@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #E7E5E0; font-family: Archivo, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #DC5401; }
+  a:hover { color: #B44100; }
+  input, textarea, button { font-family: inherit; }
+  @keyframes griitFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 26px; padding: 40px 20px 60px; background: #E7E5E0;">
+
+  <div style="width: 390px; height: 844px; border: 12px solid #0A0A0A; border-radius: 56px; background: #F5F2EC; position: relative; overflow: hidden; box-shadow: 0 40px 80px -20px rgba(0,0,0,.35);">
+    <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 116px; height: 32px; background: #0A0A0A; border-radius: 20px; z-index: 20;"></div>
+
+    <div style="height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 15px; font-weight: 500; color: #0A0A0A; letter-spacing: -.2px;">
+      <span>9:41</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-weight: 400;">
+        <span style="display: flex; gap: 3px;">
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+          <span style="width: 7px; height: 7px; border-radius: 50%; background: #0A0A0A;"></span>
+        </span>
+        <span>Wi-Fi</span>
+      </span>
+    </div>
+
+    <!-- ============ OWN PROFILE ============ -->
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ true }}">
+      <div key="{{ profileKey }}" style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="flex: 1; overflow-y: auto; padding: 0 28px 20px;">
+
+          <div style="height: 48px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 17px; font-weight: 400; color: #0A0A0A; letter-spacing: -.2px;">@bobabdel</span>
+            <span style="display: flex; gap: 8px;">
+              <button aria-label="Share profile" style="width: 44px; height: 44px; border: none; border-radius: 22px; background: #FFF; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EFEBE2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M8 8l4-4 4 4"></path><path d="M5 14v5a1 1 0 001 1h12a1 1 0 001-1v-5"></path></svg>
+              </button>
+              <button onClick="{{ goSettings }}" aria-label="Settings" style="width: 44px; height: 44px; border: none; border-radius: 22px; background: #FFF; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EFEBE2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2M12 19v2M4.6 7.5l1.7 1M17.7 15.5l1.7 1M4.6 16.5l1.7-1M17.7 8.5l1.7-1M3 12h2M19 12h2"></path></svg>
+              </button>
+            </span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px;">
+            <div style="width: 76px; height: 76px; border-radius: 50%; background: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); border: 2px solid #E7E2D8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; letter-spacing: .5px; color: #8A867E; text-align: center; overflow: hidden;">AVATAR<br />PLACEHOLDER</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 27px; font-weight: 500; letter-spacing: -.9px; color: #0A0A0A; line-height: 1.05;">Yaseen</div>
+              <div style="display: flex; gap: 16px; margin-top: 8px; font-size: 13px; color: #6B6862;">
+                <span><span style="color: #0A0A0A;">{{ followers }}</span> Followers</span>
+                <span><span style="color: #0A0A0A;">{{ following }}</span> Following</span>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{ hasBio }}" hint-placeholder-val="{{ true }}">
+            <p style="margin: 14px 0 0; font-size: 14px; line-height: 1.45; color: #4A4741; text-wrap: pretty;">{{ bio }}</p>
+          </sc-if>
+          <sc-if value="{{ noBio }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ goEdit }}" style="margin: 14px 0 0; padding: 0; border: none; background: none; font-size: 14px; color: #8A867E; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: #0A0A0A">Add a line about what you are building</button>
+          </sc-if>
+
+          <div style="display: flex; gap: 10px; margin-top: 18px;">
+            <button onClick="{{ goEdit }}" style="flex: 1; height: 46px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFF; font-size: 15px; font-weight: 400; cursor: pointer;" style-hover="background: #232220">Edit profile</button>
+            <button onClick="{{ goVisitor }}" style="flex: 1; height: 46px; border: 2px solid #DED9CE; border-radius: 16px; background: #FFF; color: #0A0A0A; font-size: 15px; font-weight: 400; cursor: pointer;" style-hover="border-color: #0A0A0A">Invite friends</button>
+          </div>
+
+          <div style="margin-top: 16px; background: #0A0A0A; border-radius: 24px; padding: 20px; box-shadow: 0 24px 40px -22px rgba(0,0,0,.45);">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">CURRENT STREAK</span>
+              <span style="font-size: 11px; letter-spacing: .5px; color: #8A867E;">BEST · {{ bestText }}</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 9px; margin-top: 12px;">
+              <span style="font-size: 54px; font-weight: 500; letter-spacing: -2.4px; color: #FFF; line-height: .95;">{{ currentStreak }}</span>
+              <span style="font-size: 15px; color: #A8A49C;">{{ currentUnit }}</span>
+            </div>
+            <div style="margin-top: 10px; font-size: 13px; color: #A8A49C;">{{ streakNote }}</div>
+          </div>
+
+          <div style="margin-top: 10px; background: #FFF; border-radius: 22px; padding: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">CONSISTENCY</span>
+              <sc-if value="{{ showRange }}" hint-placeholder-val="{{ true }}">
+                <span style="display: flex; gap: 6px;">
+                  <sc-for list="{{ rangeTabs }}" as="r" hint-placeholder-count="2">
+                    <button onClick="{{ r.pick }}" style="height: 44px; padding: 0 13px; border-radius: 13px; font-size: 12px; letter-spacing: .3px; cursor: pointer; background: {{ r.bg }}; border: 1.5px solid {{ r.border }}; color: {{ r.color }}; transition: all .18s ease;">{{ r.label }}</button>
+                  </sc-for>
+                </span>
+              </sc-if>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 14px;">
+              <span style="font-size: 40px; font-weight: 500; letter-spacing: -1.6px; color: #0A0A0A; line-height: 1;">{{ rateText }}</span>
+              <span style="font-size: 17px; color: {{ verdictColor }};">{{ verdict }}</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.45; color: #4A4741; text-wrap: pretty;">{{ verdictLine }}</div>
+
+            <sc-if value="{{ is30 }}" hint-placeholder-val="{{ true }}">
+              <sc-if value="{{ hasStrip }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 4px;">
+                  <sc-for list="{{ dayCells }}" as="d" hint-placeholder-count="12">
+                    <span style="flex: 0 0 auto; box-sizing: border-box; width: {{ d.w }}; height: 26px; border-radius: 3px; background: {{ d.bg }}; border: 1.5px {{ d.style }} {{ d.border }};"></span>
+                  </sc-for>
+                </div>
+                <div style="display: flex; gap: 14px; margin-top: 12px; font-size: 11px; color: #8A867E;">
+                  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #DC5401;"></span>Verified</span>
+                  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #F1EDE4; border: 1.5px solid #C4BEB2;"></span>Missed</span>
+                  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: #FFF; border: 1.5px dashed #DC5401;"></span>Today</span>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{ isMonths }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top: 16px; position: relative; height: 92px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid #EFEBE2;">
+                <sc-for list="{{ weekBars }}" as="w" hint-placeholder-count="26">
+                  <span style="flex: 1; height: {{ w.h }}; border-radius: 2px 2px 0 0; background: {{ w.bg }};"></span>
+                </sc-for>
+                <span style="position: absolute; left: 0; right: 0; bottom: {{ avgBottom }}; border-top: 1px dashed #8A867E;"></span>
+              </div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 9px; font-size: 11px; color: #8A867E;">
+                <span>{{ sixFrom }}</span>
+                <span>Dashed line · your average {{ avgText }}</span>
+              </div>
+              <div style="margin-top: 8px; font-size: 11px; line-height: 1.4; color: #8A867E;">One bar per week, verified ÷ due. Blank weeks had no challenge running.</div>
+            </sc-if>
+
+            <button onClick="{{ goConsistency }}" style="margin-top: 16px; width: 100%; height: 44px; border: 2px solid #DED9CE; border-radius: 14px; background: none; font-size: 14px; color: #4A4741; cursor: pointer;" style-hover="border-color: #0A0A0A">See the full record</button>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 18px;">
+            <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+              <button onClick="{{ t.pick }}" style="flex: 1; height: 44px; border-radius: 14px; font-size: 14px; font-weight: 400; cursor: pointer; background: {{ t.bg }}; border: 2px solid {{ t.border }}; color: {{ t.color }}; transition: all .18s ease;">{{ t.label }}</button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ isChallenges }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ runs }}" as="r" hint-placeholder-count="2">
+                <div style="background: #FFF; border-radius: 18px; padding: 15px 16px;">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                    <span style="font-size: 16px; color: #0A0A0A; letter-spacing: -.2px;">{{ r.name }}</span>
+                    <span style="font-size: 16px; color: #0A0A0A; letter-spacing: -.2px;">{{ r.day }}</span>
+                  </div>
+                  <div style="margin-top: 13px; display: flex; height: 6px; border-radius: 3px; overflow: hidden;">
+                    <sc-for list="{{ r.track }}" as="d" hint-placeholder-count="30">
+                      <span style="flex: 1; height: 6px; background: {{ d.bar }};"></span>
+                    </sc-for>
+                  </div>
+                  <div style="margin-top: 10px; font-size: 12px; color: #8A867E;">{{ r.meta }}</div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ noRun }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFF; border-radius: 20px; padding: 22px 20px; text-align: center;">
+                  <div style="font-size: 16px; color: #0A0A0A; letter-spacing: -.2px;">No active challenge</div>
+                  <p style="margin: 8px 0 16px; font-size: 13px; line-height: 1.45; color: #6B6862; text-wrap: pretty;">Start one from Discover. Day 1 begins the morning after you join.</p>
+                  <button style="width: 100%; height: 48px; border: none; border-radius: 16px; background: #DC5401; color: #FFF; font-size: 15px; cursor: pointer;" style-hover="background: #B44100">Go to Discover</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hasCompleted }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top: 6px; font-size: 11px; letter-spacing: .8px; color: #8A867E;">COMPLETED · {{ doneCount }}</div>
+                <sc-for list="{{ completed }}" as="c" hint-placeholder-count="1">
+                  <div style="background: #EFEBE2; border-radius: 18px; padding: 14px 16px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                    <span style="font-size: 15px; color: #0A0A0A;">{{ c.name }}</span>
+                    <span style="font-size: 12px; color: #6B6862;">{{ c.meta }}</span>
+                  </div>
+                </sc-for>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isProofs }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 14px;">
+              <sc-if value="{{ hasProofs }}" hint-placeholder-val="{{ true }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                  <sc-for list="{{ proofs }}" as="p" hint-placeholder-count="9">
+                    <div style="position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); display: flex; align-items: flex-end; padding: 8px;">
+                      <span style="font-size: 10px; letter-spacing: .4px; color: #6B6862; background: rgba(255,255,255,.82); border-radius: 5px; padding: 2px 5px;">{{ p.day }}</span>
+                      <span style="position: absolute; top: 8px; left: 8px; font-size: 7px; letter-spacing: .6px; color: #8A867E;">PROOF IMG</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; line-height: 1.45; color: #8A867E;">Every tile is a live-camera capture. Placeholder images.</div>
+              </sc-if>
+              <sc-if value="{{ noProofs }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFF; border-radius: 20px; padding: 20px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                    <span style="aspect-ratio: 1; border-radius: 12px; border: 2px dashed #DED9CE;"></span>
+                    <span style="aspect-ratio: 1; border-radius: 12px; border: 2px dashed #E7E2D8;"></span>
+                    <span style="aspect-ratio: 1; border-radius: 12px; border: 2px dashed #EFEBE2;"></span>
+                  </div>
+                  <div style="margin-top: 16px; font-size: 16px; color: #0A0A0A; letter-spacing: -.2px;">{{ proofEmptyTitle }}</div>
+                  <p style="margin: 8px 0 16px; font-size: 13px; line-height: 1.45; color: #6B6862; text-wrap: pretty;">{{ proofEmptyBody }}</p>
+                  <button style="width: 100%; height: 48px; border: none; border-radius: 16px; background: #DC5401; color: #FFF; font-size: 15px; cursor: pointer;" style-hover="background: #B44100">{{ proofEmptyCta }}</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isBadges }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <sc-for list="{{ badges }}" as="b" hint-placeholder-count="5">
+                <div style="background: {{ b.bg }}; border: 2px solid {{ b.border }}; border-radius: 18px; padding: 14px 16px;">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                    <span style="font-size: 15px; color: {{ b.nameColor }}; letter-spacing: -.2px;">{{ b.name }}</span>
+                    <span style="font-size: 11px; letter-spacing: .6px; color: {{ b.stateColor }};">{{ b.state }}</span>
+                  </div>
+                  <div style="margin-top: 6px; font-size: 12px; line-height: 1.4; color: #8A867E;">{{ b.rule }}</div>
+                  <sc-if value="{{ b.showBar }}" hint-placeholder-val="{{ true }}">
+                    <div style="margin-top: 10px; height: 4px; border-radius: 2px; background: #E2DDD2; overflow: hidden;">
+                      <span style="display: block; height: 4px; border-radius: 2px; background: {{ b.fill }}; width: {{ b.pct }};"></span>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="margin-top: 4px; font-size: 12px; line-height: 1.45; color: #8A867E;">Five marks, each earned by verified days only. Nothing here can be bought or awarded.</div>
+            </div>
+          </sc-if>
+
+        </div>
+
+        <div style="height: 84px; border-top: 1px solid #E7E2D8; background: #FFF; display: flex; align-items: center; padding: 0 14px 12px;">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"></path></svg>
+            Home
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-2 5-5 2 2-5 5-2z"></path></svg>
+            Discover
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A0A0A; display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 01-9 0c0-1.2.5-2.5 1.5-3.9"></path></svg>
+            Activity
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #DC5401;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC5401" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 00-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profile
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CONSISTENCY DETAIL ============ -->
+    <sc-if value="{{ isConsistency }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #E7E2D8;">
+          <button onClick="{{ goProfile }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2px solid #0A0A0A; border-bottom: 2px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+          <span style="flex: 1; text-align: center; margin-right: 44px; font-size: 15px; color: #0A0A0A;">Consistency</span>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px 28px 34px;">
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span style="font-size: 40px; font-weight: 500; letter-spacing: -1.6px; color: #0A0A0A; line-height: 1;">{{ rateText }}</span>
+            <span style="font-size: 17px; color: {{ verdictColor }};">{{ verdict }}</span>
+          </div>
+          <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: #4A4741;">{{ verdictLine }}</p>
+
+          <div style="margin-top: 18px; background: #FFF; border-radius: 20px; padding: 4px 16px; display: flex; flex-wrap: wrap;">
+            <sc-for list="{{ detailFacts }}" as="f" hint-placeholder-count="4">
+              <div style="width: 50%; box-sizing: border-box; padding: 14px 0; border-top: 1px solid {{ f.line }};">
+                <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">{{ f.label }}</div>
+                <div style="margin-top: 5px; font-size: 16px; font-weight: 500; letter-spacing: -.3px; color: #0A0A0A;">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="margin-top: 22px; font-size: 11px; letter-spacing: .8px; color: #8A867E;">BY MONTH</div>
+          <div style="margin-top: 10px; background: #FFF; border-radius: 20px; padding: 0 16px;">
+            <sc-for list="{{ detailMonths }}" as="m" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid #EFEBE2;">
+                <span style="width: 74px; font-size: 14px; color: #0A0A0A;">{{ m.label }}</span>
+                <span style="flex: 1; height: 6px; border-radius: 3px; background: #E2DDD2; overflow: hidden;">
+                  <span style="display: block; height: 6px; border-radius: 3px; background: #DC5401; width: {{ m.pct }};"></span>
+                </span>
+                <span style="font-size: 12px; color: #8A867E;">{{ m.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="margin-top: 22px; font-size: 11px; letter-spacing: .8px; color: #8A867E;">BY CHALLENGE</div>
+          <div style="margin-top: 10px; background: #FFF; border-radius: 20px; padding: 0 16px;">
+            <sc-for list="{{ detailByChallenge }}" as="c" hint-placeholder-count="3">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 15px 0; border-top: 1px solid #EFEBE2;">
+                <span style="font-size: 14px; color: #0A0A0A;">{{ c.label }}</span>
+                <span style="font-size: 13px; color: #6B6862;">{{ c.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <p style="margin: 16px 0 0; font-size: 12px; line-height: 1.45; color: #8A867E;">{{ detailNote }}</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ VISITOR PROFILE ============ -->
+    <sc-if value="{{ isVisitor }}" hint-placeholder-val="{{ false }}">
+      <div key="{{ visitorKey }}" style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="flex: 1; overflow-y: auto; padding: 0 28px 20px;">
+
+          <div style="height: 48px; margin-left: -10px; display: flex; align-items: center; justify-content: space-between;">
+            <button onClick="{{ goProfile }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EAE6DE">
+              <span style="display: block; width: 11px; height: 11px; border-left: 2px solid #0A0A0A; border-bottom: 2px solid #0A0A0A; transform: rotate(45deg);"></span>
+            </button>
+            <button aria-label="More" style="width: 44px; height: 44px; border: none; background: none; border-radius: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 3px;" style-hover="background: #EAE6DE">
+              <span style="width: 4px; height: 4px; border-radius: 50%; background: #0A0A0A;"></span>
+              <span style="width: 4px; height: 4px; border-radius: 50%; background: #0A0A0A;"></span>
+              <span style="width: 4px; height: 4px; border-radius: 50%; background: #0A0A0A;"></span>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 16px; margin-top: 4px;">
+            <div style="width: 76px; height: 76px; border-radius: 50%; background: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); border: 2px solid #E7E2D8; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; letter-spacing: .5px; color: #8A867E; text-align: center;">AVATAR<br />PLACEHOLDER</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 27px; font-weight: 500; letter-spacing: -.9px; color: #0A0A0A; line-height: 1.05;">Marcus Hale</div>
+              <div style="margin-top: 4px; font-size: 13px; color: #8A867E;">@marcus</div>
+            </div>
+          </div>
+
+          <p style="margin: 14px 0 0; font-size: 14px; line-height: 1.45; color: #4A4741; text-wrap: pretty;">Up at 5. Cold water, long runs, early nights.</p>
+
+          <div style="display: flex; gap: 10px; margin-top: 18px;">
+            <button onClick="{{ cycleRel }}" style="flex: 1; height: 46px; border-radius: 16px; font-size: 15px; cursor: pointer; background: {{ relBg }}; border: 2px solid {{ relBorder }}; color: {{ relColor }}; transition: all .18s ease;">{{ relLabel }}</button>
+            <button aria-label="Message" style="width: 46px; height: 46px; border: 2px solid #DED9CE; border-radius: 16px; background: #FFF; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="border-color: #0A0A0A">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-8 8H8l-4 3v-5.5A8 8 0 1121 12z"></path></svg>
+            </button>
+          </div>
+
+          <sc-if value="{{ visOpen }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top: 16px; background: #0A0A0A; border-radius: 24px; padding: 20px; box-shadow: 0 24px 40px -22px rgba(0,0,0,.45);">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">CURRENT STREAK</span>
+                <span style="font-size: 11px; letter-spacing: .5px; color: #8A867E;">BEST · 132 days</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 9px; margin-top: 12px;">
+                <span style="font-size: 54px; font-weight: 500; letter-spacing: -2.4px; color: #FFF; line-height: .95;">47</span>
+                <span style="font-size: 15px; color: #A8A49C;">days</span>
+              </div>
+              <div style="margin-top: 10px; font-size: 13px; line-height: 1.4; color: #A8A49C;">Unbroken since 21 Jul. 418 days verified since Aug 2024.</div>
+            </div>
+            <div style="margin-top: 10px; background: #FFF; border-radius: 22px; padding: 18px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">CONSISTENCY</span>
+                <span style="display: flex; gap: 4px;">
+                  <sc-for list="{{ rangeTabs }}" as="r" hint-placeholder-count="2">
+                    <button onClick="{{ r.pick }}" style="height: 44px; padding: 0 14px; border-radius: 13px; font-size: 12px; letter-spacing: .3px; cursor: pointer; background: {{ r.bg }}; border: 1.5px solid {{ r.border }}; color: {{ r.color }}; transition: all .18s ease;">{{ r.label }}</button>
+                  </sc-for>
+                </span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 14px;">
+                <span style="font-size: 40px; font-weight: 500; letter-spacing: -1.6px; color: #0A0A0A; line-height: 1;">{{ visitorRate }}</span>
+                <span style="font-size: 17px; color: #DC5401;">{{ visitorVerdict }}</span>
+              </div>
+              <div style="margin-top: 8px; font-size: 13px; line-height: 1.45; color: #4A4741;">{{ visitorLine }}</div>
+              <sc-if value="{{ is30 }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 4px;">
+                  <sc-for list="{{ visitorDayCells }}" as="d" hint-placeholder-count="30">
+                    <span style="flex: 0 0 auto; box-sizing: border-box; width: {{ d.w }}; height: 26px; border-radius: 3px; background: {{ d.bg }}; border: 1.5px {{ d.style }} {{ d.border }};"></span>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isMonths }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top: 16px; position: relative; height: 92px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid #EFEBE2;">
+                  <sc-for list="{{ visitorWeekBars }}" as="w" hint-placeholder-count="26">
+                    <span style="flex: 1; height: {{ w.h }}; border-radius: 2px 2px 0 0; background: {{ w.bg }};"></span>
+                  </sc-for>
+                  <span style="position: absolute; left: 0; right: 0; bottom: {{ visitorAvgBottom }}; border-top: 1px dashed #8A867E;"></span>
+                </div>
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 9px; font-size: 11px; color: #8A867E;">
+                  <span>Mar 2026</span>
+                  <span>Dashed line · their average {{ visitorAvgText }}</span>
+                </div>
+              </sc-if>
+            </div>
+            <div style="margin-top: 18px; font-size: 11px; letter-spacing: .8px; color: #8A867E;">ACTIVE RUNS</div>
+            <div style="margin-top: 10px; background: #FFF; border-radius: 18px; padding: 15px 16px;">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 16px; color: #0A0A0A; letter-spacing: -.2px;">75 Hard</span>
+                <span style="font-size: 12px; color: #8A867E;">Day 47 of 75</span>
+              </div>
+              <div style="margin-top: 13px; display: flex; height: 6px; border-radius: 3px; overflow: hidden;">
+                <sc-for list="{{ visitorRunTrack }}" as="d" hint-placeholder-count="75">
+                  <span style="flex: 1; height: 6px; background: {{ d.bar }};"></span>
+                </sc-for>
+              </div>
+              <div style="margin-top: 10px; font-size: 12px; color: #8A867E;">46 verified · 0 missed · 5 tasks daily</div>
+            </div>
+            <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+              <sc-for list="{{ visitorProofs }}" as="p" hint-placeholder-count="6">
+                <div style="position: relative; aspect-ratio: 1; border-radius: 12px; background: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); display: flex; align-items: flex-end; padding: 8px;">
+                  <span style="font-size: 10px; color: #6B6862; background: rgba(255,255,255,.82); border-radius: 5px; padding: 2px 5px;">{{ p.day }}</span>
+                  <span style="position: absolute; top: 8px; left: 8px; font-size: 7px; letter-spacing: .6px; color: #8A867E;">PROOF IMG</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ visLocked }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 20px; background: #FFF; border: 2px solid #E7E2D8; border-radius: 22px; padding: 24px 20px; text-align: center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A867E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg>
+              <div style="margin-top: 12px; font-size: 17px; color: #0A0A0A; letter-spacing: -.3px;">{{ lockTitle }}</div>
+              <p style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #6B6862; text-wrap: pretty;">{{ lockBody }}</p>
+            </div>
+            <div style="margin-top: 12px; display: flex; gap: 9px;">
+              <div style="flex: 1; background: #EFEBE2; border-radius: 16px; padding: 13px 14px;">
+                <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">STREAK</div>
+                <div style="margin-top: 5px; font-size: 19px; font-weight: 500; color: #8A867E;">Hidden</div>
+              </div>
+              <div style="flex: 1; background: #EFEBE2; border-radius: 16px; padding: 13px 14px;">
+                <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">CONSISTENCY</div>
+                <div style="margin-top: 5px; font-size: 19px; font-weight: 500; color: #8A867E;">Hidden</div>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+        <div style="height: 84px; border-top: 1px solid #E7E2D8; background: #FFF; display: flex; align-items: center; padding: 0 14px 12px;">
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"></path></svg>
+            Home
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M15 9l-2 5-5 2 2-5 5-2z"></path></svg>
+            Discover
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <span style="width: 34px; height: 34px; border-radius: 50%; background: #0A0A0A; display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #A8A49C;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A49C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3.2 4.5 5.8 4.5 8a4.5 4.5 0 01-9 0c0-1.2.5-2.5 1.5-3.9"></path></svg>
+            Activity
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 10px; font-size: 10px; letter-spacing: .3px; color: #DC5401;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC5401" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 00-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profile
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ EDIT PROFILE ============ -->
+    <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #E7E2D8;">
+          <button onClick="{{ goProfile }}" style="height: 44px; padding: 0 8px; border: none; background: none; font-size: 15px; color: #6B6862; cursor: pointer;" style-hover="color: #0A0A0A">Cancel</button>
+          <span style="font-size: 15px; color: #0A0A0A;">Edit profile</span>
+          <button onClick="{{ saveProfile }}" style="height: 44px; padding: 0 8px; border: none; background: none; font-size: 15px; color: {{ saveColor }}; cursor: pointer;">Save</button>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 22px 28px 34px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="width: 96px; height: 96px; border-radius: 50%; background: repeating-linear-gradient(135deg, #EDE8DF 0 6px, #E3DDD2 6px 12px); border: 2px solid #E7E2D8; display: flex; align-items: center; justify-content: center; font-size: 9px; letter-spacing: .5px; color: #8A867E; text-align: center;">AVATAR<br />PLACEHOLDER</div>
+            <button style="height: 44px; padding: 0 18px; border: 2px solid #DED9CE; border-radius: 14px; background: #FFF; font-size: 14px; color: #0A0A0A; cursor: pointer;" style-hover="border-color: #0A0A0A">Change photo</button>
+            <div style="font-size: 12px; color: #8A867E;">Square crop — crops to a circle everywhere.</div>
+          </div>
+
+          <div style="margin-top: 26px; display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <label for="dn" style="display: block; font-size: 11px; letter-spacing: .8px; color: #8A867E;">DISPLAY NAME</label>
+              <input id="dn" value="{{ name }}" onChange="{{ onName }}" maxLength="30" style="margin-top: 8px; width: 100%; box-sizing: border-box; height: 52px; padding: 0 15px; border: 2px solid #E7E2D8; border-radius: 16px; background: #FFF; font-size: 16px; color: #0A0A0A; outline: none;" style-focus="border-color: #0A0A0A" />
+            </div>
+
+            <div>
+              <label for="un" style="display: block; font-size: 11px; letter-spacing: .8px; color: #8A867E;">USERNAME</label>
+              <div style="margin-top: 8px; display: flex; align-items: center; border: 2px solid {{ userBorder }}; border-radius: 16px; background: #FFF; height: 52px; padding: 0 15px; transition: border-color .18s ease;">
+                <span style="font-size: 16px; color: #8A867E;">@</span>
+                <input id="un" value="{{ username }}" onChange="{{ onUser }}" maxLength="20" style="flex: 1; min-width: 0; height: 48px; border: none; background: none; font-size: 16px; color: #0A0A0A; outline: none; padding: 0 4px;" />
+                <span style="font-size: 12px; letter-spacing: .4px; color: {{ userMsgColor }};">{{ userMsg }}</span>
+              </div>
+              <div style="margin-top: 7px; font-size: 12px; line-height: 1.4; color: #8A867E;">Lowercase letters, numbers and underscores. Changing it breaks old links to your profile.</div>
+            </div>
+
+            <div>
+              <label for="bio" style="display: flex; align-items: baseline; justify-content: space-between; font-size: 11px; letter-spacing: .8px; color: #8A867E;">
+                <span>BIO</span>
+                <span style="color: {{ bioCountColor }};">{{ bioCount }}/150</span>
+              </label>
+              <textarea id="bio" onChange="{{ onBio }}" value="{{ bioDraft }}" rows="4" maxLength="150" placeholder="What are you building?" style="margin-top: 8px; width: 100%; box-sizing: border-box; padding: 14px 15px; border: 2px solid #E7E2D8; border-radius: 16px; background: #FFF; font-size: 15px; line-height: 1.45; color: #0A0A0A; outline: none; resize: none;" style-focus="border-color: #0A0A0A"></textarea>
+              <div style="margin-top: 7px; font-size: 12px; line-height: 1.4; color: #8A867E;">Shown on your profile to anyone who can see it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ SETTINGS ============ -->
+    <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #E7E2D8;">
+          <button onClick="{{ goProfile }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2px solid #0A0A0A; border-bottom: 2px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+          <span style="flex: 1; text-align: center; margin-right: 44px; font-size: 15px; color: #0A0A0A;">Settings</span>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px 28px 34px;">
+          <div style="background: #FFF; border-radius: 20px; overflow: hidden;">
+            <sc-for list="{{ settingsRows }}" as="s" hint-placeholder-count="5">
+              <button onClick="{{ s.go }}" style="width: 100%; min-height: 62px; display: flex; align-items: center; gap: 14px; padding: 12px 16px; border: none; border-top: 1px solid {{ s.line }}; background: none; text-align: left; cursor: pointer;" style-hover="background: #F7F4EE">
+                <span style="width: 22px; display: flex; justify-content: center; color: #4A4741;">{{ s.icon }}</span>
+                <span style="flex: 1; min-width: 0;">
+                  <span style="display: block; font-size: 15px; color: #0A0A0A;">{{ s.label }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: 12px; color: #8A867E;">{{ s.sub }}</span>
+                </span>
+                <span style="display: block; width: 8px; height: 8px; border-right: 1.8px solid #C6C1B7; border-top: 1.8px solid #C6C1B7; transform: rotate(45deg);"></span>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 10px;">
+            <button style="width: 100%; height: 52px; border: 2px solid #DED9CE; border-radius: 16px; background: #FFF; font-size: 15px; color: #0A0A0A; cursor: pointer;" style-hover="border-color: #0A0A0A">Sign out</button>
+            <button style="width: 100%; height: 52px; border: none; border-radius: 16px; background: none; font-size: 15px; color: #A4341A; cursor: pointer;" style-hover="background: #F3E5DF">Delete account</button>
+          </div>
+          <div style="margin-top: 18px; text-align: center; font-size: 12px; color: #8A867E;">GRIIT 1.0.0</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ NOTIFICATIONS ============ -->
+    <sc-if value="{{ isNotif }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #E7E2D8;">
+          <button onClick="{{ goSettings }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2px solid #0A0A0A; border-bottom: 2px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+          <span style="flex: 1; text-align: center; margin-right: 44px; font-size: 15px; color: #0A0A0A;">Notifications</span>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px 28px 34px;">
+
+          <div style="background: #FFF; border-radius: 20px; padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span style="flex: 1;">
+                <span style="display: block; font-size: 15px; color: #0A0A0A;">Daily reminder</span>
+                <span style="display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; color: #8A867E;">One push a day if today has no verified proof yet.</span>
+              </span>
+              <button onClick="{{ toggleReminder }}" aria-label="Daily reminder" style="width: 50px; height: 30px; flex-shrink: 0; border: none; border-radius: 15px; cursor: pointer; padding: 3px; display: flex; justify-content: {{ reminderJustify }}; background: {{ reminderTrack }}; transition: background .2s ease;">
+                <span style="display: block; width: 24px; height: 24px; border-radius: 50%; background: #FFF;"></span>
+              </button>
+            </div>
+
+            <sc-if value="{{ reminders }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #EFEBE2;">
+                <div style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">SEND IT AT</div>
+                <sc-if value="{{ presetsOpen }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top: 10px; display: flex; gap: 7px;">
+                    <sc-for list="{{ presets }}" as="p" hint-placeholder-count="4">
+                      <button onClick="{{ p.pick }}" style="flex: 1; height: 56px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; background: {{ p.bg }}; border: 2px solid {{ p.border }}; color: {{ p.color }}; transition: all .18s ease;">
+                        <span style="font-size: 15px;">{{ p.time }}</span>
+                        <span style="font-size: 10px; letter-spacing: .5px; opacity: .65;">{{ p.mer }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ hasCustom }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ openCustom }}" style="margin-top: 7px; width: 100%; height: 48px; border: none; border-radius: 15px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; background: {{ customRowBg }};">
+                      <span style="font-size: 11px; letter-spacing: .7px; color: #8A867E;">CUSTOM</span>
+                      <span style="font-size: 15px; color: {{ customRowValue }};">{{ customText }}</span>
+                    </button>
+                  </sc-if>
+                  <button onClick="{{ openCustom }}" style="margin-top: 6px; height: 44px; padding: 0; border: none; background: none; font-size: 13px; color: #6B6862; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 3px;" style-hover="color: #0A0A0A">Pick a custom time</button>
+                </sc-if>
+
+                <sc-if value="{{ customOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top: 10px; background: #FFF; border: 2px solid #E7E2D8; border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-size: 26px; font-weight: 500; letter-spacing: -.8px; color: #0A0A0A;">{{ draftText }}</span>
+                      <span style="display: flex; gap: 6px;">
+                        <sc-for list="{{ meridiems }}" as="m" hint-placeholder-count="2">
+                          <button onClick="{{ m.pick }}" style="width: 52px; height: 44px; border-radius: 12px; font-size: 14px; cursor: pointer; background: {{ m.bg }}; border: 2px solid {{ m.border }}; color: {{ m.color }};">{{ m.label }}</button>
+                        </sc-for>
+                      </span>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">HOUR</div>
+                      <div style="margin-top: 6px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;">
+                        <sc-for list="{{ hours }}" as="h" hint-placeholder-count="12">
+                          <button onClick="{{ h.pick }}" style="height: 44px; border-radius: 11px; font-size: 14px; cursor: pointer; background: {{ h.bg }}; border: 2px solid {{ h.border }}; color: {{ h.color }};">{{ h.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">MINUTES</div>
+                      <div style="margin-top: 6px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+                        <sc-for list="{{ minutes }}" as="m" hint-placeholder-count="4">
+                          <button onClick="{{ m.pick }}" style="height: 44px; border-radius: 11px; font-size: 14px; cursor: pointer; background: {{ m.bg }}; border: 2px solid {{ m.border }}; color: {{ m.color }};">{{ m.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 2px;">
+                      <button onClick="{{ closeCustom }}" style="flex: 1; height: 44px; border: 2px solid #DED9CE; border-radius: 12px; background: none; font-size: 14px; color: #4A4741; cursor: pointer;" style-hover="border-color: #0A0A0A">Back to presets</button>
+                      <button onClick="{{ saveCustom }}" style="flex: 1; height: 44px; border: none; border-radius: 12px; background: #0A0A0A; color: #FFF; font-size: 14px; cursor: pointer;" style-hover="background: #232220">Use {{ draftText }}</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="margin-top: 22px; font-size: 11px; letter-spacing: .8px; color: #8A867E;">OTHER PUSHES</div>
+          <div style="margin-top: 10px; background: #FFF; border-radius: 20px; overflow: hidden;">
+            <sc-for list="{{ otherToggles }}" as="t" hint-placeholder-count="4">
+              <div onClick="{{ t.toggle }}" style="display: flex; align-items: center; gap: 14px; padding: 15px 16px; border-top: 1px solid {{ t.line }}; cursor: pointer;" style-hover="background: #F7F4EE">
+                <span style="flex: 1;">
+                  <span style="display: block; font-size: 15px; color: #0A0A0A;">{{ t.label }}</span>
+                  <span style="display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; color: #8A867E;">{{ t.sub }}</span>
+                </span>
+                <button onClick="{{ t.toggle }}" aria-label="{{ t.label }}" style="width: 50px; height: 30px; flex-shrink: 0; border: none; border-radius: 15px; cursor: pointer; padding: 3px; display: flex; justify-content: {{ t.justify }}; background: {{ t.track }}; transition: background .2s ease;">
+                  <span style="display: block; width: 24px; height: 24px; border-radius: 50%; background: #FFF;"></span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 12px; font-size: 12px; line-height: 1.45; color: #8A867E;">Turning the system permission off in iOS Settings silences all of these, and GRIIT will show that state here.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ PRIVACY ============ -->
+    <sc-if value="{{ isPrivacy }}" hint-placeholder-val="{{ false }}">
+      <div style="height: 790px; display: flex; flex-direction: column; animation: griitFade .3s ease both;">
+        <div style="height: 52px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #E7E2D8;">
+          <button onClick="{{ goSettings }}" aria-label="Back" style="width: 44px; height: 44px; border: none; background: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;" style-hover="background: #EAE6DE">
+            <span style="display: block; width: 11px; height: 11px; border-left: 2px solid #0A0A0A; border-bottom: 2px solid #0A0A0A; transform: rotate(45deg);"></span>
+          </button>
+          <span style="flex: 1; text-align: center; margin-right: 44px; font-size: 15px; color: #0A0A0A;">Privacy</span>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding: 20px 28px 34px;">
+          <p style="margin: 0 0 18px; font-size: 13px; line-height: 1.5; color: #6B6862; text-wrap: pretty;">Three controls, applied everywhere your record appears — profile, search and shared links.</p>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ privacyGroups }}" as="g" hint-placeholder-count="3">
+              <div style="background: #FFF; border-radius: 20px; padding: 16px;">
+                <div style="font-size: 15px; color: #0A0A0A;">{{ g.label }}</div>
+                <div style="margin-top: 12px; display: flex; gap: 7px;">
+                  <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="3">
+                    <button onClick="{{ o.pick }}" style="flex: 1; height: 44px; border-radius: 13px; font-size: 14px; cursor: pointer; background: {{ o.bg }}; border: 2px solid {{ o.border }}; color: {{ o.color }}; transition: all .18s ease;">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="margin-top: 11px; font-size: 12px; line-height: 1.45; color: #8A867E;">{{ g.explain }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 16px; background: #EFEBE2; border-radius: 20px; padding: 16px;">
+            <div style="font-size: 13px; color: #0A0A0A;">None of this hides a proof from a challenge you joined</div>
+            <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: #6B6862;">Everyone in a shared challenge sees whether you verified the day. Privacy controls what your profile shows outside it.</p>
+          </div>
+          <button onClick="{{ goVisitor }}" style="margin-top: 16px; width: 100%; height: 48px; border: 2px dashed #D5D0C5; border-radius: 16px; background: none; font-size: 14px; color: #4A4741; cursor: pointer;" style-hover="border-color: #0A0A0A">See how a stranger sees your profile</button>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div style="width: 100%; max-width: 720px; background: #FFF; border: 1px solid #DED9CE; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px;">
+    <div style="font-size: 11px; letter-spacing: 1px; color: #8A867E;">PROTOTYPE CONTROLS — NOT PART OF THE APP</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <sc-for list="{{ screenJumps }}" as="s" hint-placeholder-count="6">
+        <button onClick="{{ s.go }}" style="height: 38px; padding: 0 14px; border-radius: 12px; font-size: 13px; cursor: pointer; background: {{ s.bg }}; border: 1.5px solid {{ s.border }}; color: {{ s.color }};">{{ s.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 18px;">
+      <div>
+        <div style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">OWN PROFILE DATA</div>
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <sc-for list="{{ dataSwitch }}" as="d" hint-placeholder-count="2">
+            <button onClick="{{ d.pick }}" style="height: 36px; padding: 0 13px; border-radius: 11px; font-size: 13px; cursor: pointer; background: {{ d.bg }}; border: 1.5px solid {{ d.border }}; color: {{ d.color }};">{{ d.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">WHAT A VISITOR MAY SEE</div>
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <sc-for list="{{ visSwitch }}" as="v" hint-placeholder-count="3">
+            <button onClick="{{ v.pick }}" style="height: 36px; padding: 0 13px; border-radius: 11px; font-size: 13px; cursor: pointer; background: {{ v.bg }}; border: 1.5px solid {{ v.border }}; color: {{ v.color }};">{{ v.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:760,&quot;height&quot;:1220},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;established&quot;,&quot;new&quot;],&quot;default&quot;:&quot;established&quot;,&quot;tsType&quot;:&quot;'established' | 'new'&quot;,&quot;section&quot;:&quot;Prototype data&quot;},&quot;visitorSees&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;open&quot;,&quot;friends&quot;,&quot;private&quot;],&quot;default&quot;:&quot;open&quot;,&quot;tsType&quot;:&quot;'open' | 'friends' | 'private'&quot;,&quot;section&quot;:&quot;Prototype data&quot;}}">
+const OR = '#DC5401', INK = '#0A0A0A', BORD = '#E7E2D8', MUT = '#8A867E';
+const HEAT = ['#E7E2D8', '#F6D6BB', '#EDA871', '#DC5401', '#A03C00'];
+const TAKEN = ['yaseen', 'marcus', 'kyle', 'griit'];
+
+function icon(paths) {
+  return React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' },
+    paths.map((d, i) => React.createElement('path', { key: i, d: d })));
+}
+const ICONS = {
+  account: ['M20 21a8 8 0 00-16 0', 'M12 11a4 4 0 100-8 4 4 0 000 8'],
+  bell: ['M18 16V11a6 6 0 10-12 0v5l-2 3h16l-2-3', 'M10 22h4'],
+  eye: ['M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6', 'M12 15a3 3 0 100-6 3 3 0 000 6'],
+  card: ['M3 7h18v11a1 1 0 01-1 1H4a1 1 0 01-1-1V7z', 'M3 11h18', 'M7 15h4'],
+  info: ['M12 3a9 9 0 100 18 9 9 0 000-18', 'M12 11v5', 'M12 8h.01']
+};
+
+class Component extends DCLogic {
+  state = {
+    screen: 'profile',
+    tab: 'challenges',
+    range: '30d',
+    data: this.props.dataState || 'established',
+    rel: 'none',
+    vis: this.props.visitorSees || 'open',
+    name: 'Yaseen',
+    username: 'bobabdel',
+    bioDraft: 'Two challenges deep. Cold mornings, ten pages, phone down by ten.',
+    bio: 'Two challenges deep. Cold mornings, ten pages, phone down by ten.',
+    reminders: true,
+    time: 'am6',
+    custom: null,
+    customOpen: false,
+    draftH: 6, draftM: '30', draftMer: 'AM',
+    lastCall: true, circleActivity: true, weekly: false, liveActivity: true,
+    privacy: { profile: 'public', challenge: 'public', activity: 'friends' }
+  };
+
+  set = (k, v) => this.setState({ [k]: v });
+  go = (s) => () => this.setState({ screen: s });
+
+  heat(seed, joinIdx, density) {
+    const cells = [];
+    let x = seed;
+    for (let i = 0; i < 371; i++) {
+      x = (x * 1103515245 + 12345) % 2147483648;
+      const r = x / 2147483648;
+      let lvl = 0;
+      if (i >= joinIdx) {
+        if (r < density * 0.18) lvl = 4;
+        else if (r < density * 0.45) lvl = 3;
+        else if (r < density * 0.7) lvl = 2;
+        else if (r < density * 0.86) lvl = 1;
+      }
+      cells.push({ bg: HEAT[lvl] });
+    }
+    return cells;
+  }
+
+  days(states) {
+    const map = {
+      verified: { bg: '#DC5401', border: '#DC5401', style: 'solid' },
+      missed: { bg: '#F1EDE4', border: '#E2DDD2', style: 'solid' },
+      today: { bg: '#FFFFFF', border: '#DC5401', style: 'dashed' },
+      future: { bg: '#F7F4EE', border: '#F7F4EE', style: 'solid' },
+      pre: { bg: '#F7F4EE', border: '#F7F4EE', style: 'solid' }
+    };
+    return states.map(st => map[st]);
+  }
+
+  // one source of truth for a run: len days, `elapsed` days behind today, misses by day index
+  states(len, elapsed, misses) {
+    const out = [];
+    for (let i = 0; i < len; i++) {
+      out.push(i < elapsed ? (misses.indexOf(i) >= 0 ? 'missed' : 'verified')
+        : i === elapsed ? 'today' : 'future');
+    }
+    return out;
+  }
+
+  track(len, elapsed, misses) { return this.days(this.states(len, elapsed, misses)); }
+
+  // continuous per-day progress bar for a challenge row
+  bar(len, elapsed, misses) {
+    const fill = { verified: '#DC5401', missed: '#C4BEB2', today: '#F6D6BB', future: '#E2DDD2', pre: '#E2DDD2' };
+    return this.states(len, elapsed, misses).map(st => ({ bar: fill[st] }));
+  }
+
+  // strip cells are sized to the number of DUE days, and grow from the right
+  // cells are border-box, gap 4: they can never exceed the card's inner width
+  cellW(n) {
+    if (!n) return '0px';
+    return Math.max(6, Math.min(24, Math.floor((298 - (n - 1) * 4) / n))) + 'px';
+  }
+
+  weeks(values, height) {
+    const live = values.filter(v => v !== null);
+    const avg = live.length ? live.reduce((a, b) => a + b, 0) / live.length : 0;
+    return {
+      bars: values.map(v => ({
+        h: (v === null ? 3 : Math.max(4, Math.round(v * height))) + 'px',
+        bg: v === null ? '#EFEBE2' : '#DC5401'
+      })),
+      avgBottom: Math.round(avg * height) + 'px',
+      avgText: Math.round(avg * 100) + '%'
+    };
+  }
+
+  months(pcts, currentIdx) {
+    const labels = ['O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S'];
+    return pcts.map((p, i) => ({
+      label: labels[i],
+      h: (p > 0 ? Math.max(6, Math.round(p * 96)) : 3) + 'px',
+      bg: p > 0 ? (i === currentIdx ? '#EDA871' : '#DC5401') : '#EFEBE2',
+      labelColor: i === currentIdx ? '#0A0A0A' : '#8A867E'
+    }));
+  }
+
+  week(seed, joinIdx, density) {
+    const cells = [];
+    let x = seed || 1;
+    for (let i = 0; i < 84; i++) {
+      x = (x * 1103515245 + 12345) % 2147483648;
+      const r = x / 2147483648;
+      let lvl = 0;
+      if (i >= joinIdx) {
+        if (r < density * 0.3) lvl = 4;
+        else if (r < density * 0.62) lvl = 3;
+        else if (r < density * 0.82) lvl = 2;
+        else if (r < density * 0.9) lvl = 1;
+      }
+      cells.push({ bg: HEAT[lvl] });
+    }
+    return cells;
+  }
+
+  timeText(t, custom) {
+    if (t === 'custom' && custom) return custom.h + ':' + custom.m + ' ' + custom.mer;
+    return { am6: '6:00 AM', am8: '8:00 AM', pm12: '12:00 PM', pm7: '7:00 PM' }[t] || '6:00 AM';
+  }
+
+  privacySummary() {
+    const p = this.state.privacy;
+    const cap = (v) => v.charAt(0).toUpperCase() + v.slice(1);
+    return 'Profile ' + cap(p.profile) + ' · Activity ' + cap(p.activity);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const kind = s.data === 'established' ? 'full' : s.data === 'new' ? 'early' : s.data === 'thirty' ? 'thirty' : 'none';
+    const noRun = kind === 'none', isNew = kind === 'early', zero = kind === 'early' || kind === 'none';
+    const fx = {
+      // Read Something from 25 Aug (day 12 today), missed day 4; Cold Plunge from 3 Sep (day 3).
+      // 12 due days, 11 closed: 10 verified, 1 missed. Nothing before 25 Aug.
+      full: {
+        current: 7, best: 7, total: 10, rate: '91%', verdict: 'Locked in',
+        line: '10 of 11 due days verified. 1 due today.',
+        since: '29 Aug', firstProof: '25 Aug 2026', completion: '10 of 11 due days',
+        proofDays: [11, 10, 9, 8, 7, 6, 5, 3, 2, 1],
+        strip: ['verified', 'verified', 'verified', 'missed',
+          'verified', 'verified', 'verified', 'verified', 'verified', 'verified', 'verified', 'today'],
+        badgeDates: { 3: '31 Aug 2026', 7: '4 Sep 2026' },
+        months: [{ label: 'Sep 2026', value: '4 of 4', pct: '100%' }, { label: 'Aug 2026', value: '6 of 7', pct: '86%' }],
+        byChallenge: [{ label: 'Read Something', value: '10 of 11' }, { label: 'Cold Plunge Ladder', value: '2 of 2' }],
+        weeks: Array.from({ length: 26 }, (_, i) => i === 24 ? 0.86 : i === 25 ? 1 : null)
+      },
+      early: {
+        current: 2, best: 2, total: 2, rate: '2 of 2', verdict: '',
+        line: 'Day 3 of 30. Today\u2019s proof is due.',
+        since: '3 Sep', firstProof: '3 Sep 2026', completion: '2 of 2 due days',
+        proofDays: [2, 1],
+        strip: ['verified', 'verified', 'today'],
+        badgeDates: {},
+        months: [{ label: 'Sep 2026', value: '2 of 2', pct: '100%' }],
+        byChallenge: [{ label: 'Read Something', value: '2 of 2' }],
+        weeks: Array.from({ length: 26 }, (_, i) => i === 25 ? 1 : null)
+      },
+      // Read Something day 30 of 30 today, misses on day 4 (10 Aug) and day 12 (18 Aug)
+      thirty: {
+        current: 17, best: 17, total: 27, rate: '93%', verdict: 'Locked in',
+        line: '27 of 29 due days verified. 1 due today.',
+        since: '19 Aug', firstProof: '7 Aug 2026', completion: '27 of 29 due days',
+        proofDays: [29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18],
+        strip: Array.from({ length: 30 }, (_, i) =>
+          i === 29 ? 'today' : (i === 3 || i === 11) ? 'missed' : 'verified'),
+        badgeDates: { 3: '21 Aug 2026', 7: '25 Aug 2026', 14: '1 Sep 2026' },
+        months: [{ label: 'Sep 2026', value: '4 of 4', pct: '100%' }, { label: 'Aug 2026', value: '23 of 25', pct: '92%' }],
+        byChallenge: [{ label: 'Read Something', value: '27 of 29' }],
+        weeks: Array.from({ length: 26 }, (_, i) => i === 21 ? 0.71 : i >= 22 ? 1 : null)
+      },
+      none: {
+        current: 0, best: 0, total: 0, rate: 'No due days', verdict: '',
+        line: 'Join a challenge and the strip starts filling.',
+        since: '', firstProof: '—', completion: '—',
+        proofDays: [], strip: [], badgeDates: {}, months: [], byChallenge: [],
+        weeks: Array.from({ length: 26 }, () => null)
+      }
+    }[kind];
+    const sixMo = this.weeks(fx.weeks, 92);
+    // visitor: unbroken since 21 Jul, so the last 7 weeks are 1.0 and every miss is older
+    const visSix = this.weeks(Array.from({ length: 26 }, (_, i) =>
+      i >= 19 ? 1 : i >= 14 ? 0.86 : i >= 8 ? 0.71 : 0.86), 92);
+    const p = s.privacy;
+    const chip = (on) => ({ bg: on ? INK : '#FFF', border: on ? INK : BORD, color: on ? '#FFF' : INK });
+    const mini = (on) => ({ bg: on ? INK : '#FFF', border: on ? INK : '#DED9CE', color: on ? '#FFF' : '#4A4741' });
+
+    const blocked = s.vis !== 'open';
+    const relMap = {
+      none: { label: s.vis === 'open' ? 'Follow' : 'Request', bg: OR, border: OR, color: '#FFF' },
+      requested: { label: 'Requested', bg: '#FFF', border: '#DED9CE', color: '#6B6862' },
+      following: { label: 'Following', bg: '#FFF', border: '#DED9CE', color: INK }
+    };
+    const rel = relMap[s.rel];
+
+    const runsEstablished = [
+      { name: 'Read Something', day: 'Day 12 of 30', meta: '10 verified · 1 missed · 2 tasks daily', track: this.bar(30, 11, [3]) },
+      { name: 'Cold Plunge Ladder', day: 'Day 3 of 14', meta: '2 verified · 0 missed · 2 tasks daily', track: this.bar(14, 2, []) }
+    ];
+    const runsNew = [{ name: 'Read Something', day: 'Day 3 of 30', meta: '2 verified · 0 missed · 2 tasks daily', track: this.bar(30, 2, []) }];
+
+    const best = fx.best, total = fx.total;
+    const badges = [
+      { name: '3 days', rule: 'Three consecutive verified days', need: 3 },
+      { name: '7 days', rule: 'Seven consecutive verified days', need: 7 },
+      { name: '14 days', rule: 'Fourteen consecutive verified days', need: 14 },
+      { name: '30 days', rule: 'Thirty consecutive verified days', need: 30 },
+      { name: '100 verified', rule: 'One hundred verified days in total', need: 100 }
+    ].map(b => {
+      const have = b.need === 100 ? total : best;
+      const earned = have >= b.need;
+      return {
+        name: b.name, rule: b.rule,
+        state: earned ? (fx.badgeDates[b.need] ? 'Earned ' + fx.badgeDates[b.need] : 'Earned') : have + ' / ' + b.need,
+        stateColor: earned ? OR : MUT,
+        nameColor: earned ? INK : '#4A4741',
+        bg: earned ? '#FFF' : 'transparent',
+        border: earned ? BORD : '#E2DDD2',
+        showBar: !earned,
+        fill: '#CFC9BC',
+        pct: Math.min(100, Math.round(have / b.need * 100)) + '%'
+      };
+    });
+
+    const settingsRows = [
+      { label: 'Account', sub: 'Signed in with Apple · y•••@gmail.com', icon: icon(ICONS.account), go: this.go('settings') },
+      { label: 'Notifications', sub: s.reminders ? 'Daily reminder at ' + this.timeText(s.time, s.custom) : 'Daily reminder off', icon: icon(ICONS.bell), go: this.go('notif') },
+      { label: 'Privacy', sub: this.privacySummary(), icon: icon(ICONS.eye), go: this.go('privacy') },
+      { label: 'Subscription', sub: 'Free plan · 1 streak freeze a month', icon: icon(ICONS.card), go: this.go('settings') },
+      { label: 'About', sub: 'Version, terms, privacy policy, contact', icon: icon(ICONS.info), go: this.go('settings') }
+    ].map((r, i) => Object.assign(r, { line: i === 0 ? 'transparent' : '#EFEBE2' }));
+
+    const presets = [
+      { id: 'am6', time: '6:00', mer: 'AM' }, { id: 'am8', time: '8:00', mer: 'AM' },
+      { id: 'pm12', time: '12:00', mer: 'PM' }, { id: 'pm7', time: '7:00', mer: 'PM' }
+    ].map(x => Object.assign({ time: x.time, mer: x.mer }, chip(s.time === x.id), { pick: () => this.setState({ time: x.id, customOpen: false }) }));
+
+    const toggle = (k) => ({
+      justify: s[k] ? 'flex-end' : 'flex-start',
+      track: s[k] ? OR : '#E2DDD2',
+      toggle: () => this.set(k, !s[k])
+    });
+    const otherToggles = [
+      Object.assign({ label: 'Last call', sub: '60 minutes before the day resets, only if the day is unverified.' }, toggle('lastCall')),
+      Object.assign({ label: 'Circle activity', sub: 'When someone in your circle verifies a day.' }, toggle('circleActivity')),
+      Object.assign({ label: 'Weekly summary', sub: 'Sunday: days verified, days missed, streak state.' }, toggle('weekly')),
+      Object.assign({ label: 'Lock screen timer', sub: 'Live activity while a timed task is running.' }, toggle('liveActivity'))
+    ].map((t, i) => Object.assign(t, { line: i === 0 ? 'transparent' : '#EFEBE2' }));
+
+    const pgroup = (key, label, explains) => ({
+      label: label,
+      explain: explains[p[key]],
+      options: ['public', 'friends', 'private'].map(v => Object.assign(
+        { label: v.charAt(0).toUpperCase() + v.slice(1), pick: () => this.setState({ privacy: Object.assign({}, p, { [key]: v }) }) },
+        chip(p[key] === v)))
+    });
+
+    const uname = (s.username || '').toLowerCase();
+    const taken = TAKEN.indexOf(uname) >= 0;
+    const tooShort = uname.length > 0 && uname.length < 3;
+    const bad = taken || tooShort;
+
+    return {
+      isProfile: s.screen === 'profile', isVisitor: s.screen === 'visitor', isEdit: s.screen === 'edit',
+      isSettings: s.screen === 'settings', isNotif: s.screen === 'notif', isPrivacy: s.screen === 'privacy',
+      isConsistency: s.screen === 'consistency',
+      profileKey: s.data + s.tab, visitorKey: s.vis + s.rel,
+      goProfile: this.go('profile'), goVisitor: this.go('visitor'), goEdit: this.go('edit'),
+      goSettings: this.go('settings'),
+
+      followers: zero ? 0 : 34, following: zero ? 0 : 21,
+      hasBio: !zero, noBio: zero, bio: s.bio,
+
+      currentStreak: String(fx.current),
+      currentUnit: fx.current === 1 ? 'day' : 'days',
+      bestText: fx.best === 1 ? '1 day' : fx.best + ' days',
+      streakNote: fx.current === 0 ? 'Post today to start.' : 'Unbroken since ' + fx.since + '.',
+      noRun: noRun,
+
+      rateText: fx.rate,
+      verdict: fx.verdict,
+      verdictColor: fx.verdict === 'Locked in' ? '#DC5401' : '#4A4741',
+      verdictLine: fx.line,
+      hasStrip: fx.strip.length > 0,
+      dayCells: this.days(fx.strip).map(c => Object.assign({}, c, { w: this.cellW(fx.strip.length) })),
+
+      showRange: !zero,
+      is30: s.range === '30d' || zero, isMonths: s.range === '6mo' && !zero,
+      rangeTabs: [
+        { id: '30d', label: '30 days' }, { id: '6mo', label: '6 months' }
+      ].map(x => Object.assign({ label: x.label, pick: () => this.set('range', x.id) },
+        s.range === x.id
+          ? { bg: '#0A0A0A', border: '#0A0A0A', color: '#FFF' }
+          : { bg: '#FFF', border: '#DED9CE', color: '#6B6862' })),
+      weekBars: sixMo.bars, avgBottom: sixMo.avgBottom, avgText: sixMo.avgText,
+      sixFrom: 'Mar 2026',
+      goConsistency: this.go('consistency'),
+
+      detailFacts: [
+        { label: 'LONGEST STREAK', value: fx.best === 1 ? '1 day' : fx.best + ' days' },
+        { label: 'TOTAL VERIFIED', value: fx.total === 1 ? '1 day' : fx.total + ' days' },
+        { label: 'COMPLETION', value: fx.completion },
+        { label: 'FIRST PROOF', value: fx.firstProof }
+      ].map((f, i) => Object.assign(f, { line: i < 2 ? 'transparent' : '#EFEBE2' })),
+      detailMonths: fx.months,
+      detailByChallenge: fx.byChallenge,
+      detailNote: 'A day inside more than one challenge counts once in the totals. Every figure here is a count of verified proof rows.',
+
+      visitorRunTrack: this.bar(75, 46, []),
+      visitorRate: '100%', visitorVerdict: 'Locked in',
+      visitorLine: '29 of 29 due days verified. 1 due today.',
+      visitorDayCells: this.days(Array.from({ length: 30 }, (_, i) => i === 29 ? 'today' : 'verified'))
+        .map(c => Object.assign({}, c, { w: this.cellW(30) })),
+      visitorWeekBars: visSix.bars, visitorAvgBottom: visSix.avgBottom, visitorAvgText: visSix.avgText,
+
+      tabs: [
+        { id: 'challenges', label: 'Challenges' }, { id: 'proofs', label: 'Proofs' }, { id: 'badges', label: 'Badges' }
+      ].map(t => Object.assign({ label: t.label, pick: () => this.set('tab', t.id) },
+        s.tab === t.id ? { bg: '#FFF', border: OR, color: OR } : { bg: 'transparent', border: BORD, color: '#6B6862' })),
+      isChallenges: s.tab === 'challenges', isProofs: s.tab === 'proofs', isBadges: s.tab === 'badges',
+
+      runs: noRun ? [] : isNew ? runsNew
+        : kind === 'thirty'
+          ? [{ name: 'Read Something', day: 'Day 30 of 30', meta: '27 verified · 2 missed · 2 tasks daily', track: this.bar(30, 29, [3, 11]) }]
+          : runsEstablished,
+      hasCompleted: false, doneCount: '0',
+      completed: [],
+
+      hasProofs: fx.proofDays.length > 0, noProofs: fx.proofDays.length === 0,
+      proofs: fx.proofDays.map(d => ({ day: 'Day ' + d })),
+      proofEmptyTitle: noRun ? 'No proofs yet' : 'Day 1 proof is due today',
+      proofEmptyBody: noRun
+        ? 'Join a challenge and every verified day lands here as a photo.'
+        : 'Proofs land here the moment the camera verifies one. Nothing can be uploaded from your library.',
+      proofEmptyCta: noRun ? 'Go to Discover' : 'Post today\u2019s proof',
+      badges: badges,
+
+      navItems: ['Home', 'Discover', 'Post', 'Activity', 'Profile'].map(l => ({
+        label: l, color: l === 'Profile' ? OR : '#A8A49C',
+        fill: l === 'Post' ? INK : 'transparent'
+      })),
+
+      visitorScoreCols: [
+        { label: 'CURRENT', value: '47 days' },
+        { label: 'BEST', value: '132 days' },
+        { label: 'COMPLETION', value: '94%' }
+      ].map((c, i) => Object.assign(c, {
+        line: i === 0 ? 'transparent' : '#232220',
+        pad: i === 0 ? '0' : '14px'
+      })),
+      relLabel: rel.label, relBg: rel.bg, relBorder: rel.border, relColor: rel.color,
+      cycleRel: () => this.set('rel', s.rel === 'none' ? (s.vis === 'open' ? 'following' : 'requested') : 'none'),
+      visOpen: !blocked, visLocked: blocked,
+      lockTitle: s.vis === 'private' ? 'This profile is private' : 'Visible to their circle',
+      lockBody: s.vis === 'private'
+        ? 'Marcus keeps this record private. Nothing is shown, and requests are not accepted automatically.'
+        : 'Marcus shows the streak, activity and proofs to people they have accepted. Send a request to see the record.',
+      visitorProofs: [46, 45, 44, 43, 42, 41].map(d => ({ day: 'Day ' + d })),
+
+      name: s.name, onName: (e) => this.set('name', e.target.value),
+      username: s.username, onUser: (e) => this.set('username', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')),
+      userMsg: taken ? 'Taken' : tooShort ? '3 characters min' : uname === 'bobabdel' ? '' : 'Available',
+      userMsgColor: bad ? '#A4341A' : '#2E6B33',
+      userBorder: bad ? '#A4341A' : BORD,
+      bioDraft: s.bioDraft, onBio: (e) => this.set('bioDraft', e.target.value.slice(0, 150)),
+      bioCount: (s.bioDraft || '').length,
+      bioCountColor: (s.bioDraft || '').length > 140 ? '#A4341A' : MUT,
+      saveColor: bad ? '#C9C4BA' : OR,
+      saveProfile: () => { if (!bad) this.setState({ bio: s.bioDraft, screen: 'profile' }); },
+
+      settingsRows: settingsRows,
+
+      reminders: s.reminders,
+      reminderJustify: s.reminders ? 'flex-end' : 'flex-start',
+      reminderTrack: s.reminders ? OR : '#E2DDD2',
+      toggleReminder: () => this.set('reminders', !s.reminders),
+      presetsOpen: !s.customOpen, customOpen: s.customOpen,
+      presets: presets,
+      hasCustom: !!s.custom,
+      customText: s.custom ? this.timeText('custom', s.custom) : '',
+      customRowBg: s.time === 'custom' ? INK : '#F5F2EC',
+      customRowValue: s.time === 'custom' ? '#FFF' : INK,
+      openCustom: () => this.setState({
+        customOpen: true,
+        draftH: s.custom ? s.custom.h : s.draftH,
+        draftM: s.custom ? s.custom.m : s.draftM,
+        draftMer: s.custom ? s.custom.mer : s.draftMer
+      }),
+      closeCustom: () => this.set('customOpen', false),
+      saveCustom: () => this.setState({ custom: { h: s.draftH, m: s.draftM, mer: s.draftMer }, time: 'custom', customOpen: false }),
+      draftText: s.draftH + ':' + s.draftM + ' ' + s.draftMer,
+      meridiems: ['AM', 'PM'].map(m => Object.assign({ label: m, pick: () => this.set('draftMer', m) }, chip(s.draftMer === m))),
+      hours: Array.from({ length: 12 }, (_, i) => i + 1).map(h => Object.assign(
+        { label: String(h), pick: () => this.set('draftH', h) },
+        s.draftH === h ? { bg: OR, border: OR, color: '#FFF' } : { bg: '#FFF', border: BORD, color: INK })),
+      minutes: ['00', '15', '30', '45'].map(m => Object.assign(
+        { label: ':' + m, pick: () => this.set('draftM', m) },
+        s.draftM === m ? { bg: OR, border: OR, color: '#FFF' } : { bg: '#FFF', border: BORD, color: INK })),
+      otherToggles: otherToggles,
+
+      privacyGroups: [
+        pgroup('profile', 'Profile', {
+          public: 'Anyone can open your profile and see your bio, stats and activity.',
+          friends: 'Only people you have accepted see the record. Others see your name, photo and bio only.',
+          private: 'Nobody but you. You still appear to people inside challenges you share.'
+        }),
+        pgroup('challenge', 'Challenges', {
+          public: 'Anyone can see which challenges you are running and how far in you are.',
+          friends: 'Only your circle sees your runs. Others see the tab as hidden.',
+          private: 'Your runs are hidden from your profile entirely.'
+        }),
+        pgroup('activity', 'Activity and proofs', {
+          public: 'Anyone can see your 365-day map and your proof photos.',
+          friends: 'Only your circle sees your map and proof photos.',
+          private: 'Your map and proofs are yours alone.'
+        })
+      ],
+
+      screenJumps: [
+        { id: 'profile', label: 'Own profile' }, { id: 'consistency', label: 'Consistency detail' },
+        { id: 'visitor', label: 'Visitor profile' },
+        { id: 'edit', label: 'Edit profile' }, { id: 'settings', label: 'Settings' },
+        { id: 'notif', label: 'Notifications' }, { id: 'privacy', label: 'Privacy' }
+      ].map(x => Object.assign({ label: x.label, go: this.go(x.id) }, mini(s.screen === x.id))),
+      dataSwitch: [
+        { id: 'new', label: '3 due days' }, { id: 'established', label: '12 due days' },
+        { id: 'thirty', label: '30 due days' }, { id: 'norun', label: 'No challenge' }
+      ].map(x => Object.assign({ label: x.label, pick: () => this.setState({ data: x.id, screen: 'profile' }) }, mini(s.data === x.id))),
+      visSwitch: [
+        { id: 'open', label: 'Public' }, { id: 'friends', label: 'Friends only' }, { id: 'private', label: 'Private' }
+      ].map(x => Object.assign({ label: x.label, pick: () => this.setState({ vis: x.id, rel: 'none', screen: 'visitor' }) }, mini(s.vis === x.id)))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

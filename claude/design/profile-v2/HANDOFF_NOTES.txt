@@ -1,0 +1,88 @@
+GRIIT — Profile & Settings redesign (v3)
+Design handoff bundle
+=====================================
+
+WHAT TO READ FIRST
+------------------
+README.md is the spec and it is self-sufficient. An engineer can build every screen from it
+without opening any other file: per-screen layout, components, copy, states, interactions,
+the state model, one-line derivation for every stat shown, tokens, empty states,
+implementation notes and open questions.
+
+Build order that works: README "Design tokens" -> "Screen 1 Own profile" -> the sub-pages.
+
+
+WHAT IS IN THE FOLDER
+---------------------
+README.md
+    The specification. Complete on its own. Read this.
+
+GRIIT Profile and Settings v3.dc.html
+    The interactive prototype. Open it in any browser (keep support.js next to it).
+    All seven screens are clickable. The panel BELOW the phone is prototype scaffolding,
+    not part of the app: it switches the four data fixtures (3 / 12 / 30 due days, no
+    challenge), jumps between screens, and switches the three visitor visibility states.
+
+GRIIT Profile and Settings (standalone).html
+    The same prototype as one self-contained file — no support.js, no web fonts, no network.
+    Use this one for sharing, review calls and offline viewing.
+
+support.js
+    Runtime the .dc.html prototype loads. Not product code. Do not port it.
+
+src/
+    The unbundled source, as plain readable React + CSS. This is a READING AID that shows the
+    structure and the exact values in ordinary component form — it is not a build target and
+    has no bundler config. Port the layout, tokens, copy and logic into React Native using the
+    app's existing primitives; do not lift this DOM.
+
+    tokens.css              every colour, radius and spacing token, as CSS variables
+    styles.css              one class per component, in the same order as the README
+    fixtures.js             the four datasets + the derivations shared by every screen:
+                            cellWidth(), runStates(), verdictFor(), weeklyAverage(), badgeRows()
+    App.jsx                 navigation between the seven screens, all app state in one place
+    components/
+      StreakCard.jsx        the one dark card: current streak + best
+      ConsistencyCard.jsx   rate -> verdict word -> sentence -> strip / weekly bars
+      DueDayStrip.jsx       one cell per DUE day, right-aligned, width computed so it cannot overflow
+      WeeklyBars.jsx        26 weekly bars + the user's own average as a dashed baseline
+      ChallengeRow.jsx      three-line challenge row with the per-day progress bar
+      Switch.jsx            50x30 switch inside a fully tappable >= 62px row
+      TabBar.jsx            bottom tab bar (icons are Lucide-style placeholders here)
+      Icons.jsx             the ten line icons used across the screens
+    screens/
+      OwnProfile.jsx        identity, streak, consistency, three tabs and their empty states
+      ConsistencyDetail.jsx facts, by-month, by-challenge
+      VisitorProfile.jsx    follow states + the public / friends-only / private gating
+      EditProfile.jsx       avatar, display name, username uniqueness, 150-char bio
+      Settings.jsx          five-row top level with live sub-labels
+      Notifications.jsx     one reminder + the four presets + the custom picker + other pushes
+      Privacy.jsx           three visibility controls with per-level explanations
+
+
+THE FOUR RULES THIS DESIGN IS BUILT ON
+--------------------------------------
+1. Honest cut. Nothing on screen that the backend cannot compute or enforce. Every stat in the
+   README has a one-line query beside it. Anything unenforceable is an open question, not a pixel.
+2. One dataset. The streak card, the consistency rate, the strip, the challenge rows, the proof
+   tiles, the badges and the detail page all describe the same days and must come from the same
+   rows. README "Stats — one query each" lists the fixtures; do not write these strings by hand.
+3. One place per thing. Each challenge appears once (a row in the Challenges tab). Reminder time
+   has one source, shared with onboarding, and the same four presets plus custom.
+4. Weights 400 and 500 only, no emoji anywhere, line icons only, 44pt minimum hit targets
+   (the switches are the one stated exception — their whole row is the target).
+
+
+PLACEHOLDERS — REPLACE BEFORE SHIP
+----------------------------------
+- Avatars (76px on profiles, 96px in Edit profile): striped circles labelled AVATAR PLACEHOLDER.
+- Proof tiles (3-up grid, visitor strip): striped squares labelled PROOF IMG.
+Everything else is drawn to spec.
+
+
+OPEN QUESTIONS
+--------------
+Fifteen, at the end of README.md. Four need a product decision before build:
+the Consequences card (does the backend apply any of it?), whether the profile should carry a
+"post today's proof" action, the streak definition (do no-challenge days break a streak?),
+and whether Followers/Following and "circle" are one relation or two.

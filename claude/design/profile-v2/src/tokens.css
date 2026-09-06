@@ -1,0 +1,32 @@
+:root {
+  /* GRIIT profile & settings v3 — design tokens */
+  --ink: #0A0A0A;
+  --ink-hover: #232220;
+  --body: #4A4741;
+  --muted: #6B6862;
+  --muted-light: #8A867E;
+  --muted-dark: #A8A49C;      /* meta inside the dark streak card */
+  --orange: #DC5401;
+  --orange-press: #B44100;
+  --danger: #A4341A;
+  --danger-wash: #F3E5DF;
+  --success: #2E6B33;
+  --canvas: #F5F2EC;
+  --surface: #FFFFFF;
+  --surface-sunken: #EFEBE2;
+  --surface-warm: #EAE6DE;
+  --row-press: #F7F4EE;
+  --border: #E7E2D8;
+  --border-strong: #DED9CE;
+  --border-dashed: #D5D0C5;
+  --track: #E2DDD2;
+  --missed: #C4BEB2;
+  --missed-fill: #F1EDE4;
+  --today-bar: #F6D6BB;
+  --chevron: #C6C1B7;
+  --gutter: 28px;
+  --radius-btn: 16px;
+  --radius-card: 22px;
+  --radius-hero: 24px;
+  --shadow-hero: 0 24px 40px -22px rgba(0,0,0,.45);
+}
