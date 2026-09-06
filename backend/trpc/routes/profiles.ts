@@ -16,6 +16,7 @@ import { sanitizeSearchQuery } from "../../lib/sanitize-search";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
+import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
@@ -43,6 +44,7 @@ function mapEntitlementToStatus(expiresDate: string | null): SubscriptionStatus 
 export const profilesRouter = createTRPCRouter({
   ...profilesSocialProcedures,
   ...profilesStatsProcedures,
+  ...profilesRecordProcedures,
   create: protectedProcedure
     .input(z.object({
       username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
