@@ -6,7 +6,7 @@ v2 is live. `FLAGS.ONBOARDING_V2` defaults to true (`lib/feature-flags.ts`). Set
 
 ## Profile v2
 
-Phase 1 (query layer) is on `feat/profile-v2-phase-1`. Own-profile UI is not swapped yet.
+Phases 1–5 are on `feat/profile-v2-phase-1`. Stopped at the start of Phase 6 — the privacy migration is **not written**.
 
 ### Open — streak semantics (Q2)
 

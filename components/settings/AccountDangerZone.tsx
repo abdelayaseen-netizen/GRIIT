@@ -14,13 +14,6 @@ import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { InlineError } from "@/components/InlineError";
 import { styles } from "@/components/settings/settings-styles";
 
-const CONSEQUENCES = [
-  { bulletColor: DS_COLORS.warning, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: DS_COLORS.danger, title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
-] as const;
-
 export interface AccountDangerZoneProps {
   isGuest: boolean;
   showDeleteModal: boolean;
@@ -164,24 +157,5 @@ export function AccountDangerZone({
       </Modal>
 
     </>
-  );
-}
-
-export function ConsequencesSection() {
-  return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>⏱ Consequences</Text>
-      <View style={[styles.card, styles.consequenceCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-        {CONSEQUENCES.map((item, i) => (
-          <View key={i} style={styles.consequenceRow}>
-            <View style={[styles.bullet, { backgroundColor: item.bulletColor }]} />
-            <View style={styles.consequenceTextWrap}>
-              <Text style={[styles.consequenceTitle, { color: DS_COLORS.textPrimary }]}>{item.title}</Text>
-              <Text style={[styles.consequenceSub, { color: DS_COLORS.textMuted }]}>{item.sub}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
   );
 }

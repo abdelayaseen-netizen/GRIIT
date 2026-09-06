@@ -19,7 +19,7 @@ function PrivacyPolicyScreenInner() {
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>GRIIT Privacy Policy</Text>
-        <Text style={styles.updated}>Last updated: March 2025</Text>
+        <Text style={styles.updated}>Last updated: September 2026</Text>
         {CONTENT.map((section, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.heading}>{section.heading}</Text>
