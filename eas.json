@@ -29,8 +29,7 @@
         "simulator": false
       },
       "env": {
-        "NODE_ENV": "production",
-        "EXPO_PUBLIC_ONBOARDING_V2": "true"
+        "NODE_ENV": "production"
       }
     },
     "production": {
