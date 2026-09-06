@@ -18,6 +18,12 @@ describe("profileUpdateInputSchema caps", () => {
     expect(parsed.bio).toHaveLength(150);
   });
 
+  it("accepts distance_unit km or mi", () => {
+    expect(profileUpdateInputSchema.parse({ distance_unit: "km" }).distance_unit).toBe("km");
+    expect(profileUpdateInputSchema.parse({ distance_unit: "mi" }).distance_unit).toBe("mi");
+    expect(profileUpdateInputSchema.safeParse({ distance_unit: "yd" }).success).toBe(false);
+  });
+
   it("rejects username, display name, and bio over the client caps", () => {
     expect(profileUpdateInputSchema.safeParse({ username: "ab" }).success).toBe(false);
     expect(

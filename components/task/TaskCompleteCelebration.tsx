@@ -15,7 +15,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { Camera, Flame, Image as GalleryIcon, Share2 } from "lucide-react-native";
-import { FLAGS } from "@/lib/feature-flags";
 import ViewShot from "react-native-view-shot";
 import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
@@ -82,7 +81,7 @@ export function TaskCompleteCelebration({
   taskTypeRaw,
   streakCount,
   isHardMode: _isHardMode,
-  variableReward,
+  variableReward: _variableReward,
   postedInline,
   postCaption,
   setPostCaption,
@@ -174,12 +173,6 @@ export function TaskCompleteCelebration({
               <Text style={d.streakChipText}>
                 {streakCount} {streakCount === 1 ? "day" : "days"}
               </Text>
-            </View>
-          ) : null}
-
-          {FLAGS.COMPLETION_REWARDS && variableReward ? (
-            <View style={d.rewardPill}>
-              <Text style={d.rewardText}>{variableReward.label}</Text>
             </View>
           ) : null}
 

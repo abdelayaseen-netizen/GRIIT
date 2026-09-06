@@ -29,8 +29,8 @@ describe("challenges.create helpers (regression)", () => {
   });
 
   describe("taskStrictAndPhoto", () => {
-    it("stores strict_timer_mode true only for timer with strictTimerMode", () => {
-      expect(taskStrictAndPhoto({ type: "timer", strictTimerMode: true }).strict_timer_mode).toBe(true);
+    it("never writes timer hard mode — wall-clock timer only", () => {
+      expect(taskStrictAndPhoto({ type: "timer", strictTimerMode: true }).strict_timer_mode).toBe(false);
       expect(taskStrictAndPhoto({ type: "timer", strictTimerMode: false }).strict_timer_mode).toBe(false);
       expect(taskStrictAndPhoto({ type: "timer" }).strict_timer_mode).toBe(false);
       expect(taskStrictAndPhoto({ type: "journal" }).strict_timer_mode).toBe(false);

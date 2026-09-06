@@ -16,7 +16,6 @@ import {
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
-import { showGoalCelebration } from "@/store/celebrationStore";
 import { useProofSharePromptStore } from "@/store/proofSharePromptStore";
 import type {
   StatsFromApi,
@@ -95,6 +94,13 @@ export function useAppChallengeMutations({
       firstTaskOfDay?: boolean;
       completionId?: string;
       verification?: { rows: ServerVerificationRow[] };
+      requiredRemaining?: number;
+      dayAlreadySecured?: boolean;
+      streakDays?: number;
+      challengeDay?: number;
+      challengeLength?: number;
+      challengeName?: string;
+      verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
     } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -121,6 +127,13 @@ export function useAppChallengeMutations({
       return trpcMutate<{
         id?: string;
         verification?: { rows: ServerVerificationRow[] };
+        requiredRemaining?: number;
+        dayAlreadySecured?: boolean;
+        streakDays?: number;
+        challengeDay?: number;
+        challengeLength?: number;
+        challengeName?: string;
+        verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
       }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
@@ -175,7 +188,6 @@ export function useAppChallengeMutations({
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
           void queryClient.invalidateQueries({ queryKey: ["profile"] });
-          showGoalCelebration();
           const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
           const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? "unknown";
           const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
@@ -219,6 +231,13 @@ export function useAppChallengeMutations({
             firstTaskOfDay,
             completionId: data?.id,
             verification: data?.verification,
+            requiredRemaining: data?.requiredRemaining,
+            dayAlreadySecured: data?.dayAlreadySecured,
+            streakDays: data?.streakDays,
+            challengeDay: data?.challengeDay,
+            challengeLength: data?.challengeLength,
+            challengeName: data?.challengeName,
+            verificationKind: data?.verificationKind,
           };
         })
         .catch((err: unknown) => {
@@ -243,6 +262,7 @@ export function useAppChallengeMutations({
   const secureDay = useCallback(async (): Promise<{
     newStreakCount: number;
     lastStandEarned?: boolean;
+    alreadySecured?: boolean;
     challengeCompleted?: boolean;
     challengeId?: string;
     challengeName?: string;
@@ -261,6 +281,7 @@ export function useAppChallengeMutations({
         success: boolean;
         newStreakCount: number;
         lastStandEarned?: boolean;
+        alreadySecured?: boolean;
         challengeDay?: number;
         challengeCompleted?: boolean;
         challengeId?: string;

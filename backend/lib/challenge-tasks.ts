@@ -276,12 +276,6 @@ function buildTaskConfigFromInput(task: {
     config.photo_required = true;
     config.require_photo_proof = true;
   }
-  if (type === "timer" && task.strictTimerMode === true) {
-    config.strict_timer_mode = true;
-  }
-  if (rawType === "workout" && task.strictTimerMode === true) {
-    config.strict_timer_mode = true;
-  }
   if (task.verificationMethod) {
     config.verification_method = task.verificationMethod;
   }
