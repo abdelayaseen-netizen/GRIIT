@@ -63,6 +63,8 @@ export type StreakHeroV4Props = {
   freezeUsedToday: boolean;
   nextBadgeName: string;
   nextBadgeDaysAway: number;
+  nextBadgeHave: number;
+  nextBadgeNeed: number;
   tasks: StreakHeroV4Task[];
   onPressTask: (task: StreakHeroV4Task) => void;
   onPressPrimaryCTA: () => void;
@@ -176,27 +178,6 @@ function TaskRow({
   );
 }
 
-function BadgeProgressBar({
-  totalSegments,
-  filled,
-}: {
-  totalSegments: number;
-  filled: number;
-}) {
-  const cells = [] as React.ReactElement[];
-  for (let i = 0; i < totalSegments; i++) {
-    cells.push(
-      <View
-        key={i}
-        style={[
-          styles.badgeSegment,
-          i < filled ? styles.badgeSegmentFilled : styles.badgeSegmentEmpty,
-        ]}
-      />,
-    );
-  }
-  return <View style={styles.badgeRow}>{cells}</View>;
-}
 
 // ──────────────────────────────────────────────────────────────────────────
 // Header block (label + big number + days + flame + caption)
@@ -244,10 +225,11 @@ function HeaderBlock({
         label = 'Current streak';
         labelColor = DS_COLORS_V2.text.tertiary;
         const days = Math.max(0, nextBadgeDaysAway);
-        caption =
-          days <= 0
+        caption = !nextBadgeName
+          ? "All five marks earned."
+          : days <= 0
             ? `${nextBadgeName} unlocked`
-            : `${days} more to your ${nextBadgeName} badge`;
+            : `${days} more to ${nextBadgeName}`;
         break;
       }
     }
@@ -388,11 +370,12 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
 
   const tasksDone = Math.max(0, props.totalTasksToday - props.tasksRemaining);
 
-  // Secured state — badge progress + dual CTA inside the white proof card.
+  // Secured state — next Profile mark (3 / 7 / 14 / 30 / 100) + dual CTA.
   if (state === 'secured') {
-    const segmentsTotal = 5;
-    // Fill from actual streak — do not use `n % 5 || 5` (that treats 0 as 5).
-    const filled = Math.min(segmentsTotal, Math.max(0, props.streak ?? 0));
+    const markName = props.nextBadgeName;
+    const markNeed = props.nextBadgeNeed;
+    const markHave = props.nextBadgeHave;
+    const markPct = markNeed > 0 ? Math.min(1, markHave / markNeed) : 1;
     return (
       <View style={styles.root}>
         <HeaderBlock
@@ -406,20 +389,21 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
           <View style={styles.proofHeader}>
             <View style={styles.proofTitleCol}>
               <Text style={styles.proofTitle}>Streak secured</Text>
-              <Text style={styles.proofSubtitle}>Next badge progress</Text>
+              <Text style={styles.proofSubtitle}>
+                {markName
+                  ? `${markName} · ${markHave} of ${markNeed}`
+                  : "All five marks earned"}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.badgeBlock}>
-            <BadgeProgressBar totalSegments={segmentsTotal} filled={filled} />
-            <View style={styles.badgeLabelRow}>
-              {Array.from({ length: segmentsTotal }, (_, i) => (
-                <Text key={i} style={styles.badgeDayLabel}>
-                  Day {i + 1}
-                </Text>
-              ))}
+          {markName && markNeed > 0 ? (
+            <View style={styles.badgeBlock}>
+              <View style={styles.badgeTrack}>
+                <View style={[styles.badgeFill, { width: `${Math.round(markPct * 100)}%` }]} />
+              </View>
             </View>
-          </View>
+          ) : null}
 
           <View style={styles.dualCtaRow}>
             <SecondaryGhostCTA
@@ -688,37 +672,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
 
-  // ── Badge progress (secured) ──
   badgeBlock: {
     marginTop: 16,
     marginBottom: 4,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  badgeSegment: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-  },
-  badgeSegmentFilled: {
-    backgroundColor: DS_COLORS_V2.brand.primary,
-  },
-  badgeSegmentEmpty: {
+  badgeTrack: {
+    height: 6,
+    borderRadius: 3,
     backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
+    overflow: 'hidden',
   },
-  badgeLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-  },
-  badgeDayLabel: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
-    flex: 1,
-    textAlign: 'center',
+  badgeFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DS_COLORS_V2.brand.primary,
   },
 
   // ── CTAs ──

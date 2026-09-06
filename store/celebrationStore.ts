@@ -23,10 +23,10 @@ export const useCelebrationStore = create<CelebrationState>((set) => ({
   dismiss: () => set({ visible: false, shareMessage: null }),
 }));
 
-export function showGoalCelebration(pointsEarned = 5) {
+export function showGoalCelebration() {
   useCelebrationStore.getState().show({
     title: "Goal secured!",
-    subtitle: `+${pointsEarned} points`,
+    subtitle: "",
     type: "goal",
   });
 }

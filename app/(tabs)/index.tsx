@@ -41,6 +41,7 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { challengeDisplayDay } from "@/lib/challenge-day";
+import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
@@ -75,26 +76,6 @@ type HomeData = {
 
 type FollowCounts = { followers: number; following: number };
 
-const NEXT_BADGE_TARGETS = [3, 5, 7, 14, 30, 60, 100] as const;
-
-function deriveNextBadge(streak: number): { name: string; daysAway: number; progress: number } {
-  for (const target of NEXT_BADGE_TARGETS) {
-    if (streak < target) {
-      const previous =
-        NEXT_BADGE_TARGETS[
-          Math.max(0, NEXT_BADGE_TARGETS.indexOf(target) - 1)
-        ] ?? 0;
-      const span = Math.max(1, target - previous);
-      const progressed = Math.max(0, streak - previous);
-      return {
-        name: `${target}-Day`,
-        daysAway: target - streak,
-        progress: Math.min(1, progressed / span),
-      };
-    }
-  }
-  return { name: "Legend", daysAway: 0, progress: 1 };
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -329,10 +310,20 @@ export default function HomeScreen() {
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, homeTimeZone]);
 
-  const nextBadge = useMemo(
-    () => deriveNextBadge(streak ?? 0),
-    [streak],
-  );
+  const nextBadge = useMemo(() => {
+    const mark = nextProfileV2Badge({
+      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
+      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
+    });
+    if (!mark) return { name: "", daysAway: 0, progress: 1, have: 0, need: 0 };
+    return {
+      name: mark.name,
+      daysAway: mark.remaining,
+      progress: mark.progress,
+      have: mark.have,
+      need: mark.need,
+    };
+  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
@@ -553,6 +544,8 @@ export default function HomeScreen() {
       freezeUsedToday: false,
       nextBadgeName: nextBadge.name,
       nextBadgeDaysAway: nextBadge.daysAway,
+      nextBadgeHave: nextBadge.have,
+      nextBadgeNeed: nextBadge.need,
       tasks: heroTasks,
       onPressTask,
       onPressPrimaryCTA,
@@ -624,7 +617,7 @@ export default function HomeScreen() {
               todayWeekIndex={todayWeekIndex}
               freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
               freezesMaxPerWeek={FREEZE_MAX_PER_WEEK}
-              nextBadgeName={nextBadge.name}
+              nextBadgeName={nextBadge.name || "All five marks"}
               nextBadgeProgress={nextBadge.progress}
               onPressFreezesStat={onPressFreezesStat}
               onPressBadgeStat={onPressBadgeStat}
