@@ -23,7 +23,6 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
             ? cfg.min_words
             : undefined,
       timer_direction: t.timer_direction,
-      timer_hard_mode: t.timer_hard_mode ?? t.strict_timer_mode,
       require_heart_rate: t.require_heart_rate,
       heart_rate_threshold: t.heart_rate_threshold,
       require_location: requireLoc,

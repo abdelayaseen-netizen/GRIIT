@@ -32,7 +32,6 @@ export type TaskCompleteConfig = {
   min_duration_minutes?: number;
   min_words?: number;
   timer_direction?: "countdown" | "countup";
-  timer_hard_mode?: boolean;
   require_heart_rate?: boolean;
   heart_rate_threshold?: number;
   require_location?: boolean;

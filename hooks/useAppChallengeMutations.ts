@@ -16,15 +16,12 @@ import {
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
-import { useProofSharePromptStore } from "@/store/proofSharePromptStore";
 import type {
   StatsFromApi,
   ActiveChallengeFromApi,
   TodayCheckinForUser,
   ChallengeTaskFromApi,
 } from "@/types";
-
-const MILESTONE_SHARE_DAYS = new Set([7, 14, 21, 30, 45, 60, 75]);
 
 type UserRef = { id?: string } | null;
 
@@ -311,19 +308,6 @@ export function useAppChallengeMutations({
         } catch {
           /* non-fatal */
         }
-      }
-      const dayN = result.challengeDay;
-      if (typeof dayN === "number" && MILESTONE_SHARE_DAYS.has(dayN)) {
-        const prof = profile || fallbackProfile;
-        const uname = String((prof as { username?: string } | null)?.username ?? "user").replace(/^@+/, "");
-        const nested = (activeChallenge as { challenges?: { title?: string; duration_days?: number } } | null)?.challenges;
-        useProofSharePromptStore.getState().show({
-          userName: uname,
-          challengeTitle: nested?.title ?? "Challenge",
-          dayNumber: dayN,
-          totalDays: nested?.duration_days ?? 75,
-          streakCount: result.newStreakCount ?? 0,
-        });
       }
       void fetchActiveChallenge();
       await fetchStats();
