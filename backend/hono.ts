@@ -1,3 +1,4 @@
+import "./ensure-backend-modules";
 import { trpcServer } from "@hono/trpc-server";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";

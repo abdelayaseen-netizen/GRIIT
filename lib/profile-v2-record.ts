@@ -10,12 +10,12 @@
  * Streak: `streaks.active_streak_count` / `longest_streak_count` — same read as Home.
  * Verdict: display only. Not persisted.
  */
-import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "@/lib/date-utils";
+import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import {
   badgeRowsFromProgress,
   formatDayMonthYear,
   type ProfileV2BadgeNeed,
-} from "@/lib/profile-v2-badges";
+} from "./profile-v2-badges";
 
 export const DAY_STATE = {
   VERIFIED: "verified",

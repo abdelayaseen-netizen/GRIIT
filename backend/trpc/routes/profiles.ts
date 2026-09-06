@@ -18,7 +18,7 @@ import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
 import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
-import { profileUpdateInputSchema } from "@/lib/profile-update-schema";
+import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
