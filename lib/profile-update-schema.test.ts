@@ -13,7 +13,7 @@ describe("profileUpdateInputSchema caps", () => {
       display_name: "n".repeat(PROFILE_DISPLAY_NAME_MAX),
       bio: "b".repeat(PROFILE_BIO_MAX),
     });
-    expect(parsed.username).toHaveLength(30);
+    expect(parsed.username).toHaveLength(20);
     expect(parsed.display_name).toHaveLength(30);
     expect(parsed.bio).toHaveLength(150);
   });

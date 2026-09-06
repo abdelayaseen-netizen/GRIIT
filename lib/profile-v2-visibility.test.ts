@@ -4,6 +4,7 @@ import {
   mutualFollowAccepted,
   parseVisibility,
   resolveRecordGate,
+  visitorFollowControl,
 } from "@/lib/profile-v2-visibility";
 
 describe("parseVisibility", () => {
@@ -59,5 +60,26 @@ describe("mutualFollowAccepted", () => {
   it("requires both accepted rows", () => {
     expect(mutualFollowAccepted(true, false)).toBe(false);
     expect(mutualFollowAccepted(true, true)).toBe(true);
+  });
+});
+
+describe("visitorFollowControl", () => {
+  it("public: Follow / Following", () => {
+    expect(visitorFollowControl("public", "none")).toEqual({
+      label: "Follow",
+      appearance: "primary",
+      action: "follow",
+    });
+    expect(visitorFollowControl("public", "following").label).toBe("Following");
+  });
+
+  it("friends/private: Request to follow → Requested → Following", () => {
+    expect(visitorFollowControl("friends", "none").label).toBe("Request to follow");
+    expect(visitorFollowControl("friends", "pending")).toEqual({
+      label: "Requested",
+      appearance: "quiet",
+      action: "idle",
+    });
+    expect(visitorFollowControl("private", "following").label).toBe("Following");
   });
 });

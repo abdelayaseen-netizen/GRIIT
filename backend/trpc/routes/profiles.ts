@@ -48,7 +48,7 @@ export const profilesRouter = createTRPCRouter({
   ...profilesRecordProcedures,
   create: protectedProcedure
     .input(z.object({
-      username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
+      username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
       display_name: z.string().max(50).optional(),
       bio: z.string().max(500).optional(),
       avatar_url: z.string().max(2000).optional(),

@@ -1,10 +1,10 @@
 /**
  * Shared identity caps for profiles.update — match the edit-profile client.
- * Username 30 (create + this update). Bio 150. Display name 30.
+ * Username 20 (README + edit + account name). Bio 150. Display name 30.
  */
 import * as z from "zod";
 
-export const PROFILE_USERNAME_MAX = 30;
+export const PROFILE_USERNAME_MAX = 20;
 export const PROFILE_DISPLAY_NAME_MAX = 30;
 export const PROFILE_BIO_MAX = 150;
 

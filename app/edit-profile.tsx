@@ -23,6 +23,7 @@ import { captureError } from "@/lib/sentry";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { pickProfilePhoto } from "@/lib/pick-profile-photo";
 import { normalizeProfileUsername, usernameFieldState, usernameSaveBlocked } from "@/lib/profile-v2-username";
+import { PROFILE_USERNAME_MAX } from "@/lib/profile-update-schema";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 import { Avatar } from "@/components/shared/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -236,7 +237,7 @@ export default function EditProfileScreen() {
                   onChangeText={(t) => setUsername(normalizeProfileUsername(t))}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  maxLength={20}
+                  maxLength={PROFILE_USERNAME_MAX}
                   style={styles.userInput}
                 />
               </View>

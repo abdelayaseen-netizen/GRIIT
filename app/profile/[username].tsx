@@ -1,6 +1,6 @@
 /**
  * Visitor profile v2 — identity always; record gated server-side.
- * Follow only (no Requested). Lock card + Hidden tiles when profile is closed.
+ * Public: Follow / Following. Friends/Private: Request to follow / Requested / Following.
  */
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, Lock, MessageCircle, MoreHorizontal } from "lucide-react-native";
+import { ChevronLeft, Lock, MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
@@ -27,6 +27,7 @@ import { captureError } from "@/lib/sentry";
 import { shareProfile } from "@/lib/share";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
+import { visitorFollowControl } from "@/lib/profile-v2-visibility";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 import { Avatar } from "@/components/shared/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -119,7 +120,8 @@ export default function VisitorProfileScreen() {
   const avatar = rec?.identity.avatarUrl ?? publicQ.data?.avatar_url ?? null;
   const gate = rec?.gate ?? { profile: false, challenges: false, activity: false };
   const vis = rec?.visibility.profile ?? parseVis(publicQ.data?.profile_visibility);
-  const following = followQ.data?.status === "following";
+  const followStatus = followQ.data?.status ?? "none";
+  const followCtrl = visitorFollowControl(vis, followStatus);
   const weekStartLabel = rec?.detail.months[rec.detail.months.length - 1]?.label ?? "";
 
   const invalidate = useCallback(async () => {
@@ -136,13 +138,14 @@ export default function VisitorProfileScreen() {
       router.push(ROUTES.AUTH_LOGIN as never);
       return;
     }
-    if (following) {
+    if (followCtrl.action === "idle") return;
+    if (followCtrl.action === "unfollow") {
       setShowUnfollow(true);
       return;
     }
     setFollowBusy(true);
     try {
-      if (vis === "friends" || vis === "private") {
+      if (followCtrl.action === "request") {
         await trpcMutate(TRPC.profiles.sendFollowRequest, { userId: ownerId });
       } else {
         await trpcMutate(TRPC.profiles.followUser, { userId: ownerId });
@@ -230,7 +233,7 @@ export default function VisitorProfileScreen() {
           </Pressable>
         </View>
 
-        <GriitFade fadeKey={`visitor-${handle}-${gate.profile}-${following}`}>
+        <GriitFade fadeKey={`visitor-${handle}-${gate.profile}-${followCtrl.label}`}>
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             <View style={styles.identity}>
               <Avatar url={avatar} name={name || handle} size={76} userId={ownerId || undefined} />
@@ -248,29 +251,23 @@ export default function VisitorProfileScreen() {
             ) : null}
 
             {!isSelf ? (
-              <View style={styles.actions}>
-                <Pressable
-                  onPress={() => void onFollow()}
-                  disabled={followBusy}
-                  accessibilityRole="button"
-                  accessibilityLabel={following ? "Following" : "Follow"}
-                  style={[styles.follow, following && styles.followOn]}
+              <Pressable
+                onPress={() => void onFollow()}
+                disabled={followBusy || followCtrl.action === "idle"}
+                accessibilityRole="button"
+                accessibilityLabel={followCtrl.label}
+                accessibilityState={{ disabled: followBusy || followCtrl.action === "idle" }}
+                style={[styles.follow, followCtrl.appearance === "quiet" && styles.followOn]}
+              >
+                <Text
+                  style={[
+                    styles.followTxt,
+                    followCtrl.appearance === "quiet" && styles.followTxtOn,
+                  ]}
                 >
-                  <Text style={[styles.followTxt, following && styles.followTxtOn]}>
-                    {following ? "Following" : "Follow"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Message"
-                  style={styles.msg}
-                  onPress={() => {
-                    /* no DM surface in the app */
-                  }}
-                >
-                  <MessageCircle size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />
-                </Pressable>
-              </View>
+                  {followCtrl.label}
+                </Text>
+              </Pressable>
             ) : null}
 
             {previewStranger ? (
@@ -416,14 +413,14 @@ const styles = StyleSheet.create({
   },
   handle: { marginTop: 6, fontSize: 13, color: PROFILE_V2_COLOR.mutedLight },
   bio: { marginTop: 14, fontSize: 14, lineHeight: 20, color: PROFILE_V2_COLOR.body },
-  actions: { flexDirection: "row", gap: 10, marginTop: 16, marginBottom: 14 },
   follow: {
-    flex: 1,
     height: 46,
     borderRadius: 16,
     backgroundColor: PROFILE_V2_COLOR.orange,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 16,
+    marginBottom: 14,
   },
   followOn: {
     backgroundColor: PROFILE_V2_COLOR.surface,
@@ -432,16 +429,6 @@ const styles = StyleSheet.create({
   },
   followTxt: { fontSize: 15, color: PROFILE_V2_COLOR.surface },
   followTxtOn: { color: PROFILE_V2_COLOR.ink },
-  msg: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.borderStrong,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: PROFILE_V2_COLOR.surface,
-  },
   previewNote: {
     marginBottom: 12,
     fontSize: 12,

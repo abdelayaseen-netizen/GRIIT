@@ -39,3 +39,31 @@ export function mutualFollowAccepted(
 ): boolean {
   return outboundAccepted && inboundAccepted;
 }
+
+export type FollowRowStatus = "none" | "pending" | "following";
+
+/**
+ * Visitor relationship control.
+ * Public: Follow → Following.
+ * Friends/Private: Request to follow → Requested (pending) → Following (accepted).
+ */
+export function visitorFollowControl(
+  profileVisibility: VisibilityLevel,
+  status: FollowRowStatus
+): {
+  label: "Follow" | "Following" | "Request to follow" | "Requested";
+  appearance: "primary" | "quiet";
+  action: "follow" | "request" | "unfollow" | "idle";
+} {
+  const needsRequest = profileVisibility === "friends" || profileVisibility === "private";
+  if (status === "following") {
+    return { label: "Following", appearance: "quiet", action: "unfollow" };
+  }
+  if (needsRequest) {
+    if (status === "pending") {
+      return { label: "Requested", appearance: "quiet", action: "idle" };
+    }
+    return { label: "Request to follow", appearance: "primary", action: "request" };
+  }
+  return { label: "Follow", appearance: "primary", action: "follow" };
+}

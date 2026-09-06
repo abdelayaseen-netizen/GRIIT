@@ -255,8 +255,9 @@ export default function AccountNameScreen({
               placeholder="username"
               placeholderTextColor={OBV2_COLOR.ink3}
               value={username}
+              maxLength={20}
               onChangeText={(t) => {
-                setUsernameField(t);
+                setUsernameField(normalizeAccountUsername(t));
                 setError("");
                 setStatus("idle");
               }}
