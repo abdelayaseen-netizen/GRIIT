@@ -10,7 +10,7 @@ import * as Haptics from "expo-haptics";
 import { useSharedValue, withTiming, runOnJS } from "react-native-reanimated";
 import { DS_V3 } from "@/lib/design-system";
 
-const DAY_SECURED_MS = DS_V3.space.xs * 100;
+const DAY_SECURED_MS = DS_V3.motion.count;
 
 export type DisplayNumberSize = "inline" | "home" | "moment" | "mid" | "share";
 

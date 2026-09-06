@@ -1,8 +1,8 @@
 /**
  * ProofImage — 01_components.md "ProofImage" and 03_media.md request sizes
  * Laws: 13 (every proof 4:5, three sizes), 14 (text on a scrim), 15 (missing is
- * canvas + title; loading is blurhash). Radius is radius.card for all sizes
- * (spec); radius.thumb is not in DS_V3.
+ * canvas + title; loading is blurhash). radius.card for feed and card;
+ * radius.thumb (tokens.ts:83 / 03_media.md:62) for thumb.
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -81,7 +81,14 @@ export default function ProofImage({
         : request;
 
   return (
-    <View style={styles.frame}>
+    <View
+      style={[
+        styles.frame,
+        {
+          borderRadius: size === "thumb" ? DS_V3.radius.thumb : DS_V3.radius.card,
+        },
+      ]}
+    >
       {imageSource ? (
         <Image
           source={imageSource}

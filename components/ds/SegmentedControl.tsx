@@ -2,7 +2,9 @@
  * SegmentedControl — 01_components.md "SegmentedControl"
  * Laws: 23 (one selection language per screen; max one segmented control),
  * 20 (44 per item). Never stacked. Never with chips immediately beneath it.
- * Never a surface pill (spec Never; reference Primitives.tsx:81 uses surface).
+ * Selected pill ground is surface, not border: 01_components.md:64 conflicts with
+ * GRIIT System.dc.html frame 04 (id=f4) line 319, where the Leaderboard pill
+ * inline style is background surface on a border track (line 317).
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   itemOn: {
-    backgroundColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
   },
   pressed: {
     opacity: 0.8,
