@@ -1058,6 +1058,8 @@ export const DS_COLORS_V2 = {
     borderStrong: '#DED9CE',    // Auth button borders
     borderDashed: '#D5D0C5',    // Share-link dashed border
     track: '#E2DDD2',           // Empty progress segment, blocked CTA
+    camera: '#0B0B0B',          // Task completion v2 capture / review
+    warm: '#EAE6DE',            // Hover / back-button wash on light chrome
 
     // Dividers
     divider: '#E8E4DC',
@@ -1067,6 +1069,7 @@ export const DS_COLORS_V2 = {
   // Brand
   brand: {
     primary: '#DC5401',         // Daylight brand orange (locked). AA large-text (3.96:1). accentAccessible (#BB471D) for dense text.
+    primaryPress: '#B44100',    // Task completion v2 pressed orange
     primaryHover: '#9E3A14',    // Pressed/hover state
     primarySoft: '#FAECE7',     // Subtle tint backgrounds (light mode only)
     primaryOnDark: '#E8693E',   // Slightly brighter for OLED compensation
@@ -1084,7 +1087,10 @@ export const DS_COLORS_V2 = {
     secondary: '#5F5E5A',
     secondaryDark: '#A8A6A0',
     tertiary: '#8A8A8A',
+    body: '#4A4741',            // Task completion v2 gate / failure body
+    muted: '#6B6862',           // Task completion v2 secondary copy
     mutedWarm: '#8A867E',       // Onboarding v4 meta / step label
+    mutedDark: '#A8A49C',       // Self-entered / disabled ink
     tertiaryDark: '#737272',
 
     // On always-dark surfaces (don't invert)
@@ -1100,6 +1106,7 @@ export const DS_COLORS_V2 = {
     warning: '#854F0B',
     warningSoft: '#FAEEDA',
     danger: '#A32D2D',
+    dangerInk: '#A4341A',       // Task completion v2 "NOT POSTED" eyebrow
     dangerSoft: '#FCEBEB',
 
     // At-risk state on dark hero surface — 1.5px border color.

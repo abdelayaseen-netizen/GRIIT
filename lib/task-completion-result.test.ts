@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assembleSubmitResult,
   pickConfirmationChallengeDay,
+  pickConfirmationCopy,
   pickConfirmationVariant,
 } from "@/lib/task-completion-result";
 
@@ -26,6 +27,22 @@ describe("pickConfirmationVariant", () => {
     expect(
       pickConfirmationVariant({ verificationKind: "self_report", daySecured: true, daySecuredEarlier: false })
     ).toBe("D");
+  });
+});
+
+describe("pickConfirmationCopy", () => {
+  it("uses optional-task copy and does not claim a streak move (Q12)", () => {
+    expect(
+      pickConfirmationCopy({
+        daySecured: false,
+        daySecuredEarlier: false,
+        requiredRemaining: 2,
+        optional: true,
+      })
+    ).toEqual({
+      headline: "Task done",
+      footnote: "This task is optional. It does not move the streak.",
+    });
   });
 });
 

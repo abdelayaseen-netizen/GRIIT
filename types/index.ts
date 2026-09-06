@@ -202,6 +202,8 @@ export interface ProfileFromApi {
   bio?: string | null;
   /** IANA timezone for calendar date_key (matches backend). */
   timezone?: string | null;
+  /** Account-level distance preference. */
+  distance_unit?: "km" | "mi" | null;
   /** When present, used by streak freeze UI (optional DB column). */
   streak_freezes_remaining?: number | null;
 }

@@ -89,6 +89,7 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
           : typeof cfg.pages === "number"
             ? cfg.pages
             : undefined,
+      required: (t.required ?? cfg.required) !== false,
     });
   } catch (err) {
     captureError(err, "BuildTaskConfigParam");

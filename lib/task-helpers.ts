@@ -60,6 +60,8 @@ export type TaskCompleteConfig = {
   target_pages?: number;
   cup_count?: number;
   pages?: number;
+  /** Defaults true when omitted — matches `isTaskRequired`. */
+  required?: boolean;
 };
 
 export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {

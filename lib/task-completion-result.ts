@@ -28,6 +28,37 @@ export function pickConfirmationChallengeDay(args: {
   return args.dayFromComplete;
 }
 
+export function pickConfirmationCopy(args: {
+  daySecured: boolean;
+  daySecuredEarlier: boolean;
+  requiredRemaining: number;
+  optional?: boolean;
+}): { headline: string; footnote: string } {
+  if (args.optional) {
+    return {
+      headline: "Task done",
+      footnote: "This task is optional. It does not move the streak.",
+    };
+  }
+  if (args.daySecuredEarlier) {
+    return {
+      headline: "Task done",
+      footnote: "The day was already secured earlier today. Nothing changes on the streak.",
+    };
+  }
+  if (!args.daySecured) {
+    const n = args.requiredRemaining;
+    return {
+      headline: `${n} required task${n === 1 ? "" : "s"} left`,
+      footnote: "The streak moves only when every required task for the day is done.",
+    };
+  }
+  return {
+    headline: "Day secured",
+    footnote: "Streak: consecutive days where every required task was completed.",
+  };
+}
+
 export function pickConfirmationVariant(result: {
   verificationKind: VerificationKind;
   daySecured: boolean;
