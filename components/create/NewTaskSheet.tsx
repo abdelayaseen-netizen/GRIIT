@@ -42,6 +42,8 @@ import {
 
 import { DS_DAYLIGHT } from "@/lib/design-system";
 import { FLAGS } from "@/lib/feature-flags";
+import { useApp } from "@/contexts/AppContext";
+import { parseDistanceUnit } from "@/lib/distance-unit";
 import type {
   RunGoalType,
   RunTrackingMode,
@@ -145,10 +147,6 @@ const RUN_TRACKING_MODES: readonly { id: RunTrackingMode; label: string }[] = [
   { id: "manual", label: "Manual" },
 ] as const;
 
-// TODO(profile-unit): source the user's distance unit from profile/locale.
-// No profile unit preference exists yet, so default to "mi" (matches the
-// miles-based run completion screen). Display only — never asked per task.
-const RUN_UNIT: RunUnit = "mi";
 
 type NewTaskState = {
   name: string;
@@ -180,6 +178,8 @@ export type NewTaskSheetProps = {
 };
 
 export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
+  const { profile } = useApp();
+  const runUnit: RunUnit = parseDistanceUnit(profile?.distance_unit);
   const [state, setState] = useState<NewTaskState>(INITIAL_STATE);
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false);
 
@@ -223,13 +223,13 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
             runGoalType: state.runGoalType,
             runTarget: state.runJustTrack ? undefined : state.runTarget,
             runTrackingMode: state.runTrackingMode,
-            runUnit: RUN_UNIT,
+            runUnit,
           }
         : {}),
     };
     onSave(task);
     reset();
-  }, [canSave, state, onSave, reset]);
+  }, [canSave, state, onSave, reset, runUnit]);
 
   const setType = useCallback((id: WizardTaskType) => {
     setState((p) => ({ ...p, type: id }));
@@ -336,7 +336,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
       );
     }
     if (state.type === "run" && FLAGS.RUN_GOAL_CONFIG) {
-      const unitUpper = RUN_UNIT.toUpperCase();
+      const unitUpper = runUnit.toUpperCase();
       const goalLabel =
         state.runGoalType === "time"
           ? "TARGET TIME (MIN)"
@@ -347,8 +347,8 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
         state.runGoalType === "time"
           ? "min"
           : state.runGoalType === "pace"
-            ? `min/${RUN_UNIT}`
-            : RUN_UNIT;
+            ? `min/${runUnit}`
+            : runUnit;
       const targetPlaceholder =
         state.runGoalType === "time"
           ? "30"
