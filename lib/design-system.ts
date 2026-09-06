@@ -1542,7 +1542,12 @@ export const DS_V3 = {
     stamp:      { fontSize: 12, lineHeight: 16, fontWeight: '600' as const, fontFamily: 'BarlowCondensed_600SemiBold', letterSpacing: 0.96, textTransform: 'uppercase' as const },
   },
   space: { xs: 4, sm: 8, md: 12, lg: 16, gutter: 20, section: 32 },
-  radius: { input: 12, card: 20, pill: 999 },
+  radius: {
+    input: 12,
+    card: 20,
+    pill: 999,
+    thumb: 4,                  // tokens.ts:83 contactSheet.radius; 03_media.md:62
+  },
   size: {
     tap: 44,
     button: 52,
@@ -1552,4 +1557,8 @@ export const DS_V3 = {
   },
   numberSize: { inline: 17, home: 64, moment: 96, mid: 160, share: 220 },
   contactSheet: { cols: 6, rows: 5, gap: 4, radius: 4, revealMs: 600, dimmed: 0.4 },
+  motion: {
+    count: 400,                // tokens.ts:74 motion.daySecuredMs; 00_READ_FIRST.md:81
+    sheet: 600,                // tokens.ts:83 contactSheet.revealMs; 00_READ_FIRST.md:80
+  },
 } as const;

@@ -1,0 +1,3 @@
+# Dev-only design gallery (Chunk B). Not shipped in production EAS uploads.
+assets/dev/
+app/dev/
