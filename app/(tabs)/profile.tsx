@@ -1,12 +1,8 @@
 /**
- * Self profile (tab) — composition: ProfileHeader + StreakBar + YearHeatmap +
- * tab segmented (challenges / posts / badges).
- *
- * Replaces the legacy 1236-line StreakHero + MiniStats + StreakHeatmap +
- * TodayTaskStrip stack. The data hooks (`useApp().stats`, follow counts,
- * heatmap, badges) carry over unchanged — only the layout was re-thought.
+ * Own profile v2 — identity, streak, consistency, Challenges / Proofs / Badges.
+ * Record strings come from profiles.getRecord. No proof CTA except empty Proofs tab.
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -14,18 +10,12 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  Settings,
-  Share2,
-  Lock,
-  Target,
-  ChevronRight,
-} from "lucide-react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Settings, Share2 } from "lucide-react-native";
+import { useQuery } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,111 +25,51 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { trackEvent } from "@/lib/analytics";
 import { shareInvite, shareProfile } from "@/lib/share";
-import { pickAndUploadAvatar } from "@/lib/avatar";
 import { captureError } from "@/lib/sentry";
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
-
+import { profilePrimaryName } from "@/lib/profile-display";
+import type { ProfileRecord } from "@/lib/profile-v2-record";
+import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { Avatar } from "@/components/shared/Avatar";
 import { SkeletonProfile } from "@/components/skeletons";
 import ErrorState from "@/components/shared/ErrorState";
 import Card from "@/components/shared/Card";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { StreakCard } from "@/components/profile-v2/StreakCard";
+import { ConsistencyCard } from "@/components/profile-v2/ConsistencyCard";
+import { ChallengeRow, CompletedRow } from "@/components/profile-v2/ChallengeRow";
+import { BadgeRows } from "@/components/profile-v2/BadgeRows";
+import { ProofsTab } from "@/components/profile-v2/ProofsTab";
+import { GriitFade } from "@/components/profile-v2/GriitFade";
 
-import {
-  BadgeDetailModal,
-  type BadgeDetailPayload,
-} from "@/components/profile/BadgeDetailModal";
-import { PostsGrid } from "@/components/profile/PostsGrid";
-import { BadgesGrid, type BadgeGridRow } from "@/components/profile/BadgesGrid";
-import {
-  ChallengeListSheet,
-  type ChallengeListSheetIconName,
-} from "@/components/profile/ChallengeListSheet";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { StreakBar } from "@/components/profile/StreakBar";
-import { YearHeatmap } from "@/components/profile/YearHeatmap";
+type ProfileTab = "challenges" | "proofs" | "badges";
 
-type ProfileTab = "challenges" | "posts" | "badges";
-
-type HeatmapDay = { date: string; level: 0 | 1 | 2 | 3 | 4 };
-type HeatmapResponse = { days: HeatmapDay[] };
-
-type ActiveRow = {
-  id: string;
-  current_day?: number;
-  progress_percent?: number;
-  challenges?: { id?: string; title?: string; duration_days?: number };
+type RecordPayload = ProfileRecord & {
+  timezone: string;
+  todayKey: string;
+  elapsedMs: number;
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
-  return value === "challenges" || value === "posts" || value === "badges";
-}
-
-function formatMonthYear(d: Date): string {
-  return d.toLocaleString("en-US", { month: "short", year: "numeric" });
+  return value === "challenges" || value === "proofs" || value === "badges";
 }
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
-  const qc = useQueryClient();
   const isGuest = useIsGuest();
   const { user } = useAuth();
-  const {
-    profile,
-    profileLoading,
-    profileMissing,
-    isError,
-    stats,
-    refetchAll,
-  } = useApp();
+  const { profile, profileLoading, profileMissing, isError, refetchAll } = useApp();
 
-  const [tab, setTab] = useState<ProfileTab>(
-    isProfileTab(tabParam) ? tabParam : "challenges",
-  );
+  const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "challenges");
+  const [bioOpen, setBioOpen] = useState(false);
 
-  useEffect(() => {
-    if (isProfileTab(tabParam) && tabParam !== tab) {
-      setTab(tabParam);
-    }
-    // tab intentionally excluded — only react to query-param changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam]);
-
-  const [uploading, setUploading] = useState(false);
-  const [avatarInlineError, setAvatarInlineError] = useState<string | null>(null);
-  const [avatarDisplayOverride, setAvatarDisplayOverride] = useState<string | null>(null);
-  const [selectedBadge, setSelectedBadge] = useState<BadgeDetailPayload | null>(null);
-  const [miniActiveSheetOpen, setMiniActiveSheetOpen] = useState(false);
-  const [miniCompletedSheetOpen, setMiniCompletedSheetOpen] = useState(false);
-
-  useEffect(() => {
-    if (!avatarInlineError) return;
-    const t = setTimeout(() => setAvatarInlineError(null), 4000);
-    return () => clearTimeout(t);
-  }, [avatarInlineError]);
-
-  useEffect(() => {
-    const fromServer = profile?.avatar_url?.trim();
-    if (!fromServer || !avatarDisplayOverride) return;
-    if (fromServer.split("?")[0] === avatarDisplayOverride.split("?")[0]) {
-      setAvatarDisplayOverride(null);
-    }
-  }, [profile?.avatar_url, avatarDisplayOverride]);
-
-  const activeListQuery = useQuery({
-    queryKey: ["profile", user?.id, "activeChallenges"],
-    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+  const recordQuery = useQuery({
+    queryKey: ["profiles", "getRecord", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.profiles.getRecord) as Promise<RecordPayload>,
+    staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
-    placeholderData: (previousData) => previousData,
   });
-  if (activeListQuery.isError)
-    captureError(activeListQuery.error, "Profile.activeChallenges");
+  if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
 
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
@@ -152,192 +82,15 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  type BadgeProcRow = {
-    id: string;
-    name: string;
-    icon: string;
-    color: string;
-    dimension: string;
-    description: string;
-    progress: number;
-    total: number;
-  };
-
-  const badgesQuery = useQuery({
-    queryKey: ["profile", user?.id, "badges"],
-    queryFn: () =>
-      trpcQuery(TRPC.profiles.getBadges, { userId: user!.id }) as Promise<{
-        earned: BadgeProcRow[];
-        next: BadgeProcRow[];
-      }>,
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-  if (badgesQuery.isError) captureError(badgesQuery.error, "Profile.getBadges");
-
-  const heatmapQuery = useQuery({
-    queryKey: ["profile", user?.id, "heatmap", 365],
-    queryFn: () =>
-      trpcQuery(TRPC.profiles.getCheckinHeatmap, { days: 365 }) as Promise<HeatmapResponse>,
-    staleTime: 5 * 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-  if (heatmapQuery.isError)
-    captureError(heatmapQuery.error, "Profile.getCheckinHeatmap");
-
-  const refreshing =
-    activeListQuery.isRefetching ||
-    followCountsQuery.isRefetching ||
-    heatmapQuery.isRefetching ||
-    badgesQuery.isRefetching;
+  const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching;
 
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([
-      activeListQuery.refetch(),
-      followCountsQuery.refetch(),
-      heatmapQuery.refetch(),
-      badgesQuery.refetch(),
-    ]);
-  }, [refetchAll, activeListQuery, followCountsQuery, heatmapQuery, badgesQuery]);
+    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, recordQuery, followCountsQuery]);
 
-  const streak = stats?.activeStreak ?? 0;
-  const best = stats?.longestStreak ?? 0;
-  const active = stats?.activeChallenges ?? 0;
-  const done = stats?.completedChallenges ?? 0;
-
-  const heatmapDays: HeatmapDay[] = useMemo(() => {
-    return heatmapQuery.data?.days ?? [];
-  }, [heatmapQuery.data]);
-
-  const heatmapTotalSecured = useMemo(
-    () => heatmapDays.filter((d) => d.level > 0).length,
-    [heatmapDays],
-  );
-
-  const rangeLabels = useMemo(() => {
-    const today = new Date();
-    const start = new Date(Date.now() - 365 * 86400000);
-    return {
-      start: formatMonthYear(start),
-      end: formatMonthYear(today),
-    };
-  }, []);
-
-  const activeItems = useMemo(() => {
-    const rows = (activeListQuery.data ?? []) as ActiveRow[];
-    return rows.map((row) => {
-      const duration = Math.max(1, row.challenges?.duration_days ?? 1);
-      const day = Math.min(duration, Math.max(1, row.current_day ?? 1));
-      const rawProgress =
-        row.progress_percent != null && !Number.isNaN(Number(row.progress_percent))
-          ? Number(row.progress_percent)
-          : (day / duration) * 100;
-      const progressPercent = Math.max(0, Math.min(100, Math.round(rawProgress)));
-      return {
-        id: row.id,
-        challengeId: row.challenges?.id ?? "",
-        title: row.challenges?.title ?? "Challenge",
-        currentDay: day,
-        durationDays: duration,
-        progressPercent,
-      };
-    });
-  }, [activeListQuery.data]);
-
-  const navigateMiniActiveChallenge = useCallback(
-    (id: string) => {
-      setMiniActiveSheetOpen(false);
-      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
-    },
-    [router],
-  );
-
-  const navigateMiniCompletedChallenge = useCallback(
-    (id: string) => {
-      setMiniCompletedSheetOpen(false);
-      router.push(ROUTES.CHALLENGE_ACTIVE(id) as never);
-    },
-    [router],
-  );
-
-  // Stub rows for the bottom sheets (kept in V1 tone — separate cleanup PR).
-  const stubActiveRows = useMemo(
-    (): {
-      id: string;
-      title: string;
-      subtitle: string;
-      joinedCount: number;
-      finishedCount?: number;
-      iconBg: string;
-      iconColor: string;
-      iconName: ChallengeListSheetIconName;
-    }[] =>
-      activeItems.map((row) => ({
-        id: row.id,
-        title: row.title,
-        subtitle: `Day ${row.currentDay} of ${row.durationDays}`,
-        joinedCount: 0,
-        iconBg: DS_COLORS_V2.brand.primarySoft,
-        iconColor: DS_COLORS_V2.brand.primary,
-        iconName: "target",
-      })),
-    [activeItems],
-  );
-
-  const stubCompletedRows = useMemo(
-    (): {
-      id: string;
-      title: string;
-      subtitle: string;
-      joinedCount: number;
-      finishedCount?: number;
-      iconBg: string;
-      iconColor: string;
-      iconName: ChallengeListSheetIconName;
-    }[] => [],
-    [],
-  );
-
-  const badgeRows = useMemo((): BadgeGridRow[] => {
-    const earned = (badgesQuery.data?.earned ?? []).map((b) => ({
-      id: b.id,
-      name: b.name,
-      iconName: (b.icon ?? "").toLowerCase(),
-      unlocked: true,
-    }));
-    const next = (badgesQuery.data?.next ?? []).map((b) => ({
-      id: b.id,
-      name: b.name,
-      iconName: (b.icon ?? "").toLowerCase(),
-      unlocked: false,
-    }));
-    return [...earned, ...next].slice(0, 6);
-  }, [badgesQuery.data]);
-
-  const profileV2PostsStub = useMemo(
-    () =>
-      Array.from({ length: 9 }, (_, i) => ({
-        id: `profile-v2-post-${i + 1}`,
-        imageUrl: `https://picsum.photos/seed/grit-${i + 101}/320/400`,
-        challengeTitle:
-          ["Morning Lift", "Run Club", "Prayer Pace", "Journal Jam", "Cold Plunge", "Hydration", "Macros", "Steps", "Read"][i] ??
-          `Challenge ${i + 1}`,
-        dayOfTotal:
-          [
-            "Day 1 of 21",
-            "Day 7 of 30",
-            "Day 3 of 30",
-            "Day 12 of 14",
-            "Day 20 of 30",
-            "Day 4 of 10",
-            "Day 15 of 60",
-            "Day 9 of 21",
-            "Day 11 of 40",
-          ][i] ?? `Day ${i + 2} of 21`,
-      })),
-    [],
-  );
+  const record = recordQuery.data;
+  const proofs = record?.proofs ?? [];
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -345,14 +98,14 @@ export default function ProfileScreen() {
     try {
       await shareProfile({
         username: profile.username,
-        streak,
-        totalDaysSecured: stats?.totalDaysSecured ?? 0,
-        tier: stats?.tier ?? "Starter",
+        streak: record?.streak.current ?? 0,
+        totalDaysSecured: record?.detail.totalVerified ?? 0,
+        tier: "Starter",
       });
     } catch (e) {
       captureError(e, "Profile.handleShare");
     }
-  }, [profile?.username, streak, stats?.totalDaysSecured, stats?.tier]);
+  }, [profile?.username, record?.streak.current, record?.detail.totalVerified]);
 
   const handleInvite = useCallback(async () => {
     trackEvent("share_tapped", { content_type: "invite" });
@@ -363,36 +116,7 @@ export default function ProfileScreen() {
     }
   }, []);
 
-  const handleAvatarPress = useCallback(async () => {
-    if (!user?.id) return;
-    setAvatarInlineError(null);
-    setUploading(true);
-    try {
-      const outcome = await pickAndUploadAvatar(user.id);
-      if (outcome.status === "ok") {
-        setAvatarDisplayOverride(outcome.url);
-        await qc.invalidateQueries({ queryKey: ["profile", user?.id] });
-        await refetchAll();
-        return;
-      }
-      if (outcome.status === "denied") {
-        setAvatarInlineError("Allow photo access in Settings to change your avatar.");
-        return;
-      }
-      if (outcome.status === "failed") {
-        setAvatarInlineError(outcome.message);
-        return;
-      }
-    } catch (e) {
-      captureError(e, "Profile.AvatarPick");
-      setAvatarInlineError("Something went wrong. Try again.");
-    } finally {
-      setUploading(false);
-    }
-  }, [user?.id, qc, refetchAll]);
-
-  const fc = followCountsQuery.data;
-  const listUsername = profile?.username?.trim() ?? "";
+  const weekStartLabel = record?.detail.months[record.detail.months.length - 1]?.label ?? "";
 
   if (isGuest) {
     return (
@@ -400,9 +124,7 @@ export default function ProfileScreen() {
         <View style={styles.centerGuest}>
           <Card containerStyle={styles.guestCard}>
             <Text style={styles.guestTitle}>Sign in to view your profile</Text>
-            <Text style={styles.guestSub}>
-              Track streaks, rank, and activity in one place.
-            </Text>
+            <Text style={styles.guestSub}>Track streaks, rank, and activity in one place.</Text>
           </Card>
         </View>
       </SafeAreaView>
@@ -425,7 +147,7 @@ export default function ProfileScreen() {
             message="Couldn't load profile"
             onRetry={() => {
               void refetchAll();
-              void activeListQuery.refetch();
+              void recordQuery.refetch();
             }}
           />
         </View>
@@ -435,11 +157,15 @@ export default function ProfileScreen() {
 
   if (!profile || !user?.id) return null;
 
-  const isPrivate = profile.profile_visibility === "private";
+  const handle = profile.username?.trim() ?? "";
+  const name = profilePrimaryName(profile);
+  const bio = (profile.bio ?? "").trim();
+  const fc = followCountsQuery.data;
 
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
+        <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -447,218 +173,216 @@ export default function ProfileScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void onRefresh()}
-              tintColor={DS_COLORS_V2.brand.primary}
+              tintColor={PROFILE_V2_COLOR.orange}
             />
           }
         >
-          <View style={styles.topBar}>
-            <View style={styles.topBarLeft}>
-              <Text style={styles.handle} numberOfLines={1}>
-                {`@${listUsername}`}
-              </Text>
-              {isPrivate ? (
-                <Lock
-                  size={11}
-                  color={DS_COLORS_V2.text.secondary}
-                  strokeWidth={2}
-                />
-              ) : null}
-            </View>
-            <View style={styles.topBarRight}>
+          <View style={styles.header}>
+            <Text style={styles.handle} numberOfLines={1}>
+              @{handle}
+            </Text>
+            <View style={styles.headerBtns}>
               <Pressable
                 onPress={() => void handleShare()}
                 accessibilityRole="button"
                 accessibilityLabel="Share my profile"
-                hitSlop={8}
-                style={styles.iconBtn}
+                style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnOn]}
               >
-                <Share2
-                  size={16}
-                  color={DS_COLORS_V2.text.primary}
-                  strokeWidth={2}
-                />
+                <Share2 size={18} color={PROFILE_V2_COLOR.ink} strokeWidth={1.6} />
               </Pressable>
               <Pressable
                 onPress={() => router.push(ROUTES.SETTINGS as never)}
                 accessibilityRole="button"
                 accessibilityLabel="Open settings"
-                hitSlop={8}
-                style={styles.iconBtn}
+                style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnOn]}
               >
-                <Settings
-                  size={16}
-                  color={DS_COLORS_V2.text.primary}
-                  strokeWidth={2}
-                />
+                <Settings size={18} color={PROFILE_V2_COLOR.ink} strokeWidth={1.6} />
               </Pressable>
             </View>
           </View>
 
-          {avatarInlineError ? (
-            <Pressable
-              style={styles.avatarErrorBanner}
-              accessibilityRole="alert"
-              accessibilityLabel={avatarInlineError}
-              onPress={() => {
-                if (avatarInlineError.includes("Settings")) {
-                  void Linking.openSettings();
-                }
-              }}
-            >
-              <Text style={styles.avatarErrorText}>{avatarInlineError}</Text>
-              {avatarInlineError.includes("Settings") ? (
-                <Text style={styles.avatarErrorLink}>Tap to open Settings →</Text>
-              ) : null}
-            </Pressable>
-          ) : null}
-
-          <ProfileHeader
-            mode="self"
-            userId={user.id}
-            username={profile.username ?? ""}
-            displayName={profile.display_name ?? ""}
-            bio={profile.bio}
-            avatarUrl={avatarDisplayOverride ?? profile.avatar_url}
-            isPrivate={isPrivate}
-            currentStreak={streak}
-            followersCount={fc?.followers ?? 0}
-            followingCount={fc?.following ?? 0}
-            completedChallenges={done}
-            onPressAvatar={uploading ? undefined : () => void handleAvatarPress()}
-            onPressEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}
-            onPressInvite={() => void handleInvite()}
-            onPressFollowers={() =>
-              router.push(
-                ROUTES.FOLLOW_LIST(user.id, "followers", listUsername) as never,
-              )
-            }
-            onPressFollowing={() =>
-              router.push(
-                ROUTES.FOLLOW_LIST(user.id, "following", listUsername) as never,
-              )
-            }
-            onPressCompleted={() => setMiniCompletedSheetOpen(true)}
-          />
-
-          <View style={styles.contentPad}>
-            <StreakBar
-              currentStreak={streak}
-              longestStreak={best}
-              activeCount={active}
-              onPressActive={() => setMiniActiveSheetOpen(true)}
-            />
-
-            <YearHeatmap
-              days={heatmapDays}
-              totalSecured={heatmapTotalSecured}
-              rangeLabelStart={rangeLabels.start}
-              rangeLabelEnd={rangeLabels.end}
-            />
-
-            <View style={styles.tabBar}>
-              {(["challenges", "posts", "badges"] as const).map((t) => (
-                <Pressable
-                  key={t}
-                  onPress={() => setTab(t)}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    t === "challenges"
-                      ? "Challenges tab"
-                      : t === "posts"
-                        ? "Posts tab"
-                        : "Badges tab"
-                  }
-                  accessibilityState={{ selected: tab === t }}
-                  style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-                >
-                  <Text
-                    style={[styles.tabTxt, tab === t && styles.tabTxtActive]}
+          <View style={styles.gutter}>
+            <View style={styles.identity}>
+              <Avatar
+                url={profile.avatar_url}
+                name={name || handle}
+                size={76}
+                userId={user.id}
+              />
+              <View style={styles.idCol}>
+                <Text style={styles.displayName}>{name || handle}</Text>
+                <View style={styles.counts}>
+                  <Pressable
+                    onPress={() =>
+                      router.push(ROUTES.FOLLOW_LIST(user.id, "followers", handle) as never)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`${fc?.followers ?? 0} followers`}
+                    hitSlop={8}
                   >
-                    {t === "challenges"
-                      ? "Challenges"
-                      : t === "posts"
-                        ? "Posts"
-                        : "Badges"}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text style={styles.count}>
+                      <Text style={styles.countN}>{fc?.followers ?? 0}</Text> Followers
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() =>
+                      router.push(ROUTES.FOLLOW_LIST(user.id, "following", handle) as never)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel={`${fc?.following ?? 0} following`}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.count}>
+                      <Text style={styles.countN}>{fc?.following ?? 0}</Text> Following
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+
+            {bio ? (
+              <Pressable onPress={() => setBioOpen((v) => !v)} accessibilityRole="button">
+                <Text style={styles.bio} numberOfLines={bioOpen ? undefined : 3}>
+                  {bio}
+                  {!bioOpen && bio.length > 90 ? " more" : ""}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Add a line about what you are building"
+                style={styles.bioPromptHit}
+              >
+                <Text style={styles.bioPrompt}>Add a line about what you are building</Text>
+              </Pressable>
+            )}
+
+            <View style={styles.actions}>
+              <Pressable
+                onPress={() => router.push(ROUTES.EDIT_PROFILE as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Edit profile"
+                style={styles.btnDark}
+              >
+                <Text style={styles.btnDarkTxt}>Edit profile</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => void handleInvite()}
+                accessibilityRole="button"
+                accessibilityLabel="Invite friends"
+                style={styles.btnGhost}
+              >
+                <Text style={styles.btnGhostTxt}>Invite friends</Text>
+              </Pressable>
+            </View>
+
+            <StreakCard
+              current={record?.streak.current ?? 0}
+              best={record?.streak.best ?? 0}
+              note={record?.streak.note ?? "Post today to start."}
+            />
+
+            <View style={{ height: 10 }} />
+
+            <ConsistencyCard
+              consistency={
+                record?.consistency ?? {
+                  rate: "No due days",
+                  verdict: "",
+                  line: "Join a challenge and the strip starts filling.",
+                  strip: [],
+                  weeks: Array.from({ length: 26 }, () => null),
+                  weeklyAverage: 0,
+                  dueDayKeys: [],
+                  closedDueDays: 0,
+                  verifiedClosed: 0,
+                  dueToday: false,
+                  showWindowControl: false,
+                }
+              }
+              weekStartLabel={weekStartLabel}
+              onOpenDetail={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
+            />
+
+            <View style={styles.tabs}>
+              {(["challenges", "proofs", "badges"] as const).map((t) => {
+                const on = tab === t;
+                const label = t === "challenges" ? "Challenges" : t === "proofs" ? "Proofs" : "Badges";
+                return (
+                  <Pressable
+                    key={t}
+                    onPress={() => {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setTab(t);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    accessibilityLabel={`${label} tab`}
+                    style={[styles.tab, on && styles.tabOn]}
+                  >
+                    <Text style={[styles.tabTxt, on && styles.tabTxtOn]}>{label}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {tab === "challenges" ? (
               <View style={styles.tabBody}>
-                {activeItems.length === 0 ? (
-                  <View style={styles.emptyCard}>
-                    <Text style={styles.emptyTitle}>No active challenges</Text>
-                    <Text style={styles.emptySub}>
-                      Tap Discover to start one.
+                {(record?.runs.length ?? 0) === 0 ? (
+                  <View style={styles.empty}>
+                    <Text style={styles.emptyTitle}>No active challenge</Text>
+                    <Text style={styles.emptyBody}>
+                      Start one from Discover. Day 1 begins the morning after you join.
                     </Text>
                     <Pressable
                       onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
                       accessibilityRole="button"
-                      accessibilityLabel="Open Discover"
+                      accessibilityLabel="Go to Discover"
                       style={styles.emptyCta}
                     >
-                      <Text style={styles.emptyCtaText}>Open Discover</Text>
+                      <Text style={styles.emptyCtaTxt}>Go to Discover</Text>
                     </Pressable>
                   </View>
                 ) : (
-                  <View style={styles.activeList}>
-                    {activeItems.map((item) => (
-                      <Pressable
-                        key={item.id}
-                        onPress={() =>
-                          router.push(ROUTES.CHALLENGE_ACTIVE(item.id) as never)
-                        }
-                        accessibilityRole="button"
-                        accessibilityLabel={`${item.title}, day ${item.currentDay} of ${item.durationDays}`}
-                        style={({ pressed }) => [
-                          styles.activeRow,
-                          pressed ? styles.activeRowPressed : null,
-                        ]}
-                      >
-                        <View style={styles.activeRowIcon}>
-                          <Target
-                            size={18}
-                            color={DS_COLORS_V2.brand.primary}
-                            strokeWidth={2}
-                          />
-                        </View>
-                        <View style={styles.activeRowBody}>
-                          <View style={styles.activeRowTopline}>
-                            <Text style={styles.activeRowTitle} numberOfLines={1}>
-                              {item.title}
-                            </Text>
-                            <Text style={styles.activeRowDay}>
-                              Day {item.currentDay}
-                            </Text>
-                          </View>
-                          <View style={styles.activeRowProgressTrack}>
-                            <View
-                              style={[
-                                styles.activeRowProgressFill,
-                                { width: `${item.progressPercent}%` },
-                              ]}
-                            />
-                          </View>
-                        </View>
-                        <ChevronRight
-                          size={16}
-                          color={DS_COLORS_V2.text.tertiary}
-                          strokeWidth={2}
-                        />
-                      </Pressable>
+                  <View style={styles.stack}>
+                    {record?.runs.map((r) => (
+                      <ChallengeRow
+                        key={r.id}
+                        name={r.name}
+                        dayLabel={r.dayLabel}
+                        meta={r.meta}
+                        days={r.days}
+                        onPress={() => router.push(ROUTES.CHALLENGE_ACTIVE(r.id) as never)}
+                      />
                     ))}
+                    {(record?.completed.length ?? 0) > 0 ? (
+                      <>
+                        <Text style={styles.microhead}>COMPLETED · {record?.completed.length}</Text>
+                        {record?.completed.map((c) => (
+                          <CompletedRow
+                            key={c.id}
+                            name={c.name}
+                            value={c.value}
+                            onPress={() => router.push(ROUTES.CHALLENGE_ACTIVE(c.id) as never)}
+                          />
+                        ))}
+                      </>
+                    ) : null}
                   </View>
                 )}
               </View>
             ) : null}
 
-            {tab === "posts" ? (
+            {tab === "proofs" ? (
               <View style={styles.tabBody}>
-                <PostsGrid
-                  posts={profileV2PostsStub}
-                  onSelect={(postId) => {
-                    router.push(ROUTES.POST_ID(postId) as never);
+                <ProofsTab
+                  proofs={proofs}
+                  hasRun={(record?.runs.length ?? 0) > 0}
+                  onPostProof={() => router.push(ROUTES.TABS_HOME as never)}
+                  onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
+                  onSelect={() => {
+                    /* proof detail is not designed here */
                   }}
                 />
               </View>
@@ -666,247 +390,127 @@ export default function ProfileScreen() {
 
             {tab === "badges" ? (
               <View style={styles.tabBody}>
-                <BadgesGrid
-                  badges={badgeRows}
-                  onBadgePress={(payload) => setSelectedBadge(payload)}
-                />
+                <BadgeRows rows={record?.badges ?? []} />
               </View>
             ) : null}
           </View>
         </ScrollView>
-
-        <BadgeDetailModal
-          badge={selectedBadge}
-          onClose={() => setSelectedBadge(null)}
-        />
-        <ChallengeListSheet
-          visible={miniActiveSheetOpen}
-          title="Active challenges"
-          items={stubActiveRows}
-          onClose={() => setMiniActiveSheetOpen(false)}
-          onSelect={navigateMiniActiveChallenge}
-        />
-        <ChallengeListSheet
-          visible={miniCompletedSheetOpen}
-          title="Completed challenges"
-          items={stubCompletedRows}
-          onClose={() => setMiniCompletedSheetOpen(false)}
-          onSelect={navigateMiniCompletedChallenge}
-        />
+        </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
-  scroll: { paddingBottom: 32 },
-  centerGuest: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
+  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
+  scroll: { paddingBottom: 34 },
+  centerGuest: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 },
   guestCard: { width: "100%" },
-  guestTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-    textAlign: "center",
-  },
-  guestSub: {
-    marginTop: 8,
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
-    textAlign: "center",
-  },
+  guestTitle: { fontSize: 18, fontWeight: "500", color: PROFILE_V2_COLOR.ink, textAlign: "center" },
+  guestSub: { marginTop: 8, fontSize: 13, color: PROFILE_V2_COLOR.muted, textAlign: "center" },
   errorPad: { paddingHorizontal: 24 },
-
-  topBar: {
+  header: {
+    height: 48,
+    paddingHorizontal: 28,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingTop: 8,
-    paddingBottom: 4,
   },
-  topBarLeft: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  handle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.1,
-  },
-  topBarRight: {
-    flexDirection: "row",
-    gap: DS_SPACING_V2.sm,
-  },
+  handle: { fontSize: 17, fontWeight: "400", letterSpacing: -0.2, color: PROFILE_V2_COLOR.ink },
+  headerBtns: { flexDirection: "row", gap: 8 },
   iconBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: PROFILE_V2_COLOR.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconBtnOn: { backgroundColor: PROFILE_V2_COLOR.sunken },
+  gutter: { paddingHorizontal: 28, gap: 0 },
+  identity: { flexDirection: "row", alignItems: "center", gap: 16, marginTop: 8 },
+  idCol: { flex: 1, minWidth: 0 },
+  displayName: {
+    fontSize: 27,
+    fontWeight: "500",
+    letterSpacing: -0.9,
+    lineHeight: 28,
+    color: PROFILE_V2_COLOR.ink,
+  },
+  counts: { flexDirection: "row", gap: 16, marginTop: 8 },
+  count: { fontSize: 13, color: PROFILE_V2_COLOR.muted },
+  countN: { fontWeight: "500", color: PROFILE_V2_COLOR.ink },
+  bio: { marginTop: 14, fontSize: 14, lineHeight: 20, color: PROFILE_V2_COLOR.body },
+  bioPromptHit: { marginTop: 14, minHeight: 44, justifyContent: "center" },
+  bioPrompt: {
+    fontSize: 14,
+    color: PROFILE_V2_COLOR.mutedLight,
+    textDecorationLine: "underline",
+  },
+  actions: { flexDirection: "row", gap: 10, marginTop: 16, marginBottom: 14 },
+  btnDark: {
+    flex: 1,
+    height: 46,
     borderRadius: 16,
+    backgroundColor: PROFILE_V2_COLOR.ink,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
   },
-
-  avatarErrorBanner: {
-    marginHorizontal: DS_SPACING_V2.md,
-    marginTop: DS_SPACING_V2.xs,
-    marginBottom: DS_SPACING_V2.sm,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.semantic.dangerSoft,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.semantic.danger,
-  },
-  avatarErrorText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.semantic.danger,
-    textAlign: "center",
-  },
-  avatarErrorLink: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.semantic.danger,
-    textAlign: "center",
-    marginTop: 4,
-  },
-
-  contentPad: {
-    paddingHorizontal: DS_SPACING_V2.md,
-  },
-
-  tabBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
-  },
-  tabBtn: {
+  btnDarkTxt: { fontSize: 15, fontWeight: "400", color: PROFILE_V2_COLOR.surface },
+  btnGhost: {
     flex: 1,
-    height: 32,
+    height: 46,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  tabBtnActive: {
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-    borderColor: DS_COLORS_V2.brand.primary,
-  },
-  tabTxt: {
-    fontSize: 13,
-    fontWeight: "400",
-    color: DS_COLORS_V2.text.secondary,
-  },
-  tabTxtActive: {
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
-  },
-
-  tabBody: {
-    paddingBottom: DS_SPACING_V2.md,
-  },
-
-  activeList: {
-    gap: DS_SPACING_V2.sm,
-  },
-  activeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING_V2.md,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.md,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-  },
-  activeRowPressed: {
-    opacity: 0.85,
-  },
-  activeRowIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: DS_RADIUS_V2.sm,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: PROFILE_V2_COLOR.surface,
+    borderWidth: 2,
+    borderColor: PROFILE_V2_COLOR.borderStrong,
     alignItems: "center",
     justifyContent: "center",
   },
-  activeRowBody: {
+  btnGhostTxt: { fontSize: 15, fontWeight: "400", color: PROFILE_V2_COLOR.ink },
+  tabs: { flexDirection: "row", gap: 8, marginTop: 16, marginBottom: 14 },
+  tab: {
     flex: 1,
-    minWidth: 0,
-    gap: 6,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: PROFILE_V2_COLOR.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  activeRowTopline: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: 6,
+  tabOn: { backgroundColor: PROFILE_V2_COLOR.surface, borderColor: PROFILE_V2_COLOR.orange },
+  tabTxt: { fontSize: 14, fontWeight: "400", color: PROFILE_V2_COLOR.muted },
+  tabTxtOn: { color: PROFILE_V2_COLOR.orange },
+  tabBody: { paddingBottom: 16 },
+  stack: { gap: 10 },
+  microhead: {
+    marginTop: 6,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    color: PROFILE_V2_COLOR.mutedLight,
   },
-  activeRowTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-  },
-  activeRowDay: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
-  },
-  activeRowProgressTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: DS_COLORS_V2.surface.divider,
-    overflow: "hidden",
-  },
-  activeRowProgressFill: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: DS_COLORS_V2.brand.primary,
-  },
-
-  emptyCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.lg,
+  empty: {
+    backgroundColor: PROFILE_V2_COLOR.surface,
+    borderRadius: 20,
     padding: 20,
     alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
   },
-  emptyTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-  },
-  emptySub: {
-    fontSize: 12,
-    color: DS_COLORS_V2.text.secondary,
+  emptyTitle: { fontSize: 16, fontWeight: "400", color: PROFILE_V2_COLOR.ink },
+  emptyBody: {
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 19,
+    color: PROFILE_V2_COLOR.muted,
     textAlign: "center",
   },
   emptyCta: {
-    marginTop: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-    borderRadius: DS_RADIUS_V2.md,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    marginTop: 16,
+    minHeight: 48,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    backgroundColor: PROFILE_V2_COLOR.orange,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  emptyCtaText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primaryText,
-  },
+  emptyCtaTxt: { fontSize: 15, fontWeight: "500", color: PROFILE_V2_COLOR.surface },
 });

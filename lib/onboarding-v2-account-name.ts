@@ -73,7 +73,8 @@ export function normalizeAccountUsername(raw: string): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 20);
 }
 
 export function isValidAccountUsername(normalized: string): boolean {

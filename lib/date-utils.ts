@@ -51,7 +51,7 @@ export function getYesterdayDateKey(timezone?: string | null): string {
   return dt.toISOString().slice(0, 10);
 }
 
-function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): string {
+export function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   if (y === undefined || m === undefined || d === undefined) {
     throw new Error(`Invalid date key: ${dateKey}`);

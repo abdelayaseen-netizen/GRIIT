@@ -215,14 +215,14 @@ export const notificationsRouter = createTRPCRouter({
       last_call_enabled: true,
       friend_activity_enabled: true,
       morning_kickoff_enabled: true,
-      weekly_summary_enabled: true,
+      weekly_summary_enabled: false,
     };
 
     try {
       // Select only columns added in repo migrations — unknown columns make PostgREST fail the whole select.
       const { data, error } = await ctx.supabase
         .from("profiles")
-        .select("reminder_time, last_call_enabled, friend_activity_enabled, morning_kickoff_enabled, weekly_summary_enabled")
+        .select("reminder_time, reminder_enabled, last_call_enabled, friend_activity_enabled, weekly_summary_enabled")
         .eq("user_id", ctx.userId)
         .maybeSingle();
 
@@ -230,9 +230,9 @@ export const notificationsRouter = createTRPCRouter({
 
       const row = data as {
         reminder_time?: string | null;
+        reminder_enabled?: boolean | null;
         last_call_enabled?: boolean | null;
         friend_activity_enabled?: boolean | null;
-        morning_kickoff_enabled?: boolean | null;
         weekly_summary_enabled?: boolean | null;
       } | null;
 
@@ -240,12 +240,12 @@ export const notificationsRouter = createTRPCRouter({
 
       return {
         reminder_time: row.reminder_time ?? defaults.reminder_time,
-        enabled: defaults.enabled,
+        enabled: row.reminder_enabled !== false,
         timezone: defaults.timezone,
         last_call_enabled: row.last_call_enabled !== false,
         friend_activity_enabled: row.friend_activity_enabled !== false,
-        morning_kickoff_enabled: row.morning_kickoff_enabled !== false,
-        weekly_summary_enabled: row.weekly_summary_enabled !== false,
+        morning_kickoff_enabled: defaults.morning_kickoff_enabled,
+        weekly_summary_enabled: row.weekly_summary_enabled === true,
       };
     } catch {
       return defaults;

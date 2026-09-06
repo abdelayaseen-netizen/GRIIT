@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform } from "react-native";
+import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, Pressable, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { LogOut } from "lucide-react-native";
 import { DS_COLORS } from "@/lib/design-system";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -12,14 +11,8 @@ import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { InlineError } from "@/components/InlineError";
-import { styles } from "@/components/settings/settings-styles";
-
-const CONSEQUENCES = [
-  { bulletColor: DS_COLORS.warning, title: "Miss 1 day", sub: "Streak breaks (unless grace used)" },
-  { bulletColor: DS_COLORS.accent, title: "Miss 3 in 7 days", sub: "On Thin Ice warning state" },
-  { bulletColor: DS_COLORS.danger, title: "Miss 7 days", sub: "Challenge auto-paused, tier drops" },
-  { bulletColor: DS_COLORS.danger, title: "Miss 14 days", sub: "Full reset, must rebuild 7 days" },
-] as const;
+import { styles as modalStyles } from "@/components/settings/settings-styles";
+import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 
 export interface AccountDangerZoneProps {
   isGuest: boolean;
@@ -50,13 +43,9 @@ export function AccountDangerZone({
 
   return (
     <>
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <LogOut size={18} color={DS_COLORS.textPrimary} />
-          <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary }]}>Account</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}
+      <View style={v2.wrap}>
+        <Pressable
+          style={({ pressed }) => [v2.signOut, pressed && v2.signOutOn]}
           onPress={async () => {
             if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             await cancelLapsedUserReminders();
@@ -66,39 +55,37 @@ export function AccountDangerZone({
             await clearOnboardingStorage();
             router.replace(ROUTES.AUTH as never);
           }}
-          activeOpacity={0.9}
           accessibilityLabel="Sign out"
           accessibilityRole="button"
         >
-          <Text style={[styles.toggleTitle, { color: DS_COLORS.dangerDark }]}>Sign Out</Text>
-        </TouchableOpacity>
+          <Text style={v2.signOutTxt}>Sign out</Text>
+        </Pressable>
         {!isGuest && (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border, marginTop: 10 }]}
+          <Pressable
+            style={({ pressed }) => [v2.deleteBtn, pressed && v2.deleteOn]}
             onPress={() => setShowDeleteModal(true)}
-            activeOpacity={0.9}
             accessibilityLabel="Delete account"
             accessibilityRole="button"
           >
-            <Text style={[styles.toggleTitle, { color: DS_COLORS.dangerDark, fontSize: 14 }]}>Delete Account</Text>
-          </TouchableOpacity>
+            <Text style={v2.deleteTxt}>Delete account</Text>
+          </Pressable>
         )}
       </View>
 
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <TouchableOpacity
-          style={styles.deleteModalBackdrop}
+          style={modalStyles.deleteModalBackdrop}
           activeOpacity={1}
           onPress={() => !deleteAccountLoading && setShowDeleteModal(false)}
           accessibilityLabel="Dismiss delete account dialog"
           accessibilityRole="button"
         />
-        <View style={styles.deleteModalCenter}>
-          <View style={[styles.card, styles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+        <View style={modalStyles.deleteModalCenter}>
+          <View style={[modalStyles.card, modalStyles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
             <InlineError message={deleteAccountError} onDismiss={clearDeleteAccountError} />
-            <Text style={[styles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
+            <Text style={[modalStyles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
             <TextInput
-              style={[styles.deleteConfirmInput, { color: DS_COLORS.textPrimary, borderColor: DS_COLORS.border }]}
+              style={[modalStyles.deleteConfirmInput, { color: DS_COLORS.textPrimary, borderColor: DS_COLORS.border }]}
               value={deleteConfirmValue}
               onChangeText={setDeleteConfirmValue}
               placeholder="DELETE"
@@ -111,7 +98,7 @@ export function AccountDangerZone({
             />
             <TouchableOpacity
               style={[
-                styles.deleteConfirmBtn,
+                modalStyles.deleteConfirmBtn,
                 { backgroundColor: deleteConfirmValue === "DELETE" ? DS_COLORS.dangerDark : DS_COLORS.border },
               ]}
               onPress={async () => {
@@ -143,11 +130,11 @@ export function AccountDangerZone({
               {deleteAccountLoading ? (
                 <ActivityIndicator size="small" color={DS_COLORS.white} />
               ) : (
-                <Text style={styles.deleteConfirmBtnText}>Delete my account</Text>
+                <Text style={modalStyles.deleteConfirmBtnText}>Delete my account</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.deleteCancelBtn, { borderColor: DS_COLORS.border }]}
+              style={[modalStyles.deleteCancelBtn, { borderColor: DS_COLORS.border }]}
               onPress={() => {
                 setShowDeleteModal(false);
                 setDeleteConfirmValue("");
@@ -157,7 +144,7 @@ export function AccountDangerZone({
               accessibilityRole="button"
               accessibilityState={{ disabled: deleteAccountLoading }}
             >
-              <Text style={[styles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
+              <Text style={[modalStyles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -167,21 +154,26 @@ export function AccountDangerZone({
   );
 }
 
-export function ConsequencesSection() {
-  return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitleFriends, { color: DS_COLORS.textPrimary }]}>⏱ Consequences</Text>
-      <View style={[styles.card, styles.consequenceCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
-        {CONSEQUENCES.map((item, i) => (
-          <View key={i} style={styles.consequenceRow}>
-            <View style={[styles.bullet, { backgroundColor: item.bulletColor }]} />
-            <View style={styles.consequenceTextWrap}>
-              <Text style={[styles.consequenceTitle, { color: DS_COLORS.textPrimary }]}>{item.title}</Text>
-              <Text style={[styles.consequenceSub, { color: DS_COLORS.textMuted }]}>{item.sub}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
+const v2 = StyleSheet.create({
+  wrap: { marginTop: 18, gap: 10 },
+  signOut: {
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: PROFILE_V2_COLOR.surface,
+    borderWidth: 2,
+    borderColor: PROFILE_V2_COLOR.borderStrong,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signOutOn: { backgroundColor: PROFILE_V2_COLOR.sunken },
+  signOutTxt: { fontSize: 15, color: PROFILE_V2_COLOR.ink },
+  deleteBtn: {
+    height: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteOn: { backgroundColor: PROFILE_V2_COLOR.dangerWash },
+  deleteTxt: { fontSize: 15, color: PROFILE_V2_COLOR.danger },
+});
+

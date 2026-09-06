@@ -16,7 +16,9 @@ import { sanitizeSearchQuery } from "../../lib/sanitize-search";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { profilesSocialProcedures } from "./profiles-social";
 import { profilesStatsProcedures } from "./profiles-stats";
+import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
+import { profileUpdateInputSchema } from "@/lib/profile-update-schema";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -27,7 +29,7 @@ const PROFILE_UPDATE_KEYS = [
   "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
-  "profile_visibility", "weekly_goal",
+  "profile_visibility", "challenge_visibility", "activity_visibility", "weekly_goal",
   "timezone",
 ] as const;
 
@@ -43,9 +45,10 @@ function mapEntitlementToStatus(expiresDate: string | null): SubscriptionStatus 
 export const profilesRouter = createTRPCRouter({
   ...profilesSocialProcedures,
   ...profilesStatsProcedures,
+  ...profilesRecordProcedures,
   create: protectedProcedure
     .input(z.object({
-      username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
+      username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
       display_name: z.string().max(50).optional(),
       bio: z.string().max(500).optional(),
       avatar_url: z.string().max(2000).optional(),
@@ -194,7 +197,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, timezone"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone"
         )
         .eq("user_id", ctx.userId)
         .single();
@@ -297,23 +300,7 @@ export const profilesRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      username: z.string().min(3).max(64).optional(),
-      display_name: z.string().max(128).optional(),
-      bio: z.string().max(500).optional(),
-      avatar_url: z.string().max(2000).optional(),
-      cover_url: z.string().max(2000).optional(),
-      onboarding_completed: z.boolean().optional(),
-      onboarding_completed_at: z.string().max(64).optional(),
-      primary_goal: z.string().max(128).optional(),
-      daily_time_budget: z.string().max(32).optional(),
-      starter_challenge_id: z.string().max(64).optional(),
-      preferred_secure_time: z.string().max(16).optional(),
-      onboarding_answers: z.record(z.string(), z.unknown()).optional(),
-      profile_visibility: z.enum(["public", "friends", "private"]).optional(),
-      weekly_goal: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
-      timezone: z.string().max(64).optional(),
-    }))
+    .input(profileUpdateInputSchema)
     .mutation(async ({ input, ctx }) => {
       const updatePayload: Record<string, unknown> = {};
       for (const key of PROFILE_UPDATE_KEYS) {

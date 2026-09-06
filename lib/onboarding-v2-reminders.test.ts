@@ -4,6 +4,7 @@ import {
   formatReminderTimeLong,
   formatReminderTimeShort,
   notificationBody,
+  parseReminderTime24h,
   reminderTime24h,
   reminderTimeShort,
   reminderTimeText,
@@ -38,6 +39,12 @@ describe("reminder time formatters", () => {
     expect(reminderTimeText("am6", null)).toBe("6:00 AM");
     expect(reminderTimeShort("am6", null)).toBe("6am");
     expect(reminderTime24h("am6", null)).toBe("06:00");
+    expect(parseReminderTime24h("06:00")).toEqual({ preset: "am6", custom: null });
+    expect(parseReminderTime24h("19:00")).toEqual({ preset: "pm7", custom: null });
+    expect(parseReminderTime24h("09:00")).toEqual({
+      preset: "custom",
+      custom: { h: 9, m: "00", mer: "AM" },
+    });
     expect(reminderTime24h("pm7", null)).toBe("19:00");
     expect(reminderTime24h("pm12", null)).toBe("12:00");
     expect(reminderTimeText("custom", { h: 6, m: "30", mer: "AM" })).toBe("6:30 AM");

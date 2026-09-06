@@ -11,7 +11,6 @@ import {
   View,
 } from "react-native";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { Camera } from "lucide-react-native";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -19,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { captureError } from "@/lib/sentry";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
+import { pickProfilePhoto } from "@/lib/pick-profile-photo";
 import {
   accountNameContinueDecision,
   accountNameSkipDecision,
@@ -29,34 +29,6 @@ import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
 import { PrimaryButton, TextLink } from "../ui";
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken";
-
-/**
- * Photo picker matches old ProfileSetup (`requestMediaLibraryPermissionsAsync`
- * + `launchImageLibraryAsync` 1:1 / quality 0.85) and uploads via
- * `uploadAvatarFromUri` → Supabase Storage `avatars` bucket.
- */
-async function pickProfilePhoto(): Promise<
-  | { status: "ok"; uri: string; mimeType?: string | null; fileName?: string | null }
-  | { status: "cancelled" }
-  | { status: "denied" }
-> {
-  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!perm.granted) return { status: "denied" };
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.85,
-  });
-  if (result.canceled || !result.assets[0]?.uri) return { status: "cancelled" };
-  const asset = result.assets[0];
-  return {
-    status: "ok",
-    uri: asset.uri,
-    mimeType: asset.mimeType,
-    fileName: asset.fileName,
-  };
-}
 
 export default function AccountNameScreen({
   onContinue,
@@ -283,8 +255,9 @@ export default function AccountNameScreen({
               placeholder="username"
               placeholderTextColor={OBV2_COLOR.ink3}
               value={username}
+              maxLength={20}
               onChangeText={(t) => {
-                setUsernameField(t);
+                setUsernameField(normalizeAccountUsername(t));
                 setError("");
                 setStatus("idle");
               }}
