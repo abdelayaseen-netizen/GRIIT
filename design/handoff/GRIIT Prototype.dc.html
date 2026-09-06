@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="background:#0F0F0F;font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;">
+  <div id="f18" data-screen-label="18 Prototype" style="display:flex;flex-direction:column;align-items:center;gap:16px;width:390px;">
+      <sc-if value="{{ sWelcome }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:8px 20px 0;display:flex;align-items:flex-end;gap:8px;height:32px;">
+            <div style="width:10px;height:32px;border-radius:4px;background:#DC5401;"></div>
+            <div style="width:10px;height:22px;border-radius:4px;background:#DC5401;"></div>
+          </div>
+          <div style="position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:16px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:44px;line-height:44px;font-weight:600;font-variant-numeric:tabular-nums;color:#F5F3EE;letter-spacing:-0.01em;">Discipline,<br>witnessed.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Photo proof. Daily. No way to fake it.</div>
+          </div>
+          <div style="position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;">
+            <div onClick="{{ start }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Start</div>
+            <div onClick="{{ dead }}" style="height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Log in</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sHome }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:8px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
+            <div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Sunday</div><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Marcus</div></div>
+            <div onClick="{{ dead }}" style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;margin-top:4px;cursor:pointer;"><i data-lucide="bell" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+          </div>
+          <div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Current streak</div>
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;line-height:64px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;">{{ streak }}</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">days</div></div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">{{ streakLine }}</div>
+          </div>
+          <div style="padding:20px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div><div style="font-size:20px;line-height:25px;font-weight:500;">Today's proof</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">{{ challenge }} · Day 1</div></div>
+                <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">{{ proofCount }}</div>
+              </div>
+              <sc-if value="{{ notPosted }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ openCapture }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Post your first proof</div>
+              </sc-if>
+              <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+                <div style="height:52px;border-radius:12px;background:#3A1F10;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;"><i data-lucide="check" style="width:24px;height:24px;color:#E8600F;"></i>Posted today</div>
+              </sc-if>
+            </div>
+          </div>
+          <div style="padding:20px 20px 0;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;background:#2E2B27;"></div><div style="height:44px;border-radius:12px;border:1.5px solid #DC5401;background:{{ todayFill }};"></div></div></div>
+          <div style="padding:32px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;">Feed</div>
+            <div style="display:flex;gap:4px;"><div onClick="{{ scFriends }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ scFriendsBg }};color:{{ scFriendsFg }};font-weight:{{ scFriendsW }};">Friends</div><div onClick="{{ scEveryone }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ scEveryoneBg }};color:{{ scEveryoneFg }};font-weight:{{ scEveryoneW }};">Everyone</div></div>
+          </div>
+          <div style="padding:12px 20px 120px;display:flex;flex-direction:column;gap:12px;overflow:hidden;height:300px;">
+            <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">MA</div>
+                  <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Marcus</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">now · Day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">1</span> · {{ challenge }}</div></div>
+                </div>
+                <div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;">
+              <img src="assets/proof-keyboard.png" alt="Your day 1 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(15,15,15,0) 0%,rgba(15,15,15,0.6) 100%);"></div>
+              <div style="position:absolute;right:16px;bottom:16px;"><div style="display:inline-flex;align-items:center;border:1.5px solid #F5F3EE;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F5F3EE;">Verified</div></div>
+            </div>
+                <div style="display:flex;gap:8px;"><div onClick="{{ toggleHeart }}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i data-lucide="heart" style="width:24px;height:24px;color:{{ heart }};"></i></div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="message-circle" style="width:24px;height:24px;color:#F5F3EE;"></i></div></div>
+              </div>
+            </sc-if>
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;align-items:center;gap:12px;">
+              <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">YA</div>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Yaseen secured day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">4</span></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">14h · Read Something</div></div>
+            </div>
+            <sc-if value="{{ everyone }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">AB</div>
+                <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel secured day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">12</span></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">1d · Make Your Bed Every Day</div></div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
+            <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
+            <div onClick="{{ toDiscover }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tDisc }};"><i data-lucide="compass" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Discover</span></div>
+            <div onClick="{{ openCreate }}" style="width:56px;height:56px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><i data-lucide="plus" style="width:24px;height:24px;color:#E8600F;"></i></div>
+            <div onClick="{{ toActivity }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tAct }};"><i data-lucide="flame" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Activity</span></div>
+            <div onClick="{{ toProfile }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tProf }};"><i data-lucide="user" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Profile</span></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sCapture }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+            <div onClick="{{ toHome }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Cancel</div>
+            <div onClick="{{ dead }}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i data-lucide="switch-camera" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+          </div>
+          <div style="padding:20px 20px 0;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ challenge }}</div><div style="font-size:15px;line-height:20px;color:#A39E95;">Drink water and post a photo. Day 1.</div></div>
+          <div style="padding:20px;"><div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;"><img src="assets/proof-keyboard.png" alt="Live camera" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+          <div style="padding:20px;display:flex;justify-content:center;"><div onClick="{{ shoot }}" style="width:72px;height:72px;border-radius:999px;background:#1A1917;cursor:pointer;"></div></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sSecured }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:12px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:96px;line-height:96px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;">{{ securedNum }}</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ securedCopy }}</div>
+          </div>
+          <div style="padding:20px 20px 8px;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;">
+              <img src="assets/proof-keyboard.png" alt="Proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(15,15,15,0) 0%,rgba(15,15,15,0.6) 100%);"></div>
+              <sc-if value="{{ stampOn }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:16px;bottom:16px;"><div style="display:inline-flex;align-items:center;border:1.5px solid #F5F3EE;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F5F3EE;">Verified</div></div></sc-if>
+            </div>
+          </div>
+          <div style="position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#1A1917;opacity:0.24;"></div><div style="height:44px;border-radius:12px;background:#DC5401;"></div></div>
+            <div onClick="{{ openShare }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Share</div>
+            <div onClick="{{ doneSecured }}" style="height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Done</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sComplete }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:12px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:96px;line-height:96px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;">30</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">30 days. Every one witnessed.</div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;opacity:{{ cRow1 }};"><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 1 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 2 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 3 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 4 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 5 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 6 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;opacity:{{ cRow2 }};"><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 7 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:0.4;"><img src="assets/proof-keyboard.png" alt="Day 8 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 9 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 10 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 11 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 12 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;opacity:{{ cRow3 }};"><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 13 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 14 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 15 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 16 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 17 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 18 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;opacity:{{ cRow4 }};"><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:0.4;"><img src="assets/proof-can.png" alt="Day 19 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 20 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 21 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 22 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 23 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 24 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;opacity:{{ cRow5 }};"><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:0.4;"><img src="assets/proof-can.png" alt="Day 25 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 26 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 27 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 28 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-can.png" alt="Day 29 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div><div style="position:relative;aspect-ratio:4/5;border-radius:4px;overflow:hidden;background:#1A1917;opacity:1;"><img src="assets/proof-keyboard.png" alt="Day 30 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;justify-content:center;"><div style="display:inline-flex;align-items:center;border:1.5px solid #F5F3EE;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F5F3EE;">Complete</div></div>
+          <div style="position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;">
+            <div onClick="{{ nextChallenge }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Start the next one</div>
+            <div style="display:flex;gap:8px;">
+              <div onClick="{{ openShare }}" style="flex:1;height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Share</div>
+              <div onClick="{{ doneComplete }}" style="flex:1;height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Done</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sShare }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:0 20px;display:flex;justify-content:center;">
+            <div style="width:350px;height:622px;overflow:hidden;">
+              <div style="width:1080px;height:1920px;transform:scale(0.324);transform-origin:top left;background:#0F0F0F;display:flex;flex-direction:column;align-items:center;padding:250px 90px;">
+                <div style="flex:none;font-family:'Barlow Condensed',sans-serif;font-size:220px;line-height:220px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;color:#F5F3EE;">{{ shareNum }}</div>
+                <div style="margin-top:16px;flex:none;font-size:44px;line-height:56px;font-weight:500;color:#F5F3EE;">{{ shareCopy }}</div>
+                <div style="margin-top:24px;width:720px;aspect-ratio:4/5;flex:none;border-radius:60px;overflow:hidden;position:relative;background:#0F0F0F;"><img src="assets/proof-keyboard.png" alt="Proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div>
+                <div style="margin-top:24px;flex:none;display:inline-flex;align-items:center;border:3px solid #F5F3EE;border-radius:24px;padding:10px 18px;font-family:'Barlow Condensed',sans-serif;font-size:28px;line-height:28px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F5F3EE;">Verified</div>
+                <div style="flex:1;"></div>
+                <div style="display:flex;align-items:flex-end;gap:16px;height:80px;flex:none;"><div style="width:24px;height:80px;border-radius:12px;background:#DC5401;"></div><div style="width:24px;height:56px;border-radius:12px;background:#DC5401;"></div><div style="font-size:56px;line-height:64px;font-weight:500;letter-spacing:2px;color:#F5F3EE;">GRIIT</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="position:absolute;left:20px;right:20px;bottom:20px;"><div onClick="{{ backShare }}" style="height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Back</div></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sYouIn }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:64px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;">You're in.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Day 1 begins tomorrow morning.</div>
+            <div onClick="{{ toHome }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;margin-top:20px;">Back to Home</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sDiscover }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:8px 20px 0;"><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Discover</div></div>
+          <div style="padding:20px 20px 0;display:flex;gap:4px;overflow:hidden;"><div onClick="{{ cFor }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cForBg }};color:{{ cForFg }};font-weight:{{ cForW }};">For you</div><div onClick="{{ cTrend }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cTrendBg }};color:{{ cTrendFg }};font-weight:{{ cTrendW }};">Trending</div><div onClick="{{ cBody }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cBodyBg }};color:{{ cBodyFg }};font-weight:{{ cBodyW }};">Body</div><div onClick="{{ cMind }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cMindBg }};color:{{ cMindFg }};font-weight:{{ cMindW }};">Mind</div></div>
+          <div style="padding:20px 20px 0;">
+            <div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;">
+              <img src="assets/proof-keyboard.png" alt="Featured cover" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(15,15,15,0) 0%,rgba(15,15,15,0.6) 100%);"></div>
+              <div style="position:absolute;left:16px;right:16px;bottom:16px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+                <div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ featTitle }}</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#F5F3EE;">{{ featMeta }}</div></div>
+                <div onClick="{{ startFeatured }}" style="flex:none;height:44px;padding:0 24px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Start</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div><div style="font-size:20px;line-height:25px;font-weight:500;">Popular with your circle</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">What the people you follow started this week.</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;"><div style="position:absolute;left:12px;right:12px;bottom:12px;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ gridA }}</div></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">14 days · Easy</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;"><img src="assets/proof-can.png" alt="Cover" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"><div style="position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to bottom,rgba(15,15,15,0) 0%,rgba(15,15,15,0.6) 100%);"></div><div style="position:absolute;left:12px;right:12px;bottom:12px;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ gridB }}</div></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">7 days · Easy</div></div>
+            </div>
+          </div>
+          <div style="padding:32px 0 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="padding:0 20px;font-size:20px;line-height:25px;font-weight:500;">People</div>
+            <div style="display:flex;gap:12px;padding:0 20px;overflow:hidden;">
+              <div onClick="{{ openVisitor }}" style="width:140px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;"><div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">AB</div><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">New here</div><div style="width:100%;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Follow</div></div>
+              <div onClick="{{ openVisitor }}" style="width:140px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;"><div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">YA</div><div style="font-size:17px;line-height:22px;font-weight:500;">Yaseen</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">New here</div><div style="width:100%;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Follow</div></div>
+              <div onClick="{{ openVisitor }}" style="width:140px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;"><div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="user" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">Test</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">New here</div><div style="width:100%;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Follow</div></div>
+            </div>
+          </div>
+          <div style="padding:32px 20px 120px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;">Have your own idea?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Create a custom challenge and invite others to join.</div>
+            <div onClick="{{ openCreate }}" style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Build your own</div>
+          </div>
+          <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
+            <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
+            <div onClick="{{ toDiscover }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tDisc }};"><i data-lucide="compass" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Discover</span></div>
+            <div onClick="{{ openCreate }}" style="width:56px;height:56px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><i data-lucide="plus" style="width:24px;height:24px;color:#E8600F;"></i></div>
+            <div onClick="{{ toActivity }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tAct }};"><i data-lucide="flame" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Activity</span></div>
+            <div onClick="{{ toProfile }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tProf }};"><i data-lucide="user" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Profile</span></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sActivity }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:8px 20px 0;"><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Activity</div></div>
+          <div style="padding:20px 20px 0;"><div style="display:flex;padding:2px;background:#2E2B27;border-radius:999px;">
+            <div onClick="{{ actNotifs }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ actNotifsBg }};color:{{ actNotifsFg }};font-weight:{{ actNotifsW }};">Notifications</div>
+            <div onClick="{{ actBoard }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ actBoardBg }};color:{{ actBoardFg }};font-weight:{{ actBoardW }};">Leaderboard</div>
+          </div></div>
+          <sc-if value="{{ onNotifs }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:64px 20px 0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+              <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+                <div style="width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:20px 0;"><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">AB</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel liked your day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">1</span> proof</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">now</div></div></div>
+              </sc-if>
+              <sc-if value="{{ notPosted }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+                  <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="bell" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+                  <div style="font-size:20px;line-height:25px;font-weight:500;">No notifications yet</div>
+                  <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;max-width:280px;">Join a challenge and updates from your circle land here.</div>
+                  <div onClick="{{ toDiscover }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;padding:0 28px;margin-top:8px;">Find a challenge</div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ onBoard }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:4px;"><div style="font-size:20px;line-height:25px;font-weight:500;">This week</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Rankings reset every Monday. Post daily to climb.</div></div>
+              <div style="padding:12px 20px 0;display:flex;gap:4px;"><div onClick="{{ bGlobal }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bGlobalBg }};color:{{ bGlobalFg }};font-weight:{{ bGlobalW }};">Global</div><div onClick="{{ bFriends }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bFriendsBg }};color:{{ bFriendsFg }};font-weight:{{ bFriendsW }};">Friends</div><div onClick="{{ bChall }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bChallBg }};color:{{ bChallFg }};font-weight:{{ bChallW }};">Challenges</div></div>
+              <div style="padding:12px 20px 120px;">
+                <sc-if value="{{ bGlobalOn }}" hint-placeholder-val="{{ true }}">
+                  <div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">1</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">MA</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Marcus</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">7 check ins · 7 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">712</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">2</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">AB</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">5 check ins · 5 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">504</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">3</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">YA</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Yaseen</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">4 check ins · 4 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">401</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ bFriendsOn }}" hint-placeholder-val="{{ false }}">
+                  <div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">1</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">AB</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">5 check ins · 5 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">504</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">2</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">YA</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Yaseen</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">4 check ins · 4 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">401</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ bChallOn }}" hint-placeholder-val="{{ false }}">
+                  <div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">1</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">MA</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Marcus</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Drink Water Today · 7 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">712</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+            <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">2</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">TE</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Test</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Drink Water Today · 1 day</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">101</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
+            <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
+            <div onClick="{{ toDiscover }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tDisc }};"><i data-lucide="compass" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Discover</span></div>
+            <div onClick="{{ openCreate }}" style="width:56px;height:56px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><i data-lucide="plus" style="width:24px;height:24px;color:#E8600F;"></i></div>
+            <div onClick="{{ toActivity }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tAct }};"><i data-lucide="flame" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Activity</span></div>
+            <div onClick="{{ toProfile }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tProf }};"><i data-lucide="user" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Profile</span></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sProfile }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:8px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
+            <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Marcus</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <div onClick="{{ dead }}" style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i data-lucide="share-2" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+              <div onClick="{{ openSettings }}" style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i data-lucide="settings" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            </div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;gap:16px;align-items:center;">
+            <div style="width:96px;height:96px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:34px;font-weight:500;flex:none;">MA</div>
+            <div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">@user_092d2dad</div><div style="display:flex;gap:16px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">0 followers</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">0 following</div></div></div>
+          </div>
+          <div style="padding:16px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:4px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div><div style="font-size:13px;line-height:18px;color:#A39E95;">Best <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">{{ best }}</span></div></div>
+              <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;line-height:64px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;">{{ streak }}</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">days</div></div>
+              <div style="font-size:15px;line-height:20px;color:#A39E95;">{{ streakLine }}</div>
+            </div>
+          </div>
+          <div style="padding:12px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Consistency</div>
+              <div style="font-size:28px;line-height:34px;font-weight:500;">{{ consistency }}</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">{{ consistencySub }}</div>
+              <div onClick="{{ openRecord }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;margin-top:8px;cursor:pointer;">See the full record</div>
+            </div>
+          </div>
+          <div style="padding:32px 20px 0;"><div style="display:flex;padding:2px;background:#2E2B27;border-radius:999px;">
+            <div onClick="{{ pChall }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ pChallBg }};color:{{ pChallFg }};font-weight:{{ pChallW }};">Challenges</div>
+            <div onClick="{{ pProofs }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ pProofsBg }};color:{{ pProofsFg }};font-weight:{{ pProofsW }};">Proofs</div>
+            <div onClick="{{ pBadges }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ pBadgesBg }};color:{{ pBadgesFg }};font-weight:{{ pBadgesW }};">Badges</div>
+          </div></div>
+          <div style="padding:12px 20px 120px;">
+            <sc-if value="{{ pChallOn }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:20px;"><div style="font-size:20px;line-height:25px;font-weight:500;">{{ challTitle }}</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">{{ challBody }}</div></div>
+            </sc-if>
+            <sc-if value="{{ pProofsOn }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div style="position:relative;border-radius:20px;overflow:hidden;aspect-ratio:4/5;background:#0F0F0F;"><img src="assets/proof-keyboard.png" alt="Day 1 proof" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"></div></div>
+                </sc-if>
+                <sc-if value="{{ notPosted }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:20px;"><div style="font-size:20px;line-height:25px;font-weight:500;">No proofs yet</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Join a challenge and every verified day lands here as a photo.</div></div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ pBadgesOn }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #E8600F;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E8600F;">First day</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Earned 6 Sep 2026</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">One week</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">7</span> verified days</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Three weeks</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">21</span> verified days</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Thirty</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">30</span> verified days</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px;"><div style="display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Seventy five</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">75</span> verified days</div></div>
+                </div>
+                <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Five marks, each earned by verified days only. Nothing here can be bought or awarded.</div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
+            <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
+            <div onClick="{{ toDiscover }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tDisc }};"><i data-lucide="compass" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Discover</span></div>
+            <div onClick="{{ openCreate }}" style="width:56px;height:56px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><i data-lucide="plus" style="width:24px;height:24px;color:#E8600F;"></i></div>
+            <div onClick="{{ toActivity }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tAct }};"><i data-lucide="flame" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Activity</span></div>
+            <div onClick="{{ toProfile }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tProf }};"><i data-lucide="user" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Profile</span></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sVisitor }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+<div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;"><div onClick="{{ backVisitor }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel</div><div style="width:44px;"></div></div>
+          <div style="padding:20px 20px 0;display:flex;gap:16px;align-items:center;">
+            <div style="width:96px;height:96px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:34px;font-weight:500;flex:none;">AB</div>
+            <div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">@abdel</div><div style="display:flex;gap:16px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">12 followers</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">8 following</div></div></div>
+          </div>
+          <div style="padding:20px 20px 0;"><div onClick="{{ dead }}" style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Request to follow</div></div>
+          <div style="padding:20px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+              <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;line-height:64px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;">12</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">days</div></div>
+              <div style="font-size:15px;line-height:20px;color:#A39E95;">Posted today.</div>
+            </div>
+          </div>
+          <div style="padding:20px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Five marks, each earned by verified days only. Nothing here can be bought or awarded.</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+<div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;"><div onClick="{{ toProfile }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">Settings</div><div style="width:44px;"></div></div>
+          <div style="padding:20px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;overflow:hidden;">
+              <div onClick="{{ openDetail }}" style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;"><i data-lucide="user" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Account</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Signed in with email</div></div><i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div onClick="{{ openDetail }}" style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;"><i data-lucide="bell" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Notifications</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Daily reminder at 9:00</div></div><i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div onClick="{{ openDetail }}" style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;"><i data-lucide="eye" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Privacy</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Profile public · activity public</div></div><i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div onClick="{{ openDetail }}" style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;"><i data-lucide="credit-card" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Subscription</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Free plan · 1 streak freeze a month</div></div><i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div onClick="{{ openDetail }}" style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;"><i data-lucide="info" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">About</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">"Version, terms, privacy policy, contact"</div></div><i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div>
+            </div>
+          </div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div onClick="{{ dead }}" style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Sign out</div>
+            <div onClick="{{ dead }}" style="height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#E5533D;cursor:pointer;">Delete account</div>
+          </div>
+          <div style="padding:32px 20px 0;text-align:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">GRIIT 1.0.0</div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+<div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;"><div onClick="{{ openSettings }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">Account</div><div style="width:44px;"></div></div>
+          <div style="padding:20px 20px 0;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;overflow:hidden;">
+              <div style="padding:20px;display:flex;align-items:center;gap:16px;min-height:44px;"><i data-lucide="mail" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Email</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">marcus@example.com</div></div></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sRecord }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+<div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;"><div onClick="{{ toProfile }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">The full record</div><div style="width:44px;"></div></div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;">September</div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;background:#2E2B27;"></div><div style="aspect-ratio:1;border-radius:12px;border:1.5px solid #DC5401;background:{{ todayFill }};"></div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">One square a day. Only verified days fill.</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sCreate1 }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 1 of 3</div><div style="width:56px;"></div>
+          </div>
+          <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div></div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;">Name your challenge</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">One sentence. Be specific.</div>
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:16px;font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Read 30 min before phone</div>
+            <div style="font-size:20px;line-height:25px;font-weight:500;margin-top:20px;">How long?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">7 days</div><div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">14 days</div><div style="height:44px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">30 days</div></div>
+            <div style="background:#3A1F10;border-radius:12px;padding:16px;display:flex;gap:12px;margin-top:20px;"><i data-lucide="lightbulb" style="width:24px;height:24px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;color:#E8600F;">30 days is the sweet spot. Build the habit, prove you can.</div></div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sCreate2 }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 2 of 3</div><div style="width:56px;"></div>
+          </div>
+          <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div></div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;">What counts as proof?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A photo taken in the app. No uploads.</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="height:44px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;align-items:center;padding:0 16px;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Live camera photo</div>
+              <div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;padding:0 16px;font-size:15px;line-height:20px;">Photo and a note</div>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sCreate3 }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 3 of 3</div><div style="width:56px;"></div>
+          </div>
+          <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div></div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;">Who joins?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You can invite people after it starts.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div style="border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;padding:16px;min-height:44px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#E8600F;">Solo</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;">Just you</div></div>
+              <div style="border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:16px;min-height:44px;"><div style="font-size:17px;line-height:22px;font-weight:500;">Group</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Up to 10</div></div>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ startChallenge }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Start challenge</div></div>
+        </div>
+      </sc-if>
+      <div style="display:flex;gap:8px;">
+        <div onClick="{{ jumpComplete }}" style="height:44px;padding:0 16px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Complete the challenge</div>
+        <div onClick="{{ reset }}" style="height:44px;padding:0 16px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Reset</div>
+      </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showGuides&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Audit&quot;},&quot;autoplaySecure&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Audit&quot;}}">
+class Component extends DCLogic {
+  state = {
+    n: 22, fill: 0, gridRows: 5,
+    screen: 'welcome', returnTab: 'home',
+    streak: 0, posted: false, hearted: false,
+    challenge: 'Drink Water Today',
+    activeTab: 'home', feedScope: 'Everyone', chip: 'For you',
+    board: 'Global', profileTab: 'Proofs', act: 'Notifications',
+    securedNum: 0, stampOn: false, complete: false, createStep: 1
+  };
+
+  componentDidMount() { this.icons(); if (this.props.autoplaySecure) setTimeout(() => this.play(), 600); }
+  componentDidUpdate() { this.icons(); }
+  icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+
+  play = () => {
+    const t0 = performance.now();
+    this.setState({ n: 22, fill: 0 });
+    const step = () => {
+      const p = Math.min(1, (performance.now() - t0) / 400);
+      this.setState({ n: 22 + (p >= 1 ? 1 : Math.round(p)), fill: p });
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  go = (screen, patch) => this.setState(Object.assign({ screen }, patch || {}));
+  tab = (t) => this.setState({ screen: t, activeTab: t });
+
+  countSecured = () => {
+    const from = this.state.streak, to = from + 1, t0 = performance.now();
+    this.setState({ securedNum: from, stampOn: false, screen: 'secured' });
+    const step = () => {
+      const p = Math.min(1, (performance.now() - t0) / 400);
+      this.setState({ securedNum: Math.round(from + (to - from) * p) });
+      if (p < 1) requestAnimationFrame(step); else this.setState({ stampOn: true });
+    };
+    requestAnimationFrame(step);
+  };
+
+
+  runGrid = () => {
+    // Row by row over 600ms: five steps of 120ms, then the stamp. Timers, not rAF, so a
+    // backgrounded preview still finishes the reveal.
+    this.setState({ gridRows: 0, stampOn: false });
+    for (let i = 1; i <= 5; i++) setTimeout(() => this.setState({ gridRows: i }), i * 120);
+    setTimeout(() => this.setState({ stampOn: true }), 640);
+  };
+
+  segStyle(on) { return { Bg: on ? '#2E2B27' : 'transparent', Fg: on ? '#F5F3EE' : '#A39E95', W: on ? '500' : '400' }; }
+  chipStyle(on) { return { Bg: on ? '#3A1F10' : 'transparent', Fg: on ? '#E8600F' : '#A39E95', W: on ? '500' : '400' }; }
+
+  spread(out, name, s) { out[name + 'Bg'] = s.Bg; out[name + 'Fg'] = s.Fg; out[name + 'W'] = s.W; }
+
+  renderVals() {
+    const st = this.state, s = st.screen;
+    const out = {
+      guides: this.props.showGuides ?? false,
+      secureNum: String(this.state.n),
+      fillBar: React.createElement('div', { style: { width: '100%', height: (100 * this.state.fill) + '%', background: '#DC5401' } }),
+      play: this.play,
+      toNotifs: () => {}, toBoard: () => {},
+
+      sWelcome: s === 'welcome', sHome: s === 'home', sCapture: s === 'capture',
+      sSecured: s === 'secured', sComplete: s === 'complete', sShare: s === 'share',
+      sYouIn: s === 'youIn', sDiscover: s === 'discover', sActivity: s === 'activity',
+      sProfile: s === 'profile', sVisitor: s === 'visitor', sSettings: s === 'settings',
+      sDetail: s === 'detail', sRecord: s === 'record',
+      sCreate1: s === 'create' && st.createStep === 1,
+      sCreate2: s === 'create' && st.createStep === 2,
+      sCreate3: s === 'create' && st.createStep === 3,
+
+      tHome: st.activeTab === 'home' ? '#E8600F' : '#A39E95',
+      tDisc: st.activeTab === 'discover' ? '#E8600F' : '#A39E95',
+      tAct: st.activeTab === 'activity' ? '#E8600F' : '#A39E95',
+      tProf: st.activeTab === 'profile' ? '#E8600F' : '#A39E95',
+
+      dead: () => {},
+      start: () => this.tab('home'),
+      toHome: () => this.tab('home'),
+      toDiscover: () => this.tab('discover'),
+      toActivity: () => this.tab('activity'),
+      toProfile: () => this.tab('profile'),
+      openCreate: () => this.setState({ screen: 'create', createStep: 1, returnTab: st.activeTab }),
+      cancelCreate: () => this.tab(st.returnTab),
+      nextStep: () => this.setState({ createStep: Math.min(3, st.createStep + 1) }),
+      startChallenge: () => this.go('youIn'),
+      openCapture: () => (st.posted ? null : this.go('capture')),
+      shoot: this.countSecured,
+      openShare: () => this.go('share'),
+      backShare: () => this.go(st.complete ? 'complete' : 'secured'),
+      doneSecured: () => this.setState({ screen: 'home', activeTab: 'home', streak: 1, posted: true }),
+      doneComplete: () => this.setState({ screen: 'home', activeTab: 'home', complete: false }),
+      jumpComplete: () => { this.setState({ screen: 'complete', streak: 30, posted: true, complete: true }); this.runGrid(); },
+      nextChallenge: () => this.setState({ screen: 'discover', activeTab: 'discover', complete: false, posted: false, streak: 0 }),
+      reset: () => this.setState({ screen: 'welcome', activeTab: 'home', streak: 0, posted: false, hearted: false, complete: false, createStep: 1, profileTab: 'Proofs', act: 'Notifications', board: 'Global', chip: 'For you', feedScope: 'Everyone' }),
+      toggleHeart: () => this.setState({ hearted: !st.hearted }),
+      openVisitor: () => this.go('visitor'),
+      backVisitor: () => this.tab('discover'),
+      openSettings: () => this.go('settings'),
+      openDetail: () => this.go('detail'),
+      openRecord: () => this.go('record'),
+      startFeatured: () => this.setState({ screen: 'youIn', challenge: this.featured().title }),
+
+      scFriends: () => this.setState({ feedScope: 'Friends' }),
+      scEveryone: () => this.setState({ feedScope: 'Everyone' }),
+      cFor: () => this.setState({ chip: 'For you' }),
+      cTrend: () => this.setState({ chip: 'Trending' }),
+      cBody: () => this.setState({ chip: 'Body' }),
+      cMind: () => this.setState({ chip: 'Mind' }),
+      actNotifs: () => this.setState({ act: 'Notifications' }),
+      actBoard: () => this.setState({ act: 'Leaderboard' }),
+      bGlobal: () => this.setState({ board: 'Global' }),
+      bFriends: () => this.setState({ board: 'Friends' }),
+      bChall: () => this.setState({ board: 'Challenges' }),
+      pChall: () => this.setState({ profileTab: 'Challenges' }),
+      pProofs: () => this.setState({ profileTab: 'Proofs' }),
+      pBadges: () => this.setState({ profileTab: 'Badges' }),
+
+      streak: String(st.streak),
+      streakLine: st.posted ? 'Day secured.' : 'Post today to start.',
+      challenge: st.challenge,
+      proofCount: st.posted ? '1 / 1' : '0 / 1',
+      proofCta: st.posted ? 'Posted today' : 'Post your first proof',
+      todayFill: st.posted ? '#DC5401' : 'transparent',
+      posted: st.posted, notPosted: !st.posted,
+      everyone: st.feedScope === 'Everyone',
+      heart: st.hearted ? '#E8600F' : '#F5F3EE',
+      securedNum: String(st.securedNum),
+      securedCopy: 'Day ' + (st.streak + 1) + '. Verified.',
+      stampOn: st.stampOn,
+      shareNum: st.complete ? '30' : String(st.streak || 1),
+      shareCopy: st.complete ? '30 days. Every one witnessed.' : 'Day ' + (st.streak || 1) + '. Verified.',
+      onNotifs: st.act === 'Notifications', onBoard: st.act === 'Leaderboard',
+      bGlobalOn: st.board === 'Global', bFriendsOn: st.board === 'Friends', bChallOn: st.board === 'Challenges',
+      pChallOn: st.profileTab === 'Challenges', pProofsOn: st.profileTab === 'Proofs', pBadgesOn: st.profileTab === 'Badges',
+      consistency: st.posted ? '1 of 30 days' : 'No due days',
+      consistencySub: st.posted ? 'Post every day. Missed days count.' : 'Join a challenge and the strip starts filling.',
+      best: st.streak === 1 ? '1 day' : st.streak + ' days',
+      cRow1: st.gridRows >= 1 ? 1 : 0, cRow2: st.gridRows >= 2 ? 1 : 0, cRow3: st.gridRows >= 3 ? 1 : 0,
+      cRow4: st.gridRows >= 4 ? 1 : 0, cRow5: st.gridRows >= 5 ? 1 : 0,
+      challTitle: st.posted ? st.challenge : 'No active challenge',
+      challBody: st.posted ? 'Day 1 of 30. Post today to keep it.' : 'Start one from Discover. Day 1 begins the morning after you join.'
+    };
+
+    const feat = this.featured();
+    out.featTitle = feat.title; out.featMeta = feat.meta;
+    out.gridA = feat.gridA; out.gridB = feat.gridB;
+
+    this.spread(out, 'scFriends', this.chipStyle(st.feedScope === 'Friends'));
+    this.spread(out, 'scEveryone', this.chipStyle(st.feedScope === 'Everyone'));
+    this.spread(out, 'cFor', this.chipStyle(st.chip === 'For you'));
+    this.spread(out, 'cTrend', this.chipStyle(st.chip === 'Trending'));
+    this.spread(out, 'cBody', this.chipStyle(st.chip === 'Body'));
+    this.spread(out, 'cMind', this.chipStyle(st.chip === 'Mind'));
+    this.spread(out, 'bGlobal', this.chipStyle(st.board === 'Global'));
+    this.spread(out, 'bFriends', this.chipStyle(st.board === 'Friends'));
+    this.spread(out, 'bChall', this.chipStyle(st.board === 'Challenges'));
+    this.spread(out, 'actNotifs', this.segStyle(st.act === 'Notifications'));
+    this.spread(out, 'actBoard', this.segStyle(st.act === 'Leaderboard'));
+    this.spread(out, 'pChall', this.segStyle(st.profileTab === 'Challenges'));
+    this.spread(out, 'pProofs', this.segStyle(st.profileTab === 'Proofs'));
+    this.spread(out, 'pBadges', this.segStyle(st.profileTab === 'Badges'));
+    return out;
+  }
+
+  featured() {
+    const c = this.state.chip;
+    if (c === 'Trending') return { title: 'Make Your Bed Every Day', meta: '14 days · photo proof', gridA: 'Cold Shower', gridB: 'Two Week Hydration' };
+    if (c === 'Body') return { title: 'Twenty Push Ups', meta: '30 days · photo proof', gridA: 'Run Before Work', gridB: 'Two Week Hydration' };
+    if (c === 'Mind') return { title: 'Read Something', meta: '21 days · photo proof', gridA: 'Daily Gratitude', gridB: 'No Phone First Hour' };
+    return { title: 'Drink Water Today', meta: '7 days · photo proof', gridA: 'Make Your Bed Every Day', gridB: 'Two Week Hydration' };
+  }
+}</script>
+</body>
+</html>

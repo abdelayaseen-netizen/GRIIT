@@ -1513,3 +1513,43 @@ export const DS_DAYLIGHT = {
     },
   },
 } as const;
+
+// Design of record, Sept 6 2026. Source: design/handoff/src/tokens.ts and cursor/00_READ_FIRST.md.
+// Every text pair measured with the WCAG formula; ratios in comments.
+export const DS_V3 = {
+  color: {
+    canvas: '#0F0F0F',          // tokens.ts:7
+    surface: '#1A1917',         // tokens.ts:8
+    border: '#2E2B27',          // tokens.ts:9
+    textPrimary: '#F5F3EE',     // 17.3:1 on canvas, 15.8:1 on surface — tokens.ts:10
+    textSecondary: '#A39E95',   // 7.2:1 on canvas, 6.6:1 on surface — tokens.ts:11
+    brand: '#DC5401',           // fills, week strip, active outlines — tokens.ts:12
+    brandText: '#E8600F',       // orange as text: 5.6:1 canvas, 5.1:1 surface — tokens.ts:13
+    brandTint: '#3A1F10',       // hint grounds, selected chips, own row — tokens.ts:14
+    onBrand: '#0F0F0F',         // label on a brand fill: 4.9:1 — tokens.ts:15
+    danger: '#E5533D',          // 5.1:1 on canvas — tokens.ts:16
+  },
+  type: {
+    display:    { fontSize: 34, lineHeight: 41, fontWeight: '500' as const, letterSpacing: -0.5 },
+    number:     { fontSize: 64, lineHeight: 64, fontWeight: '600' as const, fontFamily: 'BarlowCondensed_600SemiBold', fontVariant: ['tabular-nums'] as const, letterSpacing: -0.64 },
+    title:      { fontSize: 28, lineHeight: 34, fontWeight: '500' as const },
+    heading:    { fontSize: 20, lineHeight: 25, fontWeight: '500' as const },
+    body:       { fontSize: 17, lineHeight: 22, fontWeight: '400' as const },
+    bodyStrong: { fontSize: 17, lineHeight: 22, fontWeight: '500' as const },
+    secondary:  { fontSize: 15, lineHeight: 20, fontWeight: '400' as const },
+    caption:    { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
+    label:      { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, letterSpacing: 0.72, textTransform: 'uppercase' as const },
+    stamp:      { fontSize: 12, lineHeight: 16, fontWeight: '600' as const, fontFamily: 'BarlowCondensed_600SemiBold', letterSpacing: 0.96, textTransform: 'uppercase' as const },
+  },
+  space: { xs: 4, sm: 8, md: 12, lg: 16, gutter: 20, section: 32 },
+  radius: { input: 12, card: 20, pill: 999 },
+  size: {
+    tap: 44,
+    button: 52,
+    buttonSmall: 44,
+    shutter: 72,
+    avatar: { xs: 32, sm: 40, md: 56, lg: 96 },
+  },
+  numberSize: { inline: 17, home: 64, moment: 96, mid: 160, share: 220 },
+  contactSheet: { cols: 6, rows: 5, gap: 4, radius: 4, revealMs: 600, dimmed: 0.4 },
+} as const;
