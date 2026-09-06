@@ -13,6 +13,8 @@
     "preview": "npx serve . -p 5000",
     "lint": "expo lint && eslint . --ext .ts,.tsx --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "design:lint": "bash scripts/design-lint.sh",
+    "design:check": "bash scripts/design-lint-check.sh",
     "backend:start": "tsx backend/server.ts",
     "postinstall": "node scripts/patch-expo-router.js",
     "test": "vitest run",
@@ -23,6 +25,7 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
+    "@expo-google-fonts/barlow-condensed": "^0.4.1",
     "@expo-google-fonts/inter": "^0.2.3",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.14",
@@ -47,7 +50,7 @@
     "expo-dev-client": "~6.0.20",
     "expo-device": "~8.0.10",
     "expo-file-system": "~19.0.21",
-    "expo-font": "~14.0.10",
+    "expo-font": "~14.0.12",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",
     "expo-image-manipulator": "~14.0.8",
