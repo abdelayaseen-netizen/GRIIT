@@ -39,3 +39,15 @@ export type { HintBoxProps } from "./HintBox";
 
 export { default as WeekStrip } from "./WeekStrip";
 export type { WeekStripDay, WeekStripProps } from "./WeekStrip";
+
+export { default as RootHeader } from "./RootHeader";
+export type { RootHeaderProps } from "./RootHeader";
+
+export { default as HeaderIcon } from "./HeaderIcon";
+export type { HeaderIconProps } from "./HeaderIcon";
+
+export { default as PushedHeader } from "./PushedHeader";
+export type { PushedHeaderProps } from "./PushedHeader";
+
+export { default as Badges } from "./Badges";
+export type { BadgeItem, BadgesProps } from "./Badges";

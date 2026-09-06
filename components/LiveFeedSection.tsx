@@ -23,10 +23,9 @@ import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLI
 import { captureError } from "@/lib/sentry";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
-import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
-import { FeedCardHeader } from "@/components/feed/FeedCardHeader";
-import { FeedEngagementRow } from "@/components/feed/FeedEngagementRow";
+import FeedPostV3 from "@/components/feed/FeedPostV3";
+import EmptyState from "@/components/ds/EmptyState";
+import { DS_V3 } from "@/lib/design-system";
 import { Avatar } from "@/components/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";
@@ -415,46 +414,22 @@ function LiveFeedSection({
 
   const renderItem = useCallback(
     ({ item }: { item: LiveFeedPost }) => {
-      const preview = previewByPostId.get(item.id) ?? null;
-      const baseCardProps = {
-        post: item,
-        onProfilePress: () => navigateProfile(item),
-        onRespect: () => void onRespect(item),
-        onComment: () => openPost(item),
-        onShare: () => void onShare(item),
-        onMenuPress: () => openPostMenu(item),
-      };
-      if (item.eventType === "thought" || item.eventType === "motivation") {
-        return (
-          <View style={styles.thoughtCard}>
-            <FeedCardHeader post={item} onProfilePress={() => navigateProfile(item)} onMenuPress={() => openPostMenu(item)} />
-            <Text style={styles.thoughtEyebrow}>💭 Daily thought</Text>
-            <View style={styles.thoughtQuote}>
-              <Text style={styles.thoughtQuoteText}>{item.caption ?? ""}</Text>
-            </View>
-            <FeedEngagementRow
-              respectCount={item.respectCount}
-              reactedByMe={item.reactedByMe}
-              commentCount={item.commentCount}
-              onRespect={() => void onRespect(item)}
-              onComment={() => openPost(item)}
-              onShare={() => void onShare(item)}
-            />
-          </View>
-        );
-      }
-      if (item.isCompleted) {
-        return <MilestonePostCard {...baseCardProps} />;
-      }
+      void previewByPostId;
+      void submitComment;
+      void openPostMenu;
       return (
-        <FeedPostCard
-          {...baseCardProps}
-          previewComment={preview}
-          onSubmitComment={(text) => submitComment(item.id, text)}
-        />
+        <View style={styles.v3Item}>
+          <FeedPostV3
+            post={item}
+            onLike={() => void onRespect(item)}
+            onComment={() => openPost(item)}
+            onShare={() => void onShare(item)}
+            onProfilePress={() => navigateProfile(item)}
+          />
+        </View>
       );
     },
-    [navigateProfile, onRespect, onShare, openPost, openPostMenu, previewByPostId, submitComment]
+    [navigateProfile, onRespect, onShare, openPost, previewByPostId, submitComment, openPostMenu]
   );
 
   const goToDiscover = useCallback(() => {
@@ -473,22 +448,20 @@ function LiveFeedSection({
     }
     if (feedQuery.isError) {
       return (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>Couldn&apos;t load feed</Text>
-          <Pressable
-            onPress={() => void feedQuery.refetch()}
-            accessibilityRole="button"
-            accessibilityLabel="Retry loading feed"
-          >
-            <Text style={styles.retry}>Tap to retry</Text>
-          </Pressable>
+        <View style={styles.v3Item}>
+          <EmptyState
+            heading="Feed did not load"
+            body="Check your connection and try again."
+            actionLabel="Retry"
+            onAction={() => void feedQuery.refetch()}
+          />
         </View>
       );
     }
     if (scope === "everyone") {
       return (
         <View style={styles.empty}>
-          <Text style={styles.emptySub}>No posts yet — be the first to check in today.</Text>
+          <Text style={styles.emptySub}>No posts yet. Be the first to check in today.</Text>
         </View>
       );
     }
@@ -550,7 +523,7 @@ function LiveFeedSection({
         </View>
       )}
 
-      {finalFeed.length > 0 ? (
+      {hideHeaderToggle || finalFeed.length === 0 ? null : (
         <Pressable
           style={styles.digestCard}
           onPress={scrollToFeed}
@@ -567,10 +540,10 @@ function LiveFeedSection({
               ))}
           </View>
           <Text style={styles.digestText} numberOfLines={2}>
-            While you were away, your network kept moving — catch up below.
+            Three friends posted while you were away.
           </Text>
         </Pressable>
-      ) : null}
+      )}
     </>
   );
 
@@ -755,9 +728,10 @@ const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
-  listContent: { paddingHorizontal: DS_SPACING.sm, paddingBottom: 110 },
+    listContent: { paddingHorizontal: 0, paddingBottom: DS_V3.space.xs * 30 },
+    v3Item: { paddingHorizontal: DS_V3.space.gutter },
   feedSkeletonStack: { gap: 10, paddingHorizontal: 4, paddingTop: 4 },
-  listItemSeparator: { height: 8 },
+  listItemSeparator: { height: DS_V3.space.md },
   empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },

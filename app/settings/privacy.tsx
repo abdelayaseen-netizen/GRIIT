@@ -8,7 +8,8 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { DS_V3 } from "@/lib/design-system";
+import DsCard from "@/components/ds/Card";
 import type { VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { parseVisibility } from "@/lib/profile-v2-visibility";
 import { SettingsNav } from "@/components/settings/SettingsNav";
@@ -86,10 +87,10 @@ export default function SettingsPrivacyScreen() {
         <GriitFade fadeKey={`privacy-${profileLevel}-${challengeLevel}-${activityLevel}`}>
           <ScrollView contentContainerStyle={styles.body}>
             <Text style={styles.intro}>
-              Three controls, applied everywhere your record appears — profile, search and shared links.
+              Three controls, applied everywhere your record appears. Profile, search and shared links.
             </Text>
 
-            <Card
+            <VisGroup
               title="Profile"
               value={profileLevel}
               onChange={(v) => {
@@ -99,7 +100,7 @@ export default function SettingsPrivacyScreen() {
               }}
               copy={PROFILE_COPY[profileLevel]}
             />
-            <Card
+            <VisGroup
               title="Challenges"
               value={challengeLevel}
               onChange={(v) => {
@@ -109,7 +110,7 @@ export default function SettingsPrivacyScreen() {
               }}
               copy={CHALLENGE_COPY[challengeLevel]}
             />
-            <Card
+            <VisGroup
               title="Activity and proofs"
               value={activityLevel}
               onChange={(v) => {
@@ -150,7 +151,7 @@ export default function SettingsPrivacyScreen() {
   );
 }
 
-function Card({
+function VisGroup({
   title,
   value,
   onChange,
@@ -162,7 +163,7 @@ function Card({
   copy: string;
 }) {
   return (
-    <View style={styles.card}>
+    <DsCard>
       <Text style={styles.cardTitle}>{title}</Text>
       <View style={styles.seg}>
         {LEVELS.map((l) => {
@@ -183,43 +184,87 @@ function Card({
         })}
       </View>
       <Text style={styles.copy}>{copy}</Text>
-    </View>
+    </DsCard>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
-  body: { paddingHorizontal: 28, paddingBottom: 40, gap: 12 },
-  intro: { fontSize: 13, lineHeight: 19, color: PROFILE_V2_COLOR.muted },
-  card: { backgroundColor: PROFILE_V2_COLOR.surface, borderRadius: 20, padding: 16, gap: 10 },
-  cardTitle: { fontSize: 15, color: PROFILE_V2_COLOR.ink },
-  seg: { flexDirection: "row", gap: 6 },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  body: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.xs * 10,
+    gap: DS_V3.space.md,
+  },
+  intro: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  cardTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  seg: { flexDirection: "row", gap: DS_V3.space.sm, marginTop: DS_V3.space.sm },
   segBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 13,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.border,
+    height: DS_V3.size.tap,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: DS_V3.space.xs / 4,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: PROFILE_V2_COLOR.surface,
+    backgroundColor: DS_V3.color.surface,
   },
-  segOn: { backgroundColor: PROFILE_V2_COLOR.ink, borderColor: PROFILE_V2_COLOR.ink },
-  segTxt: { fontSize: 14, color: PROFILE_V2_COLOR.ink },
-  segTxtOn: { color: PROFILE_V2_COLOR.surface },
-  copy: { fontSize: 12, lineHeight: 17, color: PROFILE_V2_COLOR.mutedLight },
-  honesty: { backgroundColor: PROFILE_V2_COLOR.sunken, borderRadius: 20, padding: 16, gap: 6 },
-  honestyT: { fontSize: 14, fontWeight: "500", color: PROFILE_V2_COLOR.ink },
-  honestyB: { fontSize: 12, lineHeight: 17, color: PROFILE_V2_COLOR.mutedLight },
+  segOn: { backgroundColor: DS_V3.color.brandTint, borderColor: DS_V3.color.brand },
+  segTxt: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  segTxtOn: { color: DS_V3.color.brandText },
+  copy: {
+    marginTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  honesty: {
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.lg,
+    gap: DS_V3.space.sm,
+  },
+  honestyT: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  honestyB: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   previewBtn: {
-    minHeight: 48,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: PROFILE_V2_COLOR.borderDashed,
+    minHeight: DS_V3.size.button,
+    borderRadius: DS_V3.radius.pill,
+    borderWidth: DS_V3.space.xs / 4,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: DS_V3.space.lg,
   },
-  previewTxt: { fontSize: 14, color: PROFILE_V2_COLOR.ink, textAlign: "center" },
+  previewTxt: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
+    textAlign: "center",
+  },
 });

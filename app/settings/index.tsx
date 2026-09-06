@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   Bell,
-  ChevronRight,
   CreditCard,
   Eye,
   Info,
@@ -19,7 +18,9 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { parseReminderTime24h, reminderTimeText } from "@/lib/onboarding-v2-reminders";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { DS_V3 } from "@/lib/design-system";
+import Card from "@/components/ds/Card";
+import ListRow from "@/components/ds/ListRow";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { AccountDangerZone } from "@/components/settings/AccountDangerZone";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -27,30 +28,24 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+const ICON = DS_V3.space.xs * 6;
 
-function maskEmail(email: string | null | undefined): string {
-  if (!email || !email.includes("@")) return "—";
-  const [local, domain] = email.split("@");
-  const head = (local ?? "").slice(0, 1);
-  return `${head}•••@${domain}`;
+function accountSubtitle(email: string | null | undefined): string {
+  const trimmed = email?.trim() ?? "";
+  if (trimmed) return trimmed;
+  return "Signed in with email";
 }
 
-function providerLabel(user: { app_metadata?: { provider?: string }; identities?: { provider?: string }[] } | null): string {
-  const p =
-    user?.app_metadata?.provider ??
-    user?.identities?.find((i) => i.provider && i.provider !== "email")?.provider ??
-    "email";
-  if (p === "apple") return "Apple";
-  if (p === "email") return "email";
-  return p;
+function reminderSubtitle(raw: string): string {
+  return `Daily reminder at ${raw.replace(/\s*(AM|PM)$/i, "")}`;
 }
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { isPremium, profile } = useApp();
-  const [reminderSub, setReminderSub] = useState("Daily reminder off");
+  const { profile } = useApp();
+  const [reminderSub, setReminderSub] = useState("Daily reminder at 9:00");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
@@ -68,10 +63,10 @@ export default function SettingsScreen() {
         enabled?: boolean;
       };
       if (data?.enabled === false) {
-        setReminderSub("Daily reminder off");
+        setReminderSub("Daily reminder at 9:00");
       } else {
-        const parsed = parseReminderTime24h(data?.reminder_time ?? "06:00");
-        setReminderSub(`Daily reminder at ${reminderTimeText(parsed.preset, parsed.custom)}`);
+        const parsed = parseReminderTime24h(data?.reminder_time ?? "09:00");
+        setReminderSub(reminderSubtitle(reminderTimeText(parsed.preset, parsed.custom)));
       }
       const priv = (await trpcQuery(TRPC.profiles.get)) as { activity_visibility?: string | null };
       const act = String(priv?.activity_visibility ?? "public").toLowerCase();
@@ -93,41 +88,41 @@ export default function SettingsScreen() {
         <SettingsNav title="Settings" />
         <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-          <View style={styles.card}>
-            <Row
-              icon={<User size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
-              label="Account"
-              sub={`Signed in with ${providerLabel(user)} · ${maskEmail(email)}`}
+          <Card style={styles.card}>
+            <ListRow
+              icon={<User size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Account"
+              subtitle={accountSubtitle(email)}
               onPress={() => router.push(ROUTES.SETTINGS_ACCOUNT as never)}
             />
-            <Row
-              icon={<Bell size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
-              label="Notifications"
-              sub={reminderSub}
+            <ListRow
+              icon={<Bell size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Notifications"
+              subtitle={reminderSub}
               onPress={() => router.push(ROUTES.SETTINGS_NOTIFICATIONS as never)}
             />
-            <Row
-              icon={<Eye size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
-              label="Privacy"
-              sub={`Profile ${vis} · Activity ${activityVis}`}
+            <ListRow
+              icon={<Eye size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Privacy"
+              subtitle={`Profile ${vis} · activity ${activityVis}`}
               onPress={() => router.push(ROUTES.SETTINGS_PRIVACY as never)}
             />
-            <Row
-              icon={<CreditCard size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
-              label="Subscription"
-              sub={isPremium ? "Premium" : "Free plan · 1 streak freeze a month"}
+            <ListRow
+              icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Subscription"
+              subtitle="Free plan · 1 streak freeze a month"
               onPress={() =>
                 router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
               }
             />
-            <Row
-              icon={<Info size={20} color={PROFILE_V2_COLOR.body} strokeWidth={1.6} />}
-              label="About"
-              sub="Version, terms, privacy policy, contact"
+            <ListRow
+              icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}
+              title="About"
+              subtitle="Version, terms, privacy policy, contact"
               onPress={() => router.push(ROUTES.SETTINGS_ABOUT as never)}
-              last
+              divider={false}
             />
-          </View>
+          </Card>
 
           <AccountDangerZone
             isGuest={isGuest}
@@ -150,58 +145,23 @@ export default function SettingsScreen() {
   );
 }
 
-function Row({
-  icon,
-  label,
-  sub,
-  onPress,
-  last,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  sub: string;
-  onPress: () => void;
-  last?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [styles.row, last && styles.rowLast, pressed && styles.rowOn]}
-    >
-      {icon}
-      <View style={styles.rowText}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowSub}>{sub}</Text>
-      </View>
-      <ChevronRight size={16} color={PROFILE_V2_COLOR.chevron} strokeWidth={1.6} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
-  body: { paddingHorizontal: 28, paddingBottom: 40 },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  body: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.xs * 10,
+  },
   card: {
-    backgroundColor: PROFILE_V2_COLOR.surface,
-    borderRadius: 20,
+    padding: 0,
     overflow: "hidden",
   },
-  row: {
-    minHeight: 62,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: PROFILE_V2_COLOR.sunken,
+  ver: {
+    marginTop: DS_V3.space.section,
+    textAlign: "center",
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  rowLast: { borderBottomWidth: 0 },
-  rowOn: { backgroundColor: PROFILE_V2_COLOR.canvas },
-  rowText: { flex: 1, minWidth: 0 },
-  rowLabel: { fontSize: 15, fontWeight: "400", color: PROFILE_V2_COLOR.ink },
-  rowSub: { marginTop: 2, fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
-  ver: { marginTop: 24, textAlign: "center", fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
 });
