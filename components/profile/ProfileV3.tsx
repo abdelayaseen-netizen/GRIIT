@@ -15,6 +15,18 @@ import HeaderIcon from "@/components/ds/HeaderIcon";
 import ProofImage from "@/components/ds/ProofImage";
 import RootHeader from "@/components/ds/RootHeader";
 import SegmentedControl from "@/components/ds/SegmentedControl";
+import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
+
+/** Same rows BadgeRows took: `record.badges` from badgeRowsFromProgress. */
+export function badgeItemsFromRows(
+  rows: { name: string; earned: boolean; state: string; rule: string }[],
+): BadgeItem[] {
+  return rows.map((b) => ({
+    label: b.name,
+    earnedOn: b.earned ? b.state : undefined,
+    requirement: b.rule,
+  }));
+}
 
 const ICON = DS_V3.space.xs * 6;
 const TABS = ["Challenges", "Proofs", "Badges"] as const;
@@ -210,7 +222,13 @@ export function ProfileV3({
           <Text style={styles.title}>{consistency}</Text>
           <Text style={styles.secondary}>{consistencySub}</Text>
           <View style={styles.recordBtn}>
-            <Button label="See the full record" variant="tertiary" size="small" onPress={onSeeRecord} />
+            <Button
+              label="See the full record"
+              variant="tertiary"
+              size="small"
+              flush
+              onPress={onSeeRecord}
+            />
           </View>
         </Card>
       </View>
@@ -267,7 +285,18 @@ export function ProfileV3({
           )
         ) : null}
 
-        {tab === "Badges" ? <Badges badges={badges} footnote={FOOTNOTE} /> : null}
+        {tab === "Badges" ? (
+          <Badges
+            badges={
+              badges.length > 0
+                ? badges
+                : badgeItemsFromRows(
+                    badgeRowsFromProgress({ bestStreak: 0, verifiedDays: 0 }),
+                  )
+            }
+            footnote={FOOTNOTE}
+          />
+        ) : null}
       </View>
 
       {tab === "Badges" ? null : <Text style={styles.foot}>{FOOTNOTE}</Text>}

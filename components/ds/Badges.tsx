@@ -32,7 +32,7 @@ export default function Badges({ badges, footnote }: BadgesProps) {
               <View style={[styles.stamp, { borderColor: stroke }]}>
                 <Text style={[styles.stampLabel, { color }]}>{b.label.toUpperCase()}</Text>
               </View>
-              <Text style={[styles.caption, { color }]}>
+              <Text style={styles.caption}>
                 {earned ? b.earnedOn : b.requirement}
               </Text>
             </View>
@@ -75,6 +75,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   foot: {
     fontSize: DS_V3.type.caption.fontSize,

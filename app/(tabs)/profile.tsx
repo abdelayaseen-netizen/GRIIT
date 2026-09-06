@@ -30,7 +30,8 @@ import { DS_V3 } from "@/lib/design-system";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 type ProfileTab = "challenges" | "proofs" | "badges";
@@ -203,11 +204,17 @@ export default function ProfileScreen() {
               length: r.length,
             }))}
             proofs={proofs}
-            badges={(record?.badges ?? []).map((b) => ({
-              label: b.name,
-              earnedOn: b.earned ? b.state : undefined,
-              requirement: b.rule,
-            }))}
+            badges={badgeItemsFromRows(
+              // Old: 99b1cc4 app/(tabs)/profile.tsx:393
+              //   <BadgeRows rows={record?.badges ?? []} />
+              // New: same `record.badges` (badgeRowsFromProgress). Empty
+              // record still yields the five marks.
+              record?.badges ??
+                badgeRowsFromProgress({
+                  bestStreak: record?.streak.best ?? 0,
+                  verifiedDays: record?.detail.totalVerified ?? 0,
+                }),
+            )}
             onShare={() => void handleShare()}
             onSettings={() => router.push(ROUTES.SETTINGS as never)}
             onEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}

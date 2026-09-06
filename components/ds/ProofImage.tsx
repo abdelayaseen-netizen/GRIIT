@@ -3,6 +3,11 @@
  * Laws: 13 (every proof 4:5, three sizes), 14 (text on a scrim), 15 (missing is
  * canvas + title; loading is blurhash). radius.card for feed and card;
  * radius.thumb (tokens.ts:83 / 03_media.md:62) for thumb.
+ *
+ * Fallback override: 01_components.md:166 says missing ground is canvas.
+ * Canvas on canvas is invisible in a grid of fallbacks (Discover, four cards),
+ * so the missing state is surface + 1pt border at the same radius, title
+ * bodyStrong textPrimary at the bottom left with space.gutter padding.
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -69,7 +74,12 @@ export default function ProofImage({
 }: ProofImageProps) {
   const resolved = source ?? uri ?? null;
   const request = proofRequestSource(resolved, size);
-  const inset = size === "feed" ? DS_V3.space.lg : DS_V3.space.md;
+  const missing = request == null;
+  const inset = missing
+    ? DS_V3.space.gutter
+    : size === "feed"
+      ? DS_V3.space.lg
+      : DS_V3.space.md;
   const showScrim = Boolean(scrim || title || caption || stamp);
   const stampLabel: StampLabel | null =
     stamp === true ? "Verified" : stamp === false || stamp == null ? null : stamp;
@@ -87,6 +97,7 @@ export default function ProofImage({
         {
           borderRadius: size === "thumb" ? DS_V3.radius.thumb : DS_V3.radius.card,
         },
+        missing ? styles.fallbackFrame : null,
       ]}
     >
       {imageSource ? (
@@ -130,6 +141,8 @@ export default function ProofImage({
   );
 }
 
+const PT = DS_V3.space.xs / 4;
+
 const styles = StyleSheet.create({
   frame: {
     aspectRatio: 4 / 5,
@@ -137,9 +150,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: DS_V3.color.canvas,
   },
+  fallbackFrame: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+  },
   fallback: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_V3.color.canvas,
+    backgroundColor: DS_V3.color.surface,
   },
   scrim: {
     position: "absolute",

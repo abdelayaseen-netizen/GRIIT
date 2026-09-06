@@ -206,31 +206,29 @@ export function DiscoverV3({
             )}
           </View>
 
-          {people.length > 0 ? (
-            <View style={styles.peopleSection}>
-              <Text style={styles.peopleHeading}>People</Text>
-              <FlatList
-                horizontal
-                data={people}
-                keyExtractor={(p) => p.user_id}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.peopleList}
-                ItemSeparatorComponent={PersonSep}
-                renderItem={({ item }) => (
-                  <PersonCard
-                    name={item.name}
-                    uri={item.uri}
-                    status={item.status}
-                    followLabel={item.followLabel}
-                    followDisabled={item.followDisabled}
-                    followPending={item.followPending}
-                    onFollow={() => onFollowPerson(item.user_id)}
-                    onPress={() => onOpenPerson(item.user_id)}
-                  />
-                )}
-              />
-            </View>
-          ) : null}
+          <View style={styles.peopleSection}>
+            <Text style={styles.peopleHeading}>People</Text>
+            <FlatList
+              horizontal
+              data={people}
+              keyExtractor={(p) => p.user_id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.peopleList}
+              ItemSeparatorComponent={PersonSep}
+              renderItem={({ item }) => (
+                <PersonCard
+                  name={item.name}
+                  uri={item.uri}
+                  status={item.status}
+                  followLabel={item.followLabel}
+                  followDisabled={item.followDisabled}
+                  followPending={item.followPending}
+                  onFollow={() => onFollowPerson(item.user_id)}
+                  onPress={() => onOpenPerson(item.user_id)}
+                />
+              )}
+            />
+          </View>
 
           <View style={styles.idea}>
             <Text style={styles.heading}>Have your own idea?</Text>

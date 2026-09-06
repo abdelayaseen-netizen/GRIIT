@@ -75,7 +75,8 @@ export default function FeedPostV3({
           </View>
         </View>
         <Text style={styles.summary}>
-          Finished. {post.currentDay} of {post.totalDays} days verified.
+          Finished. {post.currentDay} of {post.totalDays}{" "}
+          {post.totalDays === 1 ? "day" : "days"} verified.
         </Text>
         <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
       </Card>

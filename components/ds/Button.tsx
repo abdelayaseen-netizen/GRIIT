@@ -32,6 +32,8 @@ export type ButtonProps = {
   icon?: React.ReactNode;
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** Zero horizontal padding. Tertiary that sits alone in a card. */
+  flush?: boolean;
 };
 
 export default function Button({
@@ -44,6 +46,7 @@ export default function Button({
   icon,
   onPress,
   accessibilityLabel,
+  flush,
 }: ButtonProps) {
   const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
   const blocked = Boolean(disabled || submitting);
@@ -71,7 +74,8 @@ export default function Button({
       style={({ pressed }) => [
         styles.base,
         { height, minHeight: height, minWidth: DS_V3.size.tap },
-        size === "small" ? styles.padSmall : styles.padRegular,
+        flush ? styles.padFlush : size === "small" ? styles.padSmall : styles.padRegular,
+        flush ? styles.flush : null,
         variant === "primary" && !disabledLook && styles.primary,
         (variant === "secondary" || disabledLook) && styles.secondary,
         variant === "tertiary" && !disabledLook && styles.tertiary,
@@ -109,6 +113,14 @@ const styles = StyleSheet.create({
   },
   padSmall: {
     paddingHorizontal: DS_V3.space.xs * 6,
+  },
+  padFlush: {
+    paddingHorizontal: 0,
+  },
+  flush: {
+    minWidth: 0,
+    alignSelf: "flex-start",
+    justifyContent: "center",
   },
   primary: {
     backgroundColor: DS_V3.color.brand,

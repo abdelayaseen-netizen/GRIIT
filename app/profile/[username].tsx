@@ -30,7 +30,8 @@ import HeaderIcon from "@/components/ds/HeaderIcon";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
 type RecordPayload = ProfileRecord & {
@@ -260,11 +261,13 @@ export default function VisitorProfileScreen() {
                 length: r.length,
               }))}
               proofs={rec?.proofs ?? []}
-              badges={(rec?.badges ?? []).map((b) => ({
-                label: b.name,
-                earnedOn: b.earned ? b.state : undefined,
-                requirement: b.rule,
-              }))}
+              badges={badgeItemsFromRows(
+                rec?.badges ??
+                  badgeRowsFromProgress({
+                    bestStreak: rec?.streak.best ?? 0,
+                    verifiedDays: rec?.detail.totalVerified ?? 0,
+                  }),
+              )}
               onShare={() =>
                 void shareProfile({
                   username: handle,
