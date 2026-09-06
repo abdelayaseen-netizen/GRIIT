@@ -74,7 +74,9 @@ export default function ProofImage({
 }: ProofImageProps) {
   const resolved = source ?? uri ?? null;
   const request = proofRequestSource(resolved, size);
-  const missing = request == null;
+  const missing =
+    request == null ||
+    (typeof request === "string" && !/^https:\/\//i.test(request));
   const inset = missing
     ? DS_V3.space.gutter
     : size === "feed"
@@ -97,10 +99,10 @@ export default function ProofImage({
         {
           borderRadius: size === "thumb" ? DS_V3.radius.thumb : DS_V3.radius.card,
         },
-        missing ? styles.fallbackFrame : null,
+        missing ? styles.fallbackFrame : styles.photoFrame,
       ]}
     >
-      {imageSource ? (
+      {imageSource && !missing ? (
         <Image
           source={imageSource}
           style={StyleSheet.absoluteFill}
@@ -111,10 +113,8 @@ export default function ProofImage({
           recyclingKey={recyclingKey ?? (typeof resolved === "string" ? `${resolved}:${size}` : undefined)}
           accessibilityLabel={title ?? "Proof"}
         />
-      ) : (
-        <View style={styles.fallback} />
-      )}
-      {imageSource && showScrim ? (
+      ) : null}
+      {imageSource && !missing && showScrim ? (
         <LinearGradient
           colors={[canvasAlpha(0), canvasAlpha(0.6)]}
           start={{ x: 0, y: 0 }}
@@ -132,7 +132,7 @@ export default function ProofImage({
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
         </View>
       ) : null}
-      {stampLabel && imageSource ? (
+      {stampLabel && imageSource && !missing ? (
         <View style={[styles.stamp, { right: inset, bottom: inset }]}>
           <Stamp label={stampLabel} onInk />
         </View>
@@ -148,16 +148,14 @@ const styles = StyleSheet.create({
     aspectRatio: 4 / 5,
     borderRadius: DS_V3.radius.card,
     overflow: "hidden",
+  },
+  photoFrame: {
     backgroundColor: DS_V3.color.canvas,
   },
   fallbackFrame: {
     backgroundColor: DS_V3.color.surface,
     borderWidth: PT,
     borderColor: DS_V3.color.border,
-  },
-  fallback: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_V3.color.surface,
   },
   scrim: {
     position: "absolute",

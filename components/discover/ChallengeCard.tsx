@@ -24,6 +24,12 @@ function dayPhrase(n: number): string {
   return n === 1 ? "1 day" : `${n} days`;
 }
 
+function httpsCover(uri?: string | null): string | null {
+  if (typeof uri !== "string") return null;
+  const t = uri.trim();
+  return /^https:\/\//i.test(t) ? t : null;
+}
+
 export default function ChallengeCard({
   title,
   coverUri,
@@ -38,6 +44,7 @@ export default function ChallengeCard({
   const gridMeta = `${dayPhrase(days)} · ${difficulty}`;
   const featuredMeta = proofType ? `${dayPhrase(days)} · ${proofType}` : gridMeta;
   const size = featured ? "feed" : "card";
+  const cover = httpsCover(coverUri);
 
   return (
     <Pressable
@@ -48,7 +55,7 @@ export default function ChallengeCard({
     >
       <View>
         <ProofImage
-          uri={coverUri}
+          uri={cover}
           size={size}
           scrim
           title={featured ? undefined : title}
