@@ -22,11 +22,3 @@ export const useCelebrationStore = create<CelebrationState>((set) => ({
   show: (p) => set({ visible: true, ...p, shareMessage: p.shareMessage ?? null }),
   dismiss: () => set({ visible: false, shareMessage: null }),
 }));
-
-export function showGoalCelebration() {
-  useCelebrationStore.getState().show({
-    title: "Goal secured!",
-    subtitle: "",
-    type: "goal",
-  });
-}

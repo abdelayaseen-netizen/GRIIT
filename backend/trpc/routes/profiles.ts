@@ -30,7 +30,7 @@ const PROFILE_UPDATE_KEYS = [
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
   "profile_visibility", "challenge_visibility", "activity_visibility", "weekly_goal",
-  "timezone",
+  "timezone", "distance_unit",
 ] as const;
 
 type SubscriptionStatus = "free" | "premium" | "trial";
@@ -197,7 +197,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit"
         )
         .eq("user_id", ctx.userId)
         .single();

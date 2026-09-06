@@ -40,10 +40,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
-import { challengeDisplayDay } from "@/lib/challenge-day";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
-import { StreakMomentOverlay } from "@/components/home/StreakMomentOverlay";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -85,7 +83,6 @@ export default function HomeScreen() {
   const { stats, refetchAll, profile } = useApp();
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
-  const [showStreakMoment, setShowStreakMoment] = React.useState(false);
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -232,17 +229,6 @@ export default function HomeScreen() {
   const todaySecured = useMemo(() => {
     return securedDateKeys.includes(getTodayDateKey(homeTimeZone));
   }, [securedDateKeys, homeTimeZone]);
-
-  /**
-   * Challenge day for streak-moment copy — same helper as proof card:
-   * todaySecured ? current_day − 1 : current_day (floor 1).
-   */
-  const momentChallengeDay = useMemo(() => {
-    const fromTasks = heroTasks.find((t) => t.done)?.currentDay ?? heroTasks[0]?.currentDay;
-    if (fromTasks != null) return challengeDisplayDay(fromTasks, todaySecured);
-    const ac = homeQuery.data?.activeList?.[0];
-    return challengeDisplayDay(ac?.current_day, todaySecured);
-  }, [heroTasks, homeQuery.data?.activeList, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -394,37 +380,6 @@ export default function HomeScreen() {
     }, [isGuest, user?.id, streak, showCelebration]),
   );
 
-  // Streak moment (S12) — fires once after returning to Home when today is
-  // fully secured server-side (today in securedDateKeys) and all tasks done.
-  // Do not open on tasksRemaining===0 alone — that races ahead of secure_day / stats.
-  // If today is secured but streak is still 0, stats are stale — bail before
-  // writing the AsyncStorage key so the moment can still fire once stats land.
-  useFocusEffect(
-    useCallback(() => {
-      if (isGuest || !user?.id) return;
-      if (heroMetrics.tasksRemaining !== 0 || heroMetrics.totalTasksToday === 0) return;
-      const todayKey = getTodayDateKey(homeTimeZone);
-      if (!securedDateKeys.includes(todayKey)) return;
-      if (streak == null || streak < 1) return;
-      const key = `griit_streak_moment_${todayKey}`;
-      let cancelled = false;
-      AsyncStorage.getItem(key).then((shown) => {
-        if (shown || cancelled || streak < 1) return;
-        void AsyncStorage.setItem(key, 'true');
-        setShowStreakMoment(true);
-      }).catch(() => { /* non-fatal */ });
-      return () => { cancelled = true; };
-    }, [
-      isGuest,
-      user?.id,
-      heroMetrics.tasksRemaining,
-      heroMetrics.totalTasksToday,
-      securedDateKeys,
-      profile,
-      streak,
-    ]),
-  );
-
   const refresh = useCallback(async () => {
     await Promise.all([homeQuery.refetch(), statsQuery.refetch(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -512,16 +467,6 @@ export default function HomeScreen() {
 
   const onJeopardyDismiss = useCallback(() => {
     setShowJeopardyModal(false);
-  }, []);
-
-  // Streak moment handlers
-  const onStreakMomentKeepGoing = useCallback(() => {
-    setShowStreakMoment(false);
-    router.push(ROUTES.TABS_DISCOVER as never);
-  }, [router]);
-
-  const onStreakMomentDismiss = useCallback(() => {
-    setShowStreakMoment(false);
   }, []);
 
   const onPressFreezesStat = useCallback(() => {
@@ -641,14 +586,6 @@ export default function HomeScreen() {
           onPressFinish={onJeopardyFinish}
           onPressFreeze={onJeopardyFreeze}
           onDismiss={onJeopardyDismiss}
-        />
-        <StreakMomentOverlay
-          visible={showStreakMoment}
-          streak={streak ?? 0}
-          dayNumber={momentChallengeDay}
-          username={profile?.username ?? undefined}
-          onKeepGoing={onStreakMomentKeepGoing}
-          onDismiss={onStreakMomentDismiss}
         />
       </SafeAreaView>
     </ErrorBoundary>

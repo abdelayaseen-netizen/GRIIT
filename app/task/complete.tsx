@@ -1,15 +1,10 @@
-/**
- * Unified task completion screen — one primary interaction per task type,
- * verification add-ons, and a clear success state.
- */
-
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { TaskCompleteScreenInner } from "@/hooks/useTaskCompleteScreen";
+import { TaskFlowV2 } from "@/components/task-v2/TaskFlowV2";
 
 export default function TaskCompleteScreen() {
   return (
     <ErrorBoundary>
-      <TaskCompleteScreenInner />
+      <TaskFlowV2 />
     </ErrorBoundary>
   );
 }

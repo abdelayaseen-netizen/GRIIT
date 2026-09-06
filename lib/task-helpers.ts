@@ -32,7 +32,6 @@ export type TaskCompleteConfig = {
   min_duration_minutes?: number;
   min_words?: number;
   timer_direction?: "countdown" | "countup";
-  timer_hard_mode?: boolean;
   require_heart_rate?: boolean;
   heart_rate_threshold?: number;
   require_location?: boolean;
@@ -60,6 +59,8 @@ export type TaskCompleteConfig = {
   target_pages?: number;
   cup_count?: number;
   pages?: number;
+  /** Defaults true when omitted — matches `isTaskRequired`. */
+  required?: boolean;
 };
 
 export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {

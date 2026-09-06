@@ -33,6 +33,7 @@ export const profileUpdateInputSchema = z.object({
   activity_visibility: z.enum(VISIBILITY_LEVELS).optional(),
   weekly_goal: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
   timezone: z.string().max(64).optional(),
+  distance_unit: z.enum(["km", "mi"]).optional(),
 });
 
 export type ProfileUpdateInput = z.infer<typeof profileUpdateInputSchema>;

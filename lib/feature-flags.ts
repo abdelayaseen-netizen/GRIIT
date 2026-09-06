@@ -70,11 +70,6 @@ export const FLAGS = {
    * simple entry only. Gate here for Phase 5 audit transparency.
    */
   WORKOUT_STRUCTURED: false,
-  /**
-   * Dead. Points were celebration copy only — no table, no balance.
-   * The +N points string and variable-reward chips are gone. Keep false.
-   */
-  COMPLETION_REWARDS: false,
 } as const;
 
 // ============================================

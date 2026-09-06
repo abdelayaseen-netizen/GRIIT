@@ -1,5 +1,13 @@
 # GRIIT status
 
+## Task completion v2
+
+In progress on `feat/task-completion-v2`.
+
+- `profiles.distance_unit` (`km` | `mi`, default `mi`) — **must be applied to live Supabase before device testing** (`supabase/migrations/20260906010000_profiles_distance_unit.sql`).
+- Timer: `checkins.startSession` writes `proof_payload_json.session`; complete validates wall clock; no cron. Notification: "Come back to post proof."
+- Live Activities: timer + run/workout only, on `expo-live-activity` (title / subtitle / native timer / `brand.primary`). **counter +1 Live Activity requires expo-widgets or a native AppIntent target; deferred.**
+
 ## Onboarding
 
 v2 is live. `FLAGS.ONBOARDING_V2` defaults to true (`lib/feature-flags.ts`). Set `EXPO_PUBLIC_ONBOARDING_V2=false` to run the old flow in a preview build.

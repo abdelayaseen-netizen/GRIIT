@@ -262,7 +262,7 @@ export function CreateWizardV2() {
           type: t.type,
           required: true,
           require_photo_proof: requirePhoto || (allowPhoto && t.requirePhoto === true),
-          strict_timer_mode: state.difficulty === "hard" && t.type === "timer",
+          strict_timer_mode: false,
           duration_minutes: t.durationMinutes ?? null,
           min_words: t.minWords ?? null,
           order_index: i,

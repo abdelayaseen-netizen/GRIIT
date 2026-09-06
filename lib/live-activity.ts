@@ -18,7 +18,7 @@ import { Platform } from "react-native";
 import * as LiveActivity from "expo-live-activity";
 import { captureError } from "@/lib/sentry";
 import { useNotificationPrefsStore } from "@/store/notificationPrefsStore";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_COLORS, DS_COLORS_V2 } from "@/lib/design-system";
 
 type LiveActivityTimerType = "checkin" | "run_gps" | "run_treadmill";
 
@@ -74,7 +74,7 @@ function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityCon
     backgroundColor: DS_COLORS.LIVE_ACTIVITY_BG,
     titleColor: DS_COLORS.LIVE_ACTIVITY_TITLE,
     subtitleColor: DS_COLORS.LIVE_ACTIVITY_SUBTITLE,
-    progressViewTint: DS_COLORS.DISCOVER_CORAL,
+    progressViewTint: DS_COLORS_V2.brand.primary,
     progressViewLabelColor: DS_COLORS.LIVE_ACTIVITY_LABEL,
     deepLinkUrl: payload.route,
     timerType: "digital",

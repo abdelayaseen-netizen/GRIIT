@@ -53,8 +53,17 @@ type AppContextValue = {
     firstTaskOfDay?: boolean;
     completionId?: string;
     verification?: { rows: ServerVerificationRow[] };
+    requiredRemaining?: number;
+    dayAlreadySecured?: boolean;
+    streakDays?: number;
+    challengeDay?: number;
+    challengeLength?: number;
+    challengeName?: string;
+    verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
   } | void>;
   secureDay: () => Promise<{
+    success?: boolean;
+    alreadySecured?: boolean;
     newStreakCount: number;
     lastStandEarned?: boolean;
     challengeDay?: number;

@@ -73,7 +73,13 @@
       "expo-web-browser",
       "expo-apple-authentication",
       "expo-localization",
-      "expo-live-activity"
+      "expo-live-activity",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "GRIIT needs camera access to take photos as proof of challenge completion."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

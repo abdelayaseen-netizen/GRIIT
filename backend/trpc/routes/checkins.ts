@@ -62,6 +62,13 @@ import {
   type CheckinVerification,
 } from "../../lib/checkin-verification";
 import { buildSimpleLogFacts } from "../../lib/simple-verification";
+import {
+  assertTimerSessionElapsed,
+  parseTimerSession,
+  wrapTimerSession,
+  type TimerSessionKind,
+} from "../../lib/timer-session";
+import type { VerificationKind } from "../../../lib/task-completion-result";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -439,18 +446,11 @@ export const checkinsRouter = createTRPCRouter({
             task?.require_location === true ||
             cfg.require_location === true);
 
-      const timerHardMode = task?.timer_hard_mode === true || cfg.strict_timer_mode === true || cfg.timer_hard_mode === true;
       const minDurationMinutes =
         dailyTargets.durationMinutes ??
         task?.min_duration_minutes ??
         durationMinutes ??
         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
-      if (!isMinimumDay && timerHardMode && minDurationMinutes != null && minDurationMinutes > 0) {
-        const requiredSeconds = minDurationMinutes * 60;
-        const onScreen = input.timer_seconds_on_screen ?? 0;
-        if (onScreen < requiredSeconds) throw new TRPCError({ code: "BAD_REQUEST", message: `Hard mode: you must stay on the timer screen for the full ${minDurationMinutes} minutes. You were on screen for ${Math.floor(onScreen / 60)} minutes.` });
-      }
-
       if (
         !isMinimumDay &&
         minDurationMinutes != null &&
@@ -470,7 +470,22 @@ export const checkinsRouter = createTRPCRouter({
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
-      if (!isMinimumDay && (isTimer || isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
+      let timerSessionPayload: unknown = null;
+      if (!isMinimumDay && isTimer) {
+        const { data: existingSessionRow } = await ctx.supabase
+          .from("check_ins")
+          .select("proof_payload_json")
+          .eq("active_challenge_id", input.activeChallengeId)
+          .eq("task_id", input.taskId)
+          .eq("date_key", dateKey)
+          .maybeSingle();
+        timerSessionPayload = (existingSessionRow as { proof_payload_json?: unknown } | null)?.proof_payload_json ?? null;
+        const sessionCheck = assertTimerSessionElapsed(parseTimerSession(timerSessionPayload));
+        if (!sessionCheck.ok) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: sessionCheck.message });
+        }
+      }
+      if (!isMinimumDay && (isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
         const completedMinutes = input.value ?? 0;
         if (completedMinutes < requiredMinutes) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${requiredMinutes} minutes. You logged ${completedMinutes}.` });
       }
@@ -759,6 +774,7 @@ export const checkinsRouter = createTRPCRouter({
       if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
       if (input.clocked_in_at != null) payload.clocked_in_at = input.clocked_in_at;
       if (input.proof_payload_json != null) payload.proof_payload_json = input.proof_payload_json;
+      else if (timerSessionPayload) payload.proof_payload_json = timerSessionPayload;
       if (Object.keys(verificationGates).length > 0) payload.verification_gates = verificationGates;
 
       const { data, error } = await ctx.supabase
@@ -813,7 +829,7 @@ export const checkinsRouter = createTRPCRouter({
           has_photo: !!proofUrl,
           photo_url: proofUrl ?? null,
           verification_method: verificationMethod,
-          is_hard_mode: timerHardMode,
+          is_hard_mode: cfg.hard_mode === true,
           task_mode: input.task_mode,
           heart_rate_verified: requireHeartRate ? heartRateVerified : false,
           location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
@@ -844,7 +860,7 @@ export const checkinsRouter = createTRPCRouter({
         const totalDaysForAch = (profileForAch as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
         const { data: streakForAch } = await ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle();
         const currentStreakForAch = (streakForAch as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
-        const isHardMode = timerHardMode || cfg.hard_mode === true;
+        const isHardMode = cfg.hard_mode === true;
         await checkAndUnlockAchievements(ctx.supabase, ctx.userId, currentStreakForAch, totalDaysForAch, false, isHardMode);
       } catch {
         /* non-fatal */
@@ -858,16 +874,126 @@ export const checkinsRouter = createTRPCRouter({
       const completedRequired = completedCheckins?.filter((c) => requiredTasks.some((rt) => rt.id === c.task_id)) || [];
       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
       await ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId);
+
+      const requiredRemaining = Math.max(0, requiredTasks.length - completedRequired.length);
+      const profileDateKey = getTodayDateKey(profileTz);
+      const { data: existingSecure } = await ctx.supabase
+        .from("day_secures")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("date_key", profileDateKey)
+        .maybeSingle();
+      const { data: acForDay } = await ctx.supabase
+        .from("active_challenges")
+        .select("current_day")
+        .eq("id", input.activeChallengeId)
+        .maybeSingle();
+      const { data: streakRow } = await ctx.supabase
+        .from("streaks")
+        .select("active_streak_count")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const verificationKind: VerificationKind = isPhotoProof
+        ? "live_photo"
+        : isTimer
+          ? "timer"
+          : isCheckinProof
+            ? "gps"
+            : isJournalProof
+              ? "word_count"
+              : "self_report";
+
       return {
         ...(data ?? {}),
         isMinimumDay,
         verification_gates: (data as { verification_gates?: unknown } | null)?.verification_gates ?? verificationGates,
+        requiredRemaining,
+        dayAlreadySecured: Boolean(existingSecure),
+        streakDays: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+        challengeDay: (acForDay as { current_day?: number } | null)?.current_day ?? 1,
+        challengeLength: ch?.duration_days && ch.duration_days > 0 ? ch.duration_days : 1,
+        challengeName: challengeTitleForFeed,
+        verificationKind,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
         ...(journalVerification ? { verification: journalVerification } : {}),
         ...(counterVerification ? { verification: counterVerification } : {}),
         ...(checkinVerification ? { verification: checkinVerification } : {}),
+      };
+    }),
+
+  /**
+   * Record a wall-clock timer start. Writes a pending check_in with
+   * proof_payload_json.session. complete validates against this row.
+   */
+  startSession: protectedProcedure
+    .input(
+      z.object({
+        activeChallengeId: z.string().uuid(),
+        taskId: z.string().uuid(),
+        requiredSeconds: z.number().int().positive(),
+        kind: z.enum(["timer", "workout_session"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
+      const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const { data: taskRow, error: taskErr } = await ctx.supabase
+        .from("challenge_tasks")
+        .select("id, config")
+        .eq("id", input.taskId)
+        .maybeSingle();
+      if (taskErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
+      }
+      if (!taskRow) throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+      const taskCfg = ((taskRow as { config?: ChallengeTaskConfig } | null)?.config ?? {}) as ChallengeTaskConfig;
+      const checkInTz = resolveCheckInTimeZone(taskCfg.schedule_timezone, profileTz);
+      const dateKey = getTodayDateKey(checkInTz);
+
+      const { data: existing, error: existingErr } = await ctx.supabase
+        .from("check_ins")
+        .select("id, status")
+        .eq("active_challenge_id", input.activeChallengeId)
+        .eq("task_id", input.taskId)
+        .eq("date_key", dateKey)
+        .maybeSingle();
+      if (existingErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load session." });
+      }
+      const row = existing as { id?: string; status?: string } | null;
+      if (row?.status === "completed") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This task is already completed for today." });
+      }
+
+      const session = {
+        started_at: new Date().toISOString(),
+        required_seconds: input.requiredSeconds,
+        kind: input.kind as TimerSessionKind,
+      };
+      const payload: Record<string, unknown> = {
+        user_id: ctx.userId,
+        active_challenge_id: input.activeChallengeId,
+        task_id: input.taskId,
+        date_key: dateKey,
+        status: "pending",
+        proof_payload_json: wrapTimerSession(session),
+      };
+      const { data, error } = await ctx.supabase
+        .from("check_ins")
+        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
+        .select("id, date_key, proof_payload_json")
+        .single();
+      if (error) {
+        logger.error({ supabaseError: error, payload }, "[checkins.startSession] upsert FAILED");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to start timer." });
+      }
+      return {
+        id: (data as { id?: string } | null)?.id ?? null,
+        date_key: dateKey,
+        started_at: session.started_at,
+        required_seconds: session.required_seconds,
       };
     }),
 
@@ -1064,6 +1190,15 @@ export const checkinsRouter = createTRPCRouter({
       if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer secure the day." });
     }
 
+    const alreadyDateKey = getTodayDateKey(tz);
+    const { data: existingSecureRow } = await ctx.supabase
+      .from("day_secures")
+      .select("id")
+      .eq("user_id", ctx.userId)
+      .eq("date_key", alreadyDateKey)
+      .maybeSingle();
+    const alreadySecured = Boolean(existingSecureRow);
+
     const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", { p_active_challenge_id: input.activeChallengeId });
     if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
       const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
@@ -1128,6 +1263,7 @@ export const checkinsRouter = createTRPCRouter({
       }
       return {
         success: true,
+        alreadySecured,
         newStreakCount: row.new_streak_count,
         lastStandEarned: row.last_stand_earned,
         challengeDay: currentDayAfter,

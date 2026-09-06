@@ -62,7 +62,7 @@ export function taskHasRealVerificationGates(
   if (config.require_camera_only === true) {
     return true;
   }
-  // Same coords check as useTaskCompleteScreen.tsx:477-479.
+  // Same coords check as TaskFlowV2 check-in range.
   if (
     typeof config.location_latitude === "number" &&
     typeof config.location_longitude === "number"

@@ -37,7 +37,7 @@ export type CreateTaskInput = {
 /** Compute strict_timer_mode and require_photo_proof for DB insert. Exported for tests. */
 export function taskStrictAndPhoto(task: CreateTaskInput): { strict_timer_mode: boolean; require_photo_proof: boolean } {
   return {
-    strict_timer_mode: task.type === "timer" ? (task.strictTimerMode ?? false) : false,
+    strict_timer_mode: false,
     require_photo_proof: task.type === "photo" ? true : (task.requirePhotoProof ?? false),
   };
 }
