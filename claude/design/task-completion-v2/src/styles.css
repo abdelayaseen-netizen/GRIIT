@@ -1,0 +1,211 @@
+@import './tokens.css';
+
+/* GRIIT task completion v2. Frame of reference: 390 x 844. */
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: Archivo, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--orange); }
+a:hover { color: var(--orange-press); }
+button, input, textarea { font-family: inherit; }
+
+/* ---------- frame ---------- */
+.frame { position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--canvas); }
+.frame--dark { background: var(--camera-bg); }
+.statusbar { position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 40; }
+
+/* ---------- shared chrome (README §2) ---------- */
+.chrome { position: absolute; top: 54px; left: 0; right: 0; height: 52px; display: flex; align-items: center; padding: 0 8px; z-index: 40; }
+.chrome__back { width: 44px; height: 44px; border: none; background: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.chrome__back:hover { background: var(--surface-warm); }
+.frame--dark .chrome__back:hover { background: rgba(255,255,255,.1); }
+.chrome__glyph { width: 11px; height: 11px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+.chrome__title { flex: 1; text-align: center; margin-right: 44px; font-size: 13px; letter-spacing: .2px; color: var(--muted-light); }
+.frame--dark .chrome__title { color: rgba(255,255,255,.6); }
+.frame--dark .chrome { color: #fff; }
+
+/* ---------- body slot ---------- */
+.body { position: absolute; top: 106px; left: 0; right: 0; bottom: 0; padding: 0 var(--gutter) 34px; display: flex; flex-direction: column; }
+.body__fill { flex: 1; display: flex; flex-direction: column; }
+
+.title { font-size: 30px; font-weight: 500; letter-spacing: -1.1px; line-height: 1.1; text-wrap: balance; }
+.disclosure { font-size: 12px; color: var(--muted-dark); line-height: 1.5; text-wrap: pretty; }
+
+/* ---------- buttons ---------- */
+.btn { width: 100%; height: 56px; border: none; border-radius: var(--radius-btn); font-size: 17px; cursor: pointer; }
+.btn--verified { background: var(--orange); color: #fff; }
+.btn--verified:hover { background: var(--orange-press); }
+.btn--ink { background: var(--ink); color: #fff; }
+.btn--ink:hover { background: var(--ink-hover); }
+.btn--outline { height: 52px; background: none; border: 1.5px solid var(--border-strong); color: var(--body); font-size: 16px; }
+.btn--outline:hover { border-color: var(--ink); color: var(--ink); }
+.btn--quiet { height: 48px; background: none; color: var(--muted); font-size: 15px; }
+.btn:disabled { background: var(--track); color: var(--muted-dark); cursor: not-allowed; }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- gate lines (README §7) ---------- */
+.gates { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.gate { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: var(--body); line-height: 1.35; }
+.gate__dot { width: 6px; height: 6px; border-radius: 3px; background: var(--orange); margin-top: 7px; flex-shrink: 0; }
+.gate-line { font-size: 13px; color: rgba(255,255,255,.62); text-align: center; }
+
+/* ---------- camera (README §3) ---------- */
+.viewfinder { position: absolute; top: 106px; left: 0; width: 390px; height: 488px; overflow: hidden; }
+.viewfinder__placeholder { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, #171614 0 12px, #1E1D1A 12px 24px); }
+.viewfinder__stamp { position: absolute; left: 16px; bottom: 16px; padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,.55); font-size: 12px; color: #fff; }
+.deck { position: absolute; top: 594px; left: 0; right: 0; bottom: 0; padding-bottom: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+.shutter { width: 76px; height: 76px; border-radius: 38px; background: #fff; border: 4px solid rgba(255,255,255,.35); cursor: pointer; transition: transform .09s ease; }
+.shutter:active { transform: scale(.92); }
+.retake { position: absolute; top: 14px; right: 14px; height: 36px; padding: 0 16px; border: none; border-radius: 18px; background: rgba(10,10,10,.6); color: #fff; font-size: 13px; cursor: pointer; }
+
+/* caption overlays the photo, proof-card spec */
+.caption-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 18px 16px; display: flex; flex-direction: column; gap: 3px;
+  background: linear-gradient(to top, rgba(10,10,10,.82), rgba(10,10,10,0)); }
+.caption-overlay__challenge { font-size: 12px; color: rgba(255,255,255,.7); }
+.caption-overlay__completion { font-size: 14px; color: rgba(255,255,255,.92); }
+.caption-overlay__caption { font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.caption-field { display: flex; align-items: center; gap: 10px; }
+.caption-field input { flex: 1; height: 44px; border: none; border-bottom: 1px solid var(--border-strong); background: none; font-size: 15px; outline: none; }
+.caption-field__count { font-size: 12px; color: var(--muted-dark); }
+
+/* ---------- big numerics ---------- */
+.bignum { font-size: 84px; font-weight: 500; letter-spacing: -3.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+.pill { padding: 8px 14px; border-radius: 999px; background: var(--surface-sunken); font-size: 12px; color: var(--body); }
+.tap-target { width: 132px; height: 132px; border-radius: 66px; border: none; background: var(--orange); color: #fff; font-size: 17px; cursor: pointer; }
+.tap-target:hover { background: var(--orange-press); }
+
+/* ---------- log fields ---------- */
+.fields { display: flex; gap: 10px; margin-top: 22px; }
+.field { flex: 1; background: var(--surface); border-radius: 18px; padding: 16px; }
+.field__label { font-size: 11px; letter-spacing: .8px; color: var(--muted-light); }
+.field__value { font-size: 30px; font-weight: 500; letter-spacing: -1.2px; }
+.field__unit { font-size: 13px; color: var(--muted-light); }
+.btn--dashed { height: 48px; margin-top: 10px; background: none; border: 1.5px dashed var(--border-dashed); color: var(--body); font-size: 14px; }
+.btn--dashed:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ---------- numeric field: empty / editing / filled (README §4.3) ---------- */
+.numfield { flex: 1; background: var(--surface); border-radius: 18px; padding: 14px; border: 1.5px solid transparent; }
+.numfield--editing { border-color: var(--orange); }
+.numfield__head { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.numfield__label { font-size: 11px; letter-spacing: .8px; color: var(--muted-light); }
+.numfield__unit { height: 44px; min-width: 52px; padding: 0 10px; border: none; border-radius: 12px; background: var(--surface-sunken); color: var(--body); font-size: 13px; cursor: pointer; }
+.numfield__unit:disabled { background: transparent; cursor: default; }
+.numfield__value { width: 100%; min-height: 46px; margin-top: 2px; padding: 0; border: none; background: none; text-align: left; cursor: pointer;
+  font-size: 32px; font-weight: 500; letter-spacing: -1.3px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.numfield--empty .numfield__value { color: var(--chevron); }
+.numfield--editing .numfield__value { color: var(--orange); }
+.numfield__hint { font-size: 11px; color: var(--muted-dark); }
+.numfield__steppers { margin-top: 10px; display: flex; gap: 8px; }
+.numfield__step { flex: 1; height: 44px; border: 1.5px solid var(--border); border-radius: 12px; background: none; color: var(--body); font-size: 13px; cursor: pointer; }
+.numfield__step:hover { border-color: var(--ink); }
+
+/* ---------- keypad (docks in place of the CTA) ---------- */
+.keypad { display: flex; flex-direction: column; gap: 10px; }
+.keypad__head { display: flex; align-items: baseline; justify-content: space-between; }
+.keypad__label { font-size: 11px; letter-spacing: .8px; color: var(--muted-light); }
+.keypad__draft { font-size: 26px; font-weight: 500; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.keypad__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.keypad__key { height: 50px; border: none; border-radius: 14px; background: var(--surface); font-size: 20px; cursor: pointer; }
+.keypad__key:hover { background: var(--surface-warm); }
+.keypad__key--word { font-size: 13px; color: var(--muted); }
+
+/* ---------- switch rows (timer entry) ---------- */
+.switchrow { width: 100%; min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border: none; background: none; text-align: left; cursor: pointer; }
+.switchrow--ruled { border-top: 1px solid var(--surface-sunken); }
+.switchrow__text { display: flex; flex-direction: column; gap: 4px; }
+.switchrow__label { font-size: 15px; color: var(--ink); }
+.switchrow__sub { font-size: 12px; color: var(--muted-light); line-height: 1.35; }
+.switch { width: 46px; height: 28px; border-radius: 14px; background: var(--track); padding: 3px; display: flex; justify-content: flex-start; flex-shrink: 0; }
+.switch--on { background: var(--orange); justify-content: flex-end; }
+.switch__knob { width: 22px; height: 22px; border-radius: 11px; background: #fff; }
+.switchcard { background: var(--surface); border-radius: 20px; padding: 4px 20px; margin-top: 28px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: 14px; border: 1.5px solid var(--border); background: none; color: var(--body); font-size: 14px; cursor: pointer; }
+.chip--on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* ---------- journal ---------- */
+.editor { flex: 1; margin-top: 12px; border: none; background: none; resize: none; outline: none; font-size: 17px; line-height: 1.5; padding: 4px; }
+.wordline { font-size: 13px; color: var(--muted); padding: 0 4px; }
+
+/* ---------- location ---------- */
+.loccard { margin-top: 28px; background: var(--surface); border-radius: 20px; padding: 20px; }
+.loccard__label { font-size: 11px; letter-spacing: .8px; color: var(--muted-light); }
+.loccard__value { font-size: 40px; font-weight: 500; letter-spacing: -1.6px; line-height: 1; }
+.loccard__track { margin-top: 10px; height: 6px; border-radius: 3px; background: var(--surface-sunken); overflow: hidden; }
+.loccard__fill { display: block; height: 6px; background: var(--orange); }
+.loccard__meta { margin-top: 9px; font-size: 12px; color: var(--muted-light); }
+
+/* ---------- verifying (README §5) ---------- */
+.verifying { position: absolute; inset: 0; background: var(--canvas); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 50; }
+.spinner { width: 34px; height: 34px; border-radius: 17px; border: 2.5px solid var(--track); border-top-color: var(--orange); animation: griit-spin .8s linear infinite; }
+@keyframes griit-spin { to { transform: rotate(360deg); } }
+
+/* ---------- confirmation (README §6) ---------- */
+.confirm { position: absolute; inset: 0; padding: 90px var(--gutter) 34px; display: flex; flex-direction: column; animation: griit-rise .3s ease both; }
+@keyframes griit-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.confirm__center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.mark { width: 66px; height: 66px; border-radius: 33px; display: flex; align-items: center; justify-content: center; }
+.mark--verified { background: var(--orange); }
+.mark--self { border: 1.5px solid var(--muted-dark); }
+.mark__check { width: 22px; height: 11px; border-left: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(-45deg) translate(2px, -2px); }
+.mark--verified .mark__check { color: #fff; }
+.mark--self .mark__check { color: var(--ink); }
+.eyebrow { margin-top: 20px; font-size: 11px; letter-spacing: 1.6px; }
+.eyebrow--verified { color: var(--orange); }
+.eyebrow--self { color: var(--muted-light); }
+.confirm__headline { margin-top: 10px; font-size: 34px; font-weight: 500; letter-spacing: -1.4px; line-height: 1.08; text-wrap: balance; }
+.confirm__task { margin-top: 12px; font-size: 16px; color: var(--body); }
+.confirm__verify { margin-top: 6px; font-size: 13px; color: var(--muted-light); line-height: 1.4; max-width: 280px; text-wrap: pretty; }
+.stats { margin-top: 30px; width: 100%; display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.stat { flex: 1; padding: 18px 8px; display: flex; flex-direction: column; gap: 5px; }
+.stat__value { font-size: 24px; font-weight: 500; letter-spacing: -.9px; }
+.stat__value--muted { color: var(--muted-light); }
+.stat__label { font-size: 11px; letter-spacing: .7px; color: var(--muted-light); }
+.confirm__footnote { margin-top: 14px; font-size: 12px; color: var(--muted-dark); line-height: 1.5; max-width: 290px; text-wrap: pretty; }
+
+/* ---------- blocked / failed (README §7) ---------- */
+.notice { position: absolute; inset: 0; background: var(--canvas); padding: 106px var(--gutter) 34px; display: flex; flex-direction: column; z-index: 50; }
+.notice__center { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.notice__eyebrow { font-size: 11px; letter-spacing: 1.6px; color: var(--muted-light); }
+.notice__eyebrow--danger { color: var(--danger); }
+.notice__body { font-size: 15px; color: var(--body); line-height: 1.45; text-wrap: pretty; }
+.notice__meta { font-size: 13px; color: var(--muted-light); }
+
+/* ---------- OS surfaces: Live Activity + completion notification (README §4.2) ---------- */
+.lockscreen { position: absolute; inset: 0; z-index: 60; padding: 54px 16px 34px; display: flex; flex-direction: column;
+  background: linear-gradient(170deg, #1B1A18 0%, #2A2723 55%, #14130F 100%); }
+.lockscreen__clock { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 18px; color: #fff; }
+.lockscreen__date { font-size: 15px; color: rgba(255,255,255,.68); }
+.lockscreen__time { font-size: 82px; font-weight: 500; letter-spacing: -3px; line-height: 1.05; }
+.lockscreen__note { margin-top: 16px; text-align: center; font-size: 12px; color: rgba(255,255,255,.45); }
+
+.appmark { width: 22px; height: 22px; border-radius: 6px; background: var(--ink); display: flex; align-items: center; justify-content: center; gap: 2px; flex-shrink: 0; }
+.appmark > span { width: 3px; height: 9px; border-radius: 1px; background: var(--orange); }
+.appmark--lg { width: 38px; height: 38px; border-radius: 10px; gap: 3px; }
+.appmark--lg > span { width: 4px; height: 14px; }
+
+.liveactivity { width: 100%; padding: 16px; border: none; border-radius: 22px; background: rgba(255,255,255,.14); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 12px; }
+.liveactivity__head { display: flex; align-items: center; gap: 9px; }
+.liveactivity__brand { font-size: 12px; letter-spacing: .6px; color: rgba(255,255,255,.7); }
+.liveactivity__ends { font-size: 12px; color: rgba(255,255,255,.55); }
+.liveactivity__mid { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.liveactivity__text { display: flex; flex-direction: column; gap: 3px; }
+.liveactivity__task { font-size: 15px; color: #fff; }
+.liveactivity__sub { font-size: 12px; color: rgba(255,255,255,.6); }
+.liveactivity__count { font-size: 40px; font-weight: 500; letter-spacing: -1.6px; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.liveactivity__track { height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); overflow: hidden; }
+.liveactivity__track > span { display: block; height: 4px; background: var(--orange); }
+
+.notification { width: 100%; padding: 15px 16px; border: none; border-radius: 22px; background: rgba(255,255,255,.14); text-align: left; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; }
+.notification__text { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.notification__head { display: flex; align-items: baseline; justify-content: space-between; }
+.notification__brand { font-size: 13px; color: rgba(255,255,255,.72); }
+.notification__when { font-size: 12px; color: rgba(255,255,255,.5); }
+.notification__title { font-size: 15px; color: #fff; }
+.notification__body { font-size: 14px; color: rgba(255,255,255,.78); line-height: 1.35; }

@@ -1,0 +1,76 @@
+GRIIT — Task completion v2 — handoff notes
+=========================================
+
+Contents
+  README.md                     the spec. Read §3 (camera geometry) and §5
+                                (confirmation matrix) before writing any code.
+  GRIIT Task Completion v2.dc.html
+                                interactive prototype. Right panel switches task
+                                type, day outcome, and edge states. Opens in any
+                                browser, no server.
+  src/tokens.css                design tokens, identical to profile v3 plus
+                                --camera-bg.
+  src/styles.css                the only stylesheet. Class names are BEM-ish and
+                                match the component files.
+  src/taskTypes.js              the per-type table: label, chrome title, gates,
+                                verification line, states, tap count. This is the
+                                single source for anything type-specific. If you
+                                add a task type, add it here first.
+  src/liveActivities.js         Live Activity content per type and state, plus the
+                                lifecycle rules. Three types only: timer,
+                                run/workout, counter family. The accent field is
+                                load-bearing — orange means verified, muted means
+                                self-entered, and it is what carries that
+                                distinction at the compact Dynamic Island size.
+  src/fixtures.js               the three submit results the prototype renders
+                                (secured / remaining / already secured) plus the
+                                blocked-state copy.
+  src/components/               Chrome, GateLine, Viewfinder, Shutter,
+                                CaptionOverlay, BigTimer, SessionTimer,
+                                LogFields, NumericField, Keypad, SwitchRow,
+                                WordEditor, TapCounter, LocationReadout,
+                                TimerLiveActivity (Live Activity + completion
+                                notification), Verifying, Confirmation,
+                                GateBlocked.
+                                Keypad.jsx owns the four input masks (distance
+                                with two implied decimals, mm:ss from the right,
+                                minutes, count). Every numeric entry on this
+                                surface goes through it — do not add a second
+                                one, and do not fall back to the system keyboard:
+                                it covers the CTA.
+  src/screens/TaskFlow.jsx      the state machine. One component owns the whole
+                                flow; per-type differences are data, not
+                                branches, except for the body slot.
+
+What is intentionally missing
+  - No points, XP, levels, or percentile anywhere.
+  - No five-day pill progress row.
+  - No post-completion Home card and no bottom sheet.
+  - No confetti and no green check.
+  - No library picker on the camera screen, at all, ever — camera-only is a
+    verification gate and an affordance that suggests otherwise breaks it.
+
+The timer runs on the wall clock
+  started_at + required duration is the whole model. The remainder is always
+  derived, never decremented. Locking the phone, backgrounding, a call or the
+  app being killed changes nothing, and hard mode does not exist on this
+  surface — it is cut, along with its copy and its blocked state. While a timer
+  runs, its real home is the lock-screen Live Activity
+  (TimerLiveActivity.jsx); when it elapses, the completion notification fires
+  wherever the user is ("10:00 done" / "Come back to post proof."). Reopening
+  the app mid-run must restore the true remaining time, and reopening after it
+  elapsed must go straight to Verifying.
+
+Three rules that are not style preferences
+  1. Never render the confirmation before the server responds. Verifying exists
+     for exactly this reason.
+  2. Orange is the verified colour on this surface. A self-reported completion
+     gets the ink treatment. If you are unsure which a type is, read the
+     "verified" column in taskTypes.js — it is written as user-facing copy on
+     purpose.
+  3. Every stat on the confirmation has a named query in README §5.2. If a
+     number has no query, it does not go on the screen.
+
+Sixteen open questions are at the end of the README; 5, 6 and 15 are now
+resolved by the wall-clock timer decision. Numbers 1, 2 and 4 block
+implementation; the rest can ship with the current behaviour and be revisited.

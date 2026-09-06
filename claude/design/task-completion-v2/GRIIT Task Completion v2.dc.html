@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #E4E0D7; font-family: Archivo, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0A0A0A; }
+  a { color: #DC5401; }
+  a:hover { color: #B44100; }
+  button, input, textarea { font-family: inherit; }
+  @keyframes griitRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes griitSpin { to { transform: rotate(360deg); } }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 32px;">
+<div style="display: flex; gap: 28px; align-items: flex-start; justify-content: center; flex-wrap: wrap;">
+
+  <div style="position: relative; width: 390px; height: 844px; border-radius: 46px; overflow: hidden; background: #F5F2EC; box-shadow: 0 40px 70px -30px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.08); flex-shrink: 0;">
+
+    <div style="position: absolute; inset: 0; background: {{ frameBg }};"></div>
+
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 40;">
+      <span style="font-size: 15px; font-weight: 500; color: {{ chromeInk }}; letter-spacing: -.2px;">9:17</span>
+      <span style="display: flex; align-items: center; gap: 6px;">
+        <span style="width: 17px; height: 11px; border-radius: 2px; background: {{ chromeInk }}; opacity: .85;"></span>
+        <span style="width: 15px; height: 11px; border-radius: 2px; background: {{ chromeInk }}; opacity: .85;"></span>
+        <span style="width: 25px; height: 12px; border-radius: 4px; border: 1.5px solid {{ chromeInk }}; opacity: .85;"></span>
+      </span>
+    </div>
+
+    <sc-if value="{{ showChrome }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 54px; left: 0; right: 0; height: 52px; display: flex; align-items: center; padding: 0 8px; z-index: 40;">
+        <button onClick="{{ back }}" style="width: 44px; height: 44px; border: none; background: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <span style="width: 11px; height: 11px; border-left: 2px solid {{ chromeInk }}; border-bottom: 2px solid {{ chromeInk }}; transform: rotate(45deg);"></span>
+        </button>
+        <span style="flex: 1; text-align: center; margin-right: 44px; font-size: 13px; color: {{ chromeMuted }}; letter-spacing: .2px;">{{ chromeTitle }}</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; inset: 0; padding: 54px 0 0; display: flex; flex-direction: column;">
+        <div style="flex: 1; overflow-y: auto; padding: 12px 20px 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; height: 44px;">
+            <span style="font-size: 13px; color: #8A867E;">Saturday</span>
+            <span style="width: 34px; height: 34px; border-radius: 17px; background: #EFEBE2;"></span>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div style="font-size: 11px; letter-spacing: 1.5px; color: #8A867E;">{{ homeEyebrow }}</div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 6px;">
+              <span style="font-size: 54px; font-weight: 500; letter-spacing: -2.4px; line-height: 1;">{{ homeStreak }}</span>
+              <span style="font-size: 17px; color: #6B6862;">{{ homeStreakUnit }}</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 14px; color: #6B6862; line-height: 1.4; text-wrap: pretty;">{{ homeLine }}</div>
+          </div>
+
+          <div style="margin-top: 22px; background: #FFFFFF; border-radius: 22px; padding: 18px 18px 8px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 16px; font-weight: 500;">Today</span>
+              <span style="font-size: 12px; color: #8A867E;">{{ homeProgress }}</span>
+            </div>
+            <div style="margin-top: 2px; font-size: 12px; color: #8A867E;">Consistent Bedtime · Day 3 of 14</div>
+            <div style="margin-top: 12px;">
+              <sc-for list="{{ rows }}" as="row" hint-placeholder-count="3">
+                <button onClick="{{ row.onClick }}" style="width: 100%; min-height: 60px; display: flex; align-items: center; gap: 13px; padding: 12px 0; border: none; border-top: 1px solid #EFEBE2; background: none; text-align: left; cursor: pointer;">
+                  <sc-if value="{{ row.done }}" hint-placeholder-val="{{ false }}">
+                    <span style="width: 24px; height: 24px; border-radius: 12px; background: #DC5401; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <span style="width: 10px; height: 5px; border-left: 2px solid #FFFFFF; border-bottom: 2px solid #FFFFFF; transform: rotate(-45deg) translate(1px, -1px);"></span>
+                    </span>
+                  </sc-if>
+                  <sc-if value="{{ row.open }}" hint-placeholder-val="{{ true }}">
+                    <span style="width: 24px; height: 24px; border-radius: 12px; border: 1.5px solid #DED9CE; flex-shrink: 0;"></span>
+                  </sc-if>
+                  <span style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+                    <span style="font-size: 15px; color: {{ row.ink }};">{{ row.name }}</span>
+                    <span style="font-size: 12px; color: #8A867E;">{{ row.meta }}</span>
+                  </span>
+                  <sc-if value="{{ row.open }}" hint-placeholder-val="{{ true }}">
+                    <span style="width: 8px; height: 8px; border-right: 1.8px solid #C6C1B7; border-top: 1.8px solid #C6C1B7; transform: rotate(45deg);"></span>
+                  </sc-if>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; font-size: 12px; color: #A8A49C; line-height: 1.5; text-wrap: pretty;">Home changes in place. No new card, no sheet on top.</div>
+        </div>
+
+        <div style="height: 78px; border-top: 1px solid #E7E2D8; background: rgba(245,242,236,.92); display: flex; align-items: center; padding: 0 12px 20px;">
+          <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="5">
+            <span style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 12px;">
+              <span style="width: 20px; height: 20px; border-radius: 6px; border: 1.8px solid {{ tab.ink }};"></span>
+              <span style="font-size: 10px; color: {{ tab.ink }};">{{ tab.label }}</span>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEntry }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column;">
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="font-size: 30px; font-weight: 500; letter-spacing: -1.1px; line-height: 1.1; text-wrap: balance;">{{ taskName }}</div>
+          <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+            <sc-for list="{{ gates }}" as="gate" hint-placeholder-count="2">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="width: 6px; height: 6px; border-radius: 3px; background: #DC5401; margin-top: 7px; flex-shrink: 0;"></span>
+                <span style="font-size: 15px; color: #4A4741; line-height: 1.35;">{{ gate }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isCheckin }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 28px; background: #FFFFFF; border-radius: 20px; padding: 20px;">
+              <div style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">DISTANCE TO GOLD'S GYM</div>
+              <div style="display: flex; align-items: baseline; gap: 7px; margin-top: 7px;">
+                <span style="font-size: 40px; font-weight: 500; letter-spacing: -1.6px; line-height: 1;">24</span>
+                <span style="font-size: 16px; color: #6B6862;">m away</span>
+              </div>
+              <div style="margin-top: 10px; height: 6px; border-radius: 3px; background: #EFEBE2; overflow: hidden;">
+                <span style="display: block; height: 6px; width: 24%; background: #DC5401;"></span>
+              </div>
+              <div style="margin-top: 9px; font-size: 12px; color: #8A867E;">Inside the 100 m radius · GPS accuracy ±8 m</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isTimerType }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 28px; background: #FFFFFF; border-radius: 20px; padding: 4px 20px;">
+              <sc-for list="{{ timerSwitches }}" as="row" hint-placeholder-count="2">
+                <button onClick="{{ row.onClick }}" style="width: 100%; min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border: none; border-top: {{ row.rule }}; background: none; text-align: left; cursor: {{ row.cursor }};">
+                  <span style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 15px; color: #0A0A0A;">{{ row.label }}</span>
+                    <span style="font-size: 12px; color: #8A867E; line-height: 1.35;">{{ row.sub }}</span>
+                  </span>
+                  <span style="width: 46px; height: 28px; border-radius: 14px; background: {{ row.trackBg }}; padding: 3px; display: flex; justify-content: {{ row.knob }}; flex-shrink: 0;">
+                    <span style="width: 22px; height: 22px; border-radius: 11px; background: #FFFFFF;"></span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <button onClick="{{ next }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #DC5401; color: #FFFFFF; font-size: 17px; cursor: pointer;">{{ entryCta }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCam }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0;">
+        <div style="position: absolute; top: 106px; left: 0; width: 390px; height: 488px; background: repeating-linear-gradient(135deg, #171614 0 12px, #1E1D1A 12px 24px); display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 11px; letter-spacing: 1.4px; color: rgba(255,255,255,.34);">LIVE VIEWFINDER · 4:5</span>
+          <span style="position: absolute; left: 16px; bottom: 16px; padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,.55); font-size: 12px; color: #FFFFFF;">21:17</span>
+        </div>
+        <div style="position: absolute; top: 594px; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; padding-bottom: 34px;">
+          <span style="font-size: 13px; color: rgba(255,255,255,.62);">{{ camGateLine }}</span>
+          <button onClick="{{ shutter }}" aria-label="Take photo" style="width: 76px; height: 76px; border-radius: 38px; background: #FFFFFF; border: 4px solid rgba(255,255,255,.35); cursor: pointer;"></button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0;">
+        <div style="position: absolute; top: 106px; left: 0; width: 390px; height: 488px; background: repeating-linear-gradient(135deg, #262420 0 12px, #2E2B26 12px 24px);">
+          <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: 1.4px; color: rgba(255,255,255,.34);">CAPTURED PROOF · 4:5</span>
+          <button onClick="{{ retake }}" style="position: absolute; top: 14px; right: 14px; height: 36px; padding: 0 16px; border: none; border-radius: 18px; background: rgba(10,10,10,.6); color: #FFFFFF; font-size: 13px; cursor: pointer;">Retake</button>
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 18px 16px; background: linear-gradient(to top, rgba(10,10,10,.82), rgba(10,10,10,0)); display: flex; flex-direction: column; gap: 3px;">
+            <span style="font-size: 12px; color: rgba(255,255,255,.7);">Consistent Bedtime</span>
+            <span style="font-size: 14px; color: rgba(255,255,255,.92);">{{ reviewMeta }}</span>
+            <span style="font-size: 14px; color: #FFFFFF;">{{ captionPreview }}</span>
+          </span>
+        </div>
+        <div style="position: absolute; top: 594px; left: 0; right: 0; bottom: 0; padding: 14px 20px 34px; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input value="{{ caption }}" onChange="{{ setCaption }}" maxlength="120" placeholder="Add a caption" style="flex: 1; height: 44px; border: none; border-bottom: 1px solid #DED9CE; background: none; font-size: 15px; color: #0A0A0A; outline: none;" />
+            <span style="font-size: 12px; color: #A8A49C;">{{ captionCount }}</span>
+          </div>
+          <div style="flex: 1;"></div>
+          <button onClick="{{ submit }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #DC5401; color: #FFFFFF; font-size: 17px; cursor: pointer;">Post proof</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isTimer }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+          <div style="font-size: 84px; font-weight: 500; letter-spacing: -3.5px; line-height: 1; font-variant-numeric: tabular-nums;">{{ timerText }}</div>
+          <div style="font-size: 14px; color: #6B6862;">{{ taskName }}</div>
+          <div style="padding: 8px 14px; border-radius: 999px; background: #EFEBE2; font-size: 12px; color: #4A4741;">Started {{ startedAtText }} · ends {{ endsAtText }}</div>
+          <div style="margin-top: 4px; font-size: 13px; color: #A8A49C; text-align: center; max-width: 250px; line-height: 1.45; text-wrap: pretty;">Runs on the clock. Lock your phone, put it down — we'll tell you when it's done.</div>
+        </div>
+        <button onClick="{{ cancelTimer }}" style="width: 100%; height: 52px; border: 1.5px solid #DED9CE; border-radius: 16px; background: none; color: #4A4741; font-size: 16px; cursor: pointer;">Cancel the timer</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLock }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: linear-gradient(170deg, #1B1A18 0%, #2A2723 55%, #14130F 100%); padding: 54px 16px 34px; display: flex; flex-direction: column; z-index: 60;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 18px;">
+          <span style="font-size: 15px; color: rgba(255,255,255,.68);">Saturday, 6 September</span>
+          <span style="font-size: 82px; font-weight: 500; letter-spacing: -3px; line-height: 1.05; color: #FFFFFF;">{{ lockClock }}</span>
+        </div>
+        <div style="flex: 1;"></div>
+        <button onClick="{{ openFromLock }}" style="width: 100%; padding: 16px; border: none; border-radius: 22px; background: rgba(255,255,255,.14); text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 12px;">
+          <span style="display: flex; align-items: center; gap: 9px;">
+            <span style="width: 22px; height: 22px; border-radius: 6px; background: #0A0A0A; display: flex; align-items: center; justify-content: center; gap: 2px;">
+              <span style="width: 3px; height: 9px; border-radius: 1px; background: #DC5401;"></span>
+              <span style="width: 3px; height: 9px; border-radius: 1px; background: #DC5401;"></span>
+            </span>
+            <span style="font-size: 12px; letter-spacing: .6px; color: rgba(255,255,255,.7);">GRIIT</span>
+            <span style="flex: 1;"></span>
+            <span style="font-size: 12px; color: rgba(255,255,255,.55);">ends {{ endsAtText }}</span>
+          </span>
+          <span style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;">
+            <span style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 15px; color: #FFFFFF;">{{ taskName }}</span>
+              <span style="font-size: 12px; color: rgba(255,255,255,.6);">Day 3 · Consistent Bedtime</span>
+            </span>
+            <span style="font-size: 40px; font-weight: 500; letter-spacing: -1.6px; line-height: 1; color: #FFFFFF; font-variant-numeric: tabular-nums;">{{ timerText }}</span>
+          </span>
+          <span style="height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); overflow: hidden;">
+            <span style="display: block; height: 4px; width: {{ timerPct }}; background: #DC5401;"></span>
+          </span>
+        </button>
+        <div style="margin-top: 16px; text-align: center; font-size: 12px; color: rgba(255,255,255,.45);">Live Activity · the timer runs whether the app is open or not</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isNotif }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: linear-gradient(170deg, #1B1A18 0%, #2A2723 55%, #14130F 100%); padding: 54px 16px 34px; display: flex; flex-direction: column; z-index: 60;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 18px;">
+          <span style="font-size: 15px; color: rgba(255,255,255,.68);">Saturday, 6 September</span>
+          <span style="font-size: 82px; font-weight: 500; letter-spacing: -3px; line-height: 1.05; color: #FFFFFF;">6:12</span>
+        </div>
+        <div style="flex: 1;"></div>
+        <button onClick="{{ openFromNotif }}" style="width: 100%; padding: 15px 16px; border: none; border-radius: 22px; background: rgba(255,255,255,.14); text-align: left; cursor: pointer; display: flex; gap: 12px; align-items: flex-start;">
+          <span style="width: 38px; height: 38px; border-radius: 10px; background: #0A0A0A; display: flex; align-items: center; justify-content: center; gap: 3px; flex-shrink: 0;">
+            <span style="width: 4px; height: 14px; border-radius: 1px; background: #DC5401;"></span>
+            <span style="width: 4px; height: 14px; border-radius: 1px; background: #DC5401;"></span>
+          </span>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <span style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 13px; color: rgba(255,255,255,.72);">GRIIT</span>
+              <span style="font-size: 12px; color: rgba(255,255,255,.5);">now</span>
+            </span>
+            <span style="font-size: 15px; color: #FFFFFF;">10:00 done</span>
+            <span style="font-size: 14px; color: rgba(255,255,255,.78); line-height: 1.35;">Come back to post proof.</span>
+          </span>
+        </button>
+        <div style="margin-top: 16px; text-align: center; font-size: 12px; color: rgba(255,255,255,.45);">The session is already recorded. The notification only asks you to close the loop.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column;">
+        <div style="flex: 1;">
+          <div style="font-size: 30px; font-weight: 500; letter-spacing: -1.1px; line-height: 1.1;">{{ logTitle }}</div>
+          <div style="margin-top: 8px; font-size: 14px; color: #8A867E;">{{ logNote }}</div>
+
+          <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <sc-for list="{{ numFields }}" as="field" hint-placeholder-count="2">
+              <div style="flex: 1; background: #FFFFFF; border-radius: 18px; padding: 14px; border: 1.5px solid {{ field.border }};">
+                <div style="display: flex; align-items: center; justify-content: space-between; min-height: 44px;">
+                  <span style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">{{ field.label }}</span>
+                  <button onClick="{{ field.onUnit }}" style="height: 44px; min-width: 52px; padding: 0 10px; border: none; border-radius: 12px; background: {{ field.unitBg }}; color: #4A4741; font-size: 13px; cursor: {{ field.unitCursor }};">{{ field.unit }}</button>
+                </div>
+                <button onClick="{{ field.onEdit }}" style="width: 100%; min-height: 46px; margin-top: 2px; padding: 0; border: none; background: none; text-align: left; cursor: pointer;">
+                  <span style="font-size: 32px; font-weight: 500; letter-spacing: -1.3px; color: {{ field.ink }}; font-variant-numeric: tabular-nums;">{{ field.value }}</span>
+                </button>
+                <div style="font-size: 11px; color: #A8A49C;">{{ field.hint }}</div>
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                  <button onClick="{{ field.onDown }}" style="flex: 1; height: 44px; border: 1.5px solid #E7E2D8; border-radius: 12px; background: none; color: #4A4741; font-size: 13px; cursor: pointer;">{{ field.down }}</button>
+                  <button onClick="{{ field.onUp }}" style="flex: 1; height: 44px; border: 1.5px solid #E7E2D8; border-radius: 12px; background: none; color: #4A4741; font-size: 13px; cursor: pointer;">{{ field.up }}</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ logExtras }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ logChips }}" as="chip" hint-placeholder-count="4">
+                <button onClick="{{ chip.onClick }}" style="min-height: 44px; padding: 0 16px; border-radius: 14px; border: 1.5px solid {{ chip.border }}; background: {{ chip.bg }}; color: {{ chip.ink }}; font-size: 14px; cursor: pointer;">{{ chip.label }}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ isWorkoutType }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ startSession }}" style="margin-top: 10px; width: 100%; height: 48px; border: 1.5px dashed #D5D0C5; border-radius: 14px; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Use the timer instead</button>
+            </sc-if>
+            <div style="margin-top: 18px; font-size: 12px; color: #A8A49C; line-height: 1.5; text-wrap: pretty;">{{ logDisclosure }}</div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">{{ padLabel }}</span>
+              <span style="font-size: 26px; font-weight: 500; letter-spacing: -1px; font-variant-numeric: tabular-nums;">{{ padValue }}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <sc-for list="{{ padKeys }}" as="key" hint-placeholder-count="12">
+                <button onClick="{{ key.onClick }}" style="height: 50px; border: none; border-radius: 14px; background: #FFFFFF; color: {{ key.ink }}; font-size: {{ key.size }}; cursor: pointer;">{{ key.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ commitPad }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFFFFF; font-size: 17px; cursor: pointer;">Done</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ logIdle }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ next }}" disabled="{{ logBlocked }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: {{ logCtaBg }}; color: {{ logCtaInk }}; font-size: 17px; cursor: {{ logCursor }};">{{ logCta }}</button>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSession }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;">
+          <div style="font-size: 11px; letter-spacing: 1.5px; color: #8A867E;">SESSION TIMER</div>
+          <div style="font-size: 84px; font-weight: 500; letter-spacing: -3.5px; line-height: 1; font-variant-numeric: tabular-nums;">{{ sessionText }}</div>
+          <div style="font-size: 13px; color: #A8A49C; text-align: center; max-width: 260px; line-height: 1.45; text-wrap: pretty;">Counting up. Stopping fills the duration field for you — the photo is still what gets verified.</div>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+          <button onClick="{{ stopSession }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFFFFF; font-size: 17px; cursor: pointer;">{{ stopSessionCta }}</button>
+          <button onClick="{{ cancelSession }}" style="width: 100%; height: 48px; border: none; border-radius: 16px; background: none; color: #6B6862; font-size: 15px; cursor: pointer;">Cancel, I'll type it</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isWrite }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 20px 34px; display: flex; flex-direction: column;">
+        <div style="padding: 0 4px; font-size: 13px; color: #8A867E;">{{ wordLine }}</div>
+        <textarea value="{{ journal }}" onChange="{{ setJournal }}" placeholder="Write it out." style="flex: 1; margin-top: 12px; border: none; background: none; resize: none; outline: none; font-size: 17px; line-height: 1.5; color: #0A0A0A; padding: 4px;"></textarea>
+        <button onClick="{{ submit }}" disabled="{{ writeBlocked }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: {{ writeBtnBg }}; color: {{ writeBtnInk }}; font-size: 17px; cursor: {{ writeCursor }};">{{ writeCta }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCount }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column; align-items: center;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;">
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 84px; font-weight: 500; letter-spacing: -3.5px; line-height: 1; font-variant-numeric: tabular-nums;">{{ countDisplay }}</span>
+            <span style="font-size: 20px; color: #6B6862;">/ 8 glasses</span>
+          </div>
+          <sc-if value="{{ countIdle }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ inc }}" onPointerDown="{{ holdStart }}" onPointerUp="{{ holdEnd }}" onPointerLeave="{{ holdEnd }}" style="width: 132px; height: 132px; border-radius: 66px; border: none; background: #DC5401; color: #FFFFFF; font-size: 17px; cursor: pointer;">Add one</button>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <button onClick="{{ dec }}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 14px; background: none; color: #6B6862; font-size: 14px; cursor: pointer;">Remove one</button>
+              <button onClick="{{ editCount }}" style="min-height: 44px; padding: 0 16px; border: none; border-radius: 14px; background: none; color: #6B6862; font-size: 14px; cursor: pointer;">Type the number</button>
+            </div>
+            <div style="font-size: 11px; color: #A8A49C;">Press and hold "Add one" to type it instead</div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between;">
+              <span style="font-size: 11px; letter-spacing: .8px; color: #8A867E;">{{ padLabel }}</span>
+              <span style="font-size: 26px; font-weight: 500; letter-spacing: -1px; font-variant-numeric: tabular-nums;">{{ padValue }}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <sc-for list="{{ padKeys }}" as="key" hint-placeholder-count="12">
+                <button onClick="{{ key.onClick }}" style="height: 50px; border: none; border-radius: 14px; background: #FFFFFF; color: {{ key.ink }}; font-size: {{ key.size }}; cursor: pointer;">{{ key.label }}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{ commitPad }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFFFFF; font-size: 17px; cursor: pointer;">Done</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ countIdle }}" hint-placeholder-val="{{ true }}">
+          <div style="width: 100%; font-size: 12px; color: #A8A49C; margin-bottom: 14px; text-align: center;">Self-entered count · nothing is checked</div>
+          <button onClick="{{ submit }}" disabled="{{ countBlocked }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: {{ countBtnBg }}; color: {{ countBtnInk }}; font-size: 17px; cursor: {{ countCursor }};">{{ countCta }}</button>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isAsk }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 106px 24px 34px; display: flex; flex-direction: column;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+          <div style="font-size: 30px; font-weight: 500; letter-spacing: -1.1px;">Did you do it today?</div>
+          <div style="font-size: 16px; color: #6B6862;">{{ taskName }}</div>
+          <div style="margin-top: 6px; font-size: 14px; color: #8A867E;">Self-reported. Nothing is checked.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button onClick="{{ submit }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFFFFF; font-size: 17px; cursor: pointer;">I did it</button>
+          <button onClick="{{ back }}" style="width: 100%; height: 52px; border: 1.5px solid #DED9CE; border-radius: 16px; background: none; color: #4A4741; font-size: 16px; cursor: pointer;">Not yet</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; padding: 90px 24px 34px; display: flex; flex-direction: column; animation: griitRise .3s ease both;">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+          <span style="width: 66px; height: 66px; border-radius: 33px; background: {{ markBg }}; border: {{ markBorder }}; display: flex; align-items: center; justify-content: center;">
+            <span style="width: 22px; height: 11px; border-left: 2.5px solid {{ markInk }}; border-bottom: 2.5px solid {{ markInk }}; transform: rotate(-45deg) translate(2px, -2px);"></span>
+          </span>
+          <div style="margin-top: 20px; font-size: 11px; letter-spacing: 1.6px; color: {{ eyebrowInk }};">{{ confirmEyebrow }}</div>
+          <div style="margin-top: 10px; font-size: 34px; font-weight: 500; letter-spacing: -1.4px; line-height: 1.08; text-wrap: balance;">{{ confirmHeadline }}</div>
+          <div style="margin-top: 12px; font-size: 16px; color: #4A4741;">{{ taskName }}</div>
+          <div style="margin-top: 6px; font-size: 13px; color: #8A867E; line-height: 1.4; max-width: 280px; text-wrap: pretty;">{{ confirmVerifyLine }}</div>
+
+          <div style="margin-top: 30px; width: 100%; display: flex; border-top: 1px solid #E7E2D8; border-bottom: 1px solid #E7E2D8;">
+            <sc-for list="{{ confirmStats }}" as="stat" hint-placeholder-count="2">
+              <div style="flex: 1; padding: 18px 8px; display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-size: 24px; font-weight: 500; letter-spacing: -.9px; color: {{ stat.ink }};">{{ stat.value }}</span>
+                <span style="font-size: 11px; letter-spacing: .7px; color: #8A867E;">{{ stat.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 14px; font-size: 12px; color: #A8A49C; line-height: 1.5; max-width: 290px; text-wrap: pretty;">{{ confirmFootnote }}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button onClick="{{ done }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: {{ confirmCtaBg }}; color: #FFFFFF; font-size: 17px; cursor: pointer;">Done</button>
+          <sc-if value="{{ canShare }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ done }}" style="width: 100%; height: 48px; border: none; border-radius: 16px; background: none; color: #6B6862; font-size: 15px; cursor: pointer;">Share to my circle</button>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isVerifying }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: #F5F2EC; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 30;">
+        <span style="width: 34px; height: 34px; border-radius: 17px; border: 2.5px solid #E2DDD2; border-top-color: #DC5401; animation: griitSpin .8s linear infinite;"></span>
+        <span style="font-size: 15px; color: #4A4741;">Posting your proof…</span>
+        <span style="font-size: 13px; color: #8A867E;">Nothing is secured until the server says so.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFailed }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: #F5F2EC; padding: 106px 24px 34px; display: flex; flex-direction: column; z-index: 30;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px;">
+          <div style="font-size: 11px; letter-spacing: 1.6px; color: #A4341A;">NOT POSTED</div>
+          <div style="font-size: 30px; font-weight: 500; letter-spacing: -1.2px; line-height: 1.1;">Upload didn't go through</div>
+          <div style="font-size: 15px; color: #4A4741; line-height: 1.45; text-wrap: pretty;">Your photo is saved on this device. The day is not secured yet. Retry when you have signal — the capture keeps its original timestamp.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button onClick="{{ retry }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #DC5401; color: #FFFFFF; font-size: 17px; cursor: pointer;">Retry now</button>
+          <button onClick="{{ clearEdge }}" style="width: 100%; height: 48px; border: none; border-radius: 16px; background: none; color: #6B6862; font-size: 15px; cursor: pointer;">Keep it for later</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBlocked }}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: #F5F2EC; padding: 106px 24px 34px; display: flex; flex-direction: column; z-index: 30;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px;">
+          <div style="font-size: 11px; letter-spacing: 1.6px; color: #8A867E;">{{ blockedEyebrow }}</div>
+          <div style="font-size: 30px; font-weight: 500; letter-spacing: -1.2px; line-height: 1.1; text-wrap: balance;">{{ blockedHeadline }}</div>
+          <div style="font-size: 15px; color: #4A4741; line-height: 1.45; text-wrap: pretty;">{{ blockedBody }}</div>
+          <div style="margin-top: 6px; font-size: 13px; color: #8A867E;">{{ blockedMeta }}</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button onClick="{{ clearEdge }}" style="width: 100%; height: 56px; border: none; border-radius: 16px; background: #0A0A0A; color: #FFFFFF; font-size: 17px; cursor: pointer;">{{ blockedCta }}</button>
+          <button onClick="{{ clearEdge }}" style="width: 100%; height: 48px; border: none; border-radius: 16px; background: none; color: #6B6862; font-size: 15px; cursor: pointer;">Back to today</button>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <div style="width: 344px; display: flex; flex-direction: column; gap: 14px; flex-shrink: 0;">
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px;">
+      <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">TASK TYPE</div>
+      <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{ typeChips }}" as="chip" hint-placeholder-count="8">
+          <button onClick="{{ chip.onClick }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid {{ chip.border }}; background: {{ chip.bg }}; color: {{ chip.ink }}; font-size: 14px; cursor: pointer;">{{ chip.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+      <div>
+        <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">WHAT IS ACTUALLY VERIFIED</div>
+        <div style="margin-top: 7px; font-size: 15px; color: #0A0A0A; line-height: 1.4;">{{ verifiedLine }}</div>
+      </div>
+      <div style="border-top: 1px solid #EFEBE2; padding-top: 14px;">
+        <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">HOME TO HOME</div>
+        <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 7px;">
+          <span style="font-size: 30px; font-weight: 500; letter-spacing: -1.2px;">{{ tapTarget }}</span>
+          <span style="font-size: 14px; color: #6B6862;">taps</span>
+        </div>
+        <div style="margin-top: 5px; font-size: 13px; color: #6B6862; line-height: 1.4;">{{ tapSequence }}</div>
+        <div style="margin-top: 9px; font-size: 12px; color: #A8A49C;">This run: {{ taps }} taps · plus one to dismiss the confirmation</div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px;">
+      <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">NUMERIC FIELD STATES</div>
+      <div style="margin-top: 12px; display: flex; gap: 8px;">
+        <div style="flex: 1; background: #F5F2EC; border-radius: 14px; padding: 12px; border: 1.5px solid transparent;">
+          <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">DISTANCE</div>
+          <div style="margin-top: 6px; font-size: 24px; font-weight: 500; letter-spacing: -1px; color: #C6C1B7;">—</div>
+          <div style="margin-top: 4px; font-size: 10px; color: #A8A49C;">Empty</div>
+        </div>
+        <div style="flex: 1; background: #F5F2EC; border-radius: 14px; padding: 12px; border: 1.5px solid #DC5401;">
+          <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">DISTANCE</div>
+          <div style="margin-top: 6px; font-size: 24px; font-weight: 500; letter-spacing: -1px; color: #DC5401;">5.0<span style="opacity: .45;">2</span></div>
+          <div style="margin-top: 4px; font-size: 10px; color: #A8A49C;">Editing</div>
+        </div>
+        <div style="flex: 1; background: #F5F2EC; border-radius: 14px; padding: 12px; border: 1.5px solid transparent;">
+          <div style="font-size: 10px; letter-spacing: .7px; color: #8A867E;">DISTANCE</div>
+          <div style="margin-top: 6px; font-size: 24px; font-weight: 500; letter-spacing: -1px; color: #0A0A0A;">5.02</div>
+          <div style="margin-top: 4px; font-size: 10px; color: #A8A49C;">Filled</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px;">
+      <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">DAY OUTCOME ON SUBMIT</div>
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <sc-for list="{{ outcomeChips }}" as="chip" hint-placeholder-count="3">
+          <button onClick="{{ chip.onClick }}" style="width: 100%; min-height: 46px; padding: 0 14px; border-radius: 14px; border: 1.5px solid {{ chip.border }}; background: {{ chip.bg }}; color: {{ chip.ink }}; font-size: 14px; text-align: left; cursor: pointer;">{{ chip.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border-radius: 22px; padding: 20px;">
+      <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">EDGE STATES</div>
+      <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{ edgeChips }}" as="chip" hint-placeholder-count="5">
+          <button onClick="{{ chip.onClick }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid {{ chip.border }}; background: {{ chip.bg }}; color: {{ chip.ink }}; font-size: 14px; cursor: pointer;">{{ chip.label }}</button>
+        </sc-for>
+      </div>
+      <div style="margin-top: 14px; border-top: 1px solid #EFEBE2; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <button onClick="{{ skipTimer }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid #E7E2D8; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Run timer to 0:00</button>
+        <button onClick="{{ fillJournal }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid #E7E2D8; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Fill 150 words</button>
+        <button onClick="{{ fillCount }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid #E7E2D8; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Count to 8</button>
+        <button onClick="{{ fillLog }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid #E7E2D8; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Fill the log</button>
+        <button onClick="{{ reset }}" style="min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1.5px solid #E7E2D8; background: none; color: #4A4741; font-size: 14px; cursor: pointer;">Reset run</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="width: 100%; max-width: 810px; display: flex; flex-direction: column; gap: 18px;">
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div style="font-size: 11px; letter-spacing: 1.4px; color: #8A867E;">LIVE ACTIVITIES</div>
+    <div style="font-size: 22px; font-weight: 500; letter-spacing: -.7px;">Lock screen and Dynamic Island</div>
+    <div style="font-size: 14px; color: #6B6862; line-height: 1.5; max-width: 620px; text-wrap: pretty;">Only for the three types that keep running while the phone is away: timer, run / workout, and the counter family. Photo, journal, check-in and self-report finish in one interaction, so a persistent card would be noise.</div>
+  </div>
+
+  <sc-for list="{{ laCards }}" as="card" hint-placeholder-count="6">
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; background: #FFFFFF; border-radius: 22px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
+        <span style="font-size: 11px; letter-spacing: 1.4px; color: {{ card.accent }};">{{ card.head }}</span>
+        <span style="font-size: 12px; color: #A8A49C;">{{ card.tap }}</span>
+      </div>
+
+      <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <span style="font-size: 10px; letter-spacing: .8px; color: #A8A49C;">LOCK SCREEN · 360 × {{ card.lockH }}</span>
+          <div style="width: 360px; padding: 18px; border-radius: 22px; background: #0A0A0A; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 9px;">
+              <span style="width: 22px; height: 22px; border-radius: 6px; background: {{ card.accent }}; display: flex; align-items: center; justify-content: center; gap: 2px;">
+                <span style="width: 3px; height: 9px; border-radius: 1px; background: #0A0A0A;"></span>
+                <span style="width: 3px; height: 9px; border-radius: 1px; background: #0A0A0A;"></span>
+              </span>
+              <span style="font-size: 12px; letter-spacing: .6px; color: rgba(255,255,255,.7);">GRIIT</span>
+              <span style="flex: 1;"></span>
+              <span style="font-size: 12px; color: {{ card.footInk }};">{{ card.foot }}</span>
+            </div>
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;">
+              <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                <span style="font-size: 15px; color: #FFFFFF;">{{ card.task }}</span>
+                <span style="font-size: 12px; color: rgba(255,255,255,.6);">{{ card.challenge }}</span>
+              </span>
+              <span style="display: flex; align-items: baseline; gap: 6px; flex-shrink: 0;">
+                <span style="font-size: 38px; font-weight: 500; letter-spacing: -1.5px; line-height: 1; color: {{ card.bigInk }}; font-variant-numeric: tabular-nums;">{{ card.big }}</span>
+                <span style="font-size: 13px; color: rgba(255,255,255,.6);">{{ card.bigSub }}</span>
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span style="flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); overflow: hidden;">
+                <span style="display: block; height: 4px; width: {{ card.pct }}; background: {{ card.accent }};"></span>
+              </span>
+              <sc-if value="{{ card.hasButton }}" hint-placeholder-val="{{ false }}">
+                <span style="height: 34px; min-width: 62px; padding: 0 16px; border-radius: 17px; background: rgba(255,255,255,.16); color: #FFFFFF; font-size: 15px; display: flex; align-items: center; justify-content: center;">+1</span>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <span style="font-size: 10px; letter-spacing: .8px; color: #A8A49C;">DYNAMIC ISLAND · COMPACT</span>
+            <div style="width: 214px; height: 37px; border-radius: 19px; background: #0A0A0A; display: flex; align-items: center; justify-content: space-between; padding: 0 12px;">
+              <span style="width: 16px; height: 16px; border-radius: 5px; background: {{ card.accent }}; display: flex; align-items: center; justify-content: center; gap: 1.5px;">
+                <span style="width: 2px; height: 7px; border-radius: 1px; background: #0A0A0A;"></span>
+                <span style="width: 2px; height: 7px; border-radius: 1px; background: #0A0A0A;"></span>
+              </span>
+              <span style="width: 62px; height: 21px; border-radius: 11px; background: #000000;"></span>
+              <span style="font-size: 14px; color: #FFFFFF; font-variant-numeric: tabular-nums;">{{ card.compact }}</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <span style="font-size: 10px; letter-spacing: .8px; color: #A8A49C;">DYNAMIC ISLAND · EXPANDED</span>
+            <div style="width: 372px; border-radius: 40px; background: #0A0A0A; padding: 18px 22px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="width: 34px; height: 34px; border-radius: 10px; background: {{ card.accent }}; display: flex; align-items: center; justify-content: center; gap: 3px; flex-shrink: 0;">
+                  <span style="width: 4px; height: 13px; border-radius: 1px; background: #0A0A0A;"></span>
+                  <span style="width: 4px; height: 13px; border-radius: 1px; background: #0A0A0A;"></span>
+                </span>
+                <span style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                  <span style="font-size: 14px; color: #FFFFFF;">{{ card.task }}</span>
+                  <span style="font-size: 12px; color: rgba(255,255,255,.55);">{{ card.expandedSub }}</span>
+                </span>
+                <sc-if value="{{ card.hasButton }}" hint-placeholder-val="{{ false }}">
+                  <span style="height: 40px; min-width: 66px; padding: 0 18px; border-radius: 20px; background: rgba(255,255,255,.16); color: #FFFFFF; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">+1</span>
+                </sc-if>
+                <span style="font-size: 30px; font-weight: 500; letter-spacing: -1.2px; color: {{ card.bigInk }}; font-variant-numeric: tabular-nums; flex-shrink: 0;">{{ card.big }}</span>
+              </div>
+              <span style="height: 4px; border-radius: 2px; background: rgba(255,255,255,.2); overflow: hidden;">
+                <span style="display: block; height: 4px; width: {{ card.pct }}; background: {{ card.accent }};"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: #A8A49C; line-height: 1.5; text-wrap: pretty;">{{ card.note }}</div>
+    </div>
+  </sc-for>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;taskType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;photo&quot;,&quot;timer&quot;,&quot;run&quot;,&quot;workout&quot;,&quot;journal&quot;,&quot;counter&quot;,&quot;checkin&quot;,&quot;manual&quot;],&quot;default&quot;:&quot;photo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Flow&quot;},&quot;dayOutcome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;secured&quot;,&quot;left&quot;,&quot;already&quot;],&quot;default&quot;:&quot;secured&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Flow&quot;}}">
+const TYPES = {
+  photo: { label: 'Photo', name: 'Drink water and post a photo', chrome: 'Photo proof',
+    verified: 'Live capture, camera only. Time window if the challenge sets one.',
+    confirmLine: 'Captured live in the app · 9:17 PM',
+    gates: ['Camera only · live capture'], taps: 3, seq: 'task → shutter → post',
+    steps: ['home', 'cam', 'review', 'confirm'], honest: true },
+  timer: { label: 'Timer', name: 'Meditate 10 minutes', chrome: 'Timer',
+    verified: 'A 10:00 timer ran on the clock, start to finish, with both timestamps recorded.',
+    confirmLine: 'Timer ran 10:00 · started 6:02 PM',
+    gates: ['10:00 timer', 'Runs on the clock — lock your phone if you want'], taps: 3, seq: 'task → start → done',
+    steps: ['home', 'entry', 'timer', 'confirm'], honest: true },
+  run: { label: 'Run', name: 'Run 5k', chrome: 'Run',
+    verified: 'The photo is a live capture. Distance and duration are self-entered.',
+    confirmLine: 'Photo captured live · 5.02 km and 27:41 self-entered',
+    gates: ['Camera only · live capture'], taps: 5, seq: 'task → log → shutter → post → done',
+    steps: ['home', 'log', 'cam', 'review', 'confirm'], honest: true },
+  workout: { label: 'Workout', name: 'Lift for 45 minutes', chrome: 'Workout',
+    verified: 'The photo is a live capture. Duration is self-entered unless the in-app timer ran.',
+    confirmLine: 'Photo captured live · 45 min self-entered',
+    gates: ['Camera only · live capture', 'At least 30 minutes'], taps: 5, seq: 'task → kind → shutter → post → done',
+    steps: ['home', 'log', 'cam', 'review', 'confirm'], honest: true },
+  journal: { label: 'Journal', name: 'Write 150 words', chrome: 'Journal',
+    verified: 'Word count only. The text is the proof; nobody checks what it says.',
+    confirmLine: 'Word count met · 150 words',
+    gates: ['150 words minimum'], taps: 3, seq: 'task → write → post',
+    steps: ['home', 'write', 'confirm'], honest: true },
+  counter: { label: 'Water / count', name: 'Drink 8 glasses', chrome: 'Count',
+    verified: 'Nothing. You entered the count yourself.',
+    confirmLine: 'Self-entered count · nothing was checked',
+    gates: ['Self-entered count · nothing checked'], taps: '2 + goal', seq: 'task → 8 taps → submit',
+    steps: ['home', 'count', 'confirm'], honest: false },
+  checkin: { label: 'Check-in', name: "Train at Gold's Gym", chrome: 'Check-in',
+    verified: 'GPS inside a 100 m radius at the moment you tap.',
+    confirmLine: 'GPS 24 m from the saved location · ±8 m accuracy',
+    gates: ["Be within 100 m of Gold's Gym"], taps: 3, seq: "task → I'm here → done",
+    steps: ['home', 'entry', 'confirm'], honest: true },
+  manual: { label: 'Self-report', name: 'Hit your bedtime', chrome: 'Self-report',
+    verified: 'Nothing is checked.',
+    confirmLine: 'Nothing was checked. You said you did it.',
+    gates: ['Self-reported · nothing checked'], taps: 3, seq: 'task → I did it → done',
+    steps: ['home', 'ask', 'confirm'], honest: false }
+};
+const ORDER = ['photo', 'timer', 'run', 'workout', 'journal', 'counter', 'checkin', 'manual'];
+const TIMER_SEC = 600;
+const OUTCOMES = [
+  { id: 'secured', label: 'This was the last required task — day secured' },
+  { id: 'left', label: 'One more required task after this one' },
+  { id: 'already', label: 'Day was already secured earlier today' }
+];
+const EDGES = [
+  { id: 'verifying', label: 'Verifying' },
+  { id: 'failed', label: 'Upload failed' },
+  { id: 'window', label: 'Window not open' },
+  { id: 'range', label: 'Out of range' },
+  { id: 'lock', label: 'Lock screen (timer)' },
+  { id: 'notif', label: 'Timer done notification' }
+];
+// Live Activities exist only for types that keep running while the phone is away.
+// Orange is the verified accent (timer, run, workout); the counter family is muted because
+// its number is self-entered — and the disclosure survives to the smallest size.
+const ORANGE = '#DC5401';
+const MUTED = '#A8A49C';
+const LIVE_ACTIVITIES = [
+  { head: 'TIMER · RUNNING', accent: ORANGE, task: 'Meditate 10 minutes', challenge: 'Day 3 · Consistent Bedtime',
+    big: '4:20', bigSub: '', pct: '57%', foot: 'ends 6:12 PM', compact: '4:20', lockH: '132',
+    expandedSub: 'Consistent Bedtime · ends 6:12 PM', tap: 'Tap → Running state in-app',
+    note: 'Countdown derived from started_at, rendered with a .timer text style so it updates without pushes. Progress is elapsed / required.' },
+  { head: 'TIMER · COMPLETE', accent: ORANGE, task: 'Meditate 10 minutes', challenge: 'Done · Come back to post proof.',
+    big: '10:00', bigSub: '', pct: '100%', foot: 'ran 6:02 – 6:12 PM', compact: 'Done', lockH: '132',
+    expandedSub: 'Done · Come back to post proof.', tap: 'Tap → Verifying, then the confirmation',
+    note: 'The session is already recorded when this appears, so the card asks for the one thing left: come back and post. Dismisses when the proof posts.' },
+  { head: 'RUN / WORKOUT · RUNNING', accent: ORANGE, task: 'Run 5k', challenge: 'Day 3 · Consistent Bedtime',
+    big: '27:41', bigSub: '', pct: '100%', foot: 'started 6:02 PM', compact: '27:41', lockH: '132',
+    expandedSub: 'Counting up · started 6:02 PM', tap: 'Tap → Log screen, duration pre-filled',
+    note: 'Elapsed time counting up, from the clock. No distance and no pace: those are self-entered, and we do not fake a number we never measured. The track runs full while the session is open.' },
+  { head: 'RUN / WORKOUT · COMPLETE', accent: ORANGE, task: 'Run 5k', challenge: 'Stopped · Come back to post proof.',
+    big: '27:41', bigSub: '', pct: '100%', foot: 'ran 6:02 – 6:30 PM', compact: 'Done', lockH: '132',
+    expandedSub: 'Duration ready · come back to post proof.', tap: 'Tap → Log screen, duration pre-filled',
+    note: 'Duration carries into the log field as a filled value; distance stays empty for the user to enter. The photo is still what gets verified.' },
+  { head: 'WATER / COUNT · RUNNING', accent: MUTED, task: 'Drink 8 glasses', challenge: 'Self-entered · nothing checked',
+    big: '3', bigSub: 'of 8 glasses', pct: '38%', foot: 'Self-entered', compact: '3/8', lockH: '132',
+    expandedSub: 'Self-entered · nothing checked', tap: '+1 increments without opening the app',
+    note: 'Interactive Live Activity (iOS 17+): the single +1 button posts an increment through an App Intent, no launch. Muted accent and the word "Self-entered" both survive to the compact size — the count is not verified at any size.' },
+  { head: 'WATER / COUNT · COMPLETE', accent: MUTED, task: 'Drink 8 glasses', challenge: 'Goal met · come back to log it.',
+    big: '8', bigSub: 'of 8 glasses', pct: '100%', foot: 'Self-entered', compact: '8/8', lockH: '132',
+    expandedSub: 'Self-entered · come back to log it', tap: 'Tap → Count screen, ready to submit',
+    note: 'Reaching the goal removes the +1 button and asks for the submit. It never says secured or verified, because nothing was checked.' }
+];
+
+const SAMPLE = ('Slept badly and still got up. The room was cold and the first ten minutes were '
+  + 'unpleasant, then it stopped mattering. I keep learning the same thing: the decision is made '
+  + 'the night before, not in the morning. Today I did not argue with myself about it, I just went. '
+  + 'That is the whole difference between a week that holds and a week that falls apart. Writing it '
+  + 'down so that tomorrow I remember it was boring and fine rather than heroic, because boring and '
+  + 'fine is what actually repeats. Nothing dramatic happened and that is the point of the streak. '
+  + 'Tomorrow is the same task at the same hour and I already know how it goes, which is the only '
+  + 'reason any of this holds together. No negotiation, no debate, no clever reason why today is '
+  + 'different from every other day I have already done this. Get up, go, come back, write it down, '
+  + 'do it again. The streak is not motivation, it is just a record of decisions I stopped making '
+  + 'twice.').split(/\s+/).slice(0, 152).join(' ');
+
+class Component extends DCLogic {
+  state = { type: null, i: 0, taps: 0, caption: '', journal: '', count: 0, done: false,
+    outcome: null, edge: null, kind: 'Lift', verifying: false,
+    dist: null, unit: 'km', durSec: null, wkMin: null, editing: null, buf: '',
+    session: false, upSec: 0, sound: true, startedAt: null };
+
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.up); clearInterval(this.upTick); clearTimeout(this.hold); }
+
+  type() { return this.state.type || this.props.taskType || 'photo'; }
+  cfg() { return TYPES[this.type()]; }
+  outcome() { return this.state.outcome || this.props.dayOutcome || 'secured'; }
+  steps() { return this.cfg().steps; }
+  step() { return this.steps()[Math.min(this.state.i, this.steps().length - 1)]; }
+  words() { return this.state.journal.trim() ? this.state.journal.trim().split(/\s+/).length : 0; }
+
+  go(i) { this.setState((s) => ({ i, taps: s.taps + 1, edge: null })); }
+  next() {
+    const leaving = this.step();
+    this.go(Math.min(this.state.i + 1, this.steps().length - 1));
+    if (this.type() === 'timer' && leaving === 'entry') this.runTimer();
+  }
+  back() {
+    if (this.state.edge) return this.setState({ edge: null });
+    if (this.state.i <= 1) return this.reset();
+    this.setState((s) => ({ i: s.i - 1 }));
+  }
+  reset() {
+    clearInterval(this.tick); clearTimeout(this.up); clearInterval(this.upTick);
+    this.setState({ i: 0, taps: 0, caption: '', journal: '', count: 0, edge: null, verifying: false,
+      startedAt: null, dist: null, durSec: null, wkMin: null, editing: null, buf: '', session: false, upSec: 0 });
+  }
+  startTask() {
+    this.setState((s) => ({ i: 1, taps: s.taps + 1, done: false, edge: null }));
+  }
+  // The timer runs on the wall clock, not on screen time: we store the start instant and
+  // derive the remainder. Locking the phone, backgrounding, or being killed changes nothing —
+  // reopening mid-run shows the true remaining time, and if it elapsed while away the session
+  // is already complete. There is no hard mode on this surface.
+  remaining() {
+    if (!this.state.startedAt) return TIMER_SEC;
+    return Math.max(0, TIMER_SEC - Math.floor((Date.now() - this.state.startedAt) / 1000));
+  }
+  armTimer(offsetSec) {
+    clearInterval(this.tick);
+    this.setState({ startedAt: Date.now() - (offsetSec || 0) * 1000 });
+    this.tick = setInterval(() => {
+      if (this.remaining() > 0) { this.forceUpdate(); return; }
+      clearInterval(this.tick);
+      // Elapsed while the phone was locked: the Live Activity becomes the completion notice.
+      if (this.state.edge === 'lock') this.setState({ edge: 'notif' });
+      else if (this.state.edge !== 'notif') this.submit();
+      else this.forceUpdate();
+    }, 250);
+  }
+  runTimer() { this.armTimer(0); }
+  clock(ms) {
+    return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+  submit() {
+    clearInterval(this.tick);
+    const last = this.steps().length - 1;
+    this.setState((s) => ({ verifying: true, taps: s.taps + 1, edge: null }));
+    clearTimeout(this.up);
+    this.up = setTimeout(() => this.setState({ verifying: false, i: last }), 1100);
+  }
+  finish() {
+    clearTimeout(this.up); clearInterval(this.tick);
+    this.setState({ i: 0, done: true, verifying: false, edge: null, startedAt: null });
+  }
+
+  // ---- numeric entry (README §4.3) ----
+  // One keypad serves distance (2 implied decimals), duration (mm:ss shifting in from the
+  // right), minutes and count. No system keyboard: it would cover the CTA and it offers
+  // paste, which has no meaning for a self-entered number.
+  padSpec() {
+    const f = this.state.editing; const buf = this.state.buf;
+    if (f === 'dist') {
+      const v = buf ? (parseInt(buf, 10) / 100) : null;
+      return { label: 'DISTANCE IN ' + this.state.unit.toUpperCase(), max: 5,
+        value: v === null ? '0.00' : v.toFixed(2), commit: { dist: v } };
+    }
+    if (f === 'dur') {
+      const p = buf.padStart(4, '0');
+      const mm = p.slice(0, 2); const ss = p.slice(2);
+      return { label: 'DURATION MM:SS', max: 4, value: mm + ':' + ss,
+        commit: { durSec: buf ? parseInt(mm, 10) * 60 + Math.min(59, parseInt(ss, 10)) : null } };
+    }
+    if (f === 'wkmin') {
+      return { label: 'DURATION IN MINUTES', max: 3, value: buf || '0',
+        commit: { wkMin: buf ? parseInt(buf, 10) : null } };
+    }
+    return { label: 'GLASSES', max: 2, value: buf || '0',
+      commit: { count: buf ? Math.min(8, parseInt(buf, 10)) : 0 } };
+  }
+  padKeys() {
+    const spec = this.padSpec();
+    const digit = (d) => ({ label: d, size: '20px', ink: '#0A0A0A',
+      onClick: () => this.setState((s) => ({ buf: (s.buf + d).replace(/^0+(?=\d)/, '').slice(0, spec.max) })) });
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(digit);
+    keys.push({ label: 'Clear', size: '13px', ink: '#6B6862', onClick: () => this.setState({ buf: '' }) });
+    keys.push(digit('0'));
+    keys.push({ label: 'Del', size: '13px', ink: '#6B6862', onClick: () => this.setState((s) => ({ buf: s.buf.slice(0, -1) })) });
+    return keys;
+  }
+  numField(id, label, opts) {
+    const editing = this.state.editing === id;
+    const v = opts.value;
+    return {
+      label, hint: opts.hint,
+      value: v === null ? opts.empty : opts.text,
+      ink: editing ? '#DC5401' : (v === null ? '#C6C1B7' : '#0A0A0A'),
+      border: editing ? '#DC5401' : 'transparent',
+      unit: opts.unit, unitBg: opts.onUnit ? '#EFEBE2' : 'transparent',
+      unitCursor: opts.onUnit ? 'pointer' : 'default',
+      onUnit: opts.onUnit || (() => {}),
+      onEdit: () => this.setState({ editing: id, buf: '' }),
+      down: opts.down, up: opts.up, onDown: opts.onDown, onUp: opts.onUp
+    };
+  }
+
+  chip(on, label, onClick) {
+    return { label, onClick,
+      bg: on ? '#0A0A0A' : 'transparent',
+      ink: on ? '#FFFFFF' : '#4A4741',
+      border: on ? '#0A0A0A' : '#E7E2D8' };
+  }
+
+  confirm() {
+    const c = this.cfg(); const o = this.outcome(); const honest = c.honest;
+    const two = (n) => String(n).padStart(2, '0');
+    let vline = c.confirmLine;
+    if (this.type() === 'run' && this.state.dist !== null && this.state.durSec !== null) {
+      vline = 'Photo captured live · ' + this.state.dist.toFixed(2) + ' ' + this.state.unit + ' and '
+        + two(Math.floor(this.state.durSec / 60)) + ':' + two(this.state.durSec % 60) + ' self-entered';
+    }
+    if (this.type() === 'timer' && this.state.startedAt) {
+      vline = 'Timer ran 10:00 · started ' + this.clock(this.state.startedAt);
+    }
+    if (this.type() === 'workout' && this.state.wkMin !== null) {
+      vline = 'Photo captured live · ' + this.state.wkMin + ' min self-entered';
+    }
+    const secured = o === 'secured';
+    const stats = [];
+    if (secured) stats.push({ value: '14 days', label: 'STREAK', ink: '#0A0A0A' });
+    else stats.push({ value: '13 days', label: 'STREAK · UNCHANGED', ink: '#8A867E' });
+    stats.push({ value: 'Day 3 of 14', label: 'CONSISTENT BEDTIME', ink: '#0A0A0A' });
+    let head = 'Day secured';
+    let foot = 'Streak: consecutive days where every required task was completed.';
+    if (o === 'left') { head = '1 required task left'; foot = 'The streak moves only when every required task for the day is done.'; }
+    if (o === 'already') { head = 'Task done'; foot = 'The day was already secured earlier today. Nothing changes on the streak.'; }
+    if (!honest && secured) head = 'Day secured';
+    return {
+      eyebrow: honest ? 'PROOF POSTED' : 'LOGGED · SELF-REPORTED',
+      head, foot,
+      verifyLine: vline,
+      markBg: honest ? '#DC5401' : 'transparent',
+      markBorder: honest ? 'none' : '1.5px solid #A8A49C',
+      markInk: honest ? '#FFFFFF' : '#0A0A0A',
+      eyebrowInk: honest ? '#DC5401' : '#8A867E',
+      ctaBg: honest ? '#DC5401' : '#0A0A0A',
+      stats,
+      canShare: honest && secured
+    };
+  }
+
+  blocked() {
+    const e = this.state.edge;
+    if (e === 'range') return { eyebrow: 'OUT OF RANGE', head: "You're not at Gold's Gym", body: "You need to be within 100 m of the saved location. Right now you're 1.4 km away. Nothing is logged until you're inside the radius.", meta: 'GPS accuracy ±12 m · last checked just now', cta: 'Check again' };
+    return { eyebrow: 'NOT OPEN YET', head: 'Opens at 6:00 AM', body: 'This task only counts inside its window: 6:00 AM to 9:00 AM. You can shoot the photo then. Nothing is logged before it opens.', meta: "Window opens in 8h 43m · we'll remind you at 6:00 AM", cta: 'Remind me at 6:00 AM' };
+  }
+
+  renderVals() {
+    const c = this.cfg(); const t = this.type(); const step = this.step(); const e = this.state.edge;
+    const secured = this.outcome() === 'secured';
+    const verifying = this.state.verifying || e === 'verifying';
+    const failed = e === 'failed';
+    const blocked = e === 'window' || e === 'range';
+    const osSurface = e === 'lock' || e === 'notif';
+    const isHome = !verifying && !failed && !blocked && step === 'home';
+    const isConfirm = !verifying && !failed && !blocked && step === 'confirm';
+    const dark = !verifying && !failed && !blocked && (step === 'cam' || step === 'review');
+    const w = this.words(); const cf = this.confirm(); const bl = this.blocked();
+    const rem = this.remaining();
+    const mm = Math.floor(rem / 60);
+    const ss = String(rem % 60).padStart(2, '0');
+    const startMs = this.state.startedAt || Date.now();
+    const countReady = this.state.count >= 8;
+    const writeReady = w >= 150;
+    const homeDone = this.state.done;
+    const pad = this.padSpec();
+    const two = (n) => String(n).padStart(2, '0');
+    const durText = this.state.durSec === null ? '' : two(Math.floor(this.state.durSec / 60)) + ':' + two(this.state.durSec % 60);
+    const sessText = two(Math.floor(this.state.upSec / 60)) + ':' + two(this.state.upSec % 60);
+    const logReady = t === 'run'
+      ? (this.state.dist !== null && this.state.dist > 0 && this.state.durSec !== null && this.state.durSec > 0)
+      : (this.state.wkMin !== null && this.state.wkMin >= 30);
+
+    return {
+      frameBg: dark ? '#0B0B0B' : '#F5F2EC',
+      chromeInk: dark ? '#FFFFFF' : '#0A0A0A',
+      chromeMuted: dark ? 'rgba(255,255,255,.6)' : '#8A867E',
+      chromeTitle: 'Day 3 · ' + c.chrome,
+      showChrome: !isHome && !isConfirm && !verifying,
+      taskName: c.name,
+      gates: c.gates,
+      camGateLine: c.gates[0],
+      reviewMeta: 'Day 3 · ' + c.chrome,
+      captionPreview: this.state.caption || 'Add a caption',
+      caption: this.state.caption,
+      captionCount: this.state.caption.length + ' / 120',
+      setCaption: (ev) => this.setState({ caption: ev.target.value.slice(0, 120) }),
+
+      isHome, isConfirm,
+      isEntry: !verifying && !failed && !blocked && step === 'entry',
+      isCam: !verifying && !failed && !blocked && step === 'cam',
+      isReview: !verifying && !failed && !blocked && step === 'review',
+      isTimer: !verifying && !failed && !blocked && step === 'timer',
+      isLog: !verifying && !failed && !blocked && step === 'log' && !this.state.session,
+      isWrite: !verifying && !failed && !blocked && step === 'write',
+      isCount: !verifying && !failed && !blocked && step === 'count',
+      isAsk: !verifying && !failed && !blocked && step === 'ask',
+      isVerifying: verifying, isFailed: failed, isBlocked: blocked,
+      isCheckin: t === 'checkin', isTimerType: t === 'timer', isWorkoutType: t === 'workout',
+      entryCta: t === 'checkin' ? "I'm here" : 'Start 10:00',
+
+      homeEyebrow: homeDone && secured ? 'STREAK SECURED' : 'CURRENT STREAK',
+      homeStreak: homeDone && secured ? 14 : 13,
+      homeStreakUnit: 'days',
+      homeLine: homeDone
+        ? (secured ? 'Day secured. Proof posted 9:17 PM.' : 'One required task left before the day is secured.')
+        : 'Secure today to reach 14 days.',
+      homeProgress: homeDone ? (secured ? '3 of 3' : '2 of 3') : '1 of 3',
+      rows: [
+        { name: 'Cold shower', meta: 'Photo · required', done: true, open: false, ink: '#8A867E', onClick: () => {} },
+        { name: c.name, meta: c.label + ' · required', done: homeDone, open: !homeDone,
+          ink: homeDone ? '#8A867E' : '#0A0A0A', onClick: () => this.startTask() },
+        { name: 'Hit your bedtime', meta: 'Self-report · required', done: homeDone && secured,
+          open: !(homeDone && secured), ink: homeDone && secured ? '#8A867E' : '#0A0A0A', onClick: () => {} }
+      ],
+      tabs: ['Home', 'Discover', 'Post', 'Activity', 'Profile'].map((label, i) => ({ label, ink: i === 0 ? '#DC5401' : '#A8A49C' })),
+
+      timerText: mm + ':' + ss,
+      timerPct: Math.round(((TIMER_SEC - rem) / TIMER_SEC) * 100) + '%',
+      startedAtText: this.clock(startMs),
+      endsAtText: this.clock(startMs + TIMER_SEC * 1000),
+      lockClock: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M/, ''),
+      isLock: e === 'lock', isNotif: e === 'notif',
+      // Reopening mid-run lands on the true remaining time; if it elapsed while away the
+      // session is already complete and we go straight to verifying.
+      openFromLock: () => { this.setState({ edge: null }); if (this.remaining() <= 0) this.submit(); },
+      openFromNotif: () => { this.setState({ edge: null }); this.submit(); },
+      cancelTimer: () => this.reset(),
+      skipTimer: () => { if (t === 'timer') { this.setState({ i: 2 }); this.armTimer(TIMER_SEC - 4); } },
+
+      logTitle: t === 'run' ? 'Log the run' : 'Log the session',
+      logNote: t === 'run' ? 'Then one photo to prove you were out there.' : 'Then one photo to prove you were there.',
+      numFields: t === 'run'
+        ? [
+          this.numField('dist', 'DISTANCE', {
+            value: this.state.dist, text: this.state.dist === null ? '' : this.state.dist.toFixed(2),
+            empty: '—', hint: 'Tap to type', unit: this.state.unit,
+            onUnit: () => this.setState((s) => ({ unit: s.unit === 'km' ? 'mi' : 'km' })),
+            down: '− 0.1', up: '+ 0.1',
+            onDown: () => this.setState((s) => ({ dist: Math.max(0, Number(((s.dist || 0) - 0.1).toFixed(2))) })),
+            onUp: () => this.setState((s) => ({ dist: Number(((s.dist || 0) + 0.1).toFixed(2)) }))
+          }),
+          this.numField('dur', 'DURATION', {
+            value: this.state.durSec, text: durText, empty: '—:—', hint: 'mm:ss', unit: 'min',
+            down: '− 0:30', up: '+ 0:30',
+            onDown: () => this.setState((s) => ({ durSec: Math.max(0, (s.durSec || 0) - 30) })),
+            onUp: () => this.setState((s) => ({ durSec: (s.durSec || 0) + 30 }))
+          })
+        ]
+        : [
+          this.numField('wkmin', 'DURATION', {
+            value: this.state.wkMin, text: String(this.state.wkMin), empty: '—',
+            hint: this.state.wkMin !== null && this.state.wkMin < 30 ? 'At least 30 min' : 'Tap to type',
+            unit: 'min', down: '− 5', up: '+ 5',
+            onDown: () => this.setState((s) => ({ wkMin: Math.max(0, (s.wkMin || 0) - 5) })),
+            onUp: () => this.setState((s) => ({ wkMin: (s.wkMin || 0) + 5 }))
+          })
+        ],
+      logChips: t === 'workout'
+        ? ['Lift', 'Push', 'Pull', 'Conditioning'].map((k) => this.chip(this.state.kind === k, k, () => this.setState({ kind: k })))
+        : [],
+      logExtras: !this.state.editing,
+      logIdle: !this.state.editing,
+      logBlocked: !logReady,
+      logCta: logReady ? 'Next: photo proof' : (t === 'run' ? 'Enter distance and duration' : 'Enter the duration'),
+      logCtaBg: logReady ? '#DC5401' : '#E2DDD2',
+      logCtaInk: logReady ? '#FFFFFF' : '#A8A49C',
+      logCursor: logReady ? 'pointer' : 'not-allowed',
+      logDisclosure: t === 'run'
+        ? 'Distance and duration are self-entered. Only the photo is verified.'
+        : 'Duration is self-entered unless the in-app timer ran. Only the photo is verified.',
+
+      isEditing: !!this.state.editing,
+      padLabel: pad.label,
+      padValue: pad.value,
+      padKeys: this.padKeys(),
+      commitPad: () => this.setState(Object.assign({ editing: null, buf: '' }, pad.commit)),
+
+      isSession: this.state.session && !verifying && !failed && !blocked,
+      sessionText: sessText,
+      stopSessionCta: 'Stop and use ' + Math.max(1, Math.round(this.state.upSec / 60)) + ' min',
+      startSession: () => {
+        this.setState({ session: true, upSec: 0, editing: null });
+        clearInterval(this.upTick);
+        this.upTick = setInterval(() => this.setState((s) => ({ upSec: s.upSec + 1 })), 1000);
+      },
+      stopSession: () => {
+        clearInterval(this.upTick);
+        this.setState((s) => ({ session: false, wkMin: Math.max(1, Math.round(s.upSec / 60)) }));
+      },
+      cancelSession: () => { clearInterval(this.upTick); this.setState({ session: false }); },
+
+      timerSwitches: [
+        { label: 'Sound when it ends', sub: 'A notification arrives either way', on: this.state.sound,
+          rule: 'none', cursor: 'pointer',
+          trackBg: this.state.sound ? '#DC5401' : '#E2DDD2',
+          knob: this.state.sound ? 'flex-end' : 'flex-start',
+          onClick: () => this.setState((s) => ({ sound: !s.sound })) }
+      ],
+
+      journal: this.state.journal,
+      setJournal: (ev) => this.setState({ journal: ev.target.value }),
+      wordLine: w + ' / 150 words' + (writeReady ? ' · minimum met' : ''),
+      writeBlocked: !writeReady,
+      writeCta: writeReady ? 'Post entry' : 'Write ' + (150 - w) + ' more words',
+      writeBtnBg: writeReady ? '#DC5401' : '#E2DDD2',
+      writeBtnInk: writeReady ? '#FFFFFF' : '#A8A49C',
+      writeCursor: writeReady ? 'pointer' : 'not-allowed',
+      fillJournal: () => this.setState({ journal: SAMPLE }),
+
+      count: this.state.count,
+      countDisplay: this.state.editing === 'count' ? pad.value : this.state.count,
+      countIdle: !this.state.editing,
+      inc: () => { if (this.held) { this.held = false; return; } this.setState((s) => ({ count: Math.min(8, s.count + 1), taps: s.taps + 1 })); },
+      dec: () => this.setState((s) => ({ count: Math.max(0, s.count - 1) })),
+      editCount: () => this.setState({ editing: 'count', buf: '' }),
+      // Long-press the tap target to type the count. For users who already know it,
+      // twelve taps is the wrong interaction; the disclosure does not change either way.
+      holdStart: () => {
+        clearTimeout(this.hold);
+        this.held = false;
+        this.hold = setTimeout(() => { this.held = true; this.setState({ editing: 'count', buf: '' }); }, 450);
+      },
+      holdEnd: () => clearTimeout(this.hold),
+      fillCount: () => this.setState({ count: 8, editing: null }),
+      fillLog: () => this.setState({ dist: 5.02, durSec: 1661, wkMin: 45, editing: null, session: false }),
+      countBlocked: !countReady,
+      countCta: countReady ? 'Log 8 glasses' : this.state.count + ' of 8 logged',
+      countBtnBg: countReady ? '#0A0A0A' : '#E2DDD2',
+      countBtnInk: countReady ? '#FFFFFF' : '#A8A49C',
+      countCursor: countReady ? 'pointer' : 'not-allowed',
+
+      confirmEyebrow: cf.eyebrow,
+      confirmHeadline: cf.head,
+      confirmVerifyLine: cf.verifyLine,
+      confirmFootnote: cf.foot,
+      confirmStats: cf.stats,
+      confirmCtaBg: cf.ctaBg,
+      markBg: cf.markBg, markBorder: cf.markBorder, markInk: cf.markInk, eyebrowInk: cf.eyebrowInk,
+      canShare: cf.canShare,
+
+      blockedEyebrow: bl.eyebrow, blockedHeadline: bl.head, blockedBody: bl.body,
+      blockedMeta: bl.meta, blockedCta: bl.cta,
+
+      laCards: LIVE_ACTIVITIES.map((x) => Object.assign({}, x, {
+        bigInk: '#FFFFFF',
+        footInk: x.accent === MUTED ? MUTED : 'rgba(255,255,255,.55)',
+        hasButton: x.head === 'WATER / COUNT · RUNNING'
+      })),
+
+      verifiedLine: c.verified,
+      tapTarget: c.taps,
+      tapSequence: c.seq,
+      taps: this.state.taps,
+
+      typeChips: ORDER.map((id) => this.chip(t === id, TYPES[id].label, () => {
+        clearInterval(this.tick); clearTimeout(this.up); clearInterval(this.upTick);
+        this.setState({ type: id, i: 0, taps: 0, caption: '', journal: '', count: 0, done: false, edge: null,
+          verifying: false, startedAt: null, dist: null, durSec: null, wkMin: null, editing: null, buf: '', session: false, upSec: 0 });
+      })),
+      outcomeChips: OUTCOMES.map((o) => this.chip(this.outcome() === o.id, o.label, () => this.setState({ outcome: o.id }))),
+      // The two OS surfaces only exist for the timer, so picking them arms a real run:
+      // lock screen with 4:20 left, notification at 0:00.
+      edgeChips: EDGES.map((x) => this.chip(e === x.id, x.label, () => {
+        if (e === x.id) return this.setState({ edge: null });
+        if (x.id === 'lock' || x.id === 'notif') {
+          this.setState({ type: 'timer', i: 2, edge: x.id });
+          this.armTimer(x.id === 'lock' ? TIMER_SEC - 260 : TIMER_SEC);
+          return undefined;
+        }
+        return this.setState({ edge: x.id });
+      })),
+
+      back: () => this.back(),
+      next: () => this.next(),
+      shutter: () => this.next(),
+      retake: () => this.setState((s) => ({ i: s.i - 1 })),
+      submit: () => this.submit(),
+      done: () => this.finish(),
+      retry: () => { this.setState({ edge: null }); this.submit(); },
+      clearEdge: () => this.setState({ edge: null }),
+      reset: () => this.reset()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

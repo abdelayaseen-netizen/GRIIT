@@ -1,0 +1,24 @@
+:root {
+  /* GRIIT task completion v2 — tokens. Identical to profile v3 plus --camera-bg. */
+  --ink: #0A0A0A;
+  --ink-hover: #232220;
+  --body: #4A4741;
+  --muted: #6B6862;
+  --muted-light: #8A867E;
+  --muted-dark: #A8A49C;
+  --orange: #DC5401;
+  --orange-press: #B44100;
+  --danger: #A4341A;
+  --canvas: #F5F2EC;
+  --camera-bg: #0B0B0B;
+  --surface: #FFFFFF;
+  --surface-sunken: #EFEBE2;
+  --surface-warm: #EAE6DE;
+  --border: #E7E2D8;
+  --border-strong: #DED9CE;
+  --track: #E2DDD2;
+  --chevron: #C6C1B7;
+  --gutter: 24px;
+  --radius-btn: 16px;
+  --radius-card: 22px;
+}
