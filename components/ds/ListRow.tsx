@@ -49,7 +49,7 @@ export default function ListRow({
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {trailing ? (
+      {trailing !== undefined ? (
         trailing
       ) : onPress ? (
         <ChevronRight
@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   iconSlot: {
-    width: ICON,
-    height: ICON,
+    minWidth: ICON,
+    minHeight: ICON,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -113,7 +113,11 @@ export default function ProofImage({
       ) : null}
       {title || caption ? (
         <View style={[styles.copy, { left: inset, right: inset, bottom: inset }]}>
-          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {title ? (
+            <Text style={styles.title} numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
         </View>
       ) : null}

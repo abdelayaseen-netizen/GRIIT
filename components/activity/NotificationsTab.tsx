@@ -1,70 +1,83 @@
 import React, { useCallback, useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  RefreshControl,
-  Pressable,
-  SectionList,
-  Platform,
-} from "react-native";
+import { RefreshControl, SectionList, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
-import { DS_COLORS, DS_SHADOWS } from "@/lib/design-system";
-import { getAvatarColor } from "@/lib/avatar";
+import { DS_V3 } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
-import LoadingState from "@/components/shared/LoadingState";
-import ErrorState from "@/components/shared/ErrorState";
 import { ROUTES } from "@/lib/routes";
-import { styles } from "@/components/activity/activity-styles";
 import type { NotifRow } from "@/components/activity/types";
+import Avatar from "@/components/ds/Avatar";
+import Button from "@/components/ds/Button";
+import EmptyState from "@/components/ds/EmptyState";
+import ListRow from "@/components/ds/ListRow";
+import Skeleton from "@/components/ds/Skeleton";
 
-function getNotifText(n: NotifRow): { bold: string; rest: string } {
+const ICON = DS_V3.space.xs * 6;
+
+function dayFromMeta(n: NotifRow): number | null {
+  const md = n.metadata;
+  if (typeof md.day_number === "number") return md.day_number;
+  if (typeof md.current_day === "number") return md.current_day;
+  if (typeof md.day_label === "string") {
+    const m = md.day_label.match(/(\d+)/);
+    if (m) return Number(m[1]);
+  }
+  return null;
+}
+
+function notifTitle(n: NotifRow): string {
+  const name = n.actorDisplayName ?? n.actorUsername ?? null;
+  const day = dayFromMeta(n);
+  switch (n.type) {
+    case "respect":
+      if (name) {
+        return day != null
+          ? `${name} liked your day ${day} proof`
+          : `${name} liked your proof`;
+      }
+      break;
+    case "comment":
+      if (name) {
+        return day != null
+          ? `${name} commented on your day ${day} proof`
+          : `${name} commented on your proof`;
+      }
+      break;
+    case "follow":
+      if (name) return `${name} started following you`;
+      break;
+    case "follow_request":
+      if (name) return `${name} wants to follow you`;
+      break;
+    case "rank": {
+      const challengeName = String(
+        n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge",
+      );
+      const rank = n.metadata.rank;
+      const gap = n.metadata.rankGap;
+      return `You're #${rank} on ${challengeName}. ${gap} pts behind #${Number(rank) - 1}`;
+    }
+    default:
+      break;
+  }
   const t = (n.title ?? "").trim();
   const b = (n.body ?? "").trim();
-  if (t || b) {
-    return { bold: t, rest: t && b ? ` ${b}` : b || "" };
-  }
-  const name = n.actorDisplayName ?? n.actorUsername ?? "Someone";
-  const challengeName = String(n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge");
-  switch (n.type) {
-    case "respect": {
-      const dayLabel = typeof n.metadata.day_label === "string" && n.metadata.day_label ? ` ${n.metadata.day_label}` : "";
-      return { bold: name, rest: ` respected your${dayLabel} ${challengeName} post` };
-    }
-    case "comment": {
-      const commentText = String(n.metadata.comment_text ?? "").slice(0, 80);
-      const commentChallenge = String(n.metadata.challenge_title ?? challengeName);
-      return { bold: name, rest: ` commented on your ${commentChallenge} post — "${commentText}"` };
-    }
-    case "follow":
-      return { bold: name, rest: " started following you" };
-    case "follow_request":
-      return { bold: name, rest: " wants to follow you" };
-    case "rank":
-      return {
-        bold: "",
-        rest: `You're #${n.metadata.rank} on ${challengeName} — ${n.metadata.rankGap} pts behind #${Number(n.metadata.rank) - 1}`,
-      };
-    default:
-      return { bold: "", rest: "Notification" };
-  }
+  if (t || b) return [t, b].filter(Boolean).join(" ");
+  return "Notification";
 }
 
 function NotificationsBody({
   query,
   userId,
-  listHeader,
   refreshing,
   onRefresh,
 }: {
   query: ReturnType<typeof useQuery<{ unread: NotifRow[]; earlier: NotifRow[] }>>;
   userId: string;
-  listHeader: React.ReactNode;
   refreshing: boolean;
   onRefresh: () => Promise<void>;
 }) {
@@ -80,7 +93,7 @@ function NotificationsBody({
         captureError(e, "ActivityFollowUser");
       }
     },
-    [qc, userId]
+    [qc, userId],
   );
 
   const sections = useMemo(() => {
@@ -93,17 +106,10 @@ function NotificationsBody({
   }, [query.data?.unread, query.data?.earlier]);
 
   const renderItem = useCallback(
-    ({
-      item,
-      section,
-    }: {
-      item: NotifRow;
-      section: { title: string; data: NotifRow[] };
-    }) => (
+    ({ item }: { item: NotifRow }) => (
       <NotificationRow
         n={item}
         onFollow={onFollow}
-        unread={section.title === "NEW"}
         userId={userId}
         onPress={
           (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
@@ -123,11 +129,31 @@ function NotificationsBody({
         }
       />
     ),
-    [onFollow, userId, router]
+    [onFollow, userId, router],
   );
 
-  if (query.isPending) return <LoadingState message="Loading notifications..." />;
-  if (query.isError) return <ErrorState message="Couldn't load notifications" onRetry={() => void query.refetch()} />;
+  if (query.isPending) {
+    return (
+      <View style={styles.skel}>
+        <Skeleton />
+        <Skeleton />
+        <Skeleton />
+      </View>
+    );
+  }
+  if (query.isError) {
+    return (
+      <View style={styles.emptyPad}>
+        <EmptyState
+          heading="Couldn't load notifications"
+          body="Check your connection and try again."
+          actionLabel="Retry"
+          variant="error"
+          onRetry={() => void query.refetch()}
+        />
+      </View>
+    );
+  }
 
   const unread = query.data?.unread ?? [];
   const earlier = query.data?.earlier ?? [];
@@ -137,35 +163,39 @@ function NotificationsBody({
       sections={sections}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      renderSectionHeader={({ section: { title } }) => <Text style={styles.groupLabel}>{title}</Text>}
-      ListHeaderComponent={<>{listHeader}</>}
+      renderSectionHeader={() => null}
       ListEmptyComponent={
         unread.length === 0 && earlier.length === 0 ? (
-          <View style={styles.emptyStateFill}>
-            <View style={styles.emptyIconCircle}>
-              <Bell size={40} color={DS_COLORS.TEXT_MUTED} style={styles.iconMuted} />
-            </View>
-            <Text style={styles.emptyTitleStrong}>No notifications yet</Text>
-            <Text style={styles.emptyBodyNarrow}>
-              Complete a task or join a challenge to start getting updates from the community.
-            </Text>
-            <TouchableOpacity accessibilityRole="button"
-              onPress={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              accessibilityLabel="Start a challenge"
-            >
-              <Text style={styles.emptyTextCta}>Start a challenge →</Text>
-            </TouchableOpacity>
+          <View style={styles.emptyPad}>
+            <EmptyState
+              icon={
+                <Bell
+                  size={ICON}
+                  color={DS_V3.color.textPrimary}
+                  accessibilityLabel="Notifications"
+                />
+              }
+              heading="No notifications yet"
+              body="Join a challenge and updates from your circle land here."
+              actionLabel="Find a challenge"
+              onAction={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            />
           </View>
         ) : null
       }
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={DS_COLORS.DISCOVER_CORAL} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={DS_V3.color.brand}
+        />
+      }
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={styles.scroll}
       stickySectionHeadersEnabled={false}
       maxToRenderPerBatch={10}
       windowSize={5}
       initialNumToRender={8}
-      removeClippedSubviews={Platform.OS === "android"}
     />
   );
 }
@@ -173,30 +203,18 @@ function NotificationsBody({
 const NotificationRow = React.memo(function NotificationRow({
   n,
   onFollow,
-  unread,
   userId,
   onPress,
 }: {
   n: NotifRow;
   onFollow: (id: string) => void;
-  unread: boolean;
   userId: string;
   onPress?: () => void;
 }) {
   const qc = useQueryClient();
   const [frDone, setFrDone] = useState<"accepted" | "declined" | null>(null);
-  const text = getNotifText(n);
-  const colors = n.actorId ? getAvatarColor(n.actorId) : getAvatarColor(n.id);
-  const initial = (n.actorDisplayName ?? n.actorUsername ?? "?").charAt(0).toUpperCase();
-  const notifA11yLabel = (() => {
-    if (!onPress) return "Notification";
-    if ((n.type === "respect" || n.type === "comment") && n.metadata?.event_id) return "View related post";
-    if (n.type === "follow" || n.type === "follow_request") {
-      const who = n.actorDisplayName ?? n.actorUsername ?? "user";
-      return `View profile for ${who}`;
-    }
-    return "Open notification";
-  })();
+  const title = notifTitle(n);
+  const who = n.actorDisplayName ?? n.actorUsername ?? null;
 
   const onAcceptFr = useCallback(async () => {
     if (!n.actorId) return;
@@ -224,94 +242,67 @@ const NotificationRow = React.memo(function NotificationRow({
     return null;
   }
 
+  let trailing: React.ReactNode = null;
+  if (n.type === "follow_request" && n.actorId) {
+    trailing =
+      frDone === "accepted" ? (
+        <Button label="Accepted" variant="secondary" size="small" disabled />
+      ) : (
+        <View style={styles.frActions}>
+          <Button
+            label="Accept"
+            variant="secondary"
+            size="small"
+            onPress={() => void onAcceptFr()}
+          />
+          <Button
+            label="Decline"
+            variant="tertiary"
+            size="small"
+            onPress={() => void onDeclineFr()}
+          />
+        </View>
+      );
+  } else if (n.type === "follow" && n.actorId) {
+    trailing = (
+      <Button
+        label="Follow"
+        variant="secondary"
+        size="small"
+        onPress={() => onFollow(n.actorId!)}
+      />
+    );
+  }
+
   return (
-    <Pressable accessibilityRole="button"
+    <ListRow
+      icon={
+        <Avatar
+          size={DS_V3.size.avatar.sm}
+          uri={n.actorAvatarUrl}
+          displayName={who}
+        />
+      }
+      title={title}
+      subtitle={relativeTime(n.createdAt)}
+      trailing={trailing}
       onPress={onPress}
-      disabled={!onPress}
-      accessibilityLabel={notifA11yLabel}
-      accessibilityState={{ disabled: !onPress }}
-      style={[styles.notifRow, DS_SHADOWS.cardSubtle, unread ? styles.notifUnread : styles.notifRead]}
-    >
-      <View style={styles.avatarWrap}>
-        <View style={[styles.notifAvatar, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.notifAvatarLetter, { color: colors.letter }]}>{n.type === "rank" ? "★" : initial}</Text>
-        </View>
-        <View
-          style={[
-            styles.typeBadge,
-            {
-              backgroundColor:
-                n.type === "respect"
-                  ? DS_COLORS.DISCOVER_CORAL
-                  : n.type === "comment"
-                    ? DS_COLORS.CELEB_BONUS_PURPLE
-                    : n.type === "follow" || n.type === "follow_request"
-                      ? DS_COLORS.DISCOVER_GREEN
-                      : n.type === "rank"
-                        ? DS_COLORS.WARNING
-                        : DS_COLORS.TASK_ICON_BG,
-            },
-          ]}
-        >
-          <Text style={[styles.typeBadgeText, n.type === "follow" && styles.typeBadgeFollow]}>
-            {n.type === "respect" ? "🔥" : n.type === "comment" ? "💬" : n.type === "follow" || n.type === "follow_request" ? "+" : n.type === "rank" ? "★" : "•"}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.notifBody}>
-        <Text style={styles.notifMain}>
-          {text.bold ? <Text style={styles.notifBold}>{text.bold}</Text> : null}
-          {text.rest}
-        </Text>
-        <Text style={styles.notifTime}>{relativeTime(n.createdAt)}</Text>
-      </View>
-      {n.type === "follow_request" && n.actorId ? (
-        frDone === "accepted" ? (
-          <Text style={styles.frAccepted}>Accepted</Text>
-        ) : (
-          <View style={styles.frActions}>
-            <TouchableOpacity accessibilityRole="button"
-              style={styles.frAcceptBtn}
-              onPress={() => void onAcceptFr()}
-              accessibilityLabel="Accept follow request"
-            >
-              <Text style={styles.frAcceptTxt}>Accept</Text>
-            </TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button"
-              style={styles.frDeclineBtn}
-              onPress={() => void onDeclineFr()}
-              accessibilityLabel="Decline follow request"
-            >
-              <Text style={styles.frDeclineTxt}>Decline</Text>
-            </TouchableOpacity>
-          </View>
-        )
-      ) : n.type === "follow" && n.actorId ? (
-        <TouchableOpacity accessibilityRole="button"
-          style={styles.followBtn}
-          onPress={() => onFollow(n.actorId!)}
-          accessibilityLabel="Follow back"
-        >
-          <Text style={styles.followBtnText}>Follow</Text>
-        </TouchableOpacity>
-      ) : n.type === "respect" || n.type === "comment" ? (
-        <View style={styles.thumbPlaceholder}>
-          <Text style={styles.thumbEmoji}>📸</Text>
-        </View>
-      ) : null}
-    </Pressable>
+    />
   );
 });
 
 export interface NotificationsTabProps {
   userId: string;
-  listHeader: React.ReactNode;
 }
 
-export function NotificationsTab({ userId, listHeader }: NotificationsTabProps) {
+export function NotificationsTab({ userId }: NotificationsTabProps) {
   const notifQuery = useQuery({
     queryKey: ["activity", "notifications", userId],
-    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: NotifRow[]; earlier: NotifRow[] }>,
+    queryFn: () =>
+      trpcQuery(TRPC.notifications.getAll) as Promise<{
+        unread: NotifRow[];
+        earlier: NotifRow[];
+      }>,
     enabled: !!userId,
     staleTime: 30 * 1000,
     retry: 2,
@@ -327,9 +318,30 @@ export function NotificationsTab({ userId, listHeader }: NotificationsTabProps) 
     <NotificationsBody
       query={notifQuery}
       userId={userId}
-      listHeader={listHeader}
       refreshing={refreshing}
       onRefresh={onRefresh}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 1,
+    paddingBottom: DS_V3.space.gutter * 6,
+    paddingTop: DS_V3.space.md,
+  },
+  emptyPad: {
+    paddingTop: DS_V3.space.gutter * 3 + DS_V3.space.xs,
+    paddingHorizontal: DS_V3.space.gutter,
+  },
+  skel: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.md,
+    gap: DS_V3.space.md,
+  },
+  frActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+  },
+});

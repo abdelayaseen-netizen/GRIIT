@@ -71,6 +71,7 @@ export default function TabLayout() {
         options={{
           title: "Discover",
           tabBarAccessibilityLabel: "Discover, browse and join challenges",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
@@ -86,6 +87,7 @@ export default function TabLayout() {
         options={{
           title: "Activity",
           tabBarAccessibilityLabel: "Activity, feed, notifications, and leaderboard",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
