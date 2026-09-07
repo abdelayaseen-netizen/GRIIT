@@ -32,13 +32,14 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
-import type { inferRouterInputs } from "@trpc/server";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/backend/trpc/app-router";
 import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
 
 /** backend/trpc/app-router.ts:78 — challenges.create input (challenges-create.ts:49). */
 type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
+type CreateChallengeOutput = inferRouterOutputs<AppRouter>["challenges"]["create"];
 import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -268,9 +269,10 @@ export function CreateWizardV2() {
         ),
       };
 
-      const result = (await trpcMutate(TRPC.challenges.create, payload)) as {
-        id?: string;
-      };
+      const result = (await trpcMutate(
+        TRPC.challenges.create,
+        payload,
+      )) as CreateChallengeOutput;
       if (!result?.id) {
         throw new Error("Create returned no id.");
       }
@@ -288,7 +290,11 @@ export function CreateWizardV2() {
       void queryClient.invalidateQueries({ queryKey: ["home"] });
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
-      router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
+      if (result.activeChallenge != null) {
+        router.replace(ROUTES.CHALLENGE_ACTIVE(result.activeChallenge.id) as never);
+      } else {
+        router.replace(ROUTES.CHALLENGE_ID(result.id) as never);
+      }
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
       const msg = err instanceof Error ? err.message : "";
