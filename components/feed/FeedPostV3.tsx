@@ -10,6 +10,7 @@ import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { feedNoPhotoCopy } from "@/lib/feed-copy";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 const ICON = DS_V3.space.xs * 6;
@@ -48,9 +49,7 @@ export default function FeedPostV3({
             <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
           </Pressable>
           <View style={styles.flex}>
-            <Text style={styles.name}>
-              {name} secured day <DisplayNumber value={post.currentDay} size="inline" />
-            </Text>
+            <Text style={styles.name}>{feedNoPhotoCopy(post)}</Text>
             <Text style={styles.meta}>
               {when} · {post.challengeName}
             </Text>

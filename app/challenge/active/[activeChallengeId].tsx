@@ -472,7 +472,14 @@ export default function ActiveChallengeDetailScreen() {
             {tasks.map((task) => {
               const isCompleted = completedTaskIds.has(task.id);
               const IconComp = getTaskIcon(task);
-              const estMin = task.estimated_minutes ?? (task as { duration_minutes?: number }).duration_minutes;
+              const cfgMin =
+                typeof task.config?.duration_minutes === "number"
+                  ? task.config.duration_minutes
+                  : null;
+              const estMin =
+                task.estimated_minutes ??
+                (task as { duration_minutes?: number }).duration_minutes ??
+                cfgMin;
               const verificationType = (task.verification_type ?? task.task_type ?? "Check").toString();
               const windowState = getTileWindowState(task.config);
               const isLockedByWindow = !isCompleted && (windowState.status === "before" || windowState.status === "closed");

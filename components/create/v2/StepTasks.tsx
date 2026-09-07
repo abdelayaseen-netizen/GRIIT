@@ -2,8 +2,7 @@
  * StepTasks — Step 2 of CreateWizardV2.
  *
  * Two tabs:
- *   - Starter packs (5 hardcoded packs — wired to a future
- *     `TRPC.challenges.getStarterPack` if needed; for v2 we ship a curated set).
+ *   - Starter packs from `lib/challenge-packs.ts` (single source).
  *   - Custom — list of user-built tasks (with "Add task" tile).
  *
  * Pure controlled component.
@@ -31,6 +30,10 @@ import type {
   WizardCategory,
   WizardDifficulty,
 } from "@/components/create/v2/StepRules";
+import {
+  CHALLENGE_PACKS,
+  wizardTasksFromPack,
+} from "@/lib/challenge-packs";
 
 export type WizardTaskType =
   | "simple"
@@ -75,75 +78,30 @@ export type WizardPack = {
   difficulty?: WizardDifficulty;
 };
 
-const PACKS: readonly WizardPack[] = [
-  {
-    id: "75-hard",
-    name: "75 Hard Classic",
-    subtitle: "5 strict tasks · original framework",
-    category: "discipline",
-    durationDays: 75,
-    difficulty: "hard",
-    tasks: [
-      { name: "Workout 1 (45 min)", type: "timer", durationMinutes: 45 },
-      { name: "Workout 2 outdoors (45 min)", type: "timer", durationMinutes: 45 },
-      { name: "Read 10 pages", type: "reading", targetValue: 10 },
-      { name: "Drink 1 gallon water", type: "water", targetValue: 1 },
-      { name: "Photo proof of progress", type: "photo", requirePhoto: true },
-    ],
-  },
-  {
-    id: "athlete",
-    name: "Athlete",
-    subtitle: "3 tasks · Run, train, check-in",
-    category: "fitness",
-    tasks: [
-      { name: "Run 3 km", type: "run" },
-      { name: "Strength session (30 min)", type: "timer", durationMinutes: 30 },
-      { name: "Gym check-in", type: "checkin", locationName: "Gym", radiusMeters: 150 },
-    ],
-  },
-  {
-    id: "faith",
-    name: "Faith",
-    subtitle: "3 tasks · Prayer, read, gratitude",
-    category: "faith",
-    tasks: [
-      { name: "Prayer (15 min)", type: "timer", durationMinutes: 15 },
-      { name: "Read scripture", type: "reading", targetValue: 10 },
-      { name: "Gratitude journal", type: "journal", minWords: 30 },
-    ],
-  },
-  {
-    id: "morning",
-    name: "Morning routine",
-    subtitle: "5 tasks · Win the morning",
-    category: "discipline",
-    tasks: [
-      { name: "Wake up by 6am", type: "simple" },
-      { name: "Cold shower", type: "simple" },
-      { name: "Stretch (10 min)", type: "timer", durationMinutes: 10 },
-      { name: "Journal (50 words)", type: "journal", minWords: 50 },
-      { name: "Drink 1L water", type: "water", targetValue: 1 },
-    ],
-  },
-  {
-    id: "entrepreneur",
-    name: "Entrepreneur",
-    subtitle: "3 tasks · Ship, journal, learn",
-    category: "discipline",
-    tasks: [
-      { name: "Ship one thing", type: "simple" },
-      { name: "Journal lessons (60 words)", type: "journal", minWords: 60 },
-      { name: "Read 20 pages", type: "reading", targetValue: 20 },
-    ],
-  },
-] as const;
+const PACKS: readonly WizardPack[] = CHALLENGE_PACKS.map((pack) => ({
+  id: pack.id,
+  name: pack.name,
+  subtitle: pack.description,
+  category: pack.category ?? "discipline",
+  durationDays: pack.durationDays,
+  difficulty: pack.difficulty,
+  tasks: wizardTasksFromPack(pack).map((t) => ({
+    name: t.name,
+    type: t.type as WizardTaskType,
+    durationMinutes: t.durationMinutes,
+    minWords: t.minWords,
+    requirePhoto: t.requirePhoto,
+    targetValue: t.targetValue,
+    locationName: t.locationName,
+    radiusMeters: t.radiusMeters,
+  })),
+}));
 
 function packIcon(packId: string, color: string): React.ReactNode {
   const size = 16;
   const strokeWidth = 2;
   switch (packId) {
-    case "75-hard":
+    case "75hard":
       return <Flame size={size} color={color} strokeWidth={strokeWidth} />;
     case "athlete":
       return <Dumbbell size={size} color={color} strokeWidth={strokeWidth} />;
