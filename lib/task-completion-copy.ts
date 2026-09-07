@@ -40,3 +40,55 @@ export function failedUploadCopy(): { eyebrow: string; headline: string; body: s
     retryNote: "Retry will secure today's date, not the capture date.",
   };
 }
+
+export type FailureScreenCopy = {
+  kind: "upload" | "validation";
+  eyebrow: string;
+  headline: string;
+  body: string;
+  retryNote?: string;
+  primaryLabel: string;
+  primaryAction: "retry" | "back";
+};
+
+export function failureErrorCode(err: unknown): string | undefined {
+  if (!err || typeof err !== "object") return undefined;
+  const code = (err as { data?: { code?: unknown } }).data?.code;
+  return typeof code === "string" ? code : undefined;
+}
+
+/** Failure UI. Never claims a saved photo unless `hasLocalPhoto` is true. */
+export function failureScreenCopy(args: {
+  errorCode?: string | null;
+  message?: string | null;
+  hasLocalPhoto: boolean;
+}): FailureScreenCopy {
+  if (args.errorCode === "BAD_REQUEST") {
+    const message = args.message?.trim();
+    return {
+      kind: "validation",
+      eyebrow: "NOT POSTED",
+      headline: "Couldn't post",
+      body: message || "This task could not be completed.",
+      primaryLabel: "Go back",
+      primaryAction: "back",
+    };
+  }
+  if (args.hasLocalPhoto) {
+    const upload = failedUploadCopy();
+    return {
+      kind: "upload",
+      ...upload,
+      primaryLabel: "Retry now",
+      primaryAction: "retry",
+    };
+  }
+  return {
+    kind: "upload",
+    eyebrow: "NOT POSTED",
+    headline: "Upload didn't go through",
+    body: args.message?.trim() || "The day is not secured yet. Try again when you have signal.",
+    primaryLabel: "Retry now",
+    primaryAction: "retry",
+  };
+}
