@@ -21,15 +21,15 @@ import {
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
-import { buildProfileRecord, type ChallengeRangeInput, type ProfileRecord } from "@/lib/profile-v2-record";
-import { PROFILE_V2_BADGES } from "@/lib/profile-v2-badges";
-import { proofPhotosByDateKey, type CheckInProofRow } from "@/lib/profile-v2-proof-photo";
+import { buildProfileRecord, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
+import { proofPhotosByDateKey, type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   mutualFollowAccepted,
   parseVisibility,
   resolveRecordGate,
   type ProfileRelationship,
-} from "@/lib/profile-v2-visibility";
+} from "../../../lib/profile-v2-visibility";
 
 type ActiveRow = {
   id: string;
