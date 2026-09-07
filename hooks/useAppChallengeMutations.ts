@@ -242,13 +242,9 @@ export function useAppChallengeMutations({
           const msg =
             err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
           captureError(err, "AppContextCompleteTask");
-          const verification = (
-            err as { data?: { verification?: { rows: ServerVerificationRow[] } } }
-          )?.data?.verification;
-          const next = new Error(msg) as Error & {
-            data?: { verification?: { rows: ServerVerificationRow[] } };
-          };
-          if (verification) next.data = { verification };
+          const prevData = (err as { data?: Record<string, unknown> })?.data;
+          const next = new Error(msg) as Error & { data?: Record<string, unknown> };
+          if (prevData && typeof prevData === "object") next.data = prevData;
           throw next;
         });
     },
