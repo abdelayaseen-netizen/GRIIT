@@ -32,8 +32,13 @@ import {
   DS_SPACING_V2,
 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
+import type { inferRouterInputs } from "@trpc/server";
+import type { AppRouter } from "@/backend/trpc/app-router";
 import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
+
+/** backend/trpc/app-router.ts:78 — challenges.create input (challenges-create.ts:49). */
+type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
 import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -242,13 +247,13 @@ export function CreateWizardV2() {
       //    only the chosen goal, the other two are derived server-side.
       //  - "Manual only on Standard" must be enforced in the proof/completion
       //    engine, not the create sheet (difficulty isn't reliable at task-add).
-      const payload = {
+      const payload: CreateChallengeInput = {
         title: state.title.trim(),
         description: "",
-        type: "standard" as const,
+        type: "standard",
         durationDays: state.durationDays ?? 30,
         difficulty: state.difficulty,
-        status: "published" as const,
+        status: "published",
         categories: state.category ? [state.category] : [],
         participationType: state.who === "group" ? "team" : "solo",
         teamSize: state.who === "group" ? 10 : 1,
@@ -257,15 +262,14 @@ export function CreateWizardV2() {
         showReplayLabel: false,
         requireSameRules: state.difficulty === "hard",
         liveDate: "",
-        tasks: tasksForApi.map((t, i) => ({
+        tasks: tasksForApi.map((t) => ({
           title: t.name,
           type: t.type,
           required: true,
-          require_photo_proof: requirePhoto || (allowPhoto && t.requirePhoto === true),
-          strict_timer_mode: false,
-          duration_minutes: t.durationMinutes ?? null,
-          min_words: t.minWords ?? null,
-          order_index: i,
+          requirePhotoProof: requirePhoto || (allowPhoto && t.requirePhoto === true),
+          strictTimerMode: false,
+          durationMinutes: t.durationMinutes,
+          minWords: t.minWords,
         })),
       };
 
