@@ -22,6 +22,10 @@ export type ChallengePackDef = {
   description: string;
   taskCount: number;
   tasks: PackTaskDef[];
+  /** Wizard-only presentation. */
+  category?: "fitness" | "mind" | "faith" | "discipline";
+  durationDays?: number;
+  difficulty?: "standard" | "hard";
 };
 
 function uid(prefix: string, i: number): string {
@@ -213,6 +217,7 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
     name: "Athlete Pack",
     emoji: "🏋️",
     description: "Run, train, check-in.",
+    category: "fitness",
     taskCount: 3,
     tasks: [
       { name: "Morning run", type: "run", config: { distance: 3, unit: "miles" }, photo: "optional" },
@@ -233,6 +238,7 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
     name: "Faith Pack",
     emoji: "🙏",
     description: "Prayer, read, gratitude.",
+    category: "faith",
     taskCount: 3,
     tasks: [
       {
@@ -255,6 +261,9 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
     name: "75 Hard Classic",
     emoji: "🔥",
     description: "The original. 5 strict tasks.",
+    category: "discipline",
+    durationDays: 75,
+    difficulty: "hard",
     taskCount: 5,
     tasks: [
       {
@@ -274,6 +283,7 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
     name: "Morning Routine",
     emoji: "☀️",
     description: "Win the morning, win the day.",
+    category: "discipline",
     taskCount: 5,
     tasks: [
       { name: "Wake before 6am", type: "simple", config: {}, photo: "none" },
@@ -298,6 +308,7 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
     name: "Entrepreneur Pack",
     emoji: "🔨",
     description: "Ship, journal, learn.",
+    category: "discipline",
     taskCount: 3,
     tasks: [
       { name: "Ship something", type: "simple", config: {}, photo: "optional" },

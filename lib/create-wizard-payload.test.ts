@@ -19,4 +19,24 @@ describe("create payload packs (regression)", () => {
       }
     }
   });
+
+  it("every timer and workout pack task has durationMinutes > 0", () => {
+    for (const pack of CHALLENGE_PACKS) {
+      const sources = wizardTasksFromPack(pack);
+      expect(sources.some((t) => t.type === "timer" || t.type === "workout")).toBe(
+        pack.tasks.some((t) => t.type === "timer" || t.type === "workout"),
+      );
+      for (const t of sources) {
+        if (t.type !== "timer" && t.type !== "workout") continue;
+        const row = mapWizardTaskToCreateInput(t, {
+          requirePhoto: false,
+          allowPhoto: true,
+        });
+        expect(
+          row.durationMinutes,
+          `${pack.id} ${t.name} (${t.type})`,
+        ).toBeGreaterThan(0);
+      }
+    }
+  });
 });

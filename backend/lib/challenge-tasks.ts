@@ -238,7 +238,10 @@ function buildTaskConfigFromInput(task: {
       config.capture_mood = true;
     }
   }
-  if (type === "timer" && task.durationMinutes != null) {
+  if (
+    task.durationMinutes != null &&
+    (type === "timer" || rawType === "workout")
+  ) {
     config.duration_minutes = task.durationMinutes;
   }
   if (type === "run") {
