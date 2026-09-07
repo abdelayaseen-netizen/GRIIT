@@ -185,7 +185,9 @@ export function moderateChallengeQuality(input: {
   taskCount: number;
 }): ModerationResult {
   const title = input.title?.trim() ?? "";
-  const description = input.description?.trim() ?? "";
+  const rawDescription = input.description;
+  const description =
+    typeof rawDescription === "string" ? rawDescription.trim() : "";
 
   if (title.length < MIN_TITLE_LENGTH) {
     return {
@@ -201,19 +203,23 @@ export function moderateChallengeQuality(input: {
       category: "low_quality",
     };
   }
-  if (description.length === 0) {
-    return {
-      allowed: false,
-      reason: "Your challenge needs a description so people know what they're committing to.",
-      category: "low_quality",
-    };
-  }
-  if (description.length < MIN_DESCRIPTION_LENGTH) {
-    return {
-      allowed: false,
-      reason: `Your description is too short. Use at least ${MIN_DESCRIPTION_LENGTH} characters to explain what the challenge is about.`,
-      category: "low_quality",
-    };
+  // Empty / missing description is allowed (CreateWizardV2 sends "").
+  // Empty + min-length checks run only when the caller sent a non-empty string.
+  if (typeof rawDescription === "string" && rawDescription.length > 0) {
+    if (description.length === 0) {
+      return {
+        allowed: false,
+        reason: "Your challenge needs a description so people know what they're committing to.",
+        category: "low_quality",
+      };
+    }
+    if (description.length < MIN_DESCRIPTION_LENGTH) {
+      return {
+        allowed: false,
+        reason: `Your description is too short. Use at least ${MIN_DESCRIPTION_LENGTH} characters to explain what the challenge is about.`,
+        category: "low_quality",
+      };
+    }
   }
   if (input.taskCount < 1) {
     return {

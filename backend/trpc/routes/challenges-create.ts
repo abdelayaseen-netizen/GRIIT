@@ -9,6 +9,7 @@ import {
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
 import { moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
+import { validateCreateTask } from "../../lib/create-task-validation";
 
 /** Free-tier limit — mirrors FREE_LIMITS.MAX_CREATED_CHALLENGES in lib/feature-flags.ts. */
 const FREE_CREATED_CHALLENGES_LIMIT = 1;
@@ -182,59 +183,9 @@ export const challengesCreateProcedures = {
       }
 
       for (let i = 0; i < input.tasks.length; i++) {
-        const task = input.tasks[i];
-        if (!task) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: missing` });
-        }
-        if (!task.title.trim()) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: Title is required` });
-        }
-
-        switch (task.type) {
-          case 'journal':
-            if (task.minWords != null && task.minWords <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Minimum words must be positive` });
-            }
-            break;
-          case 'timer':
-            if (!task.durationMinutes || task.durationMinutes <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Duration is required` });
-            }
-            break;
-          case 'run':
-            if (task.trackingMode === 'distance') {
-              if (!task.targetValue || task.targetValue <= 0) {
-                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Distance is required` });
-              }
-            } else if (task.trackingMode === 'time') {
-              if (!task.targetValue || task.targetValue <= 0) {
-                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Time duration is required` });
-              }
-            }
-            break;
-          case 'checkin':
-            if (!task.locationName || !task.locationName.trim()) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Location name is required` });
-            }
-            if (!task.radiusMeters || task.radiusMeters <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Radius is required` });
-            }
-            break;
-          case 'water':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target is required` });
-            }
-            break;
-          case 'reading':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target pages is required` });
-            }
-            break;
-          case 'counter':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target count is required` });
-            }
-            break;
+        const taskErr = validateCreateTask(input.tasks[i], i);
+        if (taskErr) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: taskErr });
         }
       }
 

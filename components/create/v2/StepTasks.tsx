@@ -54,6 +54,10 @@ export type WizardTask = {
   durationMinutes?: number;
   minWords?: number;
   requirePhoto?: boolean;
+  /** Pages / glasses / count — required by challenges.create for reading, water, counter. */
+  targetValue?: number;
+  locationName?: string;
+  radiusMeters?: number;
   runGoalType?: RunGoalType;
   /** Target value for the chosen goal type. Omitted = "just track it" (no target). */
   runTarget?: number;
@@ -82,8 +86,8 @@ const PACKS: readonly WizardPack[] = [
     tasks: [
       { name: "Workout 1 (45 min)", type: "timer", durationMinutes: 45 },
       { name: "Workout 2 outdoors (45 min)", type: "timer", durationMinutes: 45 },
-      { name: "Read 10 pages", type: "reading" },
-      { name: "Drink 1 gallon water", type: "water" },
+      { name: "Read 10 pages", type: "reading", targetValue: 10 },
+      { name: "Drink 1 gallon water", type: "water", targetValue: 1 },
       { name: "Photo proof of progress", type: "photo", requirePhoto: true },
     ],
   },
@@ -95,7 +99,7 @@ const PACKS: readonly WizardPack[] = [
     tasks: [
       { name: "Run 3 km", type: "run" },
       { name: "Strength session (30 min)", type: "timer", durationMinutes: 30 },
-      { name: "Gym check-in", type: "checkin" },
+      { name: "Gym check-in", type: "checkin", locationName: "Gym", radiusMeters: 150 },
     ],
   },
   {
@@ -105,7 +109,7 @@ const PACKS: readonly WizardPack[] = [
     category: "faith",
     tasks: [
       { name: "Prayer (15 min)", type: "timer", durationMinutes: 15 },
-      { name: "Read scripture", type: "reading" },
+      { name: "Read scripture", type: "reading", targetValue: 10 },
       { name: "Gratitude journal", type: "journal", minWords: 30 },
     ],
   },
@@ -119,7 +123,7 @@ const PACKS: readonly WizardPack[] = [
       { name: "Cold shower", type: "simple" },
       { name: "Stretch (10 min)", type: "timer", durationMinutes: 10 },
       { name: "Journal (50 words)", type: "journal", minWords: 50 },
-      { name: "Drink 1L water", type: "water" },
+      { name: "Drink 1L water", type: "water", targetValue: 1 },
     ],
   },
   {
@@ -130,7 +134,7 @@ const PACKS: readonly WizardPack[] = [
     tasks: [
       { name: "Ship one thing", type: "simple" },
       { name: "Journal lessons (60 words)", type: "journal", minWords: 60 },
-      { name: "Read 20 pages", type: "reading" },
+      { name: "Read 20 pages", type: "reading", targetValue: 20 },
     ],
   },
 ] as const;

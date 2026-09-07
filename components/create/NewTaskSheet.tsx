@@ -156,6 +156,7 @@ type NewTaskState = {
   minWords?: number;
   counterGoal?: number;
   counterUnit?: string;
+  locationName?: string;
   runGoalType: RunGoalType;
   runTarget?: number;
   runJustTrack: boolean;
@@ -212,12 +213,23 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
 
   const handleSave = useCallback(() => {
     if (!canSave || state.type == null) return;
+    const targetTypes = state.type === "reading" || state.type === "water" || state.type === "counter";
+    const defaultTarget = state.type === "water" ? 8 : 10;
     const task: WizardTask = {
       name: state.name.trim(),
       type: state.type,
       durationMinutes: state.durationMinutes,
       minWords: state.minWords,
       requirePhoto: state.type === "photo" || state.verified,
+      ...(targetTypes
+        ? { targetValue: state.counterGoal ?? defaultTarget }
+        : {}),
+      ...(state.type === "checkin"
+        ? {
+            locationName: state.locationName?.trim() || "Home",
+            radiusMeters: 150,
+          }
+        : {}),
       ...(state.type === "run"
         ? {
             runGoalType: state.runGoalType,
@@ -332,6 +344,21 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
               />
             </>
           ) : null}
+        </View>
+      );
+    }
+    if (state.type === "checkin") {
+      return (
+        <View style={styles.configCard}>
+          <Text style={styles.label}>LOCATION</Text>
+          <TextInput
+            accessibilityLabel="Location name"
+            value={state.locationName ?? ""}
+            onChangeText={(v) => setState((p) => ({ ...p, locationName: v }))}
+            placeholder="Home"
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            style={styles.configInput}
+          />
         </View>
       );
     }
