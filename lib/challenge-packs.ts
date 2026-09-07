@@ -92,8 +92,12 @@ export function tasksFromPack(pack: ChallengePackDef): Record<string, unknown>[]
       case "checkin":
       case "check-in": {
         base.type = "checkin";
-        base.locationName = (t.config.locationName as string) ?? "Home";
-        base.radiusMeters = (t.config.radius as number) ?? 150;
+        if (typeof t.config.locationName === "string" && t.config.locationName.trim()) {
+          base.locationName = t.config.locationName.trim();
+        }
+        if (typeof t.config.radius === "number" && t.config.radius > 0) {
+          base.radiusMeters = t.config.radius;
+        }
         break;
       }
       case "water": {
@@ -162,11 +166,12 @@ export function wizardTasksFromPack(pack: ChallengePackDef): WizardTaskPayloadSo
           name,
           type: "checkin",
           requirePhoto,
-          locationName:
-            typeof t.config.locationName === "string" && t.config.locationName.trim()
-              ? t.config.locationName
-              : "Home",
-          radiusMeters: configNumber(t.config, "radius", 150),
+          ...(typeof t.config.locationName === "string" && t.config.locationName.trim()
+            ? { locationName: t.config.locationName.trim() }
+            : {}),
+          ...(typeof t.config.radius === "number" && t.config.radius > 0
+            ? { radiusMeters: t.config.radius }
+            : {}),
         };
       case "timer":
         return {
