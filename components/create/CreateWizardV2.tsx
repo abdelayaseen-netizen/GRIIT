@@ -253,7 +253,7 @@ export function CreateWizardV2() {
         participationType: state.who === "group" ? "team" : "solo",
         teamSize: state.who === "group" ? 10 : 1,
         visibility: state.who === "group" ? "FRIENDS" : "PUBLIC",
-        replayPolicy: "ALLOW_REPLAY",
+        replayPolicy: "allow_replay",
         showReplayLabel: false,
         requireSameRules: state.difficulty === "hard",
         liveDate: "",
