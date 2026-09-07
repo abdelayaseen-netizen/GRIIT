@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
-  Share,
   StyleSheet,
   Switch,
   Text,
@@ -32,6 +31,7 @@ import {
   type SubmitResult,
   type VerificationKind,
 } from "@/lib/task-completion-result";
+import { shareProgressImage } from "@/lib/share";
 import { failedUploadCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
 import { type KeypadMask } from "@/lib/keypad-masks";
@@ -410,7 +410,7 @@ export function TaskFlowV2() {
   }, [step, remainingSec, startedAtIso]);
 
   const dark = step === "capture" || step === "review";
-  const hideChrome = step === "confirmation" || step === "verifying";
+  const hideChrome = step === "confirmation" || step === "verifying" || step === "capture";
   const fail = failedUploadCopy();
 
   return (
@@ -697,7 +697,9 @@ export function TaskFlowV2() {
 
       {step === "capture" ? (
         <TaskCapture
-          gateLine="Camera only · live capture"
+          challenge={challengeName}
+          task={`${taskName}. Day ${currentDay}.`}
+          onCancel={goBack}
           onCaptured={(uri, at) => {
             setPhotoUri(uri);
             setCapturedAt(at);
@@ -943,6 +945,7 @@ export function TaskFlowV2() {
           taskName={taskName}
           honest={isHonest(taskType, !!photoUri)}
           optional={!taskRequired}
+          proofUri={photoUri ?? undefined}
           verifyLine={verificationLine({
             kind: (taskType === "simple" ? "manual" : taskType) as Parameters<typeof verificationLine>[0]["kind"],
             timeLabel: capturedAt ? clockLabel(capturedAt) : clockLabel(Date.now()),
@@ -963,8 +966,9 @@ export function TaskFlowV2() {
             accuracyM: gps?.acc,
           })}
           onDone={exit}
-          onShare={() => {
-            void Share.share({ message: `${taskName} — Day ${result.challengeDay} on GRIIT.` });
+          onNext={exit}
+          onShare={(uri) => {
+            void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
           }}
         />
       ) : null}
