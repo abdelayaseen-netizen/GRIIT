@@ -4,6 +4,7 @@
  */
 
 import type { JournalCategory } from "@/types";
+import type { WizardTaskPayloadSource } from "@/lib/create-wizard-payload";
 
 type PackTaskPhoto = "none" | "optional" | "required";
 
@@ -81,10 +82,8 @@ export function tasksFromPack(pack: ChallengePackDef): Record<string, unknown>[]
         break;
       }
       case "reading": {
-        base.type = "journal";
-        base.journalType = (["mental_clarity"] as JournalCategory[]) satisfies JournalCategory[];
-        base.journalPrompt = `Read ${(t.config.pages as number) ?? 10} pages from your book and summarize what you learned in at least 20 words.`;
-        base.minWords = 20;
+        base.type = "reading";
+        base.targetValue = (t.config.pages as number) ?? 10;
         break;
       }
       case "simple":
@@ -93,17 +92,24 @@ export function tasksFromPack(pack: ChallengePackDef): Record<string, unknown>[]
       case "checkin":
       case "check-in": {
         base.type = "checkin";
-        base.locationName = (t.config.locationName as string) ?? "Home";
-        base.radiusMeters = (t.config.radius as number) ?? 150;
+        if (typeof t.config.locationName === "string" && t.config.locationName.trim()) {
+          base.locationName = t.config.locationName.trim();
+        }
+        if (typeof t.config.radius === "number" && t.config.radius > 0) {
+          base.radiusMeters = t.config.radius;
+        }
         break;
       }
       case "water": {
-        base.type = "simple";
+        base.type = "water";
         base.title = t.name;
+        base.targetValue = (t.config.amount as number) ?? 8;
         break;
       }
       case "counter": {
-        base.type = "simple";
+        base.type = "counter";
+        base.targetValue =
+          (t.config.count as number) ?? (t.config.target as number) ?? 10;
         break;
       }
       default:
@@ -115,10 +121,90 @@ export function tasksFromPack(pack: ChallengePackDef): Record<string, unknown>[]
 }
 
 function initialApiType(t: string): string {
-  if (t === "reading") return "journal";
-  if (t === "water") return "simple";
   if (t === "workout") return "run";
+  if (t === "check-in") return "checkin";
   return t;
+}
+
+function configNumber(config: Record<string, unknown>, key: string, fallback: number): number {
+  const n = config[key];
+  return typeof n === "number" && n > 0 ? n : fallback;
+}
+
+/** WizardTask-shaped rows from pack config (pages / amount / check-in). */
+export function wizardTasksFromPack(pack: ChallengePackDef): WizardTaskPayloadSource[] {
+  return pack.tasks.map((t) => {
+    const requirePhoto = t.photo === "required";
+    const name = t.name;
+    switch (t.type) {
+      case "reading":
+        return {
+          name,
+          type: "reading",
+          requirePhoto,
+          targetValue: configNumber(t.config, "pages", 10),
+        };
+      case "water":
+        return {
+          name,
+          type: "water",
+          requirePhoto,
+          targetValue: configNumber(t.config, "amount", 8),
+        };
+      case "counter":
+        return {
+          name,
+          type: "counter",
+          requirePhoto,
+          targetValue:
+            configNumber(t.config, "count", 0) ||
+            configNumber(t.config, "target", 10),
+        };
+      case "checkin":
+      case "check-in":
+        return {
+          name,
+          type: "checkin",
+          requirePhoto,
+          ...(typeof t.config.locationName === "string" && t.config.locationName.trim()
+            ? { locationName: t.config.locationName.trim() }
+            : {}),
+          ...(typeof t.config.radius === "number" && t.config.radius > 0
+            ? { radiusMeters: t.config.radius }
+            : {}),
+        };
+      case "timer":
+        return {
+          name,
+          type: "timer",
+          requirePhoto,
+          durationMinutes: configNumber(t.config, "minutes", 10),
+        };
+      case "journal":
+        return {
+          name,
+          type: "journal",
+          requirePhoto,
+          minWords: typeof t.config.minWords === "number" ? t.config.minWords : undefined,
+        };
+      case "run":
+        return {
+          name,
+          type: "run",
+          requirePhoto,
+          targetValue: configNumber(t.config, "distance", 3),
+        };
+      case "workout":
+        return {
+          name,
+          type: "workout",
+          requirePhoto,
+          durationMinutes: configNumber(t.config, "duration", 30),
+        };
+      default:
+        return { name, type: t.type === "check-in" ? "checkin" : t.type, requirePhoto };
+    }
+  });
 }
 
 export const CHALLENGE_PACKS: ChallengePackDef[] = [

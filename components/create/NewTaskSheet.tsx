@@ -40,7 +40,7 @@ import {
   BookOpen,
 } from "lucide-react-native";
 
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_DAYLIGHT } from "@/lib/design-system";
 import { FLAGS } from "@/lib/feature-flags";
 import { useApp } from "@/contexts/AppContext";
 import { parseDistanceUnit } from "@/lib/distance-unit";
@@ -156,6 +156,8 @@ type NewTaskState = {
   minWords?: number;
   counterGoal?: number;
   counterUnit?: string;
+  locationName?: string;
+  radiusMeters?: number;
   runGoalType: RunGoalType;
   runTarget?: number;
   runJustTrack: boolean;
@@ -182,6 +184,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
   const runUnit: RunUnit = parseDistanceUnit(profile?.distance_unit);
   const [state, setState] = useState<NewTaskState>(INITIAL_STATE);
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string>("");
 
   const visibleTypes = useMemo(
     () => PROOF_TYPES.filter((t) => !t.advanced),
@@ -195,6 +198,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
   const reset = useCallback(() => {
     setState(INITIAL_STATE);
     setAdvancedOpen(false);
+    setSaveError("");
   }, []);
 
   const handleClose = useCallback(() => {
@@ -212,12 +216,35 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
 
   const handleSave = useCallback(() => {
     if (!canSave || state.type == null) return;
+    if (state.type === "checkin") {
+      const loc = state.locationName?.trim() ?? "";
+      if (!loc) {
+        setSaveError("Location is required");
+        return;
+      }
+      if (state.radiusMeters == null || state.radiusMeters <= 0) {
+        setSaveError("Radius is required");
+        return;
+      }
+    }
+    const targetTypes = state.type === "reading" || state.type === "water" || state.type === "counter";
+    const defaultTarget = state.type === "water" ? 8 : 10;
+    const loc = state.locationName?.trim() ?? "";
     const task: WizardTask = {
       name: state.name.trim(),
       type: state.type,
       durationMinutes: state.durationMinutes,
       minWords: state.minWords,
       requirePhoto: state.type === "photo" || state.verified,
+      ...(targetTypes
+        ? { targetValue: state.counterGoal ?? defaultTarget }
+        : {}),
+      ...(state.type === "checkin"
+        ? {
+            locationName: loc,
+            radiusMeters: state.radiusMeters,
+          }
+        : {}),
       ...(state.type === "run"
         ? {
             runGoalType: state.runGoalType,
@@ -232,6 +259,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
   }, [canSave, state, onSave, reset, runUnit]);
 
   const setType = useCallback((id: WizardTaskType) => {
+    setSaveError("");
     setState((p) => ({ ...p, type: id }));
   }, []);
 
@@ -332,6 +360,43 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
               />
             </>
           ) : null}
+        </View>
+      );
+    }
+    if (state.type === "checkin") {
+      return (
+        <View style={styles.configCard}>
+          <Text style={styles.label}>LOCATION</Text>
+          <TextInput
+            accessibilityLabel="Location name"
+            value={state.locationName ?? ""}
+            onChangeText={(v) => {
+              setSaveError("");
+              setState((p) => ({ ...p, locationName: v }));
+            }}
+            placeholder="Name this place"
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            style={styles.configInput}
+          />
+          <Text style={[styles.label, { marginTop: 8 }]}>RADIUS (METERS)</Text>
+          <TextInput
+            accessibilityLabel="Radius in meters"
+            value={state.radiusMeters != null ? String(state.radiusMeters) : ""}
+            onChangeText={(v) => {
+              setSaveError("");
+              const cleaned = v.replace(/[^0-9]/g, "");
+              const n = parseInt(cleaned, 10);
+              setState((p) => ({
+                ...p,
+                radiusMeters: Number.isNaN(n) ? undefined : Math.max(1, n),
+              }));
+            }}
+            keyboardType="number-pad"
+            placeholder="Meters"
+            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            style={styles.configInput}
+          />
+          {saveError ? <Text style={styles.inlineError}>{saveError}</Text> : null}
         </View>
       );
     }
@@ -687,6 +752,7 @@ export function NewTaskSheet({ visible, onClose, onSave }: NewTaskSheetProps) {
           </ScrollView>
 
           <View style={styles.footer}>
+            {saveError ? <Text style={styles.inlineError}>{saveError}</Text> : null}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={canSave ? "Add task" : "Enter a name to add task"}
@@ -947,10 +1013,16 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
+  inlineError: {
+    fontSize: DS_DAYLIGHT.size.metaSm,
+    fontWeight: DS_DAYLIGHT.weight.medium,
+    color: DS_COLORS_V2.semantic.danger,
+  },
   footer: {
     paddingHorizontal: DS_DAYLIGHT.space.screenH,
     paddingTop: 12,
     paddingBottom: 12,
+    gap: 8,
   },
   footerCta: {
     flexDirection: "row",

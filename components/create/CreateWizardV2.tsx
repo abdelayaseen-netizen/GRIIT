@@ -59,6 +59,7 @@ import {
   type WizardPhotoProof,
 } from "@/components/create/v2/StepRules";
 import { NewTaskSheet } from "@/components/create/NewTaskSheet";
+import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 
 type WizardStep = 1 | 2 | 3;
 
@@ -262,15 +263,9 @@ export function CreateWizardV2() {
         showReplayLabel: false,
         requireSameRules: state.difficulty === "hard",
         liveDate: "",
-        tasks: tasksForApi.map((t) => ({
-          title: t.name,
-          type: t.type,
-          required: true,
-          requirePhotoProof: requirePhoto || (allowPhoto && t.requirePhoto === true),
-          strictTimerMode: false,
-          durationMinutes: t.durationMinutes,
-          minWords: t.minWords,
-        })),
+        tasks: tasksForApi.map((t) =>
+          mapWizardTaskToCreateInput(t, { requirePhoto, allowPhoto }),
+        ),
       };
 
       const result = (await trpcMutate(TRPC.challenges.create, payload)) as {
