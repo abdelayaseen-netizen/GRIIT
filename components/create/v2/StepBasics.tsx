@@ -1,8 +1,5 @@
 /**
- * StepBasics — Step 1 of CreateWizardV2.
- *
- * Captures: title, duration, solo/group.
- * Pure controlled component. Parent owns state.
+ * Step 1 — Name, duration, solo/group. Visual layer; parent owns state.
  */
 import React from "react";
 import {
@@ -12,13 +9,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Lightbulb, User, Users } from "lucide-react-native";
-
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { User, Users } from "lucide-react-native";
+import { DS_V3 } from "@/lib/design-system";
+import { Card, Chip, HintBox } from "@/components/ds";
 
 export type WizardWho = "solo" | "group";
 
@@ -33,14 +26,18 @@ export type StepBasicsProps = {
   onChangeWho: (who: WizardWho) => void;
 };
 
-const PRESET_DURATIONS: readonly { days: number; label: string }[] = [
+const PRESETS: readonly { days: number; label: string }[] = [
   { days: 7, label: "7 days" },
   { days: 14, label: "14 days" },
   { days: 21, label: "21 days" },
   { days: 30, label: "30 days" },
   { days: 75, label: "75 days" },
 ] as const;
-const TITLE_MAX = 60;
+
+const TITLE_LIMIT = 60;
+const ICON = DS_V3.space.xs * 6;
+const STROKE = (DS_V3.space.xs * 3) / 8;
+const PT = DS_V3.space.xs / 4;
 
 export function StepBasics({
   title,
@@ -52,76 +49,59 @@ export function StepBasics({
   who,
   onChangeWho,
 }: StepBasicsProps) {
-  const titleLen = title.length;
-  const titleOk = title.trim().length >= 3;
+  const customOpen =
+    durationDays == null || !PRESETS.some((p) => p.days === durationDays);
+  const overLimit = title.length > TITLE_LIMIT;
+  const valid = title.trim().length >= 3 && !overLimit;
+  const helper = overLimit
+    ? "60 character limit"
+    : valid
+      ? "Looks good"
+      : "Min 3 characters";
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.h1}>Name your challenge</Text>
-      <Text style={styles.sub}>One sentence. Be specific.</Text>
-
-      <View
-        style={[
-          styles.inputCard,
-          titleOk ? styles.inputCardFocused : null,
-        ]}
-      >
-        <TextInput
-          accessibilityLabel="Challenge title"
-          value={title}
-          onChangeText={(t) => onChangeTitle(t.slice(0, TITLE_MAX))}
-          placeholder="e.g. Read 30 min before phone"
-          placeholderTextColor={DS_COLORS_V2.text.tertiary}
-          maxLength={TITLE_MAX}
-          style={styles.input}
-        />
-        <View style={styles.inputFootRow}>
-          <Text
-            style={[
-              styles.inputFootText,
-              titleOk ? styles.inputFootOk : null,
-            ]}
-          >
-            {titleOk ? "Looks good" : "Min 3 characters"}
-          </Text>
-          <Text style={styles.inputFootText}>{`${titleLen}/${TITLE_MAX}`}</Text>
-        </View>
+      <View style={styles.block}>
+        <Text style={styles.title}>Name your challenge</Text>
+        <Text style={styles.secondary}>One sentence. Be specific.</Text>
       </View>
 
-      <Text style={styles.exampleText}>
-        Examples: &apos;Read 30 min before phone&apos; · &apos;Workout 5x weekly&apos; · &apos;30 days no alcohol&apos;
-      </Text>
-
-      <Text style={styles.sectionLabel}>How long?</Text>
-      <View style={styles.durationGrid}>
-        {PRESET_DURATIONS.map((d) => {
-          const selected = durationDays === d.days;
-          const recommended = d.days === 30;
-          return (
-            <Pressable
-              key={d.days}
-              accessibilityRole="button"
-              accessibilityLabel={`${d.label}${recommended ? " — recommended" : ""}`}
-              accessibilityState={{ selected }}
-              onPress={() => onChangeDuration(d.days)}
+      <View style={styles.fieldBlock}>
+        <Card
+          style={overLimit ? styles.inputDanger : undefined}
+        >
+          <TextInput
+            accessibilityLabel="Challenge title"
+            value={title}
+            onChangeText={onChangeTitle}
+            placeholder="Read 30 min before phone"
+            placeholderTextColor={DS_V3.color.textSecondary}
+            style={styles.input}
+          />
+          <View style={styles.inputFoot}>
+            <Text
               style={[
-                styles.durationChip,
-                recommended ? styles.durationChipRecommended : null,
-                selected ? styles.durationChipSelected : null,
+                styles.caption,
+                overLimit
+                  ? styles.danger
+                  : valid
+                    ? styles.brandText
+                    : styles.muted,
               ]}
             >
-              <Text
-                style={[
-                  styles.durationText,
-                  selected ? styles.durationTextSelected : null,
-                ]}
-              >
-                {d.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-        <View style={styles.durationCustomCell}>
+              {helper}
+            </Text>
+            <Text style={[styles.caption, styles.muted]}>{`${title.length}/60`}</Text>
+          </View>
+        </Card>
+        <Text style={[styles.caption, styles.muted]}>
+          Examples: read 30 min before phone · workout 5x weekly · 30 days no alcohol
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.heading}>How long?</Text>
+        {customOpen ? (
           <TextInput
             accessibilityLabel="Custom duration in days"
             value={customDuration}
@@ -129,219 +109,178 @@ export function StepBasics({
               const cleaned = v.replace(/[^0-9]/g, "");
               onChangeCustomDuration(cleaned);
               const n = parseInt(cleaned, 10);
-              if (!Number.isNaN(n) && n >= 8 && n <= 365) {
-                onChangeDuration(n);
-              } else if (cleaned === "") {
-                onChangeDuration(null);
-              }
+              if (!Number.isNaN(n) && n >= 1 && n <= 365) onChangeDuration(n);
+              else onChangeDuration(null);
             }}
-            placeholder="Custom"
-            placeholderTextColor={DS_COLORS_V2.text.tertiary}
             keyboardType="number-pad"
-            style={styles.durationCustomInput}
+            placeholder="30"
+            placeholderTextColor={DS_V3.color.textSecondary}
+            style={styles.customField}
           />
+        ) : (
+          <View style={styles.chipGrid}>
+            {PRESETS.map((d) => (
+              <View key={d.days} style={styles.chipCell}>
+                <Chip
+                  label={d.label}
+                  selected={durationDays === d.days}
+                  onPress={() => onChangeDuration(d.days)}
+                />
+              </View>
+            ))}
+            <View style={styles.chipCell}>
+              <Chip
+                label="Custom"
+                selected={false}
+                onPress={() => {
+                  onChangeDuration(null);
+                  onChangeCustomDuration("");
+                }}
+              />
+            </View>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.heading}>Solo or with friends?</Text>
+        <View style={styles.whoRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Solo"
+            accessibilityState={{ selected: who === "solo" }}
+            onPress={() => onChangeWho("solo")}
+            style={[styles.whoCard, who === "solo" ? styles.whoOn : styles.whoOff]}
+          >
+            <User size={ICON} color={DS_V3.color.textPrimary} strokeWidth={2} />
+            <Text style={styles.bodyStrong}>Solo</Text>
+            <Text style={[styles.caption, styles.muted]}>Just you</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Group"
+            accessibilityState={{ selected: who === "group" }}
+            onPress={() => onChangeWho("group")}
+            style={[styles.whoCard, who === "group" ? styles.whoOn : styles.whoOff]}
+          >
+            <Users size={ICON} color={DS_V3.color.textPrimary} strokeWidth={2} />
+            <Text style={styles.bodyStrong}>Group</Text>
+            <Text style={[styles.caption, styles.muted]}>Up to 10</Text>
+          </Pressable>
         </View>
       </View>
 
-      <Text style={styles.sectionLabel}>Solo or with friends?</Text>
-      <View style={styles.whoRow}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Solo challenge"
-          accessibilityState={{ selected: who === "solo" }}
-          onPress={() => onChangeWho("solo")}
-          style={[styles.whoCard, who === "solo" ? styles.whoCardSelected : null]}
-        >
-          <User
-            size={18}
-            color={
-              who === "solo"
-                ? DS_COLORS_V2.brand.primary
-                : DS_COLORS_V2.text.secondary
-            }
-            strokeWidth={2}
-          />
-          <View style={styles.whoBody}>
-            <Text style={styles.whoTitle}>Solo</Text>
-            <Text style={styles.whoSub}>Just you</Text>
-          </View>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Group challenge"
-          accessibilityState={{ selected: who === "group" }}
-          onPress={() => onChangeWho("group")}
-          style={[styles.whoCard, who === "group" ? styles.whoCardSelected : null]}
-        >
-          <Users
-            size={18}
-            color={
-              who === "group"
-                ? DS_COLORS_V2.brand.primary
-                : DS_COLORS_V2.text.secondary
-            }
-            strokeWidth={2}
-          />
-          <View style={styles.whoBody}>
-            <Text style={styles.whoTitle}>Group</Text>
-            <Text style={styles.whoSub}>Up to 10</Text>
-          </View>
-        </Pressable>
-      </View>
-
-      <View style={styles.hintCard}>
-        <Lightbulb
-          size={14}
-          color={DS_COLORS_V2.brand.primary}
-          strokeWidth={2}
-        />
-        <Text style={styles.hintText}>
-          30 days is the sweet spot. Build the habit, prove you can.
-        </Text>
+      <View style={styles.hintWrap}>
+        <HintBox>30 days is the sweet spot. Build the habit, prove you can.</HintBox>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: DS_SPACING_V2.sm, paddingTop: DS_SPACING_V2.xs },
-  h1: {
-    fontSize: 23,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.4,
+  wrap: { paddingBottom: DS_V3.space.xs * 35 },
+  block: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.section,
+    gap: DS_V3.space.xs,
   },
-  sub: {
-    fontSize: 14,
-    color: DS_COLORS_V2.text.tertiary,
-    marginTop: -2,
+  fieldBlock: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
   },
-  inputCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderRadius: DS_RADIUS_V2.lg,
-    padding: DS_SPACING_V2.sm,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    gap: DS_SPACING_V2.xs,
-    marginTop: DS_SPACING_V2.xxs,
+  section: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.section,
+    gap: DS_V3.space.md,
   },
-  inputCardFocused: {
-    borderColor: DS_COLORS_V2.brand.primary,
+  hintWrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
   },
+  title: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  secondary: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  heading: {
+    fontSize: DS_V3.type.heading.fontSize,
+    lineHeight: DS_V3.type.heading.lineHeight,
+    fontWeight: DS_V3.type.heading.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  bodyStrong: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  caption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+  },
+  muted: { color: DS_V3.color.textSecondary },
+  brandText: { color: DS_V3.color.brandText },
+  danger: { color: DS_V3.color.danger },
   input: {
-    fontSize: 17,
-    color: DS_COLORS_V2.text.primary,
-    paddingVertical: DS_SPACING_V2.xxs,
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textPrimary,
+    paddingVertical: 0,
   },
-  inputFootRow: {
+  inputFoot: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: DS_V3.space.md,
   },
-  inputFootText: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.tertiary,
+  inputDanger: {
+    borderWidth: STROKE,
+    borderColor: DS_V3.color.danger,
   },
-  inputFootOk: { color: DS_COLORS_V2.brand.primary },
-  exampleText: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.tertiary,
-    marginTop: -2,
-  },
-
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-    marginTop: DS_SPACING_V2.sm,
-  },
-  durationGrid: {
+  chipGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: DS_SPACING_V2.sm,
+    gap: DS_V3.space.md,
   },
-  durationChip: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+  chipCell: {
+    width: "31%",
+    flexGrow: 0,
   },
-  durationChipRecommended: {},
-  durationChipSelected: {
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-    borderColor: DS_COLORS_V2.brand.primary,
+  customField: {
+    minHeight: DS_V3.size.tap,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.input,
+    paddingHorizontal: DS_V3.space.lg,
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    color: DS_V3.color.textPrimary,
   },
-  durationText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: DS_COLORS_V2.text.secondary,
-  },
-  durationTextSelected: {
-    color: DS_COLORS_V2.brand.primary,
-    fontWeight: "500",
-  },
-  durationCustomCell: {
-    minWidth: 100,
-    flexShrink: 0,
-  },
-  durationCustomInput: {
-    paddingHorizontal: DS_SPACING_V2.md,
-    paddingVertical: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    fontSize: 14,
-    fontWeight: "400",
-    color: DS_COLORS_V2.text.primary,
-    minWidth: 100,
-  },
-
-  whoRow: { flexDirection: "row", gap: DS_SPACING_V2.sm },
+  whoRow: { flexDirection: "row", gap: DS_V3.space.md },
   whoCard: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING_V2.sm,
-    padding: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
+    minHeight: DS_V3.size.tap,
   },
-  whoCardSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
-    borderWidth: 1.5,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  whoOff: {
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
   },
-  whoBody: { gap: 2 },
-  whoTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-  },
-  whoSub: {
-    fontSize: 11,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.tertiary,
-    textTransform: "uppercase",
-  },
-
-  hintCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING_V2.xs,
-    padding: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-    marginTop: DS_SPACING_V2.xxs,
-  },
-  hintText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+  whoOn: {
+    borderWidth: STROKE,
+    borderColor: DS_V3.color.brand,
   },
 });
