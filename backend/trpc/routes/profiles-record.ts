@@ -21,7 +21,7 @@ import {
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
-import { buildProfileRecord, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import { buildProfileRecord, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { proofPhotosByDateKey, type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
@@ -246,7 +246,7 @@ export const profilesRecordProcedures = {
       const acRows = [
         ...((activeRes.data ?? []) as ActiveRow[]),
         ...((completedRes.data ?? []) as ActiveRow[]),
-      ];
+      ].filter((r) => !isAbandonedEnrollment(r.status));
       const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
       const securedDateKeys = ((securesRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key);
 
