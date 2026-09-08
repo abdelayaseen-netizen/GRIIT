@@ -30,6 +30,8 @@ import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
+import { displayDay } from "@/lib/challenge-day";
+import { homeProofGate } from "@/lib/active-challenge-ui";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
@@ -46,6 +48,7 @@ type TaskRow = {
   title?: string;
   type?: string;
   required?: boolean;
+  duration_minutes?: number | null;
   config?: { required?: boolean } & Record<string, unknown>;
 };
 type ActiveRow = {
@@ -65,6 +68,13 @@ type HomeData = {
   todayCheckins: TodayCheckinForUser[];
   securedDateKeys: string[];
 };
+
+function durationMinutesFromTask(t: TaskRow): number | undefined {
+  if (typeof t.duration_minutes === "number" && t.duration_minutes > 0) return t.duration_minutes;
+  const fromCfg = t.config?.duration_minutes;
+  if (typeof fromCfg === "number" && fromCfg > 0) return fromCfg;
+  return undefined;
+}
 
 type FollowCounts = { followers: number; following: number };
 
@@ -194,6 +204,7 @@ export default function HomeScreen() {
           durationDays,
           taskType: tType,
           taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
+          durationMinutes: durationMinutesFromTask(t),
         });
       }
     }
@@ -259,16 +270,16 @@ export default function HomeScreen() {
   // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
   const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
 
-  const weekSecuredByIndex = useMemo(() => {
-    const set = new Set(securedDateKeys);
-    return weekDateKeys.map((key) => set.has(key));
-  }, [weekDateKeys, securedDateKeys]);
-
   const todayWeekIndex = useMemo(() => {
     const todayKey = getTodayDateKey(homeTimeZone);
     const idx = weekDateKeys.indexOf(todayKey);
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, homeTimeZone]);
+
+  const weekSecuredByIndex = useMemo(() => {
+    const set = new Set(securedDateKeys);
+    return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
+  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
@@ -349,10 +360,10 @@ export default function HomeScreen() {
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, todaySecured))}&durationDays=${String(task.durationDays)}` as never,
       );
     },
-    [router],
+    [router, todaySecured],
   );
 
   const onPressPrimaryCTA = useCallback(() => {
@@ -430,8 +441,9 @@ export default function HomeScreen() {
     const hasChallenge = heroTasks.length > 0;
     return {
       challenge: task?.challengeName ?? "",
-      day: task?.currentDay ?? 1,
+      day: displayDay(task?.currentDay ?? 1, todaySecured),
       taskText: task?.name ?? "",
+      gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),
       doneCount: heroMetrics.tasksDoneToday,
       totalCount: heroMetrics.totalTasksToday || 1,
       posted: todaySecured || (hasChallenge && heroMetrics.tasksRemaining === 0),
@@ -488,6 +500,7 @@ export default function HomeScreen() {
               proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
+              fillToday={todaySecured}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}

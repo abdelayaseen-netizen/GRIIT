@@ -194,7 +194,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
               ))}
             </View>
           ) : (
-            <WeekStrip days={weekDays} todayIndex={p.todayIndex} />
+            <WeekStrip days={weekDays} todayIndex={p.todayIndex} fillToday={p.securedToday} />
           )}
         </View>
 

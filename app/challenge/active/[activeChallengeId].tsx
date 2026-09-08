@@ -34,6 +34,7 @@ import {
   weekSecuredFromKeys,
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
+import { displayDay } from "@/lib/challenge-day";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 
@@ -182,11 +183,13 @@ export default function ActiveChallengeDetailScreen() {
     Array.isArray(securedDateKeys) ? securedDateKeys : [],
     todayKey
   );
-  const weekSecured = weekSecuredFromKeys(
+  const weekSecuredRaw = weekSecuredFromKeys(
     Array.isArray(securedDateKeys) ? securedDateKeys : [],
     weekKeys
   );
   const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
+  const weekSecured = weekSecuredRaw.map((filled, i) => filled || (securedToday && i === todayIndex));
+  const shownDay = displayDay(currentDay, securedToday);
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {
@@ -273,10 +276,13 @@ export default function ActiveChallengeDetailScreen() {
           taskName: task.title,
           taskDescription: "",
           taskConfig: buildTaskConfigParam((row ?? task) as unknown as Record<string, unknown>),
+          currentDay: String(shownDay),
+          durationDays: String(durationDays),
+          challengeName: title,
         },
       } as never);
     },
-    [id, rawTasks, router]
+    [id, rawTasks, router, shownDay, durationDays, title]
   );
 
   const handleLeaveChallenge = useCallback(() => {
@@ -350,7 +356,7 @@ export default function ActiveChallengeDetailScreen() {
         <ActiveChallengeV3
           title={title}
           durationDays={durationDays}
-          currentDay={currentDay}
+          currentDay={shownDay}
           difficulty={difficulty}
           tasks={tasks}
           securedToday={securedToday}

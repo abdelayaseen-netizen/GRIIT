@@ -156,6 +156,16 @@ export function participantsLine(count: number): string {
   return `${count} in this challenge`;
 }
 
+/** Home Today's proof caption. Never a constant "Photo". */
+export function homeProofGate(taskType: string, durationMinutes?: number): string {
+  const t = mapTaskType(taskType);
+  if (t === "timer" || t === "workout") {
+    return durationMinutes && durationMinutes > 0 ? `Timer ${durationMinutes} min` : "Timer";
+  }
+  if (t === "photo") return "Photo";
+  return "Self-reported";
+}
+
 export function resetBody(durationDays: number): string {
   return `A day went unsecured. Hard mode has no freezes, so the count went back to Day 1 of ${durationDays}.`;
 }

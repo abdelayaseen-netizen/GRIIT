@@ -13,6 +13,7 @@ import {
 } from "../../lib/date-utils";
 import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
 import { NOT_ALL_REQUIRED_MESSAGE } from "../../../lib/day-secure-ui";
+import { displayDay } from "../../../lib/challenge-day";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -1209,6 +1210,7 @@ export const checkinsRouter = createTRPCRouter({
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
       const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
       const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
+      const daySecured = displayDay(currentDayAfter, true);
       if (challengeId) {
         const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
         if ((chTeam as { participation_type?: string })?.participation_type === "team" && (chTeam as { run_status?: string })?.run_status === "active") {
@@ -1224,7 +1226,7 @@ export const checkinsRouter = createTRPCRouter({
       const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
-      await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: currentDayAfter, streak_count: row.new_streak_count } });
+      await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: daySecured, streak_count: row.new_streak_count } });
       if (row.last_stand_earned) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "last_stand", metadata: { streak_count: row.new_streak_count } });
       if (challengeJustCompleted) {
         await ctx.supabase.from("activity_events").insert({
@@ -1270,7 +1272,7 @@ export const checkinsRouter = createTRPCRouter({
         alreadySecured,
         newStreakCount: row.new_streak_count,
         lastStandEarned: row.last_stand_earned,
-        challengeDay: currentDayAfter,
+        challengeDay: daySecured,
         challengeCompleted: challengeJustCompleted,
         ...(challengeJustCompleted && { challengeId: challengeId ?? undefined, challengeName, totalDays: durationDays }),
       };

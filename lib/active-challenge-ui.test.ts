@@ -4,6 +4,7 @@ import {
   doneGate,
   footerAction,
   hasCameraProof,
+  homeProofGate,
   pendingGate,
   securedTodayFromKeys,
   statusLine,
@@ -179,5 +180,11 @@ describe("gates", () => {
       require_photo: false,
     });
     expect(pendingGate(water)).toBe("1 gallon · Self-reported");
+  });
+
+  it("home proof gate is from task_type, never a constant Photo", () => {
+    expect(homeProofGate("journal")).toBe("Self-reported");
+    expect(homeProofGate("photo")).toBe("Photo");
+    expect(homeProofGate("timer", 45)).toBe("Timer 45 min");
   });
 });
