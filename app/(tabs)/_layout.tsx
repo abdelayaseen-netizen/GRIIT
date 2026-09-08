@@ -17,6 +17,7 @@ function routeToTab(name: string | undefined): TabBarTab {
 function GritTabBar({ state }: BottomTabBarProps) {
   const router = useRouter();
   const current = state.routes[state.index]?.name;
+  if (current === "create") return null;
   return (
     <TabBar
       active={routeToTab(current)}
@@ -80,6 +81,7 @@ export default function TabLayout() {
           title: "Create",
           tabBarLabel: () => null,
           tabBarAccessibilityLabel: "Create a new challenge",
+          sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
       <Tabs.Screen
