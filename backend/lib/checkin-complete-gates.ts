@@ -130,11 +130,17 @@ export function evaluateTaskLocation(
 export function assertChallengeQueryOk<T>(result: {
   data: T | null;
   error: { message?: string } | null;
-}): T | null {
+}): T {
   if (result.error) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: result.error.message ?? "Failed to load challenge.",
+    });
+  }
+  if (result.data == null) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Challenge not found.",
     });
   }
   return result.data;

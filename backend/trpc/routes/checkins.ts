@@ -164,21 +164,21 @@ export const checkinsRouter = createTRPCRouter({
         live_date?: string | null;
         duration_days?: number | null;
         is_hard_mode?: boolean;
-      } | null;
+      };
       const startAt = (acStartRow as { start_at?: string } | null)?.start_at;
       let rampDayNumber = 1;
-      const totalDur = ch?.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
-      if (ch?.duration_type !== "24h" && startAt) {
+      const totalDur = ch.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
+      if (ch.duration_type !== "24h" && startAt) {
         const startKey = dateKeyFromIsoInTimeZone(String(startAt), tz);
         const idx = calendarDayIndexInclusive(startKey, dateKey);
         rampDayNumber = Math.min(totalDur, Math.max(1, idx));
       }
-      if (ch?.duration_type === "24h") {
+      if (ch.duration_type === "24h") {
         const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
       }
       const isMinimumDay = input.task_mode === "minimum";
-      const isChallengeHardMode = ch?.is_hard_mode === true;
+      const isChallengeHardMode = ch.is_hard_mode === true;
       if (isMinimumDay && isChallengeHardMode) {
         throw new TRPCError({
           code: "BAD_REQUEST",
