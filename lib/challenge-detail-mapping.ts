@@ -114,6 +114,20 @@ export function detailState(
   return "default";
 }
 
+/**
+ * Spec (griit_brand/briefs/15/cursor/02_screens.md — Challenge detail, not joined):
+ * solo → "Day 1 is today."
+ * duo/team → "Join opens the invite step. You need a partner before Day 1."
+ * Invite step does not exist yet. Restore JOIN_CAPTION_INVITE when it lands.
+ */
+export const JOIN_CAPTION_TODAY = "Day 1 is today.";
+export const JOIN_CAPTION_INVITE =
+  "Join opens the invite step. You need a partner before Day 1.";
+
+export function joinCaption(_participationType: ParticipationType): string {
+  return JOIN_CAPTION_TODAY;
+}
+
 export function mapParticipationType(raw: string | null | undefined): ParticipationType {
   const s = (raw ?? "solo").toLowerCase();
   if (s === "duo") return "duo";

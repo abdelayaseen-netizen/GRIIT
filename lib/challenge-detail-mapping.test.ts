@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import {
+  JOIN_CAPTION_INVITE,
+  JOIN_CAPTION_TODAY,
   detailState,
   formatTimeWindow,
+  joinCaption,
   taskGates,
 } from "@/lib/challenge-detail-mapping";
 
@@ -124,5 +127,20 @@ describe("detailState", () => {
 
   it("returns default when no gate applies", () => {
     expect(detailState({}, 0, FREE_ACTIVE_CHALLENGES_LIMIT, now)).toBe("default");
+  });
+});
+
+describe("joinCaption", () => {
+  it("duo renders Day 1 is today until invite step exists", () => {
+    expect(joinCaption("duo")).toBe("Day 1 is today.");
+    expect(joinCaption("duo")).toBe(JOIN_CAPTION_TODAY);
+    expect(JOIN_CAPTION_INVITE).toBe(
+      "Join opens the invite step. You need a partner before Day 1.",
+    );
+  });
+
+  it("team and solo also use Day 1 is today until invite step exists", () => {
+    expect(joinCaption("team")).toBe(JOIN_CAPTION_TODAY);
+    expect(joinCaption("solo")).toBe(JOIN_CAPTION_TODAY);
   });
 });

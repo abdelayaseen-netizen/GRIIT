@@ -26,11 +26,12 @@ import { formatDays } from "@/lib/format-days";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
-import type {
-  ChallengeDetailTask,
-  DetailState,
-  GateKind,
-  ParticipationType,
+import {
+  joinCaption,
+  type ChallengeDetailTask,
+  type DetailState,
+  type GateKind,
+  type ParticipationType,
 } from "@/lib/challenge-detail-mapping";
 
 const PT = DS_V3.space.xs / 4;
@@ -248,11 +249,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                 </Pressable>
               </>
             ) : (
-              <Text style={styles.joinCaption}>
-                {p.participationType === "solo"
-                  ? "Day 1 is today."
-                  : "Join opens the invite step. You need a partner before Day 1."}
-              </Text>
+              <Text style={styles.joinCaption}>{joinCaption(p.participationType)}</Text>
             )}
           </>
         )}
