@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Share,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,36 +21,34 @@ import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
-import { HomeHeaderV2 } from "@/components/home/HomeHeaderV2";
-import {
-  deriveStreakHeroV4State,
-  type StreakHeroV4Task,
-} from "@/components/home/StreakHeroV4";
+import { HomeV3, greetingTitle, type HomeV3Proof } from "@/components/home/HomeV3";
+import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
-import { DS_COLORS_V2, DS_SPACING_V2 } from "@/lib/design-system";
-import { profilePrimaryName } from "@/lib/profile-display";
+import { DS_V3 } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
+import { displayDay } from "@/lib/challenge-day";
+import { homeProofGate } from "@/lib/active-challenge-ui";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
-import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
+import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
-
-const FREEZE_MAX_PER_WEEK = 2;
 
 type TaskRow = {
   id: string;
   title?: string;
   type?: string;
   required?: boolean;
+  duration_minutes?: number | null;
   config?: { required?: boolean } & Record<string, unknown>;
 };
 type ActiveRow = {
@@ -71,6 +68,13 @@ type HomeData = {
   todayCheckins: TodayCheckinForUser[];
   securedDateKeys: string[];
 };
+
+function durationMinutesFromTask(t: TaskRow): number | undefined {
+  if (typeof t.duration_minutes === "number" && t.duration_minutes > 0) return t.duration_minutes;
+  const fromCfg = t.config?.duration_minutes;
+  if (typeof fromCfg === "number" && fromCfg > 0) return fromCfg;
+  return undefined;
+}
 
 type FollowCounts = { followers: number; following: number };
 
@@ -200,6 +204,7 @@ export default function HomeScreen() {
           durationDays,
           taskType: tType,
           taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
+          durationMinutes: durationMinutesFromTask(t),
         });
       }
     }
@@ -213,9 +218,6 @@ export default function HomeScreen() {
     contextStats: stats,
   });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
-  const lastStreak = statsReady
-    ? ((resolvedStats as { lastStreak?: number } | null)?.lastStreak ?? 0)
-    : 0;
   const securedDateKeys = useMemo(
     () => homeQuery.data?.securedDateKeys ?? [],
     [homeQuery.data?.securedDateKeys],
@@ -253,18 +255,6 @@ export default function HomeScreen() {
     [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
   );
 
-  const heroState = useMemo(
-    () =>
-      deriveStreakHeroV4State({
-        streak,
-        tasksRemaining: heroMetrics.tasksRemaining,
-        totalTasksToday: heroMetrics.totalTasksToday,
-        minutesRemaining: heroMetrics.minutesRemaining,
-        todaySecured,
-      }),
-    [streak, heroMetrics, todaySecured],
-  );
-
   const lastHomeStateFiredRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (!FLAGS.PR3_HOME_STATE_ANALYTICS) return;
@@ -280,36 +270,16 @@ export default function HomeScreen() {
   // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
   const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
 
-  const weekSecuredByIndex = useMemo(() => {
-    const set = new Set(securedDateKeys);
-    return weekDateKeys.map((key) => set.has(key));
-  }, [weekDateKeys, securedDateKeys]);
-
-  const weekSecured = useMemo(
-    () => weekSecuredByIndex.filter(Boolean).length,
-    [weekSecuredByIndex],
-  );
-
   const todayWeekIndex = useMemo(() => {
     const todayKey = getTodayDateKey(homeTimeZone);
     const idx = weekDateKeys.indexOf(todayKey);
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, homeTimeZone]);
 
-  const nextBadge = useMemo(() => {
-    const mark = nextProfileV2Badge({
-      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
-      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
-    });
-    if (!mark) return { name: "", daysAway: 0, progress: 1, have: 0, need: 0 };
-    return {
-      name: mark.name,
-      daysAway: mark.remaining,
-      progress: mark.progress,
-      have: mark.have,
-      need: mark.need,
-    };
-  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
+  const weekSecuredByIndex = useMemo(() => {
+    const set = new Set(securedDateKeys);
+    return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
+  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
@@ -390,10 +360,10 @@ export default function HomeScreen() {
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, todaySecured))}&durationDays=${String(task.durationDays)}` as never,
       );
     },
-    [router],
+    [router, todaySecured],
   );
 
   const onPressPrimaryCTA = useCallback(() => {
@@ -413,42 +383,8 @@ export default function HomeScreen() {
     // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
   }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
 
-  const onPressFreeze = useCallback(() => {
-    setShowFreezeModal(true);
-  }, []);
-
-  const onPressShare = useCallback(async () => {
-    if (streak == null) return;
-    try {
-      const username = profile?.username ?? "";
-      const url = username ? `https://griit.app/u/${username}` : undefined;
-      await Share.share({
-        message: `I secured Day ${streak} on GRIIT`,
-        ...(url ? { url } : {}),
-      });
-      try {
-        track({ name: "streak_secured_shared", streak });
-      } catch (err) {
-        captureError(err, "HomeStreakSharedTrack");
-      }
-    } catch (err) {
-      const msg = (err as Error)?.message ?? "";
-      if (msg !== "User did not share") {
-        captureError(err, "HomeStreakShare");
-      }
-    }
-  }, [streak, profile?.username]);
-
-  const onPressAvatar = useCallback(() => {
-    router.push(ROUTES.TABS_PROFILE as never);
-  }, [router]);
-
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
-  }, [router]);
-
-  const onPressBadgeStat = useCallback(() => {
-    router.push(`${ROUTES.TABS_PROFILE}?tab=badges` as never);
   }, [router]);
 
   // Jeopardy modal handlers
@@ -469,48 +405,58 @@ export default function HomeScreen() {
     setShowJeopardyModal(false);
   }, []);
 
-  const onPressFreezesStat = useCallback(() => {
-    setShowFreezeModal(true);
-  }, []);
+  const liveFeedQuery = useQuery({
+    queryKey: ["liveFeed", feedScope, user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getLiveFeed, { scope: feedScope, limit: 20 }) as Promise<{
+        posts: LiveFeedPost[];
+      }>,
+    enabled: !isGuest && !!user?.id,
+    staleTime: 60 * 1000,
+  });
 
-  const firstName = useMemo(() => {
-    return profilePrimaryName(profile ?? {}).split(" ")[0] ?? "";
-  }, [profile]);
+  const awayCount = useMemo(() => {
+    const ids = new Set(
+      (liveFeedQuery.data?.posts ?? [])
+        .map((p) => p.userId)
+        .filter((id) => id && id !== user?.id),
+    );
+    return ids.size;
+  }, [liveFeedQuery.data?.posts, user?.id]);
 
-  const heroProps = useMemo(
-    () => ({
-      streak,
-      lastStreak,
-      minutesRemaining: heroMetrics.minutesRemaining,
-      tasksRemaining: heroMetrics.tasksRemaining,
-      totalTasksToday: heroMetrics.totalTasksToday,
-      todaySecured,
-      freezesAvailable: freezeStatusQuery.data?.remaining ?? 0,
-      freezeUsedToday: false,
-      nextBadgeName: nextBadge.name,
-      nextBadgeDaysAway: nextBadge.daysAway,
-      nextBadgeHave: nextBadge.have,
-      nextBadgeNeed: nextBadge.need,
-      tasks: heroTasks,
-      onPressTask,
-      onPressPrimaryCTA,
-      onPressFreeze,
-      onPressShare,
-    }),
-    [
-      streak,
-      lastStreak,
-      heroMetrics,
-      todaySecured,
-      freezeStatusQuery.data?.remaining,
-      nextBadge,
-      heroTasks,
-      onPressTask,
-      onPressPrimaryCTA,
-      onPressFreeze,
-      onPressShare,
-    ],
-  );
+  const nextBadge = useMemo(() => {
+    const mark = nextProfileV2Badge({
+      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
+      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
+    });
+    if (!mark) return { name: "First badge", progress: 1 };
+    return { name: mark.name, progress: mark.progress };
+  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
+
+  const firstProofEver =
+    (resolvedStats?.totalDaysSecured ?? 0) === 0 && securedDateKeys.length === 0;
+
+  const proof: HomeV3Proof | null = useMemo(() => {
+    const task = heroTasks.find((t) => !t.done) ?? heroTasks[0] ?? null;
+    const hasChallenge = heroTasks.length > 0;
+    return {
+      challenge: task?.challengeName ?? "",
+      day: displayDay(task?.currentDay ?? 1, todaySecured),
+      taskText: task?.name ?? "",
+      gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),
+      doneCount: heroMetrics.tasksDoneToday,
+      totalCount: heroMetrics.totalTasksToday || 1,
+      posted: todaySecured || (hasChallenge && heroMetrics.tasksRemaining === 0),
+      hasChallenge,
+      firstProofEver,
+    };
+  }, [
+    heroTasks,
+    heroMetrics.tasksDoneToday,
+    heroMetrics.totalTasksToday,
+    todaySecured,
+    firstProofEver,
+  ]);
 
   // ────────────── render ──────────────
 
@@ -530,7 +476,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           )}
-          contentContainerStyle={{ paddingBottom: 96 }}
+          contentContainerStyle={s.guestList}
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
@@ -547,27 +493,23 @@ export default function HomeScreen() {
           onScopeChange={setFeedScope}
           hideHeaderToggle
           ListHeaderComponent={
-            <HomeHeaderV2
-              firstName={firstName}
-              avatarUrl={(profile as { avatar_url?: string | null } | null)?.avatar_url ?? null}
-              userId={user?.id}
-              onPressAvatar={onPressAvatar}
-              hero={heroProps}
-              heroState={heroState}
-              timeZone={homeTimeZone}
-              onPressBell={onPressBell}
-              weekSecured={weekSecured}
-              weekTotal={7}
-              weekSecuredByIndex={weekSecuredByIndex}
-              todayWeekIndex={todayWeekIndex}
-              freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
-              freezesMaxPerWeek={FREEZE_MAX_PER_WEEK}
-              nextBadgeName={nextBadge.name || "All five marks"}
-              nextBadgeProgress={nextBadge.progress}
-              onPressFreezesStat={onPressFreezesStat}
-              onPressBadgeStat={onPressBadgeStat}
+            <HomeV3
+              title={greetingTitle(profile ?? {})}
+              streak={streak ?? 0}
+              streakLine={todaySecured ? "Day secured." : "Post today to start."}
+              proof={proof}
+              weekFilled={weekSecuredByIndex}
+              todayIndex={todayWeekIndex}
+              fillToday={todaySecured}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
+              onPressBell={onPressBell}
+              onPressProof={onPressPrimaryCTA}
+              awayCount={awayCount}
+              freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
+              badgeName={nextBadge.name}
+              badgePct={Math.round(nextBadge.progress * 100)}
+              loading={homeQuery.isPending && !homeQuery.data}
             />
           }
         />
@@ -593,21 +535,23 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS_V2.surface.canvas },
+  container: { flex: 1, backgroundColor: DS_V3.color.canvas },
   guestWrap: {
-    paddingHorizontal: DS_SPACING_V2.lg,
-    paddingTop: 32,
-    gap: 12,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.section,
+    gap: DS_V3.space.md,
   },
+  guestList: { paddingBottom: DS_V3.space.xs * 24 },
   guestTitle: {
-    fontSize: 32,
-    fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: 1,
+    fontSize: DS_V3.type.display.fontSize,
+    lineHeight: DS_V3.type.display.lineHeight,
+    fontWeight: DS_V3.type.display.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   guestBody: {
-    fontSize: 16,
-    color: DS_COLORS_V2.text.secondary,
-    lineHeight: 24,
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
 });

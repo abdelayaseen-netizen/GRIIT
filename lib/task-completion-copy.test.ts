@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { failedUploadCopy, verificationLine } from "@/lib/task-completion-copy";
+import {
+  failedUploadCopy,
+  failureErrorCode,
+  failureScreenCopy,
+  verificationLine,
+} from "@/lib/task-completion-copy";
 
 describe("verificationLine", () => {
   it("matches README §6 verbatim", () => {
@@ -27,5 +32,63 @@ describe("verificationLine", () => {
 describe("failedUploadCopy", () => {
   it("says retry secures today's date, not the capture date (Q11)", () => {
     expect(failedUploadCopy().retryNote).toBe("Retry will secure today's date, not the capture date.");
+  });
+});
+
+describe("failureScreenCopy", () => {
+  it("BAD_REQUEST shows the server message, Go back, and never mentions a saved photo", () => {
+    const copy = failureScreenCopy({
+      errorCode: "BAD_REQUEST",
+      message: "This task requires a photo. Please take a photo to verify completion.",
+      hasLocalPhoto: false,
+    });
+    expect(copy.kind).toBe("validation");
+    expect(copy.body).toBe("This task requires a photo. Please take a photo to verify completion.");
+    expect(copy.primaryLabel).toBe("Go back");
+    expect(copy.primaryAction).toBe("back");
+    expect(copy.body.toLowerCase()).not.toMatch(/saved/);
+    expect(copy.retryNote).toBeUndefined();
+  });
+
+  it("BAD_REQUEST with a local photo still does not claim the photo is saved", () => {
+    const copy = failureScreenCopy({
+      errorCode: "BAD_REQUEST",
+      message: "Hard mode: this task can only be completed between 06:00 and 08:00.",
+      hasLocalPhoto: true,
+    });
+    expect(copy.primaryAction).toBe("back");
+    expect(copy.body.toLowerCase()).not.toMatch(/saved on this device/);
+  });
+
+  it("network failure with a local photo uses the upload copy and Retry now", () => {
+    const upload = failedUploadCopy();
+    const copy = failureScreenCopy({
+      errorCode: undefined,
+      message: "Network request failed",
+      hasLocalPhoto: true,
+    });
+    expect(copy.kind).toBe("upload");
+    expect(copy.headline).toBe(upload.headline);
+    expect(copy.body).toBe(upload.body);
+    expect(copy.primaryLabel).toBe("Retry now");
+    expect(copy.primaryAction).toBe("retry");
+  });
+
+  it("network failure without a local photo does not claim a saved photo", () => {
+    const copy = failureScreenCopy({
+      errorCode: "TIMEOUT",
+      message: "Couldn't save. Try again.",
+      hasLocalPhoto: false,
+    });
+    expect(copy.kind).toBe("upload");
+    expect(copy.primaryAction).toBe("retry");
+    expect(copy.body.toLowerCase()).not.toMatch(/saved on this device/);
+  });
+
+  it("reads BAD_REQUEST from a thrown tRPC-shaped error", () => {
+    const err = Object.assign(new Error("This task requires a photo."), {
+      data: { code: "BAD_REQUEST" },
+    });
+    expect(failureErrorCode(err)).toBe("BAD_REQUEST");
   });
 });

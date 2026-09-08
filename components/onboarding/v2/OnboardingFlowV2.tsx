@@ -32,6 +32,7 @@ import {
   nextAfterAccountAuth,
   type AccountAuthKind,
 } from "@/lib/onboarding-v2-account-name";
+import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
@@ -335,8 +336,9 @@ export default function OnboardingFlowV2() {
     return <SafeAreaView style={styles.safeArea} />;
   }
 
+  const welcome = step === "welcome" && !signInOpen;
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, welcome && styles.welcome]}>
       {step !== "welcome" && !signInOpen ? (
         <FlowChrome
           step={step}
@@ -362,4 +364,5 @@ export default function OnboardingFlowV2() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: OBV2_COLOR.screen },
+  welcome: { backgroundColor: DS_V3.color.canvas },
 });

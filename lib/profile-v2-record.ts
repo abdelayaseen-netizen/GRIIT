@@ -259,10 +259,16 @@ function streakSince(current: number, lastCompletedDateKey: string | null): stri
   return formatDayMonth(start);
 }
 
+/** Left / solo-leave enrollments never appear on Profile → Challenges. */
+export function isAbandonedEnrollment(status: string): boolean {
+  return status === "abandoned";
+}
+
 export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
-  const activeRanges = input.ranges.filter((r) => r.status === "active");
-  const completedRanges = input.ranges.filter((r) => r.status === "completed");
+  const listed = input.ranges.filter((r) => !isAbandonedEnrollment(r.status));
+  const activeRanges = listed.filter((r) => r.status === "active");
+  const completedRanges = listed.filter((r) => r.status === "completed");
   const dueDayKeys = unionDueDateKeys(activeRanges, input.todayKey);
   const closedDueKeys = dueDayKeys.filter((k) => k < input.todayKey);
   const verifiedClosedKeys = closedDueKeys.filter((k) => secured.has(k));

@@ -1,10 +1,12 @@
 import React from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import { ROUTES } from "@/lib/routes";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { DS_V3 } from "@/lib/design-system";
+import Card from "@/components/ds/Card";
+import ListRow from "@/components/ds/ListRow";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -17,31 +19,23 @@ export default function SettingsAboutScreen() {
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <SettingsNav title="About" />
         <ScrollView contentContainerStyle={styles.body}>
-          <View style={styles.card}>
-            <Text style={styles.val}>GRIIT {APP_VERSION}</Text>
-          </View>
-          <Pressable
-            onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}
-            style={styles.card}
-            accessibilityRole="button"
-          >
-            <Text style={styles.val}>Terms of Service</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}
-            style={styles.card}
-            accessibilityRole="button"
-          >
-            <Text style={styles.val}>Privacy Policy</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => void Linking.openURL("mailto:griit.health@gmail.com")}
-            style={styles.card}
-            accessibilityRole="button"
-          >
-            <Text style={styles.val}>Contact</Text>
-            <Text style={styles.hint}>griit.health@gmail.com</Text>
-          </Pressable>
+          <Card style={styles.card}>
+            <ListRow title={`GRIIT ${APP_VERSION}`} />
+            <ListRow
+              title="Terms of Service"
+              onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}
+            />
+            <ListRow
+              title="Privacy Policy"
+              onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}
+            />
+            <ListRow
+              title="Contact"
+              subtitle="griit.health@gmail.com"
+              onPress={() => void Linking.openURL("mailto:griit.health@gmail.com")}
+              divider={false}
+            />
+          </Card>
         </ScrollView>
       </SafeAreaView>
     </ErrorBoundary>
@@ -49,9 +43,11 @@ export default function SettingsAboutScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
-  body: { paddingHorizontal: 28, paddingBottom: 40, gap: 12 },
-  card: { backgroundColor: PROFILE_V2_COLOR.surface, borderRadius: 20, padding: 16 },
-  val: { fontSize: 15, color: PROFILE_V2_COLOR.ink },
-  hint: { marginTop: 4, fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  body: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.xs * 10,
+  },
+  card: { padding: 0, overflow: "hidden" },
 });

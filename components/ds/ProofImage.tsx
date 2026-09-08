@@ -3,6 +3,11 @@
  * Laws: 13 (every proof 4:5, three sizes), 14 (text on a scrim), 15 (missing is
  * canvas + title; loading is blurhash). radius.card for feed and card;
  * radius.thumb (tokens.ts:83 / 03_media.md:62) for thumb.
+ *
+ * Fallback override: 01_components.md:166 says missing ground is canvas.
+ * Canvas on canvas is invisible in a grid of fallbacks (Discover, four cards),
+ * so the missing state is surface + 1pt border at the same radius, title
+ * bodyStrong textPrimary at the bottom left with space.gutter padding.
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -69,7 +74,14 @@ export default function ProofImage({
 }: ProofImageProps) {
   const resolved = source ?? uri ?? null;
   const request = proofRequestSource(resolved, size);
-  const inset = size === "feed" ? DS_V3.space.lg : DS_V3.space.md;
+  const missing =
+    request == null ||
+    (typeof request === "string" && !/^https:\/\//i.test(request));
+  const inset = missing
+    ? DS_V3.space.gutter
+    : size === "feed"
+      ? DS_V3.space.lg
+      : DS_V3.space.md;
   const showScrim = Boolean(scrim || title || caption || stamp);
   const stampLabel: StampLabel | null =
     stamp === true ? "Verified" : stamp === false || stamp == null ? null : stamp;
@@ -87,9 +99,10 @@ export default function ProofImage({
         {
           borderRadius: size === "thumb" ? DS_V3.radius.thumb : DS_V3.radius.card,
         },
+        missing ? styles.fallbackFrame : styles.photoFrame,
       ]}
     >
-      {imageSource ? (
+      {imageSource && !missing ? (
         <Image
           source={imageSource}
           style={StyleSheet.absoluteFill}
@@ -100,10 +113,8 @@ export default function ProofImage({
           recyclingKey={recyclingKey ?? (typeof resolved === "string" ? `${resolved}:${size}` : undefined)}
           accessibilityLabel={title ?? "Proof"}
         />
-      ) : (
-        <View style={styles.fallback} />
-      )}
-      {imageSource && showScrim ? (
+      ) : null}
+      {imageSource && !missing && showScrim ? (
         <LinearGradient
           colors={[canvasAlpha(0), canvasAlpha(0.6)]}
           start={{ x: 0, y: 0 }}
@@ -113,11 +124,15 @@ export default function ProofImage({
       ) : null}
       {title || caption ? (
         <View style={[styles.copy, { left: inset, right: inset, bottom: inset }]}>
-          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {title ? (
+            <Text style={styles.title} numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
         </View>
       ) : null}
-      {stampLabel && imageSource ? (
+      {stampLabel && imageSource && !missing ? (
         <View style={[styles.stamp, { right: inset, bottom: inset }]}>
           <Stamp label={stampLabel} onInk />
         </View>
@@ -126,16 +141,21 @@ export default function ProofImage({
   );
 }
 
+const PT = DS_V3.space.xs / 4;
+
 const styles = StyleSheet.create({
   frame: {
     aspectRatio: 4 / 5,
     borderRadius: DS_V3.radius.card,
     overflow: "hidden",
+  },
+  photoFrame: {
     backgroundColor: DS_V3.color.canvas,
   },
-  fallback: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_V3.color.canvas,
+  fallbackFrame: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
   },
   scrim: {
     position: "absolute",

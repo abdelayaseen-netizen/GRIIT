@@ -2,8 +2,7 @@
  * Schedule-window evaluation for task-states-v2 Ready / Capture chips.
  *
  * Algorithm mirrors server `assertHardModeScheduleWindow`
- * (`backend/lib/checkin-complete-gates.ts`) and client tile soft-lock
- * `getTileWindowState` (`app/challenge/active/[activeChallengeId].tsx`).
+ * (`backend/lib/checkin-complete-gates.ts`).
  * HH:mm start/end in the given IANA timezone (viewer TZ fallback).
  */
 

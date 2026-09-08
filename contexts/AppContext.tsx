@@ -53,7 +53,7 @@ type AppContextValue = {
     firstTaskOfDay?: boolean;
     completionId?: string;
     verification?: { rows: ServerVerificationRow[] };
-    requiredRemaining?: number;
+    requiredRemaining: number;
     dayAlreadySecured?: boolean;
     streakDays?: number;
     challengeDay?: number;
@@ -61,7 +61,7 @@ type AppContextValue = {
     challengeName?: string;
     verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
   } | void>;
-  secureDay: () => Promise<{
+  secureDay: (activeChallengeId: string) => Promise<{
     success?: boolean;
     alreadySecured?: boolean;
     newStreakCount: number;
@@ -71,7 +71,7 @@ type AppContextValue = {
     challengeId?: string;
     challengeName?: string;
     totalDays?: number;
-  } | undefined>;
+  }>;
   isLoading: boolean;
   isError: boolean;
   initialFetchDone: boolean;
@@ -419,7 +419,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     stats,
     profile,
     fallbackProfile,
-    canSecureDay,
   });
 
   const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;

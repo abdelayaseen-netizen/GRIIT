@@ -7,6 +7,7 @@ import {
   badgeRows,
   buildProfileRecord,
   cellWidth,
+  isAbandonedEnrollment,
   runStates,
   unionDueDateKeys,
   verdictFor,
@@ -274,6 +275,21 @@ describe("badgeRows helper matches fixture A", () => {
     expect(rows[0]?.state).toBe("Earned 31 Aug 2026");
     expect(rows[2]?.state).toBe("7 / 14");
     expect(PROFILE_V2_BADGES).toHaveLength(5);
+  });
+});
+
+describe("Profile → Challenges list", () => {
+  it("omits abandoned enrollments", () => {
+    expect(isAbandonedEnrollment("abandoned")).toBe(true);
+    expect(isAbandonedEnrollment("active")).toBe(false);
+    const rec = buildProfileRecord({
+      ...fixtureNone(),
+      ranges: [
+        { ...readSomething("2026-09-03", 30), id: "left", name: "Left", status: "abandoned" },
+        readSomething("2026-09-03", 30),
+      ],
+    });
+    expect(rec.runs.map((r) => r.name)).toEqual(["Read Something"]);
   });
 });
 

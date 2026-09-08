@@ -44,3 +44,56 @@ export function buildIncompleteRequired(opts: {
     .map((t) => (typeof t.title === "string" && t.title.trim() ? t.title.trim() : "Task"));
   return { kind: "incomplete_required", done, total, remainingTitles };
 }
+
+/** Server `requiredRemaining` is the only gate. Do not default a missing value to 1. */
+export function shouldAttemptSecureDay(complete: {
+  requiredRemaining: number;
+  dayAlreadySecured?: boolean;
+}): boolean {
+  return complete.requiredRemaining === 0 && complete.dayAlreadySecured !== true;
+}
+
+export type SecureDayAfterComplete<T> = {
+  attempted: boolean;
+  result: T | null;
+  ui: DaySecureUi;
+};
+
+/**
+ * Call secureDay with the completion's activeChallengeId. AppContext is not consulted.
+ * NOT_ALL_REQUIRED becomes incomplete_required; other errors become secure_failed.
+ */
+export async function attemptSecureDayAfterComplete<T>(args: {
+  requiredRemaining: number;
+  dayAlreadySecured: boolean;
+  activeChallengeId: string;
+  secureDay: (activeChallengeId: string) => Promise<T | undefined>;
+}): Promise<SecureDayAfterComplete<T>> {
+  if (!shouldAttemptSecureDay(args)) {
+    return { attempted: false, result: null, ui: { kind: "not_attempted" } };
+  }
+  try {
+    const result = (await args.secureDay(args.activeChallengeId)) ?? null;
+    if (!result) {
+      return { attempted: true, result: null, ui: { kind: "secure_failed" } };
+    }
+    const streakCount =
+      typeof result === "object" && result !== null && "newStreakCount" in result
+        ? Number((result as { newStreakCount?: number }).newStreakCount ?? 0)
+        : 0;
+    return {
+      attempted: true,
+      result,
+      ui: { kind: "secured", streakCount, dayNumber: 0 },
+    };
+  } catch (err) {
+    if (isNotAllRequiredError(err)) {
+      return {
+        attempted: true,
+        result: null,
+        ui: { kind: "incomplete_required", done: 0, total: 0, remainingTitles: [] },
+      };
+    }
+    return { attempted: true, result: null, ui: { kind: "secure_failed" } };
+  }
+}

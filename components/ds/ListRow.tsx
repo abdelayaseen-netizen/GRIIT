@@ -19,6 +19,7 @@ export type ListRowProps = {
   trailing?: React.ReactNode;
   rank?: number;
   highlight?: boolean;
+  divider?: boolean;
   onPress?: () => void;
 };
 
@@ -29,6 +30,7 @@ export default function ListRow({
   trailing,
   rank,
   highlight,
+  divider = true,
   onPress,
 }: ListRowProps) {
   const body = (
@@ -47,7 +49,7 @@ export default function ListRow({
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {trailing ? (
+      {trailing !== undefined ? (
         trailing
       ) : onPress ? (
         <ChevronRight
@@ -78,7 +80,7 @@ export default function ListRow({
         >
           {body}
         </Pressable>
-        {highlight ? null : <View style={styles.divider} />}
+        {highlight || !divider ? null : <View style={styles.divider} />}
       </View>
     );
   }
@@ -86,7 +88,7 @@ export default function ListRow({
   return (
     <View>
       <View style={rowStyle}>{body}</View>
-      {highlight ? null : <View style={styles.divider} />}
+      {highlight || !divider ? null : <View style={styles.divider} />}
     </View>
   );
 }
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
   row: {
     minHeight: DS_V3.size.avatar.md,
     paddingVertical: DS_V3.space.gutter,
-    paddingHorizontal: 0,
+    paddingHorizontal: DS_V3.space.gutter,
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.lg,
@@ -110,8 +112,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   iconSlot: {
-    width: ICON,
-    height: ICON,
+    minWidth: ICON,
+    minHeight: ICON,
     alignItems: "center",
     justifyContent: "center",
   },

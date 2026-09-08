@@ -1,44 +1,37 @@
+/**
+ * Capture — frame 14. Camera behavior unchanged (live, 4:5 crop).
+ * Chrome restyle only. Shutter fill is surface (frame 14:983), not textPrimary.
+ */
 import React, { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImageManipulator from "expo-image-manipulator";
-import { DS_COLORS_V2 } from "@/lib/design-system";
+import { SwitchCamera } from "lucide-react-native";
+import { DS_V3 } from "@/lib/design-system";
 import { cropRectTo45 } from "@/lib/crop-to-45";
 import { createCameraCaptureMeta } from "@/lib/photo-capture-meta";
+import Button from "@/components/ds/Button";
+import EmptyState from "@/components/ds/EmptyState";
 
-function stampNow(): string {
-  return new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-}
+const ICON = DS_V3.space.xs * 6;
 
 export function TaskCapture({
-  gateLine,
+  challenge,
+  task,
+  timerLabel,
+  onCancel,
   onCaptured,
 }: {
-  gateLine: string;
+  challenge: string;
+  task: string;
+  timerLabel?: string;
+  onCancel: () => void;
   onCaptured: (uri: string, capturedAt: string) => void;
 }) {
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [busy, setBusy] = useState(false);
-  const [stamp] = useState(stampNow);
-
-  if (!permission) {
-    return <View style={styles.finder} />;
-  }
-  if (!permission.granted) {
-    return (
-      <View style={styles.finder}>
-        <Pressable
-          onPress={() => void requestPermission()}
-          accessibilityRole="button"
-          accessibilityLabel="Allow camera"
-          style={styles.perm}
-        >
-          <Text style={styles.permText}>Allow camera</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  const [facing, setFacing] = useState<"back" | "front">("back");
 
   const shutter = async () => {
     if (busy) return;
@@ -60,22 +53,57 @@ export function TaskCapture({
     }
   };
 
+  if (!permission) {
+    return <View style={styles.root} />;
+  }
+  if (!permission.granted) {
+    return (
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <EmptyState
+          heading="Camera access is off"
+          body="Turn it on in Settings to post proof."
+          actionLabel="Open Settings"
+          onAction={() => {
+            void requestPermission();
+            void Linking.openSettings();
+          }}
+        />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.wrap}>
-      <View style={styles.finder}>
-        <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
-        <View style={styles.stamp}>
-          <Text style={styles.stampText}>{stamp}</Text>
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.bar}>
+        <Button label="Cancel" variant="tertiary" ink onPress={onCancel} />
+        <Pressable
+          onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))}
+          accessibilityRole="button"
+          accessibilityLabel="Flip camera"
+          style={styles.flip}
+        >
+          <SwitchCamera size={ICON} color={DS_V3.color.textPrimary} />
+        </Pressable>
+      </View>
+      <View style={styles.meta}>
+        <Text style={styles.challenge}>{challenge}</Text>
+        <Text style={styles.task}>{task}</Text>
+        {timerLabel ? <Text style={styles.timer}>{timerLabel}</Text> : null}
+      </View>
+      <View style={styles.finderWrap}>
+        <View style={styles.finder}>
+          <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing={facing} />
         </View>
       </View>
-      <View style={styles.deck}>
-        <Text style={styles.gate}>{gateLine}</Text>
+      <View style={styles.shutterRow}>
         <Pressable
           onPress={() => void shutter()}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel="Shutter"
-          style={({ pressed }) => [styles.shutter, pressed && { transform: [{ scale: 0.92 }] }]}
+          accessibilityLabel="Take proof photo"
+          style={styles.shutter}
         />
       </View>
     </View>
@@ -83,35 +111,64 @@ export function TaskCapture({
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: DS_COLORS_V2.surface.camera },
-  finder: {
-    width: "100%",
-    aspectRatio: 4 / 5,
-    backgroundColor: DS_COLORS_V2.surface.camera,
-    overflow: "hidden",
+  root: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
+  },
+  bar: {
+    height: DS_V3.size.tap,
+    paddingHorizontal: DS_V3.space.gutter,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  flip: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
     alignItems: "center",
     justifyContent: "center",
   },
-  stamp: {
-    position: "absolute",
-    left: 16,
-    bottom: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "rgba(0,0,0,0.55)",
+  meta: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    gap: DS_V3.space.xs,
   },
-  stampText: { color: "#FFFFFF", fontSize: 12, fontWeight: "400" },
-  deck: { flex: 1, alignItems: "center", paddingTop: 18 },
-  gate: { fontSize: 13, color: "rgba(255,255,255,0.62)", marginBottom: 26 },
+  challenge: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  task: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  timer: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  finderWrap: {
+    padding: DS_V3.space.gutter,
+  },
+  finder: {
+    width: "100%",
+    aspectRatio: 4 / 5,
+    borderRadius: DS_V3.radius.card,
+    overflow: "hidden",
+    backgroundColor: DS_V3.color.canvas,
+  },
+  shutterRow: {
+    paddingHorizontal: DS_V3.space.gutter,
+    alignItems: "center",
+  },
   shutter: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 4,
-    borderColor: "rgba(255,255,255,0.35)",
+    width: DS_V3.size.shutter,
+    height: DS_V3.size.shutter,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.surface,
   },
-  perm: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 14, backgroundColor: "#FFFFFF" },
-  permText: { color: DS_COLORS_V2.text.primary, fontWeight: "500" },
 });

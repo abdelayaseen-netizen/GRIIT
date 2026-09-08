@@ -2,8 +2,9 @@
  * Dev-only DS primitive gallery. Route: /dev/design
  * File-based Expo Router. Not registered in app/_layout.tsx.
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Bell, Inbox } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -21,9 +22,41 @@ import ProofImage from "@/components/ds/ProofImage";
 import Skeleton from "@/components/ds/Skeleton";
 import HintBox from "@/components/ds/HintBox";
 import WeekStrip from "@/components/ds/WeekStrip";
+import MomentScreenV3, { type MomentVariant } from "@/components/task-v2/MomentScreenV3";
 
 const ICON = DS_V3.space.xs * 6;
 const PROOF = require("../../assets/dev/proof-can.png") as number;
+
+const WEEK = [
+  { letter: "M", filled: true },
+  { letter: "T", filled: true },
+  { letter: "W", filled: true },
+  { letter: "T", filled: true },
+  { letter: "F", filled: true },
+  { letter: "S", filled: false },
+  { letter: "S", filled: false },
+];
+
+function MomentPreview({ variant }: { variant: MomentVariant }) {
+  const proofs = Array.from({ length: 30 }, (_, i) => ({
+    source: PROOF,
+    selfReported: i === 7 || i === 18 || i === 24,
+  }));
+  return (
+    <MomentScreenV3
+      variant={variant}
+      streak={23}
+      streakBefore={variant === "verified" || variant === "daySecured" ? 22 : 23}
+      day={23}
+      remaining={2}
+      target={30}
+      proofSource={PROOF}
+      proofs={variant === "complete" ? proofs : undefined}
+      week={WEEK}
+      todayIndex={6}
+    />
+  );
+}
 
 function Caption({ children }: { children: string }) {
   return <Text style={styles.caption}>{children}</Text>;
@@ -47,13 +80,30 @@ function Cell({ caption, children }: { caption: string; children: React.ReactNod
   );
 }
 
+const MOMENTS: MomentVariant[] = [
+  "verified",
+  "daySecured",
+  "tasksLeft",
+  "selfReported",
+  "complete",
+];
+
 export default function DesignGallery() {
+  const params = useLocalSearchParams<{ moment?: string }>();
+  const startMoment = MOMENTS.includes(params.moment as MomentVariant)
+    ? (params.moment as MomentVariant)
+    : "verified";
   const [segment, setSegment] = useState("Feed");
   const [ghost, setGhost] = useState("Scope");
   const [form, setForm] = useState("14");
   const [countKey, setCountKey] = useState(0);
   const [fillToday, setFillToday] = useState(false);
   const [fillKey, setFillKey] = useState(0);
+  const [moment, setMoment] = useState<MomentVariant>(startMoment);
+
+  useEffect(() => {
+    setMoment(startMoment);
+  }, [startMoment]);
 
   if (!__DEV__) {
     return null;
@@ -64,6 +114,30 @@ export default function DesignGallery() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Design</Text>
         <Text style={styles.kicker}>Chunk B primitives</Text>
+
+        <Section title="Chunk E moments">
+          <View style={styles.row}>
+            {(
+              [
+                ["verified", "Verified"],
+                ["daySecured", "Day secured"],
+                ["tasksLeft", "Tasks left"],
+                ["selfReported", "Self reported"],
+                ["complete", "Complete"],
+              ] as const
+            ).map(([value, label]) => (
+              <Chip
+                key={value}
+                label={label}
+                selected={moment === value}
+                onPress={() => setMoment(value)}
+              />
+            ))}
+          </View>
+          <View style={styles.momentPhone}>
+            <MomentPreview variant={moment} />
+          </View>
+        </Section>
 
         <Section title="Button">
           <View style={styles.row}>
@@ -400,5 +474,11 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: DS_V3.space.sm,
+  },
+  momentPhone: {
+    height: 500,
+    borderRadius: DS_V3.radius.card,
+    overflow: "hidden",
+    backgroundColor: DS_V3.color.canvas,
   },
 });

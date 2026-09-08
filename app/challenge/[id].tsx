@@ -46,6 +46,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
 import { canJoinChallenge } from "@/lib/premium";
+import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { FLAGS } from "@/lib/feature-flags";
 import { ensureAnonymousSession } from "@/lib/anon-auth";
 import TeamMemberList, { type TeamMemberForList } from "@/components/challenge/TeamMemberList";
@@ -743,6 +744,7 @@ export default function ChallengeDetailScreen() {
     const count = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
     const joinGate = canJoinChallenge(count);
     if (!joinGate.allowed) {
+      showError(FREE_ACTIVE_LIMIT_MESSAGE);
       router.push(ROUTES.PAYWALL as never);
       return;
     }
@@ -793,8 +795,12 @@ export default function ChallengeDetailScreen() {
       captureError(err, { flow: "challenge_join", challengeId: id });
       const msg = err instanceof Error ? err.message : "";
       const code = (err as { data?: { code?: string } })?.data?.code;
-      if (code === "FORBIDDEN" || msg.toLowerCase().includes("up to 3 challenges")) {
-        showError("Free accounts can have up to 3 active challenges. Upgrade to Premium for unlimited challenges.");
+      if (
+        code === "FORBIDDEN" ||
+        msg.includes(FREE_ACTIVE_LIMIT_MESSAGE) ||
+        msg.toLowerCase().includes("up to 3 challenges")
+      ) {
+        showError(FREE_ACTIVE_LIMIT_MESSAGE);
         router.push(ROUTES.PAYWALL as never);
         return;
       }

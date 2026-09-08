@@ -1,36 +1,25 @@
 /**
- * StepTasks — Step 2 of CreateWizardV2.
- *
- * Two tabs:
- *   - Starter packs (5 hardcoded packs — wired to a future
- *     `TRPC.challenges.getStarterPack` if needed; for v2 we ship a curated set).
- *   - Custom — list of user-built tasks (with "Add task" tile).
- *
- * Pure controlled component.
+ * Step 2 — Starter packs or custom tasks. Visual layer; parent owns state.
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
   Briefcase,
-  Camera,
   Dumbbell,
   Feather,
   Flame,
-  Plus,
-  Sun,
   Sunrise,
-  Trash2,
 } from "lucide-react-native";
-
-import {
-  DS_COLORS_V2,
-  DS_RADIUS_V2,
-  DS_SPACING_V2,
-} from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
+import { Button, EmptyState, SegmentedControl } from "@/components/ds";
 import type {
   WizardCategory,
   WizardDifficulty,
 } from "@/components/create/v2/StepRules";
+import {
+  CHALLENGE_PACKS,
+  wizardTasksFromPack,
+} from "@/lib/challenge-packs";
 
 export type WizardTaskType =
   | "simple"
@@ -54,8 +43,10 @@ export type WizardTask = {
   durationMinutes?: number;
   minWords?: number;
   requirePhoto?: boolean;
+  targetValue?: number;
+  locationName?: string;
+  radiusMeters?: number;
   runGoalType?: RunGoalType;
-  /** Target value for the chosen goal type. Omitted = "just track it" (no target). */
   runTarget?: number;
   runTrackingMode?: RunTrackingMode;
   runUnit?: RunUnit;
@@ -71,113 +62,62 @@ export type WizardPack = {
   difficulty?: WizardDifficulty;
 };
 
-const PACKS: readonly WizardPack[] = [
-  {
-    id: "75-hard",
-    name: "75 Hard Classic",
-    subtitle: "5 strict tasks · original framework",
-    category: "discipline",
-    durationDays: 75,
-    difficulty: "hard",
-    tasks: [
-      { name: "Workout 1 (45 min)", type: "timer", durationMinutes: 45 },
-      { name: "Workout 2 outdoors (45 min)", type: "timer", durationMinutes: 45 },
-      { name: "Read 10 pages", type: "reading" },
-      { name: "Drink 1 gallon water", type: "water" },
-      { name: "Photo proof of progress", type: "photo", requirePhoto: true },
-    ],
-  },
-  {
-    id: "athlete",
-    name: "Athlete",
-    subtitle: "3 tasks · Run, train, check-in",
-    category: "fitness",
-    tasks: [
-      { name: "Run 3 km", type: "run" },
-      { name: "Strength session (30 min)", type: "timer", durationMinutes: 30 },
-      { name: "Gym check-in", type: "checkin" },
-    ],
-  },
-  {
-    id: "faith",
-    name: "Faith",
-    subtitle: "3 tasks · Prayer, read, gratitude",
-    category: "faith",
-    tasks: [
-      { name: "Prayer (15 min)", type: "timer", durationMinutes: 15 },
-      { name: "Read scripture", type: "reading" },
-      { name: "Gratitude journal", type: "journal", minWords: 30 },
-    ],
-  },
-  {
-    id: "morning",
-    name: "Morning routine",
-    subtitle: "5 tasks · Win the morning",
-    category: "discipline",
-    tasks: [
-      { name: "Wake up by 6am", type: "simple" },
-      { name: "Cold shower", type: "simple" },
-      { name: "Stretch (10 min)", type: "timer", durationMinutes: 10 },
-      { name: "Journal (50 words)", type: "journal", minWords: 50 },
-      { name: "Drink 1L water", type: "water" },
-    ],
-  },
-  {
-    id: "entrepreneur",
-    name: "Entrepreneur",
-    subtitle: "3 tasks · Ship, journal, learn",
-    category: "discipline",
-    tasks: [
-      { name: "Ship one thing", type: "simple" },
-      { name: "Journal lessons (60 words)", type: "journal", minWords: 60 },
-      { name: "Read 20 pages", type: "reading" },
-    ],
-  },
-] as const;
+const PACK_ORDER = ["75hard", "athlete", "faith", "morning", "entrepreneur"] as const;
+
+const PACK_COPY: Record<string, { title: string; meta: string }> = {
+  "75hard": { title: "75 Hard Classic", meta: "5 strict tasks · original framework" },
+  athlete: { title: "Athlete", meta: "3 tasks · run, train, check in" },
+  faith: { title: "Faith", meta: "3 tasks · prayer, read, gratitude" },
+  morning: { title: "Morning routine", meta: "5 tasks · win the morning" },
+  entrepreneur: { title: "Entrepreneur", meta: "3 tasks · ship, journal, learn" },
+};
+
+const PACKS: readonly WizardPack[] = PACK_ORDER.map((id) => {
+  const pack = CHALLENGE_PACKS.find((p) => p.id === id);
+  if (!pack) {
+    return {
+      id,
+      name: PACK_COPY[id]?.title ?? id,
+      subtitle: PACK_COPY[id]?.meta ?? "",
+      category: "discipline" as WizardCategory,
+      tasks: [],
+    };
+  }
+  return {
+    id: pack.id,
+    name: pack.name,
+    subtitle: pack.description,
+    category: pack.category ?? "discipline",
+    durationDays: pack.durationDays,
+    difficulty: pack.difficulty,
+    tasks: wizardTasksFromPack(pack).map((t) => ({
+      name: t.name,
+      type: t.type as WizardTaskType,
+      durationMinutes: t.durationMinutes,
+      minWords: t.minWords,
+      requirePhoto: t.requirePhoto,
+      targetValue: t.targetValue,
+      locationName: t.locationName,
+      radiusMeters: t.radiusMeters,
+    })),
+  };
+});
+
+const ICON = DS_V3.space.xs * 6;
+const PT = DS_V3.space.xs / 4;
 
 function packIcon(packId: string, color: string): React.ReactNode {
-  const size = 16;
-  const strokeWidth = 2;
   switch (packId) {
-    case "75-hard":
-      return <Flame size={size} color={color} strokeWidth={strokeWidth} />;
+    case "75hard":
+      return <Flame size={ICON} color={color} strokeWidth={2} />;
     case "athlete":
-      return <Dumbbell size={size} color={color} strokeWidth={strokeWidth} />;
+      return <Dumbbell size={ICON} color={color} strokeWidth={2} />;
     case "faith":
-      return <Feather size={size} color={color} strokeWidth={strokeWidth} />;
+      return <Feather size={ICON} color={color} strokeWidth={2} />;
     case "morning":
-      return <Sunrise size={size} color={color} strokeWidth={strokeWidth} />;
-    case "entrepreneur":
-      return <Briefcase size={size} color={color} strokeWidth={strokeWidth} />;
+      return <Sunrise size={ICON} color={color} strokeWidth={2} />;
     default:
-      return <Sun size={size} color={color} strokeWidth={strokeWidth} />;
-  }
-}
-
-function taskTypeLabel(type: WizardTaskType): string {
-  switch (type) {
-    case "simple":
-      return "Confirm";
-    case "photo":
-      return "Photo";
-    case "timer":
-      return "Timer";
-    case "journal":
-      return "Journal";
-    case "run":
-      return "Run";
-    case "workout":
-      return "Workout";
-    case "reading":
-      return "Pages";
-    case "water":
-      return "Water";
-    case "counter":
-      return "Counter";
-    case "checkin":
-      return "Check-in";
-    default:
-      return "Task";
+      return <Briefcase size={ICON} color={color} strokeWidth={2} />;
   }
 }
 
@@ -200,323 +140,173 @@ export function StepTasks({
   onAddCustomTask,
   onRemoveCustomTask,
 }: StepTasksProps) {
+  const mode = useCustom ? "Custom" : "Starter packs";
+
   return (
     <View style={styles.wrap}>
-      <Text style={styles.h1}>What must get done daily?</Text>
-      <Text style={styles.sub}>Pick a starter pack or build from scratch.</Text>
-
-      <View style={styles.tabs}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Starter packs tab"
-          accessibilityState={{ selected: !useCustom }}
-          onPress={() => onChangeUseCustom(false)}
-          style={[
-            styles.tab,
-            !useCustom ? styles.tabSelected : null,
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              !useCustom ? styles.tabTextSelected : null,
-            ]}
-          >
-            Starter packs
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Custom tasks tab"
-          accessibilityState={{ selected: useCustom }}
-          onPress={() => onChangeUseCustom(true)}
-          style={[styles.tab, useCustom ? styles.tabSelected : null]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              useCustom ? styles.tabTextSelected : null,
-            ]}
-          >
-            Custom
-          </Text>
-        </Pressable>
+      <View style={styles.block}>
+        <Text style={styles.title}>What must get done daily?</Text>
+        <Text style={styles.secondary}>Pick a starter pack or build from scratch.</Text>
       </View>
-
-      {!useCustom ? (
-        <View style={styles.packsList}>
-          {PACKS.map((p) => {
-            const selected = pack?.id === p.id;
-            return (
-              <Pressable
-                key={p.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Choose ${p.name} pack`}
-                accessibilityState={{ selected }}
-                onPress={() => onChangePack(p)}
-                style={[
-                  styles.packRow,
-                  selected ? styles.packRowSelected : null,
-                ]}
-              >
-                <View style={styles.packIconWrap}>
-                  {packIcon(p.id, DS_COLORS_V2.brand.primary)}
-                </View>
-                <View style={styles.packBody}>
-                  <Text style={styles.packTitle}>{p.name}</Text>
-                  <Text style={styles.packSub} numberOfLines={1}>
-                    {p.subtitle}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : (
-        <View style={styles.customWrap}>
-          {customTasks.length === 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add your first task"
-              onPress={onAddCustomTask}
-              style={styles.emptyAdd}
-            >
-              <Plus
-                size={22}
-                color={DS_COLORS_V2.brand.primary}
-                strokeWidth={2}
-              />
-              <Text style={styles.emptyAddText}>Add your first task</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.taskList}>
-              {customTasks.map((t, idx) => (
-                <View key={`${t.name}-${idx}`} style={styles.taskRow}>
-                  <View style={styles.taskRowLeft}>
-                    <View style={styles.taskTypeBadge}>
-                      <Text style={styles.taskTypeBadgeText}>
-                        {taskTypeLabel(t.type)}
-                      </Text>
-                    </View>
-                    <Text style={styles.taskName} numberOfLines={1}>
-                      {t.name}
-                    </Text>
-                  </View>
+      <View style={styles.segWrap}>
+        <SegmentedControl
+          items={["Starter packs", "Custom"]}
+          value={mode}
+          onChange={(v) => onChangeUseCustom(v === "Custom")}
+        />
+      </View>
+      <View style={styles.list}>
+        {!useCustom
+          ? PACKS.map((p, i) => {
+              const on = pack?.id === p.id;
+              const copy = PACK_COPY[p.id] ?? { title: p.name, meta: p.subtitle };
+              const tint = on ? DS_V3.color.brandText : DS_V3.color.textPrimary;
+              const metaTint = on ? DS_V3.color.brandText : DS_V3.color.textSecondary;
+              return (
+                <View key={p.id}>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove ${t.name}`}
-                    hitSlop={8}
-                    onPress={() => onRemoveCustomTask(idx)}
+                    accessibilityLabel={copy.title}
+                    accessibilityState={{ selected: on }}
+                    onPress={() => onChangePack(p)}
+                    style={[styles.packRow, on ? styles.packOn : null]}
                   >
-                    <Trash2
-                      size={14}
-                      color={DS_COLORS_V2.text.tertiary}
-                      strokeWidth={2}
-                    />
+                    {packIcon(p.id, tint)}
+                    <View style={styles.packBody}>
+                      <Text style={[styles.bodyStrong, { color: tint }]}>{copy.title}</Text>
+                      <Text style={[styles.caption, { color: metaTint }]}>{copy.meta}</Text>
+                    </View>
                   </Pressable>
+                  {on ? (
+                    <View style={styles.taskLines}>
+                      {p.tasks.map((t) => (
+                        <Text key={t.name} style={[styles.caption, styles.muted]}>
+                          {t.name}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : i < PACKS.length - 1 ? (
+                    <View style={styles.divider} />
+                  ) : null}
+                </View>
+              );
+            })
+          : customTasks.length === 0 ? (
+            <EmptyState
+              heading="No tasks yet"
+              body="Add at least one task to continue."
+              actionLabel="Add a task"
+              onAction={onAddCustomTask}
+            />
+          ) : (
+            <>
+              {customTasks.map((t, i) => (
+                <View key={`${t.name}-${i}`}>
+                  <View style={styles.taskRow}>
+                    <View style={styles.packBody}>
+                      <Text style={styles.bodyStrong}>{t.name}</Text>
+                      <Text style={[styles.caption, styles.muted]}>{t.type}</Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${t.name}`}
+                      onPress={() => onRemoveCustomTask(i)}
+                      style={styles.editHit}
+                    >
+                      <Text style={styles.edit}>Edit</Text>
+                    </Pressable>
+                  </View>
+                  {i < customTasks.length - 1 ? <View style={styles.divider} /> : null}
                 </View>
               ))}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Add another task"
-                onPress={onAddCustomTask}
-                style={styles.addAnother}
-              >
-                <Plus
-                  size={14}
-                  color={DS_COLORS_V2.brand.primary}
-                  strokeWidth={2}
-                />
-                <Text style={styles.addAnotherText}>Add another task</Text>
-              </Pressable>
-            </View>
+              <View style={styles.addWrap}>
+                <Button label="Add a task" variant="secondary" onPress={onAddCustomTask} />
+              </View>
+            </>
           )}
-        </View>
-      )}
-
-      {pack ? (
-        <View style={styles.previewCard}>
-          <View style={styles.previewHeader}>
-            <Camera
-              size={12}
-              color={DS_COLORS_V2.text.tertiary}
-              strokeWidth={2}
-            />
-            <Text style={styles.previewTitle}>{`${pack.name} · ${pack.tasks.length} tasks`}</Text>
-          </View>
-          {pack.tasks.map((t, idx) => (
-            <Text key={idx} style={styles.previewTask}>
-              {`• ${t.name}`}
-            </Text>
-          ))}
-        </View>
-      ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: DS_SPACING_V2.sm, paddingTop: DS_SPACING_V2.xs },
-  h1: {
-    fontSize: 23,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-    letterSpacing: -0.4,
+  wrap: { paddingBottom: DS_V3.space.xs * 35 },
+  block: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.section,
+    gap: DS_V3.space.xs,
   },
-  sub: {
-    fontSize: 14,
-    color: DS_COLORS_V2.text.tertiary,
-    marginTop: -2,
+  segWrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
   },
-
-  tabs: {
-    flexDirection: "row",
-    padding: DS_SPACING_V2.xxs,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
-    marginVertical: DS_SPACING_V2.xxs,
+  list: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.md,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: DS_SPACING_V2.sm,
-    alignItems: "center",
-    borderRadius: DS_RADIUS_V2.lg,
+  title: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
-  tabSelected: { backgroundColor: DS_COLORS_V2.brand.primarySoft },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.tertiary,
+  secondary: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  tabTextSelected: {
-    color: DS_COLORS_V2.brand.primary,
-    fontWeight: "500",
+  bodyStrong: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
-
-  packsList: { gap: DS_SPACING_V2.sm, marginTop: DS_SPACING_V2.xxs },
+  caption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+  },
+  muted: { color: DS_V3.color.textSecondary },
   packRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING_V2.sm,
-    padding: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    gap: DS_V3.space.lg,
+    minHeight: DS_V3.size.tap,
+    paddingVertical: DS_V3.space.gutter,
   },
-  packRowSelected: {
-    borderColor: DS_COLORS_V2.brand.primary,
-    borderWidth: 1.5,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  packOn: {
+    backgroundColor: DS_V3.color.brandTint,
+    borderRadius: DS_V3.radius.input,
+    paddingHorizontal: DS_V3.space.lg,
   },
-  packIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: DS_RADIUS_V2.lg,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+  packBody: { flex: 1 },
+  taskLines: {
+    paddingLeft: DS_V3.space.xs * 14,
+    paddingRight: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.md,
+    gap: DS_V3.space.xs,
   },
-  packBody: { flex: 1, gap: 2 },
-  packTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
+  divider: {
+    height: PT,
+    backgroundColor: DS_V3.color.border,
   },
-  packSub: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.tertiary,
-  },
-  customWrap: { gap: DS_SPACING_V2.sm, marginTop: DS_SPACING_V2.xxs },
-  emptyAdd: {
-    paddingVertical: DS_SPACING_V2.xl,
-    paddingHorizontal: DS_SPACING_V2.md,
-    alignItems: "center",
-    gap: DS_SPACING_V2.xs,
-    borderRadius: DS_RADIUS_V2.lg,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: DS_COLORS_V2.brand.primary,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
-  },
-  emptyAddText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
-  },
-
-  taskList: { gap: DS_SPACING_V2.sm },
   taskRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_SPACING_V2.sm,
-    padding: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    gap: DS_V3.space.lg,
+    minHeight: DS_V3.size.tap,
+    paddingVertical: DS_V3.space.gutter,
   },
-  taskRowLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: DS_SPACING_V2.xs },
-  taskTypeBadge: {
-    paddingHorizontal: DS_SPACING_V2.xs,
-    paddingVertical: DS_SPACING_V2.xxs,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-  },
-  taskTypeBadgeText: {
-    fontSize: 11,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    color: DS_COLORS_V2.text.tertiary,
-    textTransform: "uppercase",
-  },
-  taskName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "500",
-    color: DS_COLORS_V2.text.primary,
-  },
-  addAnother: {
-    flexDirection: "row",
-    alignItems: "center",
+  editHit: {
+    minHeight: DS_V3.size.tap,
     justifyContent: "center",
-    gap: DS_SPACING_V2.xs,
-    paddingVertical: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: DS_COLORS_V2.surface.divider,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
   },
-  addAnotherText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS_V2.brand.primary,
+  edit: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
   },
-
-  previewCard: {
-    marginTop: DS_SPACING_V2.xs,
-    padding: DS_SPACING_V2.sm,
-    borderRadius: DS_RADIUS_V2.lg,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
-    gap: DS_SPACING_V2.xs,
-    borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-  },
-  previewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_SPACING_V2.xs,
-  },
-  previewTitle: {
-    fontSize: 13,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    color: DS_COLORS_V2.text.tertiary,
-  },
-  previewTask: {
-    fontSize: 13,
-    color: DS_COLORS_V2.text.secondary,
-  },
+  addWrap: { marginTop: DS_V3.space.gutter },
 });

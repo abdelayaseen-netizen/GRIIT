@@ -20,6 +20,7 @@ export type DisplayNumberProps = {
   onInk?: boolean;
   animateFrom?: number;
   haptic?: boolean;
+  onSettled?: () => void;
 };
 
 function letterSpacingFor(size: DisplayNumberSize) {
@@ -34,6 +35,7 @@ export default function DisplayNumber({
   onInk,
   animateFrom,
   haptic,
+  onSettled,
 }: DisplayNumberProps) {
   void onInk;
   const numeric = typeof value === "number" ? value : null;
@@ -47,6 +49,7 @@ export default function DisplayNumber({
   useEffect(() => {
     if (!shouldAnimate || numeric == null || animateFrom == null) {
       setShown(value);
+      onSettled?.();
       return;
     }
 
@@ -66,12 +69,14 @@ export default function DisplayNumber({
       if (haptic) {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      onSettled?.();
     };
 
     void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
       if (cancelled) return;
       if (reduce) {
         apply(to);
+        onSettled?.();
         return;
       }
       progress.value = 0;
@@ -93,7 +98,7 @@ export default function DisplayNumber({
     return () => {
       cancelled = true;
     };
-  }, [shouldAnimate, numeric, animateFrom, value, haptic, progress]);
+  }, [shouldAnimate, numeric, animateFrom, value, haptic, progress, onSettled]);
 
   const face: TextStyle = {
     fontWeight: DS_V3.type.number.fontWeight,
