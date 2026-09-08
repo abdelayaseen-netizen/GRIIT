@@ -65,6 +65,23 @@ describe("taskGates", () => {
 describe("detailState", () => {
   const now = new Date("2026-09-08T12:00:00.000Z");
 
+  it("archived 24h seed with null live_date is ended", () => {
+    expect(
+      detailState(
+        { duration_type: "24h", live_date: null, status: "archived" },
+        0,
+        FREE_ACTIVE_CHALLENGES_LIMIT,
+        now,
+      ),
+    ).toBe("ended");
+  });
+
+  it("completed run_status is ended before free_limit", () => {
+    expect(
+      detailState({ run_status: "completed" }, FREE_ACTIVE_CHALLENGES_LIMIT, FREE_ACTIVE_CHALLENGES_LIMIT, now),
+    ).toBe("ended");
+  });
+
   it("returns ended when ends_at is in the past", () => {
     expect(detailState({ ends_at: "2026-09-01T00:00:00.000Z" }, 0, FREE_ACTIVE_CHALLENGES_LIMIT, now)).toBe(
       "ended",

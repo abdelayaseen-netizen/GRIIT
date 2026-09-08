@@ -24,7 +24,22 @@ export type DetailChallenge = {
   ends_at?: string | null;
   live_date?: string | null;
   duration_type?: string | null;
+  /** challenges.status: draft | published | archived | rejected */
+  status?: string | null;
+  /** challenges.run_status: waiting | active | completed | failed */
+  run_status?: string | null;
 };
+
+/** Catalog statuses that are not joinable. Enum: draft | published | archived | rejected. */
+const ENDED_STATUS = new Set(["archived", "rejected", "cancelled", "canceled"]);
+/** Run statuses that are over. Enum: waiting | active | completed | failed. */
+const ENDED_RUN_STATUS = new Set(["completed", "failed"]);
+
+function isClosedChallenge(challenge: DetailChallenge): boolean {
+  const status = (challenge.status ?? "").trim().toLowerCase();
+  const run = (challenge.run_status ?? "").trim().toLowerCase();
+  return ENDED_STATUS.has(status) || ENDED_RUN_STATUS.has(run);
+}
 
 export type ParticipationType = "solo" | "duo" | "team";
 
@@ -98,6 +113,8 @@ export function detailState(
   freeLimit: number = FREE_ACTIVE_CHALLENGES_LIMIT,
   now: Date = new Date(),
 ): DetailState {
+  if (isClosedChallenge(challenge)) return "ended";
+
   const nowMs = now.getTime();
   const endsAt = parseInstant(challenge.ends_at);
   const liveAt = parseInstant(challenge.live_date);

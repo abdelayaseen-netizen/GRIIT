@@ -43,6 +43,8 @@ type ChallengeRow = {
   duration_type?: string | null;
   ends_at?: string | null;
   live_date?: string | null;
+  status?: string | null;
+  run_status?: string | null;
   participation_type?: string | null;
   participants_count?: number | null;
   is_hard_mode?: boolean | null;
@@ -137,6 +139,8 @@ export default function ChallengeDetailScreen() {
       ends_at: challenge?.ends_at,
       live_date: challenge?.live_date,
       duration_type: challenge?.duration_type,
+      status: challenge?.status,
+      run_status: challenge?.run_status,
     },
     isPro ? 0 : myActiveCount,
     FREE_ACTIVE_CHALLENGES_LIMIT,
