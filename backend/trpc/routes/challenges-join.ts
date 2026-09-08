@@ -2,6 +2,11 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
+import {
+  CREATOR_LEAVE_BLOCKED_MESSAGE,
+  SOLO_LEAVE_ACTIVE_STATUS,
+  decideLeaveChallenge,
+} from "../../lib/leave-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../lib/logger";
 
@@ -171,18 +176,25 @@ export const challengesJoinProcedures = {
       }
     }),
 
-  /** Leave a challenge: remove active_challenge (and cascade check_ins) or remove from challenge_members if team waiting. Creator cannot leave. */
+  /** Leave a challenge. Solo creators end the run (abandon enrollment, keep history). Team/group creators cannot leave. */
   leave: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const { data: challenge } = await ctx.supabase
         .from("challenges")
-        .select("creator_id")
+        .select("creator_id, participation_type")
         .eq("id", input.challengeId)
         .maybeSingle();
       const creatorId = (challenge as { creator_id?: string } | null)?.creator_id;
-      if (creatorId && creatorId === ctx.userId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "You cannot leave a challenge you created." });
+      const participationType = (challenge as { participation_type?: string } | null)
+        ?.participation_type;
+      const decision = decideLeaveChallenge({
+        userId: ctx.userId,
+        creatorId,
+        participationType,
+      });
+      if (decision.action === "reject_creator") {
+        throw new TRPCError({ code: "FORBIDDEN", message: CREATOR_LEAVE_BLOCKED_MESSAGE });
       }
 
       const { data: ac } = await ctx.supabase
@@ -192,6 +204,26 @@ export const challengesJoinProcedures = {
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")
         .maybeSingle();
+
+      if (decision.action === "end_solo") {
+        if (ac) {
+          const { error: updErr } = await ctx.supabase
+            .from("active_challenges")
+            .update({ status: SOLO_LEAVE_ACTIVE_STATUS })
+            .eq("id", ac.id);
+          if (updErr) {
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
+          }
+        }
+        await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
+        await ctx.supabase
+          .from("profiles")
+          .update({ last_left_at: new Date().toISOString() })
+          .eq("user_id", ctx.userId)
+          .then(() => {});
+        logger.info({ userId: ctx.userId, challengeId: input.challengeId }, "creator ended solo challenge");
+        return { left: true, ended: true };
+      }
 
       if (ac) {
         const { error: delErr } = await ctx.supabase
