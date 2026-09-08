@@ -3,6 +3,7 @@ import { Modal, View, Text, StyleSheet, Pressable, TouchableOpacity } from "reac
 import { DS_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { BADGE_ICONS, badgeAccentFor } from "@/lib/profile-badges";
 import { getBadgeDescription } from "@/lib/badge-descriptions";
+import { dayWord } from "@/lib/format-days";
 import { Zap } from "lucide-react-native";
 
 export type BadgeDetailPayload = {
@@ -43,7 +44,7 @@ export function BadgeDetailModal({ badge, onClose }: Props) {
             <Text style={styles.title}>{badge.name}</Text>
             <Text style={styles.body}>{description}</Text>
             <Text style={styles.progressLabel}>
-              Progress: {badge.progress} / {badge.total} days
+              Progress: {badge.progress} / {badge.total} {dayWord(badge.total)}
             </Text>
             <View style={styles.barTrack}>
               <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: complete ? DS_COLORS.ACCENT : DS_COLORS.PRIMARY }]} />
