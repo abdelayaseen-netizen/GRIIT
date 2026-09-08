@@ -547,6 +547,17 @@ export default function ChallengeDetailScreen() {
     return match?.id;
   }, [id, activeChallenge?.challenge_id, activeChallenge?.id, myActiveListQuery.data]);
 
+  const enrollmentsReady =
+    !user ||
+    myActiveListQuery.isFetched ||
+    myActiveListQuery.isError ||
+    !!(id && activeChallenge?.challenge_id === id);
+
+  useEffect(() => {
+    if (!activeChallengeId) return;
+    router.replace(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
+  }, [activeChallengeId, router]);
+
   const currentUserId = user?.id ?? undefined;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const ctaScaleAnim = useRef(new Animated.Value(1)).current;
@@ -1058,6 +1069,14 @@ export default function ChallengeDetailScreen() {
         </View>
       </SafeAreaView>
     );
+  }
+
+  if (!enrollmentsReady) {
+    return null;
+  }
+
+  if (activeChallengeId) {
+    return null;
   }
 
   if (isLoading) {
