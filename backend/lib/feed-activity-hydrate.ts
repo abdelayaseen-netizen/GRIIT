@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
+import { logger } from "./logger";
 
-export const LIVE_FEED_TYPES = ["task_completed", "completed_challenge", "joined_challenge", "secured_day"] as const;
+export const LIVE_FEED_TYPES = [
+  "task_completed",
+  "completed_challenge",
+  "joined_challenge",
+  "challenge_created",
+  "secured_day",
+] as const;
 
 export function normalizeChallengeVisibility(raw: string | null | undefined): "public" | "friends" | "private" {
   const s = (raw ?? "public").toLowerCase();
@@ -22,6 +29,25 @@ export type EvRow = {
 export function followRowAccepted(row: { status?: string | null }): boolean {
   const s = String(row.status ?? "accepted").toLowerCase();
   return s === "accepted";
+}
+
+/** Frozen event day. secured_day uses metadata.day_number (already displayDay on write). */
+export function feedEventCurrentDay(
+  eventType: string,
+  metadata: Record<string, unknown>,
+  liveCurrentDay: number | undefined,
+): number {
+  if (eventType === "secured_day") {
+    if (typeof metadata.day_number === "number" && Number.isFinite(metadata.day_number)) {
+      return Math.max(1, metadata.day_number);
+    }
+    logger.warn(
+      { liveCurrentDay: liveCurrentDay ?? 1 },
+      "[feed] secured_day missing metadata.day_number; falling back to live current_day",
+    );
+    return Math.max(1, liveCurrentDay ?? 1);
+  }
+  return Math.max(1, liveCurrentDay ?? 1);
 }
 
 export async function hydrateActivityEventsToPosts(
@@ -147,7 +173,7 @@ export async function hydrateActivityEventsToPosts(
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
     const activeKey = ev.challenge_id ? `${ev.user_id}:${ev.challenge_id}` : "";
     const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
-    const currentDay = typeof md.day_number === "number" ? md.day_number : active?.current_day ?? 1;
+    const currentDay = feedEventCurrentDay(ev.event_type, md, active?.current_day);
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const stat = reactionStats.get(ev.id);

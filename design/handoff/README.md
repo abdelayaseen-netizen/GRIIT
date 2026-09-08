@@ -55,6 +55,10 @@ cannot back. Copy describes, it does not sell.
     sit directly under a segmented control; they belong to a content section, under a heading.
 24. **Chrome budget.** At most one band of controls between the title and the first content. A hint
     is a caption line under a heading, not a tinted band. HintBox is reserved for the Create wizard.
+26. **Clearance.** The tab bar floats over content, so every tab screen's scroll view ends with
+    `size.tabBarClearance` of bottom padding (96: bar 64, offset 12, gutter 20) and the last element
+    is fully visible above the bar at the end of the scroll. Nothing tappable sits under the bar or
+    the FAB. Pinned bottom buttons exist only where the tab bar is hidden.
 25. **One hero per screen.** The number on Home, the featured cover on Discover, the ink card on
     Profile, the list on Activity, the form on Create. Everything else is quiet: text on canvas,
     secondary colour, no fill.
@@ -142,37 +146,38 @@ avatars are removed.
     content. Errors reuse EmptyState with no red banner and no toast.
 12. **System sheet.** Type scale, tokens, spacing, radii, buttons, states, image sizes.
 
-## Law check
+## Law check, 26 by 27
 
 P = pass, n/a = the law does not apply on that frame.
 
-| Law | 1 Home | 2 Disc | 3 Notifs | 4 Board | 5 Profile | 6 Set | 7 Create | 8 Feed | 9 Share1 | 10 Sec | 11 States | 12 Sheet | 13 Face | 14 Cap | 15 Sec2 | 16 Stamp | 17 Share2 | 18 Proto | 19 Welc | 20 Compl | 21 Badges |
+| Law | 1 Home | 2 Disc | 3 Notifs | 4 Board | 5 Profile | 6 Set | 7 Create | 8 Feed | 9 Share1 | 10 Sec | 11 States | 12 Sheet | 13 Face | 14 Cap | 15 Sec2 | 16 Stamp | 17 Share2 | 18 Proto | 19 Welc | 20 Compl | 21 Badges | 22 Cr1 | 23 Cr2 | 24 AddTask | 25 Cr3 | 26 Review | 27 Launched |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 One canvas | P | P | P | P | P | P | P | P | P | P | P | P | n/a | P† | P† | P | n/a | P† | P† | P† | P |
-| 2 Two weights | P‡ | P‡ | P‡ | P‡ | P‡ | P | P | P‡ | P‡ | P‡ | P | P‡ | P‡ | P | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ |
-| 3 Eight text styles | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
-| 4 20pt gutters, 4pt grid | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
-| 5 Three radii | P | P | P | P | P | P | P | P | P* | P | P | P | P | P | P | P | P* | P | P | P* | P |
-| 6 Orange means do this | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | P | n/a |
-| 7 Black is structure | P | P | P | P | P | n/a | n/a | P | P | P | n/a | P | P | P† | P† | P | P† | P† | P† | P† | n/a |
-| 8 Two headers plus wizard | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a |
-| 9 One card recipe | P | P | P | P | P | P | P | P | n/a | P | P | P | P | n/a | n/a | P | n/a | P | n/a | n/a | P |
-| 10 One empty state | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a |
-| 11 Copy rules | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
-| 12 One identity fallback | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a |
-| 13 Media 4:5, three sizes | P | P | n/a | n/a | n/a | n/a | n/a | P | P | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a |
-| 14 Scrim under text on image | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | n/a | P | n/a |
-| 15 Ink fallback, blur loading | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a |
-| 16 Avatars 32/40/56/96 | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a |
-| 17 Skeleton, no spinners | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a |
-| 18 Error reuses empty state | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
-| 19 One animated moment | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P |
-| 20 44 by 44 minimum | P | P | P | P | P | P | P | P | n/a | P | P | P | n/a | P | P | n/a | n/a | P | P | P | P |
-| 21 Card only for one unit | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P |
-| 22 Nesting depth two | P | P | P | P | P | P | P | P | n/a | P | P | P** | P | P | P | P | P | P | P | P | P |
-| 23 One selection language | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a |
-| 24 Chrome budget | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | P | P | n/a |
-| 25 One hero per screen | P | P | P | P | P | P | P | n/a | P | P | P | n/a | n/a | P | P | n/a | P | P | P | P | P |
+| 1 One canvas | P | P | P | P | P | P | P | P | P | P | P | P | n/a | P† | P† | P | n/a | P† | P† | P† | P | P | P | P | P | P | P |
+| 2 Two weights | P‡ | P‡ | P‡ | P‡ | P‡ | P | P | P‡ | P‡ | P‡ | P | P‡ | P‡ | P | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ | n/a | n/a | n/a | n/a | n/a | n/a |
+| 3 Eight text styles | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 4 20pt gutters, 4pt grid | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 5 Three radii | P | P | P | P | P | P | P | P | P* | P | P | P | P | P | P | P | P* | P | P | P* | P | P | P | P | P | P | P |
+| 6 Orange means do this | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | P | n/a | P | P | P | P | P | P |
+| 7 Black is structure | P | P | P | P | P | n/a | n/a | P | P | P | n/a | P | P | P† | P† | P | P† | P† | P† | P† | n/a | P | P | P | P | P | n/a |
+| 8 Two headers plus wizard | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a | P | P | n/a | P | n/a | n/a |
+| 9 One card recipe | P | P | P | P | P | P | P | P | n/a | P | P | P | P | n/a | n/a | P | n/a | P | n/a | n/a | P | P | n/a | P | P | n/a | n/a |
+| 10 One empty state | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | P | P | n/a | P | n/a |
+| 11 Copy rules | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 12 One identity fallback | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 13 Media 4:5, three sizes | P | P | n/a | n/a | n/a | n/a | n/a | P | P | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 14 Scrim under text on image | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 15 Ink fallback, blur loading | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 16 Avatars 32/40/56/96 | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 17 Skeleton, no spinners | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a |
+| 18 Error reuses empty state | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a |
+| 19 One animated moment | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | P | P | P |
+| 20 44 by 44 minimum | P | P | P | P | P | P | P | P | n/a | P | P | P | n/a | P | P | n/a | n/a | P | P | P | P | P | P | P | P | P | P |
+| 21 Card only for one unit | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | P | P | P |
+| 22 Nesting depth two | P | P | P | P | P | P | P | P | n/a | P | P | P** | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 23 One selection language | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | P | P | P | P | n/a | n/a |
+| 24 Chrome budget | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | P | P | n/a | P | P | P | P | n/a | n/a |
+| 25 One hero per screen | P | P | P | P | P | P | P | n/a | P | P | P | n/a | n/a | P | P | n/a | P | P | P | P | P | P | P | P | P | P | P |
+| 26 Clearance | P | P | P | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
 
 - **† Law 1 and law 7.** After the inversion every frame is ink, so the marks that used to flag dark
   screens now simply mean "canvas". Capture, Secured and Complete are the full bleed photo moment;
@@ -292,7 +297,8 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 1 Home · 2 Discover · 3 Activity notifications · 4 Activity leaderboard · 5 Profile · 6 Settings ·
 7 Create step 1 · 8 FeedPost variants · 9 Share card v1 · 10 Day secured · 11 Loading and error ·
 12 System sheet · 13 Display face · 14 Capture · 15 Secured · 16 Verified stamp · 17 Share card ink ·
-18 Prototype · 19 Welcome · 20 Challenge complete · 21 Badges.
+18 Prototype · 19 Welcome · 20 Challenge complete · 21 Badges · 22 Create step 1 · 23 Create step 2 ·
+24 Add task sheet · 25 Create step 3 · 26 Review sheet · 27 Launched.
 
 ## Source
 
@@ -359,3 +365,13 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 - **7. Badges as stamps** — Done. Frame 21, and inside the prototype's Profile badges tab.
 - **8. Frame 18, one tappable phone** — Done. Seventeen screens, the state listed in the brief, cuts only, count up on Secured, dead taps where the brief says dead.
 - **9. Handoff** — Done. This README is one document; the two lists are above and below.
+
+## The Create wizard, Sept 6 2026
+
+Six surfaces rebuilt on the ink system: steps 1 to 3, the Add task sheet, the Review sheet and the
+launch result. Structure, question order and voice unchanged. What changed is containment and copy:
+pack rows left their cards and icon tiles, the uppercase section labels and the "ATHLETE · 3 TASKS"
+summary label are gone, proof types are ghost chips with one full sentence for the selected type
+instead of six truncated tiles, the tinted research band is a caption, and the raw validation array
+is the empty state pattern. Ampersands, em dashes and the label style used as body copy are all out.
+Source: `src/components/create/`.

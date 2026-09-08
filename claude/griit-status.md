@@ -1,21 +1,46 @@
 # GRIIT status
 
-## Task completion v2
+Updated 7 September 2026.
 
-In progress on `feat/task-completion-v2`.
+## Where to build
 
-- `profiles.distance_unit` (`km` | `mi`, default `mi`) — **must be applied to live Supabase before device testing** (`supabase/migrations/20260906010000_profiles_distance_unit.sql`).
-- Timer: `checkins.startSession` writes `proof_payload_json.session`; complete validates wall clock; no cron. Notification: "Come back to post proof."
-- Live Activities: timer + run/workout only, on `expo-live-activity` (title / subtitle / native timer / `brand.primary`). **counter +1 Live Activity requires expo-widgets or a native AppIntent target; deferred.**
+`design/v3` at `49cf824` is the **Build 50** candidate.
 
-## Onboarding
+Chunks A–E are merged, plus:
 
-v2 is live. `FLAGS.ONBOARDING_V2` defaults to true (`lib/feature-flags.ts`). Set `EXPO_PUBLIC_ONBOARDING_V2=false` to run the old flow in a preview build.
+- **#71** — create payload writes task targets; empty description skips the quality gate
+- **#73** — launch routes to `activeChallenge.id`, not challenge id
+- **#74** — feed copy by event type; pack timer duration; single pack source
+- **#75** — Hard-mode completions (timer and other non-photo types) go through Capture when `require_photo` is set; failure copy branches on the real error (`BAD_REQUEST` vs upload)
 
-## Profile v2
+Chunk G (active challenge, frame 28) lives in `design/handoff/`. Not implemented.
 
-Phases 1–7 are on `feat/profile-v2-phase-1`. Privacy columns are live. Visitor record is gated in `profiles.getRecord`.
+`main` is `a976851`. Railway is deployed from it; the description quality-gate fix is live in production.
 
-### Open — streak semantics (Q2)
+## TestFlight
 
-The streak card reads `streaks.active_streak_count` / `longest_streak_count` / `last_completed_date_key` exactly as Home (`profiles.getStats`). Whether a calendar day with no active challenge **pauses** or **breaks** the streak is a backend decision for later. Do not change streak write paths in the profile v2 PR.
+Build 48 is broken: every challenge launch fails (wrong-id route, missing task targets). Build 50 is the fix and is urgent.
+
+## Device pass (Simulator, 7 Sep)
+
+On `design/v3`: Home, Profile, Discover, Activity, wizard launch, and photo proof all pass. Simulator has no camera — a real-device pass is still required.
+
+## Next (in order)
+
+1. **Chunk F** — wizard, paywall, and task completion → `DS_V3`; CTA out from under the tab bar; double header removed
+2. **Chunk G** — active challenge from frame 28
+3. PR `design/v3` → `main`
+4. `eas build --profile production`
+
+## Parking lot
+
+- RevenueCat V1/V2 secret key on Railway — 403 on every `validateSubscription`
+- `profiles.getFollowCounts` 400
+- Free tier is 1 on the server vs 3 in the spec
+- Reading counter renders `/10count`
+- Active screen does not refetch after a completion
+- Real-device pass still required (no camera on Simulator)
+
+## Standing rule
+
+Cursor never starts or kills Metro. Yaseen owns it in his own terminal.

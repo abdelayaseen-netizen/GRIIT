@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
-  Share,
   StyleSheet,
   Switch,
   Text,
@@ -19,20 +18,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS_V2 } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
 import { firstString, parseConfig } from "@/lib/task-helpers";
+import { counterGoalCaption, counterUnitFromTaskType } from "@/lib/counter-log";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { haversineDistance } from "@/lib/geo";
 import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
+import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
+import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
+import { shareProgressImage } from "@/lib/share";
 import {
-  assembleSubmitResult,
-  type SubmitResult,
-  type VerificationKind,
-} from "@/lib/task-completion-result";
-import { failedUploadCopy, verificationLine } from "@/lib/task-completion-copy";
+  failureErrorCode,
+  failureScreenCopy,
+  verificationLine,
+} from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
 import { type KeypadMask } from "@/lib/keypad-masks";
 import {
@@ -76,7 +78,7 @@ function initialStep(type: string): Step {
   if (type === "timer" || type === "checkin") return "entry";
   if (type === "run" || type === "workout") return "log";
   if (type === "journal") return "write";
-  if (type === "counter" || type === "water") return "count";
+  if (type === "counter" || type === "water" || type === "reading") return "count";
   return "ask";
 }
 
@@ -137,7 +139,8 @@ export function TaskFlowV2() {
   const minWords = config.min_words ?? 150;
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
-  const counterUnit = config.unit_label || (taskType === "water" ? "glasses" : "count");
+  const requirePhoto = config.require_photo === true;
+  const counterUnit = counterUnitFromTaskType(taskType);
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 
@@ -163,6 +166,7 @@ export function TaskFlowV2() {
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [failNote, setFailNote] = useState("");
+  const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
 
@@ -254,9 +258,27 @@ export function TaskFlowV2() {
       setStep("log");
       return;
     }
-    if (step === "capture" && (taskType === "run" || taskType === "workout")) {
-      setStep("log");
-      return;
+    if (step === "capture") {
+      if (taskType === "run" || taskType === "workout") {
+        setStep("log");
+        return;
+      }
+      if (taskType === "journal") {
+        setStep("write");
+        return;
+      }
+      if (taskType === "counter" || taskType === "water" || taskType === "reading") {
+        setStep("count");
+        return;
+      }
+      if (taskType === "checkin") {
+        setStep("entry");
+        return;
+      }
+      if (taskType === "simple" || taskType === "manual") {
+        setStep("ask");
+        return;
+      }
     }
     exit();
   }, [step, caption, taskType, exit]);
@@ -266,6 +288,7 @@ export function TaskFlowV2() {
     const b64 = await FileSystem.readAsStringAsync(photoUri, { encoding: "base64" as never });
     const uploaded = await uploadProofImageFromBase64(b64, "image/jpeg");
     if ("error" in uploaded) {
+      setFailCode(undefined);
       setFailNote(uploaded.error);
       setStep("failed");
       return null;
@@ -282,23 +305,37 @@ export function TaskFlowV2() {
         ...payload,
       });
       if (!complete) {
+        setFailCode(undefined);
         setFailNote("Couldn't save. Try again.");
         setStep("failed");
         return;
       }
       let secure: { success?: boolean; alreadySecured?: boolean; newStreakCount?: number } | null = null;
-      if ((complete.requiredRemaining ?? 1) === 0 && !complete.dayAlreadySecured) {
-        try {
-          secure = (await secureDay()) ?? null;
-        } catch {
-          secure = null;
-        }
-      } else if (complete.dayAlreadySecured) {
+      if (complete.dayAlreadySecured) {
         secure = { success: true, alreadySecured: true, newStreakCount: complete.streakDays };
+      } else {
+        const after = await attemptSecureDayAfterComplete({
+          requiredRemaining: complete.requiredRemaining,
+          dayAlreadySecured: complete.dayAlreadySecured ?? false,
+          activeChallengeId,
+          secureDay,
+        });
+        if (after.result) {
+          const r = after.result as {
+            success?: boolean;
+            alreadySecured?: boolean;
+            newStreakCount?: number;
+          };
+          secure = {
+            success: r.success === true,
+            alreadySecured: r.alreadySecured,
+            newStreakCount: r.newStreakCount,
+          };
+        }
       }
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
-        requiredRemaining: complete.requiredRemaining ?? 0,
+        requiredRemaining: complete.requiredRemaining,
         dayAlreadySecured: complete.dayAlreadySecured ?? false,
         streakDaysBefore: complete.streakDays ?? 0,
         challengeDayBeforeSecure: complete.challengeDay ?? currentDay,
@@ -317,6 +354,7 @@ export function TaskFlowV2() {
       void endLiveActivity();
       setStep("confirmation");
     } catch (err) {
+      setFailCode(failureErrorCode(err));
       setFailNote(err instanceof Error ? err.message : "Couldn't save. Try again.");
       setStep("failed");
     }
@@ -334,13 +372,106 @@ export function TaskFlowV2() {
           ? { capturedAt, captured_in_app: true }
           : undefined,
         ...extra,
+        ...(taskType === "timer" ? { value: Math.floor(requiredSeconds / 60) } : {}),
+        ...(taskType === "journal" ? { noteText: text } : {}),
+        ...(taskType === "counter" || taskType === "water" || taskType === "reading"
+          ? { value: count }
+          : {}),
+        ...(taskType === "checkin"
+          ? {
+              location_latitude: config.location_latitude,
+              location_longitude: config.location_longitude,
+            }
+          : {}),
       },
       verificationKindFor(taskType, true)
     );
   };
 
+  const submitWithoutPhoto = async (payload: Record<string, unknown>, kind: VerificationKind) => {
+    if (requirePhoto) {
+      setStep("capture");
+      return;
+    }
+    await finishSubmit(payload, kind);
+  };
+
   const submitTimer = async () => {
-    await finishSubmit({ value: Math.floor(requiredSeconds / 60) }, "timer");
+    await submitWithoutPhoto({ value: Math.floor(requiredSeconds / 60) }, "timer");
+  };
+
+  const retryFailedSubmit = () => {
+    setFailNote("");
+    setFailCode(undefined);
+    if (photoUri) {
+      void submitPhoto();
+      return;
+    }
+    if (taskType === "timer" && !(startedAtIso && remainingSec <= 0)) {
+      void startTimer();
+      return;
+    }
+    if (requirePhoto) {
+      setStep("capture");
+      return;
+    }
+    if (taskType === "timer") {
+      void submitTimer();
+      return;
+    }
+    if (taskType === "journal") {
+      void finishSubmit({ noteText: text }, "word_count");
+      return;
+    }
+    if (taskType === "counter" || taskType === "water" || taskType === "reading") {
+      void finishSubmit({ value: count }, "self_report");
+      return;
+    }
+    if (taskType === "checkin") {
+      void finishSubmit(
+        {
+          location_latitude: config.location_latitude,
+          location_longitude: config.location_longitude,
+        },
+        "gps"
+      );
+      return;
+    }
+    if (taskType === "run" || taskType === "workout") {
+      setStep("log");
+      return;
+    }
+    void finishSubmit({}, "self_report");
+  };
+
+  const goBackFromFailure = () => {
+    setFailNote("");
+    setFailCode(undefined);
+    if (requirePhoto && !photoUri) {
+      setStep("capture");
+      return;
+    }
+    if (photoUri) {
+      setStep("review");
+      return;
+    }
+    if (taskType === "timer" || taskType === "checkin") {
+      setStep("entry");
+      return;
+    }
+    if (taskType === "journal") {
+      setStep("write");
+      return;
+    }
+    if (taskType === "counter" || taskType === "water" || taskType === "reading") {
+      setStep("count");
+      return;
+    }
+    if (taskType === "run" || taskType === "workout") {
+      setStep("log");
+      return;
+    }
+    setStep(initialStep(taskType));
   };
 
   const startTimer = async () => {
@@ -353,11 +484,13 @@ export function TaskFlowV2() {
         kind: "timer",
       });
     } catch (err) {
+      setFailCode(failureErrorCode(err));
       setFailNote(err instanceof Error ? err.message : "Couldn't start the timer.");
       setStep("failed");
       return;
     }
     if (!started?.started_at) {
+      setFailCode(undefined);
       setFailNote("Couldn't start the timer.");
       setStep("failed");
       return;
@@ -410,8 +543,12 @@ export function TaskFlowV2() {
   }, [step, remainingSec, startedAtIso]);
 
   const dark = step === "capture" || step === "review";
-  const hideChrome = step === "confirmation" || step === "verifying";
-  const fail = failedUploadCopy();
+  const hideChrome = step === "confirmation" || step === "verifying" || step === "capture";
+  const fail = failureScreenCopy({
+    errorCode: failCode,
+    message: failNote,
+    hasLocalPhoto: !!photoUri,
+  });
 
   return (
     <View style={[styles.root, dark && { backgroundColor: DS_COLORS_V2.surface.camera }]}>
@@ -512,7 +649,7 @@ export function TaskFlowV2() {
           <Pressable
             disabled={!gps || gps.m > radius}
             onPress={() =>
-              void finishSubmit(
+              void submitWithoutPhoto(
                 {
                   location_latitude: config.location_latitude,
                   location_longitude: config.location_longitude,
@@ -697,7 +834,9 @@ export function TaskFlowV2() {
 
       {step === "capture" ? (
         <TaskCapture
-          gateLine="Camera only · live capture"
+          challenge={challengeName}
+          task={`${taskName}. Day ${currentDay}.`}
+          onCancel={goBack}
           onCaptured={(uri, at) => {
             setPhotoUri(uri);
             setCapturedAt(at);
@@ -809,7 +948,7 @@ export function TaskFlowV2() {
           />
           <Pressable
             disabled={wordCount(text) < minWords}
-            onPress={() => void finishSubmit({ noteText: text }, "word_count")}
+            onPress={() => void submitWithoutPhoto({ noteText: text }, "word_count")}
             accessibilityRole="button"
             accessibilityLabel={wordCount(text) < minWords ? `Write ${minWords - wordCount(text)} more words` : "Post"}
             style={[styles.orangeBtn, wordCount(text) < minWords && styles.disabledBtn]}
@@ -823,9 +962,12 @@ export function TaskFlowV2() {
 
       {step === "count" ? (
         <View style={styles.body}>
-          <Text style={styles.huge}>
-            {count} <Text style={styles.unit}>/ {counterGoal} {counterUnit}</Text>
-          </Text>
+          <View style={styles.countLine}>
+            <Text style={styles.huge}>{count}</Text>
+            <Text style={styles.unit}>
+              {counterGoalCaption(count, counterGoal, counterUnit).slice(String(count).length)}
+            </Text>
+          </View>
           {keypad?.field === "count" ? (
             <TaskKeypad
               label="Count"
@@ -892,7 +1034,7 @@ export function TaskFlowV2() {
               ) : null}
               <Pressable
                 disabled={count < counterGoal}
-                onPress={() => void finishSubmit({ value: count }, "self_report")}
+                onPress={() => void submitWithoutPhoto({ value: count }, "self_report")}
                 accessibilityRole="button"
                 accessibilityLabel={count < counterGoal ? `${count} of ${counterGoal} logged` : "Submit"}
                 style={[styles.inkBtn, count < counterGoal && styles.disabledBtn]}
@@ -912,7 +1054,7 @@ export function TaskFlowV2() {
           <Text style={{ fontSize: 16, color: DS_COLORS_V2.text.muted }}>{taskName}</Text>
           <Text style={styles.switchSub}>Self-reported. Nothing is checked.</Text>
           <Pressable
-            onPress={() => void finishSubmit({}, "self_report")}
+            onPress={() => void submitWithoutPhoto({}, "self_report")}
             accessibilityRole="button"
             accessibilityLabel="I did it"
             style={styles.inkBtn}
@@ -943,6 +1085,7 @@ export function TaskFlowV2() {
           taskName={taskName}
           honest={isHonest(taskType, !!photoUri)}
           optional={!taskRequired}
+          proofUri={photoUri ?? undefined}
           verifyLine={verificationLine({
             kind: (taskType === "simple" ? "manual" : taskType) as Parameters<typeof verificationLine>[0]["kind"],
             timeLabel: capturedAt ? clockLabel(capturedAt) : clockLabel(Date.now()),
@@ -963,8 +1106,9 @@ export function TaskFlowV2() {
             accuracyM: gps?.acc,
           })}
           onDone={exit}
-          onShare={() => {
-            void Share.share({ message: `${taskName} — Day ${result.challengeDay} on GRIIT.` });
+          onNext={exit}
+          onShare={(uri) => {
+            void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
           }}
         />
       ) : null}
@@ -974,22 +1118,23 @@ export function TaskFlowV2() {
           <Text style={[styles.eyebrowInk, { color: DS_COLORS_V2.semantic.dangerInk }]}>{fail.eyebrow}</Text>
           <Text style={styles.title}>{fail.headline}</Text>
           <Text style={styles.bodyText}>{fail.body}</Text>
-          {failNote ? <Text style={styles.disclosure}>{failNote}</Text> : null}
-          <Text style={styles.disclosure}>{fail.retryNote}</Text>
+          {fail.retryNote ? <Text style={styles.disclosure}>{fail.retryNote}</Text> : null}
           <Pressable
             onPress={() => {
-              if (photoUri) void submitPhoto();
-              else setFailNote("");
+              if (fail.primaryAction === "back") goBackFromFailure();
+              else retryFailedSubmit();
             }}
             accessibilityRole="button"
-            accessibilityLabel="Retry now"
+            accessibilityLabel={fail.primaryLabel}
             style={styles.orangeBtn}
           >
-            <Text style={styles.btnText}>Retry now</Text>
+            <Text style={styles.btnText}>{fail.primaryLabel}</Text>
           </Pressable>
-          <Pressable onPress={exit} accessibilityRole="button" accessibilityLabel="Keep it for later" style={styles.textBtn}>
-            <Text style={styles.shareText}>Keep it for later</Text>
-          </Pressable>
+          {fail.primaryAction === "retry" && photoUri ? (
+            <Pressable onPress={exit} accessibilityRole="button" accessibilityLabel="Keep it for later" style={styles.textBtn}>
+              <Text style={styles.shareText}>Keep it for later</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
 
@@ -1042,8 +1187,14 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   bigNum: { fontSize: 32, fontWeight: "500", letterSpacing: -1.3, color: DS_COLORS_V2.text.primary, fontVariant: ["tabular-nums"] },
+  countLine: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" },
   huge: { fontSize: 84, fontWeight: "500", letterSpacing: -3.5, color: DS_COLORS_V2.text.primary, fontVariant: ["tabular-nums"] },
-  unit: { fontSize: 20, color: DS_COLORS_V2.text.muted, fontWeight: "400" },
+  unit: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   statLabel: { fontSize: 11, letterSpacing: 0.8, color: DS_COLORS_V2.text.mutedWarm },
   unitBtn: { minWidth: 52, height: 44, borderRadius: 12, backgroundColor: DS_COLORS_V2.surface.sunken, alignItems: "center", justifyContent: "center" },
   unitBtnText: { fontSize: 13, color: DS_COLORS_V2.text.primary },

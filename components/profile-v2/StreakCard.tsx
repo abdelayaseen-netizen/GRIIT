@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { dayWord } from "@/lib/format-days";
 
 export function StreakCard({
   current,
@@ -11,16 +12,15 @@ export function StreakCard({
   best: number;
   note: string;
 }) {
-  const unit = current === 1 ? "day" : "days";
   return (
     <View style={styles.card}>
       <View style={styles.top}>
         <Text style={styles.micro}>CURRENT STREAK</Text>
-        <Text style={styles.best}>BEST · {best} days</Text>
+        <Text style={styles.best}>BEST · {best} {dayWord(best)}</Text>
       </View>
       <View style={styles.valueRow}>
         <Text style={styles.value}>{current}</Text>
-        <Text style={styles.unit}>{unit}</Text>
+        <Text style={styles.unit}>{dayWord(current)}</Text>
       </View>
       <Text style={styles.note}>{note}</Text>
     </View>

@@ -42,6 +42,7 @@
       <sc-if value="{{ sHome }}" hint-placeholder-val="{{ false }}">
         <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="position:absolute;left:0;right:0;top:44px;bottom:0;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;">
           <div style="padding:8px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
             <div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Sunday</div><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Marcus</div></div>
             <div onClick="{{ dead }}" style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;margin-top:4px;cursor:pointer;"><i data-lucide="bell" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
@@ -70,7 +71,7 @@
             <div style="font-size:20px;line-height:25px;font-weight:500;">Feed</div>
             <div style="display:flex;gap:4px;"><div onClick="{{ scFriends }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ scFriendsBg }};color:{{ scFriendsFg }};font-weight:{{ scFriendsW }};">Friends</div><div onClick="{{ scEveryone }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ scEveryoneBg }};color:{{ scEveryoneFg }};font-weight:{{ scEveryoneW }};">Everyone</div></div>
           </div>
-          <div style="padding:12px 20px 120px;display:flex;flex-direction:column;gap:12px;overflow:hidden;height:300px;">
+          <div style="padding:12px 20px 96px;display:flex;flex-direction:column;gap:12px;overflow:hidden;height:300px;">
             <sc-if value="{{ posted }}" hint-placeholder-val="{{ false }}">
               <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;">
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -95,6 +96,8 @@
                 <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Abdel secured day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">12</span></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">1d · Make Your Bed Every Day</div></div>
               </div>
             </sc-if>
+          </div>
+          
           </div>
           <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
             <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
@@ -193,6 +196,7 @@
       <sc-if value="{{ sDiscover }}" hint-placeholder-val="{{ false }}">
         <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="position:absolute;left:0;right:0;top:44px;bottom:0;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;">
           <div style="padding:8px 20px 0;"><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Discover</div></div>
           <div style="padding:20px 20px 0;display:flex;gap:4px;overflow:hidden;"><div onClick="{{ cFor }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cForBg }};color:{{ cForFg }};font-weight:{{ cForW }};">For you</div><div onClick="{{ cTrend }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cTrendBg }};color:{{ cTrendFg }};font-weight:{{ cTrendW }};">Trending</div><div onClick="{{ cBody }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cBodyBg }};color:{{ cBodyFg }};font-weight:{{ cBodyW }};">Body</div><div onClick="{{ cMind }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ cMindBg }};color:{{ cMindFg }};font-weight:{{ cMindW }};">Mind</div></div>
           <div style="padding:20px 20px 0;">
@@ -220,10 +224,12 @@
               <div onClick="{{ openVisitor }}" style="width:140px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;"><div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="user" style="width:24px;height:24px;color:#F5F3EE;"></i></div><div style="font-size:17px;line-height:22px;font-weight:500;">Test</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">New here</div><div style="width:100%;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Follow</div></div>
             </div>
           </div>
-          <div style="padding:32px 20px 120px;display:flex;flex-direction:column;gap:12px;">
+          <div style="padding:32px 20px 96px;display:flex;flex-direction:column;gap:12px;">
             <div style="font-size:20px;line-height:25px;font-weight:500;">Have your own idea?</div>
             <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Create a custom challenge and invite others to join.</div>
             <div onClick="{{ openCreate }}" style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Build your own</div>
+          </div>
+          
           </div>
           <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
             <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
@@ -237,6 +243,7 @@
       <sc-if value="{{ sActivity }}" hint-placeholder-val="{{ false }}">
         <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="position:absolute;left:0;right:0;top:44px;bottom:0;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;">
           <div style="padding:8px 20px 0;"><div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Activity</div></div>
           <div style="padding:20px 20px 0;"><div style="display:flex;padding:2px;background:#2E2B27;border-radius:999px;">
             <div onClick="{{ actNotifs }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ actNotifsBg }};color:{{ actNotifsFg }};font-weight:{{ actNotifsW }};">Notifications</div>
@@ -261,7 +268,7 @@
             <div>
               <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:4px;"><div style="font-size:20px;line-height:25px;font-weight:500;">This week</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Rankings reset every Monday. Post daily to climb.</div></div>
               <div style="padding:12px 20px 0;display:flex;gap:4px;"><div onClick="{{ bGlobal }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bGlobalBg }};color:{{ bGlobalFg }};font-weight:{{ bGlobalW }};">Global</div><div onClick="{{ bFriends }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bFriendsBg }};color:{{ bFriendsFg }};font-weight:{{ bFriendsW }};">Friends</div><div onClick="{{ bChall }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;border-radius:12px;cursor:pointer;font-size:15px;line-height:20px;background:{{ bChallBg }};color:{{ bChallFg }};font-weight:{{ bChallW }};">Challenges</div></div>
-              <div style="padding:12px 20px 120px;">
+              <div style="padding:12px 20px 96px;">
                 <sc-if value="{{ bGlobalOn }}" hint-placeholder-val="{{ true }}">
                   <div>
             <div style="padding:20px 0;display:flex;align-items:center;gap:16px;"><div style="width:24px;font-family:'Barlow Condensed',sans-serif;font-size:13px;line-height:18px;font-weight:600;letter-spacing:1px;color:#A39E95;">1</div><div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex:none;">MA</div><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;">Marcus</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">7 check ins · 7 days</div></div><div style="text-align:right;"><div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;line-height:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:1px;">712</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">pts</div></div></div>
@@ -284,6 +291,8 @@
               </div>
             </div>
           </sc-if>
+          
+          </div>
           <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
             <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
             <div onClick="{{ toDiscover }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tDisc }};"><i data-lucide="compass" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Discover</span></div>
@@ -296,6 +305,7 @@
       <sc-if value="{{ sProfile }}" hint-placeholder-val="{{ false }}">
         <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="position:absolute;left:0;right:0;top:44px;bottom:0;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;">
           <div style="padding:8px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
             <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Marcus</div>
             <div style="display:flex;gap:8px;margin-top:4px;">
@@ -327,7 +337,7 @@
             <div onClick="{{ pProofs }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ pProofsBg }};color:{{ pProofsFg }};font-weight:{{ pProofsW }};">Proofs</div>
             <div onClick="{{ pBadges }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;cursor:pointer;background:{{ pBadgesBg }};color:{{ pBadgesFg }};font-weight:{{ pBadgesW }};">Badges</div>
           </div></div>
-          <div style="padding:12px 20px 120px;">
+          <div style="padding:12px 20px 96px;">
             <sc-if value="{{ pChallOn }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:20px;"><div style="font-size:20px;line-height:25px;font-weight:500;">{{ challTitle }}</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">{{ challBody }}</div></div>
             </sc-if>
@@ -353,6 +363,8 @@
                 <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Five marks, each earned by verified days only. Nothing here can be bought or awarded.</div>
               </div>
             </sc-if>
+          </div>
+          
           </div>
           <div style="position:absolute;left:12px;right:12px;bottom:12px;height:64px;background:#1A1917;border:1px solid #2E2B27;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;">
             <div onClick="{{ toHome }}" style="width:60px;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:{{ tHome }};"><i data-lucide="house" style="width:24px;height:24px;"></i><span style="font-size:12px;line-height:16px;font-weight:400;">Home</span></div>
@@ -429,63 +441,236 @@
         </div>
       </sc-if>
       <sc-if value="{{ sCreate1 }}" hint-placeholder-val="{{ false }}">
-        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow-y:auto;overflow-x:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
           <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
-            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
-            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 1 of 3</div><div style="width:56px;"></div>
+            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Cancel</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Step 1 of 3</div><div style="width:56px;"></div>
           </div>
           <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div></div>
-          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
-            <div style="font-size:28px;line-height:34px;font-weight:500;">Name your challenge</div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Name your challenge</div>
             <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">One sentence. Be specific.</div>
-            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:16px;font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Read 30 min before phone</div>
-            <div style="font-size:20px;line-height:25px;font-weight:500;margin-top:20px;">How long?</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">7 days</div><div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">14 days</div><div style="height:44px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">30 days</div></div>
-            <div style="background:#3A1F10;border-radius:12px;padding:16px;display:flex;gap:12px;margin-top:20px;"><i data-lucide="lightbulb" style="width:24px;height:24px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;color:#E8600F;">30 days is the sweet spot. Build the habit, prove you can.</div></div>
           </div>
-          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div></div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Read for 30 min</div>
+              <div style="display:flex;justify-content:space-between;">
+                <div style="font-size:13px;line-height:18px;font-weight:400;color:#E8600F;">Looks good</div>
+                <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">16/60</div>
+              </div>
+            </div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Examples: read 30 min before phone · workout 5x weekly · 30 days no alcohol</div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">How long?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div onClick="{{ dur0 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">7 days</div><div onClick="{{ dur1 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">14 days</div><div onClick="{{ dur2 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">21 days</div><div onClick="{{ dur3 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;background:#3A1F10;color:#E8600F;font-weight:500;cursor:pointer;">30 days</div><div onClick="{{ dur4 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">75 days</div><div onClick="{{ dur5 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">Custom</div></div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Solo or with friends?</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div onClick="{{ pickSolo }}" style="background:#1A1917;border:1.5px solid #DC5401;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;"><i data-lucide="user" style="width:24px;height:24px;color:#E8600F;"></i><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Solo</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Just you</div></div>
+              <div onClick="{{ pickGroup }}" style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;"><i data-lucide="users" style="width:24px;height:24px;color:#A39E95;"></i><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Group</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Up to 10</div></div>
+            </div>
+          </div>
+          <div style="padding:16px 20px 130px;">
+            <div style="background:#3A1F10;border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+              <i data-lucide="lightbulb" style="width:24px;height:24px;color:#E8600F;flex:none;"></i>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#E8600F;">30 days is the sweet spot. Build the habit, prove you can.</div>
+            </div>
+          </div>
+          <div style="position:sticky;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;">
+            <div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div>
+          </div>
         </div>
       </sc-if>
       <sc-if value="{{ sCreate2 }}" hint-placeholder-val="{{ false }}">
-        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow-y:auto;overflow-x:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
           <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
-            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
-            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 2 of 3</div><div style="width:56px;"></div>
+            <div onClick="{{ prevStep }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Step 2 of 3</div><div style="width:56px;"></div>
           </div>
           <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#2E2B27;"></div></div>
-          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
-            <div style="font-size:28px;line-height:34px;font-weight:500;">What counts as proof?</div>
-            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A photo taken in the app. No uploads.</div>
-            <div style="display:flex;flex-direction:column;gap:12px;">
-              <div style="height:44px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;align-items:center;padding:0 16px;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Live camera photo</div>
-              <div style="height:44px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;padding:0 16px;font-size:15px;line-height:20px;">Photo and a note</div>
+          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">What must get done daily?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick a starter pack or build from scratch.</div>
+          </div>
+          <div style="padding:20px 20px 0;">
+            <div style="display:flex;padding:2px;background:#2E2B27;border-radius:999px;">
+              <div onClick="{{ segPacks }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;background:{{ packsBg }};color:{{ packsFg }};font-weight:{{ packsW }};cursor:pointer;">Starter packs</div>
+              <div onClick="{{ segCustom }}" style="flex:1;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;background:{{ customBg }};color:{{ customFg }};font-weight:{{ customW }};cursor:pointer;">Custom</div>
             </div>
           </div>
-          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div></div>
+          <sc-if value="{{ onPacks }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:12px 20px 140px;">
+            <div onClick="{{ pack0 }}" style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;">
+              <i data-lucide="flame" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 Hard Classic</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">5 strict tasks · original framework</div></div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div onClick="{{ pack1 }}" style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;">
+              <i data-lucide="dumbbell" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Athlete</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">3 tasks · run, train, check in</div></div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div onClick="{{ pack2 }}" style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;">
+              <i data-lucide="feather" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Faith</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">3 tasks · prayer, read, gratitude</div></div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div onClick="{{ pack3 }}" style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;">
+              <i data-lucide="sunrise" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Morning routine</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">5 tasks · win the morning</div></div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div onClick="{{ pack4 }}" style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;cursor:pointer;">
+              <i data-lucide="briefcase" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Entrepreneur</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">3 tasks · ship, journal, learn</div></div>
+            </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ onCustom }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:12px 20px 140px;">
+              <div style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><i data-lucide="footprints" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Morning run</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Run · verified proof</div></div><div style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:20px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><i data-lucide="check-square" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i><div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Check off</div></div><div style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div onClick="{{ openAddTask }}" style="margin-top:20px;height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;">Add a task</div>
+            </div>
+          </sc-if>
+          <div style="position:sticky;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;">
+            <div onClick="{{ nextStep }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Continue</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sAddTask }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow-y:auto;overflow-x:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:0 20px;opacity:0.35;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">What must get done daily?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick a starter pack or build from scratch.</div>
+          </div>
+          <div style="position:absolute;left:0;right:0;top:140px;bottom:0;overflow-y:auto;background:#1A1917;border-radius:20px 20px 0 0;border-top:1px solid #2E2B27;">
+            <div style="display:flex;justify-content:center;padding-top:8px;"><div style="width:36px;height:4px;border-radius:12px;background:#2E2B27;"></div></div>
+            <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+              <div onClick="{{ closeAddTask }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Cancel</div>
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Add task</div>
+              <div onClick="{{ saveTask }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Save</div>
+            </div>
+            <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Task name</div>
+              <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:12px;padding:16px;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Morning run</div>
+            </div>
+            <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Proof type</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;"><div onClick="{{ type0 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="check-square" style="width:24px;height:24px;color:#A39E95;"></i>Check off</div><div onClick="{{ type1 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="camera" style="width:24px;height:24px;color:#A39E95;"></i>Photo</div><div onClick="{{ type2 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="timer" style="width:24px;height:24px;color:#A39E95;"></i>Timer</div><div onClick="{{ type3 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="pencil" style="width:24px;height:24px;color:#A39E95;"></i>Text</div><div onClick="{{ type4 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;background:#3A1F10;color:#E8600F;font-weight:500;cursor:pointer;"><i data-lucide="footprints" style="width:24px;height:24px;color:#E8600F;"></i>Run</div><div onClick="{{ type5 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="target" style="width:24px;height:24px;color:#A39E95;"></i>Counter</div></div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Run records distance and time from the phone, and the day counts only when both are recorded.</div>
+              <div style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;">4 more types</div>
+            </div>
+            <div style="padding:20px 20px 0;display:flex;align-items:flex-start;gap:16px;min-height:44px;">
+              <i data-lucide="shield-check" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+              <div style="flex:1;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Verified proof</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Requires a photo taken in the app to complete this task each day.</div></div>
+              <div style="width:52px;height:32px;border-radius:999px;background:#DC5401;display:flex;align-items:center;justify-content:flex-end;padding:2px;flex:none;"><div style="width:28px;height:28px;border-radius:999px;background:#F5F3EE;"></div></div>
+            </div>
+            <div style="position:sticky;bottom:0;padding:20px 20px 32px;background:#1A1917;">
+              <div onClick="{{ saveTask }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Add task</div>
+            </div>
+          </div>
         </div>
       </sc-if>
       <sc-if value="{{ sCreate3 }}" hint-placeholder-val="{{ false }}">
-        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow-y:auto;overflow-x:hidden;">
           <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
           <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
-            <div onClick="{{ cancelCreate }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Cancel</div>
-            <div style="font-size:17px;line-height:22px;font-weight:500;">Step 3 of 3</div><div style="width:56px;"></div>
+            <div onClick="{{ prevStep }}" style="width:44px;height:44px;display:flex;align-items:center;cursor:pointer;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Step 3 of 3</div><div style="width:56px;"></div>
           </div>
           <div style="padding:8px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;"><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div><div style="height:4px;border-radius:12px;background:#DC5401;"></div></div>
-          <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:12px;">
-            <div style="font-size:28px;line-height:34px;font-weight:500;">Who joins?</div>
-            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You can invite people after it starts.</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div style="border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;padding:16px;min-height:44px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#E8600F;">Solo</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;">Just you</div></div>
-              <div style="border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:16px;min-height:44px;"><div style="font-size:17px;line-height:22px;font-weight:500;">Group</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Up to 10</div></div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">How strict?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick your accountability level.</div>
+          </div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div onClick="{{ pickStandard }}" style="background:#1A1917;border:1.5px solid #DC5401;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;">
+              <div style="display:flex;align-items:center;gap:12px;"><i data-lucide="shield-check" style="width:24px;height:24px;color:#E8600F;"></i><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Standard</div></div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Recommended for your first challenge</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak freezes on. Miss a day and you do not reset.</div>
+            </div>
+            <div onClick="{{ pickHard }}" style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;">
+              <div style="display:flex;align-items:center;gap:12px;"><i data-lucide="shield-alert" style="width:24px;height:24px;color:#F5F3EE;"></i><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Hard mode</div></div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 Hard style. No exceptions.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">No freezes. Miss a day, restart from day 1.</div>
             </div>
           </div>
-          <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div onClick="{{ startChallenge }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Start challenge</div></div>
+          <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Public proof on feed</div>
+            <div style="display:flex;gap:4px;"><div onClick="{{ pub0 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">Off</div><div onClick="{{ pub1 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;background:#3A1F10;color:#E8600F;font-weight:500;cursor:pointer;">Optional</div><div onClick="{{ pub2 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;">Required</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Public accountability lifted goal completion from 43% to 76% (Matthews, 2015).</div>
+          </div>
+          <div style="padding:20px 20px 130px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Category</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;"><div onClick="{{ cat0 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;background:#3A1F10;color:#E8600F;font-weight:500;cursor:pointer;"><i data-lucide="dumbbell" style="width:24px;height:24px;color:#E8600F;"></i>Fitness</div><div onClick="{{ cat1 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="brain" style="width:24px;height:24px;color:#A39E95;"></i>Mind</div><div onClick="{{ cat2 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="feather" style="width:24px;height:24px;color:#A39E95;"></i>Faith</div><div onClick="{{ cat3 }}" style="min-height:44px;padding:12px 16px;display:flex;align-items:center;gap:8px;border-radius:12px;font-size:15px;line-height:20px;color:#A39E95;font-weight:400;cursor:pointer;"><i data-lucide="zap" style="width:24px;height:24px;color:#A39E95;"></i>Discipline</div></div>
+          </div>
+          <div style="position:sticky;bottom:0;padding:20px 20px 32px;background:#0F0F0F;border-top:1px solid #2E2B27;">
+            <div onClick="{{ openReview }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Review</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sReview }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow-y:auto;overflow-x:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="padding:0 20px;opacity:0.35;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">How strict?</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick your accountability level.</div>
+          </div>
+          <div style="position:absolute;left:0;right:0;top:300px;bottom:0;overflow-y:auto;background:#1A1917;border-radius:20px 20px 0 0;border-top:1px solid #2E2B27;">
+            <div style="display:flex;justify-content:center;padding-top:8px;"><div style="width:36px;height:4px;border-radius:12px;background:#2E2B27;"></div></div>
+            <div style="padding:12px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Review and launch</div>
+              <div onClick="{{ closeReview }}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;cursor:pointer;"><i data-lucide="x" style="width:24px;height:24px;color:#A39E95;"></i></div>
+            </div>
+            <div style="padding:8px 20px 100px;">
+              <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Read for 30 min · 30 days</div><div onClick="{{ editStep1 }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Solo</div><div onClick="{{ editStep1 }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">3 tasks · Standard</div><div onClick="{{ editStep2 }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Photo proof optional</div><div onClick="{{ editStep3 }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Edit</div></div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Category fitness</div><div onClick="{{ editStep3 }}" style="height:44px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;color:#E8600F;cursor:pointer;">Edit</div></div>
+            </div>
+
+            <sc-if value="{{ launchFailed }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:32px 20px 0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;">
+                <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="wifi-off" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+                <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Could not launch</div>
+                <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;max-width:280px;">Check your connection and try again.</div>
+              </div>
+            </sc-if>
+            <div style="position:sticky;bottom:0;padding:20px 20px 32px;background:#1A1917;">
+              <div onClick="{{ launch }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">{{ launchLabel }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ sLaunched }}" hint-placeholder-val="{{ false }}">
+        <div style="position:relative;width:390px;height:844px;background:#0F0F0F;border-radius:40px;overflow:hidden;">
+          <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+          <div style="position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">You're in.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Day 1 begins tomorrow morning.</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">{{ challenge }}</div>
+          </div>
+          <div style="position:absolute;left:20px;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;">
+            <div onClick="{{ inviteFriends }}" style="{{ inviteStyle }}">Invite friends</div>
+            <div onClick="{{ launchDone }}" style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;cursor:pointer;">Back to Home</div>
+          </div>
         </div>
       </sc-if>
       <div style="display:flex;gap:8px;">
+        <div onClick="{{ failLaunch }}" style="height:44px;padding:0 16px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Fail launch</div>
         <div onClick="{{ jumpComplete }}" style="height:44px;padding:0 16px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Complete the challenge</div>
         <div onClick="{{ reset }}" style="height:44px;padding:0 16px;display:flex;align-items:center;font-size:17px;line-height:22px;font-weight:500;color:#E8600F;cursor:pointer;">Reset</div>
       </div>
@@ -495,7 +680,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;showGuides&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Audit&quot;},&quot;autoplaySecure&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Audit&quot;}}">
 class Component extends DCLogic {
   state = {
-    n: 22, fill: 0, gridRows: 5,
+    n: 22, fill: 0, gridRows: 5, taskMode: 'packs', group: false, launchState: 'idle', failNext: false,
     screen: 'welcome', returnTab: 'home',
     streak: 0, posted: false, hearted: false,
     challenge: 'Drink Water Today',
@@ -564,6 +749,13 @@ class Component extends DCLogic {
       sCreate1: s === 'create' && st.createStep === 1,
       sCreate2: s === 'create' && st.createStep === 2,
       sCreate3: s === 'create' && st.createStep === 3,
+      sAddTask: s === 'addTask', sReview: s === 'review', sLaunched: s === 'launched',
+      onPacks: st.taskMode === 'packs', onCustom: st.taskMode === 'custom',
+      isGroup: st.group,
+      inviteStyle: st.group
+        ? 'height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;cursor:pointer;'
+        : 'display:none;', launchFailed: st.launchState === 'error',
+      launchLabel: st.launchState === 'loading' ? 'Launching' : st.launchState === 'error' ? 'Retry' : 'Launch',
 
       tHome: st.activeTab === 'home' ? '#E8600F' : '#A39E95',
       tDisc: st.activeTab === 'discover' ? '#E8600F' : '#A39E95',
@@ -571,14 +763,44 @@ class Component extends DCLogic {
       tProf: st.activeTab === 'profile' ? '#E8600F' : '#A39E95',
 
       dead: () => {},
+      pack0: () => this.setState({ pack: 0 }), pack1: () => this.setState({ pack: 1 }),
+      pack2: () => this.setState({ pack: 2 }), pack3: () => this.setState({ pack: 3 }),
+      pack4: () => this.setState({ pack: 4 }),
+      dur0: () => {}, dur1: () => {}, dur2: () => {}, dur3: () => {}, dur4: () => {}, dur5: () => {},
+      type0: () => {}, type1: () => {}, type2: () => {}, type3: () => {}, type4: () => {}, type5: () => {},
+      pub0: () => {}, pub1: () => {}, pub2: () => {},
+      cat0: () => {}, cat1: () => {}, cat2: () => {}, cat3: () => {},
+      pickStandard: () => {}, pickHard: () => {},
       start: () => this.tab('home'),
       toHome: () => this.tab('home'),
+      launchDone: () => this.tab('home'),
+      inviteFriends: () => {},
       toDiscover: () => this.tab('discover'),
       toActivity: () => this.tab('activity'),
       toProfile: () => this.tab('profile'),
       openCreate: () => this.setState({ screen: 'create', createStep: 1, returnTab: st.activeTab }),
       cancelCreate: () => this.tab(st.returnTab),
-      nextStep: () => this.setState({ createStep: Math.min(3, st.createStep + 1) }),
+      nextStep: () => this.setState({ screen: 'create', createStep: Math.min(3, st.createStep + 1) }),
+      prevStep: () => (st.createStep === 1 ? this.tab(st.returnTab) : this.setState({ createStep: st.createStep - 1 })),
+      pickSolo: () => this.setState({ group: false }),
+      pickGroup: () => this.setState({ group: true }),
+      segPacks: () => this.setState({ taskMode: 'packs' }),
+      segCustom: () => this.setState({ taskMode: 'custom' }),
+      openAddTask: () => this.go('addTask'),
+      closeAddTask: () => this.setState({ screen: 'create', createStep: 2 }),
+      saveTask: () => this.setState({ screen: 'create', createStep: 2 }),
+      openReview: () => this.setState({ screen: 'review', launchState: 'idle' }),
+      closeReview: () => this.setState({ screen: 'create', createStep: 3 }),
+      editStep1: () => this.setState({ screen: 'create', createStep: 1 }),
+      editStep2: () => this.setState({ screen: 'create', createStep: 2 }),
+      editStep3: () => this.setState({ screen: 'create', createStep: 3 }),
+      failLaunch: () => this.setState({ failNext: true }),
+      launch: () => {
+        this.setState({ launchState: 'loading' });
+        setTimeout(() => this.setState(this.state.failNext
+          ? { launchState: 'error', failNext: false }
+          : { launchState: 'idle', screen: 'launched', posted: false, challenge: 'Read for 30 min' }), 600);
+      },
       startChallenge: () => this.go('youIn'),
       openCapture: () => (st.posted ? null : this.go('capture')),
       shoot: this.countSecured,
@@ -651,6 +873,8 @@ class Component extends DCLogic {
     this.spread(out, 'bGlobal', this.chipStyle(st.board === 'Global'));
     this.spread(out, 'bFriends', this.chipStyle(st.board === 'Friends'));
     this.spread(out, 'bChall', this.chipStyle(st.board === 'Challenges'));
+    this.spread(out, 'packs', this.segStyle(st.taskMode === 'packs'));
+    this.spread(out, 'custom', this.segStyle(st.taskMode === 'custom'));
     this.spread(out, 'actNotifs', this.segStyle(st.act === 'Notifications'));
     this.spread(out, 'actBoard', this.segStyle(st.act === 'Leaderboard'));
     this.spread(out, 'pChall', this.segStyle(st.profileTab === 'Challenges'));

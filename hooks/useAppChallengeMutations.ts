@@ -15,6 +15,7 @@ import {
 } from "@/lib/notifications";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
+import { displayDay } from "@/lib/challenge-day";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import type {
   StatsFromApi,
@@ -38,7 +39,6 @@ type UseAppChallengeMutationsArgs = {
   stats: StatsFromApi | null;
   profile: unknown;
   fallbackProfile: unknown;
-  canSecureDay: boolean;
 };
 
 function calculateDaysSinceSignup(profileLike: unknown): number | null {
@@ -64,7 +64,6 @@ export function useAppChallengeMutations({
   stats,
   profile,
   fallbackProfile,
-  canSecureDay,
 }: UseAppChallengeMutationsArgs) {
   const completeTask = useCallback(
     (params: {
@@ -91,7 +90,7 @@ export function useAppChallengeMutations({
       firstTaskOfDay?: boolean;
       completionId?: string;
       verification?: { rows: ServerVerificationRow[] };
-      requiredRemaining?: number;
+      requiredRemaining: number;
       dayAlreadySecured?: boolean;
       streakDays?: number;
       challengeDay?: number;
@@ -124,7 +123,7 @@ export function useAppChallengeMutations({
       return trpcMutate<{
         id?: string;
         verification?: { rows: ServerVerificationRow[] };
-        requiredRemaining?: number;
+        requiredRemaining: number;
         dayAlreadySecured?: boolean;
         streakDays?: number;
         challengeDay?: number;
@@ -185,6 +184,7 @@ export function useAppChallengeMutations({
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
           void queryClient.invalidateQueries({ queryKey: ["profile"] });
+          void queryClient.invalidateQueries({ queryKey: ["activeChallenge", params.activeChallengeId] });
           const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
           const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? "unknown";
           const cid = (activeChallenge as ActiveChallengeFromApi | null)?.challenge_id;
@@ -228,7 +228,7 @@ export function useAppChallengeMutations({
             firstTaskOfDay,
             completionId: data?.id,
             verification: data?.verification,
-            requiredRemaining: data?.requiredRemaining,
+            requiredRemaining: data.requiredRemaining,
             dayAlreadySecured: data?.dayAlreadySecured,
             streakDays: data?.streakDays,
             challengeDay: data?.challengeDay,
@@ -242,13 +242,9 @@ export function useAppChallengeMutations({
           const msg =
             err instanceof Error ? err.message : typeof err === "string" ? err : "Couldn't save. Tap to retry.";
           captureError(err, "AppContextCompleteTask");
-          const verification = (
-            err as { data?: { verification?: { rows: ServerVerificationRow[] } } }
-          )?.data?.verification;
-          const next = new Error(msg) as Error & {
-            data?: { verification?: { rows: ServerVerificationRow[] } };
-          };
-          if (verification) next.data = { verification };
+          const prevData = (err as { data?: Record<string, unknown> })?.data;
+          const next = new Error(msg) as Error & { data?: Record<string, unknown> };
+          if (prevData && typeof prevData === "object") next.data = prevData;
           throw next;
         });
     },
@@ -256,7 +252,8 @@ export function useAppChallengeMutations({
     [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]
   );
 
-  const secureDay = useCallback(async (): Promise<{
+  const secureDay = useCallback(async (activeChallengeId: string): Promise<{
+    success?: boolean;
     newStreakCount: number;
     lastStandEarned?: boolean;
     alreadySecured?: boolean;
@@ -264,17 +261,14 @@ export function useAppChallengeMutations({
     challengeId?: string;
     challengeName?: string;
     totalDays?: number;
-  } | undefined> => {
+  }> => {
     if (__DEV__) {
       console.log("[secureDay] called", {
-        activeChallengeId: activeChallenge?.id,
-        canSecureDay,
-        todayCheckinsCount: todayCheckins.length,
+        activeChallengeId,
       });
     }
-    if (!activeChallenge?.id || !canSecureDay) return undefined;
     try {
-      const result = (await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId: activeChallenge.id })) as {
+      const result = (await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId })) as {
         success: boolean;
         newStreakCount: number;
         lastStandEarned?: boolean;
@@ -286,8 +280,11 @@ export function useAppChallengeMutations({
         totalDays?: number;
       };
       const securedChallengeId =
-        result.challengeId ?? (activeChallenge as { challenge_id?: string }).challenge_id ?? "";
-      const dayNum = result.challengeDay ?? (activeChallenge as { current_day?: number }).current_day ?? 0;
+        result.challengeId ?? (activeChallenge as { challenge_id?: string } | null)?.challenge_id ?? "";
+      const dayNum =
+        typeof result.challengeDay === "number"
+          ? result.challengeDay
+          : displayDay((activeChallenge as { current_day?: number } | null)?.current_day ?? 1, true);
       if (securedChallengeId) {
         try {
           trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });
@@ -326,7 +323,9 @@ export function useAppChallengeMutations({
           captureError(err, "scheduleNextSecureReminder");
         });
         await cancelLapsedUserReminders();
-        const challengeName = (activeChallenge as { challenges?: { title?: string } })?.challenges?.title;
+        const challengeName =
+          result.challengeName ??
+          (activeChallenge as { challenges?: { title?: string } } | null)?.challenges?.title;
         await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
         scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
           captureError(err, "scheduleMilestoneApproachingIfNeeded");
@@ -340,7 +339,7 @@ export function useAppChallengeMutations({
       captureError(err, "secureDay");
       throw err;
     }
-  }, [activeChallenge, canSecureDay, fetchActiveChallenge, fetchStats, stats, profile, fallbackProfile, todayCheckins]);
+  }, [activeChallenge, fetchActiveChallenge, fetchStats, stats]);
 
   return { completeTask, secureDay };
 }

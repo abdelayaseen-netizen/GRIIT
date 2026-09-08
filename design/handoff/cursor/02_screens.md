@@ -438,57 +438,6 @@ exclamation mark.
 
 **Laws most at risk** 13 (the proof stays 4:5, so the width flexes to 720 story and 560 feed), 5 (radius 60 and 24 are 20 and 12 at export scale).
 
-## Create step 1
-
-**Chunk** F
-
-**Tree**
-1. WizardHeader step={1}
-2. Text title "Name your challenge"; Text secondary "One sentence. Be specific."
-3. TextInput in a 12 radius surface box, 1pt border, padding 16, with a caption row "Min 3 characters" and a right aligned "0/60"
-4. Text caption examples line
-5. Text heading "How long?"; 3 x 2 form Chip grid, gutter 12
-6. Text heading "Solo or with friends?"; two form Chips with a glyph, title and caption
-7. HintBox
-8. footer pinned: Button primary "Continue"
-
-**Vertical rhythm from the status bar down** 44 status area, 44 wizard bar, 8 to the progress bar, 32 to the title, 20 to the input, 32 to How long, 12 to the chips, 32 to Solo or with friends, 12 to the chips, 20 to the HintBox, footer pinned above the home indicator.
-
-**Display face** yes: nothing: the step number, the durations and the character count are not earned. no: everything.
-
-**States**
-- name under 3 characters: Continue disabled at opacity 0.4, caption "Min 3 characters" in textSecondary
-- over 60: input border 1.5pt danger, caption "60 character limit" in danger
-- Custom selected: a number field appears in place of the chip grid
-
-**Copy. Do not paraphrase.**
-
-| string | style |
-|---|---|
-| Step 1 of 3 | bodyStrong |
-| Cancel | bodyStrong brandText |
-| Name your challenge | title |
-| One sentence. Be specific. | secondary |
-| Read 30 min before phone | body textSecondary as the placeholder |
-| Min 3 characters | caption |
-| 0/60 | caption |
-| Examples: read 30 min before phone · workout 5x weekly · 30 days no alcohol | caption |
-| How long? | heading |
-| 7 days | chip |
-| 14 days | chip |
-| 21 days | chip |
-| 30 days | chip |
-| 75 days | chip |
-| Custom | chip |
-| Solo or with friends? | heading |
-| Solo | bodyStrong brandText when selected |
-| Just you | caption |
-| Group | bodyStrong |
-| Up to 10 | caption |
-| 30 days is the sweet spot. Build the habit, prove you can. | secondary brandText |
-| Continue | bodyStrong on brand |
-
-**Laws most at risk** 8 (no tab bar, CTA pinned), 5 (chips at 12), 24 (HintBox is allowed here and only here), 6 (Continue is the one fill).
 
 ## FeedPost variants
 
@@ -548,3 +497,413 @@ exclamation mark.
 | Retry | bodyStrong on brand |
 
 **Laws most at risk** 17 (skeletons in the card recipe, spinners only inside a submitting button), 18 (errors reuse the empty state).
+
+# Create wizard. Six surfaces.
+
+Replaces the Create step 1 section above. Source: `src/components/create/`.
+
+## Create, step 1
+
+**Chunk** F
+
+**Tree**
+1. WizardHeader step={1} onCancel
+2. Text title "Name your challenge"; Text secondary
+3. Card with TextInput body, helper caption left, counter caption right
+4. Text caption examples line
+5. Text heading "How long?"; 6 ghost Chips in a 3 column grid, gutter 12
+6. Text heading "Solo or with friends?"; two Cards in a 2 column grid, each glyph 24, title bodyStrong, descriptor caption; selected card 1.5pt brand border
+7. HintBox with the lightbulb glyph
+8. WizardFooter with primary Continue
+
+**Vertical rhythm from the status bar down** 44 status area, 44 wizard bar, 8 progress bar, 32 title, 20 field, 32 How long, 12 chips, 32 Solo or with friends, 12 cards, 20 HintBox, 140 to clear the pinned footer.
+
+**Display face** yes: nothing. no: the step number, every duration, the character count.
+
+**States**
+- name under 3 characters: helper "Min 3 characters" in textSecondary, Continue disabled as surface fill with a textSecondary label
+- name valid: helper "Looks good" in brandText, Continue enabled
+- over 60 characters: input border 1.5pt danger, helper "60 character limit" in danger
+- Custom duration selected: a number field replaces the chip grid
+- Group selected: the Group card takes the brand border and Solo loses it
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| Name your challenge | title |
+| One sentence. Be specific. | secondary |
+| Read 30 min before phone | body textSecondary placeholder |
+| Min 3 characters | caption |
+| Looks good | caption brandText |
+| 16/60 | caption |
+| Examples: read 30 min before phone · workout 5x weekly · 30 days no alcohol | caption |
+| How long? | heading |
+| 7 days | chip |
+| 14 days | chip |
+| 21 days | chip |
+| 30 days | chip |
+| 75 days | chip |
+| Custom | chip |
+| Solo or with friends? | heading |
+| Solo | bodyStrong |
+| Just you | caption |
+| Group | bodyStrong |
+| Up to 10 | caption |
+| 30 days is the sweet spot. Build the habit, prove you can. | secondary brandText |
+| Continue | bodyStrong onBrand |
+
+**Laws most at risk** 3 (the descriptor is caption sentence case, never the label style), 6 (Continue is the one fill), 8 (no tab bar, CTA pinned), 23 (chips for duration, cards only where a description is needed), 24 (one HintBox).
+
+## Create, step 2
+
+**Chunk** F
+
+**Tree**
+1. WizardHeader step={2} onCancel={back}
+2. Text title "What must get done daily?"; Text secondary
+3. SegmentedControl items={["Starter packs","Custom"]}
+4. Starter packs: five rows on the canvas, glyph 24 with no tile, title bodyStrong, meta caption, 1pt dividers; selected row brandTint at radius 12 with the contents inline beneath at 56pt indent
+5. Custom: task rows with a trailing tertiary Edit, then a secondary Button "Add a task"
+6. WizardFooter with primary Continue
+
+**Vertical rhythm from the status bar down** 44 status area, 44 wizard bar, 8 progress bar, 32 title, 20 segmented control, 12 first row, 20 per row, 140 to clear the pinned footer.
+
+**Display face** yes: nothing. no: the task counts in the row meta.
+
+**States**
+- no pack selected: five rows with dividers, Continue enabled only in Custom mode with at least one task
+- pack selected: that row is brandTint, its divider is dropped, and three caption lines appear under it
+- Custom with no tasks: EmptyState heading "No tasks yet", body "Add at least one task to continue.", action "Add a task"
+- Custom with tasks: rows plus the secondary Add a task
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| What must get done daily? | title |
+| Pick a starter pack or build from scratch. | secondary |
+| Starter packs | segmented |
+| Custom | segmented |
+| 75 Hard Classic | bodyStrong |
+| 5 strict tasks · original framework | caption |
+| Athlete | bodyStrong |
+| 3 tasks · run, train, check in | caption |
+| Faith | bodyStrong |
+| 3 tasks · prayer, read, gratitude | caption |
+| Morning routine | bodyStrong |
+| 5 tasks · win the morning | caption |
+| Entrepreneur | bodyStrong |
+| 3 tasks · ship, journal, learn | caption |
+| Run 3 km | caption |
+| Strength session, 30 min | caption |
+| Gym check in | caption |
+| Add a task | bodyStrong |
+| Edit | bodyStrong brandText |
+| No tasks yet | heading |
+| Add at least one task to continue. | secondary |
+
+**Laws most at risk** 9 and 22 (rows on the canvas, no card and no icon tile, so no box in a box), 21 (a list is not one unit), 23 (one segmented control and no chips under it), 3 (no uppercase summary label).
+
+## Add task sheet
+
+**Chunk** F
+
+**Tree**
+1. dimmed step 2 behind at opacity 0.35
+2. sheet on surface, radius 20 top corners, 1pt top border, grabber 36 x 4
+3. row: Cancel tertiary, "Add task" bodyStrong, Save tertiary (textSecondary until valid)
+4. Text heading "Task name"; TextInput in a canvas box, 1pt border, radius 12
+5. Text heading "Proof type"; six ghost Chips in a wrapping row, each with a leading glyph 24
+6. Text secondary: the description of the selected type, one full sentence
+7. tertiary Button "4 more types"
+8. row: glyph 24, "Verified proof" bodyStrong, secondary explanation, trailing switch
+9. pinned primary "Add task"
+
+**Vertical rhythm from the status bar down** 44 status area, sheet top at 140, 8 grabber, 44 header row, 20 Task name, 12 field, 32 Proof type, 12 chips, 12 description, 20 Verified proof, footer pinned at 20 with 32 bottom inset.
+
+**Display face** yes: nothing. no: every type name, the task name.
+
+**States**
+- name empty: Save and the primary are disabled with a textSecondary label
+- name valid: both enabled
+- type change: only the description line changes
+- "4 more types" tapped: four more chips join the same wrapping row and the button is removed
+- verified on: switch ground brand, knob textPrimary
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| Add task | bodyStrong |
+| Cancel | bodyStrong brandText |
+| Save | bodyStrong brandText |
+| Task name | heading |
+| Morning run, Read 10 pages | body textSecondary placeholder |
+| Proof type | heading |
+| Check off | chip |
+| Photo | chip |
+| Timer | chip |
+| Text | chip |
+| Run | chip |
+| Counter | chip |
+| Tap to confirm the task is done, with no proof attached. | secondary |
+| A photo taken in the app completes the day. | secondary |
+| A countdown runs in the app and the day counts when it reaches zero. | secondary |
+| A short written note completes the day. | secondary |
+| Run records distance and time from the phone, and the day counts only when both are recorded. | secondary |
+| Count up to a daily target and the day counts when the target is met. | secondary |
+| 4 more types | bodyStrong brandText |
+| Verified proof | bodyStrong |
+| Requires a photo taken in the app to complete this task each day. | secondary |
+
+**Laws most at risk** 3 (headings in sentence case, no uppercase section labels), 11 (nothing truncates: one full sentence per selected type), 21 (Verified proof is a row on the sheet ground, not a card), 6 (one fill: Add task).
+
+## Create, step 3
+
+**Chunk** F
+
+**Tree**
+1. WizardHeader step={3} onCancel={back}
+2. Text title "How strict?"; Text secondary
+3. two Cards stacked: glyph 24 plus title bodyStrong, caption, one secondary consequence line; selected 1.5pt brand border
+4. Text heading "Public proof on feed"; three ghost Chips
+5. Text caption research line
+6. Text heading "Category"; four ghost Chips in a wrapping row
+7. WizardFooter with primary Review
+
+**Vertical rhythm from the status bar down** 44 status area, 44 wizard bar, 8 progress bar, 32 title, 20 first card, 12 between cards, 32 Public proof, 12 chips, 12 research caption, 32 Category, 12 chips, 140 to clear the pinned footer.
+
+**Display face** yes: nothing. no: the percentages and the year in the research line.
+
+**States**
+- Standard selected by default
+- Hard mode selected: the border moves, nothing else changes
+- public proof Off: the research caption stays
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| How strict? | title |
+| Pick your accountability level. | secondary |
+| Standard | bodyStrong |
+| Recommended for your first challenge | caption |
+| Streak freezes on. Miss a day and you do not reset. | secondary |
+| Hard mode | bodyStrong |
+| 75 Hard style. No exceptions. | caption |
+| No freezes. Miss a day, restart from day 1. | secondary |
+| Public proof on feed | heading |
+| Off | chip |
+| Optional | chip |
+| Required | chip |
+| Public accountability lifted goal completion from 43% to 76% (Matthews, 2015). | caption |
+| Category | heading |
+| Fitness | chip |
+| Mind | chip |
+| Faith | chip |
+| Discipline | chip |
+| Review | bodyStrong onBrand |
+
+**Laws most at risk** 23 (one selection language: cards where a description is required, ghost chips elsewhere), 24 (the research line is a caption, not a tinted band), 11 (no em dash), 6 (Review is the one fill).
+
+## Review sheet
+
+**Chunk** F
+
+**Tree**
+1. dimmed step 3 behind
+2. sheet on surface with the grabber
+3. row: "Review and launch" bodyStrong, close glyph in a 44 target
+4. five rows on the sheet ground with dividers, each with a trailing tertiary Edit
+5. error only: EmptyState in the error variant under the rows
+6. pinned primary Launch
+
+**Vertical rhythm from the status bar down** sheet top at 300 in the idle state and 200 in the error state, 8 grabber, 12 title row, 8 first row, 20 per row, footer pinned at 20 with 32 bottom inset.
+
+**Display face** yes: nothing. no: every summary row.
+
+**States**
+- idle: rows plus primary "Launch"
+- loading: nothing changes except the button, which reads "Launching" with the spinner inside it and is not tappable
+- error: the rows stay and the empty state renders inside the sheet's scroll content above the pinned footer, with heading "Could not launch"; the sheet grows to contain it, the primary reads "Retry", and nothing renders below the pinned button
+- never a raw error string, never a red banner, never a toast
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| Review and launch | bodyStrong |
+| Read for 30 min · 30 days | body |
+| Solo | body |
+| 3 tasks · Standard | body |
+| Photo proof optional | body |
+| Category fitness | body |
+| Edit | bodyStrong brandText |
+| Launch | bodyStrong onBrand |
+| Launching | bodyStrong onBrand |
+| Could not launch | heading |
+| Check your connection and try again. | secondary |
+| Retry | bodyStrong onBrand |
+
+**Laws most at risk** 11 (no ampersands), 18 (the error reuses the empty state), 21 (rows on the sheet ground, no boxes), 17 (the spinner lives inside the button).
+
+## Launched
+
+**Chunk** F
+
+**Tree**
+1. View on canvas
+2. Text title "You're in."
+3. Text secondary "Day 1 begins tomorrow morning."
+4. Text bodyStrong challenge name
+5. group only: secondary Button "Invite friends"
+6. primary Button "Back to Home"
+
+**Vertical rhythm from the status bar down** 44 status area, then the heading block centered on the screen with 12 between its lines; footer pinned at 20 above the safe area with 8 between buttons.
+
+**Display face** yes: nothing. no: all of it.
+
+**States**
+- solo: one primary
+- group: one secondary above the primary, and that is the only difference
+- no motion, no confetti, no celebration copy
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| You're in. | title |
+| Day 1 begins tomorrow morning. | secondary |
+| Read for 30 min | bodyStrong |
+| Invite friends | bodyStrong |
+| Back to Home | bodyStrong onBrand |
+
+**Laws most at risk** 19 (nothing animates here), 6 (one fill), 25 (the line is the hero).
+
+## Law 26 clearance, applied
+
+| screen | scroll view bottom padding | verified |
+|---|---|---|
+| Home | `size.tabBarClearance` | last feed card clears the bar at the end of the scroll |
+| Discover | `size.tabBarClearance` | the idea prompt button clears the bar |
+| Activity, both tabs | `size.tabBarClearance` | the last leaderboard row clears the bar |
+| Profile, all three tabs | `size.tabBarClearance` | the "Five marks" footnote and the badge grid clear the bar |
+| Badges sheet | not applicable | no tab bar on this surface |
+| Wizard, Capture, Secured, Complete, sheets | no clearance padding | the tab bar is hidden, so the button is pinned instead |
+
+## Active challenge
+
+**Chunk** G. Component `ActiveChallenge` in `src/components/ActiveChallenge.tsx`. No new tokens.
+
+The screen a user sees inside a challenge they joined. It answers one question: what is left today,
+and where am I in the run. It is a working screen. Everything on it is derived from a field: nothing
+is shown that the API did not send.
+
+**Data** `title`, `duration_days`, `current_day`, `difficulty`, `tasks[] {title, task_type,
+duration_minutes | target_value + unit, require_photo, completed_today, verified, proof_photo_url}`,
+`secured_today`, `streak_days`, `week_secured[7]`, `today_index`, `participants_count`,
+`description`, `reset_notice`.
+
+`secured_today` is a server field. It comes from `day_secures` via `getSecuredDateKeys` and is passed
+in as a prop. It is never derived on the client from `tasks.every(completed_today)`. If the server says
+unsecured and every row shows done, the status line still reads "5 of 5 done." and the footer stays the
+primary button: the client does not award the day.
+
+`week_secured[7]` comes from the same `getSecuredDateKeys` set, one entry per weekday, Monday first.
+
+The Stamp binds to the completion row, not to the task definition. A done row earns it only when its
+completion carries camera proof: `verified` true, or `proof_photo_url` non-null. `require_photo: true`
+on the task alone does not earn a stamp, because it states what was asked, not what was returned.
+
+`reset_notice` is not an API field today. It renders only when the backend exposes a reset event, either
+a reset row on the challenge participant or `started_at` newer than `joined_at`. It is never inferred
+from `current_day === 1`. Until that signal exists, the prop is always false and the card does not render.
+
+**Tree**
+1. Nav bar, one only: IconButton chevron-left, Text bodyStrong {title}, IconButton ellipsis
+2. Position block, gutter 20: Row baseline [Text secondary "Day", DisplayNumber size="home" value={current_day}, Text body textSecondary "of " {duration_days}]
+3. Status line, from the `secured_today` prop only, never from the task rows: secured -> Row [Text secondary brandText "Day secured.", Text secondary "All {n} done."]; otherwise Text secondary "{done} of {n} done. {left} {task|tasks} left." with "Nothing done today." when done is 0, and "{n} of {n} done." with no left clause when every row is done and the server has not secured the day
+4. reset_notice only, and only on the real reset signal above: Card [rotate-ccw 24 textPrimary, Text bodyStrong "The run restarted", Text secondary "A day went unsecured. Hard mode has no freezes, so the count went back to Day 1 of 75."]
+5. WeekStrip week={week_secured} todayIndex={today_index}: filled brand when secured, 1.5pt brand border on today, 1pt border otherwise
+6. Meta row: [shield or shield-off 16 + Text caption difficulty line], [flame 16 + DisplayNumber inline {streak_days} + Text caption "day streak", or Text caption "No streak yet"]
+7. Text heading "Today"
+8. Task ListRows on the canvas with Dividers. Pending: icon by task_type 24 textSecondary, Text bodyStrong {title}, Text caption {gate}, trailing Text secondary brandText {verb}. Done: check 24 brandText, title textSecondary, Text caption {size only}, trailing Stamp when the completion has camera proof (`verified` or `proof_photo_url`) else Text caption "Self-reported". Read the completion, not `require_photo`: a photo task completed without a returned photo is a self-reported row
+9. participants_count > 1 only: Divider then ListRow [users 24, Text bodyStrong "{n} in this challenge", chevron-right]
+10. description non empty only: Text heading "About", Text secondary {description}
+11. Spacer 140, then pinned footer above the safe area: primary Button "{verb} · {next.title}", or secondary Button "Share today's proof" when secured_today
+
+**Vertical rhythm from the status bar down** 44 nav, 24 to the day number, 8 to the status line, 20 to the reset card when present, 24 to the week strip, 16 to the meta row, 32 to "Today", 16 top and bottom inside each task row, 32 to "About", 4 under each heading, 140 to clear the pinned footer. Footer is 20 above a 32 safe area, border-top 1pt.
+
+**No tab bar on this screen**, so law 26 clearance does not apply and the pinned button is legal.
+
+**Display face** yes: `current_day` at `numberSize.home`; `streak_days` at `numberSize.inline`; the Stamp wordmark. no: "Day", "of 75", the task counts, task titles, gates, verbs, the button label, "day streak".
+
+**Gate strings, built in code, never typed**
+| task_type | size part | proof part |
+|---|---|---|
+| timer, workout | "{duration_minutes} min timer" | "Photo required" or "Self-reported" |
+| reading, water, counter | "{target_value} {unit}" | same |
+| photo | none | "Photo required" |
+| checkin, journal | none | same |
+
+Done rows drop the proof part: the trailing element carries it, so nothing is said twice.
+
+**Action verbs, by task_type** timer "Start timer" · workout "Log workout" · reading "Log pages" · water "Log water" · counter "Log count" · photo "Take photo" · checkin "Check in" · journal "Write entry". There is no generic "Start".
+
+**States**
+- Day 1, 0 of 5, standard, participants_count 1, no description: no social row, no About, "No streak yet", week strip empty with today outlined, footer "Start timer · Workout 1"
+- Day 12, 3 of 5, participants_count 4, description present: two done rows whose completions returned a photo carry the Stamp, one done row with no photo reads "Self-reported", two pending, social row and About present, footer "Log water · Drink 1 gallon water"
+- Day 12, 5 of 5, `secured_today` true from the server: status line brandText, today square filled and outlined, every row done, the Stamp on the three completions that returned a photo and on nothing else, footer is the secondary "Share today's proof" and there is no filled button on the screen
+- 5 of 5 done, `secured_today` false: the status line reads "5 of 5 done.", the today square stays unfilled, and the footer stays primary on the last task. The client does not close the day
+- Hard mode after a missed day, with a reset event from the backend: current_day back to 1, streak_days 0, week strip cleared, reset card under the status line, difficulty reads "Hard mode. No freezes."
+- loading: Skeletons for the day number, the week strip and three task rows. Nav bar and title render immediately
+- error: EmptyState heading "Challenge did not load", body "Check your connection and try again.", action "Retry"
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| Day | secondary textSecondary |
+| of {duration_days} | body textSecondary |
+| Nothing done today. {left} tasks left. | secondary textSecondary |
+| {done} of {n} done. {left} tasks left. | secondary textSecondary |
+| {n} of {n} done. | secondary textSecondary |
+| Day secured. | secondary brandText medium |
+| All {n} done. | secondary textSecondary |
+| The run restarted | bodyStrong |
+| A day went unsecured. Hard mode has no freezes, so the count went back to Day 1 of {duration_days}. | secondary textSecondary |
+| Standard mode | caption textSecondary |
+| Hard mode. No freezes. | caption textSecondary |
+| No streak yet | caption textSecondary |
+| day streak | caption textSecondary |
+| Today | heading |
+| {duration_minutes} min timer · Photo required | caption textSecondary |
+| {target_value} {unit} · Self-reported | caption textSecondary |
+| Self-reported | caption textSecondary |
+| Start timer | secondary brandText medium |
+| Log pages | secondary brandText medium |
+| Log water | secondary brandText medium |
+| Take photo | secondary brandText medium |
+| {participants_count} in this challenge | bodyStrong |
+| About | heading |
+| {verb} · {next.title} | bodyStrong onBrand |
+| Share today's proof | bodyStrong on surface |
+
+**Cut from the current screen, and why**
+| cut | why |
+|---|---|
+| green hero block | not in the palette; ten tokens, none of them green |
+| duplicated header, title repeated under the nav bar | law 4, one header per screen |
+| "0 in this challenge · Be the first to join" with five fake avatars | wrong for a member, and there is no avatar data |
+| two 0% tiles | both read 0 on Day 1 and neither is a field |
+| "timer · ~? min" | the type was shown and the gate was not |
+| generic "Start ›" on every row | the verb now comes from task_type |
+| "Continue Today" | it did not name what it continued |
+| pill row 75 days / Day 1/75 / hard | duration is in "of 75", difficulty is in the meta row, and the format is "Day 1 of 75" |
+| "Day resets at midnight" | not a field, and the week strip says it |
+
+Every string above with a number in it is a template. Nothing in this table is a literal 5, a literal 75
+or a literal 45: bind the count, the duration and the target from the fields.
+
+**Laws most at risk** 1 (ink canvas), 2 and the Sept 6 amendment (the day and the streak are the only display numbers), 6 (one fill: the secured state has none), 7 and 9 (rows on the canvas, one card only for the reset notice), 18 (the stamp is camera proof only, read off the completion and never off `require_photo`).

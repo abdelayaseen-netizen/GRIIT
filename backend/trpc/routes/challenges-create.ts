@@ -9,10 +9,11 @@ import {
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
 import { moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
+import { validateCreateTask } from "../../lib/create-task-validation";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
   FREE_ACTIVE_LIMIT_MESSAGE,
-} from "../../lib/free-challenge-limit";
+} from "../../../lib/free-challenge-limit";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -61,6 +62,7 @@ export const challengesCreateProcedures = {
       participationType: z.enum(['solo', 'duo', 'team', 'shared_goal']).optional().default('solo'),
       teamSize: z.number().min(1).max(10).optional().default(1),
       difficulty: z.enum(['standard', 'hard']).optional().default('standard'),
+      isHardMode: z.boolean().optional(),
       status: z.enum(['published', 'draft']).optional().default('published'),
       sharedGoalTarget: z.number().positive().optional(),
       sharedGoalUnit: z.string().max(50).optional(),
@@ -183,59 +185,9 @@ export const challengesCreateProcedures = {
       }
 
       for (let i = 0; i < input.tasks.length; i++) {
-        const task = input.tasks[i];
-        if (!task) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: missing` });
-        }
-        if (!task.title.trim()) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: `Task ${i + 1}: Title is required` });
-        }
-
-        switch (task.type) {
-          case 'journal':
-            if (task.minWords != null && task.minWords <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Minimum words must be positive` });
-            }
-            break;
-          case 'timer':
-            if (!task.durationMinutes || task.durationMinutes <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Duration is required` });
-            }
-            break;
-          case 'run':
-            if (task.trackingMode === 'distance') {
-              if (!task.targetValue || task.targetValue <= 0) {
-                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Distance is required` });
-              }
-            } else if (task.trackingMode === 'time') {
-              if (!task.targetValue || task.targetValue <= 0) {
-                throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Time duration is required` });
-              }
-            }
-            break;
-          case 'checkin':
-            if (!task.locationName || !task.locationName.trim()) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Location name is required` });
-            }
-            if (!task.radiusMeters || task.radiusMeters <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Radius is required` });
-            }
-            break;
-          case 'water':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target is required` });
-            }
-            break;
-          case 'reading':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target pages is required` });
-            }
-            break;
-          case 'counter':
-            if (!task.targetValue || task.targetValue <= 0) {
-              throw new TRPCError({ code: "BAD_REQUEST", message: `Task "${task.title}": Target count is required` });
-            }
-            break;
+        const taskErr = validateCreateTask(input.tasks[i], i);
+        if (taskErr) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: taskErr });
         }
       }
 
@@ -319,6 +271,7 @@ export const challengesCreateProcedures = {
         participation_type: input.participationType ?? "solo",
         team_size: input.teamSize ?? 1,
         run_status: runStatus,
+        is_hard_mode: input.isHardMode ?? false,
       };
       if (isOneDay) {
         const start = input.liveDate ? new Date(input.liveDate) : new Date();

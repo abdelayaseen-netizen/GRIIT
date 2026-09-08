@@ -17,6 +17,7 @@ export type ChipProps = {
   label: string;
   selected?: boolean;
   variant?: ChipVariant;
+  disabled?: boolean;
   onPress?: () => void;
 };
 
@@ -24,6 +25,7 @@ export default function Chip({
   label,
   selected = false,
   variant = "ghost",
+  disabled = false,
   onPress,
 }: ChipProps) {
   const ghost = variant === "ghost";
@@ -37,8 +39,9 @@ export default function Chip({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ selected }}
-      onPress={onPress}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
+      onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [
         styles.base,
         ghost && !selected ? styles.ghost : null,
@@ -46,6 +49,7 @@ export default function Chip({
         !ghost && !selected ? styles.form : null,
         !ghost && selected ? styles.formSelected : null,
         pressed ? styles.pressed : null,
+        disabled ? styles.disabled : null,
       ]}
     >
       <Text
@@ -90,6 +94,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  disabled: {
+    opacity: 0.4,
   },
   label: {
     fontSize: DS_V3.type.secondary.fontSize,

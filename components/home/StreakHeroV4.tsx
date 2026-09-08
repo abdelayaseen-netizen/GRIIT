@@ -26,7 +26,8 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
-import { challengeDisplayDay } from '@/lib/challenge-day';
+import { displayDay } from '@/lib/challenge-day';
+import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ export type StreakHeroV4Task = {
   durationDays: number;
   taskType: string;
   taskConfig: string;
+  durationMinutes?: number;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';
@@ -244,14 +246,14 @@ function HeaderBlock({
         accessibilityLabel={
           streak == null
             ? 'Streak updating'
-            : `${streak} ${streak === 1 ? 'day' : 'days'}`
+            : formatDays(streak)
         }
       >
         <Text style={styles.streakNumber}>
           {streak == null ? '—' : streak.toLocaleString()}
         </Text>
         {streak != null ? (
-          <Text style={styles.daysWord}>{streak === 1 ? 'day' : 'days'}</Text>
+          <Text style={styles.daysWord}>{dayWord(streak)}</Text>
         ) : null}
         <View style={styles.flameWrap}>
           <StreakFlame streak={streak ?? 0} state={flameState} size={22} />
@@ -442,7 +444,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
 
   const subtitle =
     props.tasks.length > 0 && props.tasks[0]
-      ? `${props.tasks[0].challengeName} · Day ${challengeDisplayDay(props.tasks[0].currentDay, props.todaySecured)}`
+      ? `${props.tasks[0].challengeName} · Day ${displayDay(props.tasks[0].currentDay, props.todaySecured)}`
       : undefined;
 
   const visibleTasks = props.tasks.slice(0, 4);

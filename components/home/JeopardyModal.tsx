@@ -25,6 +25,7 @@ import {
 } from 'react-native';
 import { X, Clock, Snowflake } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_SPACING_V2 } from '@/lib/design-system';
+import { formatDays } from '@/lib/format-days';
 import { trackEvent } from '@/lib/analytics';
 import { FLAGS } from '@/lib/feature-flags';
 
@@ -124,7 +125,7 @@ export function JeopardyModal({
           {/* Streak stat */}
           <View style={styles.streakRow}>
             <Text style={styles.streakLabel}>Current streak</Text>
-            <Text style={styles.streakValue}>{`${streak} days`}</Text>
+            <Text style={styles.streakValue}>{formatDays(streak)}</Text>
           </View>
 
           <View style={styles.divider} />

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { TRPCError } from "@trpc/server";
-import { evaluateTaskLocation } from "./checkin-complete-gates";
+import {
+  evaluateTaskLocation,
+  assertChallengeQueryOk,
+} from "./checkin-complete-gates";
 
 /** Target used across location-gate cases (origin + ~111 m per 0.001° lat). */
 const TARGET = {
@@ -65,6 +68,27 @@ describe("evaluateTaskLocation — checkin location target gate", () => {
     } catch (e) {
       expect(e).toBeInstanceOf(TRPCError);
       expect((e as TRPCError).message).toMatch(/within 200m/i);
+    }
+  });
+});
+
+describe("assertChallengeQueryOk", () => {
+  it("challenge query error → complete rejects", () => {
+    expect(() =>
+      assertChallengeQueryOk({
+        data: null,
+        error: { message: 'column challenges.is_hard_mode does not exist' },
+      })
+    ).toThrow(TRPCError);
+    try {
+      assertChallengeQueryOk({
+        data: null,
+        error: { message: 'column challenges.is_hard_mode does not exist' },
+      });
+    } catch (e) {
+      expect(e).toBeInstanceOf(TRPCError);
+      expect((e as TRPCError).code).toBe("INTERNAL_SERVER_ERROR");
+      expect((e as TRPCError).message).toBe("column challenges.is_hard_mode does not exist");
     }
   });
 });

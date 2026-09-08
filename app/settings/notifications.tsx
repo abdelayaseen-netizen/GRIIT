@@ -14,7 +14,7 @@ import {
   type ReminderCustom,
   type ReminderPresetId,
 } from "@/lib/onboarding-v2-reminders";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { DS_V3 } from "@/lib/design-system";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { ReminderPicker } from "@/components/settings/ReminderPicker";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -107,7 +107,7 @@ export default function SettingsNotificationsScreen() {
                   void persist({ enabled: v });
                   if (v) void registerPushTokenWithBackend();
                 }}
-                trackColor={{ false: PROFILE_V2_COLOR.track, true: PROFILE_V2_COLOR.orange }}
+                trackColor={{ false: DS_V3.color.border, true: DS_V3.color.brand }}
               />
             </View>
             {enabled ? (
@@ -203,37 +203,86 @@ function Toggle({
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ false: PROFILE_V2_COLOR.track, true: PROFILE_V2_COLOR.orange }}
+        trackColor={{ false: DS_V3.color.border, true: DS_V3.color.brand }}
       />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
-  body: { paddingHorizontal: 28, paddingBottom: 40 },
-  card: { backgroundColor: PROFILE_V2_COLOR.surface, borderRadius: 20, padding: 16 },
-  toggleRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },
-  label: { fontSize: 15, color: PROFILE_V2_COLOR.ink },
-  sub: { marginTop: 2, fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
-  hr: { borderBottomWidth: 1, borderBottomColor: PROFILE_V2_COLOR.sunken, marginVertical: 12, paddingBottom: 12 },
-  group: { marginTop: 22, marginBottom: 8, fontSize: 11, letterSpacing: 0.8, color: PROFILE_V2_COLOR.mutedLight },
-  foot: { marginTop: 14, fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  body: { paddingHorizontal: DS_V3.space.gutter, paddingBottom: DS_V3.space.xs * 10 },
+  card: {
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.lg,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    paddingVertical: DS_V3.space.xs,
+  },
+  label: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  sub: {
+    marginTop: DS_V3.space.xs / 2,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  hr: {
+    borderBottomWidth: DS_V3.space.xs / 4,
+    borderBottomColor: DS_V3.color.border,
+    marginVertical: DS_V3.space.md,
+    paddingBottom: DS_V3.space.md,
+  },
+  group: {
+    marginTop: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.sm,
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    color: DS_V3.color.textSecondary,
+  },
+  foot: {
+    marginTop: DS_V3.space.lg,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   disabled: { opacity: 0.5 },
   osBanner: {
-    backgroundColor: PROFILE_V2_COLOR.sunken,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    gap: 10,
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.lg,
+    marginBottom: DS_V3.space.md,
+    gap: DS_V3.space.md,
   },
-  osBannerTxt: { fontSize: 14, color: PROFILE_V2_COLOR.ink },
+  osBannerTxt: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
   osBannerBtn: {
-    minHeight: 44,
-    borderRadius: 14,
-    backgroundColor: PROFILE_V2_COLOR.ink,
+    minHeight: DS_V3.size.tap,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
-  osBannerBtnTxt: { fontSize: 14, color: PROFILE_V2_COLOR.surface },
+  osBannerBtnTxt: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.onBrand,
+  },
 });

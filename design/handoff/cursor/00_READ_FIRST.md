@@ -6,7 +6,7 @@ the day, build a streak. Target platform is React Native on Expo SDK 54; every v
 
 **If a value you need is not in tokens.ts, stop and ask. Do not invent one.**
 
-## The 25 laws
+## The 26 laws
 
 1. Canvas is `canvas` on every screen. No light screens.
 2. UI face is SF Pro at 400 and 500. One second family, Barlow Condensed 600, for earned numbers only; it is the only place above 500.
@@ -33,6 +33,8 @@ the day, build a streak. Target platform is React Native on Expo SDK 54; every v
 23. One selection language per screen. One segmented control, directly under the title or the hero. Filters and scopes are ghost chips under a heading, never directly under a segmented control.
 24. At most one band of controls between the title and the first content. A hint is a caption line under a heading. HintBox is the Create wizard only.
 25. One hero per screen: the number on Home, the featured cover on Discover, the streak card on Profile, the list on Activity, the form on Create, the contact sheet on Complete.
+
+26. Clearance. The tab bar floats over content, so every tab screen's scroll view ends with bottom padding of `size.tabBarClearance` (96: bar 64 + offset 12 + gutter 20), and the last element is fully visible above the bar at the end of the scroll. Nothing tappable sits under the bar or the FAB. Pinned bottom buttons exist only where the tab bar is hidden: the wizard, Capture, Secured, Complete and sheets. A tab screen never has a pinned button.
 
 ## Tokens
 
@@ -73,6 +75,7 @@ run of SF Pro: same size, weight 600, letterSpacing 1.
 | space.xs / sm / md / lg / gutter / section | 4 / 8 / 12 / 16 / 20 / 32 |
 | radius.input / card / pill | 12 / 20 / 999 |
 | hit | 44 |
+| size.tabBarClearance | 96 |
 | buttonHeight.regular / small | 52 / 44 |
 | avatarSize | 32 / 40 / 56 / 96 |
 | shutter | 72 |

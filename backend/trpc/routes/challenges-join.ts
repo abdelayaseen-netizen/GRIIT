@@ -12,7 +12,7 @@ import { logger } from "../../lib/logger";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
   FREE_ACTIVE_LIMIT_MESSAGE,
-} from "../../lib/free-challenge-limit";
+} from "../../../lib/free-challenge-limit";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase

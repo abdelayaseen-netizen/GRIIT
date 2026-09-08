@@ -517,8 +517,7 @@ function RootLayoutNav() {
       <Stack.Screen 
         name="task/complete" 
         options={{ 
-          headerShown: true,
-          title: "Complete Task",
+          headerShown: false,
           presentation: "card"
         }} 
       />
