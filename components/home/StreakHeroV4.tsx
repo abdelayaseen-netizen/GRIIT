@@ -27,7 +27,7 @@ import {
 } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
 import { displayDay } from '@/lib/challenge-day';
-import { formatDays } from '@/lib/format-days';
+import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ function HeaderBlock({
           {streak == null ? '—' : streak.toLocaleString()}
         </Text>
         {streak != null ? (
-          <Text style={styles.daysWord}>{formatDays(streak).slice(`${streak} `.length)}</Text>
+          <Text style={styles.daysWord}>{dayWord(streak)}</Text>
         ) : null}
         <View style={styles.flameWrap}>
           <StreakFlame streak={streak ?? 0} state={flameState} size={22} />

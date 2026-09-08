@@ -25,7 +25,7 @@ import {
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { formatDays } from "@/lib/format-days";
+import { dayWord, formatDays } from "@/lib/format-days";
 import PushedHeader from "@/components/ds/PushedHeader";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import WeekStrip from "@/components/ds/WeekStrip";
@@ -213,7 +213,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             {p.streakDays > 0 ? (
               <View style={styles.streakNum} accessibilityLabel={formatDays(p.streakDays)}>
                 <DisplayNumber value={p.streakDays} size="inline" />
-                <Text style={styles.caption}>{formatDays(p.streakDays).slice(`${p.streakDays} `.length)}</Text>
+                <Text style={styles.caption}>{dayWord(p.streakDays)}</Text>
               </View>
             ) : (
               <Text style={styles.caption}>{streakCaption(0)}</Text>
