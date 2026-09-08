@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
-import { displayDay } from "../../lib/challenge-day";
+import { feedSecuredCurrentDay } from "../../lib/challenge-day";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -155,10 +155,13 @@ export async function hydrateActivityEventsToPosts(
     const activeKey = ev.challenge_id ? `${ev.user_id}:${ev.challenge_id}` : "";
     const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
     const currentDay =
-      typeof md.day_number === "number"
-        ? md.day_number
-        : ev.event_type === "secured_day"
-          ? displayDay(active?.current_day ?? 1, true)
+      ev.event_type === "secured_day"
+        ? feedSecuredCurrentDay(
+            typeof md.day_number === "number" ? md.day_number : null,
+            active?.current_day,
+          )
+        : typeof md.day_number === "number"
+          ? md.day_number
           : (active?.current_day ?? 1);
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;

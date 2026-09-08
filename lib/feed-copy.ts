@@ -2,6 +2,8 @@
  * Live-feed no-photo headline. "secured" only for secured_day.
  */
 
+import { displayDay } from "./challenge-day";
+
 export type FeedNoPhotoInput = {
   eventType: string;
   displayName: string;
@@ -15,7 +17,7 @@ export function feedNoPhotoCopy(post: FeedNoPhotoInput): string {
   const name = post.displayName || post.username;
   switch (post.eventType) {
     case "secured_day":
-      return `${name} secured day ${post.currentDay}`;
+      return `${name} secured day ${displayDay(post.currentDay, true)}`;
     case "joined_challenge":
     case "challenge_created":
       return `${name} started ${post.challengeName}`;

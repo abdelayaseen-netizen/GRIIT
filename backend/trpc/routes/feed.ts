@@ -8,7 +8,7 @@ import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from 
 import { logger } from "../../lib/logger";
 import { moderateContent } from "../../lib/content-moderation";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
-import { displayDay } from "../../../lib/challenge-day";
+import { feedSecuredCurrentDay } from "../../../lib/challenge-day";
 import {
   LIVE_FEED_TYPES,
   followRowAccepted,
@@ -215,10 +215,13 @@ export const feedRouter = createTRPCRouter({
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
     const active = ev.challenge_id ? activeMap.get(`${ev.user_id}:${ev.challenge_id}`) : undefined;
     const currentDay =
-      typeof md.day_number === "number"
-        ? md.day_number
-        : ev.event_type === "secured_day"
-          ? displayDay(active?.current_day ?? 1, true)
+      ev.event_type === "secured_day"
+        ? feedSecuredCurrentDay(
+            typeof md.day_number === "number" ? md.day_number : null,
+            active?.current_day,
+          )
+        : typeof md.day_number === "number"
+          ? md.day_number
           : (active?.current_day ?? 1);
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;

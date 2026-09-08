@@ -8,6 +8,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
+import { displayDay } from "@/lib/challenge-day";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { feedNoPhotoCopy } from "@/lib/feed-copy";
@@ -91,7 +92,12 @@ export default function FeedPostV3({
         <View style={styles.flex}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.meta}>
-            {when} · Day <DisplayNumber value={post.currentDay} size="inline" /> · {post.challengeName}
+            {when} · Day{" "}
+            <DisplayNumber
+              value={post.eventType === "secured_day" ? displayDay(post.currentDay, true) : post.currentDay}
+              size="inline"
+            />{" "}
+            · {post.challengeName}
           </Text>
         </View>
       </View>

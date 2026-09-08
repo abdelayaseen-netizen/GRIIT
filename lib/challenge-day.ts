@@ -22,6 +22,22 @@ export function displayDay(current_day: number, secured_today: boolean): number 
   return secured_today ? challengeDayNumber(n - 1) : n;
 }
 
+/**
+ * Raw `current_day` for a secured_day feed row so the renderer can call
+ * displayDay(n, true). Old writes stored post-increment current_day; this PR
+ * stores the day actually secured. Reconstruct the column either way.
+ */
+export function feedSecuredCurrentDay(
+  day_number: number | null | undefined,
+  current_day: number | null | undefined,
+): number {
+  const live = challengeDayNumber(current_day);
+  if (typeof day_number === "number" && Number.isFinite(day_number) && day_number !== live) {
+    return challengeDayNumber(day_number + 1);
+  }
+  return live;
+}
+
 /** @deprecated use displayDay */
 export function challengeDisplayDay(
   currentDay: number | null | undefined,
