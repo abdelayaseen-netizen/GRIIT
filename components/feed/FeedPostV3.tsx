@@ -11,6 +11,7 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { feedNoPhotoCopy } from "@/lib/feed-copy";
+import { dayWord } from "@/lib/format-days";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 const ICON = DS_V3.space.xs * 6;
@@ -75,7 +76,7 @@ export default function FeedPostV3({
         </View>
         <Text style={styles.summary}>
           Finished. {post.currentDay} of {post.totalDays}{" "}
-          {post.totalDays === 1 ? "day" : "days"} verified.
+          {dayWord(post.totalDays)} verified.
         </Text>
         <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
       </Card>

@@ -15,6 +15,7 @@ import {
 } from "@/lib/notifications";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
+import { displayDay } from "@/lib/challenge-day";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import type {
   StatsFromApi,
@@ -280,7 +281,10 @@ export function useAppChallengeMutations({
       };
       const securedChallengeId =
         result.challengeId ?? (activeChallenge as { challenge_id?: string } | null)?.challenge_id ?? "";
-      const dayNum = result.challengeDay ?? (activeChallenge as { current_day?: number } | null)?.current_day ?? 0;
+      const dayNum =
+        typeof result.challengeDay === "number"
+          ? result.challengeDay
+          : displayDay((activeChallenge as { current_day?: number } | null)?.current_day ?? 1, true);
       if (securedChallengeId) {
         try {
           trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });

@@ -62,6 +62,7 @@ export const challengesCreateProcedures = {
       participationType: z.enum(['solo', 'duo', 'team', 'shared_goal']).optional().default('solo'),
       teamSize: z.number().min(1).max(10).optional().default(1),
       difficulty: z.enum(['standard', 'hard']).optional().default('standard'),
+      isHardMode: z.boolean().optional(),
       status: z.enum(['published', 'draft']).optional().default('published'),
       sharedGoalTarget: z.number().positive().optional(),
       sharedGoalUnit: z.string().max(50).optional(),
@@ -270,6 +271,7 @@ export const challengesCreateProcedures = {
         participation_type: input.participationType ?? "solo",
         team_size: input.teamSize ?? 1,
         run_status: runStatus,
+        is_hard_mode: input.isHardMode ?? false,
       };
       if (isOneDay) {
         const start = input.liveDate ? new Date(input.liveDate) : new Date();

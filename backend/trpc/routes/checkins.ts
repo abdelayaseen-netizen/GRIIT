@@ -13,6 +13,7 @@ import {
 } from "../../lib/date-utils";
 import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
 import { NOT_ALL_REQUIRED_MESSAGE } from "../../../lib/day-secure-ui";
+import { displayDay } from "../../../lib/challenge-day";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -29,6 +30,7 @@ import {
   assertHardModeScheduleWindow,
   assertHardModeCameraOnly,
   evaluateTaskLocation,
+  assertChallengeQueryOk,
 } from "../../lib/checkin-complete-gates";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
 import {
@@ -151,31 +153,32 @@ export const checkinsRouter = createTRPCRouter({
         .select("start_at")
         .eq("id", input.activeChallengeId)
         .single();
-      const { data: chRow } = await ctx.supabase
+      const chQuery = await ctx.supabase
         .from("challenges")
         .select("duration_type, ends_at, live_date, duration_days, is_hard_mode")
         .eq("id", challenge_id)
         .single();
-      const ch = chRow as {
+      const ch = assertChallengeQueryOk(chQuery) as {
         duration_type?: string;
         ends_at?: string | null;
         live_date?: string | null;
         duration_days?: number | null;
-      } | null;
+        is_hard_mode?: boolean;
+      };
       const startAt = (acStartRow as { start_at?: string } | null)?.start_at;
       let rampDayNumber = 1;
-      const totalDur = ch?.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
-      if (ch?.duration_type !== "24h" && startAt) {
+      const totalDur = ch.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
+      if (ch.duration_type !== "24h" && startAt) {
         const startKey = dateKeyFromIsoInTimeZone(String(startAt), tz);
         const idx = calendarDayIndexInclusive(startKey, dateKey);
         rampDayNumber = Math.min(totalDur, Math.max(1, idx));
       }
-      if (ch?.duration_type === "24h") {
+      if (ch.duration_type === "24h") {
         const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
       }
       const isMinimumDay = input.task_mode === "minimum";
-      const isChallengeHardMode = (ch as { is_hard_mode?: boolean } | null)?.is_hard_mode === true;
+      const isChallengeHardMode = ch.is_hard_mode === true;
       if (isMinimumDay && isChallengeHardMode) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -1209,6 +1212,8 @@ export const checkinsRouter = createTRPCRouter({
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
       const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
       const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
+      // day_number is the display value (displayDay after secure_day increments current_day). Client renders it raw.
+      const daySecured = displayDay(currentDayAfter, true);
       if (challengeId) {
         const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
         if ((chTeam as { participation_type?: string })?.participation_type === "team" && (chTeam as { run_status?: string })?.run_status === "active") {
@@ -1224,7 +1229,7 @@ export const checkinsRouter = createTRPCRouter({
       const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
-      await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: currentDayAfter, streak_count: row.new_streak_count } });
+      await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: daySecured, streak_count: row.new_streak_count } });
       if (row.last_stand_earned) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "last_stand", metadata: { streak_count: row.new_streak_count } });
       if (challengeJustCompleted) {
         await ctx.supabase.from("activity_events").insert({
@@ -1270,7 +1275,7 @@ export const checkinsRouter = createTRPCRouter({
         alreadySecured,
         newStreakCount: row.new_streak_count,
         lastStandEarned: row.last_stand_earned,
-        challengeDay: currentDayAfter,
+        challengeDay: daySecured,
         challengeCompleted: challengeJustCompleted,
         ...(challengeJustCompleted && { challengeId: challengeId ?? undefined, challengeName, totalDays: durationDays }),
       };

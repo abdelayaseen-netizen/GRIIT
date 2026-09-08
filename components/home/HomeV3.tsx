@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import DisplayNumber from "@/components/ds/DisplayNumber";
@@ -38,6 +39,7 @@ export type HomeV3Proof = {
   challenge: string;
   day: number;
   taskText: string;
+  gate: string;
   doneCount: number;
   totalCount: number;
   posted: boolean;
@@ -52,6 +54,7 @@ export type HomeV3Props = {
   proof: HomeV3Proof | null;
   weekFilled: boolean[];
   todayIndex: number;
+  fillToday?: boolean;
   feedScope: FeedScope;
   onChangeFeedScope: (s: FeedScope) => void;
   onPressBell: () => void;
@@ -72,6 +75,7 @@ export function HomeV3({
   proof,
   weekFilled,
   todayIndex,
+  fillToday,
   feedScope,
   onChangeFeedScope,
   onPressBell,
@@ -147,9 +151,9 @@ export function HomeV3({
 
       <View style={styles.streak}>
         <Text style={styles.secondary}>Current streak</Text>
-        <View style={styles.numRow}>
+        <View style={styles.numRow} accessibilityLabel={formatDays(streak)}>
           <DisplayNumber value={streak} size="home" />
-          <Text style={styles.days}>days</Text>
+          <Text style={styles.days}>{dayWord(streak)}</Text>
         </View>
         <Text style={styles.secondary}>{streakLine}</Text>
       </View>
@@ -171,7 +175,7 @@ export function HomeV3({
             <View style={styles.taskRow}>
               <View style={styles.taskDot} />
               <Text style={styles.task}>{proof.taskText}</Text>
-              <Text style={styles.caption}>Photo</Text>
+              <Text style={styles.caption}>{proof.gate}</Text>
             </View>
             {proof.posted ? (
               <View style={styles.done}>
@@ -190,7 +194,7 @@ export function HomeV3({
       ) : null}
 
       <View style={styles.week}>
-        <WeekStrip days={days} todayIndex={todayIndex} />
+        <WeekStrip days={days} todayIndex={todayIndex} fillToday={fillToday} />
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />

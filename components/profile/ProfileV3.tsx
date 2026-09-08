@@ -5,6 +5,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { dayWord, formatDays } from "@/lib/format-days";
 import Avatar from "@/components/ds/Avatar";
 import Badges, { type BadgeItem } from "@/components/ds/Badges";
 import Button from "@/components/ds/Button";
@@ -205,12 +206,12 @@ export function ProfileV3({
             <View style={styles.bestRow}>
               <Text style={styles.caption}>Best </Text>
               <DisplayNumber value={best} size="inline" />
-              <Text style={styles.caption}>{best === 1 ? " day" : " days"}</Text>
+              <Text style={styles.caption}> {dayWord(best)}</Text>
             </View>
           </View>
-          <View style={styles.numRow}>
+          <View style={styles.numRow} accessibilityLabel={formatDays(streak)}>
             <DisplayNumber value={streak} size="home" />
-            <Text style={styles.days}>days</Text>
+            <Text style={styles.days}>{dayWord(streak)}</Text>
           </View>
           <Text style={styles.secondary}>{streakLineFor(streak)}</Text>
         </Card>

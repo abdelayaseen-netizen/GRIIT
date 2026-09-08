@@ -254,6 +254,7 @@ export function CreateWizardV2() {
         type: "standard",
         durationDays: state.durationDays ?? 30,
         difficulty: state.difficulty,
+        isHardMode: state.difficulty === "hard",
         status: "published",
         categories: state.category ? [state.category] : [],
         participationType: state.who === "group" ? "team" : "solo",
