@@ -27,11 +27,8 @@ import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
-import {
-  assembleSubmitResult,
-  type SubmitResult,
-  type VerificationKind,
-} from "@/lib/task-completion-result";
+import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
+import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
 import { shareProgressImage } from "@/lib/share";
 import {
   failureErrorCode,
@@ -314,18 +311,31 @@ export function TaskFlowV2() {
         return;
       }
       let secure: { success?: boolean; alreadySecured?: boolean; newStreakCount?: number } | null = null;
-      if ((complete.requiredRemaining ?? 1) === 0 && !complete.dayAlreadySecured) {
-        try {
-          secure = (await secureDay()) ?? null;
-        } catch {
-          secure = null;
-        }
-      } else if (complete.dayAlreadySecured) {
+      if (complete.dayAlreadySecured) {
         secure = { success: true, alreadySecured: true, newStreakCount: complete.streakDays };
+      } else {
+        const after = await attemptSecureDayAfterComplete({
+          requiredRemaining: complete.requiredRemaining,
+          dayAlreadySecured: complete.dayAlreadySecured ?? false,
+          activeChallengeId,
+          secureDay,
+        });
+        if (after.result) {
+          const r = after.result as {
+            success?: boolean;
+            alreadySecured?: boolean;
+            newStreakCount?: number;
+          };
+          secure = {
+            success: r.success === true,
+            alreadySecured: r.alreadySecured,
+            newStreakCount: r.newStreakCount,
+          };
+        }
       }
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
-        requiredRemaining: complete.requiredRemaining ?? 0,
+        requiredRemaining: complete.requiredRemaining,
         dayAlreadySecured: complete.dayAlreadySecured ?? false,
         streakDaysBefore: complete.streakDays ?? 0,
         challengeDayBeforeSecure: complete.challengeDay ?? currentDay,
