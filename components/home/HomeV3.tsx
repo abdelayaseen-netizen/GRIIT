@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
 import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -37,6 +38,8 @@ export function greetingTitle(p: {
 
 export type HomeV3Proof = {
   challenge: string;
+  challengeId?: string;
+  activeChallengeId?: string;
   day: number;
   taskText: string;
   gate: string;
@@ -130,9 +133,18 @@ export function HomeV3({
     ? "Post your first proof"
     : "Post today's proof";
   const proofSub = proof?.hasChallenge ? (
-    <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
-    </Text>
+    <View style={styles.proofSubRow}>
+      <ChallengeNameLink
+        challengeId={proof.challengeId ?? ""}
+        activeChallengeId={proof.activeChallengeId}
+        name={proof.challenge}
+        style={styles.secondary}
+      />
+      <Text style={styles.secondary}>
+        {" · Day "}
+        <DisplayNumber value={proof.day} size="inline" />
+      </Text>
+    </View>
   ) : (
     <Text style={styles.secondary}>No active challenge</Text>
   );
@@ -253,6 +265,11 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.body.lineHeight,
     fontWeight: DS_V3.type.body.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  proofSubRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
   },
   secondary: {
     fontSize: DS_V3.type.secondary.fontSize,

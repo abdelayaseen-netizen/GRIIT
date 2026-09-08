@@ -23,6 +23,7 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { shouldLikeOnDoubleTap } from "@/lib/feed-interaction";
+import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
 
 type Props = {
   post: LiveFeedPost;
@@ -137,10 +138,13 @@ function FeedPostCardInner({
                   </View>
                 ) : null}
 
-                <View style={styles.overlayAnchored} pointerEvents="none">
-                  <Text style={styles.overlayTitle} numberOfLines={2}>
-                    {post.challengeName}
-                  </Text>
+                <View style={styles.overlayAnchored} pointerEvents="box-none">
+                  <ChallengeNameLink
+                    challengeId={post.challengeId ?? ""}
+                    name={post.challengeName}
+                    numberOfLines={2}
+                    style={styles.overlayTitle}
+                  />
                   <Text style={styles.overlayMeta} numberOfLines={1}>
                     {taskOrDayTag}
                   </Text>

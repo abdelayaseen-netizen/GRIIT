@@ -9,6 +9,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
+import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
 import LikeHeart from "@/components/ds/LikeHeart";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
@@ -64,9 +65,14 @@ export default function FeedPostV3({
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>{feedNoPhotoCopy(post)}</Text>
-            <Text style={styles.meta}>
-              {when} · {post.challengeName}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>{when} · </Text>
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                style={styles.meta}
+              />
+            </View>
           </View>
         </View>
       </Card>
@@ -82,9 +88,14 @@ export default function FeedPostV3({
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>{name}</Text>
-            <Text style={styles.meta}>
-              {when} · {post.challengeName}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>{when} · </Text>
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                style={styles.meta}
+              />
+            </View>
           </View>
         </View>
         <Text style={styles.summary}>
@@ -110,9 +121,16 @@ export default function FeedPostV3({
         </Pressable>
         <View style={styles.flex}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.meta}>
-            {when} · Day <DisplayNumber value={post.currentDay} size="inline" /> · {post.challengeName}
-          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>{when} · Day </Text>
+            <DisplayNumber value={post.currentDay} size="inline" />
+            <Text style={styles.meta}> · </Text>
+            <ChallengeNameLink
+              challengeId={post.challengeId ?? ""}
+              name={post.challengeName}
+              style={styles.meta}
+            />
+          </View>
         </View>
       </View>
       <GestureDetector gesture={imageGesture}>
@@ -121,6 +139,14 @@ export default function FeedPostV3({
             uri={photo}
             size="feed"
             title={post.challengeName}
+            titleNode={
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                numberOfLines={2}
+                style={styles.proofTitle}
+              />
+            }
             caption={post.caption ?? undefined}
             scrim
             stamp={post.verified ? "Verified" : undefined}
@@ -186,6 +212,17 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   flex: { flex: 1 },
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+  },
+  proofTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
   name: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,

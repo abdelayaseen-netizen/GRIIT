@@ -29,6 +29,7 @@ export type ProofImageProps = {
   source?: string | number | { uri: string } | null;
   blurhash?: string;
   title?: string;
+  titleNode?: React.ReactNode;
   caption?: string;
   size?: ProofImageSize;
   recyclingKey?: string;
@@ -66,6 +67,7 @@ export default function ProofImage({
   source,
   blurhash,
   title,
+  titleNode,
   caption,
   size = "feed",
   recyclingKey,
@@ -122,13 +124,14 @@ export default function ProofImage({
           style={styles.scrim}
         />
       ) : null}
-      {title || caption ? (
+      {title || titleNode || caption ? (
         <View style={[styles.copy, { left: inset, right: inset, bottom: inset }]}>
-          {title ? (
-            <Text style={styles.title} numberOfLines={2}>
-              {title}
-            </Text>
-          ) : null}
+          {titleNode ??
+            (title ? (
+              <Text style={styles.title} numberOfLines={2}>
+                {title}
+              </Text>
+            ) : null)}
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
         </View>
       ) : null}
