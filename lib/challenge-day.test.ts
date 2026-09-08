@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayDay, feedSecuredCurrentDay } from "./challenge-day";
+import { displayDay } from "./challenge-day";
 import { feedNoPhotoCopy } from "./feed-copy";
 
 describe("displayDay", () => {
@@ -19,16 +19,5 @@ describe("displayDay", () => {
 
   it("tomorrow morning unsecured → Day 2", () => {
     expect(displayDay(2, false)).toBe(2);
-  });
-});
-
-describe("feedSecuredCurrentDay", () => {
-  it("old write stored post-increment current_day matching live → raw live", () => {
-    expect(feedSecuredCurrentDay(2, 2)).toBe(2);
-  });
-
-  it("new write stored the day actually secured → reconstruct column", () => {
-    expect(feedSecuredCurrentDay(1, 2)).toBe(2);
-    expect(feedSecuredCurrentDay(5, 6)).toBe(6);
   });
 });
