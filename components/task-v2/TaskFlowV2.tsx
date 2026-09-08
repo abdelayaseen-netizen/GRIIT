@@ -18,8 +18,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS_V2 } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
 import { firstString, parseConfig } from "@/lib/task-helpers";
+import { counterGoalCaption, counterUnitFromTaskType } from "@/lib/counter-log";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { haversineDistance } from "@/lib/geo";
 import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
@@ -142,7 +143,7 @@ export function TaskFlowV2() {
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
   const requirePhoto = config.require_photo === true;
-  const counterUnit = config.unit_label || (taskType === "water" ? "glasses" : "count");
+  const counterUnit = counterUnitFromTaskType(taskType);
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 
@@ -951,9 +952,12 @@ export function TaskFlowV2() {
 
       {step === "count" ? (
         <View style={styles.body}>
-          <Text style={styles.huge}>
-            {count} <Text style={styles.unit}>/ {counterGoal} {counterUnit}</Text>
-          </Text>
+          <View style={styles.countLine}>
+            <Text style={styles.huge}>{count}</Text>
+            <Text style={styles.unit}>
+              {counterGoalCaption(count, counterGoal, counterUnit).slice(String(count).length)}
+            </Text>
+          </View>
           {keypad?.field === "count" ? (
             <TaskKeypad
               label="Count"
@@ -1173,8 +1177,14 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   bigNum: { fontSize: 32, fontWeight: "500", letterSpacing: -1.3, color: DS_COLORS_V2.text.primary, fontVariant: ["tabular-nums"] },
+  countLine: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" },
   huge: { fontSize: 84, fontWeight: "500", letterSpacing: -3.5, color: DS_COLORS_V2.text.primary, fontVariant: ["tabular-nums"] },
-  unit: { fontSize: 20, color: DS_COLORS_V2.text.muted, fontWeight: "400" },
+  unit: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   statLabel: { fontSize: 11, letterSpacing: 0.8, color: DS_COLORS_V2.text.mutedWarm },
   unitBtn: { minWidth: 52, height: 44, borderRadius: 12, backgroundColor: DS_COLORS_V2.surface.sunken, alignItems: "center", justifyContent: "center" },
   unitBtnText: { fontSize: 13, color: DS_COLORS_V2.text.primary },

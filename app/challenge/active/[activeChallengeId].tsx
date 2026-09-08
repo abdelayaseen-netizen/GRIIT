@@ -40,6 +40,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
+import { inlineServerError } from "@/lib/inline-server-error";
 
 type TileWindowStatus = "before" | "open" | "closed" | "none";
 
@@ -294,7 +295,7 @@ export default function ActiveChallengeDetailScreen() {
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
-      showLeaveError("Something went wrong. Please try again.");
+      showLeaveError(inlineServerError(err));
     }
   }, [challengeId, queryClient, router, showLeaveError, user?.id]);
 
