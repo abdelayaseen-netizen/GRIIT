@@ -13,6 +13,7 @@ import {
   followRowAccepted,
   normalizeChallengeVisibility,
   hydrateActivityEventsToPosts,
+  feedEventCurrentDay,
   type EvRow,
 } from "../../lib/feed-activity-hydrate";
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
@@ -213,7 +214,7 @@ export const feedRouter = createTRPCRouter({
     const challengeName = typeof md.challenge_name === "string" && md.challenge_name.trim() ? md.challenge_name : ch?.title ?? "Challenge";
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
     const active = ev.challenge_id ? activeMap.get(`${ev.user_id}:${ev.challenge_id}`) : undefined;
-    const currentDay = active?.current_day ?? 1;
+    const currentDay = feedEventCurrentDay(ev.event_type, md, active?.current_day);
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;

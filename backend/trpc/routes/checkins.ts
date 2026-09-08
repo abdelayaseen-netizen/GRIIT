@@ -1210,6 +1210,7 @@ export const checkinsRouter = createTRPCRouter({
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
       const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
       const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
+      // day_number is the display value (displayDay after secure_day increments current_day). Client renders it raw.
       const daySecured = displayDay(currentDayAfter, true);
       if (challengeId) {
         const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();

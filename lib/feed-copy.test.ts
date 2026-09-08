@@ -10,11 +10,8 @@ const base = {
 };
 
 describe("feedNoPhotoCopy", () => {
-  it("secured_day says secured day N from raw current_day", () => {
-    expect(feedNoPhotoCopy({ ...base, eventType: "secured_day", currentDay: 2 })).toBe(
-      "Maya secured day 1",
-    );
-    expect(feedNoPhotoCopy({ ...base, eventType: "secured_day", currentDay: 13 })).toBe(
+  it("secured_day says secured day N", () => {
+    expect(feedNoPhotoCopy({ ...base, eventType: "secured_day" })).toBe(
       "Maya secured day 12",
     );
   });
