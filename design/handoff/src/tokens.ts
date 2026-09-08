@@ -33,6 +33,9 @@ export const scrimHeight = '40%';
 //        proof moment is the full bleed photo with the number over it, not a change of
 //        ground. Cover fallbacks stay canvas.
 // law 9  card recipe: surface, radius 20, 1pt border, on canvas. No shadow.
+// law 26 clearance: every tab screen's scroll view ends with size.tabBarClearance of
+//        bottom padding, nothing tappable sits under the bar or the FAB, and pinned
+//        bottom buttons exist only where the tab bar is hidden.
 // law 19 two animated moments now: the 400ms day secured count up, and the 600ms row by
 //        row reveal on the completion contact sheet. Nothing else moves.
 // law 19 unchanged in spirit. The one moment is the secured screen: count up, square
@@ -67,7 +70,10 @@ export const dynamicType = {
 // 4pt grid.
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, gutter: 20, section: 32 } as const;
 export const radius = { input: 12, card: 20, pill: 999 } as const;
-export const hit = 44;          // minimum tappable size
+export const hit = 44;
+// Law 26: the tab bar floats over content, so every tab screen's scroll view ends with
+// this much bottom padding: bar height 64 + bottom offset 12 + gutter 20.
+export const size = { tabBarClearance: 96 } as const;          // minimum tappable size
 export const buttonHeight = { regular: 52, small: 44 } as const;
 export const avatarSize = { xs: 32, sm: 40, md: 56, lg: 96 } as const;
 export const proofAspect = 4 / 5;
