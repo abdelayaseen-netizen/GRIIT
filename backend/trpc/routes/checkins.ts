@@ -22,6 +22,7 @@ import {
 } from "../../lib/challenge-tasks";
 import type { TaskConfig } from "../../lib/task-config";
 import { isChallengeExpired } from "../../lib/challenge-timer";
+import { requiredRemainingCount } from "../../lib/required-remaining";
 import { checkAndUnlockAchievements, getLabelForKey } from "../../lib/achievements";
 import { logger } from "../../lib/logger";
 import {
@@ -875,7 +876,10 @@ export const checkinsRouter = createTRPCRouter({
       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
       await ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId);
 
-      const requiredRemaining = Math.max(0, requiredTasks.length - completedRequired.length);
+      const requiredRemaining = requiredRemainingCount(
+        requiredTasks.length,
+        completedRequired.length,
+      );
       const profileDateKey = getTodayDateKey(profileTz);
       const { data: existingSecure } = await ctx.supabase
         .from("day_secures")
