@@ -30,6 +30,7 @@ import {
   assertHardModeScheduleWindow,
   assertHardModeCameraOnly,
   evaluateTaskLocation,
+  assertChallengeQueryOk,
 } from "../../lib/checkin-complete-gates";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
 import {
@@ -152,16 +153,17 @@ export const checkinsRouter = createTRPCRouter({
         .select("start_at")
         .eq("id", input.activeChallengeId)
         .single();
-      const { data: chRow } = await ctx.supabase
+      const chQuery = await ctx.supabase
         .from("challenges")
         .select("duration_type, ends_at, live_date, duration_days, is_hard_mode")
         .eq("id", challenge_id)
         .single();
-      const ch = chRow as {
+      const ch = assertChallengeQueryOk(chQuery) as {
         duration_type?: string;
         ends_at?: string | null;
         live_date?: string | null;
         duration_days?: number | null;
+        is_hard_mode?: boolean;
       } | null;
       const startAt = (acStartRow as { start_at?: string } | null)?.start_at;
       let rampDayNumber = 1;
@@ -176,7 +178,7 @@ export const checkinsRouter = createTRPCRouter({
         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
       }
       const isMinimumDay = input.task_mode === "minimum";
-      const isChallengeHardMode = (ch as { is_hard_mode?: boolean } | null)?.is_hard_mode === true;
+      const isChallengeHardMode = ch?.is_hard_mode === true;
       if (isMinimumDay && isChallengeHardMode) {
         throw new TRPCError({
           code: "BAD_REQUEST",

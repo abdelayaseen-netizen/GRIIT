@@ -126,3 +126,16 @@ export function evaluateTaskLocation(
   }
   return { hardModeLocationGate: false };
 }
+
+export function assertChallengeQueryOk<T>(result: {
+  data: T | null;
+  error: { message?: string } | null;
+}): T | null {
+  if (result.error) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: result.error.message ?? "Failed to load challenge.",
+    });
+  }
+  return result.data;
+}
