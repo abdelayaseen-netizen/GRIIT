@@ -49,6 +49,7 @@ import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome"
 import { NewTaskSheet } from "@/components/create/NewTaskSheet";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
+import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 
 type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
 type CreateChallengeOutput = inferRouterOutputs<AppRouter>["challenges"]["create"];
@@ -293,7 +294,7 @@ export function CreateWizardV2() {
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
       const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("FREE_LIMIT_REACHED")) {
+      if (msg.includes(FREE_ACTIVE_LIMIT_MESSAGE) || msg.includes("FREE_LIMIT_REACHED")) {
         router.push(ROUTES.PAYWALL as never);
         return;
       }
