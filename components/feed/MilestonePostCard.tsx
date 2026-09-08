@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Star } from "lucide-react-native";
 import { DS_DAYLIGHT } from "@/lib/design-system";
+import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
@@ -43,7 +44,11 @@ function MilestonePostCardInner({
           <Star size={24} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
         </View>
         <View style={styles.bannerText}>
-          <Text style={styles.bannerTitle}>{title}</Text>
+          <ChallengeNameLink
+            challengeId={post.challengeId ?? ""}
+            name={title}
+            style={styles.bannerTitle}
+          />
           <Text style={styles.bannerSub}>{subtitle}</Text>
         </View>
       </View>

@@ -26,6 +26,7 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
+import ChallengeNameLink from '@/components/ds/ChallengeNameLink';
 import { displayDay } from '@/lib/challenge-day';
 import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
@@ -442,9 +443,10 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
         ? `Secure Day ${(props.streak ?? 0) + 1}`
         : "Post today's proof";
 
-  const subtitle =
-    props.tasks.length > 0 && props.tasks[0]
-      ? `${props.tasks[0].challengeName} · Day ${displayDay(props.tasks[0].currentDay, props.todaySecured)}`
+  const firstTask = props.tasks[0];
+  const subtitleDay =
+    firstTask != null
+      ? ` · Day ${displayDay(firstTask.currentDay, props.todaySecured)}`
       : undefined;
 
   const visibleTasks = props.tasks.slice(0, 4);
@@ -466,10 +468,19 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
         <View style={styles.proofHeader}>
           <View style={styles.proofTitleCol}>
             <Text style={styles.proofTitle}>Today&apos;s proof</Text>
-            {subtitle ? (
-              <Text style={styles.proofSubtitle} numberOfLines={1}>
-                {subtitle}
-              </Text>
+            {firstTask && subtitleDay ? (
+              <View style={styles.proofSubtitleRow}>
+                <ChallengeNameLink
+                  challengeId={firstTask.challengeId}
+                  activeChallengeId={firstTask.activeChallengeId}
+                  name={firstTask.challengeName}
+                  style={styles.proofSubtitle}
+                  numberOfLines={1}
+                />
+                <Text style={styles.proofSubtitle} numberOfLines={1}>
+                  {subtitleDay}
+                </Text>
+              </View>
             ) : null}
           </View>
           {props.totalTasksToday > 0 ? (
@@ -605,6 +616,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: DS_COLORS_V2.text.primary,
     letterSpacing: -0.2,
+  },
+  proofSubtitleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    minWidth: 0,
   },
   proofSubtitle: {
     fontSize: 13.5,

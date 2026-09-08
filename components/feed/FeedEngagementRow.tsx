@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
-import { Heart, MessageCircle, ArrowUpRight } from "lucide-react-native";
+import { MessageCircle, ArrowUpRight } from "lucide-react-native";
 import { DS_DAYLIGHT } from "@/lib/design-system";
+import LikeHeart from "@/components/ds/LikeHeart";
 
 type Props = {
   respectCount: number;
@@ -12,6 +13,7 @@ type Props = {
   onComment: () => void;
   onShare: () => void;
   onRespectCountPress?: () => void;
+  pulseToken?: number;
 };
 
 function FeedEngagementRowInner({
@@ -22,45 +24,23 @@ function FeedEngagementRowInner({
   onComment,
   onShare,
   onRespectCountPress,
+  pulseToken = 0,
 }: Props) {
-  const heartBounce = React.useRef(new Animated.Value(1)).current;
-
   return (
     <View style={styles.row}>
       <View style={styles.item}>
-        <Pressable
+        <LikeHeart
+          liked={reactedByMe}
+          color={DS_DAYLIGHT.color.accent}
+          mutedColor={DS_DAYLIGHT.color.iconInk}
+          size={23}
+          pulseToken={pulseToken}
+          accessibilityLabel={reactedByMe ? "Remove respect" : "Give respect"}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            heartBounce.setValue(1);
-            Animated.sequence([
-              Animated.spring(heartBounce, {
-                toValue: 1.3,
-                friction: 3,
-                tension: 300,
-                useNativeDriver: true,
-              }),
-              Animated.spring(heartBounce, {
-                toValue: 1,
-                friction: 4,
-                tension: 200,
-                useNativeDriver: true,
-              }),
-            ]).start();
             onRespect();
           }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={reactedByMe ? "Remove respect" : "Give respect"}
-          accessibilityState={{ selected: reactedByMe }}
-        >
-          <Animated.View style={{ transform: [{ scale: heartBounce }] }}>
-            <Heart
-              size={23}
-              color={DS_DAYLIGHT.color.accent}
-              fill={reactedByMe ? DS_DAYLIGHT.color.accent : "none"}
-            />
-          </Animated.View>
-        </Pressable>
+        />
         {respectCount > 0 ? (
           <Pressable
             onPress={onRespectCountPress}

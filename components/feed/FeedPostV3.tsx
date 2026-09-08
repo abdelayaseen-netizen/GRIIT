@@ -1,15 +1,21 @@
 /**
  * FeedPostV3 — 01_components.md FeedPost. Screen component, ds primitives only.
  */
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Heart, MessageCircle, Share2 } from "lucide-react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import { MessageCircle, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
+import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
+import LikeHeart from "@/components/ds/LikeHeart";
+import UserLink from "@/components/ds/UserLink";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { shouldLikeOnDoubleTap } from "@/lib/feed-interaction";
 import { feedNoPhotoCopy } from "@/lib/feed-copy";
 import { dayWord } from "@/lib/format-days";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
@@ -41,6 +47,15 @@ export default function FeedPostV3({
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
   const photo = post.proofPhotoUrl ?? post.photoUrl;
+  const [pulseToken, setPulseToken] = useState(0);
+
+  const onDoubleTap = useCallback(() => {
+    if (!shouldLikeOnDoubleTap(post.reactedByMe)) return;
+    onLike();
+    setPulseToken((n) => n + 1);
+  }, [onLike, post.reactedByMe]);
+
+  const imageGesture = useDoubleTap({ onDoubleTap });
 
   if (variant === "noPhoto") {
     return (
@@ -51,9 +66,14 @@ export default function FeedPostV3({
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>{feedNoPhotoCopy(post)}</Text>
-            <Text style={styles.meta}>
-              {when} · {post.challengeName}
-            </Text>
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>{when} · </Text>
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                style={styles.meta}
+              />
+            </View>
           </View>
         </View>
       </Card>
@@ -68,17 +88,30 @@ export default function FeedPostV3({
             <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
           </Pressable>
           <View style={styles.flex}>
-            <Text style={styles.name}>{name}</Text>
-            <Text style={styles.meta}>
-              {when} · {post.challengeName}
-            </Text>
+            <UserLink username={post.username} userId={post.userId}>
+              <Text style={styles.name}>{name}</Text>
+            </UserLink>
+            <View style={styles.metaRow}>
+              <Text style={styles.meta}>{when} · </Text>
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                style={styles.meta}
+              />
+            </View>
           </View>
         </View>
         <Text style={styles.summary}>
           Finished. {post.currentDay} of {post.totalDays}{" "}
           {dayWord(post.totalDays)} verified.
         </Text>
-        <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
+        <ActionRow
+          liked={post.reactedByMe}
+          onLike={onLike}
+          onComment={onComment}
+          onShare={onShare}
+          pulseToken={pulseToken}
+        />
       </Card>
     );
   }
@@ -90,21 +123,48 @@ export default function FeedPostV3({
           <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
         </Pressable>
         <View style={styles.flex}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.meta}>
-            {when} · Day <DisplayNumber value={post.currentDay} size="inline" /> · {post.challengeName}
-          </Text>
+          <UserLink username={post.username} userId={post.userId}>
+            <Text style={styles.name}>{name}</Text>
+          </UserLink>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>{when} · Day </Text>
+            <DisplayNumber value={post.currentDay} size="inline" />
+            <Text style={styles.meta}> · </Text>
+            <ChallengeNameLink
+              challengeId={post.challengeId ?? ""}
+              name={post.challengeName}
+              style={styles.meta}
+            />
+          </View>
         </View>
       </View>
-      <ProofImage
-        uri={photo}
-        size="feed"
-        title={post.challengeName}
-        caption={post.caption ?? undefined}
-        scrim
-        stamp={post.verified ? "Verified" : undefined}
+      <GestureDetector gesture={imageGesture}>
+        <View>
+          <ProofImage
+            uri={photo}
+            size="feed"
+            title={post.challengeName}
+            titleNode={
+              <ChallengeNameLink
+                challengeId={post.challengeId ?? ""}
+                name={post.challengeName}
+                numberOfLines={2}
+                style={styles.proofTitle}
+              />
+            }
+            caption={post.caption ?? undefined}
+            scrim
+            stamp={post.verified ? "Verified" : undefined}
+          />
+        </View>
+      </GestureDetector>
+      <ActionRow
+        liked={post.reactedByMe}
+        onLike={onLike}
+        onComment={onComment}
+        onShare={onShare}
+        pulseToken={pulseToken}
       />
-      <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
     </Card>
   );
 }
@@ -114,17 +174,26 @@ function ActionRow({
   onLike,
   onComment,
   onShare,
+  pulseToken,
 }: {
   liked: boolean;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
+  pulseToken: number;
 }) {
   return (
     <View style={styles.actions}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Like" onPress={onLike} style={styles.hit}>
-        <Heart size={ICON} color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary} />
-      </Pressable>
+      <View style={styles.hit}>
+        <LikeHeart
+          liked={liked}
+          color={DS_V3.color.brandText}
+          mutedColor={DS_V3.color.textPrimary}
+          size={ICON}
+          onPress={onLike}
+          pulseToken={pulseToken}
+        />
+      </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
         <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
@@ -148,6 +217,17 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   flex: { flex: 1 },
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+  },
+  proofTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
   name: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -33,6 +33,8 @@ import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InlineError } from "@/components/InlineError";
+import UserLink from "@/components/ds/UserLink";
+import { useRespect } from "@/hooks/useRespect";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -46,8 +48,6 @@ type CommentRow = {
   avatar_url: string | null;
 };
 
-const RESPECT_DEBOUNCE_MS = 300;
-
 function PostThreadScreenInner() {
   const router = useRouter();
   const { user } = useAuth();
@@ -58,7 +58,7 @@ function PostThreadScreenInner() {
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
   const [deleteErr, setDeleteErr] = useState("");
-  const respectLastAt = useRef<Map<string, number>>(new Map());
+  const { respect } = useRespect();
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -80,16 +80,6 @@ function PostThreadScreenInner() {
   });
 
   const displayPost = postQuery.data ?? null;
-
-  const updateCachedPost = useCallback(
-    (updater: (p: LiveFeedPost) => LiveFeedPost) => {
-      queryClient.setQueryData(["feed", "post", id], (old: LiveFeedPost | undefined) => {
-        if (!old) return old;
-        return updater(old);
-      });
-    },
-    [queryClient, id]
-  );
 
   const commentsQuery = useQuery({
     queryKey: ["feed", "comments", id],
@@ -149,43 +139,10 @@ function PostThreadScreenInner() {
   );
 
   const onRespect = useCallback(
-    async (post: LiveFeedPost) => {
-      const now = Date.now();
-      const last = respectLastAt.current.get(post.id) ?? 0;
-      if (now - last < RESPECT_DEBOUNCE_MS) return;
-      respectLastAt.current.set(post.id, now);
-
-      const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      updateCachedPost((p) => ({ ...p, reactedByMe: !prevR, respectCount: nextC }));
-      try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
-          reacted?: boolean;
-          reactionCount?: number;
-        };
-        updateCachedPost((p) => ({
-          ...p,
-          reactedByMe: !!result.reacted,
-          respectCount: Math.max(0, result.reactionCount ?? nextC),
-        }));
-        if (!prevR) {
-          try {
-            track({
-              name: "respect_sent",
-              toUserId: post.userId ?? (post as { user_id?: string }).user_id,
-            });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      } catch (e) {
-        captureError(e, "PostThreadRespect");
-        updateCachedPost((p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
-      }
+    (post: LiveFeedPost) => {
+      respect(post);
     },
-    [updateCachedPost, queryClient]
+    [respect]
   );
 
   const onShare = useCallback(async (post: LiveFeedPost) => {
@@ -298,30 +255,42 @@ function PostThreadScreenInner() {
       const isMine = Boolean(user?.id && item.user_id === user.id);
       return (
         <View style={styles.commentBlock}>
-          <Pressable
-            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
-            delayLongPress={450}
+          <View
             style={styles.commentRow}
-            accessibilityRole="button"
             accessibilityLabel={
               isMine
                 ? "Your comment — long press to delete"
                 : `Comment by ${item.display_name || item.username}`
             }
-            {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
           >
-            <Avatar
-              url={item.avatar_url}
-              name={item.display_name || item.username}
-              userId={item.user_id}
-              size={36}
-            />
+            <UserLink username={item.username} userId={item.user_id}>
+              <Avatar
+                url={item.avatar_url}
+                name={item.display_name || item.username}
+                userId={item.user_id}
+                size={36}
+              />
+            </UserLink>
             <View style={styles.commentMain}>
-              <Text style={styles.commentName}>{item.display_name || item.username}</Text>
-              <Text style={styles.commentBody}>{item.text}</Text>
+              <UserLink username={item.username} userId={item.user_id}>
+                <Text style={styles.commentName}>{item.display_name || item.username}</Text>
+              </UserLink>
+              <Pressable
+                onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
+                delayLongPress={450}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isMine
+                    ? "Your comment — long press to delete"
+                    : `Comment by ${item.display_name || item.username}`
+                }
+                {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
+              >
+                <Text style={styles.commentBody}>{item.text}</Text>
+              </Pressable>
               <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
             </View>
-          </Pressable>
+          </View>
           {deleteCommentTargetId === item.id ? (
             <View style={styles.deleteCommentBar}>
               <Text style={styles.deleteCommentQuestion}>Delete this comment?</Text>

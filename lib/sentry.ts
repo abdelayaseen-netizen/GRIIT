@@ -54,6 +54,15 @@ export function captureError(error: unknown, context?: string | Record<string, u
   }
 }
 
+export function addBreadcrumb(breadcrumb: {
+  category?: string;
+  message: string;
+  data?: Record<string, unknown>;
+  level?: Sentry.SeverityLevel;
+}): void {
+  Sentry.addBreadcrumb(breadcrumb);
+}
+
 export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
   if (__DEV__) {
     return;

@@ -441,6 +441,8 @@ export default function HomeScreen() {
     const hasChallenge = heroTasks.length > 0;
     return {
       challenge: task?.challengeName ?? "",
+      challengeId: task?.challengeId,
+      activeChallengeId: task?.activeChallengeId,
       day: displayDay(task?.currentDay ?? 1, todaySecured),
       taskText: task?.name ?? "",
       gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),

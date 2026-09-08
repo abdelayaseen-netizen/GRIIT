@@ -54,3 +54,6 @@ export type { BadgeItem, BadgesProps } from "./Badges";
 
 export { default as TabBar } from "./TabBar";
 export type { TabBarProps, TabBarTab } from "./TabBar";
+
+export { default as LikeHeart } from "./LikeHeart";
+export type { LikeHeartProps } from "./LikeHeart";

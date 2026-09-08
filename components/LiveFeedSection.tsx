@@ -20,7 +20,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT } from "@/lib/design-system"
-import { captureError } from "@/lib/sentry";
+import { addBreadcrumb, captureError } from "@/lib/sentry";
+import { isProfileUsername } from "@/components/ds/UserLink";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
@@ -31,10 +32,9 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
+import { useRespect } from "@/hooks/useRespect";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
-
-const RESPECT_DEBOUNCE_MS = 300;
 
 type LiveFeedScope = "following" | "everyone";
 
@@ -116,7 +116,7 @@ function LiveFeedSection({
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [blockTarget, setBlockTarget] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
-  const respectLastAt = useRef<Map<string, number>>(new Map());
+  const { respect } = useRespect();
   const dotOpacity = useRef(new Animated.Value(1)).current;
   const listRef = useRef<FlashListRef<LiveFeedPost> | null>(null);
 
@@ -232,43 +232,10 @@ function LiveFeedSection({
   );
 
   const onRespect = useCallback(
-    async (post: LiveFeedPost) => {
-      const now = Date.now();
-      const last = respectLastAt.current.get(post.id) ?? 0;
-      if (now - last < RESPECT_DEBOUNCE_MS) return;
-      respectLastAt.current.set(post.id, now);
-
-      const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      updatePost(post.id, (p) => ({ ...p, reactedByMe: !prevR, respectCount: nextC }));
-      try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
-          reacted?: boolean;
-          reactionCount?: number;
-        };
-        updatePost(post.id, (p) => ({
-          ...p,
-          reactedByMe: !!result.reacted,
-          respectCount: Math.max(0, result.reactionCount ?? nextC),
-        }));
-        if (!prevR) {
-          try {
-            track({
-              name: "respect_sent",
-              toUserId: post.userId ?? (post as { user_id?: string }).user_id,
-            });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
-      } catch (e) {
-        captureError(e, "LiveFeedRespect");
-        updatePost(post.id, (p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
-      }
+    (post: LiveFeedPost) => {
+      respect(post);
     },
-    [updatePost, queryClient]
+    [respect]
   );
 
   const onShare = useCallback(async (post: LiveFeedPost) => {
@@ -314,13 +281,16 @@ function LiveFeedSection({
         return;
       }
       const u = post.username?.trim();
-      const hasRealUsername =
-        u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u);
-      if (hasRealUsername) {
+      if (isProfileUsername(u)) {
         router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-      } else {
-        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(post.userId)) as never);
+        return;
       }
+      addBreadcrumb({
+        category: "nav",
+        message: "UserLink: username missing",
+        data: { userId: post.userId, username: post.username ?? null },
+        level: "info",
+      });
     },
     [router, user?.id]
   );
