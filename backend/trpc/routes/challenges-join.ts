@@ -9,6 +9,10 @@ import {
 } from "../../lib/leave-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../lib/logger";
+import {
+  FREE_ACTIVE_CHALLENGES_LIMIT,
+  FREE_ACTIVE_LIMIT_MESSAGE,
+} from "../../lib/free-challenge-limit";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase
@@ -23,7 +27,6 @@ export const challengesJoinProcedures = {
   join: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const MAX_FREE_CHALLENGES = 3;
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
       const { data: profile } = await ctx.supabase
         .from("profiles")
@@ -39,10 +42,10 @@ export const challengesJoinProcedures = {
           .select("id", { count: "exact", head: true })
           .eq("user_id", ctx.userId)
           .eq("status", "active");
-        if ((activeCount ?? 0) >= MAX_FREE_CHALLENGES) {
+        if ((activeCount ?? 0) >= FREE_ACTIVE_CHALLENGES_LIMIT) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: "Free users can join up to 3 challenges. Upgrade to Premium for unlimited challenges.",
+            message: FREE_ACTIVE_LIMIT_MESSAGE,
           });
         }
       }

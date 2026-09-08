@@ -9,9 +9,10 @@ import {
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
 import { moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
-
-/** Free-tier limit — mirrors FREE_LIMITS.MAX_CREATED_CHALLENGES in lib/feature-flags.ts. */
-const FREE_CREATED_CHALLENGES_LIMIT = 1;
+import {
+  FREE_ACTIVE_CHALLENGES_LIMIT,
+  FREE_ACTIVE_LIMIT_MESSAGE,
+} from "../../lib/free-challenge-limit";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -268,7 +269,7 @@ export const challengesCreateProcedures = {
         }
       }
 
-      // PAY-02: enforce free-tier challenge-creation limit server-side.
+      // PAY-02: free-tier cap is active enrollments (created or joined).
       // subscription_status is written by profiles.validateSubscription, which
       // validates against RevenueCat server-to-server (REVENUECAT_API_KEY).
       // It may lag by one session, but it is server-written and not client-bypassable.
@@ -281,15 +282,15 @@ export const challengesCreateProcedures = {
         ?.subscription_status ?? "free";
       const isProUser = subscriptionStatus === "premium" || subscriptionStatus === "trial";
       if (!isProUser) {
-        const { count: existingCount } = await ctx.supabase
-          .from("challenges")
+        const { count: activeCount } = await ctx.supabase
+          .from("active_challenges")
           .select("id", { count: "exact", head: true })
-          .eq("creator_id", ctx.userId)
-          .in("status", ["published", "draft"]);
-        if ((existingCount ?? 0) >= FREE_CREATED_CHALLENGES_LIMIT) {
+          .eq("user_id", ctx.userId)
+          .eq("status", "active");
+        if ((activeCount ?? 0) >= FREE_ACTIVE_CHALLENGES_LIMIT) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: `FREE_LIMIT_REACHED: Free accounts can create ${FREE_CREATED_CHALLENGES_LIMIT} challenge. Upgrade to GRIIT Pro to create more.`,
+            message: FREE_ACTIVE_LIMIT_MESSAGE,
           });
         }
       }
