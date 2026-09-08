@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InlineError } from "@/components/InlineError";
+import { useRespect } from "@/hooks/useRespect";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -46,8 +47,6 @@ type CommentRow = {
   avatar_url: string | null;
 };
 
-const RESPECT_DEBOUNCE_MS = 300;
-
 function PostThreadScreenInner() {
   const router = useRouter();
   const { user } = useAuth();
@@ -58,7 +57,7 @@ function PostThreadScreenInner() {
   const [androidMenuOpen, setAndroidMenuOpen] = useState(false);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
   const [deleteErr, setDeleteErr] = useState("");
-  const respectLastAt = useRef<Map<string, number>>(new Map());
+  const { respect } = useRespect();
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -80,16 +79,6 @@ function PostThreadScreenInner() {
   });
 
   const displayPost = postQuery.data ?? null;
-
-  const updateCachedPost = useCallback(
-    (updater: (p: LiveFeedPost) => LiveFeedPost) => {
-      queryClient.setQueryData(["feed", "post", id], (old: LiveFeedPost | undefined) => {
-        if (!old) return old;
-        return updater(old);
-      });
-    },
-    [queryClient, id]
-  );
 
   const commentsQuery = useQuery({
     queryKey: ["feed", "comments", id],
@@ -149,43 +138,10 @@ function PostThreadScreenInner() {
   );
 
   const onRespect = useCallback(
-    async (post: LiveFeedPost) => {
-      const now = Date.now();
-      const last = respectLastAt.current.get(post.id) ?? 0;
-      if (now - last < RESPECT_DEBOUNCE_MS) return;
-      respectLastAt.current.set(post.id, now);
-
-      const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      updateCachedPost((p) => ({ ...p, reactedByMe: !prevR, respectCount: nextC }));
-      try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
-          reacted?: boolean;
-          reactionCount?: number;
-        };
-        updateCachedPost((p) => ({
-          ...p,
-          reactedByMe: !!result.reacted,
-          respectCount: Math.max(0, result.reactionCount ?? nextC),
-        }));
-        if (!prevR) {
-          try {
-            track({
-              name: "respect_sent",
-              toUserId: post.userId ?? (post as { user_id?: string }).user_id,
-            });
-          } catch {
-            /* non-fatal */
-          }
-        }
-        await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      } catch (e) {
-        captureError(e, "PostThreadRespect");
-        updateCachedPost((p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
-      }
+    (post: LiveFeedPost) => {
+      respect(post);
     },
-    [updateCachedPost, queryClient]
+    [respect]
   );
 
   const onShare = useCallback(async (post: LiveFeedPost) => {

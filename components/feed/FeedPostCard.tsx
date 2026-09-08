@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Animated,
   TextInput,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { GestureDetector } from "react-native-gesture-handler";
 import { Camera, Heart } from "lucide-react-native";
 import { DS_DAYLIGHT } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
@@ -21,6 +21,8 @@ import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { shouldLikeOnDoubleTap } from "@/lib/feed-interaction";
 
 type Props = {
   post: LiveFeedPost;
@@ -60,62 +62,24 @@ function FeedPostCardInner({
   const posterName = post.displayName || post.username || "";
   const posterFirst = posterName.trim().split(/\s+/)[0] || posterName;
 
-  const lastTapRef = React.useRef<number>(0);
-  const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const heartScale = React.useRef(new Animated.Value(0)).current;
-  const heartOpacity = React.useRef(new Animated.Value(0)).current;
+  const [pulseToken, setPulseToken] = React.useState(0);
 
-  React.useEffect(() => {
-    return () => {
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-        tapTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleImagePress = React.useCallback(() => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-
-    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-        tapTimeoutRef.current = null;
-      }
-      if (!post.reactedByMe) {
-        onRespect();
-      }
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      heartScale.setValue(0);
-      heartOpacity.setValue(1);
-      Animated.sequence([
-        Animated.spring(heartScale, {
-          toValue: 1,
-          friction: 3,
-          tension: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heartOpacity, {
-          toValue: 0,
-          duration: 400,
-          delay: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      lastTapRef.current = 0;
-    } else {
-      lastTapRef.current = now;
-      tapTimeoutRef.current = setTimeout(() => {
-        if (FLAGS.PR3_IMAGE_VIEWER && proofUri) {
-          setViewerOpen(true);
-          viewerOpenedAtRef.current = Date.now();
-          track({ name: "image_viewer_opened", source: "feed", post_id: post.id });
-        }
-        tapTimeoutRef.current = null;
-      }, DOUBLE_TAP_DELAY);
+  const onSingleTap = React.useCallback(() => {
+    if (FLAGS.PR3_IMAGE_VIEWER && proofUri) {
+      setViewerOpen(true);
+      viewerOpenedAtRef.current = Date.now();
+      track({ name: "image_viewer_opened", source: "feed", post_id: post.id });
     }
-  }, [post.reactedByMe, post.id, onRespect, heartScale, heartOpacity, proofUri]);
+  }, [proofUri, post.id]);
+
+  const onDoubleTap = React.useCallback(() => {
+    if (!shouldLikeOnDoubleTap(post.reactedByMe)) return;
+    onRespect();
+    setPulseToken((n) => n + 1);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, [post.reactedByMe, onRespect]);
+
+  const imageGesture = useDoubleTap({ onSingleTap, onDoubleTap });
 
   const handleQuickSend = React.useCallback(async () => {
     const text = quickDraft.trim();
@@ -140,62 +104,50 @@ function FeedPostCardInner({
 
       {showProof ? (
         <View style={styles.proofWrap}>
-          <Pressable
-            style={styles.heroPressable}
-            onPress={handleImagePress}
-            accessibilityRole="button"
-            accessibilityLabel="Tap photo to view full screen, double tap to respect"
-          >
-            <View style={styles.proofImageArea}>
-              {proofUri ? (
-                <Image
-                  source={{ uri: proofUri }}
-                  style={styles.proofImage}
-                  contentFit="cover"
-                  accessibilityRole="image"
+          <GestureDetector gesture={imageGesture}>
+            <View
+              style={styles.heroPressable}
+              accessibilityRole="button"
+              accessibilityLabel="Tap photo to view full screen, double tap to like"
+            >
+              <View style={styles.proofImageArea}>
+                {proofUri ? (
+                  <Image
+                    source={{ uri: proofUri }}
+                    style={styles.proofImage}
+                    contentFit="cover"
+                    accessibilityRole="image"
+                  />
+                ) : (
+                  <View style={styles.placeholder}>
+                    <Camera size={40} color={DS_DAYLIGHT.color.inkMuted} style={{ opacity: 0.5 }} />
+                  </View>
+                )}
+
+                <LinearGradient
+                  colors={["transparent", DS_DAYLIGHT.color.photoGradientStrong]}
+                  style={styles.photoGradient}
+                  pointerEvents="none"
                 />
-              ) : (
-                <View style={styles.placeholder}>
-                  <Camera size={40} color={DS_DAYLIGHT.color.inkMuted} style={{ opacity: 0.5 }} />
+
+                {post.respectCount > 0 ? (
+                  <View style={styles.kudosChip} pointerEvents="none">
+                    <Heart size={13} color={DS_DAYLIGHT.color.textOnPhoto} fill={DS_DAYLIGHT.color.textOnPhoto} />
+                    <Text style={styles.kudosChipText}>{post.respectCount}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.overlayAnchored} pointerEvents="none">
+                  <Text style={styles.overlayTitle} numberOfLines={2}>
+                    {post.challengeName}
+                  </Text>
+                  <Text style={styles.overlayMeta} numberOfLines={1}>
+                    {taskOrDayTag}
+                  </Text>
                 </View>
-              )}
-
-              <LinearGradient
-                colors={["transparent", DS_DAYLIGHT.color.photoGradientStrong]}
-                style={styles.photoGradient}
-                pointerEvents="none"
-              />
-
-              <Animated.View
-                pointerEvents="none"
-                style={[
-                  styles.heartOverlay,
-                  {
-                    opacity: heartOpacity,
-                    transform: [{ scale: heartScale }],
-                  },
-                ]}
-              >
-                <Heart size={80} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
-              </Animated.View>
-
-              {post.respectCount > 0 ? (
-                <View style={styles.kudosChip} pointerEvents="none">
-                  <Heart size={13} color={DS_DAYLIGHT.color.textOnPhoto} fill={DS_DAYLIGHT.color.textOnPhoto} />
-                  <Text style={styles.kudosChipText}>{post.respectCount}</Text>
-                </View>
-              ) : null}
-
-              <View style={styles.overlayAnchored} pointerEvents="none">
-                <Text style={styles.overlayTitle} numberOfLines={2}>
-                  {post.challengeName}
-                </Text>
-                <Text style={styles.overlayMeta} numberOfLines={1}>
-                  {taskOrDayTag}
-                </Text>
               </View>
             </View>
-          </Pressable>
+          </GestureDetector>
         </View>
       ) : null}
 
@@ -207,6 +159,7 @@ function FeedPostCardInner({
         onComment={onSubmitComment ? () => setShowQuickComment((v) => !v) : onComment}
         onShare={onShare}
         onRespectCountPress={() => setShowWhoRespected(true)}
+        pulseToken={pulseToken}
       />
 
       {captionText ? (
@@ -346,15 +299,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: "42%",
-  },
-  heartOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
   },
   kudosChip: {
     position: "absolute",

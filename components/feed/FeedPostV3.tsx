@@ -1,15 +1,19 @@
 /**
  * FeedPostV3 — 01_components.md FeedPost. Screen component, ds primitives only.
  */
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Heart, MessageCircle, Share2 } from "lucide-react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import { MessageCircle, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
+import LikeHeart from "@/components/ds/LikeHeart";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { useDoubleTap } from "@/hooks/useDoubleTap";
+import { shouldLikeOnDoubleTap } from "@/lib/feed-interaction";
 import { feedNoPhotoCopy } from "@/lib/feed-copy";
 import { dayWord } from "@/lib/format-days";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
@@ -41,6 +45,15 @@ export default function FeedPostV3({
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
   const photo = post.proofPhotoUrl ?? post.photoUrl;
+  const [pulseToken, setPulseToken] = useState(0);
+
+  const onDoubleTap = useCallback(() => {
+    if (!shouldLikeOnDoubleTap(post.reactedByMe)) return;
+    onLike();
+    setPulseToken((n) => n + 1);
+  }, [onLike, post.reactedByMe]);
+
+  const imageGesture = useDoubleTap({ onDoubleTap });
 
   if (variant === "noPhoto") {
     return (
@@ -78,7 +91,13 @@ export default function FeedPostV3({
           Finished. {post.currentDay} of {post.totalDays}{" "}
           {dayWord(post.totalDays)} verified.
         </Text>
-        <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
+        <ActionRow
+          liked={post.reactedByMe}
+          onLike={onLike}
+          onComment={onComment}
+          onShare={onShare}
+          pulseToken={pulseToken}
+        />
       </Card>
     );
   }
@@ -96,15 +115,25 @@ export default function FeedPostV3({
           </Text>
         </View>
       </View>
-      <ProofImage
-        uri={photo}
-        size="feed"
-        title={post.challengeName}
-        caption={post.caption ?? undefined}
-        scrim
-        stamp={post.verified ? "Verified" : undefined}
+      <GestureDetector gesture={imageGesture}>
+        <View>
+          <ProofImage
+            uri={photo}
+            size="feed"
+            title={post.challengeName}
+            caption={post.caption ?? undefined}
+            scrim
+            stamp={post.verified ? "Verified" : undefined}
+          />
+        </View>
+      </GestureDetector>
+      <ActionRow
+        liked={post.reactedByMe}
+        onLike={onLike}
+        onComment={onComment}
+        onShare={onShare}
+        pulseToken={pulseToken}
       />
-      <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
     </Card>
   );
 }
@@ -114,17 +143,26 @@ function ActionRow({
   onLike,
   onComment,
   onShare,
+  pulseToken,
 }: {
   liked: boolean;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
+  pulseToken: number;
 }) {
   return (
     <View style={styles.actions}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Like" onPress={onLike} style={styles.hit}>
-        <Heart size={ICON} color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary} />
-      </Pressable>
+      <View style={styles.hit}>
+        <LikeHeart
+          liked={liked}
+          color={DS_V3.color.brandText}
+          mutedColor={DS_V3.color.textPrimary}
+          size={ICON}
+          onPress={onLike}
+          pulseToken={pulseToken}
+        />
+      </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
         <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
