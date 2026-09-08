@@ -20,7 +20,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT } from "@/lib/design-system"
-import { captureError } from "@/lib/sentry";
+import { addBreadcrumb, captureError } from "@/lib/sentry";
+import { isProfileUsername } from "@/components/ds/UserLink";
 import { SkeletonFeedCard } from "@/components/skeletons";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
@@ -280,13 +281,16 @@ function LiveFeedSection({
         return;
       }
       const u = post.username?.trim();
-      const hasRealUsername =
-        u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u);
-      if (hasRealUsername) {
+      if (isProfileUsername(u)) {
         router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-      } else {
-        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(post.userId)) as never);
+        return;
       }
+      addBreadcrumb({
+        category: "nav",
+        message: "UserLink: username missing",
+        data: { userId: post.userId, username: post.username ?? null },
+        level: "info",
+      });
     },
     [router, user?.id]
   );

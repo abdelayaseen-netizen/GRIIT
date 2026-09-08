@@ -24,6 +24,7 @@ import { FLAGS } from "@/lib/feature-flags";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
 import { shouldLikeOnDoubleTap } from "@/lib/feed-interaction";
 import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
+import UserLink from "@/components/ds/UserLink";
 
 type Props = {
   post: LiveFeedPost;
@@ -168,10 +169,14 @@ function FeedPostCardInner({
 
       {captionText ? (
         <View style={styles.captionWrap}>
-          <Text style={styles.captionText} accessibilityRole="text">
-            {posterFirst ? <Text style={styles.captionName}>{posterFirst} </Text> : null}
-            {post.caption}
-          </Text>
+          <View style={styles.captionLine} accessibilityRole="text">
+            {posterFirst ? (
+              <UserLink username={post.username} userId={post.userId}>
+                <Text style={[styles.captionText, styles.captionName]}>{posterFirst} </Text>
+              </UserLink>
+            ) : null}
+            <Text style={styles.captionText}>{post.caption}</Text>
+          </View>
         </View>
       ) : null}
 
@@ -214,17 +219,26 @@ function FeedPostCardInner({
 
       {previewComment ? (
         <View style={styles.commentPreview}>
-          <Avatar
-            url={previewComment.avatarUrl}
-            name={previewComment.displayName || previewComment.username || "?"}
-            userId={previewComment.userId}
-            size={24}
-          />
+          <UserLink username={previewComment.username} userId={previewComment.userId}>
+            <Avatar
+              url={previewComment.avatarUrl}
+              name={previewComment.displayName || previewComment.username || "?"}
+              userId={previewComment.userId}
+              size={24}
+            />
+          </UserLink>
           <View style={styles.commentBody}>
-            <Text style={styles.commentLine} numberOfLines={2}>
-              <Text style={styles.commentUser}>{previewComment.displayName || previewComment.username}</Text>
-              <Text style={styles.commentText}> {previewComment.text}</Text>
-            </Text>
+            <View style={styles.commentLine}>
+              <UserLink username={previewComment.username} userId={previewComment.userId}>
+                <Text style={styles.commentUser}>
+                  {previewComment.displayName || previewComment.username}
+                </Text>
+              </UserLink>
+              <Text style={styles.commentText} numberOfLines={2}>
+                {" "}
+                {previewComment.text}
+              </Text>
+            </View>
             <Text style={styles.commentTime}>{relativeTime(previewComment.createdAt)}</Text>
           </View>
         </View>
@@ -344,6 +358,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_DAYLIGHT.space.cardPad,
     paddingTop: 9,
   },
+  captionLine: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+  },
   captionText: {
     fontSize: DS_DAYLIGHT.size.body,
     lineHeight: 22,
@@ -406,7 +425,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_DAYLIGHT.space.cardPad,
   },
   commentBody: { flex: 1 },
-  commentLine: { fontSize: DS_DAYLIGHT.size.bodySm },
+  commentLine: { fontSize: DS_DAYLIGHT.size.bodySm, flexDirection: "row", flexWrap: "wrap" },
   commentUser: {
     fontWeight: DS_DAYLIGHT.weight.semibold,
     color: DS_DAYLIGHT.color.inkSecondary,

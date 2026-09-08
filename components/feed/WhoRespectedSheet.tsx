@@ -16,6 +16,8 @@ import { Avatar } from "@/components/Avatar";
 import { DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
+import { addBreadcrumb } from "@/lib/sentry";
+import { isProfileUsername } from "@/components/ds/UserLink";
 import { useAuth } from "@/contexts/AuthContext";
 
 type RespectedUser = {
@@ -50,11 +52,16 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
         return;
       }
       const u = item.username?.trim();
-      if (u && u !== "?" && u.length >= 2) {
+      if (isProfileUsername(u)) {
         router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-      } else {
-        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.userId)) as never);
+        return;
       }
+      addBreadcrumb({
+        category: "nav",
+        message: "UserLink: username missing",
+        data: { userId: item.userId, username: item.username ?? null },
+        level: "info",
+      });
     },
     [onClose, router, user?.id]
   );

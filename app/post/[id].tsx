@@ -33,6 +33,7 @@ import { MilestonePostCard } from "@/components/feed/MilestonePostCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InlineError } from "@/components/InlineError";
+import UserLink from "@/components/ds/UserLink";
 import { useRespect } from "@/hooks/useRespect";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
@@ -254,30 +255,42 @@ function PostThreadScreenInner() {
       const isMine = Boolean(user?.id && item.user_id === user.id);
       return (
         <View style={styles.commentBlock}>
-          <Pressable
-            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
-            delayLongPress={450}
+          <View
             style={styles.commentRow}
-            accessibilityRole="button"
             accessibilityLabel={
               isMine
                 ? "Your comment — long press to delete"
                 : `Comment by ${item.display_name || item.username}`
             }
-            {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
           >
-            <Avatar
-              url={item.avatar_url}
-              name={item.display_name || item.username}
-              userId={item.user_id}
-              size={36}
-            />
+            <UserLink username={item.username} userId={item.user_id}>
+              <Avatar
+                url={item.avatar_url}
+                name={item.display_name || item.username}
+                userId={item.user_id}
+                size={36}
+              />
+            </UserLink>
             <View style={styles.commentMain}>
-              <Text style={styles.commentName}>{item.display_name || item.username}</Text>
-              <Text style={styles.commentBody}>{item.text}</Text>
+              <UserLink username={item.username} userId={item.user_id}>
+                <Text style={styles.commentName}>{item.display_name || item.username}</Text>
+              </UserLink>
+              <Pressable
+                onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
+                delayLongPress={450}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isMine
+                    ? "Your comment — long press to delete"
+                    : `Comment by ${item.display_name || item.username}`
+                }
+                {...(isMine ? { accessibilityHint: "Long press to show delete options" } : {})}
+              >
+                <Text style={styles.commentBody}>{item.text}</Text>
+              </Pressable>
               <Text style={styles.commentTime}>{relativeTime(item.created_at)}</Text>
             </View>
-          </Pressable>
+          </View>
           {deleteCommentTargetId === item.id ? (
             <View style={styles.deleteCommentBar}>
               <Text style={styles.deleteCommentQuestion}>Delete this comment?</Text>

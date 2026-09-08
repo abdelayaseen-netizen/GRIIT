@@ -5,7 +5,8 @@ import { Bell } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { captureError } from "@/lib/sentry";
+import { addBreadcrumb, captureError } from "@/lib/sentry";
+import { isProfileUsername } from "@/components/ds/UserLink";
 import { DS_V3 } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { ROUTES } from "@/lib/routes";
@@ -118,10 +119,15 @@ function NotificationsBody({
               ? item.actorId
                 ? () => {
                     const uname = item.actorUsername?.trim();
-                    if (uname && uname !== "?" && uname.length >= 2) {
+                    if (isProfileUsername(uname)) {
                       router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(uname)) as never);
-                    } else if (item.actorId) {
-                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.actorId)) as never);
+                    } else {
+                      addBreadcrumb({
+                        category: "nav",
+                        message: "UserLink: username missing",
+                        data: { userId: item.actorId, username: item.actorUsername },
+                        level: "info",
+                      });
                     }
                   }
                 : undefined

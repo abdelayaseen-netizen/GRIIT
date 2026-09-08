@@ -11,6 +11,7 @@ import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ChallengeNameLink from "@/components/ds/ChallengeNameLink";
 import LikeHeart from "@/components/ds/LikeHeart";
+import UserLink from "@/components/ds/UserLink";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { useDoubleTap } from "@/hooks/useDoubleTap";
@@ -87,7 +88,9 @@ export default function FeedPostV3({
             <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
           </Pressable>
           <View style={styles.flex}>
-            <Text style={styles.name}>{name}</Text>
+            <UserLink username={post.username} userId={post.userId}>
+              <Text style={styles.name}>{name}</Text>
+            </UserLink>
             <View style={styles.metaRow}>
               <Text style={styles.meta}>{when} · </Text>
               <ChallengeNameLink
@@ -120,7 +123,9 @@ export default function FeedPostV3({
           <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
         </Pressable>
         <View style={styles.flex}>
-          <Text style={styles.name}>{name}</Text>
+          <UserLink username={post.username} userId={post.userId}>
+            <Text style={styles.name}>{name}</Text>
+          </UserLink>
           <View style={styles.metaRow}>
             <Text style={styles.meta}>{when} · Day </Text>
             <DisplayNumber value={post.currentDay} size="inline" />
