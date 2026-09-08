@@ -21,7 +21,8 @@ import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
-import { HomeV3, greetingTitle, type HomeV3Proof } from "@/components/home/HomeV3";
+import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -31,7 +32,6 @@ import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
-import { homeProofGate } from "@/lib/active-challenge-ui";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
@@ -188,6 +188,8 @@ export default function HomeScreen() {
       const challengeName = ac.challenges?.title ?? "Challenge";
       const currentDay = ac.current_day ?? 1;
       const durationDays = ac.challenges?.duration_days ?? 14;
+      const challengeSecuredToday =
+        required.length > 0 && required.every((t) => doneSet.has(t.id));
 
       for (const t of required) {
         const tType = String(t.type ?? "manual").toLowerCase();
@@ -201,6 +203,7 @@ export default function HomeScreen() {
           challengeId: ac.challenge_id,
           challengeName,
           currentDay,
+          challengeSecuredToday,
           durationDays,
           taskType: tType,
           taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
@@ -360,10 +363,10 @@ export default function HomeScreen() {
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, todaySecured))}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, task.challengeSecuredToday))}&durationDays=${String(task.durationDays)}` as never,
       );
     },
-    [router, todaySecured],
+    [router],
   );
 
   const onPressPrimaryCTA = useCallback(() => {
@@ -436,27 +439,16 @@ export default function HomeScreen() {
   const firstProofEver =
     (resolvedStats?.totalDaysSecured ?? 0) === 0 && securedDateKeys.length === 0;
 
-  const proof: HomeV3Proof | null = useMemo(() => {
-    const task = heroTasks.find((t) => !t.done) ?? heroTasks[0] ?? null;
-    const hasChallenge = heroTasks.length > 0;
-    return {
-      challenge: task?.challengeName ?? "",
-      day: displayDay(task?.currentDay ?? 1, todaySecured),
-      taskText: task?.name ?? "",
-      gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),
-      doneCount: heroMetrics.tasksDoneToday,
-      totalCount: heroMetrics.totalTasksToday || 1,
-      posted: todaySecured || (hasChallenge && heroMetrics.tasksRemaining === 0),
-      hasChallenge,
-      firstProofEver,
-    };
-  }, [
-    heroTasks,
-    heroMetrics.tasksDoneToday,
-    heroMetrics.totalTasksToday,
-    todaySecured,
-    firstProofEver,
-  ]);
+  const proof = useMemo(
+    () =>
+      selectHomeProofCard({
+        tasks: heroTasks,
+        tasksDoneToday: heroMetrics.tasksDoneToday,
+        totalTasksToday: heroMetrics.totalTasksToday,
+        firstProofEver,
+      }),
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver],
+  );
 
   // ────────────── render ──────────────
 

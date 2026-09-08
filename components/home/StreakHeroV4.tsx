@@ -44,6 +44,8 @@ export type StreakHeroV4Task = {
   challengeId: string;
   challengeName: string;
   currentDay: number;
+  /** True when this task's challenge has all required proofs in for today. */
+  challengeSecuredToday: boolean;
   durationDays: number;
   taskType: string;
   taskConfig: string;
