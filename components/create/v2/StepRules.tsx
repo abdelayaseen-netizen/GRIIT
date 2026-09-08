@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ShieldAlert, ShieldCheck } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { Chip } from "@/components/ds";
+import { HARD_MODE_PROOF_CAPTION, effectivePhotoProof } from "@/lib/create-wizard-hard-proof";
 
 export type WizardDifficulty = "standard" | "hard";
 export type WizardPhotoProof = "off" | "optional" | "required";
@@ -60,6 +61,8 @@ export function StepRules({
   category,
   onChangeCategory,
 }: StepRulesProps) {
+  const hard = difficulty === "hard";
+  const shownProof = effectivePhotoProof(difficulty, photoProof);
   return (
     <View style={styles.wrap}>
       <View style={styles.block}>
@@ -101,13 +104,19 @@ export function StepRules({
             <Chip
               key={p.id}
               label={p.label}
-              selected={photoProof === p.id}
-              onPress={() => onChangePhotoProof(p.id)}
+              selected={shownProof === p.id}
+              disabled={hard && p.id !== "required"}
+              onPress={() => {
+                if (hard) return;
+                onChangePhotoProof(p.id);
+              }}
             />
           ))}
         </View>
         <Text style={[styles.caption, styles.muted]}>
-          Public accountability lifted goal completion from 43% to 76% (Matthews, 2015).
+          {hard
+            ? HARD_MODE_PROOF_CAPTION
+            : "Public accountability lifted goal completion from 43% to 76% (Matthews, 2015)."}
         </Text>
       </View>
 

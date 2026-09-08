@@ -48,6 +48,7 @@ import {
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import { NewTaskSheet } from "@/components/create/NewTaskSheet";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
+import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 
 type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
 type CreateChallengeOutput = inferRouterOutputs<AppRouter>["challenges"]["create"];
@@ -109,12 +110,6 @@ function canLaunch(s: WizardState): boolean {
 
 function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
   const tasksCount = s.useCustom ? s.customTasks.length : s.pack?.tasks.length ?? 0;
-  const photo =
-    s.photoProof === "off"
-      ? "Photo proof off"
-      : s.photoProof === "required"
-        ? "Photo proof required"
-        : "Photo proof optional";
   return [
     { text: `${s.title.trim()} · ${daysLabel(s.durationDays ?? 0)}`, step: 1 },
     { text: s.who === "group" ? "Group" : "Solo", step: 1 },
@@ -122,7 +117,7 @@ function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
       text: `${tasksCount} ${tasksCount === 1 ? "task" : "tasks"} · ${s.difficulty === "hard" ? "Hard mode" : "Standard"}`,
       step: 2,
     },
-    { text: photo, step: 3 },
+    { text: reviewPhotoLine(s.difficulty, s.photoProof), step: 3 },
     { text: s.category ? `Category ${s.category}` : "Category", step: 3 },
   ];
 }
@@ -165,12 +160,14 @@ export function CreateWizardV2() {
   const setPack = useCallback((pack: WizardPack | null) => {
     setState((p) => {
       if (!pack) return { ...p, pack };
+      const difficulty = pack.difficulty ?? INITIAL_STATE.difficulty;
       return {
         ...p,
         pack,
         category: pack.category,
         durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
-        difficulty: pack.difficulty ?? INITIAL_STATE.difficulty,
+        difficulty,
+        photoProof: effectivePhotoProof(difficulty, p.photoProof),
         customDuration: "",
       };
     });
@@ -188,10 +185,17 @@ export function CreateWizardV2() {
     }));
   }, []);
   const setDifficulty = useCallback((d: WizardDifficulty) => {
-    setState((p) => ({ ...p, difficulty: d }));
+    setState((p) => ({
+      ...p,
+      difficulty: d,
+      photoProof: effectivePhotoProof(d, p.photoProof),
+    }));
   }, []);
   const setPhotoProof = useCallback((v: WizardPhotoProof) => {
-    setState((p) => ({ ...p, photoProof: v }));
+    setState((p) => ({
+      ...p,
+      photoProof: effectivePhotoProof(p.difficulty, v),
+    }));
   }, []);
   const setCategory = useCallback((c: WizardCategory) => {
     setState((p) => ({ ...p, category: c }));
@@ -239,9 +243,9 @@ export function CreateWizardV2() {
         ? state.customTasks
         : state.pack?.tasks ?? [];
 
-      const requirePhoto =
-        state.photoProof === "required" || state.difficulty === "hard";
-      const allowPhoto = state.photoProof !== "off";
+      const photoProof = effectivePhotoProof(state.difficulty, state.photoProof);
+      const requirePhoto = photoProof === "required";
+      const allowPhoto = photoProof !== "off";
 
       const payload: CreateChallengeInput = {
         title: state.title.trim(),
@@ -277,7 +281,7 @@ export function CreateWizardV2() {
         length_days: state.durationDays ?? 30,
         mode: state.who === "group" ? "group" : "solo",
         strictness: state.difficulty,
-        public_proof: state.photoProof,
+        public_proof: photoProof,
         task_count: tasksForApi.length,
         has_verified_task: tasksForApi.some((t) => t.requirePhoto === true),
       });
@@ -369,7 +373,7 @@ export function CreateWizardV2() {
             <StepRules
               difficulty={state.difficulty}
               onChangeDifficulty={setDifficulty}
-              photoProof={state.photoProof}
+              photoProof={effectivePhotoProof(state.difficulty, state.photoProof)}
               onChangePhotoProof={setPhotoProof}
               category={state.category}
               onChangeCategory={setCategory}
