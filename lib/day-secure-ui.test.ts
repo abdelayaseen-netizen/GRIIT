@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  attemptSecureDayAfterComplete,
   buildIncompleteRequired,
   formatIncompleteProgress,
   isNotAllRequiredError,
   NOT_ALL_REQUIRED_MESSAGE,
+  shouldAttemptSecureDay,
 } from "./day-secure-ui";
 
 describe("NOT_ALL_REQUIRED_MESSAGE contract with checkins.secureDay", () => {
@@ -68,5 +70,51 @@ describe("buildIncompleteRequired", () => {
       total: 3,
       remainingTitles: ["Run", "Journal"],
     });
+  });
+});
+
+describe("attemptSecureDayAfterComplete", () => {
+  it("completion with requiredRemaining: 0 triggers exactly one secureDay mutation with the completion's activeChallengeId, regardless of AppContext state", async () => {
+    const secureDay = vi.fn(async (_id: string) => ({
+      success: true,
+      newStreakCount: 4,
+      alreadySecured: false,
+    }));
+    const after = await attemptSecureDayAfterComplete({
+      requiredRemaining: 0,
+      dayAlreadySecured: false,
+      activeChallengeId: "ac-from-completion",
+      secureDay,
+    });
+    expect(secureDay).toHaveBeenCalledTimes(1);
+    expect(secureDay).toHaveBeenCalledWith("ac-from-completion");
+    expect(after.attempted).toBe(true);
+    expect(after.result).not.toBeNull();
+  });
+
+  it("does not call secureDay when requiredRemaining is not 0", async () => {
+    const secureDay = vi.fn(async () => ({ success: true, newStreakCount: 1 }));
+    await attemptSecureDayAfterComplete({
+      requiredRemaining: 1,
+      dayAlreadySecured: false,
+      activeChallengeId: "ac-from-completion",
+      secureDay,
+    });
+    expect(secureDay).not.toHaveBeenCalled();
+    expect(shouldAttemptSecureDay({ requiredRemaining: 1 })).toBe(false);
+  });
+
+  it("surfaces NOT_ALL_REQUIRED as incomplete_required", async () => {
+    const secureDay = vi.fn(async () => {
+      throw new Error(NOT_ALL_REQUIRED_MESSAGE);
+    });
+    const after = await attemptSecureDayAfterComplete({
+      requiredRemaining: 0,
+      dayAlreadySecured: false,
+      activeChallengeId: "ac-from-completion",
+      secureDay,
+    });
+    expect(after.attempted).toBe(true);
+    expect(after.ui.kind).toBe("incomplete_required");
   });
 });
