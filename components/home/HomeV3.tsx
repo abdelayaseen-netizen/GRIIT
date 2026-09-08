@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import DisplayNumber from "@/components/ds/DisplayNumber";
@@ -150,9 +151,9 @@ export function HomeV3({
 
       <View style={styles.streak}>
         <Text style={styles.secondary}>Current streak</Text>
-        <View style={styles.numRow}>
+        <View style={styles.numRow} accessibilityLabel={formatDays(streak)}>
           <DisplayNumber value={streak} size="home" />
-          <Text style={styles.days}>days</Text>
+          <Text style={styles.days}>{formatDays(streak).slice(`${streak} `.length)}</Text>
         </View>
         <Text style={styles.secondary}>{streakLine}</Text>
       </View>

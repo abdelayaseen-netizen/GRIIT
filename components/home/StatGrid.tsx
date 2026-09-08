@@ -21,6 +21,7 @@ import {
 } from 'react-native';
 import { Snowflake, Medal } from 'lucide-react-native';
 import { DS_DAYLIGHT } from '@/lib/design-system';
+import { formatDays } from '@/lib/format-days';
 
 export type StatGridVariant = 'default' | 'day0' | 'atRisk' | 'secured';
 
@@ -142,13 +143,13 @@ export function StatGrid(props: StatGridProps) {
   const securedLabel =
     variant === 'day0'
       ? 'Start today'
-      : `${weekSecured} of ${weekTotal} days secured this week`;
+      : `${weekSecured} of ${formatDays(weekTotal)} secured this week`;
 
   const freezePlural = freezesAvailable === 1 ? '' : 's';
   const badgeName = variant === 'day0' ? 'First badge' : nextBadgeName;
   const badgeText =
     variant === 'atRisk'
-      ? `${streak} day${streak === 1 ? '' : 's'} at risk`
+      ? `${formatDays(streak)} at risk`
       : `${badgeName} · ${Math.round(nextBadgeProgress * 100)}%`;
 
   const strip = (
@@ -205,7 +206,7 @@ export function StatGrid(props: StatGridProps) {
           accessibilityRole="button"
           accessibilityLabel={
             variant === 'atRisk'
-              ? `Streak at risk, ${streak} ${streak === 1 ? 'day' : 'days'} at stake`
+              ? `Streak at risk, ${formatDays(streak)} at stake`
               : `Next badge ${badgeName}, ${Math.round(nextBadgeProgress * 100)} percent complete`
           }
           hitSlop={HIT_SLOP}
