@@ -26,6 +26,15 @@ export type DetailChallenge = {
   duration_type?: string | null;
 };
 
+export type ParticipationType = "solo" | "duo" | "team";
+
+export type ChallengeDetailTask = {
+  title: string;
+  task_type: string;
+  gates: GateKind[];
+  time_window?: string;
+};
+
 const MS_DAY = 24 * 60 * 60 * 1000;
 
 function parseHHMM(raw: string): { hours: number; minutes: number } | null {
@@ -103,4 +112,41 @@ export function detailState(
   if (myActiveCount >= freeLimit) return "free_limit";
 
   return "default";
+}
+
+export function mapParticipationType(raw: string | null | undefined): ParticipationType {
+  const s = (raw ?? "solo").toLowerCase();
+  if (s === "duo") return "duo";
+  if (s === "team" || s === "shared_goal") return "team";
+  return "solo";
+}
+
+/** Spec ends_on / starts_on: "12 August". */
+export function formatChallengeDate(raw: string | null | undefined): string | undefined {
+  const ms = parseInstant(raw);
+  if (ms == null) return undefined;
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(new Date(ms));
+}
+
+export function toDetailTasks(
+  tasks: Array<
+    DetailTask & {
+      title?: string | null;
+      type?: string | null;
+      task_type?: string | null;
+    }
+  >,
+): ChallengeDetailTask[] {
+  return tasks.map((t) => {
+    const gates = taskGates(t);
+    const windowGate = gates.find(
+      (g): g is { kind: "time_window"; label: string } => g.kind === "time_window",
+    );
+    return {
+      title: (t.title ?? "").trim() || "Task",
+      task_type: String(t.task_type ?? t.type ?? ""),
+      gates: gates.map((g) => g.kind),
+      time_window: windowGate?.label,
+    };
+  });
 }
