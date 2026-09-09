@@ -17,6 +17,7 @@ import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { profilePrimaryName } from "@/lib/profile-display";
+import { homeProofCtaLabel } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -126,9 +127,6 @@ export function HomeV3({
     awayCount === 0
       ? null
       : `${awayCount} friends posted while you were away.`;
-  const proofCta = proof?.firstProofEver
-    ? "Post your first proof"
-    : "Post today's proof";
   const proofSub = proof?.hasChallenge ? (
     <Text style={styles.secondary}>
       {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
@@ -184,7 +182,7 @@ export function HomeV3({
               </View>
             ) : (
               <Button
-                label={proofCta}
+                label={homeProofCtaLabel(proof)}
                 icon={<Camera size={ICON} color={DS_V3.color.onBrand} />}
                 onPress={onPressProof}
               />
