@@ -18,6 +18,7 @@ import type { FeedScope } from "@/store/feedToggleStore";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { homeProofCtaLabel } from "@/lib/home-proof-card";
 import { NO_ACTIVE_CHALLENGE, TODAY_LOAD_ERROR } from "@/lib/home-today-view";
+import { proofDotKind } from "@/lib/today-derive";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -160,7 +161,12 @@ export function HomeV3({
               </View>
             </View>
             <View style={styles.taskRow}>
-              <View style={styles.taskDot} />
+              <View
+                style={[
+                  styles.taskDot,
+                  proofDotKind(proof.posted) === "filled" ? styles.taskDotFilled : styles.taskDotOutline,
+                ]}
+              />
               <Text style={styles.task}>{proof.taskText}</Text>
               <Text style={styles.caption}>{proof.gate}</Text>
             </View>
@@ -287,7 +293,13 @@ const styles = StyleSheet.create({
     width: DS_V3.space.xs * 6,
     height: DS_V3.space.xs * 6,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.border,
+  },
+  taskDotFilled: {
+    backgroundColor: DS_V3.color.brand,
+  },
+  taskDotOutline: {
+    borderWidth: (DS_V3.space.xs * 3) / 8,
+    borderColor: DS_V3.color.brand,
   },
   task: {
     flex: 1,

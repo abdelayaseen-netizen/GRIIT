@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badge, firstUnsecuredEnrollment, pickProofTask, proofCard, proofGates, weekStrip } from "@/lib/today-derive";
+import { badge, firstUnsecuredEnrollment, pickProofTask, proofCard, proofDotKind, proofGates, weekStrip } from "@/lib/today-derive";
 import type { TodayEnrollment, TodayState, TodayTask } from "@/lib/today-state";
 
 const AC1 = "c0000000-0000-4000-8000-000000000001";
@@ -118,9 +118,31 @@ describe("today-derive", () => {
     expect(card.posted).toBe(true);
     expect(card.taskText).toBe("Run 1 mile");
     expect(card.day).toBe(3);
+    expect(proofDotKind(card.posted)).toBe("filled");
+    expect(proofDotKind(pickProofTask(state)!.task.done)).toBe("filled");
     expect(badge(state)).toEqual({ done: 2, total: 2 });
     expect(firstUnsecuredEnrollment(state)).toBeNull();
     expect(state.remaining_challenges).toBe(0);
+  });
+
+  it("done task → filled", () => {
+    const state = today({
+      remaining_challenges: 0,
+      enrollments: [
+        enrollment({
+          active_challenge_id: AC1,
+          title: "Run",
+          current_day: 2,
+          secured_today: true,
+          tasks: [task({ id: T1, title: "Run 1 mile", done: true })],
+        }),
+      ],
+    });
+    const pick = pickProofTask(state)!;
+    const card = proofCard(state);
+    expect(pick.task.done).toBe(true);
+    expect(card.posted).toBe(pick.task.done);
+    expect(proofDotKind(card.posted)).toBe("filled");
   });
 
   it("one enrollment: badge and day follow that enrollment only", () => {

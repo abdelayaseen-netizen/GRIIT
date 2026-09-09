@@ -72,6 +72,10 @@ export function proofGates(task: TodayTask): Gate[] {
   });
 }
 
+export function proofDotKind(taskDone: boolean): "filled" | "outline" {
+  return taskDone ? "filled" : "outline";
+}
+
 export function proofCard(today: TodayState, firstProofEver = false): HomeProofCard {
   const pick = pickProofTask(today);
   const counts = badge(today);
