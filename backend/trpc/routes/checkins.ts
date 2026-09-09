@@ -33,6 +33,7 @@ import {
   assertChallengeQueryOk,
 } from "../../lib/checkin-complete-gates";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
+import { parseSecureDayRpcRow } from "../../lib/secure-day-rpc";
 import {
   buildPhotoVerification,
   evaluateScheduleWindowServer,
@@ -1187,7 +1188,26 @@ export const checkinsRouter = createTRPCRouter({
     return merged;
   }),
 
-  secureDay: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+  secureDay: protectedProcedure
+    .input(z.object({ activeChallengeId: z.string().uuid() }))
+    .output(
+      z.object({
+        streak: z.number(),
+        secured: z.boolean(),
+        challenge_done: z.boolean(),
+        remaining_challenges: z.number(),
+        success: z.boolean(),
+        alreadySecured: z.boolean(),
+        newStreakCount: z.number(),
+        lastStandEarned: z.boolean(),
+        challengeDay: z.number(),
+        challengeCompleted: z.boolean(),
+        challengeId: z.string().uuid().optional(),
+        challengeName: z.string().optional(),
+        totalDays: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
     const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
     const { data: chRow } = await ctx.supabase.from("challenges").select("duration_type, ends_at, live_date").eq("id", challenge_id).single();
@@ -1208,7 +1228,7 @@ export const checkinsRouter = createTRPCRouter({
 
     const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", { p_active_challenge_id: input.activeChallengeId });
     if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
-      const row = rpcRows[0] as { new_streak_count: number; last_stand_earned: boolean };
+      const row = parseSecureDayRpcRow(rpcRows[0]);
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
       const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
       const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
@@ -1229,8 +1249,9 @@ export const checkinsRouter = createTRPCRouter({
       const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
-      await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: daySecured, streak_count: row.new_streak_count } });
-      if (row.last_stand_earned) await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "last_stand", metadata: { streak_count: row.new_streak_count } });
+      if (row.secured && !alreadySecured) {
+        await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: daySecured, streak_count: row.streak } });
+      }
       if (challengeJustCompleted) {
         await ctx.supabase.from("activity_events").insert({
           user_id: ctx.userId,
@@ -1239,42 +1260,48 @@ export const checkinsRouter = createTRPCRouter({
           metadata: { challenge_name: challengeName, duration_days: durationDays },
         });
       }
-      const { newUnlockKeys } = await checkAndUnlockAchievements(
-        ctx.supabase,
-        ctx.userId,
-        row.new_streak_count,
-        totalDaysSecured,
-        challengeJustCompleted,
-        false
-      );
-      if (newUnlockKeys.length > 0) {
-        const achievementRows = newUnlockKeys.map((key) => ({
-          user_id: ctx.userId,
-          event_type: "unlocked_achievement" as const,
-          metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
-        }));
-        const { data: existingEvents } = await ctx.supabase
-          .from("activity_events")
-          .select("metadata")
-          .eq("user_id", ctx.userId)
-          .eq("event_type", "unlocked_achievement")
-          .in("metadata->>achievement_key", newUnlockKeys);
-        const alreadyEmitted = new Set(
-          (existingEvents ?? [])
-            .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
-            .filter(Boolean)
+      if (row.secured) {
+        const { newUnlockKeys } = await checkAndUnlockAchievements(
+          ctx.supabase,
+          ctx.userId,
+          row.streak,
+          totalDaysSecured,
+          challengeJustCompleted,
+          false
         );
-        const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
-        if (filteredRows.length > 0) {
-          const { error: achErr } = await ctx.supabase.from("activity_events").insert(filteredRows);
-          if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+        if (newUnlockKeys.length > 0) {
+          const achievementRows = newUnlockKeys.map((key) => ({
+            user_id: ctx.userId,
+            event_type: "unlocked_achievement" as const,
+            metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
+          }));
+          const { data: existingEvents } = await ctx.supabase
+            .from("activity_events")
+            .select("metadata")
+            .eq("user_id", ctx.userId)
+            .eq("event_type", "unlocked_achievement")
+            .in("metadata->>achievement_key", newUnlockKeys);
+          const alreadyEmitted = new Set(
+            (existingEvents ?? [])
+              .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
+              .filter(Boolean)
+          );
+          const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
+          if (filteredRows.length > 0) {
+            const { error: achErr } = await ctx.supabase.from("activity_events").insert(filteredRows);
+            if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+          }
         }
       }
       return {
         success: true,
         alreadySecured,
-        newStreakCount: row.new_streak_count,
-        lastStandEarned: row.last_stand_earned,
+        streak: row.streak,
+        secured: row.secured,
+        challenge_done: row.challenge_done,
+        remaining_challenges: row.remaining_challenges,
+        newStreakCount: row.streak,
+        lastStandEarned: false,
         challengeDay: daySecured,
         challengeCompleted: challengeJustCompleted,
         ...(challengeJustCompleted && { challengeId: challengeId ?? undefined, challengeName, totalDays: durationDays }),
