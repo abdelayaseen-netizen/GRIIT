@@ -16,6 +16,7 @@ import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
 import {
   CONFIRM_EMAIL_NOTICE,
   EMAIL_TAKEN_NOTICE,
+  EMAIL_TAKEN_PRIMARY,
   GUEST_PROGRESS_STAYS,
   MALFORMED_EMAIL,
   isCompleteEmail,
@@ -325,7 +326,7 @@ export default function AccountScreen({
             <Notice icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}>{EMAIL_TAKEN_NOTICE}</Notice>
             <Text style={styles.guest}>{GUEST_PROGRESS_STAYS}</Text>
             <ChromePrimary
-              label="Log in and bring my progress"
+              label={EMAIL_TAKEN_PRIMARY}
               onPress={() => onSignInWithAccount(email.trim() || undefined)}
             />
           </View>

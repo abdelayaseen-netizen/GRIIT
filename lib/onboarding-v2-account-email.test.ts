@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CONFIRM_EMAIL_NOTICE,
   EMAIL_TAKEN_NOTICE,
+  EMAIL_TAKEN_PRIMARY,
+  EMAIL_TAKEN_PRIMARY_BRIEF,
   GUEST_PROGRESS_STAYS,
   MALFORMED_EMAIL,
   emailFieldState,
@@ -31,6 +33,8 @@ describe("identity copy", () => {
       "That email already has a GRIIT account. Log in and today's progress comes with you."
     );
     expect(GUEST_PROGRESS_STAYS).toBe("Guest progress stays on this device.");
+    expect(EMAIL_TAKEN_PRIMARY).toBe("Log in");
+    expect(EMAIL_TAKEN_PRIMARY_BRIEF).toBe("Log in and bring my progress");
     expect(CONFIRM_EMAIL_NOTICE("a@b.co")).toBe("We'll confirm at a@b.co — correct?");
     expect(MALFORMED_EMAIL).toBe("That is not a complete email address.");
   });

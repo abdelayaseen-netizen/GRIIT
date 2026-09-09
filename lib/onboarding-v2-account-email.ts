@@ -10,6 +10,16 @@ export const EMAIL_TAKEN_NOTICE =
 
 export const GUEST_PROGRESS_STAYS = "Guest progress stays on this device.";
 
+/**
+ * Brief (`02_screens.md` Account identity states) wants
+ * "Log in and bring my progress". That copy is a lie until
+ * `lib/anon-auth.ts` can merge an anon session into an existing account
+ * (`identity_taken` today cannot merge). Restore EMAIL_TAKEN_PRIMARY_BRIEF
+ * when merge lands.
+ */
+export const EMAIL_TAKEN_PRIMARY_BRIEF = "Log in and bring my progress";
+export const EMAIL_TAKEN_PRIMARY = "Log in";
+
 export const CONFIRM_EMAIL_NOTICE = (email: string) => `We'll confirm at ${email} — correct?`;
 
 export const MALFORMED_EMAIL = "That is not a complete email address.";
