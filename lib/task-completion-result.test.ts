@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   assembleSubmitResult,
+  challengeDoneLine,
+  challengeDoneTitle,
   pickConfirmationChallengeDay,
   pickConfirmationCopy,
   pickConfirmationVariant,
@@ -44,6 +46,12 @@ describe("pickConfirmationCopy", () => {
       footnote: "This task is optional. It does not move the streak.",
     });
   });
+
+  it("challenge-done interstitial copy is exact", () => {
+    expect(challengeDoneTitle("Write")).toBe("Write done.");
+    expect(challengeDoneLine(1)).toBe("1 challenge left today.");
+    expect(challengeDoneLine(2)).toBe("2 challenges left today.");
+  });
 });
 
 describe("assembleSubmitResult", () => {
@@ -56,7 +64,7 @@ describe("assembleSubmitResult", () => {
       challengeDayBeforeSecure: 3,
       challengeLength: 14,
       challengeName: "Consistent Bedtime",
-      secure: { success: true, alreadySecured: false, newStreakCount: 14 },
+      secure: { success: true, alreadySecured: false, newStreakCount: 14, secured: true },
     });
     expect(result.challengeDay).toBe(3);
     expect(result.daySecured).toBe(true);
@@ -73,9 +81,31 @@ describe("assembleSubmitResult", () => {
       challengeDayBeforeSecure: 3,
       challengeLength: 14,
       challengeName: "Consistent Bedtime",
-      secure: { success: true, alreadySecured: true, newStreakCount: 14 },
+      secure: { success: true, alreadySecured: true, newStreakCount: 14, secured: true },
     });
     expect(result.daySecuredEarlier).toBe(true);
     expect(pickConfirmationVariant(result)).toBe("C");
+  });
+
+  it("challenge_done without user secure does not mark the day secured", () => {
+    const result = assembleSubmitResult({
+      verificationKind: "timer",
+      requiredRemaining: 0,
+      dayAlreadySecured: false,
+      streakDaysBefore: 4,
+      challengeDayBeforeSecure: 1,
+      challengeLength: 14,
+      challengeName: "Write",
+      secure: {
+        success: true,
+        alreadySecured: false,
+        newStreakCount: 4,
+        secured: false,
+        challenge_done: true,
+        remaining_challenges: 2,
+      },
+    });
+    expect(result.daySecured).toBe(false);
+    expect(result.streakDays).toBe(4);
   });
 });

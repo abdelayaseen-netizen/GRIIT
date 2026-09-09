@@ -261,6 +261,10 @@ export function useAppChallengeMutations({
     challengeId?: string;
     challengeName?: string;
     totalDays?: number;
+    streak?: number;
+    secured?: boolean;
+    challenge_done?: boolean;
+    remaining_challenges?: number;
   }> => {
     if (__DEV__) {
       console.log("[secureDay] called", {
@@ -278,21 +282,26 @@ export function useAppChallengeMutations({
         challengeId?: string;
         challengeName?: string;
         totalDays?: number;
+        streak?: number;
+        secured?: boolean;
+        challenge_done?: boolean;
+        remaining_challenges?: number;
       };
+      const userDaySecured = result.secured === true;
       const securedChallengeId =
         result.challengeId ?? (activeChallenge as { challenge_id?: string } | null)?.challenge_id ?? "";
       const dayNum =
         typeof result.challengeDay === "number"
           ? result.challengeDay
           : displayDay((activeChallenge as { current_day?: number } | null)?.current_day ?? 1, true);
-      if (securedChallengeId) {
+      if (userDaySecured && securedChallengeId) {
         try {
           trackEvent("day_secured", { challenge_id: securedChallengeId, day_number: dayNum });
         } catch {
           /* non-fatal */
         }
       }
-      if (result.challengeDay === 1 && securedChallengeId) {
+      if (userDaySecured && result.challengeDay === 1 && securedChallengeId) {
         try {
           track({
             name: "day1_secured",
@@ -309,7 +318,7 @@ export function useAppChallengeMutations({
       void fetchActiveChallenge();
       await fetchStats();
       const streakN = result?.newStreakCount;
-      if (typeof streakN === "number" && [7, 14, 30, 75].includes(streakN)) {
+      if (userDaySecured && typeof streakN === "number" && [7, 14, 30, 75].includes(streakN)) {
         trackEvent("streak_milestone", { days: streakN });
       }
       if (Platform.OS !== "web") {
@@ -327,11 +336,13 @@ export function useAppChallengeMutations({
           result.challengeName ??
           (activeChallenge as { challenges?: { title?: string } } | null)?.challenges?.title;
         await scheduleLapsedUserReminders({ streakCount: newStreakCount, challengeName });
-        scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
-          captureError(err, "scheduleMilestoneApproachingIfNeeded");
-        });
-        if (isStreakCelebrationMilestone(newStreakCount)) {
-          fireStreakCelebration(newStreakCount).catch(() => {});
+        if (userDaySecured) {
+          scheduleMilestoneApproachingIfNeeded(newStreakCount).catch((err: unknown) => {
+            captureError(err, "scheduleMilestoneApproachingIfNeeded");
+          });
+          if (isStreakCelebrationMilestone(newStreakCount)) {
+            fireStreakCelebration(newStreakCount).catch(() => {});
+          }
         }
       }
       return result;

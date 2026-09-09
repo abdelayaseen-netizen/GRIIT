@@ -71,6 +71,10 @@ type AppContextValue = {
     challengeId?: string;
     challengeName?: string;
     totalDays?: number;
+    streak?: number;
+    secured?: boolean;
+    challenge_done?: boolean;
+    remaining_challenges?: number;
   }>;
   isLoading: boolean;
   isError: boolean;

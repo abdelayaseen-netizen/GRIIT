@@ -7,6 +7,7 @@ import {
   formatIncompleteProgress,
   isNotAllRequiredError,
   NOT_ALL_REQUIRED_MESSAGE,
+  pickNextUndoneEnrollmentId,
   shouldAttemptSecureDay,
 } from "./day-secure-ui";
 
@@ -79,29 +80,73 @@ describe("attemptSecureDayAfterComplete", () => {
       success: true,
       newStreakCount: 4,
       alreadySecured: false,
+      secured: true,
+      challenge_done: true,
+      remaining_challenges: 0,
     }));
     const after = await attemptSecureDayAfterComplete({
       requiredRemaining: 0,
-      dayAlreadySecured: false,
       activeChallengeId: "ac-from-completion",
+      challengeTitle: "Write",
       secureDay,
     });
     expect(secureDay).toHaveBeenCalledTimes(1);
     expect(secureDay).toHaveBeenCalledWith("ac-from-completion");
     expect(after.attempted).toBe(true);
     expect(after.result).not.toBeNull();
+    expect(after.ui.kind).toBe("secured");
   });
 
   it("does not call secureDay when requiredRemaining is not 0", async () => {
     const secureDay = vi.fn(async () => ({ success: true, newStreakCount: 1 }));
     await attemptSecureDayAfterComplete({
       requiredRemaining: 1,
-      dayAlreadySecured: false,
       activeChallengeId: "ac-from-completion",
+      challengeTitle: "Write",
       secureDay,
     });
     expect(secureDay).not.toHaveBeenCalled();
     expect(shouldAttemptSecureDay({ requiredRemaining: 1 })).toBe(false);
+  });
+
+  it("still calls secureDay when the user day is already secured so this enrollment can bump", async () => {
+    const secureDay = vi.fn(async () => ({
+      success: true,
+      newStreakCount: 4,
+      alreadySecured: true,
+      secured: true,
+      challenge_done: true,
+      remaining_challenges: 0,
+    }));
+    await attemptSecureDayAfterComplete({
+      requiredRemaining: 0,
+      activeChallengeId: "ac-from-completion",
+      challengeTitle: "Write",
+      secureDay,
+    });
+    expect(secureDay).toHaveBeenCalledTimes(1);
+  });
+
+  it("secured=false challenge_done=true is the challenge_done interstitial", async () => {
+    const secureDay = vi.fn(async () => ({
+      success: true,
+      newStreakCount: 4,
+      alreadySecured: false,
+      secured: false,
+      challenge_done: true,
+      remaining_challenges: 2,
+    }));
+    const after = await attemptSecureDayAfterComplete({
+      requiredRemaining: 0,
+      activeChallengeId: "ac-from-completion",
+      challengeTitle: "Write",
+      secureDay,
+    });
+    expect(after.ui).toEqual({
+      kind: "challenge_done",
+      challengeTitle: "Write",
+      remainingChallenges: 2,
+    });
   });
 
   it("surfaces NOT_ALL_REQUIRED as incomplete_required", async () => {
@@ -110,11 +155,26 @@ describe("attemptSecureDayAfterComplete", () => {
     });
     const after = await attemptSecureDayAfterComplete({
       requiredRemaining: 0,
-      dayAlreadySecured: false,
       activeChallengeId: "ac-from-completion",
+      challengeTitle: "Write",
       secureDay,
     });
     expect(after.attempted).toBe(true);
     expect(after.ui.kind).toBe("incomplete_required");
+  });
+});
+
+describe("pickNextUndoneEnrollmentId", () => {
+  it("returns the other enrollment that still has a required task", () => {
+    expect(
+      pickNextUndoneEnrollmentId({
+        currentId: "ac-1",
+        enrollments: [
+          { id: "ac-1", challenges: { challenge_tasks: [{ id: "t1" }] } },
+          { id: "ac-2", challenges: { challenge_tasks: [{ id: "t2" }] } },
+        ],
+        completed: [{ active_challenge_id: "ac-1", task_id: "t1", status: "completed" }],
+      }),
+    ).toBe("ac-2");
   });
 });
