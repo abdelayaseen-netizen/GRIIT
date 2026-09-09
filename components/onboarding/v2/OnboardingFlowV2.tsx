@@ -7,13 +7,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 import {
   ONBOARDING_V2_ORDER,
   peekOnboardingV2Exit,
@@ -62,14 +61,11 @@ export default function OnboardingFlowV2() {
   const hydrated = useOnboardingHydrated();
   const rawStep = useOnboardingStore((s) => s.v2Step);
   const setV2Step = useOnboardingStore((s) => s.setV2Step);
-  const storeCompleted = useOnboardingStore((s) => s.isComplete || s.hasCompletedOnboarding);
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const setSelectedGoals = useOnboardingStore((s) => s.setSelectedGoals);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const step = resolveV2Step(rawStep);
-  const [localCompleted, setLocalCompleted] = useState(false);
-  const [localReady, setLocalReady] = useState(false);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
@@ -79,15 +75,6 @@ export default function OnboardingFlowV2() {
   const [stepReady, setStepReady] = useState(false);
   const accountNameOpen = useOnboardingStore((s) => s.accountNameOpen);
   const setAccountNameOpen = useOnboardingStore((s) => s.setAccountNameOpen);
-
-  useEffect(() => {
-    void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
-      .then((value) => {
-        setLocalCompleted(value === "true");
-        setLocalReady(true);
-      })
-      .catch(() => setLocalReady(true));
-  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -110,8 +97,10 @@ export default function OnboardingFlowV2() {
           return;
         }
         const flag = (data as { onboarding_completed?: boolean } | null)?.onboarding_completed;
-        setDbCompleted(typeof flag === "boolean" ? flag : false);
+        const done = flag === true;
+        setDbCompleted(done);
         setDbFetchFailed(false);
+        if (done) void cacheOnboardingCompleted();
       } catch {
         if (!cancelled) {
           setDbCompleted(null);
@@ -145,10 +134,7 @@ export default function OnboardingFlowV2() {
 
   const completed = resolveOnboardingCompleted({
     sessionKind: sessionKindFromUser(user),
-    localCompleted,
-    storeCompleted,
     dbCompleted: user ? dbCompleted : null,
-    dbFetchFailed: user ? dbFetchFailed : false,
   });
 
   useEffect(() => {
@@ -165,7 +151,7 @@ export default function OnboardingFlowV2() {
   }, [rawStep, step, setV2Step]);
 
   useEffect(() => {
-    if (!hydrated || !localReady || completed) return;
+    if (!hydrated || completed) return;
     let cancelled = false;
     void loadOnboardingV2Step().then((stored) => {
       if (cancelled) return;
@@ -175,7 +161,7 @@ export default function OnboardingFlowV2() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, localReady, completed, setV2Step]);
+  }, [hydrated, completed, setV2Step]);
 
   useEffect(() => {
     if (!stepReady || completed) return;
@@ -191,9 +177,9 @@ export default function OnboardingFlowV2() {
   }, [step, accountNameOpen, setAccountNameOpen]);
 
   useEffect(() => {
-    if (!hydrated || !localReady || completed) return;
+    if (!hydrated || completed) return;
     track({ name: "onboarding_started" });
-  }, [hydrated, localReady, completed]);
+  }, [hydrated, completed]);
 
   const goNext = useCallback(() => {
     const idx = ONBOARDING_V2_ORDER.indexOf(step);
@@ -348,7 +334,7 @@ export default function OnboardingFlowV2() {
   // After create/upgrade the session is "real" and dbCompleted is still null.
   // Do not blank the name step (or Invite after it) behind that overlay.
   const holdForDb = waitingOnDb && step === "account" && !accountNameOpen;
-  if (!hydrated || !localReady || holdForDb || completed) {
+  if (!hydrated || holdForDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
   }
 

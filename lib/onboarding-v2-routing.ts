@@ -66,35 +66,21 @@ export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | un
 /**
  * Whether this session has finished onboarding.
  *
- * Real accounts: DB is authoritative once loaded (non-null). A stale local
- * flag from a previous guest on the same device must not skip a new account.
- * `dbCompleted === null` while loading is not completed (caller keeps overlay).
- * `dbCompleted === null` after a fetch error falls back to local || store.
- * Guest / no session: local OR store OR db.
+ * Spec table: session kind × profiles.onboarding_completed.
+ * Local ONBOARDING_COMPLETED is a cache write only — never an input.
+ * `dbCompleted === null` is not completed (caller waits or resumes).
  */
 export function resolveOnboardingCompleted(input: {
   sessionKind: SessionKind;
-  localCompleted: boolean;
-  storeCompleted: boolean;
   dbCompleted: boolean | null;
-  dbFetchFailed?: boolean;
 }): boolean {
-  const { sessionKind, localCompleted, storeCompleted, dbCompleted, dbFetchFailed } = input;
-  if (sessionKind === "real") {
-    if (dbCompleted !== null) return dbCompleted;
-    if (dbFetchFailed) return localCompleted || storeCompleted;
-    return false;
-  }
-  return localCompleted || storeCompleted || dbCompleted === true;
+  if (input.sessionKind === "none") return false;
+  return input.dbCompleted === true;
 }
 
 export function resolveOnboardingLaunch(input: {
   sessionKind: SessionKind;
-  localCompleted: boolean;
-  storeCompleted: boolean;
   dbCompleted: boolean | null;
-  dbFetchFailed?: boolean;
-  inOnboarding: boolean;
 }): OnboardingLaunchDestination {
   if (input.sessionKind === "none") return "welcome";
   if (resolveOnboardingCompleted(input)) return "home";
