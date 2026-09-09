@@ -53,7 +53,7 @@ type LiveFeedSectionProps = {
   onScopeChange?: (next: LiveFeedScope) => void;
   /**
    * Hide the internal "Feed" header row (title + live dot + toggle). Use when
-   * the parent renders its own equivalent UI (e.g. HomeHeaderV2 on home).
+   * the parent renders its own equivalent UI (e.g. HomeV3 on home).
    */
   hideHeaderToggle?: boolean;
 };

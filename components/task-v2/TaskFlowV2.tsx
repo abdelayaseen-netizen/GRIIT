@@ -15,7 +15,7 @@ import * as Notifications from "expo-notifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
@@ -29,8 +29,6 @@ import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
 import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
-import { firstUnsecuredEnrollment } from "@/lib/today-derive";
-import type { TodayState } from "@/lib/today-state";
 import ChallengeDoneScreen from "./ChallengeDoneScreen";
 import { shareProgressImage } from "@/lib/share";
 import {
@@ -242,25 +240,6 @@ export function TaskFlowV2() {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
-
-  const goNextChallenge = useCallback(async (nextActiveChallengeId?: string) => {
-    const fromArg = nextActiveChallengeId?.trim();
-    if (fromArg) {
-      router.replace(ROUTES.CHALLENGE_ACTIVE(fromArg) as never);
-      return;
-    }
-    try {
-      const state = (await trpcQuery(TRPC.today.get)) as TodayState;
-      const next = firstUnsecuredEnrollment(state);
-      if (next) {
-        router.replace(ROUTES.CHALLENGE_ACTIVE(next.active_challenge_id) as never);
-        return;
-      }
-    } catch {
-      /* fall through to exit */
-    }
-    exit();
-  }, [exit, router]);
 
   const persistUnit = useCallback(
     (next: DistanceUnit) => {
@@ -1167,7 +1146,7 @@ export function TaskFlowV2() {
         <ChallengeDoneScreen
           challengeTitle={challengeDone.challengeTitle}
           remainingChallenges={challengeDone.remainingChallenges}
-          onNext={(nextId) => void goNextChallenge(nextId)}
+          onNext={() => router.replace(ROUTES.TABS_HOME as never)}
           onDone={exit}
         />
       ) : null}

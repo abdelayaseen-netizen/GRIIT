@@ -1,7 +1,5 @@
-import { displayDay } from "@/lib/challenge-day";
 import { taskGates, type DetailTask, type Gate } from "@/lib/challenge-detail-mapping";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "@/lib/date-utils";
-import type { HomeProofCard } from "@/lib/home-proof-card";
 import type { TodayEnrollment, TodayState, TodayTask } from "@/lib/today-state";
 
 export type TodayBadge = { done: number; total: number };
@@ -52,17 +50,6 @@ export function weekStrip(today: TodayState): TodayWeekStrip {
   return { secured, todayIndex };
 }
 
-function gateCaption(gates: Gate[]): string {
-  if (gates.length === 0) return "Self-reported";
-  return gates
-    .map((g) => {
-      if (g.kind === "time_window") return g.label;
-      if (g.kind === "camera") return "Photo";
-      return "Location";
-    })
-    .join(" · ");
-}
-
 export function proofGates(task: TodayTask): Gate[] {
   const config = (task.config ?? {}) as DetailTask["config"];
   return taskGates({
@@ -74,35 +61,6 @@ export function proofGates(task: TodayTask): Gate[] {
 
 export function proofDotKind(taskDone: boolean): "filled" | "outline" {
   return taskDone ? "filled" : "outline";
-}
-
-export function proofCard(today: TodayState, firstProofEver = false): HomeProofCard {
-  const pick = pickProofTask(today);
-  const counts = badge(today);
-  if (!pick) {
-    return {
-      challenge: "",
-      day: 1,
-      taskText: "",
-      gate: "Self-reported",
-      doneCount: 0,
-      totalCount: 1,
-      posted: false,
-      hasChallenge: today.enrollments.length > 0,
-      firstProofEver,
-    };
-  }
-  return {
-    challenge: pick.enrollment.title,
-    day: displayDay(pick.enrollment.current_day, pick.enrollment.secured_today),
-    taskText: pick.task.title,
-    gate: gateCaption(proofGates(pick.task)),
-    doneCount: counts.done,
-    totalCount: counts.total || 1,
-    posted: pick.task.done,
-    hasChallenge: true,
-    firstProofEver,
-  };
 }
 
 export function firstUnsecuredEnrollment(today: TodayState): TodayEnrollment | null {

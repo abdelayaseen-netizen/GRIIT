@@ -39,7 +39,8 @@ import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { useToday } from "@/hooks/useToday";
-import { badge, pickProofTask, proofCard, taskTypeFromToday, weekStrip, type TodayProofPick } from "@/lib/today-derive";
+import { badge, pickProofTask, taskTypeFromToday, weekStrip } from "@/lib/today-derive";
+import { todayCard } from "@/lib/today-card";
 import { homeTodayView } from "@/lib/home-today-view";
 import { EMPTY_TODAY } from "@/lib/today-state";
 
@@ -233,8 +234,10 @@ export default function HomeScreen() {
   }, [todayQuery, statsQuery, refetchAll, queryClient]);
 
   const onPressTask = useCallback(
-    (pick: TodayProofPick) => {
-      const { enrollment, task } = pick;
+    (activeChallengeId: string, taskId: string) => {
+      const enrollment = todayState.enrollments.find((e) => e.active_challenge_id === activeChallengeId);
+      const task = enrollment?.tasks.find((t) => t.id === taskId);
+      if (!enrollment || !task) return;
       const taskType = taskTypeFromToday(task);
       const taskConfig = buildTaskConfigParam({
         id: task.id,
@@ -247,24 +250,8 @@ export default function HomeScreen() {
         `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(enrollment.active_challenge_id)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(task.title)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}&challengeName=${encodeURIComponent(enrollment.title)}&currentDay=${String(displayDay(enrollment.current_day, enrollment.secured_today))}&durationDays=14` as never,
       );
     },
-    [router],
+    [router, todayState],
   );
-
-  const onPressPrimaryCTA = useCallback(() => {
-    if (todayState.enrollments.length === 0) {
-      track({ name: "discover_challenge_tapped" });
-      router.push(ROUTES.TABS_DISCOVER as never);
-      return;
-    }
-    if (tasksRemaining > 0) {
-      const next = pickProofTask(todayState);
-      if (next && !next.task.done) {
-        track({ name: "task_completed" });
-        onPressTask(next);
-      }
-      return;
-    }
-  }, [todayState, tasksRemaining, onPressTask, router]);
 
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
@@ -273,7 +260,7 @@ export default function HomeScreen() {
   const onJeopardyFinish = useCallback(() => {
     setShowJeopardyModal(false);
     const next = pickProofTask(todayState);
-    if (next && !next.task.done) onPressTask(next);
+    if (next && !next.task.done) onPressTask(next.enrollment.active_challenge_id, next.task.id);
     else router.push(ROUTES.TABS_DISCOVER as never);
   }, [todayState, onPressTask, router]);
 
@@ -314,13 +301,7 @@ export default function HomeScreen() {
     return { name: mark.name, progress: mark.progress };
   }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
 
-  const firstProofEver =
-    (resolvedStats?.totalDaysSecured ?? 0) === 0 && todayState.secured_date_keys.length === 0;
-
-  const proof = useMemo(() => {
-    if (todayView !== "ready" && todayView !== "empty") return null;
-    return proofCard(todayState, firstProofEver);
-  }, [todayView, todayState, firstProofEver]);
+  const todayModel = useMemo(() => todayCard(todayState), [todayState]);
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
 
@@ -359,19 +340,20 @@ export default function HomeScreen() {
               title={greetingTitle(profile ?? {})}
               streak={streak ?? 0}
               streakLine={todayState.secured ? "Day secured." : "Post today to start."}
-              proof={proof}
+              today={todayModel}
               weekFilled={week.secured}
               todayIndex={week.todayIndex}
               fillToday={todayState.secured}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}
-              onPressProof={onPressPrimaryCTA}
+              onPressTask={onPressTask}
               awayCount={awayCount}
               freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}
               loading={todayView === "loading"}
+              empty={todayView === "empty"}
               error={todayView === "error"}
             />
           }

@@ -3,22 +3,19 @@
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
+import { Bell, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import DisplayNumber from "@/components/ds/DisplayNumber";
-import Card from "@/components/ds/Card";
-import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
 import WeekStrip from "@/components/shared/WeekStrip";
-import Skeleton from "@/components/ds/Skeleton";
+import TodayCard from "@/components/home/TodayCard";
+import type { TodayCardModel } from "@/lib/today-card";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { profilePrimaryName } from "@/lib/profile-display";
-import { homeProofCtaLabel } from "@/lib/home-proof-card";
 import { NO_ACTIVE_CHALLENGE, TODAY_LOAD_ERROR } from "@/lib/home-today-view";
-import { proofDotKind } from "@/lib/today-derive";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -36,56 +33,45 @@ export function greetingTitle(p: {
   return user || "GRIIT";
 }
 
-export type HomeV3Proof = {
-  challenge: string;
-  day: number;
-  taskText: string;
-  gate: string;
-  doneCount: number;
-  totalCount: number;
-  posted: boolean;
-  hasChallenge: boolean;
-  firstProofEver: boolean;
-};
-
 export type HomeV3Props = {
   title: string;
   streak: number;
   streakLine: string;
-  proof: HomeV3Proof | null;
+  today: TodayCardModel | null;
   weekFilled: boolean[];
   todayIndex: number;
   fillToday?: boolean;
   feedScope: FeedScope;
   onChangeFeedScope: (s: FeedScope) => void;
   onPressBell: () => void;
-  onPressProof: () => void;
+  onPressTask: (activeChallengeId: string, taskId: string) => void;
   awayCount: number;
   freezesLeft: number;
   badgeName: string;
   badgePct: number;
   loading?: boolean;
+  empty?: boolean;
   error?: boolean;
-  onRetry?: () => void;
 };
 
 export function HomeV3({
   title,
   streak,
   streakLine,
-  proof,
+  today,
   weekFilled,
   todayIndex,
   fillToday,
   feedScope,
   onChangeFeedScope,
   onPressBell,
-  onPressProof,
+  onPressTask,
   awayCount,
   freezesLeft,
   badgeName,
   badgePct,
   loading,
+  empty,
   error,
 }: HomeV3Props) {
   const kicker = WEEKDAYS[new Date().getDay()] ?? "Sunday";
@@ -98,18 +84,6 @@ export function HomeV3({
     );
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.root, styles.pad]}>
-        <Skeleton />
-        <View style={styles.gap20} />
-        <Skeleton />
-        <View style={styles.gap20} />
-        <Skeleton />
-      </View>
-    );
-  }
-
   const freezeCaption =
     freezesLeft === 1 ? "1 freeze left" : `${freezesLeft} freezes left`;
   const badgeCaption = `${badgeName} · ${badgePct}%`;
@@ -117,13 +91,6 @@ export function HomeV3({
     awayCount === 0
       ? null
       : `${awayCount} friends posted while you were away.`;
-  const proofSub = proof?.hasChallenge ? (
-    <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
-    </Text>
-  ) : (
-    <Text style={styles.secondary}>{NO_ACTIVE_CHALLENGE}</Text>
-  );
 
   return (
     <View style={styles.root}>
@@ -146,45 +113,15 @@ export function HomeV3({
         <Text style={styles.secondary}>{streakLine}</Text>
       </View>
 
-      {proof ? (
-        <View style={styles.gutter}>
-          <Card>
-            <View style={styles.proofHead}>
-              <View style={styles.flex}>
-                <Text style={styles.heading}>Today&apos;s proof</Text>
-                {proofSub}
-              </View>
-              <View style={styles.countChip}>
-                <Text style={styles.countTxt}>
-                  {proof.doneCount} / {proof.totalCount}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.taskRow}>
-              <View
-                style={[
-                  styles.taskDot,
-                  proofDotKind(proof.posted) === "filled" ? styles.taskDotFilled : styles.taskDotOutline,
-                ]}
-              />
-              <Text style={styles.task}>{proof.taskText}</Text>
-              <Text style={styles.caption}>{proof.gate}</Text>
-            </View>
-            {proof.posted ? (
-              <View style={styles.done}>
-                <Check size={ICON} color={DS_V3.color.brandText} />
-                <Text style={styles.doneTxt}>Posted today</Text>
-              </View>
-            ) : (
-              <Button
-                label={homeProofCtaLabel(proof)}
-                icon={<Camera size={ICON} color={DS_V3.color.onBrand} />}
-                onPress={onPressProof}
-              />
-            )}
-          </Card>
-        </View>
-      ) : null}
+      <View style={styles.gutter}>
+        {loading ? (
+          <TodayCard model={null} loading onTask={onPressTask} />
+        ) : empty ? (
+          <Text style={styles.secondary}>{NO_ACTIVE_CHALLENGE}</Text>
+        ) : (
+          <TodayCard model={today} onTask={onPressTask} />
+        )}
+      </View>
 
       <View style={styles.week}>
         <WeekStrip secured={weekFilled} todayIndex={todayIndex} fillToday={fillToday} />
@@ -257,55 +194,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
   },
-  proofHead: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: DS_V3.space.md,
-    marginBottom: DS_V3.space.lg,
-  },
-  flex: { flex: 1, gap: DS_V3.space.xs },
   heading: {
     fontSize: DS_V3.type.heading.fontSize,
     lineHeight: DS_V3.type.heading.lineHeight,
     fontWeight: DS_V3.type.heading.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  countChip: {
-    backgroundColor: DS_V3.color.brandTint,
-    borderRadius: DS_V3.radius.input,
-    paddingVertical: DS_V3.space.xs,
-    paddingHorizontal: DS_V3.space.md,
-  },
-  countTxt: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
-  },
-  taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.md,
-    marginBottom: DS_V3.space.lg,
-  },
-  taskDot: {
-    width: DS_V3.space.xs * 6,
-    height: DS_V3.space.xs * 6,
-    borderRadius: DS_V3.radius.pill,
-  },
-  taskDotFilled: {
-    backgroundColor: DS_V3.color.brand,
-  },
-  taskDotOutline: {
-    borderWidth: (DS_V3.space.xs * 3) / 8,
-    borderColor: DS_V3.color.brand,
-  },
-  task: {
-    flex: 1,
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
   },
   caption: {
@@ -313,21 +205,6 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
-  },
-  done: {
-    minHeight: DS_V3.size.button,
-    borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brandTint,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: DS_V3.space.sm,
-  },
-  doneTxt: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
   },
   week: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -362,5 +239,4 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
   },
-  gap20: { height: DS_V3.space.gutter },
 });
