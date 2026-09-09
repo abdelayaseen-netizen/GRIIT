@@ -11,6 +11,7 @@ import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { ROUTES } from "@/lib/routes";
 import { setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
+import { clearOnboardingV2Step } from "@/lib/onboarding-v2-step";
 
 export async function completeOnboardingV2(opts?: { destination?: string }): Promise<void> {
   setOnboardingV2Exit(opts?.destination ?? ROUTES.TABS);
@@ -21,6 +22,7 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
 
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
+    await clearOnboardingV2Step();
   } catch (e) {
     captureError(e, "OnboardingV2PersistFlag");
   }

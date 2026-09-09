@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OBV2_COLOR } from "../theme";
-import { Kicker, PrimaryButton } from "../ui";
+import { Kicker, PrimaryButton, TextLink } from "../ui";
 
 const PROOF_KINDS = [
   { kind: "PHOTO", use: "Show the work" },
@@ -11,9 +11,10 @@ const PROOF_KINDS = [
 
 export default function WhyProofScreen({
   onContinue,
+  onSkip,
 }: {
   onContinue: () => void;
-  onSkip?: () => void;
+  onSkip: () => void;
 }) {
   return (
     <View style={styles.content}>
@@ -59,6 +60,7 @@ export default function WhyProofScreen({
 
       <View style={styles.footer}>
         <PrimaryButton label="Continue" onPress={onContinue} />
+        <TextLink label="Skip" onPress={onSkip} />
       </View>
     </View>
   );
@@ -136,5 +138,5 @@ const styles = StyleSheet.create({
   },
   kind: { fontSize: 12, fontWeight: "500", letterSpacing: 0.8, color: OBV2_COLOR.ink },
   kindUse: { fontSize: 11, fontWeight: "400", lineHeight: 14, color: OBV2_COLOR.mutedWarm },
-  footer: { paddingTop: 14, paddingBottom: 32 },
+  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
 });
