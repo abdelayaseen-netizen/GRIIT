@@ -1,3 +1,8 @@
+/**
+ * TodayCard is ported presentational (components/home/TodayCard.tsx + lib/today-card.ts).
+ * feat/today-source-of-truth / Chunk J is not on this branch's ancestry.
+ * No lib/today-state.ts here.
+ */
 import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";

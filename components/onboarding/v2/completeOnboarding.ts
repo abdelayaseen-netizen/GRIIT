@@ -29,10 +29,12 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
     const { data } = await supabase.auth.getUser();
     const userId = data.user?.id;
     if (userId) {
-      await supabase
-        .from("profiles")
-        .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
+      const payload: { onboarding_completed: true; updated_at: string; target_streak?: number } = {
+        onboarding_completed: true,
+        updated_at: new Date().toISOString(),
+      };
+      if (store.targetStreak != null) payload.target_streak = store.targetStreak;
+      await supabase.from("profiles").update(payload).eq("user_id", userId);
     }
   } catch (e) {
     captureError(e, "OnboardingV2PersistDb");

@@ -51,8 +51,10 @@ export interface OnboardingState {
   hasCompletedOnboarding: boolean;
   selectedGoals: OnboardingGoal[];
   intensityLevel: IntensityLevel | null;
-  /** OnboardingFlowV2 (screen 05) — Standard vs Hard mode. */
+  /** OnboardingFlowV2 (screen 05) — Standard vs Hard mode. Unused by v2 day-target. */
   commitment: OnboardingCommitment;
+  /** Onboarding day target. Written to profiles.target_streak. */
+  targetStreak: number | null;
   /** OnboardingFlowV2 (screen 06) — whether the reminders primer has been shown/answered. */
   notificationsAsked: boolean;
   /** v2 reminder step — persisted so back navigation and Day 1 stay lossless. */
@@ -94,6 +96,7 @@ export interface OnboardingState {
   setSelectedGoals: (goals: OnboardingGoal[]) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
   setCommitment: (commitment: OnboardingCommitment) => void;
+  setTargetStreak: (days: number | null) => void;
   setNotificationsAsked: (asked: boolean) => void;
   setReminderPreset: (preset: ReminderPresetId) => void;
   setReminderCustom: (custom: ReminderCustom | null) => void;
@@ -124,6 +127,7 @@ const initialState = {
   selectedGoals: [] as OnboardingGoal[],
   intensityLevel: null as IntensityLevel | null,
   commitment: null as OnboardingCommitment,
+  targetStreak: null as number | null,
   notificationsAsked: false,
   reminderPreset: "am6" as ReminderPresetId,
   reminderCustom: null as ReminderCustom | null,
@@ -173,6 +177,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSelectedGoals: (goals) => set({ selectedGoals: goals.slice(0, 3) }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
       setCommitment: (commitment) => set({ commitment }),
+      setTargetStreak: (days) => set({ targetStreak: days }),
       setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),
       setReminderPreset: (preset) => set({ reminderPreset: preset }),
       setReminderCustom: (custom) => set({ reminderCustom: custom }),
@@ -205,6 +210,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         selectedGoals: state.selectedGoals,
         intensityLevel: state.intensityLevel,
         commitment: state.commitment,
+        targetStreak: state.targetStreak,
         notificationsAsked: state.notificationsAsked,
         reminderPreset: state.reminderPreset,
         reminderCustom: state.reminderCustom,

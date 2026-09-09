@@ -1,6 +1,6 @@
 /**
  * OnboardingFlowV2 — Chunk A order.
- * Commitment (day target) and Profile are placeholders. No dead ends.
+ * Profile is still a placeholder. No dead ends.
  *
  * Rendered by app/onboarding/index.tsx ONLY when FLAGS.ONBOARDING_V2 is true.
  */
@@ -42,8 +42,10 @@ import AccountScreen from "./screens/AccountScreen";
 import AccountNameScreen from "./screens/AccountNameScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
+import DayTargetScreen from "./screens/DayTargetScreen";
 import NotBuiltScreen from "./screens/NotBuiltScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
+import { readTargetStreak, writeTargetStreak } from "@/lib/onboarding-v2-target-streak";
 
 function useOnboardingHydrated(): boolean {
   const [hydrated, setHydrated] = useState(() => useOnboardingStore.persist.hasHydrated());
@@ -63,6 +65,8 @@ export default function OnboardingFlowV2() {
   const setV2Step = useOnboardingStore((s) => s.setV2Step);
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const setSelectedGoals = useOnboardingStore((s) => s.setSelectedGoals);
+  const targetStreak = useOnboardingStore((s) => s.targetStreak);
+  const setTargetStreak = useOnboardingStore((s) => s.setTargetStreak);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const step = resolveV2Step(rawStep);
@@ -131,6 +135,25 @@ export default function OnboardingFlowV2() {
       cancelled = true;
     };
   }, [user, selectedGoals, setSelectedGoals]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      if (targetStreak != null) {
+        await writeTargetStreak(user.id, targetStreak);
+        return;
+      }
+      const remote = await readTargetStreak(user.id);
+      if (cancelled || remote == null) return;
+      if (useOnboardingStore.getState().targetStreak == null) {
+        setTargetStreak(remote);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, targetStreak, setTargetStreak]);
 
   const completed = resolveOnboardingCompleted({
     sessionKind: sessionKindFromUser(user),
@@ -296,7 +319,7 @@ export default function OnboardingFlowV2() {
       case "why_circle":
         return <WhyCircleScreen onContinue={goNext} onSkip={() => void handleSkip()} onBack={goBack} />;
       case "commitment":
-        return <NotBuiltScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+        return <DayTargetScreen onContinue={goNext} onBack={goBack} />;
       case "first_challenge":
         if (browseOpen) {
           return <BrowseAllPickerScreen onSelect={handleBrowseSelect} />;
@@ -308,7 +331,8 @@ export default function OnboardingFlowV2() {
               goNext();
             }}
             onSkip={goNext}
-            onBrowse={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            onBrowse={() => setBrowseOpen(true)}
+            onBack={goBack}
           />
         );
       case "reminders":
@@ -339,7 +363,13 @@ export default function OnboardingFlowV2() {
   }
 
   const welcome = step === "welcome" && !signInOpen;
-  const usesChrome = step === "goals" || step === "why_proof" || step === "why_circle";
+  const usesChrome =
+    !browseOpen &&
+    (step === "goals" ||
+      step === "why_proof" ||
+      step === "why_circle" ||
+      step === "commitment" ||
+      step === "first_challenge");
   return (
     <SafeAreaView style={[styles.safeArea, (welcome || usesChrome) && styles.welcome]}>
       {step !== "welcome" && !signInOpen && !usesChrome ? (

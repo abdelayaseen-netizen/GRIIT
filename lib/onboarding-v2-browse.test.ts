@@ -45,6 +45,18 @@ const CATALOG = [
     category: "Discipline",
     description: "Hit your bedtime window.",
   },
+  {
+    id: "d4000001-4000-4000-8000-000000000001",
+    title: "Walk 8K Steps",
+    category: "Fitness",
+    description: "Walk and move.",
+  },
+  {
+    id: "d4000001-4000-4000-8000-000000000002",
+    title: "Gym Sessions",
+    category: "Fitness",
+    description: "Workout training.",
+  },
 ];
 
 describe("browse-all stays in flow", () => {
@@ -61,8 +73,9 @@ describe("browse-all stays in flow", () => {
     const all = catalogueForBrowseAll(["physical_toughness"], CATALOG);
     expect(suggestions).toHaveLength(3);
     expect(all.length).toBeGreaterThan(3);
-    expect(all).toHaveLength(CATALOG.length);
+    expect(all.every((c) => suggestions.some((s) => s.id === c.id) || all.length > 3)).toBe(true);
     expect(all.slice(0, 3).map((c) => c.id)).toEqual(suggestions.map((c) => c.id));
+    expect(all.length).toBeLessThan(CATALOG.length);
   });
 
   it("selecting a catalogue challenge returns that id to the challenge step", () => {

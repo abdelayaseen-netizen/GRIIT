@@ -98,8 +98,8 @@ export default function DayOneScreen({ onStart }: { onStart: () => void }) {
           ) : (
             <Text style={styles.taskFallback}>
               {storedTaskCount > 0
-                ? `${storedTaskCount} tasks ready tomorrow.`
-                : "Your first day starts tomorrow."}
+                ? `${storedTaskCount} tasks ready. Day 1 is today.`
+                : "Day 1 is today."}
             </Text>
           )}
         </Animated.View>

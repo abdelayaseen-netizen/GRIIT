@@ -47,5 +47,24 @@ describe("selectHomeProofCard", () => {
     expect(card.day).not.toBe(0);
     expect(card.day).not.toBe(2);
     expect(card.challenge).toBe("Write");
+    expect(card.dayTotal).toBe(1);
+  });
+
+  it("dayTotal uses target_streak when longer than duration", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Journal",
+          challengeName: "Write",
+          currentDay: 1,
+          durationDays: 30,
+        }),
+      ],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: true,
+      targetStreak: 75,
+    });
+    expect(card.dayTotal).toBe(75);
   });
 });

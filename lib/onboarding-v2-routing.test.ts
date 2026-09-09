@@ -40,6 +40,8 @@ describe("ONBOARDING_V2_ORDER", () => {
     expect(chromeStep("goals")).toBe(0);
     expect(chromeStep("why_proof")).toBe(1);
     expect(chromeStep("why_circle")).toBe(2);
+    expect(chromeStep("commitment")).toBe(3);
+    expect(chromeStep("first_challenge")).toBe(4);
     expect(chromeStep("profile")).toBe(7);
   });
 });

@@ -39,6 +39,7 @@ export function greetingTitle(p: {
 export type HomeV3Proof = {
   challenge: string;
   day: number;
+  dayTotal: number;
   taskText: string;
   gate: string;
   doneCount: number;
@@ -129,7 +130,7 @@ export function HomeV3({
       : `${awayCount} friends posted while you were away.`;
   const proofSub = proof?.hasChallenge ? (
     <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
+      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" /> of {proof.dayTotal}
     </Text>
   ) : (
     <Text style={styles.secondary}>No active challenge</Text>

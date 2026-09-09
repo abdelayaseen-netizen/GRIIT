@@ -11,6 +11,7 @@
  * Verdict: display only. Not persisted.
  */
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
+import { homeDayTotal } from "./home-day-total";
 import {
   badgeRowsFromProgress,
   formatDayMonthYear,
@@ -104,6 +105,8 @@ export type ProfileRecordInput = {
   /** `day_secures.date_key` values. */
   securedDateKeys: string[];
   badgeUnlocks?: Record<string, string>;
+  /** profiles.target_streak — Home Day X of Y when longer than duration. */
+  targetStreak?: number | null;
 };
 
 export type ProfileRecord = {
@@ -308,7 +311,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
         name: range.name,
         day,
         length: range.durationDays,
-        dayLabel: `Day ${day} of ${range.durationDays}`,
+        dayLabel: `Day ${day} of ${homeDayTotal(range.durationDays, input.targetStreak)}`,
         meta: `${verified} verified · ${missed} missed · ${range.tasksPerDay} tasks daily`,
         verified,
         missed,
@@ -343,7 +346,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     verifiedClosed,
     dueToday,
     primaryDay: primary?.day ?? null,
-    primaryLength: primary?.length ?? null,
+    primaryLength: primary ? homeDayTotal(primary.length, input.targetStreak) : null,
   });
 
   const firstDue = dueDayKeys[0] ?? null;
