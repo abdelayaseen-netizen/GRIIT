@@ -28,7 +28,7 @@ export default function OnboardingFlow() {
   const router = useRouter();
 
   useEffect(() => {
-    const validGoalIds = new Set(GOAL_OPTIONS.map((g) => g.id));
+    const validGoalIds = new Set<string>([...GOAL_OPTIONS.map((g) => g.id), "faith_prayer"]);
     useOnboardingStore.setState((s) => ({
       totalSteps: Math.max(s.totalSteps, 5),
       selectedGoals: s.selectedGoals.filter((g) => validGoalIds.has(g)),

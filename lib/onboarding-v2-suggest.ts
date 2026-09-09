@@ -21,6 +21,7 @@ const MATCH_REASON: Record<OnboardingGoal, string> = {
   reading_learning: "Matches reading & learning",
   cold_exposure: "Matches cold exposure",
   sleep_recovery: "Matches sleep & recovery",
+  faith_prayer: "Matches faith and prayer",
 };
 
 export { inferChallengeGoalTags };

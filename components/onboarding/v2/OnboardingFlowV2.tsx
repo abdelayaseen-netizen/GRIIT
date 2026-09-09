@@ -290,11 +290,11 @@ export default function OnboardingFlowV2() {
       case "welcome":
         return <WelcomeScreen onGetStarted={goNext} onHaveAccount={() => goToLogin()} />;
       case "goals":
-        return <GoalsScreen onContinue={goNext} />;
+        return <GoalsScreen onContinue={goNext} onBack={goBack} />;
       case "why_proof":
-        return <WhyProofScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+        return <WhyProofScreen onContinue={goNext} onSkip={() => void handleSkip()} onBack={goBack} />;
       case "why_circle":
-        return <WhyCircleScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+        return <WhyCircleScreen onContinue={goNext} onSkip={() => void handleSkip()} onBack={goBack} />;
       case "commitment":
         return <NotBuiltScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
       case "first_challenge":
@@ -339,9 +339,10 @@ export default function OnboardingFlowV2() {
   }
 
   const welcome = step === "welcome" && !signInOpen;
+  const usesChrome = step === "goals" || step === "why_proof" || step === "why_circle";
   return (
-    <SafeAreaView style={[styles.safeArea, welcome && styles.welcome]}>
-      {step !== "welcome" && !signInOpen ? (
+    <SafeAreaView style={[styles.safeArea, (welcome || usesChrome) && styles.welcome]}>
+      {step !== "welcome" && !signInOpen && !usesChrome ? (
         <FlowChrome
           step={step}
           onBack={

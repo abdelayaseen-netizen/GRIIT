@@ -12,7 +12,8 @@ export type OnboardingGoal =
   | 'daily_habits'
   | 'reading_learning'
   | 'cold_exposure'
-  | 'sleep_recovery';
+  | 'sleep_recovery'
+  | 'faith_prayer';
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 

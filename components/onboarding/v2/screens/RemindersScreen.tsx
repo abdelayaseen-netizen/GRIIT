@@ -96,7 +96,7 @@ export default function RemindersScreen({ onContinue }: { onContinue: () => void
   return (
     <View style={styles.content}>
       <View style={styles.head}>
-        <Text style={styles.h1}>We&apos;ll nudge you.{"\n"}Never nag.</Text>
+        <Text style={styles.h1}>One reminder a day.</Text>
         <Text style={styles.sub}>
           One reminder a day, at a time you pick. Turn it off whenever — that&apos;s the deal.
         </Text>

@@ -15,6 +15,7 @@ const GOAL_ORDER: OnboardingGoal[] = [
   "reading_learning",
   "cold_exposure",
   "sleep_recovery",
+  "faith_prayer",
 ];
 
 const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: string[] }> = {
@@ -41,6 +42,10 @@ const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: strin
   sleep_recovery: {
     categories: [],
     keywords: ["sleep", "rest", "recovery", "lights", "bedtime"],
+  },
+  faith_prayer: {
+    categories: ["faith"],
+    keywords: ["pray", "prayer", "salah", "quran", "dhikr", "fajr", "mosque", "deen"],
   },
 };
 

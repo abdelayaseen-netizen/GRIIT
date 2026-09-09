@@ -1,117 +1,134 @@
+/**
+ * Witness preview. FeedPostV3 photo rows use DisplayNumber (Barlow) for Day.
+ * This screen must stay SF Pro, so the row uses the same Avatar + Card kit
+ * with a 200pt proof block and no action row.
+ */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { OBV2_COLOR } from "../theme";
-import { Kicker, PrimaryButton, TextLink } from "../ui";
+import { Camera } from "lucide-react-native";
+import { DS_V3 } from "@/lib/design-system";
+import Avatar from "@/components/ds/Avatar";
+import Card from "@/components/ds/Card";
+import { WHY_CIRCLE_VISIBILITY } from "@/lib/onboarding-v2-why-circle";
+import { ChromePrimary, OnboardingScreen } from "../OnboardingChrome";
 
-function Avatar({ label, size = 42, ring = false }: { label: string; size?: number; ring?: boolean }) {
-  return (
-    <View
-      style={[
-        styles.av,
-        { width: size, height: size, borderRadius: size / 2 },
-        ring && styles.avRing,
-      ]}
-    >
-      <Text style={[styles.avText, size <= 26 && styles.avTextSm]}>{label}</Text>
-    </View>
-  );
-}
+const PROOF = DS_V3.space.gutter * 10;
+const CAM = DS_V3.space.xs * 7;
+const CARD_PAD = DS_V3.space.md + DS_V3.space.xs / 2;
 
 export default function WhyCircleScreen({
   onContinue,
   onSkip,
+  onBack,
 }: {
   onContinue: () => void;
   onSkip: () => void;
+  onBack: () => void;
 }) {
   return (
-    <View style={styles.content}>
-      <View style={styles.head}>
-        <Kicker>How GRIIT works</Kicker>
-        <Text style={styles.h1}>Your circle is watching.</Text>
-        <Text style={styles.sub}>
-          Show up for the people who&apos;ll notice when you don&apos;t. Every proof posts to your
-          circle — that&apos;s the accountability.
-        </Text>
-      </View>
-
-      <View style={styles.body}>
-        <View style={styles.card}>
-          <View style={styles.cardHead}>
-            <Avatar label="MH" />
-            <View>
-              <Text style={styles.name}>Marcus Hale</Text>
-              <Text style={styles.meta}>Day 12 · Morning routine</Text>
+    <OnboardingScreen
+      step={2}
+      onBack={onBack}
+      skipLabel="Skip"
+      onSkip={onSkip}
+      title="Discipline, witnessed."
+      subtitle="This is your row in the feed once you post."
+      footer={<ChromePrimary label="Continue" onPress={onContinue} />}
+    >
+      <View style={styles.wrap}>
+        <Card style={styles.card}>
+          <View style={styles.header}>
+            <Avatar size={DS_V3.size.avatar.sm} />
+            <View style={styles.who}>
+              <Text style={styles.name}>your username</Text>
+              <Text style={styles.meta}>First challenge · Day 12</Text>
             </View>
           </View>
-          <Text style={styles.quote}>Cold start, but it&apos;s done. Twelve straight.</Text>
-          <View style={styles.respectRow}>
-            <View style={styles.stack}>
-              <Avatar label="K" size={26} ring />
-              <View style={styles.stackOverlap}>
-                <Avatar label="D" size={26} ring />
-              </View>
-              <View style={styles.stackOverlap}>
-                <Avatar label="J" size={26} ring />
-              </View>
-            </View>
-            <Text style={styles.respectText}>
-              Respected by <Text style={styles.respectName}>Kyle</Text> and 13 others
-            </Text>
+          <View style={styles.proof}>
+            <Camera size={CAM} color={DS_V3.color.textSecondary} />
+            <Text style={styles.proofLabel}>Your proof photo</Text>
           </View>
-        </View>
-
-        <View style={styles.privacy}>
-          <Text style={styles.privacyTitle}>You choose who sees it</Text>
-          <Text style={styles.privacySub}>Invite up to 8 people. Nothing is public, ever.</Text>
-        </View>
+          <View style={styles.securedRow}>
+            <Text style={styles.secured}>Day secured.</Text>
+            <Text style={styles.summary}>2 of 3 tasks.</Text>
+          </View>
+        </Card>
       </View>
-
-      <View style={styles.footer}>
-        <PrimaryButton label="Continue" onPress={onContinue} />
-        <TextLink label="Skip" onPress={onSkip} />
-      </View>
-    </View>
+      <Text style={styles.visibility}>{WHY_CIRCLE_VISIBILITY}</Text>
+    </OnboardingScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 28 },
-  head: { marginTop: 6 },
-  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink, marginTop: 10 },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
-  body: { flex: 1, justifyContent: "center", paddingVertical: 16, gap: 12 },
+  wrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+  },
   card: {
-    backgroundColor: OBV2_COLOR.card,
-    borderRadius: 22,
-    padding: 18,
-    shadowColor: OBV2_COLOR.ink,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 2,
+    padding: 0,
+    overflow: "hidden",
   },
-  cardHead: { flexDirection: "row", alignItems: "center", gap: 12 },
-  name: { fontSize: 16, fontWeight: "500", color: OBV2_COLOR.ink },
-  meta: { fontSize: 13, color: OBV2_COLOR.mutedWarm, marginTop: 1 },
-  quote: { marginTop: 14, fontSize: 15, color: OBV2_COLOR.ink, lineHeight: 22 },
-  respectRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14 },
-  stack: { flexDirection: "row" },
-  stackOverlap: { marginLeft: -8 },
-  av: { backgroundColor: OBV2_COLOR.avatar, alignItems: "center", justifyContent: "center" },
-  avRing: { borderWidth: 2, borderColor: OBV2_COLOR.card },
-  avText: { fontWeight: "500", fontSize: 13, color: OBV2_COLOR.ink2 },
-  avTextSm: { fontSize: 10 },
-  respectText: { fontSize: 13, color: OBV2_COLOR.ink2, flex: 1 },
-  respectName: { color: OBV2_COLOR.ink, fontWeight: "500" },
-  privacy: {
-    backgroundColor: OBV2_COLOR.sunken,
-    borderRadius: 22,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    gap: 4,
+  header: {
+    paddingVertical: CARD_PAD,
+    paddingHorizontal: DS_V3.space.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
   },
-  privacyTitle: { fontSize: 13, fontWeight: "500", color: OBV2_COLOR.ink },
-  privacySub: { fontSize: 13, fontWeight: "400", lineHeight: 18, color: OBV2_COLOR.ink2 },
-  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
+  who: {
+    flex: 1,
+    gap: DS_V3.space.xs / 2,
+  },
+  name: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  meta: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  proof: {
+    height: PROOF,
+    backgroundColor: DS_V3.color.canvas,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: DS_V3.space.sm,
+  },
+  proofLabel: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  securedRow: {
+    paddingVertical: CARD_PAD,
+    paddingHorizontal: DS_V3.space.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+  },
+  secured: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
+  },
+  summary: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  visibility: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
 });

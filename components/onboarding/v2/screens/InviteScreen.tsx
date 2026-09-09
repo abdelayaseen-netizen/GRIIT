@@ -9,7 +9,7 @@ import { PrimaryButton, TextLink } from "../ui";
  * TODO(contacts): handoff contact rows are not built.
  * Spec: 40px initials avatar, name 15/500, note 12 mutedWarm
  * ("Already on GRIIT · Day N" vs "From your contacts"), 36px Invite/Invited
- * toggle, border #D2540A when invited. Production source is contact-permission
+ * toggle, brand border when invited. Production source is contact-permission
  * matching plus a server-side "already on GRIIT" flag. Do not invent rows.
  */
 export default function InviteScreen({
