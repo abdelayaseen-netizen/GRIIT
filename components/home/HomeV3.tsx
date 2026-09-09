@@ -14,10 +14,10 @@ import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
 import WeekStrip from "@/components/shared/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
-import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { homeProofCtaLabel } from "@/lib/home-proof-card";
+import { NO_ACTIVE_CHALLENGE, TODAY_LOAD_ERROR } from "@/lib/home-today-view";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -86,19 +86,13 @@ export function HomeV3({
   badgePct,
   loading,
   error,
-  onRetry,
 }: HomeV3Props) {
   const kicker = WEEKDAYS[new Date().getDay()] ?? "Sunday";
 
   if (error) {
     return (
       <View style={[styles.root, styles.pad]}>
-        <EmptyState
-          heading="Feed did not load"
-          body="Check your connection and try again."
-          actionLabel="Retry"
-          onAction={onRetry}
-        />
+        <Text style={styles.secondary}>{TODAY_LOAD_ERROR}</Text>
       </View>
     );
   }
@@ -127,7 +121,7 @@ export function HomeV3({
       {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
     </Text>
   ) : (
-    <Text style={styles.secondary}>No active challenge</Text>
+    <Text style={styles.secondary}>{NO_ACTIVE_CHALLENGE}</Text>
   );
 
   return (

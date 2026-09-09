@@ -40,6 +40,7 @@ import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { useToday } from "@/hooks/useToday";
 import { badge, pickProofTask, proofCard, taskTypeFromToday, weekStrip, type TodayProofPick } from "@/lib/today-derive";
+import { homeTodayView } from "@/lib/home-today-view";
 import { EMPTY_TODAY } from "@/lib/today-state";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
@@ -112,6 +113,12 @@ export default function HomeScreen() {
   }, [followCountsQuery.data?.following, initFeedToggle]);
 
   const todayQuery = useToday();
+  const todayView = homeTodayView({
+    isLoading: todayQuery.isLoading,
+    isError: todayQuery.isError,
+    isSuccess: todayQuery.isSuccess,
+    enrollmentCount: todayQuery.data?.enrollments.length ?? 0,
+  });
   const todayState = todayQuery.data ?? EMPTY_TODAY;
   const proofCounts = useMemo(() => badge(todayState), [todayState]);
   const week = useMemo(() => weekStrip(todayState), [todayState]);
@@ -310,10 +317,10 @@ export default function HomeScreen() {
   const firstProofEver =
     (resolvedStats?.totalDaysSecured ?? 0) === 0 && todayState.secured_date_keys.length === 0;
 
-  const proof = useMemo(
-    () => proofCard(todayState, firstProofEver),
-    [todayState, firstProofEver],
-  );
+  const proof = useMemo(() => {
+    if (todayView !== "ready" && todayView !== "empty") return null;
+    return proofCard(todayState, firstProofEver);
+  }, [todayView, todayState, firstProofEver]);
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
 
@@ -364,7 +371,8 @@ export default function HomeScreen() {
               freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}
-              loading={todayQuery.isPending && !todayQuery.data}
+              loading={todayView === "loading"}
+              error={todayView === "error"}
             />
           }
         />
