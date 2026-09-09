@@ -101,6 +101,10 @@ export function proofCard(today: TodayState, firstProofEver = false): HomeProofC
   };
 }
 
+export function firstUnsecuredEnrollment(today: TodayState): TodayEnrollment | null {
+  return today.enrollments.find((e) => !e.secured_today) ?? null;
+}
+
 export function taskTypeFromToday(task: TodayTask): string {
   const cfg = task.config ?? {};
   if (typeof cfg.task_type === "string" && cfg.task_type.trim()) return cfg.task_type;

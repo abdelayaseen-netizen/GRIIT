@@ -5,15 +5,11 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
-import {
-  getCurrentWeekDateKeys,
-  getTodayDateKey,
-} from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -29,14 +25,15 @@ import {
   mapDifficulty,
   mapTaskType,
   requirePhotoAsked,
-  securedTodayFromKeys,
   unitForTask,
-  weekSecuredFromKeys,
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
 import { displayDay } from "@/lib/challenge-day";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import { invalidateToday, useToday } from "@/hooks/useToday";
+import { weekStrip } from "@/lib/today-derive";
+import { EMPTY_TODAY } from "@/lib/today-state";
 
 type TaskRow = {
   id: string;
@@ -95,11 +92,14 @@ export default function ActiveChallengeDetailScreen() {
         : undefined;
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { profile, stats } = useApp();
+  const { stats } = useApp();
   const { user } = useAuth();
-  const profileTz = (profile as { timezone?: string | null })?.timezone;
-  const todayKey = getTodayDateKey(profileTz);
-  const weekKeys = useMemo(() => getCurrentWeekDateKeys(profileTz), [profileTz]);
+  const todayQuery = useToday();
+  const todayState = todayQuery.data ?? EMPTY_TODAY;
+  const enrollment = todayState.enrollments.find((e) => e.active_challenge_id === id);
+  const enrollmentSecured = enrollment?.secured_today === true;
+  const userSecured = todayState.secured;
+  const week = weekStrip(todayState);
 
   const {
     data: activeChallenge,
@@ -140,9 +140,9 @@ export default function ActiveChallengeDetailScreen() {
   });
 
   const { data: checkins = [] } = useQuery({
-    queryKey: ["check_ins", "today", id, profileTz ?? "UTC"],
+    queryKey: ["check_ins", "today", id, todayState.date_key || "UTC"],
     queryFn: async () => {
-      const dateKey = getTodayDateKey(profileTz);
+      const dateKey = todayState.date_key;
       const { data, error: err } = await supabase
         .from("check_ins")
         .select("task_id, status, photo_url, proof_url, completion_image_url")
@@ -151,21 +151,16 @@ export default function ActiveChallengeDetailScreen() {
       if (err) throw err;
       return (data ?? []) as CheckinRow[];
     },
-    enabled: !!id,
+    enabled: !!id && Boolean(todayState.date_key),
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: securedDateKeys = [] } = useQuery({
-    queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
-    queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-    enabled: !!id && !!user?.id,
-    staleTime: 60 * 1000,
-  });
-
   const currentDay =
-    typeof activeChallenge?.current_day === "number" && activeChallenge.current_day > 0
-      ? activeChallenge.current_day
-      : 1;
+    typeof enrollment?.current_day === "number" && enrollment.current_day > 0
+      ? enrollment.current_day
+      : typeof activeChallenge?.current_day === "number" && activeChallenge.current_day > 0
+        ? activeChallenge.current_day
+        : 1;
   const challenge = activeChallenge?.challenges;
   const challengeId = challenge?.id ?? activeChallenge?.challenge_id ?? "";
   const durationDays =
@@ -178,18 +173,8 @@ export default function ActiveChallengeDetailScreen() {
     isHardMode: challenge?.is_hard_mode,
     difficulty: challenge?.difficulty,
   });
-  const streakDays = (stats as { activeStreak?: number })?.activeStreak ?? 0;
-  const securedToday = securedTodayFromKeys(
-    Array.isArray(securedDateKeys) ? securedDateKeys : [],
-    todayKey
-  );
-  const weekSecuredRaw = weekSecuredFromKeys(
-    Array.isArray(securedDateKeys) ? securedDateKeys : [],
-    weekKeys
-  );
-  const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
-  const weekSecured = weekSecuredRaw.map((filled, i) => filled || (securedToday && i === todayIndex));
-  const shownDay = displayDay(currentDay, securedToday);
+  const streakDays = todayState.streak || (stats as { activeStreak?: number })?.activeStreak || 0;
+  const shownDay = displayDay(currentDay, enrollmentSecured);
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {
@@ -227,6 +212,7 @@ export default function ActiveChallengeDetailScreen() {
   }, [challenge?.challenge_tasks]);
 
   const tasks: ActiveChallengeTask[] = useMemo(() => {
+    const doneById = new Map((enrollment?.tasks ?? []).map((t) => [t.id, t.done]));
     return rawTasks.map((row) => {
       const taskType = mapTaskType(row.task_type);
       const targets = getDailyTargetForChallengeTask(row, currentDay, durationDays);
@@ -244,12 +230,12 @@ export default function ActiveChallengeDetailScreen() {
           requirePhoto: row.require_photo,
           config: cfg,
         }),
-        completed_today: Boolean(cin),
+        completed_today: doneById.get(row.id) ?? Boolean(cin),
         verified: Boolean(cin && proofUrl(cin)),
         proof_photo_url: cin ? proofUrl(cin) : null,
       };
     });
-  }, [rawTasks, checkinByTask, currentDay, durationDays]);
+  }, [rawTasks, checkinByTask, currentDay, durationDays, enrollment?.tasks]);
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =
@@ -303,6 +289,7 @@ export default function ActiveChallengeDetailScreen() {
       }
       await queryClient.invalidateQueries({ queryKey: ["home"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      await invalidateToday(queryClient);
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
@@ -359,10 +346,10 @@ export default function ActiveChallengeDetailScreen() {
           currentDay={shownDay}
           difficulty={difficulty}
           tasks={tasks}
-          securedToday={securedToday}
+          securedToday={userSecured}
           streakDays={streakDays}
-          weekSecured={weekSecured}
-          todayIndex={todayIndex}
+          weekSecured={week.secured}
+          todayIndex={week.todayIndex}
           participantsCount={participantsCount}
           description={description}
           resetNotice={RESET_NOTICE}

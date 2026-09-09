@@ -22,18 +22,16 @@ import {
 import { Snowflake, Medal } from 'lucide-react-native';
 import { DS_DAYLIGHT } from '@/lib/design-system';
 import { formatDays } from '@/lib/format-days';
+import WeekStrip from '@/components/shared/WeekStrip';
 
 export type StatGridVariant = 'default' | 'day0' | 'atRisk' | 'secured';
 
 export type StatGridProps = {
-  /** Count of secured days this week — for copy. Derive from weekSecuredByIndex. */
+  /** Count of secured days this week — for copy. Derive from secured. */
   weekSecured: number;
   weekTotal: number;
-  /**
-   * Length-7 flags (Mon→Sun): true when that cell's date key is in securedDateKeys.
-   * Fill condition — do not use weekSecured count as an index threshold.
-   */
-  weekSecuredByIndex: boolean[];
+  /** Length-7 flags (Mon→Sun) from today.secured_date_keys. */
+  secured: boolean[];
   /** Monday-first index of today in the profile-timezone week (0–6). */
   todayWeekIndex: number;
   freezesAvailable: number;
@@ -50,85 +48,11 @@ export type StatGridProps = {
 
 const HIT_SLOP = { top: 8, bottom: 8, left: 8, right: 8 } as const;
 
-// Monday-first single-letter weekday labels.
-const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
-
-/** Today's index in a Monday-first week (Mon = 0 … Sun = 6). Device-local — prefer todayWeekIndex prop. */
-function mondayFirstIndex(d: Date): number {
-  return (d.getDay() + 6) % 7;
-}
-
-// ──────────────────────────────────────────────────────────────────────────
-// Week strip
-// ──────────────────────────────────────────────────────────────────────────
-
-type DayKind = 'completed' | 'today' | 'todayCompleted' | 'future';
-
-function WeekStrip({
-  weekSecuredByIndex,
-  weekTotal,
-  todayWeekIndex,
-  variant,
-}: {
-  weekSecuredByIndex: boolean[];
-  weekTotal: number;
-  todayWeekIndex: number;
-  variant: StatGridVariant;
-}) {
-  const todayIndex =
-    todayWeekIndex >= 0 && todayWeekIndex < 7
-      ? todayWeekIndex
-      : mondayFirstIndex(new Date());
-  const total = Math.min(7, Math.max(1, weekTotal));
-
-  const cells = [] as React.ReactElement[];
-  for (let i = 0; i < total; i++) {
-    let kind: DayKind;
-    if (i === todayIndex) {
-      // Today can also be secured — don't let the today check hide a fill.
-      kind =
-        weekSecuredByIndex[i] === true ? 'todayCompleted' : 'today';
-    } else if (variant !== 'day0' && weekSecuredByIndex[i] === true) {
-      kind = 'completed';
-    } else {
-      kind = 'future';
-    }
-
-    const barStyle =
-      kind === 'completed'
-        ? styles.dayBarDone
-        : kind === 'todayCompleted'
-          ? styles.dayBarTodayDone
-          : kind === 'today'
-            ? styles.dayBarToday
-            : styles.dayBarFuture;
-
-    const isToday = kind === 'today' || kind === 'todayCompleted';
-
-    cells.push(
-      <View key={i} style={styles.dayCol}>
-        <Text
-          style={isToday ? styles.dayLetterToday : styles.dayLetter}
-        >
-          {DAY_LETTERS[i]}
-        </Text>
-        <View style={[styles.dayBar, barStyle]} />
-      </View>,
-    );
-  }
-
-  return <View style={styles.weekRow}>{cells}</View>;
-}
-
-// ──────────────────────────────────────────────────────────────────────────
-// Component
-// ──────────────────────────────────────────────────────────────────────────
-
 export function StatGrid(props: StatGridProps) {
   const {
     weekSecured,
     weekTotal,
-    weekSecuredByIndex,
+    secured,
     todayWeekIndex,
     freezesAvailable,
     nextBadgeName,
@@ -154,10 +78,9 @@ export function StatGrid(props: StatGridProps) {
 
   const strip = (
     <WeekStrip
-      weekSecuredByIndex={weekSecuredByIndex}
-      weekTotal={weekTotal}
-      todayWeekIndex={todayWeekIndex}
-      variant={variant}
+      secured={secured}
+      todayIndex={todayWeekIndex}
+      fillToday={variant === 'secured'}
     />
   );
 

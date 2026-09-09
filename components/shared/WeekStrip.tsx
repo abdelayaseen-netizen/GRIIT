@@ -2,6 +2,7 @@
  * WeekStrip — 01_components.md "WeekStrip" and Motion
  * Laws: 19 (today square fills over 400ms on the same clock as DisplayNumber),
  * 6 (filled days are brand only). Not tappable. Max seven squares.
+ * One implementation. Screens pass { secured, todayIndex, fillToday }.
  */
 import React, { useEffect } from "react";
 import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
@@ -15,14 +16,10 @@ import { DS_V3 } from "@/lib/design-system";
 
 const DAY_SECURED_MS = DS_V3.motion.count;
 const STROKE = (DS_V3.space.xs * 3) / 8;
-
-export type WeekStripDay = {
-  letter: string;
-  filled: boolean;
-};
+const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 export type WeekStripProps = {
-  days: WeekStripDay[];
+  secured: boolean[];
   todayIndex: number;
   fillToday?: boolean;
 };
@@ -86,11 +83,14 @@ function Square({
 }
 
 export default function WeekStrip({
-  days,
+  secured,
   todayIndex,
   fillToday,
 }: WeekStripProps) {
-  const seven = days.slice(0, 7);
+  const seven = LETTERS.map((letter, i) => ({
+    letter,
+    filled: secured[i] === true,
+  }));
   return (
     <View style={styles.row} accessibilityLabel="Week">
       {seven.map((d, i) => (

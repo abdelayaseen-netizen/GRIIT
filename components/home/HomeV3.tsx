@@ -12,7 +12,7 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
-import WeekStrip from "@/components/ds/WeekStrip";
+import WeekStrip from "@/components/shared/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
@@ -22,7 +22,6 @@ import { homeProofCtaLabel } from "@/lib/home-proof-card";
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 export function greetingTitle(p: {
   display_name?: string | null;
@@ -90,10 +89,6 @@ export function HomeV3({
   onRetry,
 }: HomeV3Props) {
   const kicker = WEEKDAYS[new Date().getDay()] ?? "Sunday";
-  const days = LETTERS.map((letter, i) => ({
-    letter,
-    filled: weekFilled[i] === true,
-  }));
 
   if (error) {
     return (
@@ -192,7 +187,7 @@ export function HomeV3({
       ) : null}
 
       <View style={styles.week}>
-        <WeekStrip days={days} todayIndex={todayIndex} fillToday={fillToday} />
+        <WeekStrip secured={weekFilled} todayIndex={todayIndex} fillToday={fillToday} />
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badge, pickProofTask, proofCard, proofGates, weekStrip } from "@/lib/today-derive";
+import { badge, firstUnsecuredEnrollment, pickProofTask, proofCard, proofGates, weekStrip } from "@/lib/today-derive";
 import type { TodayEnrollment, TodayState, TodayTask } from "@/lib/today-state";
 
 const AC1 = "c0000000-0000-4000-8000-000000000001";
@@ -82,6 +82,7 @@ describe("today-derive", () => {
     expect(card.totalCount).toBe(3);
     expect(badge(state)).toEqual({ done: 2, total: 3 });
     expect(pickProofTask(state)?.task.id).toBe(T3);
+    expect(firstUnsecuredEnrollment(state)?.active_challenge_id).toBe(AC3);
     expect(proofGates(state.enrollments[2]!.tasks[0]!)).toEqual([{ kind: "camera" }]);
     expect(card.gate).toBe("Photo");
 
@@ -118,6 +119,7 @@ describe("today-derive", () => {
     expect(card.taskText).toBe("Run 1 mile");
     expect(card.day).toBe(3);
     expect(badge(state)).toEqual({ done: 2, total: 2 });
+    expect(firstUnsecuredEnrollment(state)).toBeNull();
     expect(state.remaining_challenges).toBe(0);
   });
 

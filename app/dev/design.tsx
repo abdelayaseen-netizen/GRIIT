@@ -21,21 +21,13 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import Skeleton from "@/components/ds/Skeleton";
 import HintBox from "@/components/ds/HintBox";
-import WeekStrip from "@/components/ds/WeekStrip";
+import WeekStrip from "@/components/shared/WeekStrip";
 import MomentScreenV3, { type MomentVariant } from "@/components/task-v2/MomentScreenV3";
 
 const ICON = DS_V3.space.xs * 6;
 const PROOF = require("../../assets/dev/proof-can.png") as number;
 
-const WEEK = [
-  { letter: "M", filled: true },
-  { letter: "T", filled: true },
-  { letter: "W", filled: true },
-  { letter: "T", filled: true },
-  { letter: "F", filled: true },
-  { letter: "S", filled: false },
-  { letter: "S", filled: false },
-];
+const WEEK = [true, true, true, true, true, false, false];
 
 function MomentPreview({ variant }: { variant: MomentVariant }) {
   const proofs = Array.from({ length: 30 }, (_, i) => ({
@@ -371,15 +363,7 @@ export default function DesignGallery() {
           <Cell caption="empty today">
             <WeekStrip
               key={fillKey}
-              days={[
-                { letter: "M", filled: true },
-                { letter: "T", filled: true },
-                { letter: "W", filled: false },
-                { letter: "T", filled: true },
-                { letter: "F", filled: false },
-                { letter: "S", filled: false },
-                { letter: "S", filled: false },
-              ]}
+              secured={[true, true, false, true, false, false, false]}
               todayIndex={6}
               fillToday={fillToday}
             />

@@ -89,7 +89,7 @@ export type HomeHeaderV2Props = {
   // StatGrid wiring
   weekSecured: number;
   weekTotal: number;
-  weekSecuredByIndex: boolean[];
+  secured: boolean[];
   todayWeekIndex: number;
   freezesAvailable: number;
   freezesMaxPerWeek: number;
@@ -197,7 +197,7 @@ export function HomeHeaderV2(props: HomeHeaderV2Props) {
         <StatGrid
           weekSecured={props.weekSecured}
           weekTotal={props.weekTotal}
-          weekSecuredByIndex={props.weekSecuredByIndex}
+          secured={props.secured}
           todayWeekIndex={props.todayWeekIndex}
           freezesAvailable={props.freezesAvailable}
           freezesMaxPerWeek={props.freezesMaxPerWeek}

@@ -15,7 +15,7 @@ import Button from "@/components/ds/Button";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import Stamp from "@/components/ds/Stamp";
-import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
+import WeekStrip from "@/components/shared/WeekStrip";
 import ShareCardV3 from "@/components/share/ShareCardV3";
 import ContactSheet, { type ContactSheetProof } from "./ContactSheet";
 
@@ -29,12 +29,11 @@ export function momentVariantFromResult(result: SubmitResult): MomentVariant {
   return result.verificationKind === "live_photo" ? "verified" : "daySecured";
 }
 
-export function weekFromToday(): { days: WeekStripDay[]; todayIndex: number } {
-  const letters = ["M", "T", "W", "T", "F", "S", "S"];
+export function weekFromToday(): { secured: boolean[]; todayIndex: number } {
   const js = new Date().getDay();
   const todayIndex = js === 0 ? 6 : js - 1;
   return {
-    days: letters.map((letter) => ({ letter, filled: false })),
+    secured: [false, false, false, false, false, false, false],
     todayIndex,
   };
 }
@@ -66,7 +65,7 @@ export type MomentScreenV3Props = {
   proofUri?: string;
   proofSource?: number;
   proofs?: ContactSheetProof[];
-  week?: WeekStripDay[];
+  week?: boolean[];
   todayIndex?: number;
   onShare?: (uri: string) => void;
   onDone?: () => void;
@@ -95,13 +94,14 @@ export default function MomentScreenV3({
   const justMoved = counts && streakBefore != null && streakBefore !== streak;
   const [stampOn, setStampOn] = useState(!justMoved && (variant === "verified" || variant === "daySecured"));
   const [completeStamp, setCompleteStamp] = useState(false);
-  const weekDays = week ?? weekFromToday().days;
+  const weekDays = week ?? weekFromToday().secured;
   const weekToday = week ? todayIndex : weekFromToday().todayIndex;
   const fillToday = justMoved && (variant === "verified" || variant === "daySecured");
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
   const shareLabel = variant === "complete" ? "Complete" : "Verified";
+  const showProofCard = Boolean(proofUri) || proofSource != null;
 
   const settleCount = useCallback(() => {
     if (variant === "verified" || variant === "daySecured") {
@@ -180,18 +180,20 @@ export default function MomentScreenV3({
         )
       ) : (
         <View style={styles.media}>
-          <ProofImage
-            uri={proofUri}
-            source={proofSource}
-            size="feed"
-            stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
-            scrim={stampOn && (variant === "verified" || variant === "daySecured")}
-          />
+          {showProofCard ? (
+            <ProofImage
+              uri={proofUri}
+              source={proofSource}
+              size="feed"
+              stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
+              scrim={stampOn && (variant === "verified" || variant === "daySecured")}
+            />
+          ) : null}
         </View>
       )}
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
         {variant !== "complete" ? (
-          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
+          <WeekStrip secured={weekDays} todayIndex={weekToday} fillToday={fillToday} />
         ) : null}
         {variant === "complete" ? (
           <>

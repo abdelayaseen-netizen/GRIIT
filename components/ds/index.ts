@@ -37,8 +37,8 @@ export type { SkeletonProps, SkeletonVariant } from "./Skeleton";
 export { default as HintBox } from "./HintBox";
 export type { HintBoxProps } from "./HintBox";
 
-export { default as WeekStrip } from "./WeekStrip";
-export type { WeekStripDay, WeekStripProps } from "./WeekStrip";
+export { default as WeekStrip } from "@/components/shared/WeekStrip";
+export type { WeekStripProps } from "@/components/shared/WeekStrip";
 
 export { default as RootHeader } from "./RootHeader";
 export type { RootHeaderProps } from "./RootHeader";

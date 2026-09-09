@@ -28,7 +28,7 @@ import { DS_V3 } from "@/lib/design-system";
 import { dayWord, formatDays } from "@/lib/format-days";
 import PushedHeader from "@/components/ds/PushedHeader";
 import DisplayNumber from "@/components/ds/DisplayNumber";
-import WeekStrip from "@/components/ds/WeekStrip";
+import WeekStrip from "@/components/shared/WeekStrip";
 import Stamp from "@/components/ds/Stamp";
 import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
@@ -102,10 +102,6 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
     total: p.tasks.length,
   });
   const footer = footerAction({ securedToday: p.securedToday, tasks: p.tasks });
-  const weekDays = LETTERS.map((letter, i) => ({
-    letter,
-    filled: p.weekSecured[i] === true,
-  }));
   const about = (p.description ?? "").trim();
   const hard = p.difficulty === "hard";
 
@@ -195,7 +191,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
               ))}
             </View>
           ) : (
-            <WeekStrip days={weekDays} todayIndex={p.todayIndex} fillToday={p.securedToday} />
+            <WeekStrip secured={p.weekSecured} todayIndex={p.todayIndex} fillToday={p.securedToday} />
           )}
         </View>
 
