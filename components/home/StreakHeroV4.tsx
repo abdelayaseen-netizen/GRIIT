@@ -8,8 +8,8 @@
  *   secured    all tasks done + today in day_secures   "Streak secured" + badge progress + dual CTA
  *
  * Daylight language: the "owned" streak is a calm stat that sits directly on the
- * canvas (big ink number + days + small accent flame). Today's tasks live inside
- * a pure-white "Today's proof" card with an accent post CTA. The shape stays
+ * canvas (big ink number + days + small accent flame). Tasks live inside
+ * a surface card with an accent post CTA. The shape stays
  * constant across states so the home reads calm.
  */
 import React from 'react';
@@ -28,6 +28,7 @@ import {
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
 import { displayDay } from '@/lib/challenge-day';
 import { dayWord, formatDays } from '@/lib/format-days';
+import { HOME_PROOF_CTA_FIRST, HOME_PROOF_CTA_TODAY } from '@/lib/home-proof-card';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -439,10 +440,10 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
   // day0 / default / atRisk
   const primaryCtaLabel =
     state === 'day0'
-      ? 'Post your first proof'
+      ? HOME_PROOF_CTA_FIRST
       : state === 'atRisk'
         ? `Secure Day ${(props.streak ?? 0) + 1}`
-        : "Post today's proof";
+        : HOME_PROOF_CTA_TODAY;
 
   const subtitle =
     props.tasks.length > 0 && props.tasks[0]
@@ -584,7 +585,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // ── White "Today's proof" card ──
+  // ── White proof card ──
   proofCard: {
     backgroundColor: DS_COLORS_V2.surface.card,
     borderWidth: 1,

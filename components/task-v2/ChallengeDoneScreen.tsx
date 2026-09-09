@@ -1,7 +1,7 @@
 /**
  * Challenge done, user day not secured — other enrollments still have tasks.
  * Ink, DS_V3, no display face. Nothing earned yet.
- * Remaining count and next enrollment come from today_state.
+ * Remaining count comes from today_state. Next challenge returns to Home.
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -10,7 +10,6 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { challengeDoneLine, challengeDoneTitle } from "@/lib/task-completion-result";
 import { useToday } from "@/hooks/useToday";
-import { firstUnsecuredEnrollment } from "@/lib/today-derive";
 
 export default function ChallengeDoneScreen({
   challengeTitle,
@@ -20,13 +19,12 @@ export default function ChallengeDoneScreen({
 }: {
   challengeTitle: string;
   remainingChallenges?: number;
-  onNext: (nextActiveChallengeId?: string) => void;
+  onNext: () => void;
   onDone: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const todayQuery = useToday();
   const remaining = todayQuery.data?.remaining_challenges ?? remainingChallenges ?? 0;
-  const nextId = todayQuery.data ? firstUnsecuredEnrollment(todayQuery.data)?.active_challenge_id : undefined;
   return (
     <View style={styles.root}>
       <View style={[styles.body, { paddingTop: insets.top + DS_V3.space.section }]}>
@@ -34,7 +32,7 @@ export default function ChallengeDoneScreen({
         <Text style={styles.line}>{challengeDoneLine(remaining)}</Text>
       </View>
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
-        <Button label="Next challenge" onPress={() => onNext(nextId)} />
+        <Button label="Next challenge" onPress={onNext} />
         <Button label="Done" variant="tertiary" ink onPress={onDone} />
       </View>
     </View>
