@@ -257,10 +257,6 @@ export default function OnboardingFlowV2() {
     goNext();
   }, [goNext]);
 
-  const handleBrowseAll = useCallback(() => {
-    setBrowseOpen(true);
-  }, []);
-
   const handleBrowseSelect = useCallback(
     (challenge: SuggestableChallenge) => {
       const next = applyBrowsePick(challenge.id);
@@ -325,8 +321,8 @@ export default function OnboardingFlowV2() {
               setSelectedChallenge(challengeId);
               goNext();
             }}
-            onSkip={() => void handleSkip()}
-            onBrowse={handleBrowseAll}
+            onSkip={goNext}
+            onBrowse={() => router.push(ROUTES.TABS_DISCOVER as never)}
           />
         );
       case "reminders":
