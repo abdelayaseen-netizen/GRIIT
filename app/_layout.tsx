@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments, Redirect, router } from "expo-router";
+import { Stack, useRouter, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
@@ -28,6 +28,7 @@ import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
+import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 import { FLAGS } from "@/lib/feature-flags";
 import {
   peekOnboardingV2Exit,
@@ -116,19 +117,11 @@ function AuthRedirector() {
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
-  const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
-  const [localCompleted, setLocalCompleted] = useState<boolean | null>(null);
   const coldStartTrackedRef = useRef(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
-  }, []);
-
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
-      .then((v) => setLocalCompleted(v === "true"))
-      .catch(() => setLocalCompleted(false));
   }, []);
 
   const checkProfile = useCallback(async (userId: string, retry = 0) => {
@@ -176,27 +169,19 @@ function AuthRedirector() {
         setProfileCreatedAt(null);
         if (FLAGS.ONBOARDING_V2) {
           setOnboardingCompleted(null);
-          setDbFetchFailed(true);
         } else {
           setOnboardingCompleted(false);
-          setDbFetchFailed(false);
         }
       } else if (result === null) {
         setHasProfile(false);
         setOnboardingCompleted(false);
-        setDbFetchFailed(false);
         setProfileCreatedAt(null);
       } else {
         const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
         setHasProfile(hasValidProfile);
-        setDbFetchFailed(false);
-        // v2: DB flag is enough (anon profiles have a generated username, but
-        // a missing username must not hide a true onboarding_completed).
-        setOnboardingCompleted(
-          FLAGS.ONBOARDING_V2
-            ? result?.onboarding_completed === true
-            : hasValidProfile && result?.onboarding_completed === true
-        );
+        const dbDone = result?.onboarding_completed === true;
+        setOnboardingCompleted(dbDone);
+        if (dbDone) void cacheOnboardingCompleted();
         setProfileCreatedAt(result?.created_at ?? null);
       }
       done();
@@ -211,10 +196,8 @@ function AuthRedirector() {
       setProfileCreatedAt(null);
       if (FLAGS.ONBOARDING_V2) {
         setOnboardingCompleted(null);
-        setDbFetchFailed(true);
       } else {
         setOnboardingCompleted(false);
-        setDbFetchFailed(false);
       }
       done();
     }
@@ -228,7 +211,6 @@ function AuthRedirector() {
       setProfileChecked(true);
       setHasProfile(false);
       setOnboardingCompleted(null);
-      setDbFetchFailed(false);
       setProfileCreatedAt(null);
     }
   }, [user, loading, checkProfile]);
@@ -301,7 +283,7 @@ function AuthRedirector() {
 
   useEffect(() => {
     if (!FLAGS.ONBOARDING_V2) return;
-    if (loading || hasLaunched === null || localCompleted === null) return;
+    if (loading || hasLaunched === null) return;
     if (user && !profileChecked) return;
 
     const first = typeof segments[0] === "string" ? segments[0] : "";
@@ -312,11 +294,7 @@ function AuthRedirector() {
 
     const dest = resolveOnboardingLaunch({
       sessionKind: sessionKindFromUser(user),
-      localCompleted,
-      storeCompleted: onboardingCompleteFromStore,
       dbCompleted: user ? onboardingCompleted : null,
-      dbFetchFailed: user ? dbFetchFailed : false,
-      inOnboarding,
     });
 
     if (dest === "home") {
@@ -339,11 +317,8 @@ function AuthRedirector() {
     loading,
     segments,
     hasLaunched,
-    localCompleted,
     profileChecked,
     onboardingCompleted,
-    dbFetchFailed,
-    onboardingCompleteFromStore,
     router,
   ]);
 
@@ -355,6 +330,23 @@ function AuthRedirector() {
     const inAuth = first === SEGMENTS.AUTH;
     const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
     const inOnboarding = first === SEGMENTS.ONBOARDING;
+    const inTabs = first === SEGMENTS.TABS;
+
+    const dest = resolveOnboardingLaunch({
+      sessionKind: sessionKindFromUser(user),
+      dbCompleted: onboardingCompleted,
+    });
+    if (dest === "home") {
+      const href = resolveCompletedLeaveHref({
+        inOnboarding,
+        inAuth,
+        onCreateProfile,
+        inTabs,
+        exitHref: peekOnboardingV2Exit(),
+      });
+      if (href) router.replace(href as never);
+      return;
+    }
 
     const AUTHENTICATED_SEGMENTS = new Set([
       "(tabs)",
@@ -418,8 +410,7 @@ function AuthRedirector() {
   if (
     loading ||
     (user && !profileChecked) ||
-    (!user && hasLaunched === null) ||
-    (FLAGS.ONBOARDING_V2 && localCompleted === null)
+    (!user && hasLaunched === null)
   ) {
     return <AuthRedirectorLoading />;
   }
@@ -429,46 +420,6 @@ function AuthRedirector() {
 
 function RootLayoutNav() {
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
-
-  const segments = useSegments();
-  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const completed = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
-        setNeedsOnboarding(completed !== "true");
-      } catch (e) {
-        captureError(e, "RootLayoutAsyncStorageOnboarding");
-        setNeedsOnboarding(true);
-      }
-      setCheckingOnboarding(false);
-    };
-    check();
-  }, []);
-
-  const firstSegment = typeof segments[0] === "string" ? segments[0] : "";
-  const ONBOARDING_EXEMPT = new Set([
-    "onboarding",
-    "challenge",
-    "task",
-    "settings",
-    "edit-profile",
-    "legal",
-    "post",
-    "follow-list",
-  ]);
-  if (checkingOnboarding) {
-    return (
-      <View style={layoutStyles.centeredFill}>
-        <ActivityIndicator size="large" color={DS_COLORS?.accent ?? DS_COLORS.ACCENT_PRIMARY} />
-      </View>
-    );
-  }
-  if (needsOnboarding && !ONBOARDING_EXEMPT.has(firstSegment)) {
-    return <Redirect href="/onboarding" />;
-  }
 
   return (
     <View style={layoutStyles.flex1}>
@@ -647,12 +598,6 @@ const layoutStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: DS_COLORS.background,
     zIndex: 999,
-  },
-  centeredFill: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: DS_COLORS?.background ?? DS_COLORS.FALLBACK_BG,
   },
   flex1: { flex: 1 },
   sessionExpiredBanner: {

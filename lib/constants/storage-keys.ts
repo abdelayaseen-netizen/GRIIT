@@ -5,6 +5,7 @@
 
 export const STORAGE_KEYS = {
   ONBOARDING_COMPLETED: 'onboarding_completed',
+  ONBOARDING_V2_STEP: 'onboarding_v2_step',
   HAS_LAUNCHED: 'griit_has_launched',
   ONBOARDING_STORE: 'griit-onboarding',
   PENDING_CHALLENGE_ID: 'griit_pending_challenge_id',

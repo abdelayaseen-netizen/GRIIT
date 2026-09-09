@@ -12,63 +12,62 @@ import {
 } from "@/lib/onboarding-v2-routing";
 
 describe("ONBOARDING_V2_ORDER", () => {
-  it("is the v4 list without mode", () => {
+  it("is welcome, goals, why_proof, why_circle, commitment, first_challenge, reminders, account, profile", () => {
     expect(ONBOARDING_V2_ORDER).toEqual([
       "welcome",
       "goals",
-      "proof",
-      "circle",
-      "challenge",
-      "reminder",
+      "why_proof",
+      "why_circle",
+      "commitment",
+      "first_challenge",
+      "reminders",
       "account",
-      "invite",
-      "dayone",
+      "profile",
     ]);
   });
 
-  it("does not include paywall, mode, or commitment", () => {
+  it("does not include paywall or mode", () => {
     expect(ONBOARDING_V2_ORDER.includes("paywall" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
     expect(ONBOARDING_V2_ORDER.includes("mode" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
-    expect(ONBOARDING_V2_ORDER.includes("commitment" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
   });
 
-  it("has seven progress segments", () => {
-    expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(7);
+  it("has eight progress segments after welcome", () => {
+    expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(8);
   });
 });
 
 describe("resolveV2Step", () => {
   it("returns a known key unchanged", () => {
     expect(resolveV2Step("goals")).toBe("goals");
-    expect(resolveV2Step("dayone")).toBe("dayone");
+    expect(resolveV2Step("first_challenge")).toBe("first_challenge");
+    expect(resolveV2Step("profile")).toBe("profile");
   });
 
-  it("maps stale Chunk A keys and unknown keys to the renamed step", () => {
-    expect(resolveV2Step("why_proof")).toBe("proof");
-    expect(resolveV2Step("why_circle")).toBe("circle");
-    expect(resolveV2Step("commitment")).toBe("challenge");
-    expect(resolveV2Step("first_challenge")).toBe("challenge");
-    expect(resolveV2Step("reminders")).toBe("reminder");
-    expect(resolveV2Step("profile")).toBe("dayone");
-    expect(resolveV2Step("paywall")).toBe("challenge");
-    expect(resolveV2Step("nope")).toBe("challenge");
-    expect(resolveV2Step(null)).toBe("challenge");
-    expect(resolveV2Step(undefined)).toBe("challenge");
+  it("maps stale v4 keys to Chunk A steps; unknown resumes at welcome", () => {
+    expect(resolveV2Step("proof")).toBe("why_proof");
+    expect(resolveV2Step("circle")).toBe("why_circle");
+    expect(resolveV2Step("challenge")).toBe("first_challenge");
+    expect(resolveV2Step("reminder")).toBe("reminders");
+    expect(resolveV2Step("invite")).toBe("account");
+    expect(resolveV2Step("dayone")).toBe("profile");
+    expect(resolveV2Step("paywall")).toBe("first_challenge");
+    expect(resolveV2Step("nope")).toBe("welcome");
+    expect(resolveV2Step(null)).toBe("welcome");
+    expect(resolveV2Step(undefined)).toBe("welcome");
   });
 });
 
 describe("v2 progress chrome", () => {
-  it("fills segment i when step index >= i; Day 1 fills all and reads Done", () => {
+  it("fills segment i when step index >= i; labels stay empty", () => {
     expect(v2SegmentFilled("welcome", 1)).toBe(false);
     expect(v2SegmentFilled("goals", 1)).toBe(true);
     expect(v2SegmentFilled("goals", 2)).toBe(false);
-    expect(v2SegmentFilled("invite", 7)).toBe(true);
-    expect(v2SegmentFilled("dayone", 1)).toBe(true);
-    expect(v2SegmentFilled("dayone", 7)).toBe(true);
+    expect(v2SegmentFilled("account", 7)).toBe(true);
+    expect(v2SegmentFilled("profile", 1)).toBe(true);
+    expect(v2SegmentFilled("profile", 8)).toBe(true);
     expect(v2ProgressLabel("welcome")).toBe("");
-    expect(v2ProgressLabel("goals")).toBe("Step 1/7");
-    expect(v2ProgressLabel("invite")).toBe("Step 7/7");
-    expect(v2ProgressLabel("dayone")).toBe("Done");
+    expect(v2ProgressLabel("goals")).toBe("");
+    expect(v2ProgressLabel("profile")).toBe("");
   });
 });
 
@@ -81,214 +80,132 @@ describe("sessionKindFromUser", () => {
   });
 });
 
+function hrefForDest(
+  dest: ReturnType<typeof resolveOnboardingLaunch>,
+  loc: { inOnboarding: boolean; inAuth: boolean; onCreateProfile: boolean; inTabs: boolean }
+): string | null {
+  if (dest === "home") return resolveCompletedLeaveHref({ ...loc, exitHref: null });
+  if (loc.inOnboarding || loc.inAuth) return null;
+  return "/onboarding";
+}
+
 describe("resolveOnboardingCompleted", () => {
-  it("real session: dbCompleted is authoritative when loaded", () => {
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: true,
-        dbCompleted: false,
-      })
-    ).toBe(false);
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "real",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: true,
-      })
-    ).toBe(true);
+  it("real session: dbCompleted is the only gate", () => {
+    expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: false })).toBe(false);
+    expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: true })).toBe(true);
   });
 
   it("real session: db not loaded yet is not completed (overlay stays up)", () => {
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: true,
-        dbCompleted: null,
-      })
-    ).toBe(false);
+    expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: null })).toBe(false);
   });
 
-  it("real session: db fetch error falls back to local || store", () => {
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: false,
-        dbCompleted: null,
-        dbFetchFailed: true,
-      })
-    ).toBe(true);
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "real",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: null,
-        dbFetchFailed: true,
-      })
-    ).toBe(false);
+  it("guest: only profiles.onboarding_completed, not a local flag", () => {
+    expect(resolveOnboardingCompleted({ sessionKind: "guest", dbCompleted: false })).toBe(false);
+    expect(resolveOnboardingCompleted({ sessionKind: "guest", dbCompleted: true })).toBe(true);
+    expect(resolveOnboardingCompleted({ sessionKind: "guest", dbCompleted: null })).toBe(false);
   });
 
-  it("guest and none: local OR store OR db", () => {
+  it("none is never completed", () => {
+    expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: true })).toBe(false);
+    expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: null })).toBe(false);
+  });
+});
+
+describe("AuthRedirector matrix", () => {
+  it("real + completed → Home", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true })).toBe("home");
+  });
+
+  it("real + incomplete → resume", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: false })).toBe("resume");
+  });
+
+  it("anon + completed → Home", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "guest", dbCompleted: true })).toBe("home");
+  });
+
+  it("anon + incomplete → resume", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "guest", dbCompleted: false })).toBe("resume");
+  });
+
+  it("none → Welcome", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "none", dbCompleted: null })).toBe("welcome");
+    expect(resolveOnboardingLaunch({ sessionKind: "none", dbCompleted: true })).toBe("welcome");
+  });
+
+  it("real + DB true + local unset → Home, stable — no second navigation", () => {
+    const dest = resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true });
+    expect(dest).toBe("home");
+    const first = hrefForDest(dest, {
+      inOnboarding: true,
+      inAuth: false,
+      onCreateProfile: false,
+      inTabs: false,
+    });
+    expect(first).toBe("/(tabs)");
+    const second = hrefForDest(dest, {
+      inOnboarding: false,
+      inAuth: false,
+      onCreateProfile: false,
+      inTabs: true,
+    });
+    expect(second).toBeNull();
+  });
+
+  it("real + DB false → onboarding", () => {
+    const dest = resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: false });
+    expect(dest).toBe("resume");
     expect(
-      resolveOnboardingCompleted({
-        sessionKind: "guest",
-        localCompleted: true,
-        storeCompleted: false,
-        dbCompleted: false,
+      hrefForDest(dest, {
+        inOnboarding: false,
+        inAuth: false,
+        onCreateProfile: false,
+        inTabs: true,
       })
-    ).toBe(true);
+    ).toBe("/onboarding");
+  });
+
+  it("v1 path with DB true + local unset → Home", () => {
+    const dest = resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true });
+    expect(dest).toBe("home");
     expect(
-      resolveOnboardingCompleted({
-        sessionKind: "none",
-        localCompleted: false,
-        storeCompleted: true,
-        dbCompleted: null,
+      hrefForDest(dest, {
+        inOnboarding: true,
+        inAuth: false,
+        onCreateProfile: false,
+        inTabs: false,
       })
-    ).toBe(true);
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "guest",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: true,
-      })
-    ).toBe(true);
-    expect(
-      resolveOnboardingCompleted({
-        sessionKind: "none",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: null,
-      })
-    ).toBe(false);
+    ).toBe("/(tabs)");
   });
 });
 
 describe("resolveOnboardingLaunch", () => {
   it("real account, completed → Home, including a direct /onboarding hit", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "real",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: true,
-        inOnboarding: false,
-      })
-    ).toBe("home");
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "real",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: true,
-        inOnboarding: true,
-      })
-    ).toBe("home");
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true })).toBe("home");
   });
 
-  it("real session, dbCompleted null after error, localCompleted true → home", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: false,
-        dbCompleted: null,
-        dbFetchFailed: true,
-        inOnboarding: true,
-      })
-    ).toBe("home");
+  it("real session, dbCompleted null is not Home", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: null })).toBe("resume");
   });
 
-  it("real account, dbCompleted false, localCompleted true → resume", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: true,
-        dbCompleted: false,
-        inOnboarding: false,
-      })
-    ).toBe("resume");
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "real",
-        localCompleted: true,
-        storeCompleted: true,
-        dbCompleted: false,
-        inOnboarding: true,
-      })
-    ).toBe("resume");
+  it("real account, dbCompleted false → resume", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: false })).toBe("resume");
   });
 
   it("guest completed → Home with guest state (not welcome)", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "guest",
-        localCompleted: true,
-        storeCompleted: false,
-        dbCompleted: true,
-        inOnboarding: false,
-      })
-    ).toBe("home");
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "guest",
-        localCompleted: true,
-        storeCompleted: true,
-        dbCompleted: null,
-        inOnboarding: true,
-      })
-    ).toBe("home");
+    expect(resolveOnboardingLaunch({ sessionKind: "guest", dbCompleted: true })).toBe("home");
   });
 
   it("guest not completed → resume", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "guest",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: false,
-        inOnboarding: false,
-      })
-    ).toBe("resume");
+    expect(resolveOnboardingLaunch({ sessionKind: "guest", dbCompleted: false })).toBe("resume");
   });
 
-  it("no session, not completed → Welcome; in-flow → resume", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "none",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: null,
-        inOnboarding: false,
-      })
-    ).toBe("welcome");
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "none",
-        localCompleted: false,
-        storeCompleted: false,
-        dbCompleted: null,
-        inOnboarding: true,
-      })
-    ).toBe("resume");
+  it("no session → Welcome, in flow or not", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "none", dbCompleted: null })).toBe("welcome");
   });
 
-  it("no session, completed → Home even if they hit /onboarding", () => {
-    expect(
-      resolveOnboardingLaunch({
-        sessionKind: "none",
-        localCompleted: true,
-        storeCompleted: false,
-        dbCompleted: null,
-        inOnboarding: true,
-      })
-    ).toBe("home");
+  it("no session stays Welcome even if dbCompleted is true", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "none", dbCompleted: true })).toBe("welcome");
   });
 
   it("completed guest already on Discover is not redirected to Home", () => {
@@ -313,25 +230,9 @@ describe("resolveOnboardingLaunch", () => {
   });
 
   it("completed never routes back to welcome (no redirect loop)", () => {
-    const kinds = ["none", "guest", "real"] as const;
+    const kinds = ["guest", "real"] as const;
     for (const sessionKind of kinds) {
-      const dest = resolveOnboardingLaunch({
-        sessionKind,
-        localCompleted: sessionKind !== "real",
-        storeCompleted: sessionKind !== "real",
-        dbCompleted: sessionKind === "real" ? true : null,
-        inOnboarding: false,
-      });
-      expect(dest).toBe("home");
-      expect(
-        resolveOnboardingLaunch({
-          sessionKind,
-          localCompleted: sessionKind !== "real",
-          storeCompleted: sessionKind !== "real",
-          dbCompleted: sessionKind === "real" ? true : null,
-          inOnboarding: true,
-        })
-      ).toBe("home");
+      expect(resolveOnboardingLaunch({ sessionKind, dbCompleted: true })).toBe("home");
     }
   });
 });

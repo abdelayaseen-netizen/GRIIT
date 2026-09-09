@@ -24,6 +24,7 @@ export default function GoalsScreen({ onContinue }: { onContinue: () => void }) 
         setSelectedGoals(selectedGoals.filter((g) => g !== id));
         return;
       }
+      if (selectedGoals.length >= 3) return;
       setSelectedGoals([...selectedGoals, id]);
     },
     [selectedGoals, setSelectedGoals]

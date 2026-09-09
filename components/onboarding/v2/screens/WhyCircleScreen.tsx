@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OBV2_COLOR } from "../theme";
-import { Kicker, PrimaryButton } from "../ui";
+import { Kicker, PrimaryButton, TextLink } from "../ui";
 
 function Avatar({ label, size = 42, ring = false }: { label: string; size?: number; ring?: boolean }) {
   return (
@@ -19,9 +19,10 @@ function Avatar({ label, size = 42, ring = false }: { label: string; size?: numb
 
 export default function WhyCircleScreen({
   onContinue,
+  onSkip,
 }: {
   onContinue: () => void;
-  onSkip?: () => void;
+  onSkip: () => void;
 }) {
   return (
     <View style={styles.content}>
@@ -68,6 +69,7 @@ export default function WhyCircleScreen({
 
       <View style={styles.footer}>
         <PrimaryButton label="Continue" onPress={onContinue} />
+        <TextLink label="Skip" onPress={onSkip} />
       </View>
     </View>
   );
@@ -111,5 +113,5 @@ const styles = StyleSheet.create({
   },
   privacyTitle: { fontSize: 13, fontWeight: "500", color: OBV2_COLOR.ink },
   privacySub: { fontSize: 13, fontWeight: "400", lineHeight: 18, color: OBV2_COLOR.ink2 },
-  footer: { paddingTop: 14, paddingBottom: 32 },
+  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
 });

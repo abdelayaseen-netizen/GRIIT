@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, SafeAreaView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ChevronLeft } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { ONBOARDING_COLORS as C , GOAL_OPTIONS } from "@/components/onboarding/onboarding-theme";
 import { GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system"
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useAuth } from "@/contexts/AuthContext";
+import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 
 import { captureError } from "@/lib/sentry";
 import { logger } from "@/lib/logger";
@@ -74,7 +73,7 @@ export default function OnboardingFlow() {
     completeOnboarding();
     setProfileSetupHints(null);
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, "true");
+      await cacheOnboardingCompleted();
     } catch (e) {
       captureError(e, "OnboardingFlowPersistFlag");
       logger.debug("OnboardingFlow", "persist onboarding flag failed", e);

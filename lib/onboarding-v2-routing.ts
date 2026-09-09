@@ -6,19 +6,19 @@
 export const ONBOARDING_V2_ORDER = [
   "welcome",
   "goals",
-  "proof",
-  "circle",
-  "challenge",
-  "reminder",
+  "why_proof",
+  "why_circle",
+  "commitment",
+  "first_challenge",
+  "reminders",
   "account",
-  "invite",
-  "dayone",
+  "profile",
 ] as const;
 
 export type OnboardingV2Step = (typeof ONBOARDING_V2_ORDER)[number];
 
-/** Tracked steps after welcome. Day 1 fills all and labels "Done". */
-export const ONBOARDING_V2_PROGRESS_SEGMENTS = 7;
+/** Dots after welcome. No "of 9." */
+export const ONBOARDING_V2_PROGRESS_SEGMENTS = 8;
 
 export type SessionKind = "none" | "guest" | "real";
 
@@ -26,36 +26,35 @@ export type OnboardingLaunchDestination = "home" | "resume" | "welcome";
 
 const ORDER_SET = new Set<string>(ONBOARDING_V2_ORDER);
 
-/** Stale Chunk A keys + paywall-era keys resume on the renamed step. */
+/** Stale v4 / paywall-era keys resume on the Chunk A step. */
 const STEP_ALIASES: Record<string, OnboardingV2Step> = {
-  why_proof: "proof",
-  why_circle: "circle",
-  commitment: "challenge",
-  first_challenge: "challenge",
-  reminders: "reminder",
-  profile: "dayone",
-  paywall: "challenge",
+  proof: "why_proof",
+  circle: "why_circle",
+  challenge: "first_challenge",
+  reminder: "reminders",
+  invite: "account",
+  dayone: "profile",
+  paywall: "first_challenge",
 };
 
 export function resolveV2Step(raw: string | null | undefined): OnboardingV2Step {
   if (raw && ORDER_SET.has(raw)) return raw as OnboardingV2Step;
-  if (raw && raw in STEP_ALIASES) return STEP_ALIASES[raw] ?? "challenge";
-  return "challenge";
+  if (raw && raw in STEP_ALIASES) return STEP_ALIASES[raw] ?? "welcome";
+  return "welcome";
 }
 
 export function v2StepIndex(step: OnboardingV2Step): number {
   return ONBOARDING_V2_ORDER.indexOf(step);
 }
 
-/** Segment i (1..7) is filled when the current step index is >= i. */
+/** Segment i (1..8) is filled when the current step index is >= i. */
 export function v2SegmentFilled(step: OnboardingV2Step, segment: number): boolean {
   return v2StepIndex(step) >= segment;
 }
 
 export function v2ProgressLabel(step: OnboardingV2Step): string {
   if (step === "welcome") return "";
-  if (step === "dayone") return "Done";
-  return `Step ${v2StepIndex(step)}/${ONBOARDING_V2_PROGRESS_SEGMENTS}`;
+  return "";
 }
 
 export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | undefined): SessionKind {
@@ -67,38 +66,24 @@ export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | un
 /**
  * Whether this session has finished onboarding.
  *
- * Real accounts: DB is authoritative once loaded (non-null). A stale local
- * flag from a previous guest on the same device must not skip a new account.
- * `dbCompleted === null` while loading is not completed (caller keeps overlay).
- * `dbCompleted === null` after a fetch error falls back to local || store.
- * Guest / no session: local OR store OR db.
+ * Spec table: session kind × profiles.onboarding_completed.
+ * Local ONBOARDING_COMPLETED is a cache write only — never an input.
+ * `dbCompleted === null` is not completed (caller waits or resumes).
  */
 export function resolveOnboardingCompleted(input: {
   sessionKind: SessionKind;
-  localCompleted: boolean;
-  storeCompleted: boolean;
   dbCompleted: boolean | null;
-  dbFetchFailed?: boolean;
 }): boolean {
-  const { sessionKind, localCompleted, storeCompleted, dbCompleted, dbFetchFailed } = input;
-  if (sessionKind === "real") {
-    if (dbCompleted !== null) return dbCompleted;
-    if (dbFetchFailed) return localCompleted || storeCompleted;
-    return false;
-  }
-  return localCompleted || storeCompleted || dbCompleted === true;
+  if (input.sessionKind === "none") return false;
+  return input.dbCompleted === true;
 }
 
 export function resolveOnboardingLaunch(input: {
   sessionKind: SessionKind;
-  localCompleted: boolean;
-  storeCompleted: boolean;
   dbCompleted: boolean | null;
-  dbFetchFailed?: boolean;
-  inOnboarding: boolean;
 }): OnboardingLaunchDestination {
+  if (input.sessionKind === "none") return "welcome";
   if (resolveOnboardingCompleted(input)) return "home";
-  if (input.sessionKind === "none" && !input.inOnboarding) return "welcome";
   return "resume";
 }
 

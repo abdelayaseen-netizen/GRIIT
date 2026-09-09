@@ -1,23 +1,18 @@
 /**
- * OnboardingFlowV2 — v4 order without the mode screen.
- *
- * TODO(mode): per-enrollment difficulty needs an `active_challenges.mode`
- * column (standard | committed | hard) before the handoff Mode screen can
- * return. Do not route to CommitmentScreen. Store field stays unused.
+ * OnboardingFlowV2 — Chunk A order.
+ * Commitment (day target) and Profile are placeholders. No dead ends.
  *
  * Rendered by app/onboarding/index.tsx ONLY when FLAGS.ONBOARDING_V2 is true.
- * Runs alongside (never replaces) the existing components/onboarding/OnboardingFlow.
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 import {
   ONBOARDING_V2_ORDER,
   peekOnboardingV2Exit,
@@ -25,7 +20,9 @@ import {
   resolveV2Step,
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
-import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
+import { persistOnboardingV2Step, loadOnboardingV2Step } from "@/lib/onboarding-v2-step";
+import { skipOnboardingV2 } from "@/lib/onboarding-v2-skip";
+import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
 import {
@@ -45,8 +42,7 @@ import AccountScreen from "./screens/AccountScreen";
 import AccountNameScreen from "./screens/AccountNameScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
-import InviteScreen from "./screens/InviteScreen";
-import DayOneScreen from "./screens/DayOneScreen";
+import NotBuiltScreen from "./screens/NotBuiltScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 
 function useOnboardingHydrated(): boolean {
@@ -65,31 +61,20 @@ export default function OnboardingFlowV2() {
   const hydrated = useOnboardingHydrated();
   const rawStep = useOnboardingStore((s) => s.v2Step);
   const setV2Step = useOnboardingStore((s) => s.setV2Step);
-  const storeCompleted = useOnboardingStore((s) => s.isComplete || s.hasCompletedOnboarding);
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const setSelectedGoals = useOnboardingStore((s) => s.setSelectedGoals);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const step = resolveV2Step(rawStep);
-  const [localCompleted, setLocalCompleted] = useState(false);
-  const [localReady, setLocalReady] = useState(false);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [stepReady, setStepReady] = useState(false);
   const accountNameOpen = useOnboardingStore((s) => s.accountNameOpen);
   const setAccountNameOpen = useOnboardingStore((s) => s.setAccountNameOpen);
-
-  useEffect(() => {
-    void AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED)
-      .then((value) => {
-        setLocalCompleted(value === "true");
-        setLocalReady(true);
-      })
-      .catch(() => setLocalReady(true));
-  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -112,8 +97,10 @@ export default function OnboardingFlowV2() {
           return;
         }
         const flag = (data as { onboarding_completed?: boolean } | null)?.onboarding_completed;
-        setDbCompleted(typeof flag === "boolean" ? flag : false);
+        const done = flag === true;
+        setDbCompleted(done);
         setDbFetchFailed(false);
+        if (done) void cacheOnboardingCompleted();
       } catch {
         if (!cancelled) {
           setDbCompleted(null);
@@ -147,10 +134,7 @@ export default function OnboardingFlowV2() {
 
   const completed = resolveOnboardingCompleted({
     sessionKind: sessionKindFromUser(user),
-    localCompleted,
-    storeCompleted,
     dbCompleted: user ? dbCompleted : null,
-    dbFetchFailed: user ? dbFetchFailed : false,
   });
 
   useEffect(() => {
@@ -167,7 +151,25 @@ export default function OnboardingFlowV2() {
   }, [rawStep, step, setV2Step]);
 
   useEffect(() => {
-    if (step !== "challenge" && browseOpen) setBrowseOpen(false);
+    if (!hydrated || completed) return;
+    let cancelled = false;
+    void loadOnboardingV2Step().then((stored) => {
+      if (cancelled) return;
+      if (stored) setV2Step(stored);
+      setStepReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, completed, setV2Step]);
+
+  useEffect(() => {
+    if (!stepReady || completed) return;
+    void persistOnboardingV2Step(step);
+  }, [stepReady, completed, step]);
+
+  useEffect(() => {
+    if (step !== "first_challenge" && browseOpen) setBrowseOpen(false);
   }, [step, browseOpen]);
 
   useEffect(() => {
@@ -175,9 +177,9 @@ export default function OnboardingFlowV2() {
   }, [step, accountNameOpen, setAccountNameOpen]);
 
   useEffect(() => {
-    if (!hydrated || !localReady || completed) return;
+    if (!hydrated || completed) return;
     track({ name: "onboarding_started" });
-  }, [hydrated, localReady, completed]);
+  }, [hydrated, completed]);
 
   const goNext = useCallback(() => {
     const idx = ONBOARDING_V2_ORDER.indexOf(step);
@@ -241,10 +243,6 @@ export default function OnboardingFlowV2() {
     goNext();
   }, [goNext]);
 
-  const handleBrowseAll = useCallback(() => {
-    setBrowseOpen(true);
-  }, []);
-
   const handleBrowseSelect = useCallback(
     (challenge: SuggestableChallenge) => {
       const next = applyBrowsePick(challenge.id);
@@ -265,10 +263,14 @@ export default function OnboardingFlowV2() {
     setBrowseOpen(next.phase === "open");
   }, []);
 
-  const handleDayOneStart = useCallback(async () => {
-    const result = await exitOnboardingV2(ROUTES.TABS);
-    if (!result.ok) return;
-    router.replace(ROUTES.TABS as never);
+  const handleFinish = useCallback(async () => {
+    await completeOnboardingV2();
+    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
+  }, [router]);
+
+  const handleSkip = useCallback(async () => {
+    await skipOnboardingV2();
+    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
   const renderScreen = () => {
@@ -289,11 +291,13 @@ export default function OnboardingFlowV2() {
         return <WelcomeScreen onGetStarted={goNext} onHaveAccount={() => goToLogin()} />;
       case "goals":
         return <GoalsScreen onContinue={goNext} />;
-      case "proof":
-        return <WhyProofScreen onContinue={goNext} onSkip={goNext} />;
-      case "circle":
-        return <WhyCircleScreen onContinue={goNext} onSkip={goNext} />;
-      case "challenge":
+      case "why_proof":
+        return <WhyProofScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+      case "why_circle":
+        return <WhyCircleScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+      case "commitment":
+        return <NotBuiltScreen onContinue={goNext} onSkip={() => void handleSkip()} />;
+      case "first_challenge":
         if (browseOpen) {
           return <BrowseAllPickerScreen onSelect={handleBrowseSelect} />;
         }
@@ -304,26 +308,24 @@ export default function OnboardingFlowV2() {
               goNext();
             }}
             onSkip={goNext}
-            onBrowse={handleBrowseAll}
+            onBrowse={() => router.push(ROUTES.TABS_DISCOVER as never)}
           />
         );
-      case "reminder":
+      case "reminders":
         return <RemindersScreen onContinue={goNext} />;
       case "account":
         if (accountNameOpen) {
-          return <AccountNameScreen onContinue={leaveAccountName} onSkip={leaveAccountName} />;
+          return <AccountNameScreen onContinue={leaveAccountName} onSkip={() => void handleSkip()} />;
         }
         return (
           <AccountScreen
             onAuthSuccess={handleAccountSuccess}
-            onSkip={goNext}
+            onSkip={() => void handleSkip()}
             onSignInWithAccount={goToLogin}
           />
         );
-      case "invite":
-        return <InviteScreen onContinue={goNext} onSkip={goNext} />;
-      case "dayone":
-        return <DayOneScreen onStart={handleDayOneStart} />;
+      case "profile":
+        return <NotBuiltScreen onContinue={() => void handleFinish()} onSkip={() => void handleSkip()} />;
     }
   };
 
@@ -332,7 +334,7 @@ export default function OnboardingFlowV2() {
   // After create/upgrade the session is "real" and dbCompleted is still null.
   // Do not blank the name step (or Invite after it) behind that overlay.
   const holdForDb = waitingOnDb && step === "account" && !accountNameOpen;
-  if (!hydrated || !localReady || holdForDb || completed) {
+  if (!hydrated || holdForDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
   }
 
