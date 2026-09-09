@@ -96,8 +96,8 @@ export function resolveOnboardingLaunch(input: {
   dbFetchFailed?: boolean;
   inOnboarding: boolean;
 }): OnboardingLaunchDestination {
+  if (input.sessionKind === "none") return "welcome";
   if (resolveOnboardingCompleted(input)) return "home";
-  if (input.sessionKind === "none" && !input.inOnboarding) return "welcome";
   return "resume";
 }
 

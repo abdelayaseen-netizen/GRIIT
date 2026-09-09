@@ -168,6 +168,77 @@ describe("resolveOnboardingCompleted", () => {
   });
 });
 
+describe("AuthRedirector matrix", () => {
+  it("real + completed → Home", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        localCompleted: false,
+        storeCompleted: false,
+        dbCompleted: true,
+        inOnboarding: false,
+      })
+    ).toBe("home");
+  });
+
+  it("real + incomplete → resume", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        localCompleted: true,
+        storeCompleted: true,
+        dbCompleted: false,
+        inOnboarding: false,
+      })
+    ).toBe("resume");
+  });
+
+  it("anon + completed → Home", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "guest",
+        localCompleted: true,
+        storeCompleted: false,
+        dbCompleted: true,
+        inOnboarding: false,
+      })
+    ).toBe("home");
+  });
+
+  it("anon + incomplete → resume", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "guest",
+        localCompleted: false,
+        storeCompleted: false,
+        dbCompleted: false,
+        inOnboarding: false,
+      })
+    ).toBe("resume");
+  });
+
+  it("none → Welcome", () => {
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "none",
+        localCompleted: false,
+        storeCompleted: false,
+        dbCompleted: null,
+        inOnboarding: false,
+      })
+    ).toBe("welcome");
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "none",
+        localCompleted: true,
+        storeCompleted: true,
+        dbCompleted: true,
+        inOnboarding: true,
+      })
+    ).toBe("welcome");
+  });
+});
+
 describe("resolveOnboardingLaunch", () => {
   it("real account, completed → Home, including a direct /onboarding hit", () => {
     expect(
@@ -257,7 +328,7 @@ describe("resolveOnboardingLaunch", () => {
     ).toBe("resume");
   });
 
-  it("no session, not completed → Welcome; in-flow → resume", () => {
+  it("no session → Welcome, in flow or not", () => {
     expect(
       resolveOnboardingLaunch({
         sessionKind: "none",
@@ -275,10 +346,10 @@ describe("resolveOnboardingLaunch", () => {
         dbCompleted: null,
         inOnboarding: true,
       })
-    ).toBe("resume");
+    ).toBe("welcome");
   });
 
-  it("no session, completed → Home even if they hit /onboarding", () => {
+  it("no session stays Welcome even if a local completed flag is set", () => {
     expect(
       resolveOnboardingLaunch({
         sessionKind: "none",
@@ -287,7 +358,7 @@ describe("resolveOnboardingLaunch", () => {
         dbCompleted: null,
         inOnboarding: true,
       })
-    ).toBe("home");
+    ).toBe("welcome");
   });
 
   it("completed guest already on Discover is not redirected to Home", () => {
@@ -312,7 +383,7 @@ describe("resolveOnboardingLaunch", () => {
   });
 
   it("completed never routes back to welcome (no redirect loop)", () => {
-    const kinds = ["none", "guest", "real"] as const;
+    const kinds = ["guest", "real"] as const;
     for (const sessionKind of kinds) {
       const dest = resolveOnboardingLaunch({
         sessionKind,
