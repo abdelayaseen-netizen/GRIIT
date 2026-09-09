@@ -20,6 +20,30 @@ export type TestAppCaller = {
       newStreakCount: number;
     }>;
   };
+  today: {
+    get: () => Promise<{
+      date_key: string;
+      secured: boolean;
+      streak: number;
+      secured_date_keys: string[];
+      enrollments: Array<{
+        active_challenge_id: string;
+        challenge_id: string;
+        title: string;
+        current_day: number;
+        secured_today: boolean;
+        tasks: Array<{
+          id: string;
+          title: string;
+          done: boolean;
+          require_photo: boolean;
+          require_location: boolean;
+          config: Record<string, unknown> | null;
+        }>;
+      }>;
+      remaining_challenges: number;
+    }>;
+  };
 };
 
 export function createTestCaller(ctx: {
