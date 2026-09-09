@@ -1,6 +1,11 @@
-import React, { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { requestNotificationPermissions, scheduleNextSecureReminder } from "@/lib/notifications";
+import React, { useCallback, useEffect, useState } from "react";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { BellOff, Shield } from "lucide-react-native";
+import {
+  getNotificationPermissionStatus,
+  requestNotificationPermissions,
+  scheduleNextSecureReminder,
+} from "@/lib/notifications";
 import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { track } from "@/lib/analytics";
@@ -17,13 +22,24 @@ import {
   type ReminderMinute,
   type ReminderPresetId,
 } from "@/lib/onboarding-v2-reminders";
-import { OBV2_COLOR } from "../theme";
-import { LogoMark, PrimaryButton, TextLink } from "../ui";
+import { DS_V3 } from "@/lib/design-system";
+import Card from "@/components/ds/Card";
+import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
 const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const MINUTES: ReminderMinute[] = ["00", "15", "30", "45"];
+const ICON = DS_V3.space.xs * 6;
+const TILE = DS_V3.space.gutter * 2;
+const PT = DS_V3.space.xs / 4;
+const PT_SELECTED = PT * 1.5;
 
-export default function RemindersScreen({ onContinue }: { onContinue: () => void }) {
+export default function RemindersScreen({
+  onContinue,
+  onBack,
+}: {
+  onContinue: () => void;
+  onBack: () => void;
+}) {
   const setNotificationsAsked = useOnboardingStore((s) => s.setNotificationsAsked);
   const reminderPreset = useOnboardingStore((s) => s.reminderPreset);
   const reminderCustom = useOnboardingStore((s) => s.reminderCustom);
@@ -35,11 +51,23 @@ export default function RemindersScreen({ onContinue }: { onContinue: () => void
 
   const [customOpen, setCustomOpen] = useState(false);
   const [draft, setDraft] = useState<ReminderCustom>(reminderCustom ?? DEFAULT_CUSTOM_DRAFT);
+  const [denied, setDenied] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getNotificationPermissionStatus().then((status) => {
+      if (!cancelled && status === "denied") setDenied(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openCustom = useCallback(() => {
+    if (denied) return;
     setDraft(reminderCustom ?? draft ?? DEFAULT_CUSTOM_DRAFT);
     setCustomOpen(true);
-  }, [reminderCustom, draft]);
+  }, [denied, reminderCustom, draft]);
 
   const useDraft = useCallback(() => {
     setReminderCustom(draft);
@@ -47,335 +75,384 @@ export default function RemindersScreen({ onContinue }: { onContinue: () => void
     setCustomOpen(false);
   }, [draft, setReminderCustom, setReminderPreset]);
 
-  const backToPresets = useCallback(() => {
-    setCustomOpen(false);
-  }, []);
-
   const pickPreset = useCallback(
     (id: Exclude<ReminderPresetId, "custom">) => {
+      if (denied) return;
       setReminderPreset(id);
     },
-    [setReminderPreset]
+    [denied, setReminderPreset]
+  );
+
+  const finish = useCallback(
+    (granted: boolean) => {
+      track({ name: "notifications_prompt_result", granted });
+      setNotificationsAsked(true);
+      setRemindersEnabled(granted);
+      onContinue();
+    },
+    [setNotificationsAsked, setRemindersEnabled, onContinue]
   );
 
   const handleEnable = useCallback(async () => {
     let granted = false;
     try {
-      // Sole v2 OS prompt — see v2MayPromptNotificationPermission("reminders_cta").
       if (v2MayPromptNotificationPermission("reminders_cta")) {
         granted = await requestNotificationPermissions();
       }
       if (granted) {
         await scheduleNextSecureReminder(reminderTime24h(reminderPreset, reminderCustom));
+        finish(true);
+        return;
       }
-    } finally {
-      track({ name: "notifications_prompt_result", granted });
-      setNotificationsAsked(true);
-      setRemindersEnabled(granted);
-      onContinue();
+      setDenied(true);
+    } catch {
+      setDenied(true);
     }
-  }, [
-    reminderPreset,
-    reminderCustom,
-    setNotificationsAsked,
-    setRemindersEnabled,
-    onContinue,
-  ]);
+  }, [reminderPreset, reminderCustom, finish]);
 
   const handleLater = useCallback(() => {
-    track({ name: "notifications_prompt_result", granted: false });
-    setNotificationsAsked(true);
-    setRemindersEnabled(false);
-    onContinue();
-  }, [setNotificationsAsked, setRemindersEnabled, onContinue]);
+    finish(false);
+  }, [finish]);
 
   const timeShort = reminderTimeShort(reminderPreset, reminderCustom);
-  const body = notificationBody(challengeName, taskCount);
+  const total = taskCount > 0 ? taskCount : 0;
+  const body = notificationBody(challengeName, total, total);
   const draftText = formatReminderTimeLong(draft);
 
+  const footer = denied ? (
+    <>
+      <ChromePrimary label="Open Settings" onPress={() => void Linking.openSettings()} />
+      <TextLink label="Continue without reminders" onPress={handleLater} />
+    </>
+  ) : (
+    <>
+      <ChromePrimary label="Turn on reminders" onPress={() => void handleEnable()} />
+      <TextLink label="No reminders for now" onPress={handleLater} />
+    </>
+  );
+
   return (
-    <View style={styles.content}>
-      <View style={styles.head}>
-        <Text style={styles.h1}>One reminder a day.</Text>
-        <Text style={styles.sub}>
-          One reminder a day, at a time you pick. Turn it off whenever — that&apos;s the deal.
-        </Text>
-      </View>
-
-      <ScrollView
-        style={styles.bodyScroll}
-        contentContainerStyle={styles.body}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.preview}>
-          <View style={styles.appIcon}>
-            <LogoMark size="icon" />
-          </View>
-          <View style={styles.previewText}>
-            <Text style={styles.previewTitle}>GRIIT</Text>
-            <Text style={styles.previewBody}>{body}</Text>
-          </View>
-          <Text style={styles.previewTime}>{timeShort}</Text>
-        </View>
-
-        <Text style={styles.sendLabel}>SEND IT AT</Text>
-
-        {customOpen ? (
-          <View style={styles.customPanel}>
-            <View style={styles.customHead}>
-              <Text style={styles.draftReadout}>{draftText}</Text>
-              <View style={styles.merRow}>
-                {(["AM", "PM"] as ReminderMeridiem[]).map((mer) => {
-                  const on = draft.mer === mer;
-                  return (
-                    <Pressable
-                      key={mer}
-                      onPress={() => setDraft((d) => ({ ...d, mer }))}
-                      style={[styles.merBtn, on && styles.merBtnOn]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: on }}
-                      accessibilityLabel={mer}
-                    >
-                      <Text style={[styles.merText, on && styles.merTextOn]}>{mer}</Text>
-                    </Pressable>
-                  );
-                })}
+    <OnboardingScreen
+      step={5}
+      onBack={onBack}
+      title="One reminder a day."
+      subtitle="It tells you what is still open. Turn it off in Settings whenever you want."
+      footer={footer}
+    >
+      <View style={styles.previewWrap}>
+        {denied ? (
+          <Card>
+            <View style={styles.deniedRow}>
+              <BellOff size={ICON} color={DS_V3.color.textPrimary} />
+              <View style={styles.deniedCopy}>
+                <Text style={styles.deniedTitle}>Notifications are off for GRIIT</Text>
+                <Text style={styles.deniedBody}>
+                  iOS is blocking them, so nothing can be sent. Turn them on in Settings and the time
+                  you pick here will be used.
+                </Text>
               </View>
             </View>
+          </Card>
+        ) : (
+          <View style={styles.preview}>
+            <View style={styles.appIcon}>
+              <Shield size={DS_V3.space.gutter} color={DS_V3.color.brandText} />
+            </View>
+            <View style={styles.previewText}>
+              <Text style={styles.previewTitle}>GRIIT</Text>
+              <Text style={styles.previewBody}>{body}</Text>
+            </View>
+            <Text style={styles.previewTime}>{timeShort}</Text>
+          </View>
+        )}
+      </View>
 
-            <Text style={styles.gridLabel}>HOUR</Text>
-            <View style={styles.hourGrid}>
-              {HOURS.map((h) => {
-                const on = draft.h === h;
+      <Text style={styles.sendLabel}>Send it at</Text>
+      <View style={[styles.presetRow, denied && styles.dim]}>
+        {REMINDER_PRESETS.map((p) => {
+          const on = reminderPreset === p.id;
+          return (
+            <Pressable
+              key={p.id}
+              onPress={() => pickPreset(p.id)}
+              disabled={denied}
+              style={[styles.preset, on ? styles.presetOn : styles.presetOff]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on, disabled: denied }}
+              accessibilityLabel={`${p.h} ${p.mer}`}
+            >
+              <Text style={[styles.presetH, on && styles.presetOnText]}>{p.h}:00</Text>
+              <Text style={[styles.presetMer, on && styles.presetOnText]}>{p.mer}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {denied ? null : customOpen ? (
+        <View style={styles.customPanel}>
+          <View style={styles.customHead}>
+            <Text style={styles.draftReadout}>{draftText}</Text>
+            <View style={styles.merRow}>
+              {(["AM", "PM"] as ReminderMeridiem[]).map((mer) => {
+                const on = draft.mer === mer;
                 return (
                   <Pressable
-                    key={h}
-                    onPress={() => setDraft((d) => ({ ...d, h }))}
-                    style={[styles.gridBtn, on && styles.gridBtnOn]}
+                    key={mer}
+                    onPress={() => setDraft((d) => ({ ...d, mer }))}
+                    style={[styles.merBtn, on && styles.merBtnOn]}
                     accessibilityRole="button"
                     accessibilityState={{ selected: on }}
-                    accessibilityLabel={`${h} o'clock`}
+                    accessibilityLabel={mer}
                   >
-                    <Text style={[styles.gridBtnText, on && styles.gridBtnTextOn]}>{h}</Text>
+                    <Text style={[styles.merText, on && styles.merTextOn]}>{mer}</Text>
                   </Pressable>
                 );
               })}
-            </View>
-
-            <Text style={styles.gridLabel}>MINUTES</Text>
-            <View style={styles.minGrid}>
-              {MINUTES.map((m) => {
-                const on = draft.m === m;
-                return (
-                  <Pressable
-                    key={m}
-                    onPress={() => setDraft((d) => ({ ...d, m }))}
-                    style={[styles.gridBtn, styles.minBtn, on && styles.gridBtnOn]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
-                    accessibilityLabel={`${m} minutes`}
-                  >
-                    <Text style={[styles.gridBtnText, on && styles.gridBtnTextOn]}>:{m}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={styles.customActions}>
-              <Pressable
-                onPress={backToPresets}
-                style={styles.backPresets}
-                accessibilityRole="button"
-                accessibilityLabel="Back to presets"
-              >
-                <Text style={styles.backPresetsText}>Back to presets</Text>
-              </Pressable>
-              <Pressable
-                onPress={useDraft}
-                style={styles.useDraft}
-                accessibilityRole="button"
-                accessibilityLabel={`Use ${draftText}`}
-              >
-                <Text style={styles.useDraftText}>Use {draftText}</Text>
-              </Pressable>
             </View>
           </View>
-        ) : (
-          <>
-            <View style={styles.presetRow}>
-              {REMINDER_PRESETS.map((p) => {
-                const on = reminderPreset === p.id;
-                return (
-                  <Pressable
-                    key={p.id}
-                    onPress={() => pickPreset(p.id)}
-                    style={[styles.preset, on && styles.presetOn]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
-                    accessibilityLabel={`${p.h} ${p.mer}`}
-                  >
-                    <Text style={[styles.presetH, on && styles.presetOnText]}>{p.h}:00</Text>
-                    <Text style={[styles.presetMer, on && styles.presetOnText]}>{p.mer}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {reminderPreset === "custom" && reminderCustom ? (
-              <Pressable
-                onPress={openCustom}
-                style={styles.customSaved}
-                accessibilityRole="button"
-                accessibilityLabel={`Custom time ${reminderTimeText("custom", reminderCustom)}`}
-              >
-                <Text style={styles.customSavedLabel}>CUSTOM</Text>
-                <Text style={styles.customSavedTime}>{reminderTimeText("custom", reminderCustom)}</Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              onPress={openCustom}
-              accessibilityRole="button"
-              accessibilityLabel="Pick a custom time"
-              style={styles.customLinkWrap}
-            >
-              <Text style={styles.customLink}>Pick a custom time</Text>
-            </Pressable>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <PrimaryButton label="Turn on reminders" onPress={() => void handleEnable()} />
-        <TextLink label="No reminders for now" onPress={handleLater} />
-      </View>
-    </View>
+          <Text style={styles.gridLabel}>Hour</Text>
+          <View style={styles.hourGrid}>
+            {HOURS.map((h) => {
+              const on = draft.h === h;
+              return (
+                <Pressable
+                  key={h}
+                  onPress={() => setDraft((d) => ({ ...d, h }))}
+                  style={[styles.gridBtn, on && styles.gridBtnOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${h} o'clock`}
+                >
+                  <Text style={[styles.gridBtnText, on && styles.gridBtnTextOn]}>{h}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.gridLabel}>Minutes</Text>
+          <View style={styles.minGrid}>
+            {MINUTES.map((m) => {
+              const on = draft.m === m;
+              return (
+                <Pressable
+                  key={m}
+                  onPress={() => setDraft((d) => ({ ...d, m }))}
+                  style={[styles.gridBtn, styles.minBtn, on && styles.gridBtnOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${m} minutes`}
+                >
+                  <Text style={[styles.gridBtnText, on && styles.gridBtnTextOn]}>:{m}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <View style={styles.customActions}>
+            <TextLink label="Back to presets" onPress={() => setCustomOpen(false)} />
+            <TextLink
+              label={`Use ${draftText}`}
+              tone={DS_V3.color.brandText}
+              onPress={useDraft}
+            />
+          </View>
+          {reminderPreset === "custom" && reminderCustom ? (
+            <Text style={styles.customSaved}>{reminderTimeText("custom", reminderCustom)}</Text>
+          ) : null}
+        </View>
+      ) : (
+        <View style={styles.customLink}>
+          <TextLink label="Pick a custom time" tone={DS_V3.color.brandText} onPress={openCustom} />
+        </View>
+      )}
+    </OnboardingScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 28 },
-  head: { marginTop: 6 },
-  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
-  bodyScroll: { flex: 1 },
-  body: { flexGrow: 1, justifyContent: "center", paddingVertical: 16, gap: 16 },
+  previewWrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+  },
   preview: {
-    backgroundColor: OBV2_COLOR.card,
-    borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    paddingVertical: DS_V3.space.md + DS_V3.space.xs / 2,
+    paddingHorizontal: DS_V3.space.lg,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    shadowColor: OBV2_COLOR.ink,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
-    elevation: 2,
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
   },
   appIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    backgroundColor: OBV2_COLOR.blackBtn,
+    width: TILE,
+    height: TILE,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.brandTint,
     alignItems: "center",
     justifyContent: "center",
   },
-  previewText: { flex: 1 },
-  previewTitle: { fontSize: 14, fontWeight: "500", color: OBV2_COLOR.ink },
-  previewBody: { fontSize: 13, fontWeight: "400", lineHeight: 18, color: OBV2_COLOR.ink2, marginTop: 2 },
-  previewTime: { alignSelf: "flex-start", fontSize: 12, color: OBV2_COLOR.mutedWarm },
-  sendLabel: { fontSize: 12, fontWeight: "500", letterSpacing: 0.8, color: OBV2_COLOR.ink },
-  presetRow: { flexDirection: "row", gap: 7 },
+  previewText: { flex: 1, gap: 2 },
+  previewTitle: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  previewBody: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  previewTime: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  deniedRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.lg,
+  },
+  deniedCopy: { flex: 1, gap: DS_V3.space.xs },
+  deniedTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  deniedBody: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  sendLabel: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
+  presetRow: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    flexDirection: "row",
+    gap: DS_V3.space.sm,
+  },
+  dim: { opacity: 0.5 },
   preset: {
     flex: 1,
     minHeight: 60,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.hair,
-    backgroundColor: OBV2_COLOR.card,
+    borderRadius: DS_V3.radius.input,
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
   },
-  presetOn: { backgroundColor: OBV2_COLOR.blackBtn, borderColor: OBV2_COLOR.blackBtn },
-  presetH: { fontSize: 15, fontWeight: "500", color: OBV2_COLOR.ink },
-  presetMer: { fontSize: 10, fontWeight: "500", letterSpacing: 0.5, color: OBV2_COLOR.ink, opacity: 0.65 },
-  presetOnText: { color: OBV2_COLOR.onDark },
-  customSaved: {
-    minHeight: 48,
-    borderRadius: 15,
-    backgroundColor: OBV2_COLOR.blackBtn,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  presetOff: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
   },
-  customSavedLabel: { fontSize: 11, fontWeight: "500", letterSpacing: 0.7, color: OBV2_COLOR.mutedWarm },
-  customSavedTime: { fontSize: 15, fontWeight: "500", color: OBV2_COLOR.onDark },
-  customLinkWrap: { minHeight: 44, justifyContent: "center" },
-  customLink: { fontSize: 13, fontWeight: "500", color: OBV2_COLOR.ink2, textDecorationLine: "underline" },
+  presetOn: {
+    backgroundColor: DS_V3.color.brandTint,
+    borderWidth: PT_SELECTED,
+    borderColor: DS_V3.color.brand,
+  },
+  presetH: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  presetMer: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  presetOnText: { color: DS_V3.color.brandText },
+  customLink: {
+    paddingHorizontal: DS_V3.space.gutter,
+  },
   customPanel: {
-    backgroundColor: OBV2_COLOR.card,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.hair,
-    borderRadius: 20,
-    padding: 14,
-    gap: 12,
+    marginHorizontal: DS_V3.space.gutter,
+    marginTop: DS_V3.space.sm,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.md,
+    gap: DS_V3.space.md,
   },
   customHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  draftReadout: { fontSize: 26, fontWeight: "500", letterSpacing: -0.8, color: OBV2_COLOR.ink },
-  merRow: { flexDirection: "row", gap: 6 },
+  draftReadout: {
+    fontSize: DS_V3.type.heading.fontSize,
+    lineHeight: DS_V3.type.heading.lineHeight,
+    fontWeight: DS_V3.type.heading.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  merRow: { flexDirection: "row", gap: DS_V3.space.sm },
   merBtn: {
-    width: 46,
-    height: 44,
-    minHeight: 44,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.hair,
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: OBV2_COLOR.card,
+    backgroundColor: DS_V3.color.surface,
   },
-  merBtnOn: { backgroundColor: OBV2_COLOR.blackBtn, borderColor: OBV2_COLOR.blackBtn },
-  merText: { fontSize: 13, fontWeight: "500", color: OBV2_COLOR.ink },
-  merTextOn: { color: OBV2_COLOR.onDark },
-  gridLabel: { fontSize: 10, fontWeight: "500", letterSpacing: 0.7, color: OBV2_COLOR.mutedWarm },
-  hourGrid: { flexDirection: "row", flexWrap: "wrap", gap: 5 },
-  minGrid: { flexDirection: "row", gap: 5 },
+  merBtnOn: {
+    backgroundColor: DS_V3.color.brandTint,
+    borderWidth: PT_SELECTED,
+    borderColor: DS_V3.color.brand,
+  },
+  merText: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  merTextOn: { color: DS_V3.color.brandText },
+  gridLabel: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
+  hourGrid: { flexDirection: "row", flexWrap: "wrap", gap: DS_V3.space.xs },
+  minGrid: { flexDirection: "row", gap: DS_V3.space.xs },
   gridBtn: {
     width: "15.2%",
-    minHeight: 44,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.hair,
-    backgroundColor: OBV2_COLOR.card,
+    minHeight: DS_V3.size.tap,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   minBtn: { flex: 1, width: undefined },
-  gridBtnOn: { backgroundColor: OBV2_COLOR.orange, borderColor: OBV2_COLOR.orange },
-  gridBtnText: { fontSize: 13, fontWeight: "500", color: OBV2_COLOR.ink },
-  gridBtnTextOn: { color: OBV2_COLOR.onDark },
-  customActions: { flexDirection: "row", gap: 8, marginTop: 2 },
-  backPresets: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.borderStrong,
-    alignItems: "center",
-    justifyContent: "center",
+  gridBtnOn: {
+    backgroundColor: DS_V3.color.brandTint,
+    borderWidth: PT_SELECTED,
+    borderColor: DS_V3.color.brand,
   },
-  backPresetsText: { fontSize: 14, fontWeight: "500", color: OBV2_COLOR.ink2 },
-  useDraft: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: OBV2_COLOR.blackBtn,
-    alignItems: "center",
-    justifyContent: "center",
+  gridBtnText: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
-  useDraftText: { fontSize: 14, fontWeight: "500", color: OBV2_COLOR.onDark },
-  footer: { paddingTop: 14, paddingBottom: 32, gap: 2 },
+  gridBtnTextOn: { color: DS_V3.color.brandText },
+  customActions: { flexDirection: "row", justifyContent: "space-between" },
+  customSaved: {
+    fontSize: DS_V3.type.caption.fontSize,
+    color: DS_V3.color.textSecondary,
+  },
 });

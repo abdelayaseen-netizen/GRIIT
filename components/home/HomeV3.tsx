@@ -16,7 +16,7 @@ import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
-import { profilePrimaryName } from "@/lib/profile-display";
+import { greetingName } from "@/lib/profile-display";
 import { homeProofCtaLabel } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
@@ -27,13 +27,9 @@ const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 export function greetingTitle(p: {
   display_name?: string | null;
   username?: string | null;
-}): string {
-  const primary = profilePrimaryName(p);
-  if (primary) return primary;
-  const first = (p.display_name ?? "").trim().split(/\s+/)[0] ?? "";
-  if (first) return first;
-  const user = (p.username ?? "").trim();
-  return user || "GRIIT";
+  first_name?: string | null;
+}): string | null {
+  return greetingName(p);
 }
 
 export type HomeV3Proof = {
@@ -50,7 +46,7 @@ export type HomeV3Proof = {
 };
 
 export type HomeV3Props = {
-  title: string;
+  title: string | null;
   streak: number;
   streakLine: string;
   proof: HomeV3Proof | null;
@@ -90,7 +86,9 @@ export function HomeV3({
   error,
   onRetry,
 }: HomeV3Props) {
-  const kicker = WEEKDAYS[new Date().getDay()] ?? "Sunday";
+  const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
+  const kicker = title ? weekday : undefined;
+  const headerTitle = title ?? weekday;
   const days = LETTERS.map((letter, i) => ({
     letter,
     filled: weekFilled[i] === true,
@@ -140,7 +138,7 @@ export function HomeV3({
     <View style={styles.root}>
       <RootHeader
         kicker={kicker}
-        title={title}
+        title={headerTitle}
         actions={
           <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
             <Bell size={ICON} color={DS_V3.color.textPrimary} />

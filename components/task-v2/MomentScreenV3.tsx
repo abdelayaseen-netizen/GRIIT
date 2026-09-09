@@ -11,6 +11,7 @@ import { DS_V3 } from "@/lib/design-system";
 import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
+import { taskWord } from "@/lib/active-challenge-ui";
 import Button from "@/components/ds/Button";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
@@ -47,7 +48,7 @@ function stateLine(args: {
 }): string {
   if (args.variant === "verified") return `Day ${args.day}. Verified.`;
   if (args.variant === "selfReported") return `Day ${args.day}. Self reported.`;
-  if (args.variant === "tasksLeft") return `${args.remaining} tasks left.`;
+  if (args.variant === "tasksLeft") return `${args.remaining} ${taskWord(args.remaining)} left.`;
   if (args.variant === "complete") return `${args.target} days. Every one witnessed.`;
   return "Day secured.";
 }

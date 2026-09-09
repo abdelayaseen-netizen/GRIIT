@@ -1,71 +1,64 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import React, { useCallback, useEffect, useState, type ReactNode } from "react";
+import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { useRouter } from "expo-router";
-import { Apple, Mail } from "lucide-react-native";
+import { Apple, Check, CircleAlert, CircleHelp, Info, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import {
   isAnonymousUser,
-  SIGN_IN_WITH_THAT_ACCOUNT,
   upgradeAnonymousWithApple,
   upgradeAnonymousWithEmail,
 } from "@/lib/anon-auth";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
-import { ROUTES } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
 import {
-  receiptChallengeLine,
-  receiptGoalsLine,
-  receiptReminderLine,
-} from "@/lib/onboarding-v2-dayone";
+  CONFIRM_EMAIL_NOTICE,
+  EMAIL_TAKEN_NOTICE,
+  GUEST_PROGRESS_STAYS,
+  MALFORMED_EMAIL,
+  isCompleteEmail,
+  type AccountIdentityState,
+} from "@/lib/onboarding-v2-account-email";
 import {
   classifyAccountAuth,
   type AccountAuthKind,
 } from "@/lib/onboarding-v2-account-name";
-import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
+import { DS_V3 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
+import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
-/**
- * Auth wiring:
- *   - Anonymous session already present → linkIdentity (Apple) / updateUser (email)
- *     so Day 1 uid is preserved. Never signInWithIdToken on that path.
- *   - No anon session → legacy signInWithIdToken / signUp (cold signup).
- * Apple + email only. Google is not offered.
- */
+const ICON = DS_V3.space.xs * 5;
+const CHECK = DS_V3.space.lg;
+const PT = DS_V3.space.xs / 4;
+const PT_DANGER = PT * 1.5;
+
 export default function AccountScreen({
   onAuthSuccess,
   onSkip,
+  onContinue,
   onSignInWithAccount,
+  onBack,
 }: {
   onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
+  onContinue: () => void;
   onSignInWithAccount: (email?: string) => void;
+  onBack: () => void;
 }) {
-  const router = useRouter();
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
   const challengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
+  const targetStreak = useOnboardingStore((s) => s.targetStreak);
   const remindersEnabled = useOnboardingStore((s) => s.remindersEnabled);
   const reminderPreset = useOnboardingStore((s) => s.reminderPreset);
   const reminderCustom = useOnboardingStore((s) => s.reminderCustom);
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const [appleAvailable, setAppleAvailable] = useState(false);
-  const [emailMode, setEmailMode] = useState(false);
+  const [state, setState] = useState<AccountIdentityState>("default");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [identityTaken, setIdentityTaken] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -73,14 +66,20 @@ export default function AccountScreen({
     }
   }, []);
 
+  const saved = accountSavedLines({
+    challengeTitle,
+    targetStreak,
+    remindersEnabled,
+    reminderPreset: reminderPreset ?? "am6",
+    reminderCustom: reminderCustom ?? null,
+    goals: selectedGoals,
+  });
+
   const handleApple = useCallback(async () => {
     if (Platform.OS !== "ios" || !appleAvailable) {
-      setError("Apple Sign-In is available on iOS. Use email for now.");
-      setEmailMode(true);
+      setState("email_entry");
       return;
     }
-    setError("");
-    setIdentityTaken(false);
     setLoading(true);
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -89,10 +88,7 @@ export default function AccountScreen({
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      if (!credential.identityToken) {
-        setError("Apple Sign-In did not return a token.");
-        return;
-      }
+      if (!credential.identityToken) return;
 
       const displayNameFromApple = credential.fullName
         ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
@@ -110,18 +106,11 @@ export default function AccountScreen({
           identityToken: credential.identityToken,
         });
         if (upgraded.kind === "identity_taken") {
-          setIdentityTaken(true);
-          setError(upgraded.message ?? "Apple ID already linked to another account.");
+          setEmail(credential.email ?? "");
+          setState("email_taken");
           return;
         }
-        if (upgraded.kind === "no_anon_session") {
-          setError(upgraded.message ?? "Guest session was lost.");
-          return;
-        }
-        if (upgraded.kind !== "ok" || !upgraded.user?.id) {
-          setError(upgraded.message ?? "Could not link Apple ID.");
-          return;
-        }
+        if (upgraded.kind !== "ok" || !upgraded.user?.id) return;
         track({ name: "signup_completed", method: "apple" });
         track({ name: "account_created", method: "apple" });
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_apple" }));
@@ -132,23 +121,15 @@ export default function AccountScreen({
         provider: "apple",
         token: credential.identityToken,
       });
-      if (idError) {
-        setError(idError.message);
-        return;
-      }
-      const next = data?.user;
-      if (!next?.id) {
-        setError("Sign in failed. Please try again.");
-        return;
-      }
+      if (idError || !data?.user?.id) return;
       await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
       onAuthSuccess(
         classifyAccountAuth({
           path: "apple_id_token",
-          createdAt: next.created_at,
-          lastSignInAt: next.last_sign_in_at,
+          createdAt: data.user.created_at,
+          lastSignInAt: data.user.last_sign_in_at,
         })
       );
     } catch (e: unknown) {
@@ -156,47 +137,30 @@ export default function AccountScreen({
         return;
       }
       captureError(e, "OnboardingV2Apple");
-      setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
   }, [appleAvailable, onAuthSuccess, setProfileSetupHints]);
 
-  const handleEmail = useCallback(async () => {
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in email and password");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
+  const sendEmail = useCallback(async () => {
+    const trimmed = email.trim();
+    if (!isCompleteEmail(trimmed) || password.length < 6) return;
     setLoading(true);
-    setError("");
-    setIdentityTaken(false);
     try {
       const { data: sessionSnap } = await supabase.auth.getSession();
       const sessionUser = sessionSnap.session?.user ?? null;
 
       if (isAnonymousUser(sessionUser)) {
         const upgraded = await upgradeAnonymousWithEmail({
-          email: email.trim(),
+          email: trimmed,
           password,
         });
         if (upgraded.kind === "identity_taken") {
-          setIdentityTaken(true);
-          setError(upgraded.message ?? "Email already registered.");
+          setState("email_taken");
           return;
         }
-        if (upgraded.kind === "no_anon_session") {
-          setError(upgraded.message ?? "Guest session was lost.");
-          return;
-        }
-        if (upgraded.kind !== "ok" || !upgraded.user?.id) {
-          setError(upgraded.message ?? "Could not attach email.");
-          return;
-        }
-        setProfileSetupHints({ email: email.trim() });
+        if (upgraded.kind !== "ok" || !upgraded.user?.id) return;
+        setProfileSetupHints({ email: trimmed });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_email" }));
@@ -204,7 +168,7 @@ export default function AccountScreen({
       }
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: trimmed,
         password,
       });
       if (signUpError) {
@@ -213,206 +177,317 @@ export default function AccountScreen({
           signUpError.message.includes("already been registered") ||
           signUpError.message.includes("User already registered")
         ) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-          });
-          if (signInError) {
-            setError("Account exists but wrong password. Try again.");
-            return;
-          }
-          if (signInData.session?.user) {
-            await writeDeviceTimezone();
-            setProfileSetupHints({ email: email.trim() });
-            track({ name: "signup_completed", method: "email" });
-            track({ name: "account_created", method: "email" });
-            onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
-            return;
-          }
+          setState("email_taken");
+          return;
         }
-        setError(signUpError.message);
         return;
       }
       const createdUser = signUpData.session?.user ?? signUpData.user;
       if (createdUser) {
         await writeDeviceTimezone();
-        setProfileSetupHints({ email: email.trim() });
+        setProfileSetupHints({ email: trimmed });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
         onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
-        return;
       }
-      setError("Sign up succeeded but could not create session. Try again.");
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
+      captureError(e, "OnboardingV2Email");
     } finally {
       setLoading(false);
     }
   }, [email, password, onAuthSuccess, setProfileSetupHints]);
 
-  const receipt = [
-    receiptChallengeLine(challengeTitle),
-    receiptReminderLine(remindersEnabled, reminderPreset ?? "am6", reminderCustom ?? null),
-    receiptGoalsLine(selectedGoals.length),
-  ];
+  const onEmailBlur = () => {
+    if (state === "email_entry" || state === "malformed") {
+      setState(isCompleteEmail(email) ? "email_entry" : email.trim() ? "malformed" : "email_entry");
+    }
+  };
+
+  const skip = <TextLink label="Skip — I'll risk losing my progress" onPress={onSkip} />;
+  const footer =
+    state === "default" ? (
+      <>
+        <ChromePrimary label="Continue" onPress={onContinue} />
+        {skip}
+      </>
+    ) : (
+      skip
+    );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+    <OnboardingScreen
+      step={6}
+      onBack={onBack}
+      title="Save your streak."
+      subtitle="You are in already. An account is what makes your proof, streak and challenges survive this phone."
+      footer={footer}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={styles.head}>
-          <Text style={styles.h1}>Save your progress</Text>
-          <Text style={styles.sub}>So your streak and your circle follow you to any device.</Text>
-        </View>
-
-        <View style={styles.body}>
-          <View style={styles.buttons}>
+      <View style={styles.body}>
+        {state === "default" ? (
+          <View style={styles.auth}>
             {Platform.OS === "ios" && appleAvailable ? (
-              <DarkButton
-                label="Sign in with Apple"
-                onPress={handleApple}
+              <Button
+                label="Continue with Apple"
+                variant="secondary"
+                icon={<Apple size={ICON} color={DS_V3.color.textPrimary} />}
+                onPress={() => void handleApple()}
                 disabled={loading}
-                icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
               />
             ) : null}
+            <Button
+              label="Continue with email"
+              variant="secondary"
+              icon={<Mail size={ICON} color={DS_V3.color.textPrimary} />}
+              onPress={() => setState("email_entry")}
+              disabled={loading}
+            />
+            <TextLink
+              label="Have an account? Log in"
+              tone={DS_V3.color.brandText}
+              onPress={() => onSignInWithAccount()}
+            />
+          </View>
+        ) : null}
 
-            {!emailMode ? (
-              <GhostButton
-                label="Continue with email"
-                onPress={() => setEmailMode(true)}
-                disabled={loading}
-                icon={<Mail size={18} color={OBV2_COLOR.ink} strokeWidth={2} />}
-              />
+        {state === "email_entry" || state === "malformed" ? (
+          <View style={styles.auth}>
+            <Field
+              label="Email"
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                if (state === "malformed" && isCompleteEmail(t)) setState("email_entry");
+              }}
+              onBlur={onEmailBlur}
+              error={state === "malformed"}
+              keyboardType="email-address"
+            />
+            {state === "malformed" ? (
+              <View style={styles.malformed}>
+                <CircleAlert size={DS_V3.space.lg} color={DS_V3.color.danger} />
+                <Text style={styles.danger}>{MALFORMED_EMAIL}</Text>
+              </View>
             ) : (
-              <View style={styles.emailForm}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor={OBV2_COLOR.ink3}
-                  value={email}
-                  onChangeText={(t) => {
-                    setEmail(t);
-                    setError("");
-                    setIdentityTaken(false);
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  accessibilityLabel="Email address"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password (min 6 characters)"
-                  placeholderTextColor={OBV2_COLOR.ink3}
-                  value={password}
-                  onChangeText={(t) => {
-                    setPassword(t);
-                    setError("");
-                    setIdentityTaken(false);
-                  }}
-                  secureTextEntry
-                  accessibilityLabel="Password"
-                />
-                <PrimaryButton
-                  label={loading ? "" : "Create account"}
-                  onPress={handleEmail}
-                  disabled={loading}
-                  icon={loading ? <ActivityIndicator color={OBV2_COLOR.onDark} /> : undefined}
-                />
-              </View>
+              <Field
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secure
+                placeholder="Password"
+              />
             )}
-
-            {error ? (
-              identityTaken ? (
-                <Text style={styles.error}>
-                  {error.includes("email") ? "That email is already registered. " : "This Apple ID is already linked to another GRIIT account. "}
-                  <Text
-                    style={styles.errorLink}
-                    onPress={() => onSignInWithAccount(email.trim() || undefined)}
-                    accessibilityRole="link"
-                    accessibilityLabel={SIGN_IN_WITH_THAT_ACCOUNT}
-                  >
-                    {SIGN_IN_WITH_THAT_ACCOUNT}
-                  </Text>
-                  {" — Day 1 on this guest session cannot be merged."}
-                </Text>
-              ) : (
-                <Text style={styles.error}>{error}</Text>
-              )
-            ) : null}
+            <ChromePrimary
+              label="Continue"
+              disabled={state === "malformed" || !isCompleteEmail(email)}
+              onPress={() => {
+                if (!isCompleteEmail(email)) {
+                  setState("malformed");
+                  return;
+                }
+                setState("confirm_email");
+              }}
+            />
           </View>
+        ) : null}
 
-          <View style={styles.receipt}>
-            <Text style={styles.receiptHead}>SAVED AND WAITING FOR YOU</Text>
-            {receipt.map((line) => (
-              <View key={line} style={styles.receiptRow}>
-                <View style={styles.receiptDot} />
-                <Text style={styles.receiptLine}>{line}</Text>
+        {state === "confirm_email" ? (
+          <View style={styles.auth}>
+            <Field label="Email" value={email} editable={false} />
+            <Notice icon={<CircleHelp size={ICON} color={DS_V3.color.textPrimary} />}>
+              {CONFIRM_EMAIL_NOTICE(email.trim())}
+            </Notice>
+            <Field
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secure
+              placeholder="Password"
+            />
+            <View style={styles.halfRow}>
+              <View style={styles.half}>
+                <Button label="Edit" variant="secondary" onPress={() => setState("email_entry")} />
               </View>
-            ))}
+              <View style={styles.half}>
+                <Button
+                  label={loading ? "" : "Send it"}
+                  disabled={loading || password.length < 6}
+                  icon={loading ? <ActivityIndicator color={DS_V3.color.onBrand} /> : undefined}
+                  onPress={() => void sendEmail()}
+                />
+              </View>
+            </View>
           </View>
-        </View>
+        ) : null}
 
-        <TextLink label="Skip — I'll risk losing my progress" onPress={onSkip} />
-        <Text style={styles.terms}>
-          By continuing you agree to GRIIT&apos;s{" "}
-          <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
-            Terms
-          </Text>{" "}
-          and{" "}
-          <Text style={styles.termsLink} onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
-            Privacy Policy
-          </Text>
-          .
-        </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        {state === "email_taken" ? (
+          <View style={styles.auth}>
+            <Field label="Email" value={email} editable={false} />
+            <Notice icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}>{EMAIL_TAKEN_NOTICE}</Notice>
+            <Text style={styles.guest}>{GUEST_PROGRESS_STAYS}</Text>
+            <ChromePrimary
+              label="Log in and bring my progress"
+              onPress={() => onSignInWithAccount(email.trim() || undefined)}
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.saved}>
+          <Text style={styles.savedHead}>Saved and waiting for you</Text>
+          {saved.map((line) => (
+            <View key={line} style={styles.savedRow}>
+              <Check size={CHECK} color={DS_V3.color.brandText} />
+              <Text style={styles.savedLine}>{line}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </OnboardingScreen>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChangeText,
+  onBlur,
+  error,
+  editable = true,
+  secure,
+  keyboardType,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChangeText?: (t: string) => void;
+  onBlur?: () => void;
+  error?: boolean;
+  editable?: boolean;
+  secure?: boolean;
+  keyboardType?: "email-address";
+  placeholder?: string;
+}) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        onBlur={onBlur}
+        editable={editable}
+        secureTextEntry={secure}
+        keyboardType={keyboardType}
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder={placeholder ?? label}
+        placeholderTextColor={DS_V3.color.textSecondary}
+        accessibilityLabel={label}
+        style={[styles.input, error && styles.inputError]}
+      />
+    </View>
+  );
+}
+
+function Notice({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <View style={styles.notice}>
+      {icon}
+      <Text style={styles.noticeTxt}>{children}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { flexGrow: 1, paddingHorizontal: 28, paddingTop: 6, paddingBottom: 24 },
-  head: { marginBottom: 16 },
-  h1: { fontSize: 36, fontWeight: "500", lineHeight: 37, letterSpacing: -1.3, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
-  body: { flexGrow: 1, justifyContent: "center", paddingVertical: 16, gap: 16 },
-  buttons: { gap: 10 },
-  emailForm: { gap: 12 },
+  body: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    gap: DS_V3.space.md,
+  },
+  auth: { gap: DS_V3.space.sm },
+  field: { gap: DS_V3.space.xs + 2 },
+  fieldLabel: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
   input: {
-    minHeight: 56,
-    backgroundColor: OBV2_COLOR.card,
-    borderRadius: OBV2_RADIUS.button,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: OBV2_COLOR.ink,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.borderStrong,
+    minHeight: DS_V3.size.button,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    paddingHorizontal: DS_V3.space.lg,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
-  error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center", marginTop: 4 },
-  errorLink: { fontSize: 13, color: OBV2_COLOR.orangeInk, textDecorationLine: "underline", fontWeight: "500" },
-  receipt: {
-    marginTop: 6,
-    backgroundColor: OBV2_COLOR.sunken,
-    borderRadius: 18,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    gap: 7,
+  inputError: {
+    borderWidth: PT_DANGER,
+    borderColor: DS_V3.color.danger,
   },
-  receiptHead: { fontSize: 12, fontWeight: "500", letterSpacing: 0.6, color: OBV2_COLOR.ink },
-  receiptRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  receiptDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: OBV2_COLOR.orange },
-  receiptLine: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, flex: 1 },
-  terms: {
-    fontSize: 13,
-    color: OBV2_COLOR.ink3,
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: 14,
-    paddingBottom: 8,
+  malformed: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+    minHeight: 18,
   },
-  termsLink: { color: OBV2_COLOR.ink2, textDecorationLine: "underline" },
+  danger: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
+  },
+  notice: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.lg,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
+  },
+  noticeTxt: {
+    flex: 1,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  guest: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  halfRow: { flexDirection: "row", gap: DS_V3.space.sm },
+  half: { flex: 1 },
+  saved: {
+    paddingTop: DS_V3.space.lg,
+    gap: DS_V3.space.sm,
+  },
+  savedHead: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
+  savedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 24,
+  },
+  savedLine: {
+    flex: 1,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
 });

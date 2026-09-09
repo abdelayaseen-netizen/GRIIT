@@ -1,6 +1,6 @@
 /**
  * OnboardingFlowV2 — Chunk A order.
- * Profile is still a placeholder. No dead ends.
+ * No dead ends.
  *
  * Rendered by app/onboarding/index.tsx ONLY when FLAGS.ONBOARDING_V2 is true.
  */
@@ -25,10 +25,7 @@ import { skipOnboardingV2 } from "@/lib/onboarding-v2-skip";
 import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
-import {
-  nextAfterAccountAuth,
-  type AccountAuthKind,
-} from "@/lib/onboarding-v2-account-name";
+import type { AccountAuthKind } from "@/lib/onboarding-v2-account-name";
 import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
@@ -39,11 +36,10 @@ import WhyCircleScreen from "./screens/WhyCircleScreen";
 import GoalsScreen from "./screens/GoalsScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import AccountScreen from "./screens/AccountScreen";
-import AccountNameScreen from "./screens/AccountNameScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
 import DayTargetScreen from "./screens/DayTargetScreen";
-import NotBuiltScreen from "./screens/NotBuiltScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 import { readTargetStreak, writeTargetStreak } from "@/lib/onboarding-v2-target-streak";
 
@@ -251,20 +247,12 @@ export default function OnboardingFlowV2() {
   }, []);
 
   const handleAccountSuccess = useCallback(
-    (kind: AccountAuthKind) => {
-      if (nextAfterAccountAuth(kind) === "account_name") {
-        setAccountNameOpen(true);
-        return;
-      }
+    (_kind: AccountAuthKind) => {
       setAccountNameOpen(false);
       goNext();
     },
     [goNext, setAccountNameOpen]
   );
-
-  const leaveAccountName = useCallback(() => {
-    goNext();
-  }, [goNext]);
 
   const handleBrowseSelect = useCallback(
     (challenge: SuggestableChallenge) => {
@@ -336,20 +324,25 @@ export default function OnboardingFlowV2() {
           />
         );
       case "reminders":
-        return <RemindersScreen onContinue={goNext} />;
+        return <RemindersScreen onContinue={goNext} onBack={goBack} />;
       case "account":
-        if (accountNameOpen) {
-          return <AccountNameScreen onContinue={leaveAccountName} onSkip={() => void handleSkip()} />;
-        }
         return (
           <AccountScreen
             onAuthSuccess={handleAccountSuccess}
-            onSkip={() => void handleSkip()}
+            onContinue={goNext}
+            onSkip={goNext}
             onSignInWithAccount={goToLogin}
+            onBack={goBack}
           />
         );
       case "profile":
-        return <NotBuiltScreen onContinue={() => void handleFinish()} onSkip={() => void handleSkip()} />;
+        return (
+          <ProfileScreen
+            onContinue={() => void handleFinish()}
+            onSkip={() => void handleFinish()}
+            onBack={goBack}
+          />
+        );
     }
   };
 
@@ -357,7 +350,7 @@ export default function OnboardingFlowV2() {
   const waitingOnDb = sessionKind === "real" && dbCompleted === null && !dbFetchFailed;
   // After create/upgrade the session is "real" and dbCompleted is still null.
   // Do not blank the name step (or Invite after it) behind that overlay.
-  const holdForDb = waitingOnDb && step === "account" && !accountNameOpen;
+  const holdForDb = waitingOnDb && step === "welcome";
   if (!hydrated || holdForDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
   }
@@ -369,7 +362,10 @@ export default function OnboardingFlowV2() {
       step === "why_proof" ||
       step === "why_circle" ||
       step === "commitment" ||
-      step === "first_challenge");
+      step === "first_challenge" ||
+      step === "reminders" ||
+      step === "account" ||
+      step === "profile");
   return (
     <SafeAreaView style={[styles.safeArea, (welcome || usesChrome) && styles.welcome]}>
       {step !== "welcome" && !signInOpen && !usesChrome ? (

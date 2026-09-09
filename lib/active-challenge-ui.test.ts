@@ -9,6 +9,7 @@ import {
   securedTodayFromKeys,
   statusLine,
   taskVerb,
+  taskWord,
   weekSecuredFromKeys,
   type ActiveChallengeTask,
 } from "./active-challenge-ui";
@@ -87,6 +88,8 @@ describe("four states to verify", () => {
     ];
     const line = statusLine({ securedToday: false, done: 0, total: tasks.length });
     expect(line).toEqual({ kind: "progress", text: "Nothing done today. 2 tasks left." });
+    expect(taskWord(1)).toBe("task");
+    expect(taskWord(2)).toBe("tasks");
     const foot = footerAction({ securedToday: false, tasks });
     expect(foot).toEqual({ kind: "next", task: tasks[0] });
     if (foot.kind === "next") {

@@ -91,6 +91,10 @@ export type StatusLine =
   | { kind: "secured"; allDone: string }
   | { kind: "progress"; text: string };
 
+export function taskWord(n: number): string {
+  return n === 1 ? "task" : "tasks";
+}
+
 export function statusLine(args: {
   securedToday: boolean;
   done: number;
@@ -100,16 +104,15 @@ export function statusLine(args: {
     return { kind: "secured", allDone: `All ${args.total} done.` };
   }
   const left = Math.max(0, args.total - args.done);
-  const taskWord = left === 1 ? "task" : "tasks";
   if (args.done === 0) {
-    return { kind: "progress", text: `Nothing done today. ${left} ${taskWord} left.` };
+    return { kind: "progress", text: `Nothing done today. ${left} ${taskWord(left)} left.` };
   }
   if (left === 0) {
     return { kind: "progress", text: `All ${args.total} done.` };
   }
   return {
     kind: "progress",
-    text: `${args.done} of ${args.total} done. ${left} ${taskWord} left.`,
+    text: `${args.done} of ${args.total} done. ${left} ${taskWord(left)} left.`,
   };
 }
 
