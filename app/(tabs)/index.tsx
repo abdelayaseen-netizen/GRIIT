@@ -19,18 +19,16 @@ import { fetchStatsWithReconcile } from "@/lib/fetch-stats-with-reconcile";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import type { StatsFromApi, TodayCheckinForUser } from "@/types";
+import type { StatsFromApi } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
-import { selectHomeProofCard } from "@/lib/home-proof-card";
-import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
-import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
+import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
 import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -40,44 +38,20 @@ import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { useToday } from "@/hooks/useToday";
+import { badge, pickProofTask, proofCard, taskTypeFromToday, weekStrip, type TodayProofPick } from "@/lib/today-derive";
+import { EMPTY_TODAY } from "@/lib/today-state";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
-type TaskRow = {
-  id: string;
-  title?: string;
-  type?: string;
-  required?: boolean;
-  duration_minutes?: number | null;
-  config?: { required?: boolean } & Record<string, unknown>;
-};
-type ActiveRow = {
-  id: string;
-  challenge_id: string;
-  current_day?: number;
-  challenges?: {
-    id?: string;
-    title?: string;
-    duration_days?: number;
-    challenge_tasks?: TaskRow[];
-  };
-};
-
-type HomeData = {
-  activeList: ActiveRow[];
-  todayCheckins: TodayCheckinForUser[];
-  securedDateKeys: string[];
-};
-
-function durationMinutesFromTask(t: TaskRow): number | undefined {
-  if (typeof t.duration_minutes === "number" && t.duration_minutes > 0) return t.duration_minutes;
-  const fromCfg = t.config?.duration_minutes;
-  if (typeof fromCfg === "number" && fromCfg > 0) return fromCfg;
-  return undefined;
+function minutesUntilMidnight(): number {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return Math.floor((midnight.getTime() - now.getTime()) / 60000);
 }
 
 type FollowCounts = { followers: number; following: number };
-
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -137,82 +111,12 @@ export default function HomeScreen() {
     initFeedToggle(followingCount);
   }, [followCountsQuery.data?.following, initFeedToggle]);
 
-  const homeQuery = useQuery({
-    queryKey: ["home", "v2", user?.id ?? ""],
-    enabled: !isGuest && !!user?.id,
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: true,
-    placeholderData: (previousData) => previousData,
-    queryFn: async (): Promise<HomeData> => {
-      const settled = await Promise.allSettled([
-        trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
-        trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-      ]);
-
-      const activeRaw =
-        settled[0].status === "fulfilled"
-          ? settled[0].value
-          : (captureError(settled[0].reason, "HomeListMyActive"), []);
-      const checkinsRaw =
-        settled[1].status === "fulfilled"
-          ? settled[1].value
-          : (captureError(settled[1].reason, "HomeGetTodayCheckinsForUser"), []);
-      const securedRaw =
-        settled[2].status === "fulfilled"
-          ? settled[2].value
-          : (captureError(settled[2].reason, "HomeGetSecuredDateKeys"), []);
-      const activeList = (Array.isArray(activeRaw) ? activeRaw : []) as ActiveRow[];
-      const todayCheckins = Array.isArray(checkinsRaw) ? checkinsRaw : [];
-      const securedDateKeys = Array.isArray(securedRaw) ? securedRaw : [];
-      return { activeList, todayCheckins, securedDateKeys };
-    },
-  });
-
-  const heroTasks: StreakHeroV4Task[] = useMemo(() => {
-    const activeList = homeQuery.data?.activeList ?? [];
-    const checkins = homeQuery.data?.todayCheckins ?? [];
-    const flat: StreakHeroV4Task[] = [];
-
-    for (const ac of activeList) {
-      const tasks = ac.challenges?.challenge_tasks ?? [];
-      const required = tasks.filter((t) => {
-        const cfg = t.config as { required?: boolean } | undefined;
-        return (cfg?.required ?? true) === true;
-      });
-      const doneSet = new Set(
-        checkins
-          .filter((c) => c.active_challenge_id === ac.id && c.status === "completed")
-          .map((c) => c.task_id),
-      );
-      const challengeName = ac.challenges?.title ?? "Challenge";
-      const currentDay = ac.current_day ?? 1;
-      const durationDays = ac.challenges?.duration_days ?? 14;
-      const challengeSecuredToday =
-        required.length > 0 && required.every((t) => doneSet.has(t.id));
-
-      for (const t of required) {
-        const tType = String(t.type ?? "manual").toLowerCase();
-        flat.push({
-          id: t.id,
-          name: t.title ?? t.type ?? "Task",
-          description: challengeName,
-          proofType: tType.includes("photo") ? "photo" : "text",
-          done: doneSet.has(t.id),
-          activeChallengeId: ac.id,
-          challengeId: ac.challenge_id,
-          challengeName,
-          currentDay,
-          challengeSecuredToday,
-          durationDays,
-          taskType: tType,
-          taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
-          durationMinutes: durationMinutesFromTask(t),
-        });
-      }
-    }
-    return flat;
-  }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
+  const todayQuery = useToday();
+  const todayState = todayQuery.data ?? EMPTY_TODAY;
+  const proofCounts = useMemo(() => badge(todayState), [todayState]);
+  const week = useMemo(() => weekStrip(todayState), [todayState]);
+  const minutesRemaining = minutesUntilMidnight();
+  const tasksRemaining = Math.max(0, proofCounts.total - proofCounts.done);
 
   const resolvedStats = statsQuery.data ?? stats;
   const statsReady = resolveHomeStatsReady({
@@ -221,41 +125,20 @@ export default function HomeScreen() {
     contextStats: stats,
   });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
-  const securedDateKeys = useMemo(
-    () => homeQuery.data?.securedDateKeys ?? [],
-    [homeQuery.data?.securedDateKeys],
-  );
 
   const homeTimeZone = resolveHomeTimeZone(
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
   );
 
-  const todaySecured = useMemo(() => {
-    return securedDateKeys.includes(getTodayDateKey(homeTimeZone));
-  }, [securedDateKeys, homeTimeZone]);
-
-  const heroMetrics = useMemo(() => {
-    const totalTasksToday = heroTasks.length;
-    const tasksDoneToday = heroTasks.filter((t) => t.done).length;
-    const tasksRemaining = Math.max(0, totalTasksToday - tasksDoneToday);
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const minutesRemaining = Math.floor(
-      (midnight.getTime() - now.getTime()) / 60000,
-    );
-    return { totalTasksToday, tasksDoneToday, tasksRemaining, minutesRemaining };
-  }, [heroTasks]);
-
   const homeState = useMemo(
     () =>
       computeHomeState({
         streak: streak ?? 0,
-        tasksRemaining: heroMetrics.tasksRemaining,
-        minutesToMidnight: heroMetrics.minutesRemaining,
+        tasksRemaining,
+        minutesToMidnight: minutesRemaining,
       }),
-    [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
+    [streak, tasksRemaining, minutesRemaining],
   );
 
   const lastHomeStateFiredRef = React.useRef<string | null>(null);
@@ -269,35 +152,20 @@ export default function HomeScreen() {
 
   const showCelebration = useCelebrationStore((s) => s.show);
 
-  // Week strip — Mon→Sun in profile IANA, else device IANA.
-  // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
-  const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
-
-  const todayWeekIndex = useMemo(() => {
-    const todayKey = getTodayDateKey(homeTimeZone);
-    const idx = weekDateKeys.indexOf(todayKey);
-    return idx >= 0 ? idx : 0;
-  }, [weekDateKeys, homeTimeZone]);
-
-  const weekSecuredByIndex = useMemo(() => {
-    const set = new Set(securedDateKeys);
-    return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
-  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
-
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
     if (!profile || streak == null || streak <= 0) return;
-    const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
+    const keys = [...todayState.secured_date_keys].sort();
     if (keys.length === 0) return;
     const lastKey = keys[keys.length - 1]!;
-    const today = getTodayDateKey(homeTimeZone);
+    const dateKey = getTodayDateKey(homeTimeZone);
     const yesterday = getYesterdayDateKey(homeTimeZone);
-    const missedWindow = lastKey !== today && lastKey !== yesterday;
+    const missedWindow = lastKey !== dateKey && lastKey !== yesterday;
     if (missedWindow) {
       setShowFreezeModal(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- profile identity covered via profile?.username
-  }, [isGuest, user?.id, profile?.username, streak, homeQuery.data?.securedDateKeys]);
+  }, [isGuest, user?.id, profile?.username, streak, todayState.secured_date_keys]);
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
@@ -305,18 +173,16 @@ export default function HomeScreen() {
     void scheduleStreakReminder(streak);
   }, [isGuest, user?.id, streak]);
 
-  // Jeopardy modal — show once per calendar day when streak is at risk.
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
-    if (homeState !== 'streak_at_risk') return;
-    const todayKey = getTodayDateKey(homeTimeZone);
-    const storageKey = `griit_jeopardy_${todayKey}`;
+    if (homeState !== "streak_at_risk") return;
+    const dateKey = getTodayDateKey(homeTimeZone);
+    const storageKey = `griit_jeopardy_${dateKey}`;
     AsyncStorage.getItem(storageKey).then((shown) => {
       if (shown) return;
-      void AsyncStorage.setItem(storageKey, 'true');
+      void AsyncStorage.setItem(storageKey, "true");
       setShowJeopardyModal(true);
     }).catch(() => {
-      // non-fatal — show the modal anyway
       setShowJeopardyModal(true);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps -- homeState covers all inputs
@@ -326,7 +192,8 @@ export default function HomeScreen() {
     useCallback(() => {
       if (isGuest || !user?.id) return;
       void statsQuery.refetch();
-    }, [isGuest, user?.id, statsQuery.refetch]),
+      void todayQuery.refetch();
+    }, [isGuest, user?.id, statsQuery.refetch, todayQuery.refetch]),
   );
 
   useFocusEffect(
@@ -354,50 +221,54 @@ export default function HomeScreen() {
   );
 
   const refresh = useCallback(async () => {
-    await Promise.all([homeQuery.refetch(), statsQuery.refetch(), refetchAll()]);
+    await Promise.all([todayQuery.refetch(), statsQuery.refetch(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-  }, [homeQuery, statsQuery, refetchAll, queryClient]);
-
-  // ────────────── handlers ──────────────
+  }, [todayQuery, statsQuery, refetchAll, queryClient]);
 
   const onPressTask = useCallback(
-    (task: StreakHeroV4Task) => {
+    (pick: TodayProofPick) => {
+      const { enrollment, task } = pick;
+      const taskType = taskTypeFromToday(task);
+      const taskConfig = buildTaskConfigParam({
+        id: task.id,
+        title: task.title,
+        require_photo: task.require_photo,
+        require_location: task.require_location,
+        config: task.config ?? {},
+      });
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, task.challengeSecuredToday))}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(enrollment.active_challenge_id)}&taskType=${encodeURIComponent(taskType)}&taskName=${encodeURIComponent(task.title)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(taskConfig)}&challengeName=${encodeURIComponent(enrollment.title)}&currentDay=${String(displayDay(enrollment.current_day, enrollment.secured_today))}&durationDays=14` as never,
       );
     },
     [router],
   );
 
   const onPressPrimaryCTA = useCallback(() => {
-    if (heroTasks.length === 0) {
-      track({ name: 'discover_challenge_tapped' });
+    if (todayState.enrollments.length === 0) {
+      track({ name: "discover_challenge_tapped" });
       router.push(ROUTES.TABS_DISCOVER as never);
       return;
     }
-    if (heroMetrics.tasksRemaining > 0) {
-      const next = heroTasks.find((t) => !t.done);
-      if (next) {
-        track({ name: 'task_completed' });
+    if (tasksRemaining > 0) {
+      const next = pickProofTask(todayState);
+      if (next && !next.task.done) {
+        track({ name: "task_completed" });
         onPressTask(next);
       }
       return;
     }
-    // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
-  }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
+  }, [todayState, tasksRemaining, onPressTask, router]);
 
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
   }, [router]);
 
-  // Jeopardy modal handlers
   const onJeopardyFinish = useCallback(() => {
     setShowJeopardyModal(false);
-    // Navigate to the first incomplete task
-    const next = heroTasks.find((t) => !t.done);
-    if (next) onPressTask(next);
+    const next = pickProofTask(todayState);
+    if (next && !next.task.done) onPressTask(next);
     else router.push(ROUTES.TABS_DISCOVER as never);
-  }, [heroTasks, onPressTask, router]);
+  }, [todayState, onPressTask, router]);
 
   const onJeopardyFreeze = useCallback(() => {
     setShowJeopardyModal(false);
@@ -437,20 +308,12 @@ export default function HomeScreen() {
   }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
 
   const firstProofEver =
-    (resolvedStats?.totalDaysSecured ?? 0) === 0 && securedDateKeys.length === 0;
+    (resolvedStats?.totalDaysSecured ?? 0) === 0 && todayState.secured_date_keys.length === 0;
 
   const proof = useMemo(
-    () =>
-      selectHomeProofCard({
-        tasks: heroTasks,
-        tasksDoneToday: heroMetrics.tasksDoneToday,
-        totalTasksToday: heroMetrics.totalTasksToday,
-        firstProofEver,
-      }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver],
+    () => proofCard(todayState, firstProofEver),
+    [todayState, firstProofEver],
   );
-
-  // ────────────── render ──────────────
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
 
@@ -479,7 +342,7 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <SafeAreaView style={s.container}>
         <LiveFeedSection
-          refreshing={homeQuery.isRefetching}
+          refreshing={todayQuery.isRefetching}
           onRefresh={refresh}
           scope={feedScope}
           onScopeChange={setFeedScope}
@@ -488,11 +351,11 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak ?? 0}
-              streakLine={todaySecured ? "Day secured." : "Post today to start."}
+              streakLine={todayState.secured ? "Day secured." : "Post today to start."}
               proof={proof}
-              weekFilled={weekSecuredByIndex}
-              todayIndex={todayWeekIndex}
-              fillToday={todaySecured}
+              weekFilled={week.secured}
+              todayIndex={week.todayIndex}
+              fillToday={todayState.secured}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}
@@ -501,7 +364,7 @@ export default function HomeScreen() {
               freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}
-              loading={homeQuery.isPending && !homeQuery.data}
+              loading={todayQuery.isPending && !todayQuery.data}
             />
           }
         />
@@ -515,7 +378,7 @@ export default function HomeScreen() {
         <JeopardyModal
           visible={showJeopardyModal}
           streak={streak ?? 0}
-          minutesRemaining={heroMetrics.minutesRemaining}
+          minutesRemaining={minutesRemaining}
           freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
           onPressFinish={onJeopardyFinish}
           onPressFreeze={onJeopardyFreeze}
