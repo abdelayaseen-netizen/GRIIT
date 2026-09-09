@@ -105,7 +105,7 @@ export function statusLine(args: {
     return { kind: "progress", text: `Nothing done today. ${left} ${taskWord} left.` };
   }
   if (left === 0) {
-    return { kind: "progress", text: `${args.done} of ${args.total} done.` };
+    return { kind: "progress", text: `All ${args.total} done.` };
   }
   return {
     kind: "progress",

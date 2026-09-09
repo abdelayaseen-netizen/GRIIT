@@ -15,7 +15,7 @@ import * as Notifications from "expo-notifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { trpcMutate } from "@/lib/trpc";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
@@ -28,7 +28,8 @@ import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
-import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
+import { attemptSecureDayAfterComplete, pickNextUndoneEnrollmentId } from "@/lib/day-secure-ui";
+import ChallengeDoneScreen from "./ChallengeDoneScreen";
 import { shareProgressImage } from "@/lib/share";
 import {
   failureErrorCode,
@@ -62,6 +63,7 @@ type Step =
   | "ask"
   | "verifying"
   | "confirmation"
+  | "challenge_done"
   | "blocked"
   | "failed";
 
@@ -165,6 +167,10 @@ export function TaskFlowV2() {
   const [sessionUp, setSessionUp] = useState(0);
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [challengeDone, setChallengeDone] = useState<{
+    challengeTitle: string;
+    remainingChallenges: number;
+  } | null>(null);
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +240,38 @@ export function TaskFlowV2() {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
+
+  const goNextChallenge = useCallback(async () => {
+    if (!activeChallengeId) {
+      exit();
+      return;
+    }
+    try {
+      const [activeList, checkins] = await Promise.all([
+        trpcQuery(TRPC.challenges.listMyActive) as Promise<
+          Array<{
+            id: string;
+            challenges?: { challenge_tasks?: Array<{ id: string; config?: { required?: boolean } }> };
+          }>
+        >,
+        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
+          Array<{ active_challenge_id?: string; task_id?: string; status?: string }>
+        >,
+      ]);
+      const nextId = pickNextUndoneEnrollmentId({
+        currentId: activeChallengeId,
+        enrollments: Array.isArray(activeList) ? activeList : [],
+        completed: Array.isArray(checkins) ? checkins : [],
+      });
+      if (nextId) {
+        router.replace(ROUTES.CHALLENGE_ACTIVE(nextId) as never);
+        return;
+      }
+    } catch {
+      /* fall through to exit */
+    }
+    exit();
+  }, [activeChallengeId, exit, router]);
 
   const persistUnit = useCallback(
     (next: DistanceUnit) => {
@@ -310,28 +348,47 @@ export function TaskFlowV2() {
         setStep("failed");
         return;
       }
-      let secure: { success?: boolean; alreadySecured?: boolean; newStreakCount?: number } | null = null;
-      if (complete.dayAlreadySecured) {
-        secure = { success: true, alreadySecured: true, newStreakCount: complete.streakDays };
-      } else {
-        const after = await attemptSecureDayAfterComplete({
-          requiredRemaining: complete.requiredRemaining,
-          dayAlreadySecured: complete.dayAlreadySecured ?? false,
-          activeChallengeId,
-          secureDay,
+      let secure: {
+        success?: boolean;
+        alreadySecured?: boolean;
+        newStreakCount?: number;
+        secured?: boolean;
+        challenge_done?: boolean;
+        remaining_challenges?: number;
+      } | null = null;
+      const after = await attemptSecureDayAfterComplete({
+        requiredRemaining: complete.requiredRemaining,
+        activeChallengeId,
+        challengeTitle: complete.challengeName ?? challengeName,
+        secureDay,
+      });
+      if (after.ui.kind === "challenge_done") {
+        setChallengeDone({
+          challengeTitle: after.ui.challengeTitle,
+          remainingChallenges: after.ui.remainingChallenges,
         });
-        if (after.result) {
-          const r = after.result as {
-            success?: boolean;
-            alreadySecured?: boolean;
-            newStreakCount?: number;
-          };
-          secure = {
-            success: r.success === true,
-            alreadySecured: r.alreadySecured,
-            newStreakCount: r.newStreakCount,
-          };
-        }
+        if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
+        void endLiveActivity();
+        setStep("challenge_done");
+        return;
+      }
+      if (after.result) {
+        const r = after.result as {
+          success?: boolean;
+          alreadySecured?: boolean;
+          newStreakCount?: number;
+          secured?: boolean;
+          challenge_done?: boolean;
+          remaining_challenges?: number;
+        };
+        secure = {
+          success: r.success === true,
+          alreadySecured: r.alreadySecured,
+          newStreakCount: r.newStreakCount,
+          secured: r.secured,
+          challenge_done: r.challenge_done,
+          remaining_challenges: r.remaining_challenges,
+        };
       }
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
@@ -346,6 +403,9 @@ export function TaskFlowV2() {
               success: secure.success === true,
               alreadySecured: secure.alreadySecured,
               newStreakCount: secure.newStreakCount,
+              secured: secure.secured,
+              challenge_done: secure.challenge_done,
+              remaining_challenges: secure.remaining_challenges,
             }
           : null,
       });
@@ -543,7 +603,7 @@ export function TaskFlowV2() {
   }, [step, remainingSec, startedAtIso]);
 
   const dark = step === "capture" || step === "review";
-  const hideChrome = step === "confirmation" || step === "verifying" || step === "capture";
+  const hideChrome = step === "confirmation" || step === "challenge_done" || step === "verifying" || step === "capture";
   const fail = failureScreenCopy({
     errorCode: failCode,
     message: failNote,
@@ -1110,6 +1170,15 @@ export function TaskFlowV2() {
           onShare={(uri) => {
             void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
           }}
+        />
+      ) : null}
+
+      {step === "challenge_done" && challengeDone ? (
+        <ChallengeDoneScreen
+          challengeTitle={challengeDone.challengeTitle}
+          remainingChallenges={challengeDone.remainingChallenges}
+          onNext={() => void goNextChallenge()}
+          onDone={exit}
         />
       ) : null}
 

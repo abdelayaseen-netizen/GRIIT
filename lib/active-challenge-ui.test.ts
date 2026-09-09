@@ -143,7 +143,7 @@ describe("four states to verify", () => {
     expect(weekSecuredFromKeys([TODAY], WEEK)[1]).toBe(true);
   });
 
-  it("all done but server not secured: n of n done, today square unfilled, footer stays on last task", () => {
+  it("all done but server not secured: All N done only, today square unfilled, footer stays on last task", () => {
     const tasks: ActiveChallengeTask[] = [
       task({ id: "t1", title: "A", task_type: "timer", completed_today: true }),
       task({ id: "t2", title: "B", task_type: "journal", completed_today: true }),
@@ -152,7 +152,7 @@ describe("four states to verify", () => {
     expect(securedToday).toBe(false);
     expect(statusLine({ securedToday, done: 2, total: 2 })).toEqual({
       kind: "progress",
-      text: "2 of 2 done.",
+      text: "All 2 done.",
     });
     const foot = footerAction({ securedToday, tasks });
     expect(foot).toEqual({ kind: "next", task: tasks[1] });

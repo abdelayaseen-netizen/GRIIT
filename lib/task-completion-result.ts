@@ -3,6 +3,8 @@
  * Server-authored fields only — never invent streak or day-secured client-side.
  */
 
+import { challengeWord } from "@/lib/format-days";
+
 export type VerificationKind = "live_photo" | "timer" | "gps" | "word_count" | "self_report";
 
 export type SubmitResult = {
@@ -26,6 +28,15 @@ export function pickConfirmationChallengeDay(args: {
   dayFromSecureAfter: number;
 }): number {
   return args.dayFromComplete;
+}
+
+export function challengeDoneTitle(challengeTitle: string): string {
+  return `${challengeTitle} done.`;
+}
+
+export function challengeDoneLine(remainingChallenges: number): string {
+  const n = Math.max(0, Math.floor(remainingChallenges));
+  return `${n} ${challengeWord(n)} left today.`;
 }
 
 export function pickConfirmationCopy(args: {
@@ -78,11 +89,19 @@ export function assembleSubmitResult(args: {
   challengeDayBeforeSecure: number;
   challengeLength: number;
   challengeName: string;
-  secure?: { success: boolean; alreadySecured?: boolean; newStreakCount?: number } | null;
+  secure?: {
+    success: boolean;
+    alreadySecured?: boolean;
+    newStreakCount?: number;
+    secured?: boolean;
+    challenge_done?: boolean;
+    remaining_challenges?: number;
+  } | null;
 }): SubmitResult {
   const alreadyFromSecure = args.secure?.alreadySecured === true;
-  const daySecuredEarlier = args.dayAlreadySecured || alreadyFromSecure;
-  const justSecured = args.secure?.success === true && !alreadyFromSecure && !args.dayAlreadySecured;
+  const rpcSecured = args.secure?.secured === true;
+  const daySecuredEarlier = rpcSecured && (args.dayAlreadySecured || alreadyFromSecure);
+  const justSecured = rpcSecured && !daySecuredEarlier;
   const daySecured = daySecuredEarlier || justSecured;
   return {
     taskComplete: true,

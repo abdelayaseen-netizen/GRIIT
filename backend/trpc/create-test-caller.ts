@@ -9,6 +9,17 @@ export type TestAppCaller = {
   nudges: {
     send: (input: { toUserId: string }) => Promise<{ success: boolean; nudgeId: string; message: string }>;
   };
+  checkins: {
+    secureDay: (input: { activeChallengeId: string }) => Promise<{
+      streak: number;
+      secured: boolean;
+      challenge_done: boolean;
+      remaining_challenges: number;
+      success: boolean;
+      alreadySecured: boolean;
+      newStreakCount: number;
+    }>;
+  };
 };
 
 export function createTestCaller(ctx: {
