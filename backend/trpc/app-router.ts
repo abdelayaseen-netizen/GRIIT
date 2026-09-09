@@ -51,6 +51,8 @@ log("[app-router] importing referrals");
 const { referralsRouter } = await import("./routes/referrals");
 log("[app-router] importing reports");
 const { reportsRouter } = await import("./routes/reports");
+log("[app-router] importing today");
+const { todayRouter } = await import("./routes/today");
 
 log("[app-router] all sub-routers loaded, building appRouter");
 
@@ -73,6 +75,7 @@ export const appRouter = createTRPCRouter({
   sharedGoal: sharedGoalRouter,
   referrals: referralsRouter,
   reports: reportsRouter,
+  today: todayRouter,
 });
 
 export type AppRouter = typeof appRouter;

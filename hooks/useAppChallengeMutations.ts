@@ -16,6 +16,7 @@ import {
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { displayDay } from "@/lib/challenge-day";
+import { invalidateToday } from "@/hooks/useToday";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import type {
   StatsFromApi,
@@ -179,6 +180,7 @@ export function useAppChallengeMutations({
           void fetchStats();
           void queryClient.invalidateQueries({ queryKey: ["home"] });
           void queryClient.invalidateQueries({ queryKey: ["home", "v2", user?.id ?? ""] });
+          void invalidateToday(queryClient);
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
@@ -317,6 +319,7 @@ export function useAppChallengeMutations({
       }
       void fetchActiveChallenge();
       await fetchStats();
+      void invalidateToday(queryClient);
       const streakN = result?.newStreakCount;
       if (userDaySecured && typeof streakN === "number" && [7, 14, 30, 75].includes(streakN)) {
         trackEvent("streak_milestone", { days: streakN });
@@ -350,7 +353,7 @@ export function useAppChallengeMutations({
       captureError(err, "secureDay");
       throw err;
     }
-  }, [activeChallenge, fetchActiveChallenge, fetchStats, stats]);
+  }, [activeChallenge, fetchActiveChallenge, fetchStats, queryClient, stats]);
 
   return { completeTask, secureDay };
 }
