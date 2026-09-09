@@ -73,8 +73,6 @@ export default function OnboardingFlowV2() {
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
   const [stepReady, setStepReady] = useState(false);
-  const accountNameOpen = useOnboardingStore((s) => s.accountNameOpen);
-  const setAccountNameOpen = useOnboardingStore((s) => s.setAccountNameOpen);
 
   useEffect(() => {
     if (!user) {
@@ -192,10 +190,6 @@ export default function OnboardingFlowV2() {
   }, [step, browseOpen]);
 
   useEffect(() => {
-    if (step !== "account" && accountNameOpen) setAccountNameOpen(false);
-  }, [step, accountNameOpen, setAccountNameOpen]);
-
-  useEffect(() => {
     if (!hydrated || completed) return;
     track({ name: "onboarding_started" });
   }, [hydrated, completed]);
@@ -220,10 +214,6 @@ export default function OnboardingFlowV2() {
         setSignInOpen(false);
         return true;
       }
-      if (accountNameOpen) {
-        setAccountNameOpen(false);
-        return true;
-      }
       if (browseOpen) {
         const next = applyBrowseBack(useOnboardingStore.getState().selectedChallengeId);
         setBrowseOpen(next.phase === "open");
@@ -234,7 +224,7 @@ export default function OnboardingFlowV2() {
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen, browseOpen, accountNameOpen, setAccountNameOpen]);
+  }, [step, goBack, signInOpen, browseOpen]);
 
   const goToLogin = useCallback((prefill?: string) => {
     setSignInPrefill(prefill);
@@ -248,10 +238,9 @@ export default function OnboardingFlowV2() {
 
   const handleAccountSuccess = useCallback(
     (_kind: AccountAuthKind) => {
-      setAccountNameOpen(false);
       goNext();
     },
-    [goNext, setAccountNameOpen]
+    [goNext]
   );
 
   const handleBrowseSelect = useCallback(
@@ -349,7 +338,7 @@ export default function OnboardingFlowV2() {
   const sessionKind = sessionKindFromUser(user);
   const waitingOnDb = sessionKind === "real" && dbCompleted === null && !dbFetchFailed;
   // After create/upgrade the session is "real" and dbCompleted is still null.
-  // Do not blank the name step (or Invite after it) behind that overlay.
+  // Do not blank Account / Profile behind that overlay.
   const holdForDb = waitingOnDb && step === "welcome";
   if (!hydrated || holdForDb || completed) {
     return <SafeAreaView style={styles.safeArea} />;
@@ -371,18 +360,12 @@ export default function OnboardingFlowV2() {
       {step !== "welcome" && !signInOpen && !usesChrome ? (
         <FlowChrome
           step={step}
-          onBack={
-            accountNameOpen
-              ? () => setAccountNameOpen(false)
-              : browseOpen
-                ? handleBrowseBack
-                : goBack
-          }
+          onBack={browseOpen ? handleBrowseBack : goBack}
         />
       ) : null}
       <StepFade
         stepKey={
-          signInOpen ? "signin" : accountNameOpen ? "account-name" : browseOpen ? "browse-all" : step
+          signInOpen ? "signin" : browseOpen ? "browse-all" : step
         }
       >
         {renderScreen()}

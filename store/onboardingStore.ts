@@ -65,12 +65,6 @@ export interface OnboardingState {
   v2Step: OnboardingV2Step;
   /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
   profileSetupHints: ProfileSetupHints | null;
-  /**
-   * Account-screen name sub-step. Persisted so an anon→real upgrade's
-   * waitingOnDb overlay / remount cannot drop a newly created account
-   * onto Invite.
-   */
-  accountNameOpen: boolean;
   setMotivation: (v: string) => void;
   setPersona: (v: string) => void;
   setBarrier: (v: string) => void;
@@ -103,7 +97,6 @@ export interface OnboardingState {
   setRemindersEnabled: (enabled: boolean) => void;
   setV2Step: (step: OnboardingV2Step) => void;
   setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
-  setAccountNameOpen: (open: boolean) => void;
   reset: () => void;
 }
 
@@ -134,7 +127,6 @@ const initialState = {
   remindersEnabled: false,
   v2Step: "welcome" as OnboardingV2Step,
   profileSetupHints: null as ProfileSetupHints | null,
-  accountNameOpen: false,
 };
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -184,7 +176,6 @@ export const useOnboardingStore = create<OnboardingState>()(
       setRemindersEnabled: (enabled) => set({ remindersEnabled: enabled }),
       setV2Step: (step) => set({ v2Step: step }),
       setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
-      setAccountNameOpen: (open) => set({ accountNameOpen: open }),
       reset: () => set(initialState),
     }),
     {
@@ -216,7 +207,6 @@ export const useOnboardingStore = create<OnboardingState>()(
         reminderCustom: state.reminderCustom,
         remindersEnabled: state.remindersEnabled,
         v2Step: state.v2Step,
-        accountNameOpen: state.accountNameOpen,
         // profileSetupHints intentionally omitted from persist
       }),
     }
