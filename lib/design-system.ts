@@ -1523,7 +1523,8 @@ export const DS_V3 = {
     border: '#2E2B27',          // tokens.ts:9
     textPrimary: '#F5F3EE',     // 17.3:1 on canvas, 15.8:1 on surface — tokens.ts:10
     textSecondary: '#A39E95',   // 7.2:1 on canvas, 6.6:1 on surface — tokens.ts:11
-    brand: '#DC5401',           // fills, week strip, active outlines — tokens.ts:12
+    primary: '#BB471D',         // primary button fill; textPrimary label — tokens.ts:12
+    brand: '#DC5401',           // fills, week strip, active outlines — tokens.ts:13
     brandText: '#E8600F',       // orange as text: 5.6:1 canvas, 5.1:1 surface — tokens.ts:13
     brandTint: '#3A1F10',       // hint grounds, selected chips, own row — tokens.ts:14
     onBrand: '#0F0F0F',         // label on a brand fill: 4.9:1 — tokens.ts:15
