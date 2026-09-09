@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badge, firstUnsecuredEnrollment, pickProofTask, proofCard, proofDotKind, proofGates, weekStrip } from "@/lib/today-derive";
+import { badge, firstUnsecuredEnrollment, pickProofTask, proofDotKind, proofGates, weekStrip } from "@/lib/today-derive";
 import type { TodayEnrollment, TodayState, TodayTask } from "@/lib/today-state";
 
 const AC1 = "c0000000-0000-4000-8000-000000000001";
@@ -73,18 +73,10 @@ describe("today-derive", () => {
       ],
     });
 
-    const card = proofCard(state);
-    expect(card.taskText).toBe("Journal");
-    expect(card.challenge).toBe("Write");
-    expect(card.posted).toBe(false);
-    expect(card.day).toBe(1);
-    expect(card.doneCount).toBe(2);
-    expect(card.totalCount).toBe(3);
     expect(badge(state)).toEqual({ done: 2, total: 3 });
     expect(pickProofTask(state)?.task.id).toBe(T3);
     expect(firstUnsecuredEnrollment(state)?.active_challenge_id).toBe(AC3);
     expect(proofGates(state.enrollments[2]!.tasks[0]!)).toEqual([{ kind: "camera" }]);
-    expect(card.gate).toBe("Photo");
 
     const week = weekStrip(state);
     expect(week.todayIndex).toBe(2);
@@ -114,11 +106,6 @@ describe("today-derive", () => {
       ],
     });
 
-    const card = proofCard(state);
-    expect(card.posted).toBe(true);
-    expect(card.taskText).toBe("Run 1 mile");
-    expect(card.day).toBe(3);
-    expect(proofDotKind(card.posted)).toBe("filled");
     expect(proofDotKind(pickProofTask(state)!.task.done)).toBe("filled");
     expect(badge(state)).toEqual({ done: 2, total: 2 });
     expect(firstUnsecuredEnrollment(state)).toBeNull();
@@ -139,10 +126,8 @@ describe("today-derive", () => {
       ],
     });
     const pick = pickProofTask(state)!;
-    const card = proofCard(state);
     expect(pick.task.done).toBe(true);
-    expect(card.posted).toBe(pick.task.done);
-    expect(proofDotKind(card.posted)).toBe("filled");
+    expect(proofDotKind(pick.task.done)).toBe("filled");
   });
 
   it("one enrollment: badge and day follow that enrollment only", () => {
@@ -161,12 +146,7 @@ describe("today-derive", () => {
       ],
     });
 
-    const card = proofCard(state);
-    expect(card.taskText).toBe("Evening pages");
-    expect(card.challenge).toBe("Write");
-    expect(card.day).toBe(2);
-    expect(card.doneCount).toBe(1);
-    expect(card.totalCount).toBe(2);
+    expect(pickProofTask(state)?.task.title).toBe("Evening pages");
     expect(badge(state)).toEqual({ done: 1, total: 2 });
   });
 });
