@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import { FLAGS } from '@/lib/feature-flags';
 import { v2MayPromptNotificationPermission } from '@/lib/onboarding-v2-notifications';
+import { ensureOwnProfile, resetEnsureOwnProfile } from '@/lib/ensure-own-profile';
+import { captureError } from '@/lib/sentry';
 
 type AuthContextValue = {
   user: User | null;
@@ -32,10 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timeout = setTimeout(() => setLoading(false), 5000);
 
     supabase.auth.getSession()
-      .then(({ data: { session } }) => {
+      .then(async ({ data: { session } }) => {
         clearTimeout(timeout);
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user?.id) {
+          try {
+            await ensureOwnProfile(session.user.id);
+          } catch (err) {
+            captureError(err, "AuthContext.ensureOwnProfile");
+          }
+        } else {
+          resetEnsureOwnProfile();
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -47,6 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user?.id) {
+        void ensureOwnProfile(session.user.id).catch((err) => {
+          captureError(err, "AuthContext.ensureOwnProfile");
+        });
+      } else {
+        resetEnsureOwnProfile();
+      }
       setLoading(false);
     });
 

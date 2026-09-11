@@ -19,6 +19,7 @@ import { profilesStatsProcedures } from "./profiles-stats";
 import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
+import { ensureProfile } from "../../lib/ensure-profile";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -47,6 +48,12 @@ export const profilesRouter = createTRPCRouter({
   ...profilesSocialProcedures,
   ...profilesStatsProcedures,
   ...profilesRecordProcedures,
+  /** Service-role upsert of the caller's row. Idempotent. */
+  ensure: protectedProcedure.mutation(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    return ensureProfile(server, ctx.userId);
+  }),
+
   create: protectedProcedure
     .input(z.object({
       username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
