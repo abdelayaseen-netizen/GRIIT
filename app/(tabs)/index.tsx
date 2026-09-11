@@ -446,8 +446,9 @@ export default function HomeScreen() {
         tasksDoneToday: heroMetrics.tasksDoneToday,
         totalTasksToday: heroMetrics.totalTasksToday,
         firstProofEver,
+        targetStreak: profile?.target_streak ?? null,
       }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver],
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak],
   );
 
   // ────────────── render ──────────────

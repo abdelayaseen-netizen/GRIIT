@@ -804,6 +804,8 @@ export const challengesDiscoverProcedures = {
           category,
           visibility,
           status,
+          is_hard_mode,
+          participation_type,
           source_starter_id,
           challenge_tasks (id, title, task_type, order_index, config)
         `)

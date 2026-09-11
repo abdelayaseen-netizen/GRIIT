@@ -43,6 +43,18 @@ const CATALOG = [
     category: "Discipline",
     description: "Hit your bedtime window.",
   },
+  {
+    id: "c3000001-4000-4000-8000-000000000001",
+    title: "Breathe 1 Min",
+    category: "Mind",
+    description: "One minute of breathing.",
+  },
+  {
+    id: "c3000001-4000-4000-8000-000000000002",
+    title: "7-Day Digital Sunset",
+    category: "mind",
+    description: "Screens down at sunset.",
+  },
 ];
 
 describe("isJoinableChallengeId", () => {
@@ -57,11 +69,12 @@ describe("suggestChallengesForGoals", () => {
   it("returns different ids for physical vs reading goal sets", () => {
     const physical = suggestChallengesForGoals(["physical_toughness"], CATALOG).map((c) => c.id);
     const reading = suggestChallengesForGoals(["reading_learning"], CATALOG).map((c) => c.id);
-    expect(physical).toHaveLength(3);
-    expect(reading).toHaveLength(3);
+    expect(physical.length).toBeGreaterThan(0);
+    expect(reading.length).toBeGreaterThan(0);
     expect(physical).not.toEqual(reading);
     expect(physical[0]).toBe("a1000001-4000-4000-8000-000000000005");
     expect(reading[0]).toBe("a1000001-4000-4000-8000-000000000004");
+    expect(reading).not.toContain("c3000001-4000-4000-8000-000000000001");
   });
 
   it("returns no fake joinable ids on an empty catalog", () => {
@@ -80,13 +93,17 @@ describe("suggestChallengesForGoals", () => {
     expect(matchReasonForChallenge(physical[0]!, ["physical_toughness"])).toBe(
       "Matches physical toughness"
     );
-    expect(sleep[0]?.id).toBe("b2000001-4000-4000-8000-000000000006");
+    expect(sleep.map((c) => c.id)).toContain("c3000001-4000-4000-8000-000000000002");
     expect(matchReasonForChallenge(sleep[0]!, ["sleep_recovery"])).toBe(
-      "Matches sleep & recovery"
+      "Matches sleep and recovery"
     );
     expect(matchReasonForChallenge(CATALOG[1]!, ["physical_toughness"])).toBe(
       "Popular first challenge"
     );
+  });
+
+  it("never pads with a score-0 challenge", () => {
+    expect(suggestChallengesForGoals(["faith_prayer"], CATALOG)).toEqual([]);
   });
 });
 

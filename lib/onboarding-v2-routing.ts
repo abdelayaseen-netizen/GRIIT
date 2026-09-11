@@ -47,6 +47,11 @@ export function v2StepIndex(step: OnboardingV2Step): number {
   return ONBOARDING_V2_ORDER.indexOf(step);
 }
 
+/** PositionBar index. Goals is 0. Welcome is not on the bar. */
+export function chromeStep(step: OnboardingV2Step): number {
+  return Math.max(0, v2StepIndex(step) - 1);
+}
+
 /** Segment i (1..8) is filled when the current step index is >= i. */
 export function v2SegmentFilled(step: OnboardingV2Step, segment: number): boolean {
   return v2StepIndex(step) >= segment;

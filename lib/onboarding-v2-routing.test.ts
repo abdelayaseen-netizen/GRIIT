@@ -5,6 +5,7 @@ import {
   resolveCompletedLeaveHref,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
+  chromeStep,
   resolveV2Step,
   sessionKindFromUser,
   v2ProgressLabel,
@@ -33,6 +34,15 @@ describe("ONBOARDING_V2_ORDER", () => {
 
   it("has eight progress segments after welcome", () => {
     expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(8);
+  });
+
+  it("chromeStep starts at Goals", () => {
+    expect(chromeStep("goals")).toBe(0);
+    expect(chromeStep("why_proof")).toBe(1);
+    expect(chromeStep("why_circle")).toBe(2);
+    expect(chromeStep("commitment")).toBe(3);
+    expect(chromeStep("first_challenge")).toBe(4);
+    expect(chromeStep("profile")).toBe(7);
   });
 });
 

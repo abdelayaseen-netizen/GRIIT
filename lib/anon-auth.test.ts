@@ -40,6 +40,14 @@ vi.mock("@/lib/write-device-timezone", () => ({
   writeDeviceTimezone: () => writeDeviceTimezone(),
 }));
 
+const trpcMutate = vi.fn<(path: string, input?: unknown) => Promise<unknown>>(
+  async () => ({ created: false })
+);
+vi.mock("@/lib/trpc", () => ({
+  trpcMutate: (path: string, input?: unknown) =>
+    input === undefined ? trpcMutate(path) : trpcMutate(path, input),
+}));
+
 import {
   __anonAuthTestUtils,
   ensureAnonymousSession,
@@ -47,6 +55,7 @@ import {
   upgradeAnonymousWithApple,
   upgradeAnonymousWithEmail,
 } from "@/lib/anon-auth";
+import { resetEnsureOwnProfile } from "@/lib/ensure-own-profile";
 
 const anonUser = {
   id: "anon-uid-1",
@@ -104,7 +113,9 @@ describe("ensureAnonymousSession", () => {
     vi.clearAllMocks();
     getItem.mockResolvedValue(null);
     __anonAuthTestUtils.resetEnsureAnonymousInflight();
+    resetEnsureOwnProfile();
     writeDeviceTimezone.mockResolvedValue("America/New_York");
+    trpcMutate.mockResolvedValue({ created: false });
   });
 
   it("returns existing session without calling signInAnonymously", async () => {
@@ -117,6 +128,21 @@ describe("ensureAnonymousSession", () => {
     expect(res.user?.id).toBe("anon-uid-1");
     expect(signInAnonymously).not.toHaveBeenCalled();
     expect(writeDeviceTimezone).not.toHaveBeenCalled();
+    expect(trpcMutate).toHaveBeenCalledWith("profiles.ensure");
+  });
+
+  it("anon session calls profiles.ensure once; second call is a no-op", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    const first = await ensureAnonymousSession();
+    __anonAuthTestUtils.resetEnsureAnonymousInflight();
+    const second = await ensureAnonymousSession();
+    expect(first.kind).toBe("ok");
+    expect(second.kind).toBe("ok");
+    expect(trpcMutate).toHaveBeenCalledTimes(1);
+    expect(trpcMutate).toHaveBeenCalledWith("profiles.ensure");
   });
 
   it("creates anon session when none exists", async () => {

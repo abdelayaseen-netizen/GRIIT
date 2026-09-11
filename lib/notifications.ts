@@ -198,6 +198,19 @@ export async function scheduleNextSecureReminder(
 /**
  * Request permissions and return whether we can schedule.
  */
+export type NotificationPermissionStatus = "granted" | "denied" | "undetermined";
+
+export async function getNotificationPermissionStatus(): Promise<NotificationPermissionStatus> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === "granted") return "granted";
+    if (status === "denied") return "denied";
+    return "undetermined";
+  } catch {
+    return "undetermined";
+  }
+}
+
 export async function requestNotificationPermissions(): Promise<boolean> {
   try {
     const { status: existing } = await Notifications.getPermissionsAsync();
