@@ -3,8 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
+import { readOwnProfileOnce } from '@/lib/profile-read';
 import { fetchStatsWithReconcile } from '@/lib/fetch-stats-with-reconcile';
-import { supabase } from '@/lib/supabase';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
@@ -111,11 +111,7 @@ export function useApp() {
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [autoCreateAttempted, setAutoCreateAttempted] = useState(false);
-  const [autoCreateError, setAutoCreateError] = useState<string | null>(null);
-  const [fallbackProfile, setFallbackProfile] = useState<Record<string, unknown> | null>(null);
-  const [fallbackAttempted, setFallbackAttempted] = useState(false);
-  const [profileAutoCreating, setProfileAutoCreating] = useState(false);
+  const [autoCreateError] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<ProfileFromApi | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -141,31 +137,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     setProfileLoading(true);
-    try {
-      const data = await trpcQuery<ProfileFromApi>(TRPC.profiles.get);
+    const result = await readOwnProfileOnce();
+    if (result.status === "ready") {
+      const data = result.profile;
       setProfile(data);
-      const subStatus = (data as ProfileFromApi)?.subscription_status;
-      const subExpiry = (data as ProfileFromApi)?.subscription_expiry;
+      const subStatus = data.subscription_status;
+      const subExpiry = data.subscription_expiry;
       setSubscriptionState(subStatus ?? undefined, subExpiry ?? undefined);
-      const premiumFromProfile = subStatus === 'premium' || subStatus === 'trial';
+      const premiumFromProfile = subStatus === "premium" || subStatus === "trial";
       setIsPremium(premiumFromProfile);
       setProfileError(false);
       initSubscription(user.id).catch((err) => {
         captureError(err, "AppContext.initSubscription");
       });
-    } catch (err) {
-      captureError(err, "AppContext.fetchProfile");
+    } else {
+      captureError(result.error, "AppContext.fetchProfile");
       setProfileError(true);
-    } finally {
-      setProfileLoading(false);
-      setProfileFetched(true);
     }
-  }, [user]);
+    setProfileLoading(false);
+    setProfileFetched(true);
+  }, [user?.id]);
 
   const fetchStats = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     try {
       const data = await fetchStatsWithReconcile();
       setStats(data);
@@ -174,10 +170,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // home owns the authoritative getStats fetch (app/(tabs)/index.tsx).
       captureError(err, "AppContext.fetchStats");
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchActiveChallenge = useCallback(async (): Promise<ActiveChallengeFromApi | null> => {
-    if (!user) return null;
+    if (!user?.id) return null;
     try {
       const data = await trpcQuery<ActiveChallengeFromApi | null>(TRPC.challenges.getActive);
       setActiveChallenge(data);
@@ -190,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActiveChallengeLoaded(true);
       return null;
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchTodayCheckins = useCallback(async (activeChallengeId: string) => {
     try {
@@ -202,7 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
       setProfile(null);
       setStats(null);
       setSubscriptionState(null, null);
@@ -218,9 +214,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (ac?.id) void fetchTodayCheckins(ac.id);
       }
     });
-  }, [user, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
+  }, [user?.id, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
 
-  const resolvedProfile = profile || fallbackProfile;
+  const resolvedProfile = profile;
   const profileTimezone = (resolvedProfile as { timezone?: string | null } | null)?.timezone;
   useNotificationScheduler({ user, stats, activeChallenge, timezone: profileTimezone });
 
@@ -230,96 +226,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [activeChallenge?.id, fetchTodayCheckins]);
 
-  const directProfileFallback = useCallback(async (userId: string, email?: string) => {
-    if (fallbackAttempted) return;
-    setFallbackAttempted(true);
-    try {
-      const { data: existing, error: fetchErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (existing && !fetchErr) {
-        setFallbackProfile(existing);
-        return;
-      }
-
-      const fallbackUsername = `user_${userId.slice(0, 8)}`;
-      const fallbackName = email?.split('@')[0] || fallbackUsername;
-
-      const { data: created, error: createErr } = await supabase
-        .from('profiles')
-        .upsert(
-          {
-            user_id: userId,
-            username: fallbackUsername,
-            display_name: fallbackName,
-            bio: '',
-            timezone: getDeviceIanaTimeZone(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id' }
-        )
-        .select()
-        .single();
-
-      if (createErr) {
-        setAutoCreateError(createErr.message);
-        return;
-      }
-
-      if (created) setFallbackProfile(created);
-    } catch (err) {
-      setAutoCreateError(err instanceof Error ? err.message : 'Unknown error');
-    }
-  }, [fallbackAttempted]);
-
-  useEffect(() => {
-    if (
-      user &&
-      profileFetched &&
-      profile === null &&
-      !autoCreateAttempted &&
-      !profileAutoCreating
-    ) {
-      setAutoCreateAttempted(true);
-      setProfileAutoCreating(true);
-      const fallbackUsername = `user_${user.id.slice(0, 8)}`;
-      const fallbackName = user.email?.split('@')[0] || fallbackUsername;
-      trpcMutate(TRPC.profiles.create, {
-        username: fallbackUsername,
-        display_name: fallbackName,
-        timezone: getDeviceIanaTimeZone(),
-      }).then(() => {
-        fetchProfile();
-        fetchStats();
-      }).catch((err: unknown) => {
-        setAutoCreateError(err instanceof Error ? err.message : String(err));
-      }).finally(() => {
-        setProfileAutoCreating(false);
-      });
-    }
-  }, [user, profileFetched, profile, autoCreateAttempted, profileAutoCreating, fetchProfile, fetchStats]);
-
-  useEffect(() => {
-    if (
-      user &&
-      profileError &&
-      !fallbackAttempted &&
-      !profile &&
-      !fallbackProfile
-    ) {
-      directProfileFallback(user.id, user.email ?? undefined);
-    }
-  }, [user, profileError, profile, fallbackAttempted, fallbackProfile, directProfileFallback]);
-
   useEffect(() => {
     if (!user) {
-      setAutoCreateAttempted(false);
-      setAutoCreateError(null);
-      setFallbackProfile(null);
-      setFallbackAttempted(false);
       setProfile(null);
       setProfileFetched(false);
       setProfileError(false);
@@ -351,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user?.id || !profileFetched) return;
-    const p = profile || fallbackProfile;
+    const p = profile;
     if (!p) return;
     const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
     const tier = typeof rawTier === "string" ? rawTier : undefined;
@@ -378,7 +286,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           timezoneHealForDeviceRef.current = null;
         });
     }
-  }, [user?.id, user?.email, profile, fallbackProfile, profileFetched, isPremium, stats, fetchProfile]);
+  }, [user?.id, user?.email, profile, profileFetched, isPremium, stats, fetchProfile]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 
@@ -422,18 +330,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fetchStats,
     stats,
     profile,
-    fallbackProfile,
+    fallbackProfile: null,
   });
 
-  const profileHasLoaded = (profileFetched && profile !== null) || profileError || !!fallbackProfile;
-  const initialFetchDone = hardTimeout || ((profileHasLoaded || (profileFetched && autoCreateAttempted && !profileAutoCreating) || !!fallbackProfile) && activeChallengeLoaded);
+  const profileHasLoaded = (profileFetched && profile !== null) || profileError;
+  const initialFetchDone = hardTimeout || ((profileHasLoaded || profileFetched) && activeChallengeLoaded);
 
-  const isError = (
-    profileError &&
-    !profile &&
-    !fallbackProfile &&
-    fallbackAttempted
-  );
+  const isError = profileError && !profile;
 
   const refetchAll = useCallback(async () => {
     const results = await Promise.allSettled([
@@ -464,11 +367,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const profileMissing = !resolvedProfile && autoCreateAttempted && fallbackAttempted && !profileAutoCreating && !!autoCreateError;
+  const profileMissing = profileError && !resolvedProfile && profileFetched;
 
   const value: AppContextValue = useMemo(() => ({
     profile: resolvedProfile,
-    profileLoading: (profileLoading || profileAutoCreating) && !resolvedProfile,
+    profileLoading: profileLoading && !resolvedProfile,
     profileMissing,
     autoCreateError,
     stats,
@@ -480,7 +383,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     canSecureDay,
     completeTask,
     secureDay,
-    isLoading: !initialFetchDone && !hardTimeout && !resolvedProfile && (profileLoading || profileAutoCreating),
+    isLoading: !initialFetchDone && !hardTimeout && !resolvedProfile && profileLoading,
     isError,
     initialFetchDone,
     refetchAll,
@@ -506,7 +409,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }), [
     resolvedProfile,
     profileLoading,
-    profileAutoCreating,
     profileMissing,
     autoCreateError,
     stats,
