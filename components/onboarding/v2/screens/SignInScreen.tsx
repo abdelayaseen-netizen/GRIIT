@@ -135,9 +135,8 @@ export default function SignInScreen({
     }
     setResetHint("");
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
-        redirectTo: undefined,
-      });
+      // TODO: recovery link opens Supabase default page; in-app reset screen not built.
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed);
       if (resetError) {
         setResetHint(resetError.message);
         return;
