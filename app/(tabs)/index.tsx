@@ -23,6 +23,7 @@ import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
+import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -451,6 +452,11 @@ export default function HomeScreen() {
     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak],
   );
 
+  const securedTodayVisual = homeSecuredToday({
+    dateKeysSaySecured: todaySecured,
+    postedFromCheckins: proof.posted,
+  });
+
   // ────────────── render ──────────────
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
@@ -489,11 +495,11 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak ?? 0}
-              streakLine={todaySecured ? "Day secured." : "Post today to start."}
-              proof={proof}
+              streakLine={securedTodayVisual ? "Day secured." : "Post today to start."}
+              proof={{ ...proof, posted: securedTodayVisual }}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
-              fillToday={todaySecured}
+              fillToday={securedTodayVisual}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}

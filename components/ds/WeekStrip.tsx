@@ -11,7 +11,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { DS_V3 } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
 
 const DAY_SECURED_MS = DS_V3.motion.count;
 const STROKE = (DS_V3.space.xs * 3) / 8;
@@ -54,7 +54,7 @@ function Square({
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      [DS_V3.color.border, DS_V3.color.brand]
+      [DS_V3.color.border, DS_COLORS_V2.brand.primary]
     ),
   }));
 
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.border,
   },
   squareFilled: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_COLORS_V2.brand.primary,
   },
   today: {
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_COLORS_V2.brand.primary,
   },
 });

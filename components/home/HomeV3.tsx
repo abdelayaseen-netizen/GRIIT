@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -89,9 +90,10 @@ export function HomeV3({
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
+  const secured = homeProofFilled(fillToday === true || proof?.posted === true);
   const days = LETTERS.map((letter, i) => ({
     letter,
-    filled: weekFilled[i] === true,
+    filled: weekFilled[i] === true || (secured.todaySquareFilled && i === todayIndex),
   }));
 
   if (error) {
@@ -170,11 +172,11 @@ export function HomeV3({
               </View>
             </View>
             <View style={styles.taskRow}>
-              <View style={styles.taskDot} />
+              <View style={[styles.taskDot, { backgroundColor: secured.circleFill }]} />
               <Text style={styles.task}>{proof.taskText}</Text>
               <Text style={styles.caption}>{proof.gate}</Text>
             </View>
-            {proof.posted ? (
+            {secured.posted ? (
               <View style={styles.done}>
                 <Check size={ICON} color={DS_V3.color.brandText} />
                 <Text style={styles.doneTxt}>Posted today</Text>
@@ -191,7 +193,7 @@ export function HomeV3({
       ) : null}
 
       <View style={styles.week}>
-        <WeekStrip days={days} todayIndex={todayIndex} fillToday={fillToday} />
+        <WeekStrip days={days} todayIndex={todayIndex} fillToday={secured.todaySquareFilled} />
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />
