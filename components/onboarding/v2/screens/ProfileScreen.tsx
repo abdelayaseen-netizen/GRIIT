@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { Camera } from "lucide-react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useApp } from "@/contexts/AppContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -26,6 +28,8 @@ export default function ProfileScreen({
   onSkip: () => void;
   onBack: () => void;
 }) {
+  const queryClient = useQueryClient();
+  const { refetchAll } = useApp();
   const hints = useOnboardingStore((s) => s.profileSetupHints);
   const setUsername = useOnboardingStore((s) => s.setUsername);
   const [displayName, setDisplayName] = useState(hints?.displayNameFromApple ?? "");
@@ -111,7 +115,7 @@ export default function ProfileScreen({
         if (isValidAccountUsername(normalizeOnboardingUsername(username))) {
           setUsername(normalizeOnboardingUsername(username));
         }
-      }, done);
+      }, done, { queryClient, afterPersist: refetchAll });
       if (result.status === "stayed") {
         captureError(result.error, "OnboardingV2Profile");
         setSaveError(
@@ -120,7 +124,7 @@ export default function ProfileScreen({
       }
       setSaving(false);
     },
-    [displayName, username, bio, avatarUrl, setUsername]
+    [displayName, username, bio, avatarUrl, setUsername, queryClient, refetchAll]
   );
 
   const preview = avatarUri ?? avatarUrl;
