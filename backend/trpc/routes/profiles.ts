@@ -180,6 +180,25 @@ export const profilesRouter = createTRPCRouter({
       };
     }),
 
+  /** Availability only. Deploy this procedure before the onboarding Profile check can work. */
+  checkUsername: publicProcedure
+    .input(z.object({ username: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const username = input.username.trim().toLowerCase();
+      if (!username) return { available: true };
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const escaped = username.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+      const { data } = await server
+        .from("profiles")
+        .select("user_id")
+        .ilike("username", escaped)
+        .maybeSingle();
+      const row = data as { user_id?: string } | null;
+      if (!row?.user_id) return { available: true };
+      if (ctx.userId && row.user_id === ctx.userId) return { available: true };
+      return { available: false };
+    }),
+
   /**
    * Native push: persist Expo token on both canonical columns.
    * expo_push_token is the canonical column (original schema, read by cron/nudges/accountability).
