@@ -29,6 +29,7 @@ import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
 import { attemptSecureDayAfterComplete, pickNextUndoneEnrollmentId } from "@/lib/day-secure-ui";
+import { taskSecuredHref } from "@/lib/task-secured-nav";
 import ChallengeDoneScreen from "./ChallengeDoneScreen";
 import { shareProgressImage } from "@/lib/share";
 import {
@@ -412,7 +413,8 @@ export function TaskFlowV2() {
       setResult(assembled);
       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
       void endLiveActivity();
-      setStep("confirmation");
+      // secureDay already awaited invalidate+refetch (useAppChallengeMutations 291–296).
+      router.push(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
     } catch (err) {
       setFailCode(failureErrorCode(err));
       setFailNote(err instanceof Error ? err.message : "Couldn't save. Try again.");

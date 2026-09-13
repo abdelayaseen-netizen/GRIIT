@@ -485,6 +485,13 @@ function RootLayoutNav() {
           presentation: "card"
         }} 
       />
+      <Stack.Screen
+        name="task/secured"
+        options={{
+          headerShown: false,
+          presentation: "card",
+        }}
+      />
       <Stack.Screen 
         name="challenge/complete" 
         options={{ 

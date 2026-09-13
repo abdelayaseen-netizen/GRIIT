@@ -43,6 +43,8 @@ export const ROUTES = {
   POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_COMPLETE: "/task/complete",
+  /** Secured / self-reported moment. Push only after secureDay refetch. */
+  TASK_SECURED: "/task/secured",
   CHALLENGE_COMPLETE: "/challenge/complete",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",

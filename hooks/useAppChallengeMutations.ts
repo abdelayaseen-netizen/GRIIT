@@ -108,10 +108,6 @@ export function useAppChallengeMutations({
       ).length;
       const firstTaskOfDay = completedCountBefore === 0 && requiredTasks.length > 1;
 
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
       const previousCheckins = todayCheckins.slice();
       const optimisticCheckin = {
         active_challenge_id: params.activeChallengeId,
@@ -295,6 +291,9 @@ export function useAppChallengeMutations({
       await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
       await queryClient.refetchQueries({ queryKey: ["profiles", "getStats"] });
       const userDaySecured = result.secured === true;
+      if (userDaySecured && Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       const securedChallengeId =
         result.challengeId ?? (activeChallenge as { challenge_id?: string } | null)?.challenge_id ?? "";
       const dayNum =
