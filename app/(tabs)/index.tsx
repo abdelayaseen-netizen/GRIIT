@@ -24,6 +24,7 @@ import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { countFriendsPostedAway } from "@/lib/home-away-count";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -419,14 +420,10 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
   });
 
-  const awayCount = useMemo(() => {
-    const ids = new Set(
-      (liveFeedQuery.data?.posts ?? [])
-        .map((p) => p.userId)
-        .filter((id) => id && id !== user?.id),
-    );
-    return ids.size;
-  }, [liveFeedQuery.data?.posts, user?.id]);
+  const awayCount = useMemo(
+    () => countFriendsPostedAway(liveFeedQuery.data?.posts ?? [], user?.id),
+    [liveFeedQuery.data?.posts, user?.id]
+  );
 
   const nextBadge = useMemo(() => {
     const mark = nextProfileV2Badge({
