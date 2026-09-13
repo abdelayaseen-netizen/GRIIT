@@ -41,6 +41,8 @@ export function selectHomeProofCard(input: {
   totalTasksToday: number;
   firstProofEver: boolean;
   targetStreak?: number | null;
+  /** Server getSecuredDateKeys only. Never task.done / checkins. */
+  securedToday: boolean;
 }): HomeProofCard {
   const task = input.tasks.find((t) => !t.done) ?? input.tasks[0] ?? null;
   const hasChallenge = input.tasks.length > 0;
@@ -53,7 +55,7 @@ export function selectHomeProofCard(input: {
     gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),
     doneCount: input.tasksDoneToday,
     totalCount: input.totalTasksToday || 1,
-    posted: task ? task.done : false,
+    posted: input.securedToday,
     hasChallenge,
     firstProofEver: input.firstProofEver,
   };

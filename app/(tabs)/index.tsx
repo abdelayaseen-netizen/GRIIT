@@ -233,9 +233,10 @@ export default function HomeScreen() {
     getDeviceIanaTimeZone(),
   );
 
-  const todaySecured = useMemo(() => {
-    return securedDateKeys.includes(getTodayDateKey(homeTimeZone));
-  }, [securedDateKeys, homeTimeZone]);
+  const todaySecured = useMemo(
+    () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
+    [securedDateKeys, homeTimeZone]
+  );
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -445,14 +446,10 @@ export default function HomeScreen() {
         totalTasksToday: heroMetrics.totalTasksToday,
         firstProofEver,
         targetStreak: profile?.target_streak ?? null,
+        securedToday: todaySecured,
       }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak],
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured],
   );
-
-  const securedTodayVisual = homeSecuredToday({
-    dateKeysSaySecured: todaySecured,
-    postedFromCheckins: proof.posted,
-  });
 
   // ────────────── render ──────────────
 
@@ -492,11 +489,11 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak ?? 0}
-              streakLine={securedTodayVisual ? "Day secured." : "Post today to start."}
-              proof={{ ...proof, posted: securedTodayVisual }}
+              streakLine={todaySecured ? "Day secured." : "Post today to start."}
+              proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
-              fillToday={securedTodayVisual}
+              fillToday={todaySecured}
               feedScope={feedScope}
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}

@@ -90,10 +90,10 @@ export function HomeV3({
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
-  const secured = homeProofFilled(fillToday === true || proof?.posted === true);
+  const secured = homeProofFilled(fillToday === true);
   const days = LETTERS.map((letter, i) => ({
     letter,
-    filled: weekFilled[i] === true || (secured.todaySquareFilled && i === todayIndex),
+    filled: weekFilled[i] === true,
   }));
 
   if (error) {
