@@ -120,3 +120,36 @@ export function setOnboardingV2Exit(href: string): void {
 export function peekOnboardingV2Exit(): string | null {
   return pendingExitHref;
 }
+
+/**
+ * Confirmed `profiles.onboarding_completed` from a write this session,
+ * scoped to the user it was written for.
+ * Breaks stale-fetch ties in AuthRedirector only — never a routing gate
+ * on its own. Not the AsyncStorage ONBOARDING_COMPLETED cache.
+ */
+let knownDbCompleted: { userId: string; value: boolean } | null = null;
+
+export function setKnownOnboardingCompleted(userId: string, value: boolean): void {
+  knownDbCompleted = { userId, value };
+}
+
+export function clearKnownOnboardingCompleted(): void {
+  knownDbCompleted = null;
+}
+
+/** `null` when empty, or when the stored userId is not `userId`. */
+export function peekKnownOnboardingCompleted(
+  userId: string | null | undefined
+): boolean | null {
+  if (!userId || !knownDbCompleted || knownDbCompleted.userId !== userId) return null;
+  return knownDbCompleted.value;
+}
+
+/** Writer wins when it has confirmed true; otherwise the last fetch. */
+export function dbCompletedForLaunch(input: {
+  fetched: boolean | null;
+  written: boolean | null;
+}): boolean | null {
+  if (input.written === true) return true;
+  return input.fetched;
+}

@@ -1,13 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   ONBOARDING_V2_ORDER,
   ONBOARDING_V2_PROGRESS_SEGMENTS,
+  clearKnownOnboardingCompleted,
+  dbCompletedForLaunch,
+  peekKnownOnboardingCompleted,
   resolveCompletedLeaveHref,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
   chromeStep,
   resolveV2Step,
   sessionKindFromUser,
+  setKnownOnboardingCompleted,
   v2ProgressLabel,
   v2SegmentFilled,
 } from "@/lib/onboarding-v2-routing";
@@ -245,4 +249,61 @@ describe("resolveOnboardingLaunch", () => {
       expect(resolveOnboardingLaunch({ sessionKind, dbCompleted: true })).toBe("home");
     }
   });
+
+  it("does not redirect to onboarding when onboarding_completed is true", () => {
+    const fetchedFalseWrittenTrue = dbCompletedForLaunch({
+      fetched: false,
+      written: true,
+    });
+    expect(fetchedFalseWrittenTrue).toBe(true);
+    for (const sessionKind of ["guest", "real"] as const) {
+      const dest = resolveOnboardingLaunch({
+        sessionKind,
+        dbCompleted: fetchedFalseWrittenTrue,
+      });
+      expect(dest).toBe("home");
+      expect(
+        hrefForDest(dest, {
+          inOnboarding: false,
+          inAuth: false,
+          onCreateProfile: false,
+          inTabs: true,
+        })
+      ).toBeNull();
+      expect(
+        hrefForDest(dest, {
+          inOnboarding: true,
+          inAuth: false,
+          onCreateProfile: false,
+          inTabs: false,
+        })
+      ).not.toBe("/onboarding");
+    }
+  });
+
+  it("written true for user A does not send user B home on a stale fetch", () => {
+    setKnownOnboardingCompleted("user-a", true);
+    expect(peekKnownOnboardingCompleted("user-a")).toBe(true);
+    expect(peekKnownOnboardingCompleted("user-b")).toBeNull();
+    const dest = resolveOnboardingLaunch({
+      sessionKind: "real",
+      dbCompleted: dbCompletedForLaunch({
+        fetched: false,
+        written: peekKnownOnboardingCompleted("user-b"),
+      }),
+    });
+    expect(dest).toBe("resume");
+    expect(
+      hrefForDest(dest, {
+        inOnboarding: false,
+        inAuth: false,
+        onCreateProfile: false,
+        inTabs: false,
+      })
+    ).toBe("/onboarding");
+  });
+});
+
+afterEach(() => {
+  clearKnownOnboardingCompleted();
 });

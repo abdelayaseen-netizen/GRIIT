@@ -7,7 +7,7 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { ROUTES } from "@/lib/routes";
-import { setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
+import { setKnownOnboardingCompleted, setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
 import { clearOnboardingV2Step } from "@/lib/onboarding-v2-step";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 
@@ -15,15 +15,7 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
   setOnboardingV2Exit(opts?.destination ?? ROUTES.TABS);
   const store = useOnboardingStore.getState();
   track({ name: "onboarding_completed" });
-  store.completeOnboarding();
   store.setProfileSetupHints(null);
-
-  try {
-    await cacheOnboardingCompleted();
-    await clearOnboardingV2Step();
-  } catch (e) {
-    captureError(e, "OnboardingV2PersistFlag");
-  }
 
   try {
     const { data } = await supabase.auth.getUser();
@@ -34,9 +26,26 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
         updated_at: new Date().toISOString(),
       };
       if (store.targetStreak != null) payload.target_streak = store.targetStreak;
-      await supabase.from("profiles").update(payload).eq("user_id", userId);
+      const { data: row, error } = await supabase
+        .from("profiles")
+        .update(payload)
+        .eq("user_id", userId)
+        .select("onboarding_completed")
+        .maybeSingle();
+      if (error) throw error;
+      if ((row as { onboarding_completed?: boolean } | null)?.onboarding_completed === true) {
+        setKnownOnboardingCompleted(userId, true);
+        store.completeOnboarding();
+      }
     }
   } catch (e) {
     captureError(e, "OnboardingV2PersistDb");
+  }
+
+  try {
+    await cacheOnboardingCompleted();
+    await clearOnboardingV2Step();
+  } catch (e) {
+    captureError(e, "OnboardingV2PersistFlag");
   }
 }
