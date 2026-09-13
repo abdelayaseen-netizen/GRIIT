@@ -26,18 +26,25 @@ export default function SignInScreen({
   onBack,
   onSuccess,
   initialEmail,
+  startOnEmailForm,
 }: {
   onBack: () => void;
   onSuccess: () => void;
   /** Prefill from Account "Sign in with that account". */
   initialEmail?: string;
+  /** Account "Log in" opens the email form, not the method picker. */
+  startOnEmailForm?: boolean;
 }) {
   const [appleAvailable, setAppleAvailable] = useState(false);
-  const [emailMode, setEmailMode] = useState(Boolean(initialEmail?.trim()));
+  const [emailMode, setEmailMode] = useState(
+    Boolean(initialEmail?.trim()) || Boolean(startOnEmailForm)
+  );
   const [email, setEmail] = useState(initialEmail?.trim() ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+  const [resetHint, setResetHint] = useState("");
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -119,6 +126,29 @@ export default function SignInScreen({
     }
   }, [email, password, onSuccess]);
 
+  const handleForgotPassword = useCallback(async () => {
+    if (resetSent) return;
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setResetHint("Enter your email first.");
+      return;
+    }
+    setResetHint("");
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: undefined,
+      });
+      if (resetError) {
+        setResetHint(resetError.message);
+        return;
+      }
+      setResetSent(true);
+    } catch (e) {
+      captureError(e, "OnboardingV2ForgotPassword");
+      setResetHint(e instanceof Error ? e.message : "Could not send a reset link.");
+    }
+  }, [email, resetSent]);
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -166,6 +196,8 @@ export default function SignInScreen({
                 onChangeText={(t) => {
                   setEmail(t);
                   setError("");
+                  setResetHint("");
+                  setResetSent(false);
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -184,6 +216,12 @@ export default function SignInScreen({
                 secureTextEntry
                 accessibilityLabel="Password"
               />
+              {resetSent ? (
+                <Text style={styles.resetNote}>Check your email for a reset link.</Text>
+              ) : (
+                <TextLink label="Forgot password?" onPress={() => void handleForgotPassword()} />
+              )}
+              {resetHint ? <Text style={styles.resetHint}>{resetHint}</Text> : null}
               <PrimaryButton
                 label={loading ? "" : "Sign in"}
                 onPress={handleEmail}
@@ -221,4 +259,6 @@ const styles = StyleSheet.create({
     borderColor: OBV2_COLOR.borderStrong,
   },
   error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center" },
+  resetNote: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, textAlign: "center" },
+  resetHint: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.orangeInk, textAlign: "center" },
 });

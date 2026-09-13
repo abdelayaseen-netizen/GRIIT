@@ -38,13 +38,11 @@ const PT_DANGER = PT * 1.5;
 export default function AccountScreen({
   onAuthSuccess,
   onSkip,
-  onContinue,
   onSignInWithAccount,
   onBack,
 }: {
   onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
-  onContinue: () => void;
   onSignInWithAccount: (email?: string) => void;
   onBack: () => void;
 }) {
@@ -208,7 +206,7 @@ export default function AccountScreen({
   const footer =
     state === "default" ? (
       <>
-        <ChromePrimary label="Continue" onPress={onContinue} />
+        <ChromePrimary label="Continue" onPress={() => setState("email_entry")} />
         {skip}
       </>
     ) : (

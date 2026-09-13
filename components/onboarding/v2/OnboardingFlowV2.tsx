@@ -278,6 +278,7 @@ export default function OnboardingFlowV2() {
       return (
         <SignInScreen
           initialEmail={signInPrefill}
+          startOnEmailForm={step === "account"}
           onBack={() => {
             setSignInOpen(false);
             setSignInPrefill(undefined);
@@ -318,7 +319,6 @@ export default function OnboardingFlowV2() {
         return (
           <AccountScreen
             onAuthSuccess={handleAccountSuccess}
-            onContinue={goNext}
             onSkip={goNext}
             onSignInWithAccount={goToLogin}
             onBack={goBack}
