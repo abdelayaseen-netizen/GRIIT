@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { Camera } from "lucide-react-native";
+import ImagePicker from "react-native-image-crop-picker";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -15,6 +16,35 @@ import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 const PHOTO = DS_V3.space.gutter * 4 + DS_V3.space.sm;
 const CAM = DS_V3.space.lg + DS_V3.space.md;
 const PT = DS_V3.space.xs / 4;
+
+async function openCircularPhoto(): Promise<
+  | { status: "ok"; uri: string; mimeType?: string | null; fileName?: string | null }
+  | { status: "cancelled" }
+> {
+  try {
+    const image = await ImagePicker.openPicker({
+      width: 800,
+      height: 800,
+      cropping: true,
+      cropperCircleOverlay: true,
+      mediaType: "photo",
+      compressImageQuality: 0.8,
+    });
+    if (!image.path) return { status: "cancelled" };
+    const uri = image.path.startsWith("file://") ? image.path : `file://${image.path}`;
+    return {
+      status: "ok",
+      uri,
+      mimeType: image.mime ?? null,
+      fileName: image.filename ?? null,
+    };
+  } catch (e: unknown) {
+    const code = e && typeof e === "object" && "code" in e ? String((e as { code: unknown }).code) : "";
+    const msg = e instanceof Error ? e.message : "";
+    if (code === "E_PICKER_CANCELLED" || /cancel/i.test(msg)) return { status: "cancelled" };
+    throw e;
+  }
+}
 
 export default function ProfileScreen({
   onContinue,
@@ -35,11 +65,14 @@ export default function ProfileScreen({
   const [saving, setSaving] = useState(false);
 
   const handlePick = useCallback(async () => {
-    const picked = await pickProfilePhoto();
-    if (picked.status !== "ok") return;
-    setAvatarUri(picked.uri);
-    setAvatarUrl(null);
     try {
+      const picked =
+        Platform.OS === "web"
+          ? await pickProfilePhoto()
+          : await openCircularPhoto();
+      if (picked.status !== "ok") return;
+      setAvatarUri(picked.uri);
+      setAvatarUrl(null);
       const up = await uploadAvatarFromUri(picked.uri, {
         mimeType: picked.mimeType,
         fileName: picked.fileName,
