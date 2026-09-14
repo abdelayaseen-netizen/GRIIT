@@ -13,6 +13,8 @@ import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
   FREE_ACTIVE_LIMIT_MESSAGE,
 } from "../../../lib/free-challenge-limit";
+import { ensureProfile } from "../../lib/ensure-profile";
+import { getSupabaseServer } from "../../lib/supabase-server";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase
@@ -28,6 +30,7 @@ export const challengesJoinProcedures = {
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
+      await ensureProfile(getSupabaseServer() ?? ctx.supabase, ctx.userId);
       const { data: profile } = await ctx.supabase
         .from("profiles")
         .select("subscription_status")

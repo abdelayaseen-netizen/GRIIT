@@ -15,7 +15,7 @@ export const profileUpdateInputSchema = z.object({
     .string()
     .min(3)
     .max(PROFILE_USERNAME_MAX)
-    .regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only")
+    .regex(/^[a-zA-Z0-9_.]+$/, "Letters, numbers, underscores, dots only")
     .optional(),
   display_name: z.string().max(PROFILE_DISPLAY_NAME_MAX).optional(),
   bio: z.string().max(PROFILE_BIO_MAX).optional(),
@@ -32,6 +32,7 @@ export const profileUpdateInputSchema = z.object({
   challenge_visibility: z.enum(VISIBILITY_LEVELS).optional(),
   activity_visibility: z.enum(VISIBILITY_LEVELS).optional(),
   weekly_goal: z.union([z.literal(3), z.literal(5), z.literal(7)]).optional(),
+  target_streak: z.number().int().min(3).max(365).optional(),
   timezone: z.string().max(64).optional(),
   distance_unit: z.enum(["km", "mi"]).optional(),
 });

@@ -3,7 +3,9 @@
  * Screens persist the chosen preset/custom; this module never touches I/O.
  */
 
-export type ReminderPresetId = "am6" | "am8" | "pm12" | "pm7" | "custom";
+import { taskWord } from "@/lib/active-challenge-ui";
+
+export type ReminderPresetId = "am6" | "am8" | "pm6" | "pm9" | "custom";
 export type ReminderMinute = "00" | "15" | "30" | "45";
 export type ReminderMeridiem = "AM" | "PM";
 
@@ -21,8 +23,8 @@ export const REMINDER_PRESETS: {
 }[] = [
   { id: "am6", h: 6, m: "00", mer: "AM" },
   { id: "am8", h: 8, m: "00", mer: "AM" },
-  { id: "pm12", h: 12, m: "00", mer: "PM" },
-  { id: "pm7", h: 7, m: "00", mer: "PM" },
+  { id: "pm6", h: 6, m: "00", mer: "PM" },
+  { id: "pm9", h: 9, m: "00", mer: "PM" },
 ];
 
 export const DEFAULT_CUSTOM_DRAFT: ReminderCustom = { h: 6, m: "30", mer: "AM" };
@@ -108,8 +110,14 @@ export function parseReminderTime24h(hhmm: string): {
   return { preset: "custom", custom };
 }
 
-export function notificationBody(challengeName: string | null | undefined, taskCount: number): string {
+/** Preview / scheduler body. `{challenge}: {left} of {total} task(s) left today.` */
+export function notificationBody(
+  challengeName: string | null | undefined,
+  left: number,
+  total: number = left
+): string {
   const name = challengeName?.trim() ? challengeName.trim() : "Day 1";
-  const n = Number.isFinite(taskCount) && taskCount > 0 ? taskCount : 0;
-  return `${name} isn't logged yet. ${n} tasks left.`;
+  const remaining = Number.isFinite(left) && left > 0 ? left : 0;
+  const all = Number.isFinite(total) && total > 0 ? total : remaining;
+  return `${name}: ${remaining} of ${all} ${taskWord(remaining)} left today.`;
 }

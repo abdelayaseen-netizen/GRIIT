@@ -4,6 +4,9 @@ import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import { FLAGS } from '@/lib/feature-flags';
 import { v2MayPromptNotificationPermission } from '@/lib/onboarding-v2-notifications';
+import { ensureOwnProfile, resetEnsureOwnProfile } from '@/lib/ensure-own-profile';
+import { clearKnownOnboardingCompleted } from '@/lib/onboarding-v2-routing';
+import { captureError } from '@/lib/sentry';
 
 type AuthContextValue = {
   user: User | null;
@@ -30,12 +33,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 5000);
+    let lastAuthUserId: string | null = null;
 
     supabase.auth.getSession()
-      .then(({ data: { session } }) => {
+      .then(async ({ data: { session } }) => {
+        const nextId = session?.user?.id ?? null;
+        if (lastAuthUserId != null && nextId !== lastAuthUserId) {
+          clearKnownOnboardingCompleted();
+        }
+        lastAuthUserId = nextId;
         clearTimeout(timeout);
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user?.id) {
+          try {
+            await ensureOwnProfile(session.user.id);
+          } catch (err) {
+            captureError(err, "AuthContext.ensureOwnProfile");
+          }
+        } else {
+          resetEnsureOwnProfile();
+        }
         setLoading(false);
       })
       .catch(() => {
@@ -44,9 +62,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // error swallowed — handle in UI
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const nextId = session?.user?.id ?? null;
+      if (event === "SIGNED_OUT" || (lastAuthUserId != null && nextId !== lastAuthUserId)) {
+        clearKnownOnboardingCompleted();
+      }
+      lastAuthUserId = nextId;
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user?.id) {
+        void ensureOwnProfile(session.user.id).catch((err) => {
+          captureError(err, "AuthContext.ensureOwnProfile");
+        });
+      } else {
+        resetEnsureOwnProfile();
+      }
       setLoading(false);
     });
 

@@ -19,6 +19,7 @@ import { profilesStatsProcedures } from "./profiles-stats";
 import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
+import { ensureProfile } from "../../lib/ensure-profile";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -30,6 +31,7 @@ const PROFILE_UPDATE_KEYS = [
   "primary_goal", "daily_time_budget",
   "starter_challenge_id", "preferred_secure_time",
   "profile_visibility", "challenge_visibility", "activity_visibility", "weekly_goal",
+  "target_streak",
   "timezone", "distance_unit",
 ] as const;
 
@@ -46,6 +48,12 @@ export const profilesRouter = createTRPCRouter({
   ...profilesSocialProcedures,
   ...profilesStatsProcedures,
   ...profilesRecordProcedures,
+  /** Service-role upsert of the caller's row. Idempotent. */
+  ensure: protectedProcedure.mutation(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    return ensureProfile(server, ctx.userId);
+  }),
+
   create: protectedProcedure
     .input(z.object({
       username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers, underscores only"),
@@ -172,6 +180,25 @@ export const profilesRouter = createTRPCRouter({
       };
     }),
 
+  /** Availability only. Deploy this procedure before the onboarding Profile check can work. */
+  checkUsername: publicProcedure
+    .input(z.object({ username: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const username = input.username.trim().toLowerCase();
+      if (!username) return { available: true };
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const escaped = username.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+      const { data } = await server
+        .from("profiles")
+        .select("user_id")
+        .ilike("username", escaped)
+        .maybeSingle();
+      const row = data as { user_id?: string } | null;
+      if (!row?.user_id) return { available: true };
+      if (ctx.userId && row.user_id === ctx.userId) return { available: true };
+      return { available: false };
+    }),
+
   /**
    * Native push: persist Expo token on both canonical columns.
    * expo_push_token is the canonical column (original schema, read by cron/nudges/accountability).
@@ -197,7 +224,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit, target_streak"
         )
         .eq("user_id", ctx.userId)
         .single();

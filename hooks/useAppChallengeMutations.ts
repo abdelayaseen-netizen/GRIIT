@@ -108,10 +108,6 @@ export function useAppChallengeMutations({
       ).length;
       const firstTaskOfDay = completedCountBefore === 0 && requiredTasks.length > 1;
 
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
       const previousCheckins = todayCheckins.slice();
       const optimisticCheckin = {
         active_challenge_id: params.activeChallengeId,
@@ -287,7 +283,17 @@ export function useAppChallengeMutations({
         challenge_done?: boolean;
         remaining_challenges?: number;
       };
+      // After the server has written the day — not before. Home reads these keys only.
+      await queryClient.invalidateQueries({ queryKey: ["home"] });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getStats"] });
+      await queryClient.refetchQueries({ queryKey: ["home", "v2"] });
+      await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
+      await queryClient.refetchQueries({ queryKey: ["profiles", "getStats"] });
       const userDaySecured = result.secured === true;
+      if (userDaySecured && Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       const securedChallengeId =
         result.challengeId ?? (activeChallenge as { challenge_id?: string } | null)?.challenge_id ?? "";
       const dayNum =
@@ -350,7 +356,7 @@ export function useAppChallengeMutations({
       captureError(err, "secureDay");
       throw err;
     }
-  }, [activeChallenge, fetchActiveChallenge, fetchStats, stats]);
+  }, [activeChallenge, fetchActiveChallenge, fetchStats, stats, queryClient]);
 
   return { completeTask, secureDay };
 }

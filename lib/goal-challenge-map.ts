@@ -15,7 +15,18 @@ const GOAL_ORDER: OnboardingGoal[] = [
   "reading_learning",
   "cold_exposure",
   "sleep_recovery",
+  "faith_prayer",
 ];
+
+export const GOAL_LABELS: Record<OnboardingGoal, string> = {
+  physical_toughness: "Physical toughness",
+  mental_discipline: "Mental discipline",
+  daily_habits: "Daily habits",
+  reading_learning: "Reading and learning",
+  cold_exposure: "Cold exposure",
+  sleep_recovery: "Sleep and recovery",
+  faith_prayer: "Faith and prayer",
+};
 
 const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: string[] }> = {
   physical_toughness: {
@@ -23,16 +34,16 @@ const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: strin
     keywords: ["run", "steps", "workout", "5k", "walk", "move", "training"],
   },
   mental_discipline: {
-    categories: ["discipline", "focus"],
-    keywords: ["discipline", "focus", "phone", "morning", "warrior"],
+    categories: ["mind", "focus", "discipline"],
+    keywords: ["meditat", "journal", "focus", "phone"],
   },
   daily_habits: {
     categories: ["discipline"],
     keywords: ["water", "bed", "habit", "daily", "drink", "consistent"],
   },
   reading_learning: {
-    categories: ["mind"],
-    keywords: ["read", "journal", "pages", "learn", "gratitude", "mindful"],
+    categories: [],
+    keywords: ["read", "pages", "book", "learn", "course", "language"],
   },
   cold_exposure: {
     categories: ["discipline", "fitness"],
@@ -40,7 +51,11 @@ const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: strin
   },
   sleep_recovery: {
     categories: [],
-    keywords: ["sleep", "rest", "recovery", "lights", "bedtime"],
+    keywords: ["sleep", "bed", "bedtime", "lights", "rest", "recovery", "sunset", "screen"],
+  },
+  faith_prayer: {
+    categories: ["faith"],
+    keywords: ["pray", "prayer", "salah", "quran", "dhikr", "fajr", "mosque", "deen"],
   },
 };
 
@@ -67,16 +82,20 @@ function scoreChallenge(c: ChallengeMapRow, goals: readonly OnboardingGoal[]): n
   return inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
 }
 
-/** Rank catalog rows by selected goals using `category` plus title/description keywords. */
+/** Rank catalog rows by selected goals. Never returns a row with score 0. */
 export function filterChallengesByGoals<T extends ChallengeMapRow>(
   goals: readonly OnboardingGoal[],
   rows: readonly T[],
   limit = 3
 ): T[] {
-  const ranked = [...rows].sort((a, b) => {
-    const diff = scoreChallenge(b, goals) - scoreChallenge(a, goals);
-    if (diff !== 0) return diff;
-    return a.id.localeCompare(b.id);
-  });
-  return ranked.slice(0, limit);
+  return [...rows]
+    .map((row) => ({ row, score: scoreChallenge(row, goals) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => {
+      const diff = b.score - a.score;
+      if (diff !== 0) return diff;
+      return a.row.id.localeCompare(b.row.id);
+    })
+    .slice(0, limit)
+    .map((entry) => entry.row);
 }

@@ -74,6 +74,7 @@ type AnalyticsEvent =
   | { name: "onboarding_goals_selected"; goals: string[] }
   // OnboardingFlowV2 funnel additions.
   | { name: "commitment_selected"; commitment: "standard" | "hard" }
+  | { name: "target_streak_selected"; days: number }
   | { name: "notifications_prompt_shown" }
   | { name: "notifications_prompt_result"; granted: boolean }
   | { name: "account_created"; method?: "apple" | "email" | "google" }

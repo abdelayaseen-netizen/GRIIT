@@ -11,6 +11,8 @@ export const ROUTES = {
   ONBOARDING: "/onboarding",
   ONBOARDING_STEP4: "/onboarding?step=4",
   TABS: "/(tabs)",
+  /** Tabs index. Secured Done replaces here — never back onto /task/complete. */
+  HOME: "/(tabs)",
   TABS_HOME: "/(tabs)",
   TABS_DISCOVER: "/(tabs)/discover",
   /** Full Discover category list (Body / Mind / Faith / Focus). */
@@ -43,6 +45,8 @@ export const ROUTES = {
   POST_ID: (id: string) => `/post/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_COMPLETE: "/task/complete",
+  /** Secured / self-reported moment. Push only after secureDay refetch. */
+  TASK_SECURED: "/task/secured",
   CHALLENGE_COMPLETE: "/challenge/complete",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",

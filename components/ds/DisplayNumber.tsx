@@ -43,7 +43,7 @@ export default function DisplayNumber({
   const [shown, setShown] = useState<string | number>(
     shouldAnimate ? animateFrom : value
   );
-  const progress = useSharedValue(0);
+  const countProgress = useSharedValue(0);
   const fired = useRef(false);
 
   useEffect(() => {
@@ -79,8 +79,8 @@ export default function DisplayNumber({
         onSettled?.();
         return;
       }
-      progress.value = 0;
-      progress.value = withTiming(1, { duration: DAY_SECURED_MS }, (done) => {
+      countProgress.value = 0;
+      countProgress.value = withTiming(1, { duration: DAY_SECURED_MS }, (done) => {
         if (done) {
           runOnJS(finish)();
         }
@@ -98,7 +98,7 @@ export default function DisplayNumber({
     return () => {
       cancelled = true;
     };
-  }, [shouldAnimate, numeric, animateFrom, value, haptic, progress, onSettled]);
+  }, [shouldAnimate, numeric, animateFrom, value, haptic, countProgress, onSettled]);
 
   const face: TextStyle = {
     fontWeight: DS_V3.type.number.fontWeight,

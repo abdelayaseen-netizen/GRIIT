@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { profilePrimaryName } from "@/lib/profile-display";
+import { greetingName, profilePrimaryName } from "@/lib/profile-display";
 
 describe("profilePrimaryName", () => {
   it("display name → username → nothing; never the email prefix", () => {
@@ -9,5 +9,15 @@ describe("profilePrimaryName", () => {
     expect(profilePrimaryName({ username: "yaseen" })).toBe("yaseen");
     expect(profilePrimaryName({}, "local")).toBe("");
     expect(profilePrimaryName({ username: "user_280c07a4" }, "yaseen")).toBe("");
+  });
+});
+
+describe("greetingName", () => {
+  it("display_name, then username, then first_name, then null — never User", () => {
+    expect(greetingName({ display_name: "Yaseen" })).toBe("Yaseen");
+    expect(greetingName({ username: "yaseen" })).toBe("yaseen");
+    expect(greetingName({ first_name: "Yas" })).toBe("Yas");
+    expect(greetingName({ username: "user_deadbeef" })).toBeNull();
+    expect(greetingName({})).toBeNull();
   });
 });

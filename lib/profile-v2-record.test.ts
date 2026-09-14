@@ -219,6 +219,9 @@ describe("fixture B — 3 due days", () => {
     expect(rec.consistency.rate).toBe("2 of 2");
     expect(rec.consistency.verdict).toBe("");
     expect(rec.consistency.line).toBe("Day 3 of 30. Today's proof is due.");
+    expect(
+      buildProfileRecord({ ...fixtureThree(), targetStreak: 75 }).consistency.line
+    ).toBe("Day 3 of 75. Today's proof is due.");
     expect(rec.consistency.strip).toEqual([V, V, T]);
     expect(rec.consistency.showWindowControl).toBe(false);
     expect(rec.proofs.map((p) => p.day)).toEqual([2, 1]);

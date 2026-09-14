@@ -14,6 +14,7 @@ import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
   FREE_ACTIVE_LIMIT_MESSAGE,
 } from "../../../lib/free-challenge-limit";
+import { guestUsername } from "../../lib/guest-username";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -164,7 +165,7 @@ export const challengesCreateProcedures = {
         });
       }
       if (!existingProfile) {
-        const username = `user_${ctx.userId.slice(0, 8)}`;
+        const username = guestUsername(ctx.userId);
         const { error: profileUpsertError } = await ctx.supabase.from("profiles").upsert(
           {
             user_id: ctx.userId,

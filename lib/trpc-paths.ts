@@ -11,7 +11,9 @@ export const TRPC = {
   },
   profiles: {
     get: 'profiles.get',
+    ensure: 'profiles.ensure',
     getPublicByUsername: 'profiles.getPublicByUsername',
+    checkUsername: 'profiles.checkUsername',
     create: 'profiles.create',
     update: 'profiles.update',
     updatePushToken: 'profiles.updatePushToken',

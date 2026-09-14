@@ -21,7 +21,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
-import { pickProfilePhoto } from "@/lib/pick-profile-photo";
+import { pickAvatar } from "@/lib/pick-avatar";
 import { normalizeProfileUsername, usernameFieldState, usernameSaveBlocked } from "@/lib/profile-v2-username";
 import { PROFILE_USERNAME_MAX } from "@/lib/profile-update-schema";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
@@ -94,7 +94,7 @@ export default function EditProfileScreen() {
   const blocked = usernameSaveBlocked(fieldState) || saving;
 
   const handlePhoto = useCallback(async () => {
-    const pick = await pickProfilePhoto();
+    const pick = await pickAvatar();
     if (pick.status === "denied") {
       setFormError("Allow photo access in Settings to change your photo.");
       return;
@@ -197,7 +197,6 @@ export default function EditProfileScreen() {
               <Pressable onPress={() => void handlePhoto()} accessibilityRole="button" style={styles.photoBtn}>
                 <Text style={styles.photoBtnTxt}>Change photo</Text>
               </Pressable>
-              <Text style={styles.helper}>Square crop — crops to a circle everywhere.</Text>
             </View>
 
             <Field label="DISPLAY NAME">
@@ -205,6 +204,7 @@ export default function EditProfileScreen() {
                 value={displayName}
                 onChangeText={(t) => setDisplayName(t.slice(0, NAME_MAX))}
                 maxLength={NAME_MAX}
+                autoCapitalize="words"
                 style={styles.input}
                 placeholder="Your name"
                 placeholderTextColor={PROFILE_V2_COLOR.mutedLight}
@@ -252,6 +252,7 @@ export default function EditProfileScreen() {
                 value={bio}
                 onChangeText={(t) => setBio(t.slice(0, BIO_MAX))}
                 maxLength={BIO_MAX}
+                autoCapitalize="sentences"
                 multiline
                 style={[styles.input, styles.bio]}
                 placeholder="Shown on your profile to anyone who can see it."

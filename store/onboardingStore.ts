@@ -12,7 +12,8 @@ export type OnboardingGoal =
   | 'daily_habits'
   | 'reading_learning'
   | 'cold_exposure'
-  | 'sleep_recovery';
+  | 'sleep_recovery'
+  | 'faith_prayer';
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 
@@ -50,8 +51,10 @@ export interface OnboardingState {
   hasCompletedOnboarding: boolean;
   selectedGoals: OnboardingGoal[];
   intensityLevel: IntensityLevel | null;
-  /** OnboardingFlowV2 (screen 05) — Standard vs Hard mode. */
+  /** OnboardingFlowV2 (screen 05) — Standard vs Hard mode. Unused by v2 day-target. */
   commitment: OnboardingCommitment;
+  /** Onboarding day target. Written to profiles.target_streak. */
+  targetStreak: number | null;
   /** OnboardingFlowV2 (screen 06) — whether the reminders primer has been shown/answered. */
   notificationsAsked: boolean;
   /** v2 reminder step — persisted so back navigation and Day 1 stay lossless. */
@@ -62,12 +65,6 @@ export interface OnboardingState {
   v2Step: OnboardingV2Step;
   /** Ephemeral hints for ProfileSetup (email prefix, Apple full name); not persisted. */
   profileSetupHints: ProfileSetupHints | null;
-  /**
-   * Account-screen name sub-step. Persisted so an anon→real upgrade's
-   * waitingOnDb overlay / remount cannot drop a newly created account
-   * onto Invite.
-   */
-  accountNameOpen: boolean;
   setMotivation: (v: string) => void;
   setPersona: (v: string) => void;
   setBarrier: (v: string) => void;
@@ -93,13 +90,13 @@ export interface OnboardingState {
   setSelectedGoals: (goals: OnboardingGoal[]) => void;
   setIntensityLevel: (level: IntensityLevel) => void;
   setCommitment: (commitment: OnboardingCommitment) => void;
+  setTargetStreak: (days: number | null) => void;
   setNotificationsAsked: (asked: boolean) => void;
   setReminderPreset: (preset: ReminderPresetId) => void;
   setReminderCustom: (custom: ReminderCustom | null) => void;
   setRemindersEnabled: (enabled: boolean) => void;
   setV2Step: (step: OnboardingV2Step) => void;
   setProfileSetupHints: (hints: ProfileSetupHints | null) => void;
-  setAccountNameOpen: (open: boolean) => void;
   reset: () => void;
 }
 
@@ -123,13 +120,13 @@ const initialState = {
   selectedGoals: [] as OnboardingGoal[],
   intensityLevel: null as IntensityLevel | null,
   commitment: null as OnboardingCommitment,
+  targetStreak: null as number | null,
   notificationsAsked: false,
   reminderPreset: "am6" as ReminderPresetId,
   reminderCustom: null as ReminderCustom | null,
   remindersEnabled: false,
   v2Step: "welcome" as OnboardingV2Step,
   profileSetupHints: null as ProfileSetupHints | null,
-  accountNameOpen: false,
 };
 
 export const useOnboardingStore = create<OnboardingState>()(
@@ -172,13 +169,13 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSelectedGoals: (goals) => set({ selectedGoals: goals.slice(0, 3) }),
       setIntensityLevel: (level) => set({ intensityLevel: level }),
       setCommitment: (commitment) => set({ commitment }),
+      setTargetStreak: (days) => set({ targetStreak: days }),
       setNotificationsAsked: (asked) => set({ notificationsAsked: asked }),
       setReminderPreset: (preset) => set({ reminderPreset: preset }),
       setReminderCustom: (custom) => set({ reminderCustom: custom }),
       setRemindersEnabled: (enabled) => set({ remindersEnabled: enabled }),
       setV2Step: (step) => set({ v2Step: step }),
       setProfileSetupHints: (hints) => set({ profileSetupHints: hints }),
-      setAccountNameOpen: (open) => set({ accountNameOpen: open }),
       reset: () => set(initialState),
     }),
     {
@@ -204,12 +201,12 @@ export const useOnboardingStore = create<OnboardingState>()(
         selectedGoals: state.selectedGoals,
         intensityLevel: state.intensityLevel,
         commitment: state.commitment,
+        targetStreak: state.targetStreak,
         notificationsAsked: state.notificationsAsked,
         reminderPreset: state.reminderPreset,
         reminderCustom: state.reminderCustom,
         remindersEnabled: state.remindersEnabled,
         v2Step: state.v2Step,
-        accountNameOpen: state.accountNameOpen,
         // profileSetupHints intentionally omitted from persist
       }),
     }

@@ -23,6 +23,8 @@ import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
+import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { countFriendsPostedAway } from "@/lib/home-away-count";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -109,7 +111,7 @@ export default function HomeScreen() {
     enabled: !isGuest && !!user?.id,
     staleTime: 5 * 60 * 1000,
     queryFn: () =>
-      trpcQuery(TRPC.profiles.getFollowCounts) as Promise<FollowCounts>,
+      trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<FollowCounts>,
   });
 
   // Home-owned getStats: AppContext fetchStats swallows errors and never retries,
@@ -231,9 +233,10 @@ export default function HomeScreen() {
     getDeviceIanaTimeZone(),
   );
 
-  const todaySecured = useMemo(() => {
-    return securedDateKeys.includes(getTodayDateKey(homeTimeZone));
-  }, [securedDateKeys, homeTimeZone]);
+  const todaySecured = useMemo(
+    () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
+    [securedDateKeys, homeTimeZone]
+  );
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -418,14 +421,10 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
   });
 
-  const awayCount = useMemo(() => {
-    const ids = new Set(
-      (liveFeedQuery.data?.posts ?? [])
-        .map((p) => p.userId)
-        .filter((id) => id && id !== user?.id),
-    );
-    return ids.size;
-  }, [liveFeedQuery.data?.posts, user?.id]);
+  const awayCount = useMemo(
+    () => countFriendsPostedAway(liveFeedQuery.data?.posts ?? [], user?.id),
+    [liveFeedQuery.data?.posts, user?.id]
+  );
 
   const nextBadge = useMemo(() => {
     const mark = nextProfileV2Badge({
@@ -446,8 +445,10 @@ export default function HomeScreen() {
         tasksDoneToday: heroMetrics.tasksDoneToday,
         totalTasksToday: heroMetrics.totalTasksToday,
         firstProofEver,
+        targetStreak: profile?.target_streak ?? null,
+        securedToday: todaySecured,
       }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver],
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured],
   );
 
   // ────────────── render ──────────────

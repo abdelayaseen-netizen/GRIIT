@@ -7,6 +7,7 @@ const GOAL_IDS = new Set<OnboardingGoal>([
   "reading_learning",
   "cold_exposure",
   "sleep_recovery",
+  "faith_prayer",
 ]);
 
 export function parseGoalsFromAnswers(answers: unknown): OnboardingGoal[] {

@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError } from "@/lib/sentry";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
+import { ensureOwnProfile } from "@/lib/ensure-own-profile";
 
 /** Shared by identity-taken copy so AccountScreen can make this phrase a link. */
 export const SIGN_IN_WITH_THAT_ACCOUNT = "Sign in with that account";
@@ -140,6 +141,7 @@ async function ensureAnonymousSessionOnce(): Promise<AnonAuthResult> {
       if (isAnonymousUser(existing.session.user)) {
         await rememberAnonUserId(existing.session.user.id);
       }
+      await ensureOwnProfile(existing.session.user.id);
       return {
         kind: "ok",
         user: existing.session.user,
@@ -183,6 +185,7 @@ async function ensureAnonymousSessionOnce(): Promise<AnonAuthResult> {
       };
     }
     await rememberAnonUserId(user.id);
+    await ensureOwnProfile(user.id);
     await writeDeviceTimezone();
     return {
       kind: "ok",

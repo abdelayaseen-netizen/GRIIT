@@ -109,7 +109,7 @@ export const profilesRecordProcedures = {
       const { data: profileRow, error: profileErr } = await db
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, timezone, reminder_timezone, profile_visibility, challenge_visibility, activity_visibility"
+          "user_id, username, display_name, bio, avatar_url, timezone, reminder_timezone, profile_visibility, challenge_visibility, activity_visibility, target_streak"
         )
         .eq("user_id", ownerId)
         .maybeSingle();
@@ -131,6 +131,7 @@ export const profilesRecordProcedures = {
         profile_visibility?: string | null;
         challenge_visibility?: string | null;
         activity_visibility?: string | null;
+        target_streak?: number | null;
       };
 
       const visibility = {
@@ -318,6 +319,7 @@ export const profilesRecordProcedures = {
         ranges,
         securedDateKeys,
         badgeUnlocks: unlocks,
+        targetStreak: p.target_streak ?? null,
       });
 
       const photos = proofPhotosByDateKey(checkInRows);

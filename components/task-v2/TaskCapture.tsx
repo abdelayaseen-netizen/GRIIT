@@ -4,6 +4,7 @@
  */
 import React, { useRef, useState } from "react";
 import { Linking, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImageManipulator from "expo-image-manipulator";
 import { SwitchCamera } from "lucide-react-native";
@@ -58,7 +59,7 @@ export function TaskCapture({
   }
   if (!permission.granted) {
     return (
-      <View style={styles.root}>
+      <SafeAreaView style={[styles.root, styles.permission]}>
         <StatusBar barStyle="light-content" />
         <EmptyState
           heading="Camera access is off"
@@ -69,7 +70,7 @@ export function TaskCapture({
             void Linking.openSettings();
           }}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -114,6 +115,10 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
+  },
+  permission: {
+    justifyContent: "center",
+    paddingHorizontal: DS_V3.space.gutter,
   },
   bar: {
     height: DS_V3.size.tap,

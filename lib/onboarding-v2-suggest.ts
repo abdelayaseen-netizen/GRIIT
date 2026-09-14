@@ -1,5 +1,6 @@
 import type { OnboardingGoal } from "@/store/onboardingStore";
 import { filterChallengesByGoals, inferChallengeGoalTags } from "@/lib/goal-challenge-map";
+import type { SuggestionTask } from "@/lib/onboarding-v2-first-challenge";
 
 export type SuggestableChallenge = {
   id: string;
@@ -7,8 +8,10 @@ export type SuggestableChallenge = {
   description?: string | null;
   category?: string | null;
   duration_days?: number | null;
+  is_hard_mode?: boolean | null;
+  participation_type?: string | null;
   participants_count?: number | null;
-  tasks?: { length?: number } | unknown[];
+  tasks?: SuggestionTask[] | { length?: number };
 };
 
 const UUID_RE =
@@ -18,9 +21,10 @@ const MATCH_REASON: Record<OnboardingGoal, string> = {
   physical_toughness: "Matches physical toughness",
   mental_discipline: "Matches mental discipline",
   daily_habits: "Matches daily habits",
-  reading_learning: "Matches reading & learning",
+  reading_learning: "Matches reading and learning",
   cold_exposure: "Matches cold exposure",
-  sleep_recovery: "Matches sleep & recovery",
+  sleep_recovery: "Matches sleep and recovery",
+  faith_prayer: "Matches faith and prayer",
 };
 
 export { inferChallengeGoalTags };

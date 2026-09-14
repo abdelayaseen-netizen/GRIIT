@@ -31,10 +31,14 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 import { FLAGS } from "@/lib/feature-flags";
 import {
+  dbCompletedForLaunch,
+  clearKnownOnboardingCompleted,
+  peekKnownOnboardingCompleted,
   peekOnboardingV2Exit,
   resolveCompletedLeaveHref,
   resolveOnboardingLaunch,
   sessionKindFromUser,
+  setKnownOnboardingCompleted,
 } from "@/lib/onboarding-v2-routing";
 import { captureError, initialiseSentry } from "@/lib/sentry";
 import {
@@ -181,7 +185,10 @@ function AuthRedirector() {
         setHasProfile(hasValidProfile);
         const dbDone = result?.onboarding_completed === true;
         setOnboardingCompleted(dbDone);
-        if (dbDone) void cacheOnboardingCompleted();
+        if (dbDone) {
+          setKnownOnboardingCompleted(userId, true);
+          void cacheOnboardingCompleted();
+        }
         setProfileCreatedAt(result?.created_at ?? null);
       }
       done();
@@ -208,6 +215,7 @@ function AuthRedirector() {
     if (user) {
       checkProfile(user.id);
     } else {
+      clearKnownOnboardingCompleted();
       setProfileChecked(true);
       setHasProfile(false);
       setOnboardingCompleted(null);
@@ -294,7 +302,12 @@ function AuthRedirector() {
 
     const dest = resolveOnboardingLaunch({
       sessionKind: sessionKindFromUser(user),
-      dbCompleted: user ? onboardingCompleted : null,
+      dbCompleted: user
+        ? dbCompletedForLaunch({
+            fetched: onboardingCompleted,
+            written: peekKnownOnboardingCompleted(user.id),
+          })
+        : null,
     });
 
     if (dest === "home") {
@@ -471,6 +484,13 @@ function RootLayoutNav() {
           headerShown: false,
           presentation: "card"
         }} 
+      />
+      <Stack.Screen
+        name="task/secured"
+        options={{
+          headerShown: false,
+          presentation: "card",
+        }}
       />
       <Stack.Screen 
         name="challenge/complete" 

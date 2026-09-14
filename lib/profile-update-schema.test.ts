@@ -18,6 +18,13 @@ describe("profileUpdateInputSchema caps", () => {
     expect(parsed.bio).toHaveLength(150);
   });
 
+  it("accepts target_streak from 3 to 365", () => {
+    expect(profileUpdateInputSchema.parse({ target_streak: 7 }).target_streak).toBe(7);
+    expect(profileUpdateInputSchema.parse({ target_streak: 365 }).target_streak).toBe(365);
+    expect(profileUpdateInputSchema.safeParse({ target_streak: 2 }).success).toBe(false);
+    expect(profileUpdateInputSchema.safeParse({ target_streak: 366 }).success).toBe(false);
+  });
+
   it("accepts distance_unit km or mi", () => {
     expect(profileUpdateInputSchema.parse({ distance_unit: "km" }).distance_unit).toBe("km");
     expect(profileUpdateInputSchema.parse({ distance_unit: "mi" }).distance_unit).toBe("mi");

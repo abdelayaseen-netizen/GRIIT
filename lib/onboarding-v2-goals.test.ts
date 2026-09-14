@@ -14,7 +14,7 @@ describe("parseGoalsFromAnswers", () => {
     expect(parseGoalsFromAnswers({ goals: "physical_toughness" })).toEqual([]);
   });
 
-  it("keeps all six known ids including sleep_recovery (no cap of 3)", () => {
+  it("keeps all seven known ids including faith_prayer (no cap of 3)", () => {
     expect(
       parseGoalsFromAnswers({
         goals: [
@@ -24,6 +24,7 @@ describe("parseGoalsFromAnswers", () => {
           "reading_learning",
           "cold_exposure",
           "sleep_recovery",
+          "faith_prayer",
         ],
       })
     ).toEqual([
@@ -33,6 +34,7 @@ describe("parseGoalsFromAnswers", () => {
       "reading_learning",
       "cold_exposure",
       "sleep_recovery",
+      "faith_prayer",
     ]);
   });
 });

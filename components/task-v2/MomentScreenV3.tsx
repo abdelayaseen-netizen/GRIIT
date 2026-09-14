@@ -8,9 +8,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import type ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
+import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
 import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
+import { taskWord } from "@/lib/active-challenge-ui";
 import Button from "@/components/ds/Button";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
@@ -39,6 +41,25 @@ export function weekFromToday(): { days: WeekStripDay[]; todayIndex: number } {
   };
 }
 
+/** Mon–Sun strip from server date keys. Today is filled only when the key is present. */
+export function weekFromSecuredKeys(
+  keys: string[],
+  timezone?: string | null
+): { days: WeekStripDay[]; todayIndex: number } {
+  const letters = ["M", "T", "W", "T", "F", "S", "S"];
+  const weekKeys = getCurrentWeekDateKeys(timezone);
+  const todayKey = getTodayDateKey(timezone);
+  const idx = weekKeys.indexOf(todayKey);
+  const fallback = weekFromToday();
+  return {
+    days: letters.map((letter, i) => ({
+      letter,
+      filled: keys.includes(weekKeys[i] ?? ""),
+    })),
+    todayIndex: idx >= 0 ? idx : fallback.todayIndex,
+  };
+}
+
 function stateLine(args: {
   variant: MomentVariant;
   day: number;
@@ -47,7 +68,7 @@ function stateLine(args: {
 }): string {
   if (args.variant === "verified") return `Day ${args.day}. Verified.`;
   if (args.variant === "selfReported") return `Day ${args.day}. Self reported.`;
-  if (args.variant === "tasksLeft") return `${args.remaining} tasks left.`;
+  if (args.variant === "tasksLeft") return `${args.remaining} ${taskWord(args.remaining)} left.`;
   if (args.variant === "complete") return `${args.target} days. Every one witnessed.`;
   return "Day secured.";
 }
@@ -68,6 +89,7 @@ export type MomentScreenV3Props = {
   proofs?: ContactSheetProof[];
   week?: WeekStripDay[];
   todayIndex?: number;
+  fillToday?: boolean;
   onShare?: (uri: string) => void;
   onDone?: () => void;
   onNext?: () => void;
@@ -85,19 +107,25 @@ export default function MomentScreenV3({
   proofs,
   week,
   todayIndex = 0,
+  fillToday: fillTodayProp,
   onShare,
   onDone,
   onNext,
 }: MomentScreenV3Props) {
   const insets = useSafeAreaInsets();
   const shotRef = useRef<ViewShot>(null);
-  const counts = variant === "verified" || variant === "daySecured";
+  const counts =
+    variant === "verified" || variant === "daySecured" || variant === "selfReported";
   const justMoved = counts && streakBefore != null && streakBefore !== streak;
   const [stampOn, setStampOn] = useState(!justMoved && (variant === "verified" || variant === "daySecured"));
   const [completeStamp, setCompleteStamp] = useState(false);
-  const weekDays = week ?? weekFromToday().days;
   const weekToday = week ? todayIndex : weekFromToday().todayIndex;
-  const fillToday = justMoved && (variant === "verified" || variant === "daySecured");
+  const fillToday =
+    fillTodayProp ?? (justMoved && counts);
+  const rawDays = week ?? weekFromToday().days;
+  const weekDays = fillToday
+    ? rawDays.map((d, i) => (i === weekToday ? { ...d, filled: false } : d))
+    : rawDays;
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
@@ -180,18 +208,24 @@ export default function MomentScreenV3({
         )
       ) : (
         <View style={styles.media}>
-          <ProofImage
-            uri={proofUri}
-            source={proofSource}
-            size="feed"
-            stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
-            scrim={stampOn && (variant === "verified" || variant === "daySecured")}
-          />
+          {variant === "selfReported" ? (
+            <View style={styles.selfCard}>
+              <Text style={styles.selfCardText}>Self-reported. Nothing was checked.</Text>
+            </View>
+          ) : (
+            <ProofImage
+              uri={proofUri}
+              source={proofSource}
+              size="feed"
+              stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
+              scrim={stampOn && (variant === "verified" || variant === "daySecured")}
+            />
+          )}
         </View>
       )}
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
         {variant !== "complete" ? (
-          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
+          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} fillMs={300} />
         ) : null}
         {variant === "complete" ? (
           <>
@@ -248,6 +282,17 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
     paddingBottom: DS_V3.size.button * 3,
     justifyContent: "flex-start",
+  },
+  selfCard: {
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.gutter,
+  },
+  selfCardText: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: "400",
+    color: DS_V3.color.textPrimary,
   },
   completeStamp: {
     marginTop: DS_V3.space.gutter,

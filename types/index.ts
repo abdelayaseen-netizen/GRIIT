@@ -206,6 +206,8 @@ export interface ProfileFromApi {
   distance_unit?: "km" | "mi" | null;
   /** When present, used by streak freeze UI (optional DB column). */
   streak_freezes_remaining?: number | null;
+  /** Onboarding day target. Home Day X of Y uses this when longer than duration. */
+  target_streak?: number | null;
 }
 
 /** Check-in row from getTodayCheckins (task_id, status, etc.). */

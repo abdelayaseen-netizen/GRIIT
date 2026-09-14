@@ -5,6 +5,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -16,7 +17,7 @@ import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
-import { profilePrimaryName } from "@/lib/profile-display";
+import { greetingName } from "@/lib/profile-display";
 import { homeProofCtaLabel } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
@@ -27,18 +28,15 @@ const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 export function greetingTitle(p: {
   display_name?: string | null;
   username?: string | null;
-}): string {
-  const primary = profilePrimaryName(p);
-  if (primary) return primary;
-  const first = (p.display_name ?? "").trim().split(/\s+/)[0] ?? "";
-  if (first) return first;
-  const user = (p.username ?? "").trim();
-  return user || "GRIIT";
+  first_name?: string | null;
+}): string | null {
+  return greetingName(p);
 }
 
 export type HomeV3Proof = {
   challenge: string;
   day: number;
+  dayTotal: number;
   taskText: string;
   gate: string;
   doneCount: number;
@@ -49,7 +47,7 @@ export type HomeV3Proof = {
 };
 
 export type HomeV3Props = {
-  title: string;
+  title: string | null;
   streak: number;
   streakLine: string;
   proof: HomeV3Proof | null;
@@ -89,7 +87,10 @@ export function HomeV3({
   error,
   onRetry,
 }: HomeV3Props) {
-  const kicker = WEEKDAYS[new Date().getDay()] ?? "Sunday";
+  const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
+  const kicker = title ? weekday : undefined;
+  const headerTitle = title ?? weekday;
+  const secured = homeProofFilled(fillToday === true);
   const days = LETTERS.map((letter, i) => ({
     letter,
     filled: weekFilled[i] === true,
@@ -129,7 +130,7 @@ export function HomeV3({
       : `${awayCount} friends posted while you were away.`;
   const proofSub = proof?.hasChallenge ? (
     <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" />
+      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" /> of {proof.dayTotal}
     </Text>
   ) : (
     <Text style={styles.secondary}>No active challenge</Text>
@@ -139,7 +140,7 @@ export function HomeV3({
     <View style={styles.root}>
       <RootHeader
         kicker={kicker}
-        title={title}
+        title={headerTitle}
         actions={
           <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
             <Bell size={ICON} color={DS_V3.color.textPrimary} />
@@ -171,11 +172,11 @@ export function HomeV3({
               </View>
             </View>
             <View style={styles.taskRow}>
-              <View style={styles.taskDot} />
+              <View style={[styles.taskDot, { backgroundColor: secured.circleFill }]} />
               <Text style={styles.task}>{proof.taskText}</Text>
               <Text style={styles.caption}>{proof.gate}</Text>
             </View>
-            {proof.posted ? (
+            {secured.posted ? (
               <View style={styles.done}>
                 <Check size={ICON} color={DS_V3.color.brandText} />
                 <Text style={styles.doneTxt}>Posted today</Text>
@@ -192,7 +193,7 @@ export function HomeV3({
       ) : null}
 
       <View style={styles.week}>
-        <WeekStrip days={days} todayIndex={todayIndex} fillToday={fillToday} />
+        <WeekStrip days={days} todayIndex={todayIndex} fillToday={secured.todaySquareFilled} />
         <View style={styles.meta}>
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />

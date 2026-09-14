@@ -23,6 +23,7 @@ describe("selectHomeProofCard", () => {
       tasksDoneToday: 2,
       totalTasksToday: 3,
       firstProofEver: false,
+      securedToday: false,
     });
     expect(card.taskText).toBe("Journal");
     expect(card.posted).toBe(false);
@@ -42,10 +43,55 @@ describe("selectHomeProofCard", () => {
       tasksDoneToday: 2,
       totalTasksToday: 3,
       firstProofEver: false,
+      securedToday: false,
     });
     expect(card.day).toBe(1);
     expect(card.day).not.toBe(0);
     expect(card.day).not.toBe(2);
     expect(card.challenge).toBe("Write");
+    expect(card.dayTotal).toBe(1);
+  });
+
+  it("dayTotal uses target_streak when longer than duration", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Journal",
+          challengeName: "Write",
+          currentDay: 1,
+          durationDays: 30,
+        }),
+      ],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: true,
+      targetStreak: 75,
+      securedToday: false,
+    });
+    expect(card.dayTotal).toBe(75);
+  });
+
+  it("checkin done but securedDateKeys lacks today → posted is false", () => {
+    const card = selectHomeProofCard({
+      tasks: [task({ name: "Journal", challengeName: "Write", done: true })],
+      tasksDoneToday: 1,
+      totalTasksToday: 1,
+      firstProofEver: false,
+      securedToday: false,
+    });
+    expect(card.posted).toBe(false);
+    expect(homeProofCtaLabel(card)).not.toBe("Posted today");
+  });
+
+  it("securedDateKeys has today → posted is true even if a task row is undone", () => {
+    const card = selectHomeProofCard({
+      tasks: [task({ name: "Journal", challengeName: "Write", done: false })],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: false,
+      securedToday: true,
+    });
+    expect(card.posted).toBe(true);
+    expect(homeProofCtaLabel(card)).toBe("Posted today");
   });
 });
