@@ -262,11 +262,6 @@ export function useAppChallengeMutations({
     challenge_done?: boolean;
     remaining_challenges?: number;
   }> => {
-    if (__DEV__) {
-      console.log("[secureDay] called", {
-        activeChallengeId,
-      });
-    }
     try {
       const result = (await trpcMutate(TRPC.checkins.secureDay, { activeChallengeId })) as {
         success: boolean;

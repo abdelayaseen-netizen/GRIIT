@@ -14,14 +14,6 @@ export const posthog: PostHog | null = API_KEY
   ? (() => {
       try {
         const client = new PostHog(API_KEY, { host: HOST });
-        if (__DEV__) {
-          console.log(
-            "[PostHog] Initialized with key:",
-            API_KEY.slice(0, 8) + "...",
-            "host:",
-            HOST
-          );
-        }
         return client;
       } catch {
         return null;
