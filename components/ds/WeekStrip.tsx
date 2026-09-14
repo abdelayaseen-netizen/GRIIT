@@ -25,6 +25,8 @@ export type WeekStripProps = {
   days: WeekStripDay[];
   todayIndex: number;
   fillToday?: boolean;
+  /** Today’s square fill. Default 400ms (Home). Secured screen passes 300. */
+  fillMs?: number;
 };
 
 function Square({
@@ -32,29 +34,31 @@ function Square({
   filled,
   isToday,
   animateFill,
+  fillMs,
 }: {
   letter: string;
   filled: boolean;
   isToday: boolean;
   animateFill: boolean;
+  fillMs: number;
 }) {
-  const progress = useSharedValue(filled && !animateFill ? 1 : 0);
+  const fillProgress = useSharedValue(filled && !animateFill ? 1 : 0);
 
   useEffect(() => {
     if (!animateFill) {
-      progress.value = filled ? 1 : 0;
+      fillProgress.value = filled ? 1 : 0;
       return;
     }
     void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      progress.value = reduce ? 1 : withTiming(1, { duration: DAY_SECURED_MS });
+      fillProgress.value = reduce ? 1 : withTiming(1, { duration: fillMs });
     });
-  }, [animateFill, filled, progress]);
+  }, [animateFill, filled, fillMs, fillProgress]);
 
   const fillStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
-      progress.value,
+      fillProgress.value,
       [0, 1],
-      [DS_V3.color.border, DS_COLORS_V2.brand.primary]
+      [DS_V3.color.canvas, DS_COLORS_V2.brand.primary]
     ),
   }));
 
@@ -76,7 +80,7 @@ function Square({
       <Animated.View
         style={[
           styles.square,
-          settled ? styles.squareFilled : styles.squareEmpty,
+          settled ? styles.squareFilled : animateFill ? styles.squareBorderOnly : styles.squareEmpty,
           isToday ? styles.today : null,
           animateFill || !settled ? fillStyle : null,
         ]}
@@ -89,6 +93,7 @@ export default function WeekStrip({
   days,
   todayIndex,
   fillToday,
+  fillMs = DAY_SECURED_MS,
 }: WeekStripProps) {
   const seven = days.slice(0, 7);
   return (
@@ -100,6 +105,7 @@ export default function WeekStrip({
           filled={d.filled || (fillToday === true && i === todayIndex)}
           isToday={i === todayIndex}
           animateFill={fillToday === true && i === todayIndex && !d.filled}
+          fillMs={fillMs}
         />
       ))}
     </View>
@@ -127,6 +133,9 @@ const styles = StyleSheet.create({
   },
   squareEmpty: {
     backgroundColor: DS_V3.color.border,
+  },
+  squareBorderOnly: {
+    backgroundColor: DS_V3.color.canvas,
   },
   squareFilled: {
     backgroundColor: DS_COLORS_V2.brand.primary,

@@ -114,14 +114,18 @@ export default function MomentScreenV3({
 }: MomentScreenV3Props) {
   const insets = useSafeAreaInsets();
   const shotRef = useRef<ViewShot>(null);
-  const counts = variant === "verified" || variant === "daySecured";
+  const counts =
+    variant === "verified" || variant === "daySecured" || variant === "selfReported";
   const justMoved = counts && streakBefore != null && streakBefore !== streak;
   const [stampOn, setStampOn] = useState(!justMoved && (variant === "verified" || variant === "daySecured"));
   const [completeStamp, setCompleteStamp] = useState(false);
-  const weekDays = week ?? weekFromToday().days;
   const weekToday = week ? todayIndex : weekFromToday().todayIndex;
   const fillToday =
-    fillTodayProp ?? (justMoved && (variant === "verified" || variant === "daySecured"));
+    fillTodayProp ?? (justMoved && counts);
+  const rawDays = week ?? weekFromToday().days;
+  const weekDays = fillToday
+    ? rawDays.map((d, i) => (i === weekToday ? { ...d, filled: false } : d))
+    : rawDays;
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
@@ -221,7 +225,7 @@ export default function MomentScreenV3({
       )}
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
         {variant !== "complete" ? (
-          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
+          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} fillMs={300} />
         ) : null}
         {variant === "complete" ? (
           <>
