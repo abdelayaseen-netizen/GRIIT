@@ -11,6 +11,8 @@ export const ROUTES = {
   ONBOARDING: "/onboarding",
   ONBOARDING_STEP4: "/onboarding?step=4",
   TABS: "/(tabs)",
+  /** Tabs index. Secured Done replaces here — never back onto /task/complete. */
+  HOME: "/(tabs)",
   TABS_HOME: "/(tabs)",
   TABS_DISCOVER: "/(tabs)/discover",
   /** Full Discover category list (Body / Mind / Faith / Focus). */

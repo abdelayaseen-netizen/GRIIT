@@ -51,8 +51,7 @@ function TaskSecuredInner() {
   const proofUri = firstString(params.proofUri) || undefined;
   const taskName = firstString(params.taskName) || "Task";
   const done = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace(ROUTES.TABS_HOME as never);
+    router.replace(ROUTES.HOME as never);
   };
 
   return (
