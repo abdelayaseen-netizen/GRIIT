@@ -1,6 +1,6 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { DS_COLORS_V2 } from "@/lib/design-system";
+import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
 
 export function TaskVerifying({
   line = "Posting your proof…",
@@ -19,11 +19,25 @@ export function TaskVerifying({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: DS_COLORS_V2.surface.canvas,
+    backgroundColor: DS_V3.color.canvas,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: DS_V3.space.section,
   },
-  line: { marginTop: 18, fontSize: 15, color: DS_COLORS_V2.text.body, textAlign: "center" },
-  sub: { marginTop: 8, fontSize: 13, color: DS_COLORS_V2.text.mutedWarm, textAlign: "center" },
+  line: {
+    marginTop: DS_V3.space.lg,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
+    textAlign: "center",
+  },
+  sub: {
+    marginTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
 });

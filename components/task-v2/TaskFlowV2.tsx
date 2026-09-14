@@ -613,7 +613,13 @@ export function TaskFlowV2() {
   });
 
   return (
-    <View style={[styles.root, dark && { backgroundColor: DS_COLORS_V2.surface.camera }]}>
+    <View
+      style={[
+        styles.root,
+        dark && { backgroundColor: DS_COLORS_V2.surface.camera },
+        step === "verifying" && { backgroundColor: DS_V3.color.canvas },
+      ]}
+    >
       {!hideChrome ? (
         <TaskChrome
           title={`Day ${currentDay} · ${chromeTitle(taskType)}`}
