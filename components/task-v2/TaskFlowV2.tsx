@@ -948,7 +948,8 @@ export function TaskFlowV2() {
                 value={caption}
                 onChangeText={(t) => setCaption(t.slice(0, 120))}
                 placeholder="Add a caption"
-                placeholderTextColor={DS_COLORS_V2.text.mutedDark}
+                placeholderTextColor={DS_V3.color.textSecondary}
+                selectionColor={DS_COLORS_V2.brand.primary}
                 style={styles.capInput}
                 maxLength={120}
               />
@@ -1304,7 +1305,7 @@ const styles = StyleSheet.create({
   cap100: { color: "#FFFFFF", fontSize: 15, marginTop: 2 },
   reviewDeck: { flex: 1, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 34, justifyContent: "space-between" },
   capRow: { flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: DS_COLORS_V2.surface.borderStrong, height: 44 },
-  capInput: { flex: 1, fontSize: 15, color: DS_COLORS_V2.text.primary },
+  capInput: { flex: 1, fontSize: 15, color: DS_V3.color.textPrimary },
   counter: { fontSize: 12, color: DS_COLORS_V2.text.mutedDark },
   modal: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(10,10,10,0.4)", alignItems: "center", justifyContent: "center", padding: 24 },
   modalCard: { width: "100%", backgroundColor: DS_COLORS_V2.surface.card, borderRadius: 22, padding: 24, gap: 12 },
