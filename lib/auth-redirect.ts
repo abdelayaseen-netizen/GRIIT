@@ -1,10 +1,5 @@
 /**
  * AuthRedirector routing decision. Pure — no I/O.
- * Characterises app/_layout.tsx as it exists now (ONBOARDING_V2 path).
- *
- * hasLaunched is only a wait-gate (`null` → wait). Once it is true or false
- * it does not change the destination. No-session first launch and returning
- * both replace to /onboarding.
  */
 
 import { ROUTES } from "@/lib/routes";
@@ -22,7 +17,6 @@ export type AuthRedirectDecision =
 export function resolveAuthRedirect(input: {
   sessionKind: SessionKind;
   onboardingCompleted: boolean | null;
-  hasLaunched: boolean | null;
   loading: boolean;
   profileChecked: boolean;
   inOnboarding: boolean;
@@ -31,7 +25,7 @@ export function resolveAuthRedirect(input: {
   inTabs: boolean;
   exitHref?: string | null;
 }): AuthRedirectDecision {
-  if (input.loading || input.hasLaunched === null) return { action: "wait" };
+  if (input.loading) return { action: "wait" };
   if (input.sessionKind !== "none" && !input.profileChecked) return { action: "wait" };
 
   const dest = resolveOnboardingLaunch({
@@ -62,11 +56,6 @@ export function shouldShowAuthRedirectOverlay(input: {
   loading: boolean;
   hasSession: boolean;
   profileChecked: boolean;
-  hasLaunched: boolean | null;
 }): boolean {
-  return (
-    input.loading ||
-    (input.hasSession && !input.profileChecked) ||
-    (!input.hasSession && input.hasLaunched === null)
-  );
+  return input.loading || (input.hasSession && !input.profileChecked);
 }
