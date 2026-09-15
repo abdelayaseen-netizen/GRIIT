@@ -59,6 +59,7 @@ export default function ChallengeCard({
           size={size}
           scrim
           title={featured ? undefined : title}
+          recyclingKey={cover ?? title}
         />
         {featured ? (
           <View style={styles.featuredRow} pointerEvents="box-none">

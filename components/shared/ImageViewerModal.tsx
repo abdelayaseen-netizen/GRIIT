@@ -120,6 +120,7 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
                 style={{ width: VIEWPORT_W, height: VIEWPORT_H }}
                 contentFit="contain"
                 cachePolicy="memory-disk"
+                recyclingKey={imageUri}
                 transition={150}
                 accessibilityLabel="Full size proof photo"
                 accessibilityRole="image"

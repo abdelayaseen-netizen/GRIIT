@@ -103,6 +103,7 @@ export default function FeedPostV3({
         caption={post.caption ?? undefined}
         scrim
         stamp={post.verified ? "Verified" : undefined}
+        recyclingKey={post.id}
       />
       <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
     </Card>

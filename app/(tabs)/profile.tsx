@@ -7,7 +7,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,7 +30,8 @@ import { DS_V3 } from "@/lib/design-system";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, PROFILE_V3_FOOTNOTE, ProfileV3 } from "@/components/profile/ProfileV3";
+import ProofImage from "@/components/ds/ProofImage";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
@@ -164,17 +165,14 @@ export default function ProfileScreen() {
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
-        <ScrollView
-          contentContainerStyle={styles.scroll}
+        <FlatList
+          data={v3Tab === "Proofs" ? proofs : []}
+          numColumns={3}
+          keyExtractor={(p) => p.dateKey}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => void onRefresh()}
-              tintColor={DS_V3.color.brand}
-            />
-          }
-        >
+          contentContainerStyle={styles.scroll}
+          columnWrapperStyle={proofs.length > 0 && v3Tab === "Proofs" ? styles.proofRow : undefined}
+          ListHeaderComponent={
           <ProfileV3
             title={name}
             handle={handle}
@@ -228,8 +226,32 @@ export default function ProfileScreen() {
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
+            proofsInParent
           />
-        </ScrollView>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.proofCell}>
+              <ProofImage
+                uri={item.imageUrl}
+                size="thumb"
+                title={`Day ${item.day}`}
+                recyclingKey={item.dateKey}
+              />
+            </View>
+          )}
+          ListFooterComponent={
+            v3Tab === "Proofs" && proofs.length > 0 ? (
+              <Text style={styles.foot}>{PROFILE_V3_FOOTNOTE}</Text>
+            ) : null
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void onRefresh()}
+              tintColor={DS_V3.color.brand}
+            />
+          }
+        />
         </GriitFade>
       </SafeAreaView>
     </ErrorBoundary>
@@ -239,6 +261,20 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   scroll: { paddingBottom: DS_V3.space.xs * 30 },
+  proofRow: {
+    gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.md,
+  },
+  proofCell: { width: "31%" },
+  foot: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   centerGuest: {
     flex: 1,
     alignItems: "center",
