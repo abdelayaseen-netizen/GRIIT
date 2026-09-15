@@ -6,7 +6,11 @@ import type { SubmitResult, VerificationKind } from "@/lib/task-completion-resul
 export function readSecuredDateKeysFromCache(queryClient: QueryClient, userId: string): string[] {
   const dedicated = queryClient.getQueryData<string[]>(["profiles", "getSecuredDateKeys", userId]);
   if (Array.isArray(dedicated)) return dedicated;
-  const home = queryClient.getQueryData<{ securedDateKeys?: string[] }>(["home", "v2", userId]);
+  const home = queryClient.getQueryData<{ securedDateKeys?: string[] | null }>([
+    "home",
+    "bootstrap",
+    userId,
+  ]);
   return Array.isArray(home?.securedDateKeys) ? home.securedDateKeys : [];
 }
 

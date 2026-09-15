@@ -301,7 +301,7 @@ export default function ActiveChallengeDetailScreen() {
       } catch {
         /* non-fatal */
       }
-      await queryClient.invalidateQueries({ queryKey: ["home"] });
+      await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {

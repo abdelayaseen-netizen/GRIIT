@@ -9,8 +9,7 @@ export function normalizeOnboardingUsername(raw: string): string {
 export const ONBOARDING_PROFILE_QUERY_KEYS: readonly (readonly string[])[] = [
   ["profiles", "getRecord"],
   ["profile"],
-  ["profiles", "getStats"],
-  ["profiles", "getFollowCounts"],
+  ["home", "bootstrap"],
 ];
 
 /**

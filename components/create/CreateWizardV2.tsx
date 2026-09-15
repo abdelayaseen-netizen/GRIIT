@@ -287,7 +287,7 @@ export function CreateWizardV2() {
         task_count: tasksForApi.length,
         has_verified_task: tasksForApi.some((t) => t.requirePhoto === true),
       });
-      void queryClient.invalidateQueries({ queryKey: ["home"] });
+      void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
       setConfirmOpen(false);

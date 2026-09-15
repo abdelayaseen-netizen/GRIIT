@@ -14,7 +14,12 @@ export function resolveHomeStatsReady(input: {
   queryFetched: boolean;
   queryData: unknown;
   contextStats: unknown;
+  /** bootstrap.failed includes "stats" and there is no stats payload. */
+  statsFailed?: boolean;
 }): boolean {
+  if (input.statsFailed && input.queryData == null && input.contextStats == null) {
+    return false;
+  }
   return input.queryFetched || input.queryData != null || input.contextStats != null;
 }
 

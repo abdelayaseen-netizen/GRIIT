@@ -48,7 +48,7 @@ export type HomeV3Proof = {
 
 export type HomeV3Props = {
   title: string | null;
-  streak: number;
+  streak: number | null;
   streakLine: string;
   proof: HomeV3Proof | null;
   weekFilled: boolean[];
@@ -150,9 +150,18 @@ export function HomeV3({
 
       <View style={styles.streak}>
         <Text style={styles.secondary}>Current streak</Text>
-        <View style={styles.numRow} accessibilityLabel={formatDays(streak)}>
-          <DisplayNumber value={streak} size="home" />
-          <Text style={styles.days}>{dayWord(streak)}</Text>
+        <View
+          style={styles.numRow}
+          accessibilityLabel={streak == null ? "Streak unavailable" : formatDays(streak)}
+        >
+          {streak == null ? (
+            <Text style={styles.days}>—</Text>
+          ) : (
+            <>
+              <DisplayNumber value={streak} size="home" />
+              <Text style={styles.days}>{dayWord(streak)}</Text>
+            </>
+          )}
         </View>
         <Text style={styles.secondary}>{streakLine}</Text>
       </View>

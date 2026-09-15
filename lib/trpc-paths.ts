@@ -122,6 +122,9 @@ export const TRPC = {
   user: {
     completeOnboarding: 'user.completeOnboarding',
   },
+  home: {
+    bootstrap: 'home.bootstrap',
+  },
   referrals: {
     recordOpen: 'referrals.recordOpen',
     markJoinedChallenge: 'referrals.markJoinedChallenge',
