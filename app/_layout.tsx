@@ -7,7 +7,6 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired } from "@/lib/auth-expiry";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
@@ -23,11 +22,9 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { DS_COLORS } from "@/lib/design-system";
 import CelebrationOverlay from "@/components/shared/CelebrationOverlay";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
-import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
 import { FLAGS } from "@/lib/feature-flags";
 import {
@@ -40,16 +37,13 @@ import {
   sessionKindFromUser,
   setKnownOnboardingCompleted,
 } from "@/lib/onboarding-v2-routing";
-import { captureError, initialiseSentry } from "@/lib/sentry";
+import { resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
+import { checkProfile } from "@/lib/check-profile";
+import { readHasLaunched, recordAppOpen } from "@/lib/app-open-tracking";
+import { initialiseSentry } from "@/lib/sentry";
 import { registerPushTokenIfPermissionGranted } from "@/lib/register-push-token";
 import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
-import {
-  trackAppOpened,
-  trackColdStart,
-  trackNotificationOpened,
-  trackUserReturnedAfterLapse,
-  type ReminderType,
-} from "@/lib/analytics";
+import { trackNotificationOpened, type ReminderType } from "@/lib/analytics";
 // Static import: ensures Notifications.setNotificationHandler at the top of
 // lib/notifications.ts runs at app boot, before any timer task can schedule a
 // lock-screen notification.
@@ -91,7 +85,6 @@ function PushRegistrationBootstrap() {
   return null;
 }
 
-const PROFILE_CHECK_TIMEOUT_MS = 2500;
 const SPLASH_MAX_MS = 1800;
 
 function AuthRedirectorLoading() {
@@ -117,87 +110,25 @@ function AuthRedirector() {
   const coldStartTrackedRef = useRef(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED).then((v) => setHasLaunched(v === "true"));
+    void readHasLaunched().then(setHasLaunched);
   }, []);
 
-  const checkProfile = useCallback(async (userId: string, retry = 0) => {
-    const maxRetries = 1;
-    const done = () => setProfileChecked(true);
-    const timedOut = { timedOut: true as const };
-    try {
-      const timeoutPromise = new Promise<typeof timedOut>((resolve) =>
-        setTimeout(() => resolve(timedOut), PROFILE_CHECK_TIMEOUT_MS)
-      );
-
-      const profilePromise = supabase
-        .from("profiles")
-        .select("user_id, username, onboarding_completed, created_at")
-        .eq("user_id", userId)
-        .single()
-        .then(
-          ({
-            data,
-          }: {
-            data: { user_id?: string; username?: string | null; onboarding_completed?: boolean; created_at?: string | null } | null;
-          }) => data
-        );
-
-      let result = await Promise.race([profilePromise, timeoutPromise]);
-
-      if (result && typeof result === "object" && "timedOut" in result && retry < maxRetries) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id, username, onboarding_completed, created_at")
-          .eq("user_id", userId)
-          .single();
-        result = data;
-      } else if (result === null && retry < maxRetries) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("user_id, username, onboarding_completed, created_at")
-          .eq("user_id", userId)
-          .single();
-        result = data;
-      }
-
-      if (result && typeof result === "object" && "timedOut" in result) {
-        setHasProfile(false);
-        setProfileCreatedAt(null);
-        setOnboardingCompleted(null);
-      } else if (result === null) {
-        setHasProfile(false);
-        setOnboardingCompleted(false);
-        setProfileCreatedAt(null);
-      } else {
-        const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
-        setHasProfile(hasValidProfile);
-        const dbDone = result?.onboarding_completed === true;
-        setOnboardingCompleted(dbDone);
-        if (dbDone) {
-          setKnownOnboardingCompleted(userId, true);
-          void cacheOnboardingCompleted();
-        }
-        setProfileCreatedAt(result?.created_at ?? null);
-      }
-      done();
-    } catch (err) {
-      captureError(err, "AuthRedirectorCheckProfile");
-      // error swallowed — handle in UI
-      if (retry < maxRetries) {
-        await checkProfile(userId, retry + 1);
-        return;
-      }
-      setHasProfile(false);
-      setProfileCreatedAt(null);
-      setOnboardingCompleted(null);
-      done();
+  const runCheckProfile = useCallback(async (userId: string) => {
+    const outcome = await checkProfile(userId);
+    setHasProfile(outcome.hasProfile);
+    setOnboardingCompleted(outcome.onboardingCompleted);
+    setProfileCreatedAt(outcome.profileCreatedAt);
+    if (outcome.cacheCompleted) {
+      setKnownOnboardingCompleted(userId, true);
+      void cacheOnboardingCompleted();
     }
+    setProfileChecked(true);
   }, []);
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-      checkProfile(user.id);
+      void runCheckProfile(user.id);
     } else {
       clearKnownOnboardingCompleted();
       setProfileChecked(true);
@@ -205,45 +136,17 @@ function AuthRedirector() {
       setOnboardingCompleted(null);
       setProfileCreatedAt(null);
     }
-  }, [user, loading, checkProfile]);
+  }, [user, loading, runCheckProfile]);
 
   useEffect(() => {
     if (loading || !user || !profileChecked) return;
-
-    const daysSinceSignup = (() => {
-      if (!profileCreatedAt) return undefined;
-      const createdAtMs = Date.parse(profileCreatedAt);
-      if (Number.isNaN(createdAtMs)) return undefined;
-      return Math.max(0, Math.floor((Date.now() - createdAtMs) / (1000 * 60 * 60 * 24)));
-    })();
-
-    const recordOpen = async () => {
-      try {
-        if (!coldStartTrackedRef.current) {
-          coldStartTrackedRef.current = true;
-          const coldStartMs = Date.now() - COLD_START_AT;
-          trackColdStart({ cold_start_ms: coldStartMs });
-        }
-        const nowMs = Date.now();
-        const nowIso = new Date(nowMs).toISOString();
-        const lastOpenRaw = await AsyncStorage.getItem("griit:last_app_open_at");
-        if (lastOpenRaw) {
-          const lastOpenMs = Date.parse(lastOpenRaw);
-          if (!Number.isNaN(lastOpenMs)) {
-            const lapseDays = Math.floor((nowMs - lastOpenMs) / (1000 * 60 * 60 * 24));
-            if (lapseDays >= 3) {
-              trackUserReturnedAfterLapse({ lapse_days: lapseDays, days_since_signup: daysSinceSignup });
-            }
-          }
-        }
-        trackAppOpened({ days_since_signup: daysSinceSignup });
-        await AsyncStorage.setItem("griit:last_app_open_at", nowIso);
-      } catch {
-        // non-fatal
-      }
-    };
-
-    void recordOpen();
+    const trackCold = !coldStartTrackedRef.current;
+    if (trackCold) coldStartTrackedRef.current = true;
+    void recordAppOpen({
+      profileCreatedAt,
+      coldStartMs: Date.now() - COLD_START_AT,
+      trackColdStart: trackCold,
+    });
   }, [loading, user, profileChecked, profileCreatedAt]);
 
   useEffect(() => {
@@ -275,49 +178,28 @@ function AuthRedirector() {
 
   useEffect(() => {
     if (!FLAGS.ONBOARDING_V2) return;
-    if (loading || hasLaunched === null) return;
-    if (user && !profileChecked) return;
-
     const first = typeof segments[0] === "string" ? segments[0] : "";
-    const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inAuth = first === SEGMENTS.AUTH;
-    const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
-    const inTabs = first === SEGMENTS.TABS;
-
-    const dest = resolveOnboardingLaunch({
+    const decision = resolveAuthRedirect({
       sessionKind: sessionKindFromUser(user),
-      dbCompleted: user
+      onboardingCompleted: user
         ? dbCompletedForLaunch({
             fetched: onboardingCompleted,
             written: peekKnownOnboardingCompleted(user.id),
           })
         : null,
+      hasLaunched,
+      loading,
+      profileChecked,
+      inOnboarding: first === SEGMENTS.ONBOARDING,
+      inAuth: first === SEGMENTS.AUTH,
+      onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
+      inTabs: first === SEGMENTS.TABS,
+      exitHref: peekOnboardingV2Exit(),
     });
-
-    if (dest === "home") {
-      const href = resolveCompletedLeaveHref({
-        inOnboarding,
-        inAuth,
-        onCreateProfile,
-        inTabs,
-        exitHref: peekOnboardingV2Exit(),
-      });
-      if (href) router.replace(href as never);
-      return;
+    if (decision.action === "replace") {
+      router.replace(decision.href as never);
     }
-
-    if (!inOnboarding && !inAuth) {
-      router.replace(ROUTES.ONBOARDING as never);
-    }
-  }, [
-    user,
-    loading,
-    segments,
-    hasLaunched,
-    profileChecked,
-    onboardingCompleted,
-    router,
-  ]);
+  }, [user, loading, segments, hasLaunched, profileChecked, onboardingCompleted, router]);
 
   useEffect(() => {
     if (FLAGS.ONBOARDING_V2) return;
@@ -405,9 +287,12 @@ function AuthRedirector() {
   }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);
 
   if (
-    loading ||
-    (user && !profileChecked) ||
-    (!user && hasLaunched === null)
+    shouldShowAuthRedirectOverlay({
+      loading,
+      hasSession: !!user,
+      profileChecked,
+      hasLaunched,
+    })
   ) {
     return <AuthRedirectorLoading />;
   }
