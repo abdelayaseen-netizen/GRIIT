@@ -15,6 +15,10 @@ import type { ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { logger } from "../../lib/logger";
 
+/** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
+export const GET_STATS_PROFILE_SELECT =
+  "total_days_secured, tier, subscription_status, timezone, reminder_timezone";
+
 export const profilesStatsProcedures = {
   /**
    * Applies freeze reset, Last Stand consumption, and streak zeroing.
@@ -200,18 +204,28 @@ export const profilesStatsProcedures = {
         .maybeSingle(),
       ctx.supabase
         .from("profiles")
-        .select(
-          "streak_freeze_used_count, streak_freeze_reset_at, total_days_secured, tier, preferred_secure_time, subscription_status, timezone, reminder_timezone"
-        )
+        .select(GET_STATS_PROFILE_SELECT)
         .eq("user_id", ctx.userId)
         .maybeSingle(),
       ctx.supabase.from("streak_freezes").select("date_key").eq("user_id", ctx.userId).limit(365),
       ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
     ]);
 
-    const profileRow = profileResult?.error ? { data: null } : profileResult;
-    const freezesRows = freezesResult?.error ? { data: [] } : freezesResult;
-    const lastStandUsesRows = lastStandUsesResult?.error ? { data: [] } : lastStandUsesResult;
+    if (profileResult.error && profileResult.error.code !== "PGRST116") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+    }
+    if (freezesResult.error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to load streak.",
+      });
+    }
+    if (lastStandUsesResult.error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to load streak.",
+      });
+    }
 
     if (streakData.error) {
       logger.error(
@@ -224,24 +238,13 @@ export const profilesStatsProcedures = {
       });
     }
     const streakRow = streakData.data ?? null;
+    const profileRow = profileResult;
 
-    const streakFreezePerMonth = 1;
-    let usedCount = profileRow?.data?.streak_freeze_used_count ?? 0;
-    let resetAt = profileRow?.data?.streak_freeze_reset_at
-      ? new Date(profileRow.data.streak_freeze_reset_at)
-      : new Date();
-    const now = new Date();
-    // Read-only: surface a reset window without writing (writes live in reconcileStreak).
-    if (resetAt && (now.getTime() - new Date(resetAt).getTime()) / (1000 * 60 * 60 * 24) >= 30) {
-      usedCount = 0;
-      resetAt = now;
-    }
-    const freezesRemaining = Math.max(0, streakFreezePerMonth - usedCount);
     const frozenDateKeys = new Set(
-      (freezesRows?.data ?? []).map((r: { date_key: string }) => r.date_key)
+      (freezesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
     );
     const lastStandUsedDateKeys = new Set(
-      (lastStandUsesRows?.data ?? []).map((r: { date_key: string }) => r.date_key)
+      (lastStandUsesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
     );
 
     const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
@@ -278,14 +281,11 @@ export const profilesStatsProcedures = {
     // Missing row (RLS / no streak yet) must not collapse to a real zero.
     const activeStreak =
       streakRow == null ? null : (streakRow.active_streak_count ?? 0);
-    const canUseFreeze =
-      effectiveMissedDays === 1 && (activeStreak ?? 0) > 0 && freezesRemaining > 0;
 
     const totalDaysSecured = profileRow?.data?.total_days_secured ?? 0;
     const tier = profileRow?.data?.tier ?? getTierForDays(totalDaysSecured);
     const pointsToNextTier = getPointsToNextTier(totalDaysSecured);
     const nextTierName = getNextTierName(totalDaysSecured);
-    const preferredSecureTime = profileRow?.data?.preferred_secure_time ?? "20:00";
 
     return {
       activeChallenges: activeChallenges.data?.length || 0,
@@ -293,16 +293,11 @@ export const profilesStatsProcedures = {
       activeStreak,
       longestStreak: streakRow?.longest_streak_count || 0,
       lastCompletedDateKey: lastCompletedDateKey,
-      streakFreezeUsedCount: usedCount,
-      streakFreezeResetAt: resetAt.toISOString(),
-      freezesRemaining,
       effectiveMissedDays,
-      canUseFreeze,
       totalDaysSecured,
       tier,
       pointsToNextTier,
       nextTierName,
-      preferredSecureTime,
       lastStandsAvailable,
       lastStandUsedThisSession: false,
       streakLostNoLastStand: false,

@@ -7,6 +7,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import {
   scheduleNextSecureReminder,
+  SECURE_REMINDER_TIME,
   scheduleLapsedUserReminders,
   cancelLapsedUserReminders,
   scheduleMilestoneApproachingIfNeeded,
@@ -323,7 +324,7 @@ export function useAppChallengeMutations({
         trackEvent("streak_milestone", { days: streakN });
       }
       if (Platform.OS !== "web") {
-        const preferred = (stats as StatsFromApi)?.preferredSecureTime ?? "20:00";
+        const preferred = SECURE_REMINDER_TIME;
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;

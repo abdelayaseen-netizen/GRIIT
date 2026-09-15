@@ -15,6 +15,12 @@
  */
 
 /**
+ * Production has no profiles.preferred_secure_time. Evening secure reminder
+ * is this constant — not a user setting.
+ */
+export const SECURE_REMINDER_TIME = "20:00";
+
+/**
  * Local notifications for "Time to secure your day" and optional "2 hours left".
  * Schedule is updated on app open and after secure so we don't notify if already secured today.
  */
