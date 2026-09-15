@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  FlatList,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -144,18 +145,15 @@ function LeaderboardBody({
     }
   }
 
-  return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scroll}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => void onRefresh()}
-          tintColor={DS_V3.color.brand}
-        />
-      }
-    >
+  const viewer = entries.find((e) => e.userId === userId);
+  const lastRank = entries[entries.length - 1]?.rank ?? 0;
+  const outOfRange = viewer != null && viewer.rank > lastRank;
+  const rows = outOfRange ? entries.filter((e) => e.userId !== userId) : entries;
+  const showBoard = !loading && !err && !showEmpty;
+  const openProfile = useOpenLeaderboardProfile();
+
+  const header = (
+    <>
       <View style={styles.week}>
         <Text style={styles.heading}>This week</Text>
         <Text style={styles.caption}>
@@ -243,11 +241,43 @@ function LeaderboardBody({
       ) : null}
 
       {!loading && !err && showEmpty ? empty : null}
+      {showBoard ? <View style={styles.board} /> : null}
+    </>
+  );
 
-      {!loading && !err && !showEmpty ? (
-        <BoardList entries={entries} viewerId={userId} />
-      ) : null}
-    </ScrollView>
+  return (
+    <FlatList
+      data={showBoard ? rows : []}
+      keyExtractor={(item) => item.userId}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scroll}
+      ListHeaderComponent={header}
+      ListFooterComponent={
+        showBoard && outOfRange && viewer ? (
+          <BoardRow
+            entry={viewer}
+            viewerId={userId}
+            divider={false}
+            onPress={openProfile}
+          />
+        ) : null
+      }
+      renderItem={({ item, index }) => (
+        <BoardRow
+          entry={item}
+          viewerId={userId}
+          divider={index < rows.length - 1 || (outOfRange && Boolean(viewer))}
+          onPress={openProfile}
+        />
+      )}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={DS_V3.color.brand}
+        />
+      }
+    />
   );
 }
 
@@ -268,64 +298,39 @@ function useOpenLeaderboardProfile() {
   );
 }
 
-function BoardList({ entries, viewerId }: { entries: BoardEntry[]; viewerId: string }) {
-  const viewer = entries.find((e) => e.userId === viewerId);
-  const lastRank = entries[entries.length - 1]?.rank ?? 0;
-  const outOfRange = viewer != null && viewer.rank > lastRank;
-  const openProfile = useOpenLeaderboardProfile();
-
-  const rows = outOfRange ? entries.filter((e) => e.userId !== viewerId) : entries;
-
+function BoardRow({
+  entry,
+  viewerId,
+  divider,
+  onPress,
+}: {
+  entry: BoardEntry;
+  viewerId: string;
+  divider: boolean;
+  onPress: (viewerId: string, entry: BoardEntry) => void;
+}) {
   return (
-    <View style={styles.board}>
-      {rows.map((entry, i) => (
-        <ListRow
-          key={entry.userId}
-          rank={entry.rank}
-          icon={
-            <Avatar
-              size={DS_V3.size.avatar.sm}
-              uri={entry.avatarUrl}
-              displayName={entry.displayName}
-            />
-          }
-          title={entry.displayName}
-          subtitle={checkInLine(entry.checkInsThisWeek, entry.currentStreak)}
-          highlight={entry.userId === viewerId}
-          divider={i < rows.length - 1 || (outOfRange && Boolean(viewer))}
-          trailing={
-            <View style={styles.pts}>
-              <DisplayNumber value={entry.points} size="inline" />
-              <Text style={styles.ptsLabel}>pts</Text>
-            </View>
-          }
-          onPress={() => openProfile(viewerId, entry)}
+    <ListRow
+      rank={entry.rank}
+      icon={
+        <Avatar
+          size={DS_V3.size.avatar.sm}
+          uri={entry.avatarUrl}
+          displayName={entry.displayName}
         />
-      ))}
-      {outOfRange && viewer ? (
-        <ListRow
-          rank={viewer.rank}
-          icon={
-            <Avatar
-              size={DS_V3.size.avatar.sm}
-              uri={viewer.avatarUrl}
-              displayName={viewer.displayName}
-            />
-          }
-          title={viewer.displayName}
-          subtitle={checkInLine(viewer.checkInsThisWeek, viewer.currentStreak)}
-          highlight
-          divider={false}
-          trailing={
-            <View style={styles.pts}>
-              <DisplayNumber value={viewer.points} size="inline" />
-              <Text style={styles.ptsLabel}>pts</Text>
-            </View>
-          }
-          onPress={() => openProfile(viewerId, viewer)}
-        />
-      ) : null}
-    </View>
+      }
+      title={entry.displayName}
+      subtitle={checkInLine(entry.checkInsThisWeek, entry.currentStreak)}
+      highlight={entry.userId === viewerId}
+      divider={divider}
+      trailing={
+        <View style={styles.pts}>
+          <DisplayNumber value={entry.points} size="inline" />
+          <Text style={styles.ptsLabel}>pts</Text>
+        </View>
+      }
+      onPress={() => onPress(viewerId, entry)}
+    />
   );
 }
 

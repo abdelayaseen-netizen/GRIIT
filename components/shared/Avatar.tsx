@@ -33,6 +33,8 @@ export function Avatar({ url, name, size, userId, bgColor, style }: AvatarProps)
           source={{ uri: url }}
           style={[styles.img, { width: size, height: size, borderRadius: radius }]}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={url}
           accessibilityIgnoresInvertColors
         />
       </View>

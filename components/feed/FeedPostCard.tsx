@@ -152,6 +152,8 @@ function FeedPostCardInner({
                   source={{ uri: proofUri }}
                   style={styles.proofImage}
                   contentFit="cover"
+                  cachePolicy="memory-disk"
+                  recyclingKey={post.id}
                   accessibilityRole="image"
                 />
               ) : (
