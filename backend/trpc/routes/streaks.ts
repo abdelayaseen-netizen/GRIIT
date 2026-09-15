@@ -28,7 +28,8 @@ export function effectiveFreezesRemaining(input: {
   const limit = monthlyFreezeLimit(input.isPro);
   const lastUsed = input.lastFreezeUsedAt ? new Date(input.lastFreezeUsedAt) : null;
   const now = input.now ?? new Date();
-  if (freezeWindowExpired(lastUsed, now)) {
+  // Never used: DB default remaining is 1, which would hide a Pro allotment of 4.
+  if (!input.lastFreezeUsedAt || freezeWindowExpired(lastUsed, now)) {
     return { remaining: limit, limit };
   }
   const stored = input.storedRemaining;

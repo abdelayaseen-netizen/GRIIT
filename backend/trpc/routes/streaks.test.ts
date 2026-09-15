@@ -119,6 +119,17 @@ describe("effectiveFreezesRemaining", () => {
     ).toEqual({ remaining: 0, limit: 1 });
   });
 
+  it("uses the monthly limit when last_freeze_used_at is null", () => {
+    expect(
+      effectiveFreezesRemaining({
+        storedRemaining: 1,
+        lastFreezeUsedAt: null,
+        isPro: true,
+        now: new Date("2026-09-14T00:00:00.000Z"),
+      })
+    ).toEqual({ remaining: STREAK_FREEZE_PER_MONTH_PRO, limit: STREAK_FREEZE_PER_MONTH_PRO });
+  });
+
   it("refills to the limit when last_freeze_used_at is 30+ days ago", () => {
     expect(
       effectiveFreezesRemaining({
@@ -138,6 +149,19 @@ describe("streaks.getFreezeStatus", () => {
       remaining: 1,
       limit: STREAK_FREEZE_PER_MONTH_FREE,
       isPro: false,
+    });
+  });
+
+  it("returns the Pro limit when last_freeze_used_at is null even if stored remaining is 1", async () => {
+    const caller = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      isPremium: true,
+    });
+    await expect(caller.getFreezeStatus()).resolves.toEqual({
+      remaining: STREAK_FREEZE_PER_MONTH_PRO,
+      limit: STREAK_FREEZE_PER_MONTH_PRO,
+      isPro: true,
     });
   });
 
