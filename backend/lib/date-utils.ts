@@ -26,13 +26,17 @@ function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : isoInstant.toISOString().slice(0, 10);
 }
 
-export function getTodayDateKey(timezone?: string | null): string {
-  const tz = (timezone?.trim() || "UTC");
+export function dateKeyInTimeZone(instant: Date, timezone?: string | null): string {
+  const tz = timezone?.trim() || "UTC";
   try {
-    return formatDateKeyInTimeZone(new Date(), tz);
+    return formatDateKeyInTimeZone(instant, tz);
   } catch {
-    return new Date().toISOString().slice(0, 10);
+    return instant.toISOString().slice(0, 10);
   }
+}
+
+export function getTodayDateKey(timezone?: string | null): string {
+  return dateKeyInTimeZone(new Date(), timezone);
 }
 
 /**

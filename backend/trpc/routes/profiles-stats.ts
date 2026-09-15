@@ -5,6 +5,7 @@ import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/
 import {
   getTodayDateKey,
   getYesterdayDateKey,
+  dateKeyInTimeZone,
   daysBetweenKeys,
   getWeekStartDateKey,
   getWeekEndDateKey,
@@ -17,15 +18,19 @@ import { logger } from "../../lib/logger";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
-  "total_days_secured, tier, subscription_status, timezone, reminder_timezone";
+  "total_days_secured, tier, subscription_status, timezone, reminder_timezone, last_freeze_used_at";
+
+export const RECONCILE_PROFILE_SELECT =
+  "subscription_status, timezone, reminder_timezone, last_freeze_used_at";
 
 export const profilesStatsProcedures = {
   /**
-   * Applies freeze reset, Last Stand consumption, and streak zeroing.
+   * Last Stand consumption and streak zeroing.
+   * Frozen day = date key of profiles.last_freeze_used_at in the profile TZ.
    * Must run before getStats so Home never writes on a query path.
    */
   reconcileStreak: protectedProcedure.mutation(async ({ ctx }) => {
-    const [streakData, profileResult, freezesResult, lastStandUsesResult] = await Promise.all([
+    const [streakData, profileResult, lastStandUsesResult] = await Promise.all([
       ctx.supabase
         .from("streaks")
         .select(
@@ -35,16 +40,13 @@ export const profilesStatsProcedures = {
         .maybeSingle(),
       ctx.supabase
         .from("profiles")
-        .select(
-          "streak_freeze_used_count, streak_freeze_reset_at, subscription_status, timezone, reminder_timezone"
-        )
+        .select(RECONCILE_PROFILE_SELECT)
         .eq("user_id", ctx.userId)
         .maybeSingle(),
-      ctx.supabase.from("streak_freezes").select("date_key").eq("user_id", ctx.userId).limit(365),
       ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
     ]);
 
-    if (streakData.error) {
+    if (streakData.error && streakData.error.code !== "PGRST116") {
       logger.error(
         { error: streakData.error, userId: ctx.userId },
         "[profiles.reconcileStreak] streaks read failed"
@@ -54,38 +56,33 @@ export const profilesStatsProcedures = {
         message: "Failed to reconcile streak.",
       });
     }
-
-    const profileRow = profileResult?.error ? { data: null } : profileResult;
-    const freezesRows = freezesResult?.error ? { data: [] } : freezesResult;
-    const lastStandUsesRows = lastStandUsesResult?.error ? { data: [] } : lastStandUsesResult;
-    const streakRow = streakData.data ?? null;
-
-    let resetAt = profileRow?.data?.streak_freeze_reset_at
-      ? new Date(profileRow.data.streak_freeze_reset_at)
-      : new Date();
-    const now = new Date();
-    if (resetAt && (now.getTime() - new Date(resetAt).getTime()) / (1000 * 60 * 60 * 24) >= 30) {
-      resetAt = now;
-      await ctx.supabase
-        .from("profiles")
-        .update({ streak_freeze_used_count: 0, streak_freeze_reset_at: resetAt.toISOString() })
-        .eq("user_id", ctx.userId);
+    if (profileResult.error && profileResult.error.code !== "PGRST116") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+    }
+    if (lastStandUsesResult.error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to load streak.",
+      });
     }
 
-    const frozenDateKeys = new Set(
-      (freezesRows?.data ?? []).map((r: { date_key: string }) => r.date_key)
-    );
-    const lastStandUsedDateKeys = new Set(
-      (lastStandUsesRows?.data ?? []).map((r: { date_key: string }) => r.date_key)
-    );
+    const profileRow = profileResult;
+    const streakRow = streakData.data ?? null;
 
     const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
     const tzRaw = profileRow?.data as
-      | { timezone?: string | null; reminder_timezone?: string | null }
+      | { timezone?: string | null; reminder_timezone?: string | null; last_freeze_used_at?: string | null }
       | null;
     const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
     const todayKey = getTodayDateKey(tz);
     const yesterdayKey = getYesterdayDateKey(tz);
+    const lastFreezeUsedAt = tzRaw?.last_freeze_used_at ?? null;
+    const frozenDateKeys = new Set(
+      lastFreezeUsedAt ? [dateKeyInTimeZone(new Date(lastFreezeUsedAt), tz)] : []
+    );
+    const lastStandUsedDateKeys = new Set(
+      (lastStandUsesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
+    );
 
     let effectiveMissedDays = 0;
     let missedDateKeys: string[] = [];
@@ -180,7 +177,6 @@ export const profilesStatsProcedures = {
       completedChallenges,
       streakData,
       profileResult,
-      freezesResult,
       lastStandUsesResult,
     ] = await Promise.all([
       ctx.supabase
@@ -207,18 +203,11 @@ export const profilesStatsProcedures = {
         .select(GET_STATS_PROFILE_SELECT)
         .eq("user_id", ctx.userId)
         .maybeSingle(),
-      ctx.supabase.from("streak_freezes").select("date_key").eq("user_id", ctx.userId).limit(365),
       ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
     ]);
 
     if (profileResult.error && profileResult.error.code !== "PGRST116") {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
-    }
-    if (freezesResult.error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to load streak.",
-      });
     }
     if (lastStandUsesResult.error) {
       throw new TRPCError({
@@ -240,20 +229,21 @@ export const profilesStatsProcedures = {
     const streakRow = streakData.data ?? null;
     const profileRow = profileResult;
 
-    const frozenDateKeys = new Set(
-      (freezesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
-    );
     const lastStandUsedDateKeys = new Set(
       (lastStandUsesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
     );
 
     const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
     const tzRaw = profileRow?.data as
-      | { timezone?: string | null; reminder_timezone?: string | null }
+      | { timezone?: string | null; reminder_timezone?: string | null; last_freeze_used_at?: string | null }
       | null;
     const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
     const todayKey = getTodayDateKey(tz);
     const yesterdayKey = getYesterdayDateKey(tz);
+    const lastFreezeUsedAt = tzRaw?.last_freeze_used_at ?? null;
+    const frozenDateKeys = new Set(
+      lastFreezeUsedAt ? [dateKeyInTimeZone(new Date(lastFreezeUsedAt), tz)] : []
+    );
 
     let effectiveMissedDays = 0;
     let missedDateKeys: string[] = [];

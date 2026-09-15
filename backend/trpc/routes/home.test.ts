@@ -30,9 +30,8 @@ const profileRow = {
   distance_unit: "km",
   target_streak: 30,
   is_premium: false,
-  streak_freeze_used_count: 0,
-  streak_freeze_reset_at: new Date().toISOString(),
-  preferred_secure_time: "20:00",
+  streak_freezes_remaining: 1,
+  last_freeze_used_at: null,
 };
 
 const streakRow = {
@@ -94,7 +93,7 @@ function createMockSupabase(opts?: { failFollows?: boolean }) {
       if (table === "streaks") {
         return { data: streakRow, error: null, count: null };
       }
-      if (table === "streak_freezes" || table === "last_stand_uses") {
+      if (table === "last_stand_uses") {
         return { data: [], error: null, count: null };
       }
       if (table === "day_secures") {
