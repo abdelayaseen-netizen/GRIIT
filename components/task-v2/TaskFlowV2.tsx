@@ -51,67 +51,33 @@ import { TaskCapture } from "./TaskCapture";
 import { TaskConfirmation } from "./TaskConfirmation";
 import { TaskKeypad } from "./TaskKeypad";
 import { TaskVerifying } from "./TaskVerifying";
-
-type Step =
-  | "entry"
-  | "log"
-  | "session"
-  | "capture"
-  | "review"
-  | "running"
-  | "write"
-  | "count"
-  | "ask"
-  | "verifying"
-  | "confirmation"
-  | "challenge_done"
-  | "blocked"
-  | "failed";
-
-function chromeTitle(type: string): string {
-  if (type === "photo") return "Photo proof";
-  if (type === "water") return "Water";
-  if (type === "reading") return "Pages";
-  if (type === "simple" || type === "manual") return "Self-report";
-  return type.charAt(0).toUpperCase() + type.slice(1);
-}
-
-function initialStep(type: string): Step {
-  if (type === "photo") return "capture";
-  if (type === "timer" || type === "checkin") return "entry";
-  if (type === "run" || type === "workout") return "log";
-  if (type === "journal") return "write";
-  if (type === "counter" || type === "water" || type === "reading") return "count";
-  return "ask";
-}
-
-function fmtMmSs(sec: number): string {
-  const s = Math.max(0, Math.floor(sec));
-  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-}
-
-function clockLabel(isoOrMs: string | number): string {
-  const d = typeof isoOrMs === "number" ? new Date(isoOrMs) : new Date(isoOrMs);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
-
-function wordCount(text: string): number {
-  return text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-}
-
-function isHonest(type: string, hasPhoto: boolean): boolean {
-  if (type === "manual" || type === "simple" || type === "counter" || type === "water") return false;
-  if (type === "reading") return hasPhoto;
-  return true;
-}
-
-function verificationKindFor(type: string, hasPhoto: boolean): VerificationKind {
-  if (type === "photo" || (type === "reading" && hasPhoto) || type === "run" || type === "workout") return "live_photo";
-  if (type === "timer") return "timer";
-  if (type === "checkin") return "gps";
-  if (type === "journal") return "word_count";
-  return "self_report";
-}
+import {
+  type TaskFlowStep,
+  blockedEyebrow,
+  checkinGpsNextStep,
+  checkinReady,
+  chromeFlags,
+  chromeTitle,
+  clockLabel,
+  countReady,
+  discardPhotoStep,
+  finishSubmitOutcome,
+  fmtMmSs,
+  initialStep,
+  isHonest,
+  journalReady,
+  logReady,
+  resolveGoBack,
+  resolveGoBackFromFailure,
+  resolveRetryFailedSubmit,
+  shouldBlockOnWindow,
+  submitWithoutPhotoNext,
+  timerResumeStep,
+  timerShouldAutoSubmit,
+  verificationKindFor,
+  verifyingLine,
+  wordCount,
+} from "@/lib/task-flow-state";
 
 export function TaskFlowV2() {
   const router = useRouter();
@@ -147,7 +113,7 @@ export function TaskFlowV2() {
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 
-  const [step, setStep] = useState<Step>(() => initialStep(taskType));
+  const [step, setStep] = useState<TaskFlowStep>(() => initialStep(taskType));
   const [caption, setCaption] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
@@ -184,7 +150,7 @@ export function TaskFlowV2() {
   });
 
   useEffect(() => {
-    if (windowEval.status === "out_of_window" && (taskType === "photo" || step === "capture")) {
+    if (shouldBlockOnWindow({ windowStatus: windowEval.status, taskType, step })) {
       setStep("blocked");
     }
   }, [windowEval.status, taskType, step]);
@@ -196,7 +162,7 @@ export function TaskFlowV2() {
       setStartedAtIso(s.startedAtIso);
       setSoundOn(s.soundOn);
       const remaining = s.requiredSeconds - (Date.now() - Date.parse(s.startedAtIso)) / 1000;
-      setStep(remaining <= 0 ? "verifying" : "running");
+      setStep(timerResumeStep(remaining));
       if (remaining <= 0) void submitTimer();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,8 +189,8 @@ export function TaskFlowV2() {
     if (lat == null || lng == null) return;
     const m = haversineDistance(loc.coords.latitude, loc.coords.longitude, lat, lng);
     setGps({ m: Math.round(m), acc: Math.round(loc.coords.accuracy ?? 0) });
-    if (m > radius) setStep("blocked");
-    else if (taskType === "checkin") setStep("entry");
+    const next = checkinGpsNextStep(m, radius, taskType);
+    if (next) setStep(next);
   }, [config.location_latitude, config.location_longitude, radius, taskType]);
 
   useEffect(() => {
@@ -283,41 +249,16 @@ export function TaskFlowV2() {
   );
 
   const goBack = useCallback(() => {
-    if (step === "review") {
-      if (caption.trim()) {
-        setDiscardAsk(true);
-        return;
-      }
-      setPhotoUri(null);
-      setStep(taskType === "run" || taskType === "workout" ? "log" : "capture");
+    const decision = resolveGoBack({ step, caption, taskType });
+    if (decision.action === "discard_ask") {
+      setDiscardAsk(true);
       return;
     }
-    if (step === "running") return;
-    if (step === "session") {
-      setStep("log");
+    if (decision.action === "stay") return;
+    if (decision.action === "set_step") {
+      if (decision.clearPhoto) setPhotoUri(null);
+      setStep(decision.step);
       return;
-    }
-    if (step === "capture") {
-      if (taskType === "run" || taskType === "workout") {
-        setStep("log");
-        return;
-      }
-      if (taskType === "journal") {
-        setStep("write");
-        return;
-      }
-      if (taskType === "counter" || taskType === "water" || taskType === "reading") {
-        setStep("count");
-        return;
-      }
-      if (taskType === "checkin") {
-        setStep("entry");
-        return;
-      }
-      if (taskType === "simple" || taskType === "manual") {
-        setStep("ask");
-        return;
-      }
     }
     exit();
   }, [step, caption, taskType, exit]);
@@ -343,7 +284,7 @@ export function TaskFlowV2() {
         taskId,
         ...payload,
       });
-      if (!complete) {
+      if (finishSubmitOutcome({ complete }) === "failed" || !complete) {
         setFailCode(undefined);
         setFailNote("Couldn't save. Try again.");
         setStep("failed");
@@ -451,7 +392,7 @@ export function TaskFlowV2() {
   };
 
   const submitWithoutPhoto = async (payload: Record<string, unknown>, kind: VerificationKind) => {
-    if (requirePhoto) {
+    if (submitWithoutPhotoNext(requirePhoto) === "capture") {
       setStep("capture");
       return;
     }
@@ -465,31 +406,37 @@ export function TaskFlowV2() {
   const retryFailedSubmit = () => {
     setFailNote("");
     setFailCode(undefined);
-    if (photoUri) {
+    const decision = resolveRetryFailedSubmit({
+      hasPhoto: !!photoUri,
+      taskType,
+      requirePhoto,
+      timerReadyToSubmit: !!(startedAtIso && remainingSec <= 0),
+    });
+    if (decision === "submit_photo") {
       void submitPhoto();
       return;
     }
-    if (taskType === "timer" && !(startedAtIso && remainingSec <= 0)) {
+    if (decision === "start_timer") {
       void startTimer();
       return;
     }
-    if (requirePhoto) {
+    if (decision === "capture") {
       setStep("capture");
       return;
     }
-    if (taskType === "timer") {
+    if (decision === "submit_timer") {
       void submitTimer();
       return;
     }
-    if (taskType === "journal") {
+    if (decision === "submit_journal") {
       void finishSubmit({ noteText: text }, "word_count");
       return;
     }
-    if (taskType === "counter" || taskType === "water" || taskType === "reading") {
+    if (decision === "submit_count") {
       void finishSubmit({ value: count }, "self_report");
       return;
     }
-    if (taskType === "checkin") {
+    if (decision === "submit_checkin") {
       void finishSubmit(
         {
           location_latitude: config.location_latitude,
@@ -499,7 +446,7 @@ export function TaskFlowV2() {
       );
       return;
     }
-    if (taskType === "run" || taskType === "workout") {
+    if (decision === "log") {
       setStep("log");
       return;
     }
@@ -509,31 +456,7 @@ export function TaskFlowV2() {
   const goBackFromFailure = () => {
     setFailNote("");
     setFailCode(undefined);
-    if (requirePhoto && !photoUri) {
-      setStep("capture");
-      return;
-    }
-    if (photoUri) {
-      setStep("review");
-      return;
-    }
-    if (taskType === "timer" || taskType === "checkin") {
-      setStep("entry");
-      return;
-    }
-    if (taskType === "journal") {
-      setStep("write");
-      return;
-    }
-    if (taskType === "counter" || taskType === "water" || taskType === "reading") {
-      setStep("count");
-      return;
-    }
-    if (taskType === "run" || taskType === "workout") {
-      setStep("log");
-      return;
-    }
-    setStep(initialStep(taskType));
+    setStep(resolveGoBackFromFailure({ requirePhoto, hasPhoto: !!photoUri, taskType }));
   };
 
   const startTimer = async () => {
@@ -598,14 +521,13 @@ export function TaskFlowV2() {
   };
 
   useEffect(() => {
-    if (step === "running" && startedAtIso && remainingSec <= 0) {
+    if (timerShouldAutoSubmit(step, remainingSec, !!startedAtIso)) {
       void submitTimer();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, remainingSec, startedAtIso]);
 
-  const dark = step === "capture" || step === "review";
-  const hideChrome = step === "confirmation" || step === "challenge_done" || step === "verifying" || step === "capture";
+  const { dark, hideChrome } = chromeFlags(step);
   const fail = failureScreenCopy({
     errorCode: failCode,
     message: failNote,
@@ -631,7 +553,7 @@ export function TaskFlowV2() {
       {step === "blocked" ? (
         <View style={styles.body}>
           <Text style={styles.eyebrowInk}>
-            {windowEval.status === "out_of_window" ? "NOT OPEN YET" : "OUT OF RANGE"}
+            {blockedEyebrow(windowEval.status)}
           </Text>
           <Text style={styles.title}>
             {windowEval.status === "out_of_window"
@@ -715,7 +637,7 @@ export function TaskFlowV2() {
             )}
           </View>
           <Pressable
-            disabled={!gps || gps.m > radius}
+            disabled={!checkinReady(gps?.m ?? null, radius)}
             onPress={() =>
               void submitWithoutPhoto(
                 {
@@ -727,7 +649,7 @@ export function TaskFlowV2() {
             }
             accessibilityRole="button"
             accessibilityLabel="I'm here"
-            style={[styles.orangeBtn, (!gps || gps.m > radius) && styles.disabledBtn]}
+            style={[styles.orangeBtn, !checkinReady(gps?.m ?? null, radius) && styles.disabledBtn]}
           >
             <Text style={styles.btnText}>I&apos;m here</Text>
           </Pressable>
@@ -845,9 +767,13 @@ export function TaskFlowV2() {
               </Text>
               <Pressable
                 disabled={
-                  taskType === "run"
-                    ? distance == null || durationSec == null
-                    : workoutMin == null || workoutMin < (config.min_duration_minutes ?? 0)
+                  !logReady({
+                    taskType,
+                    distance,
+                    durationSec,
+                    workoutMin,
+                    minDurationMinutes: config.min_duration_minutes ?? 0,
+                  })
                 }
                 onPress={() => setStep("capture")}
                 accessibilityRole="button"
@@ -1016,11 +942,11 @@ export function TaskFlowV2() {
             placeholderTextColor={DS_COLORS_V2.text.mutedDark}
           />
           <Pressable
-            disabled={wordCount(text) < minWords}
+            disabled={!journalReady(text, minWords)}
             onPress={() => void submitWithoutPhoto({ noteText: text }, "word_count")}
             accessibilityRole="button"
-            accessibilityLabel={wordCount(text) < minWords ? `Write ${minWords - wordCount(text)} more words` : "Post"}
-            style={[styles.orangeBtn, wordCount(text) < minWords && styles.disabledBtn]}
+            accessibilityLabel={!journalReady(text, minWords) ? `Write ${minWords - wordCount(text)} more words` : "Post"}
+            style={[styles.orangeBtn, !journalReady(text, minWords) && styles.disabledBtn]}
           >
             <Text style={styles.btnText}>
               {wordCount(text) < minWords ? `Write ${minWords - wordCount(text)} more words` : "Post"}
@@ -1102,11 +1028,11 @@ export function TaskFlowV2() {
                 </Pressable>
               ) : null}
               <Pressable
-                disabled={count < counterGoal}
+                disabled={!countReady(count, counterGoal)}
                 onPress={() => void submitWithoutPhoto({ value: count }, "self_report")}
                 accessibilityRole="button"
-                accessibilityLabel={count < counterGoal ? `${count} of ${counterGoal} logged` : "Submit"}
-                style={[styles.inkBtn, count < counterGoal && styles.disabledBtn]}
+                accessibilityLabel={!countReady(count, counterGoal) ? `${count} of ${counterGoal} logged` : "Submit"}
+                style={[styles.inkBtn, !countReady(count, counterGoal) && styles.disabledBtn]}
               >
                 <Text style={styles.inkBtnText}>
                   {count < counterGoal ? `${count} of ${counterGoal} logged` : "Submit"}
@@ -1138,13 +1064,7 @@ export function TaskFlowV2() {
 
       {step === "verifying" ? (
         <TaskVerifying
-          line={
-            taskType === "timer"
-              ? "Recording the session…"
-              : taskType === "manual" || taskType === "simple" || taskType === "counter" || taskType === "water"
-                ? "Saving…"
-                : "Posting your proof…"
-          }
+          line={verifyingLine(taskType)}
         />
       ) : null}
 
@@ -1225,7 +1145,7 @@ export function TaskFlowV2() {
                 setDiscardAsk(false);
                 setCaption("");
                 setPhotoUri(null);
-                setStep(taskType === "run" || taskType === "workout" ? "log" : "capture");
+                setStep(discardPhotoStep(taskType));
               }}
               accessibilityRole="button"
               accessibilityLabel="Discard"
