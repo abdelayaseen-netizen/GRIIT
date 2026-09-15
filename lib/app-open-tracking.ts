@@ -1,18 +1,12 @@
 /**
- * HAS_LAUNCHED read and last_app_open_at / recordOpen.
- * Callers fire these; they must not be awaited on the render path.
+ * last_app_open_at / recordOpen.
+ * Callers fire this; it must not be awaited on the render path.
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { trackAppOpened, trackColdStart, trackUserReturnedAfterLapse } from "@/lib/analytics";
 
 export const LAST_APP_OPEN_AT_KEY = "griit:last_app_open_at";
-
-export async function readHasLaunched(): Promise<boolean> {
-  const v = await AsyncStorage.getItem(STORAGE_KEYS.HAS_LAUNCHED);
-  return v === "true";
-}
 
 export function daysSinceSignupFromCreatedAt(
   profileCreatedAt: string | null,

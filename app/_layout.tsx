@@ -32,14 +32,12 @@ import {
   clearKnownOnboardingCompleted,
   peekKnownOnboardingCompleted,
   peekOnboardingV2Exit,
-  resolveCompletedLeaveHref,
-  resolveOnboardingLaunch,
   sessionKindFromUser,
   setKnownOnboardingCompleted,
 } from "@/lib/onboarding-v2-routing";
 import { resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
 import { checkProfile } from "@/lib/check-profile";
-import { readHasLaunched, recordAppOpen } from "@/lib/app-open-tracking";
+import { recordAppOpen } from "@/lib/app-open-tracking";
 import { initialiseSentry } from "@/lib/sentry";
 import {
   registerPushTokenIfPermissionGranted,
@@ -108,22 +106,13 @@ function AuthRedirector() {
   const segments = useSegments();
   const router = useRouter();
   const { setMessage: setSessionExpiredMessage } = useSessionExpired();
-  const onboardingCompleteFromStore = useOnboardingStore((s) => s.isComplete);
-  useOnboardingStore((s) => s.currentStep);
-  const [hasLaunched, setHasLaunched] = useState<boolean | null>(null);
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
-  const [hasProfile, setHasProfile] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const coldStartTrackedRef = useRef(false);
 
-  useEffect(() => {
-    void readHasLaunched().then(setHasLaunched);
-  }, []);
-
   const runCheckProfile = useCallback(async (userId: string) => {
     const outcome = await checkProfile(userId);
-    setHasProfile(outcome.hasProfile);
     setOnboardingCompleted(outcome.onboardingCompleted);
     setProfileCreatedAt(outcome.profileCreatedAt);
     if (outcome.cacheCompleted) {
@@ -140,7 +129,6 @@ function AuthRedirector() {
     } else {
       clearKnownOnboardingCompleted();
       setProfileChecked(true);
-      setHasProfile(false);
       setOnboardingCompleted(null);
       setProfileCreatedAt(null);
     }
@@ -166,26 +154,6 @@ function AuthRedirector() {
   }, [router, setSessionExpiredMessage]);
 
   useEffect(() => {
-    if (FLAGS.ONBOARDING_V2) return;
-    if (loading || hasLaunched === null) return;
-    if (user) {
-      return;
-    }
-
-    const first = (typeof segments[0] === "string" ? segments[0] : "") as string;
-    const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inAuth = first === SEGMENTS.AUTH;
-
-    if (!user) {
-      if (!inOnboarding && !inAuth) {
-        router.replace(ROUTES.ONBOARDING as never);
-      }
-      return;
-    }
-  }, [user, loading, segments, hasLaunched, router]);
-
-  useEffect(() => {
-    if (!FLAGS.ONBOARDING_V2) return;
     const first = typeof segments[0] === "string" ? segments[0] : "";
     const decision = resolveAuthRedirect({
       sessionKind: sessionKindFromUser(user),
@@ -195,7 +163,6 @@ function AuthRedirector() {
             written: peekKnownOnboardingCompleted(user.id),
           })
         : null,
-      hasLaunched,
       loading,
       profileChecked,
       inOnboarding: first === SEGMENTS.ONBOARDING,
@@ -207,99 +174,13 @@ function AuthRedirector() {
     if (decision.action === "replace") {
       router.replace(decision.href as never);
     }
-  }, [user, loading, segments, hasLaunched, profileChecked, onboardingCompleted, router]);
-
-  useEffect(() => {
-    if (FLAGS.ONBOARDING_V2) return;
-    if (loading || !profileChecked || !user) return;
-
-    const first = typeof segments[0] === "string" ? segments[0] : "";
-    const inAuth = first === SEGMENTS.AUTH;
-    const onCreateProfile = first === SEGMENTS.CREATE_PROFILE;
-    const inOnboarding = first === SEGMENTS.ONBOARDING;
-    const inTabs = first === SEGMENTS.TABS;
-
-    const dest = resolveOnboardingLaunch({
-      sessionKind: sessionKindFromUser(user),
-      dbCompleted: onboardingCompleted,
-    });
-    if (dest === "home") {
-      const href = resolveCompletedLeaveHref({
-        inOnboarding,
-        inAuth,
-        onCreateProfile,
-        inTabs,
-        exitHref: peekOnboardingV2Exit(),
-      });
-      if (href) router.replace(href as never);
-      return;
-    }
-
-    const AUTHENTICATED_SEGMENTS = new Set([
-      "(tabs)",
-      "challenge",
-      "settings",
-      "edit-profile",
-      "task",
-      "paywall",
-      "accountability",
-      "legal",
-      "create",
-      "create-team",
-      "team-invite",
-      "join-team",
-      "profile",
-      "follow-list",
-      "invite",
-      "post",
-      "discover",
-    ]);
-    const inAllowedSegment = AUTHENTICATED_SEGMENTS.has(first);
-
-    // 1. No profile yet → send to create-profile (unless already there or in onboarding)
-    if (user && !hasProfile && !onCreateProfile && !inOnboarding) {
-      router.replace(ROUTES.CREATE_PROFILE as never);
-      return;
-    }
-
-    // 2. Has profile but stuck on auth or create-profile → send to tabs
-    if (user && hasProfile && (onboardingCompleted === true || onboardingCompleted === null) && (inAuth || onCreateProfile)) {
-      router.replace(ROUTES.TABS as never);
-      return;
-    }
-
-    // 3. Onboarding complete in store but still on onboarding screen → send to tabs
-    if (user && hasProfile && onboardingCompleteFromStore && inOnboarding) {
-      router.replace(ROUTES.TABS as never);
-      return;
-    }
-
-    // DB says onboarding done but local store not synced — nudge to tabs unless on an allowed screen
-    if (
-      user &&
-      hasProfile &&
-      onboardingCompleted === true &&
-      !onboardingCompleteFromStore &&
-      !inOnboarding &&
-      !inAllowedSegment
-    ) {
-      router.replace(ROUTES.TABS as never);
-      return;
-    }
-
-    // 4. Onboarding NOT complete and NOT on an allowed authenticated screen
-    if (user && hasProfile && onboardingCompleted === false && !inOnboarding && !inAllowedSegment) {
-      router.replace(ROUTES.TABS as never);
-      return;
-    }
-  }, [user, loading, segments, hasProfile, profileChecked, onboardingCompleted, onboardingCompleteFromStore, router]);
+  }, [user, loading, segments, profileChecked, onboardingCompleted, router]);
 
   if (
     shouldShowAuthRedirectOverlay({
       loading,
       hasSession: !!user,
       profileChecked,
-      hasLaunched,
     })
   ) {
     return <AuthRedirectorLoading />;
