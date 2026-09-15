@@ -4,6 +4,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import {
   scheduleNextSecureReminder,
+  SECURE_REMINDER_TIME,
   cancelSecureReminders,
   scheduleLapsedUserReminders,
   scheduleMorningMotivation,
@@ -34,7 +35,7 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
     if (Platform.OS === "web" || !user || !stats) return;
     const todayKey = getTodayDateKey(timezone);
     const lastKey = stats.lastCompletedDateKey ?? null;
-    const preferred = stats.preferredSecureTime ?? "20:00";
+    const preferred = SECURE_REMINDER_TIME;
     const lastStands = stats.lastStandsAvailable ?? 0;
     const streakCount = stats.activeStreak ?? 0;
     if (lastKey === todayKey) {
@@ -176,7 +177,6 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
   }, [
     user,
     stats?.lastCompletedDateKey,
-    stats?.preferredSecureTime,
     stats?.lastStandsAvailable,
     stats?.totalDaysSecured,
     stats?.activeStreak,
