@@ -82,6 +82,7 @@ export default function ProofShareCard({
                 style={styles.proofThumb}
                 contentFit="cover"
                 cachePolicy="memory-disk"
+                recyclingKey={proofPhotoUri}
                 accessibilityLabel="Proof photo"
                 accessibilityIgnoresInvertColors
               />

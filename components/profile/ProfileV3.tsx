@@ -31,8 +31,9 @@ export function badgeItemsFromRows(
 
 const ICON = DS_V3.space.xs * 6;
 const TABS = ["Challenges", "Proofs", "Badges"] as const;
-const FOOTNOTE =
+export const PROFILE_V3_FOOTNOTE =
   "Five marks, each earned by verified days only. Nothing here can be bought or awarded.";
+const FOOTNOTE = PROFILE_V3_FOOTNOTE;
 
 export function streakLineFor(current: number): string {
   return current === 0 ? "Post today to start." : "Day secured.";
@@ -81,6 +82,8 @@ export type ProfileV3Props = {
   followDisabled?: boolean;
   showRootHeader?: boolean;
   locked?: { heading: string; body: string } | null;
+  /** Parent FlatList owns the proofs grid + footnote when the list can grow. */
+  proofsInParent?: boolean;
 };
 
 export function ProfileV3({
@@ -113,6 +116,7 @@ export function ProfileV3({
   followDisabled,
   showRootHeader = true,
   locked,
+  proofsInParent = false,
 }: ProfileV3Props) {
   return (
     <View>
@@ -275,11 +279,16 @@ export function ProfileV3({
               actionLabel="Find a challenge"
               onAction={onDiscover}
             />
-          ) : (
+          ) : proofsInParent ? null : (
             <View style={styles.proofGrid}>
               {proofs.map((p) => (
                 <View key={p.dateKey} style={styles.proofCell}>
-                  <ProofImage uri={p.imageUrl} size="thumb" title={`Day ${p.day}`} />
+                  <ProofImage
+                    uri={p.imageUrl}
+                    size="thumb"
+                    title={`Day ${p.day}`}
+                    recyclingKey={p.dateKey}
+                  />
                 </View>
               ))}
             </View>
@@ -300,7 +309,9 @@ export function ProfileV3({
         ) : null}
       </View>
 
-      {tab === "Badges" ? null : <Text style={styles.foot}>{FOOTNOTE}</Text>}
+      {tab === "Badges" || (proofsInParent && tab === "Proofs" && proofs.length > 0) ? null : (
+        <Text style={styles.foot}>{FOOTNOTE}</Text>
+      )}
         </>
       )}
     </View>

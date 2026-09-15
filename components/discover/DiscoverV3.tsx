@@ -102,8 +102,98 @@ export function DiscoverV3({
   onRefresh,
 }: DiscoverV3Props) {
   const circle = circleCaption(circleCount);
-  const left = challenges.filter((_, i) => i % 2 === 0);
-  const right = challenges.filter((_, i) => i % 2 === 1);
+  const gridData = challengesLoading ? [] : challenges;
+
+  const header = (
+    <>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chips}
+      >
+        {CHIPS.map((c) => (
+          <Chip
+            key={c.id}
+            label={c.label}
+            selected={category === c.id}
+            onPress={() => onCategory(c.id)}
+          />
+        ))}
+      </ScrollView>
+
+      <View style={styles.featuredPad}>
+        {featuredLoading ? (
+          <Skeleton variant="proof" />
+        ) : featured ? (
+          <ChallengeCard
+            title={featured.name}
+            coverUri={featured.featuredProof?.photo_url}
+            days={featured.duration_days}
+            difficulty={difficultyLabel(featured.difficulty)}
+            proofType={proofTypeLabel(featured.proof_type)}
+            featured
+            onStart={onStartFeatured}
+            onPress={() => onOpenChallenge(featured.id, featured.slug)}
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.heading}>Popular with your circle</Text>
+        {circle ? <Text style={styles.caption}>{circle}</Text> : null}
+      </View>
+      {challengesLoading ? (
+        <View style={styles.grid}>
+          <View style={styles.col}>
+            <Skeleton variant="proof" />
+          </View>
+          <View style={styles.col}>
+            <Skeleton variant="proof" />
+          </View>
+        </View>
+      ) : null}
+    </>
+  );
+
+  const footer = (
+    <>
+      <View style={styles.peopleSection}>
+        <Text style={styles.peopleHeading}>People</Text>
+        <FlatList
+          horizontal
+          data={people}
+          keyExtractor={(p) => p.user_id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.peopleList}
+          ItemSeparatorComponent={PersonSep}
+          renderItem={({ item }) => (
+            <PersonCard
+              name={item.name}
+              uri={item.uri}
+              status={item.status}
+              followLabel={item.followLabel}
+              followDisabled={item.followDisabled}
+              followPending={item.followPending}
+              onFollow={() => onFollowPerson(item.user_id)}
+              onPress={() => onOpenPerson(item.user_id)}
+            />
+          )}
+        />
+      </View>
+
+      <View style={styles.idea}>
+        <Text style={styles.heading}>Have your own idea?</Text>
+        <Text style={styles.secondary}>
+          Create a custom challenge and invite others to join.
+        </Text>
+        <Button
+          label="Build your own"
+          variant="secondary"
+          onPress={onBuildOwn}
+        />
+      </View>
+    </>
+  );
 
   return (
     <View style={styles.root}>
@@ -119,9 +209,25 @@ export function DiscoverV3({
           />
         </View>
       ) : (
-        <ScrollView
+        <FlatList
+          data={gridData}
+          numColumns={2}
+          keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
+          columnWrapperStyle={styles.gridRow}
+          ListHeaderComponent={header}
+          ListFooterComponent={footer}
+          renderItem={({ item }) => (
+            <View style={styles.col}>
+              <ChallengeCard
+                title={item.title}
+                days={item.duration}
+                difficulty={difficultyLabel(item.difficulty)}
+                onPress={() => onOpenChallenge(item.id)}
+              />
+            </View>
+          )}
           refreshControl={
             onRefresh ? (
               <RefreshControl
@@ -131,117 +237,7 @@ export function DiscoverV3({
               />
             ) : undefined
           }
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chips}
-          >
-            {CHIPS.map((c) => (
-              <Chip
-                key={c.id}
-                label={c.label}
-                selected={category === c.id}
-                onPress={() => onCategory(c.id)}
-              />
-            ))}
-          </ScrollView>
-
-          <View style={styles.featuredPad}>
-            {featuredLoading ? (
-              <Skeleton variant="proof" />
-            ) : featured ? (
-              <ChallengeCard
-                title={featured.name}
-                coverUri={featured.featuredProof?.photo_url}
-                days={featured.duration_days}
-                difficulty={difficultyLabel(featured.difficulty)}
-                proofType={proofTypeLabel(featured.proof_type)}
-                featured
-                onStart={onStartFeatured}
-                onPress={() => onOpenChallenge(featured.id, featured.slug)}
-              />
-            ) : null}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.heading}>Popular with your circle</Text>
-            {circle ? <Text style={styles.caption}>{circle}</Text> : null}
-          </View>
-          <View style={styles.grid}>
-            {challengesLoading ? (
-              <>
-                <View style={styles.col}>
-                  <Skeleton variant="proof" />
-                </View>
-                <View style={styles.col}>
-                  <Skeleton variant="proof" />
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.col}>
-                  {left.map((c) => (
-                    <ChallengeCard
-                      key={c.id}
-                      title={c.title}
-                      days={c.duration}
-                      difficulty={difficultyLabel(c.difficulty)}
-                      onPress={() => onOpenChallenge(c.id)}
-                    />
-                  ))}
-                </View>
-                <View style={styles.col}>
-                  {right.map((c) => (
-                    <ChallengeCard
-                      key={c.id}
-                      title={c.title}
-                      days={c.duration}
-                      difficulty={difficultyLabel(c.difficulty)}
-                      onPress={() => onOpenChallenge(c.id)}
-                    />
-                  ))}
-                </View>
-              </>
-            )}
-          </View>
-
-          <View style={styles.peopleSection}>
-            <Text style={styles.peopleHeading}>People</Text>
-            <FlatList
-              horizontal
-              data={people}
-              keyExtractor={(p) => p.user_id}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.peopleList}
-              ItemSeparatorComponent={PersonSep}
-              renderItem={({ item }) => (
-                <PersonCard
-                  name={item.name}
-                  uri={item.uri}
-                  status={item.status}
-                  followLabel={item.followLabel}
-                  followDisabled={item.followDisabled}
-                  followPending={item.followPending}
-                  onFollow={() => onFollowPerson(item.user_id)}
-                  onPress={() => onOpenPerson(item.user_id)}
-                />
-              )}
-            />
-          </View>
-
-          <View style={styles.idea}>
-            <Text style={styles.heading}>Have your own idea?</Text>
-            <Text style={styles.secondary}>
-              Create a custom challenge and invite others to join.
-            </Text>
-            <Button
-              label="Build your own"
-              variant="secondary"
-              onPress={onBuildOwn}
-            />
-          </View>
-        </ScrollView>
+        />
       )}
     </View>
   );
@@ -297,6 +293,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: DS_V3.space.md,
     paddingHorizontal: DS_V3.space.gutter,
+  },
+  gridRow: {
+    gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.md,
   },
   col: {
     flex: 1,

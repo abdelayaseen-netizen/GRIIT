@@ -60,6 +60,7 @@ export default function Avatar({
         style={frame}
         contentFit="cover"
         cachePolicy="memory-disk"
+        recyclingKey={uri}
         accessibilityLabel={displayName ?? "Avatar"}
       />
     );

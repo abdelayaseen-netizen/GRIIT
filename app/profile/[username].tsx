@@ -7,9 +7,10 @@ import {
   ActionSheetIOS,
   Alert,
   Platform,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -30,7 +31,8 @@ import HeaderIcon from "@/components/ds/HeaderIcon";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, PROFILE_V3_FOOTNOTE, ProfileV3 } from "@/components/profile/ProfileV3";
+import ProofImage from "@/components/ds/ProofImage";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
@@ -218,6 +220,7 @@ export default function VisitorProfileScreen() {
       : `${name} shows the streak, activity and proofs to people they have accepted. Follow to see the record.`;
 
   const joined = (rec?.runs.length ?? 0) > 0;
+  const proofs = rec?.proofs ?? [];
 
   return (
     <ErrorBoundary>
@@ -233,7 +236,15 @@ export default function VisitorProfileScreen() {
         />
 
         <GriitFade fadeKey={`visitor-${handle}-${gate.profile}-${followCtrl.label}`}>
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          <FlatList
+            data={tab === "Proofs" ? proofs : []}
+            numColumns={3}
+            keyExtractor={(p) => p.dateKey}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.body}
+            columnWrapperStyle={tab === "Proofs" && proofs.length > 0 ? styles.proofRow : undefined}
+            ListHeaderComponent={
+            <>
             {previewStranger ? (
               <Text style={styles.previewNote}>Preview · how a stranger sees this profile</Text>
             ) : null}
@@ -260,7 +271,7 @@ export default function VisitorProfileScreen() {
                 day: r.day,
                 length: r.length,
               }))}
-              proofs={rec?.proofs ?? []}
+              proofs={proofs}
               badges={badgeItemsFromRows(
                 rec?.badges ??
                   badgeRowsFromProgress({
@@ -303,8 +314,26 @@ export default function VisitorProfileScreen() {
                   ? null
                   : { heading: lockTitle, body: lockBody }
               }
+              proofsInParent
             />
-          </ScrollView>
+            </>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.proofCell}>
+                <ProofImage
+                  uri={item.imageUrl}
+                  size="thumb"
+                  title={`Day ${item.day}`}
+                  recyclingKey={item.dateKey}
+                />
+              </View>
+            )}
+            ListFooterComponent={
+              tab === "Proofs" && proofs.length > 0 ? (
+                <Text style={styles.foot}>{PROFILE_V3_FOOTNOTE}</Text>
+              ) : null
+            }
+          />
         </GriitFade>
 
         <ConfirmDialog
@@ -348,6 +377,20 @@ function parseVis(raw: string | undefined): VisibilityLevel {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   body: { paddingBottom: DS_V3.space.xs * 30 },
+  proofRow: {
+    gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.md,
+  },
+  proofCell: { width: "31%" },
+  foot: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   previewNote: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.sm,
