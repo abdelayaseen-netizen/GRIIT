@@ -185,7 +185,6 @@ export function trackEvent(event: string, properties?: FunnelProps): void {
   try {
     if (!shouldSendPostHog()) return;
     const ph = getPostHog();
-    if (__DEV__) console.log("[PostHog] Capturing event:", event, properties);
     ph?.capture(event, funnelPropsForCapture(properties));
   } catch {
     /* non-fatal — analytics must not break UX */
