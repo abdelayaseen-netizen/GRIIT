@@ -15,11 +15,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
-import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import type { StatsFromApi, TodayCheckinForUser } from "@/types";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
@@ -65,12 +64,6 @@ type ActiveRow = {
   };
 };
 
-type HomeData = {
-  activeList: ActiveRow[];
-  todayCheckins: TodayCheckinForUser[];
-  securedDateKeys: string[];
-};
-
 function durationMinutesFromTask(t: TaskRow): number | undefined {
   if (typeof t.duration_minutes === "number" && t.duration_minutes > 0) return t.duration_minutes;
   const fromCfg = t.config?.duration_minutes;
@@ -78,15 +71,12 @@ function durationMinutesFromTask(t: TaskRow): number | undefined {
   return undefined;
 }
 
-type FollowCounts = { followers: number; following: number };
-
-
 export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { stats, refetchAll, profile } = useApp();
+  const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
 
@@ -94,94 +84,36 @@ export default function HomeScreen() {
   const setFeedScope = useFeedToggle((s) => s.setScope);
   const initFeedToggle = useFeedToggle((s) => s.initIfFirstRun);
 
-  const freezeStatusQuery = useQuery({
-    queryKey: ["streaks", "getFreezeStatus", user?.id ?? ""],
-    enabled: !isGuest && !!user?.id,
-    staleTime: 120_000,
-    queryFn: () =>
-      trpcQuery(TRPC.streaks.getFreezeStatus) as Promise<{
-        remaining: number;
-        limit: number;
-        isPro: boolean;
-      }>,
-  });
-
-  const followCountsQuery = useQuery({
-    queryKey: ["profiles", "getFollowCounts", user?.id ?? ""],
-    enabled: !isGuest && !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    queryFn: () =>
-      trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<FollowCounts>,
-  });
-
-  // Home-owned getStats: AppContext fetchStats swallows errors and never retries,
-  // so a failed mount leaves stats null (and "0 days") forever. This query
-  // refetches on focus / window focus / pull-to-refresh and exposes isSuccess
-  // so a missing fetch is not rendered as a real zero.
-  const statsQuery = useQuery({
-    queryKey: ["profiles", "getStats", user?.id ?? ""],
-    enabled: !isGuest && !!user?.id,
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: true,
-    placeholderData: (previousData) => previousData,
-    queryFn: async (): Promise<StatsFromApi> => {
-      try {
-        return await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
-      } catch (err) {
-        captureError(err, "HomeGetStats");
-        throw err;
-      }
-    },
-  });
+  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
+  const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
+  const freezeStatus = bootstrap.data?.freezeStatus ?? null;
+  const followCounts = bootstrap.data?.followCounts ?? null;
+  const statsFailed = bootstrap.data?.failed.includes("stats") === true;
+  const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
+    ? bootstrap.data.activeChallenges
+    : []) as ActiveRow[];
+  const todayCheckinsForUser = Array.isArray(bootstrap.data?.todayCheckinsForUser)
+    ? bootstrap.data.todayCheckinsForUser
+    : [];
+  const securedDateKeys = useMemo(
+    () => (Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : []),
+    [bootstrap.data?.securedDateKeys],
+  );
 
   React.useEffect(() => {
-    const followingCount = followCountsQuery.data?.following ?? 0;
-    initFeedToggle(followingCount);
-  }, [followCountsQuery.data?.following, initFeedToggle]);
-
-  const homeQuery = useQuery({
-    queryKey: ["home", "v2", user?.id ?? ""],
-    enabled: !isGuest && !!user?.id,
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: true,
-    placeholderData: (previousData) => previousData,
-    queryFn: async (): Promise<HomeData> => {
-      const settled = await Promise.allSettled([
-        trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<TodayCheckinForUser[]>,
-        trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-      ]);
-
-      const activeRaw =
-        settled[0].status === "fulfilled"
-          ? settled[0].value
-          : (captureError(settled[0].reason, "HomeListMyActive"), []);
-      const checkinsRaw =
-        settled[1].status === "fulfilled"
-          ? settled[1].value
-          : (captureError(settled[1].reason, "HomeGetTodayCheckinsForUser"), []);
-      const securedRaw =
-        settled[2].status === "fulfilled"
-          ? settled[2].value
-          : (captureError(settled[2].reason, "HomeGetSecuredDateKeys"), []);
-      const activeList = (Array.isArray(activeRaw) ? activeRaw : []) as ActiveRow[];
-      const todayCheckins = Array.isArray(checkinsRaw) ? checkinsRaw : [];
-      const securedDateKeys = Array.isArray(securedRaw) ? securedRaw : [];
-      return { activeList, todayCheckins, securedDateKeys };
-    },
-  });
+    initFeedToggle(followCounts?.following ?? 0);
+  }, [followCounts?.following, initFeedToggle]);
 
   useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
-    ready: statsQuery.isFetched && homeQuery.isFetched,
+    ready: bootstrap.isSuccess,
     userId: user?.id,
-    stats: statsQuery.data ?? stats ?? null,
-    securedDateKeys: homeQuery.data?.securedDateKeys ?? null,
+    stats: bootstrap.data?.stats ?? stats ?? null,
+    securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
   });
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
-    const activeList = homeQuery.data?.activeList ?? [];
-    const checkins = homeQuery.data?.todayCheckins ?? [];
+    const checkins = todayCheckinsForUser;
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
@@ -222,19 +154,16 @@ export default function HomeScreen() {
       }
     }
     return flat;
-  }, [homeQuery.data?.activeList, homeQuery.data?.todayCheckins]);
+  }, [activeList, todayCheckinsForUser]);
 
-  const resolvedStats = statsQuery.data ?? stats;
+  const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
   const statsReady = resolveHomeStatsReady({
-    queryFetched: statsQuery.isFetched,
-    queryData: statsQuery.data,
-    contextStats: stats,
+    queryFetched: bootstrap.isFetched,
+    queryData: bootstrap.data?.stats,
+    contextStats: statsFailed ? null : stats,
+    statsFailed,
   });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
-  const securedDateKeys = useMemo(
-    () => homeQuery.data?.securedDateKeys ?? [],
-    [homeQuery.data?.securedDateKeys],
-  );
 
   const homeTimeZone = resolveHomeTimeZone(
     (profile as { timezone?: string | null } | null)?.timezone,
@@ -298,7 +227,7 @@ export default function HomeScreen() {
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
     if (!profile || streak == null || streak <= 0) return;
-    const keys = [...(homeQuery.data?.securedDateKeys ?? [])].sort();
+    const keys = [...securedDateKeys].sort();
     if (keys.length === 0) return;
     const lastKey = keys[keys.length - 1]!;
     const today = getTodayDateKey(homeTimeZone);
@@ -308,7 +237,7 @@ export default function HomeScreen() {
       setShowFreezeModal(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- profile identity covered via profile?.username
-  }, [isGuest, user?.id, profile?.username, streak, homeQuery.data?.securedDateKeys]);
+  }, [isGuest, user?.id, profile?.username, streak, securedDateKeys]);
 
   React.useEffect(() => {
     if (isGuest || !user?.id) return;
@@ -336,8 +265,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
-      void statsQuery.refetch();
-    }, [isGuest, user?.id, statsQuery.refetch]),
+      void bootstrap.refetch();
+    }, [isGuest, user?.id, bootstrap.refetch]),
   );
 
   useFocusEffect(
@@ -365,9 +294,9 @@ export default function HomeScreen() {
   );
 
   const refresh = useCallback(async () => {
-    await Promise.all([homeQuery.refetch(), statsQuery.refetch(), refetchAll()]);
+    await Promise.all([bootstrap.refetch(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-  }, [homeQuery, statsQuery, refetchAll, queryClient]);
+  }, [bootstrap, refetchAll, queryClient]);
 
   // ────────────── handlers ──────────────
 
@@ -425,7 +354,7 @@ export default function HomeScreen() {
       trpcQuery(TRPC.feed.getLiveFeed, { scope: feedScope, limit: 20 }) as Promise<{
         posts: LiveFeedPost[];
       }>,
-    enabled: !isGuest && !!user?.id,
+    enabled: !isGuest && !!user?.id && bootstrap.isSuccess,
     staleTime: 60 * 1000,
   });
 
@@ -444,7 +373,9 @@ export default function HomeScreen() {
   }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
 
   const firstProofEver =
-    (resolvedStats?.totalDaysSecured ?? 0) === 0 && securedDateKeys.length === 0;
+    !statsFailed &&
+    (resolvedStats?.totalDaysSecured ?? 0) === 0 &&
+    securedDateKeys.length === 0;
 
   const proof = useMemo(
     () =>
@@ -488,7 +419,7 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <SafeAreaView style={s.container}>
         <LiveFeedSection
-          refreshing={homeQuery.isRefetching}
+          refreshing={bootstrap.isRefetching}
           onRefresh={refresh}
           scope={feedScope}
           onScopeChange={setFeedScope}
@@ -496,8 +427,14 @@ export default function HomeScreen() {
           ListHeaderComponent={
             <HomeV3
               title={greetingTitle(profile ?? {})}
-              streak={streak ?? 0}
-              streakLine={todaySecured ? "Day secured." : "Post today to start."}
+              streak={streak}
+              streakLine={
+                streak == null
+                  ? "Updating streak."
+                  : todaySecured
+                    ? "Day secured."
+                    : "Post today to start."
+              }
               proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
@@ -507,10 +444,10 @@ export default function HomeScreen() {
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
               awayCount={awayCount}
-              freezesLeft={freezeStatusQuery.data?.remaining ?? 0}
+              freezesLeft={freezeStatus?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}
-              loading={homeQuery.isPending && !homeQuery.data}
+              loading={bootstrap.isPending && !bootstrap.data}
             />
           }
         />
@@ -525,7 +462,7 @@ export default function HomeScreen() {
           visible={showJeopardyModal}
           streak={streak ?? 0}
           minutesRemaining={heroMetrics.minutesRemaining}
-          freezesAvailable={freezeStatusQuery.data?.remaining ?? 0}
+          freezesAvailable={freezeStatus?.remaining ?? 0}
           onPressFinish={onJeopardyFinish}
           onPressFreeze={onJeopardyFreeze}
           onDismiss={onJeopardyDismiss}

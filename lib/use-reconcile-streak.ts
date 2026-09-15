@@ -36,7 +36,6 @@ export function useReconcileStreakIfNeeded(input: {
         }
       }
       void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
-      void queryClient.invalidateQueries({ queryKey: ["profiles", "getStats"] });
     },
     onError: (err) => {
       captureError(err, "reconcileStreak");

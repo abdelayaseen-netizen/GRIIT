@@ -185,7 +185,7 @@ export default function ChallengeDetailScreen() {
       void refetchAll().catch((e: unknown) => {
         captureError(e, "ChallengeDetailRefetchAfterJoin");
       });
-      void queryClient.invalidateQueries({ queryKey: ["home"] });
+      void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });

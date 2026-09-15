@@ -1,9 +1,10 @@
-import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback, useRef, type Dispatch, type SetStateAction } from 'react';
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from './AuthContext';
-import { trpcQuery, trpcMutate } from '@/lib/trpc';
+import { trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
-import { readOwnProfileOnce } from '@/lib/profile-read';
+import { HOME_BOOTSTRAP_QUERY_KEY, homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
+import { useHomeBootstrap } from '@/lib/use-home-bootstrap';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
@@ -111,21 +112,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [autoCreateError] = useState<string | null>(null);
+  const bootstrap = useHomeBootstrap(user?.id);
 
-  const [profile, setProfile] = useState<ProfileFromApi | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState(false);
-  const [profileFetched, setProfileFetched] = useState(false);
+  const failed = bootstrap.data?.failed ?? [];
+  const profile = user?.id
+    ? ((bootstrap.data?.profile as ProfileFromApi | null | undefined) ?? null)
+    : null;
+  const stats = user?.id
+    ? ((bootstrap.data?.stats as StatsFromApi | null | undefined) ?? null)
+    : null;
+  const activeChallenge = user?.id
+    ? ((bootstrap.data?.activeChallenge as ActiveChallengeFromApi | null | undefined) ?? null)
+    : null;
+  const bootstrapTodayCheckins = Array.isArray(bootstrap.data?.todayCheckins)
+    ? (bootstrap.data.todayCheckins as TodayCheckinForUser[])
+    : [];
+  const [optimisticCheckins, setTodayCheckins] = useState<TodayCheckinForUser[] | null>(null);
+  const todayCheckins = optimisticCheckins ?? bootstrapTodayCheckins;
+  const setTodayCheckinsForMutations = useCallback<Dispatch<SetStateAction<TodayCheckinForUser[]>>>(
+    (action) => {
+      setTodayCheckins((prev) => {
+        const base = prev ?? bootstrapTodayCheckins;
+        return typeof action === "function" ? action(base) : action;
+      });
+    },
+    [bootstrapTodayCheckins]
+  );
 
-  const [stats, setStats] = useState<StatsFromApi | null>(null);
-  const [activeChallenge, setActiveChallenge] = useState<ActiveChallengeFromApi | null>(null);
-  const [, setActiveChallengeError] = useState(false);
-  const [activeChallengeLoaded, setActiveChallengeLoaded] = useState(false);
-  const [todayCheckins, setTodayCheckins] = useState<TodayCheckinForUser[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const prevPremiumForAnalytics = useRef<boolean | null>(null);
   /** Prevents repeated self-heal updates for the same device zone in one session. */
   const timezoneHealForDeviceRef = useRef<string | null>(null);
+  const subscriptionInitedForUser = useRef<string | null>(null);
 
   const [hardTimeout, setHardTimeout] = useState(false);
 
@@ -135,109 +153,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [user]);
 
-  const fetchProfile = useCallback(async () => {
-    if (!user?.id) return;
-    setProfileLoading(true);
-    const result = await readOwnProfileOnce();
-    if (result.status === "ready") {
-      const data = result.profile;
-      setProfile(data);
-      const subStatus = data.subscription_status;
-      const subExpiry = data.subscription_expiry;
-      setSubscriptionState(subStatus ?? undefined, subExpiry ?? undefined);
-      const premiumFromProfile = subStatus === "premium" || subStatus === "trial";
-      setIsPremium(premiumFromProfile);
-      setProfileError(false);
-      initSubscription(user.id).catch((err) => {
-        captureError(err, "AppContext.initSubscription");
-      });
-    } else {
-      captureError(result.error, "AppContext.fetchProfile");
-      setProfileError(true);
-    }
-    setProfileLoading(false);
-    setProfileFetched(true);
-  }, [user?.id]);
-
-  const fetchStats = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      const data = await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
-      setStats(data);
-    } catch (err) {
-      // Best-effort on mount only. A failure leaves stats null forever here;
-      // home owns the authoritative getStats fetch (app/(tabs)/index.tsx).
-      captureError(err, "AppContext.fetchStats");
-    }
-  }, [user?.id]);
-
-  const fetchActiveChallenge = useCallback(async (): Promise<ActiveChallengeFromApi | null> => {
-    if (!user?.id) return null;
-    try {
-      const data = await trpcQuery<ActiveChallengeFromApi | null>(TRPC.challenges.getActive);
-      setActiveChallenge(data);
-      setActiveChallengeError(false);
-      setActiveChallengeLoaded(true);
-      return data;
-    } catch (err) {
-      captureError(err, "AppContext.fetchActiveChallenge");
-      setActiveChallengeError(true);
-      setActiveChallengeLoaded(true);
-      return null;
-    }
-  }, [user?.id]);
-
-  const fetchTodayCheckins = useCallback(async (activeChallengeId: string) => {
-    try {
-      const data = await trpcQuery<TodayCheckinForUser[]>(TRPC.checkins.getTodayCheckins, { activeChallengeId });
-      setTodayCheckins(data || []);
-    } catch (err) {
-      captureError(err, "AppContext.fetchTodayCheckins");
-    }
-  }, []);
+  useEffect(() => {
+    setTodayCheckins(null);
+  }, [bootstrap.dataUpdatedAt]);
 
   useEffect(() => {
     if (!user?.id) {
-      setProfile(null);
-      setStats(null);
       setSubscriptionState(null, null);
       clearSubscription();
       resetAnalytics();
       timezoneHealForDeviceRef.current = null;
+      subscriptionInitedForUser.current = null;
+      setTodayCheckins(null);
+      setIsPremium(false);
+      prevPremiumForAnalytics.current = null;
       return;
     }
-    void Promise.allSettled([fetchProfile(), fetchStats(), fetchActiveChallenge()]).then((results) => {
-      const activeResult = results[2];
-      if (activeResult.status === "fulfilled") {
-        const ac = activeResult.value as { id?: string } | null;
-        if (ac?.id) void fetchTodayCheckins(ac.id);
-      }
-    });
-  }, [user?.id, fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
+    if (!profile) return;
+    const subStatus = profile.subscription_status;
+    const subExpiry = profile.subscription_expiry;
+    setSubscriptionState(subStatus ?? undefined, subExpiry ?? undefined);
+    setIsPremium(subStatus === "premium" || subStatus === "trial");
+    if (subscriptionInitedForUser.current !== user.id) {
+      subscriptionInitedForUser.current = user.id;
+      initSubscription(user.id).catch((err) => {
+        captureError(err, "AppContext.initSubscription");
+      });
+    }
+  }, [user?.id, profile]);
+
+  const refetchBootstrap = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: [...HOME_BOOTSTRAP_QUERY_KEY] });
+    if (user?.id) {
+      await queryClient.refetchQueries({ queryKey: homeBootstrapQueryKey(user.id) });
+    }
+  }, [queryClient, user?.id]);
+
+  const fetchProfile = useCallback(async () => {
+    if (!user?.id) return;
+    await refetchBootstrap();
+  }, [user?.id, refetchBootstrap]);
+
+  const fetchStats = useCallback(async () => {
+    if (!user?.id) return;
+    await refetchBootstrap();
+  }, [user?.id, refetchBootstrap]);
+
+  const fetchActiveChallenge = useCallback(async (): Promise<ActiveChallengeFromApi | null> => {
+    if (!user?.id) return null;
+    await refetchBootstrap();
+    const cached = queryClient.getQueryData(homeBootstrapQueryKey(user.id));
+    return (
+      ((cached as { activeChallenge?: ActiveChallengeFromApi | null } | undefined)?.activeChallenge ??
+        null)
+    );
+  }, [user?.id, refetchBootstrap, queryClient]);
+
+  const fetchTodayCheckins = useCallback(async (_activeChallengeId: string) => {
+    await refetchBootstrap();
+    setTodayCheckins(null);
+  }, [refetchBootstrap]);
 
   const resolvedProfile = profile;
   const profileTimezone = (resolvedProfile as { timezone?: string | null } | null)?.timezone;
   useNotificationScheduler({ user, stats, activeChallenge, timezone: profileTimezone });
-
-  useEffect(() => {
-    if (activeChallenge?.id) {
-      fetchTodayCheckins(activeChallenge.id);
-    }
-  }, [activeChallenge?.id, fetchTodayCheckins]);
-
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      setProfileFetched(false);
-      setProfileError(false);
-      setStats(null);
-      setActiveChallenge(null);
-      setActiveChallengeLoaded(false);
-      setTodayCheckins([]);
-      setIsPremium(false);
-      prevPremiumForAnalytics.current = null;
-    }
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -257,7 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isPremium]);
 
   useEffect(() => {
-    if (!user?.id || !profileFetched) return;
+    if (!user?.id || !bootstrap.isFetched) return;
     const p = profile;
     if (!p) return;
     const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
@@ -285,7 +264,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           timezoneHealForDeviceRef.current = null;
         });
     }
-  }, [user?.id, user?.email, profile, profileFetched, isPremium, stats, fetchProfile]);
+  }, [user?.id, user?.email, profile, bootstrap.isFetched, isPremium, stats, fetchProfile]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
 
@@ -323,7 +302,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeChallenge,
     challenge,
     todayCheckins,
-    setTodayCheckins,
+    setTodayCheckins: setTodayCheckinsForMutations,
     fetchTodayCheckins,
     fetchActiveChallenge,
     fetchStats,
@@ -332,22 +311,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     fallbackProfile: null,
   });
 
-  const profileHasLoaded = (profileFetched && profile !== null) || profileError;
-  const initialFetchDone = hardTimeout || ((profileHasLoaded || profileFetched) && activeChallengeLoaded);
+  const profileFetched = !!user?.id && bootstrap.isFetched;
+  const profileLoading = !!user?.id && bootstrap.isPending && !bootstrap.data;
+  const profileError =
+    !!user?.id &&
+    bootstrap.isFetched &&
+    (bootstrap.isError || failed.includes("profile"));
+  const initialFetchDone = hardTimeout || !user?.id || bootstrap.isFetched;
 
   const isError = profileError && !profile;
 
   const refetchAll = useCallback(async () => {
-    const results = await Promise.allSettled([
-      fetchProfile(),
-      fetchStats(),
-      fetchActiveChallenge(),
-    ]);
-    const activeResult = results[2];
-    const activeData = activeResult.status === 'fulfilled' ? activeResult.value : null;
-    const ac = activeData as { id?: string } | null | undefined;
-    if (ac?.id) await fetchTodayCheckins(ac.id);
-  }, [fetchProfile, fetchStats, fetchActiveChallenge, fetchTodayCheckins]);
+    await refetchBootstrap();
+  }, [refetchBootstrap]);
 
   const refetchTodayCheckins = useCallback(async () => {
     if (activeChallenge?.id) await fetchTodayCheckins(activeChallenge.id);

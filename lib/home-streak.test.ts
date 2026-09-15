@@ -41,6 +41,14 @@ describe("resolveHomeStatsReady", () => {
         contextStats: null,
       })
     ).toBe(true);
+    expect(
+      resolveHomeStatsReady({
+        queryFetched: true,
+        queryData: null,
+        contextStats: null,
+        statsFailed: true,
+      })
+    ).toBe(false);
   });
 });
 
