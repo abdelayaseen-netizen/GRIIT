@@ -77,7 +77,7 @@ const richCheckin = {
   created_at: "2026-09-14T12:00:00.000Z",
 };
 
-function createMockSupabase() {
+function createMockSupabase(opts?: { failFollows?: boolean }) {
   const makeChain = (init?: { table?: string }) => {
     const state = {
       table: init?.table ?? "",
@@ -101,6 +101,9 @@ function createMockSupabase() {
         return { data: [{ date_key: "2026-09-13" }, { date_key: "2026-09-12" }], error: null, count: null };
       }
       if (table === "user_follows") {
+        if (opts?.failFollows) {
+          throw new Error("follow counts down");
+        }
         const n = state.followSide === "following" ? 3 : 5;
         return { data: [], error: null, count: n };
       }
@@ -173,7 +176,7 @@ function createMockSupabase() {
   return makeChain();
 }
 
-function createCaller() {
+function createCaller(opts?: { failFollows?: boolean }) {
   const create = (
     appRouter as unknown as {
       createCaller?: (c: unknown) => {
@@ -198,7 +201,7 @@ function createCaller() {
   ).createCaller;
   return create?.({
     userId: USER,
-    supabase: createMockSupabase(),
+    supabase: createMockSupabase(opts),
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
@@ -243,6 +246,25 @@ describe("home.bootstrap", () => {
       securedDateKeys,
       freezeStatus,
       followCounts,
+      failed: [],
     });
+  });
+
+  it("one section rejects → others present, failed lists it, call still resolves", async () => {
+    const caller = createCaller({ failFollows: true });
+    if (!caller) return;
+
+    const bootstrap = await caller.home.bootstrap();
+
+    expect(bootstrap.failed).toEqual(["followCounts"]);
+    expect(bootstrap.followCounts).toBeNull();
+    expect(bootstrap.profile).toMatchObject({ user_id: USER, username: "tester" });
+    expect(bootstrap.stats).toMatchObject({ activeStreak: 4 });
+    expect(bootstrap.activeChallenges).toEqual(expect.any(Array));
+    expect(bootstrap.activeChallenge).toMatchObject({ id: AC });
+    expect(bootstrap.todayCheckinsForUser).toEqual(expect.any(Array));
+    expect(bootstrap.todayCheckins).toEqual(expect.any(Array));
+    expect(bootstrap.securedDateKeys).toEqual(expect.any(Array));
+    expect(bootstrap.freezeStatus).toMatchObject({ isPro: false });
   });
 });
