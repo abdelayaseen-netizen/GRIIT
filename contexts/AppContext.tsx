@@ -4,7 +4,6 @@ import { useAuth } from './AuthContext';
 import { trpcQuery, trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
 import { readOwnProfileOnce } from '@/lib/profile-read';
-import { fetchStatsWithReconcile } from '@/lib/fetch-stats-with-reconcile';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
@@ -163,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchStats = useCallback(async () => {
     if (!user?.id) return;
     try {
-      const data = await fetchStatsWithReconcile();
+      const data = await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
       setStats(data);
     } catch (err) {
       // Best-effort on mount only. A failure leaves stats null forever here;

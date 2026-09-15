@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { fetchStatsWithReconcile } from "@/lib/fetch-stats-with-reconcile";
+import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -126,7 +126,7 @@ export default function HomeScreen() {
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<StatsFromApi> => {
       try {
-        return await fetchStatsWithReconcile();
+        return await trpcQuery<StatsFromApi>(TRPC.profiles.getStats);
       } catch (err) {
         captureError(err, "HomeGetStats");
         throw err;
@@ -169,6 +169,15 @@ export default function HomeScreen() {
       const securedDateKeys = Array.isArray(securedRaw) ? securedRaw : [];
       return { activeList, todayCheckins, securedDateKeys };
     },
+  });
+
+  useReconcileStreakIfNeeded({
+    enabled: !isGuest && !!user?.id,
+    ready: statsQuery.isFetched && homeQuery.isFetched,
+    userId: user?.id,
+    stats: statsQuery.data ?? stats ?? null,
+    profile: (profile as { total_days_secured?: number | null } | null) ?? null,
+    securedDateKeys: homeQuery.data?.securedDateKeys ?? null,
   });
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
