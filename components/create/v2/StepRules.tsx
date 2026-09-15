@@ -5,7 +5,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ShieldAlert, ShieldCheck } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { Chip } from "@/components/ds";
+import Chip from "@/components/ds/Chip";
 import { HARD_MODE_PROOF_CAPTION, effectivePhotoProof } from "@/lib/create-wizard-hard-proof";
 
 export type WizardDifficulty = "standard" | "hard";

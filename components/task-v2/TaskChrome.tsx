@@ -24,7 +24,7 @@ export function TaskChrome({
           pressed && { backgroundColor: dark ? "rgba(255,255,255,0.1)" : DS_COLORS_V2.surface.warm },
         ]}
       >
-        <View style={[styles.chevron, { borderColor: dark ? "#FFFFFF" : DS_COLORS_V2.text.primary }]} />
+        <View style={[styles.chevron, { borderColor: dark ? DS_COLORS_V2.text.onDark : DS_COLORS_V2.text.primary }]} />
       </Pressable>
       <Text style={[styles.title, { color, marginRight: 44 }]} numberOfLines={1}>
         {title}

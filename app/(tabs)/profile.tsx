@@ -98,7 +98,7 @@ export default function ProfileScreen() {
     } catch (e) {
       captureError(e, "Profile.handleShare");
     }
-  }, [profile?.username, record?.streak.current, record?.detail.totalVerified]);
+  }, [profile?.username, record?.streak, record?.detail.totalVerified]);
 
   const handleInvite = useCallback(async () => {
     trackEvent("share_tapped", { content_type: "invite" });

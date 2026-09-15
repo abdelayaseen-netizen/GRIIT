@@ -161,7 +161,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           <FactChip label={peopleLabel(p.participantsCount)} />
         </View>
 
-        <Text style={styles.heading}>What you'll post</Text>
+        <Text style={styles.heading}>{"What you'll post"}</Text>
         {p.loading ? (
           <View style={styles.taskSkel}>
             <Skeleton />

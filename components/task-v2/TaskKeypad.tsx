@@ -103,5 +103,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  doneText: { color: "#FFFFFF", fontSize: 16, fontWeight: "500" },
+  doneText: { color: DS_COLORS_V2.text.onDark, fontSize: 16, fontWeight: "500" },
 });

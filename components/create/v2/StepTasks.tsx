@@ -11,7 +11,9 @@ import {
   Sunrise,
 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { Button, EmptyState, SegmentedControl } from "@/components/ds";
+import Button from "@/components/ds/Button";
+import EmptyState from "@/components/ds/EmptyState";
+import SegmentedControl from "@/components/ds/SegmentedControl";
 import type {
   WizardCategory,
   WizardDifficulty,
