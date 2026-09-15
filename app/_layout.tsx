@@ -41,10 +41,7 @@ import {
   setKnownOnboardingCompleted,
 } from "@/lib/onboarding-v2-routing";
 import { captureError, initialiseSentry } from "@/lib/sentry";
-import {
-  registerPushTokenIfPermissionGranted,
-  requestNotificationPermissionAfterFirstJoin,
-} from "@/lib/register-push-token";
+import { registerPushTokenIfPermissionGranted } from "@/lib/register-push-token";
 import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
 import {
   trackAppOpened,
@@ -56,7 +53,7 @@ import {
 // Static import: ensures Notifications.setNotificationHandler at the top of
 // lib/notifications.ts runs at app boot, before any timer task can schedule a
 // lock-screen notification.
-import { requestNotificationPermissions } from "@/lib/notifications";
+import "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
 import { PostHogProvider } from "posthog-react-native";
 import { posthog } from "@/lib/posthog";
@@ -85,16 +82,11 @@ function PushRegistrationBootstrap() {
     if (Platform.OS === "web" || !user) return;
     // v2: RemindersScreen "Turn on reminders" is the only OS prompt.
     // After completion this still must not request — only register if granted.
-    if (FLAGS.ONBOARDING_V2) {
-      // Re-run when storeCompleted flips after Day 1 so a Reminders grant can register.
-      void storeCompleted;
-      if (!v2MayPromptNotificationPermission("bootstrap")) {
-        void registerPushTokenIfPermissionGranted();
-      }
-      return;
+    // Re-run when storeCompleted flips after Day 1 so a Reminders grant can register.
+    void storeCompleted;
+    if (!v2MayPromptNotificationPermission("bootstrap")) {
+      void registerPushTokenIfPermissionGranted();
     }
-    void requestNotificationPermissionAfterFirstJoin();
-    void requestNotificationPermissions();
   }, [user, storeCompleted]);
   return null;
 }
@@ -171,11 +163,7 @@ function AuthRedirector() {
       if (result && typeof result === "object" && "timedOut" in result) {
         setHasProfile(false);
         setProfileCreatedAt(null);
-        if (FLAGS.ONBOARDING_V2) {
-          setOnboardingCompleted(null);
-        } else {
-          setOnboardingCompleted(false);
-        }
+        setOnboardingCompleted(null);
       } else if (result === null) {
         setHasProfile(false);
         setOnboardingCompleted(false);
@@ -201,11 +189,7 @@ function AuthRedirector() {
       }
       setHasProfile(false);
       setProfileCreatedAt(null);
-      if (FLAGS.ONBOARDING_V2) {
-        setOnboardingCompleted(null);
-      } else {
-        setOnboardingCompleted(false);
-      }
+      setOnboardingCompleted(null);
       done();
     }
   }, []);

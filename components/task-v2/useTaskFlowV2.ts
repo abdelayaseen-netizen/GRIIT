@@ -185,13 +185,13 @@ export function useTaskFlowV2() {
     try {
       const [activeList, checkins] = await Promise.all([
         trpcQuery(TRPC.challenges.listMyActive) as Promise<
-          Array<{
+          {
             id: string;
-            challenges?: { challenge_tasks?: Array<{ id: string; config?: { required?: boolean } }> };
-          }>
+            challenges?: { challenge_tasks?: { id: string; config?: { required?: boolean } }[] };
+          }[]
         >,
         trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-          Array<{ active_challenge_id?: string; task_id?: string; status?: string }>
+          { active_challenge_id?: string; task_id?: string; status?: string }[]
         >,
       ]);
       const nextId = pickNextUndoneEnrollmentId({

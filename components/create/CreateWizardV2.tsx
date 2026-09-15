@@ -27,7 +27,8 @@ import { TRPC } from "@/lib/trpc-paths";
 import { trpcMutate } from "@/lib/trpc";
 import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
-import { Button, EmptyState } from "@/components/ds";
+import Button from "@/components/ds/Button";
+import EmptyState from "@/components/ds/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 import {

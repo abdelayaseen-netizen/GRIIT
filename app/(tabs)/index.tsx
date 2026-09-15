@@ -89,12 +89,6 @@ export default function HomeScreen() {
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
   const followCounts = bootstrap.data?.followCounts ?? null;
   const statsFailed = bootstrap.data?.failed.includes("stats") === true;
-  const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
-    ? bootstrap.data.activeChallenges
-    : []) as ActiveRow[];
-  const todayCheckinsForUser = Array.isArray(bootstrap.data?.todayCheckinsForUser)
-    ? bootstrap.data.todayCheckinsForUser
-    : [];
   const securedDateKeys = useMemo(
     () => (Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : []),
     [bootstrap.data?.securedDateKeys],
@@ -113,7 +107,12 @@ export default function HomeScreen() {
   });
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
-    const checkins = todayCheckinsForUser;
+    const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
+      ? bootstrap.data.activeChallenges
+      : []) as ActiveRow[];
+    const checkins = Array.isArray(bootstrap.data?.todayCheckinsForUser)
+      ? bootstrap.data.todayCheckinsForUser
+      : [];
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
@@ -154,7 +153,7 @@ export default function HomeScreen() {
       }
     }
     return flat;
-  }, [activeList, todayCheckinsForUser]);
+  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser]);
 
   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
   const statsReady = resolveHomeStatsReady({
@@ -266,7 +265,7 @@ export default function HomeScreen() {
     useCallback(() => {
       if (isGuest || !user?.id) return;
       void bootstrap.refetch();
-    }, [isGuest, user?.id, bootstrap.refetch]),
+    }, [isGuest, user?.id, bootstrap]),
   );
 
   useFocusEffect(

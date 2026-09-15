@@ -23,7 +23,7 @@ import {
   DS_MEASURES,
 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { SkeletonBase } from "@/components/skeletons";
+import { SkeletonBase } from "@/components/skeletons/SkeletonBase";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import {

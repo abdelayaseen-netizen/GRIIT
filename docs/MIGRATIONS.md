@@ -1,24 +1,21 @@
-# Database migrations – run order
+# Database migrations
 
-Run these in **Supabase SQL Editor** in this order. New projects should run **seed first**, then every migration below. Existing projects: run only migrations you have not yet applied.
+Do not treat this file, `backend/seed.sql`, or older SQL notes as live schema. Production has drifted. Verify the database you are looking at before trusting any inventory.
 
-| Order | File | What it does |
-|-------|------|----------------|
-| 1 | `backend/seed.sql` | Base schema: profiles, stories, story_views, challenges, challenge_tasks, active_challenges, check_ins, streaks; RLS; seed challenges. |
-| 2 | `backend/migration-core-fixes.sql` | day_secures, respects tables; profiles: total_days_secured, tier, preferred_secure_time. |
-| 3 | `backend/migration-activation-retention.sql` | challenges.source_starter_id; profiles: streak_freeze_used_count, streak_freeze_reset_at; streak_freezes table; starter challenge seed. |
-| 4 | `backend/migration.sql` | challenges: live_date, replay_policy, require_same_rules, show_replay_label; challenge_tasks: journal/time/word-limit/strict_timer/require_photo_proof columns. |
-| 5 | `backend/migration-push-tokens.sql` | push_tokens table; profiles: reminder_enabled, reminder_timezone. |
-| 6 | `backend/migration-profiles-push-token.sql` | profiles: expo_push_token. |
-| 7 | `backend/migration-nudges.sql` | nudges table. |
-| 8 | `supabase/migrations/20250228100000_last_stand.sql` | streaks: last_stands_available, last_stands_used_total, last_stand_earned_at; last_stand_uses table. |
-| 9 | `supabase/migrations/20250228000000_accountability_pairs.sql` | accountability_pairs table + RLS. |
-| 10 | `supabase/migrations/20250305000000_schema_fixes_profiles_challenges_stories.sql` | profiles: user_id, onboarding_completed; challenges: status; active_challenges: created_at; stories + story_views tables if missing; RLS for stories. |
-| 11 | `supabase/migrations/20250305100000_stories_fk_and_challenges_is_featured.sql` | profiles: unique on user_id; stories FK → profiles(user_id); challenges: is_featured. |
-| … | *(other supabase migrations 20250306–20250311 as applicable)* | |
-| N | `supabase/migrations/20250312000000_team_challenges.sql` | challenges: participation_type, team_size, shared_goal_*, deadline_*, started_at, run_status; challenge_members table; shared_goal_logs table; RLS. |
-| N+1 | `supabase/migrations/20250312000001_team_challenge_rpcs.sql` | start_team_challenge, evaluate_team_day RPCs. |
+## Verify before trusting
 
-**After running:** In Supabase Dashboard → Settings → API, use “Reload schema” (or run `NOTIFY pgrst, 'reload schema';`); each migration already does this.
+```sql
+select table_name from information_schema.tables where table_schema='public' order by 1;
 
-**Troubleshooting:** If a migration fails (e.g. “column already exists”), that step was likely applied before; skip it and continue. If `profiles.user_id` has duplicates, fix data before adding the unique constraint in step 11.
+select column_name, data_type, column_default from information_schema.columns where table_schema='public' and table_name='<table>' order by ordinal_position;
+
+select policyname, cmd, qual from pg_policies where tablename='<table>';
+```
+
+## Tracked files
+
+Repo migrations live in `supabase/migrations/`. A filename list is in `docs/migration-inventory.txt`. Apply only what the live schema is missing.
+
+After running SQL: reload PostgREST (`NOTIFY pgrst, 'reload schema';` or Dashboard → Settings → API → Reload schema).
+
+If a migration fails with “already exists”, that step was already applied — skip it and continue.

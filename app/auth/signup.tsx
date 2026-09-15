@@ -20,7 +20,7 @@ import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
-import { GRIITWordmark } from "@/components/ui";
+import { GRIITWordmark } from "@/components/ui/GRIITWordmark";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";

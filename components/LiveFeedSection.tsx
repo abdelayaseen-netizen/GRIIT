@@ -19,13 +19,12 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT } from "@/lib/design-system"
+import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
-import { SkeletonFeedCard } from "@/components/skeletons";
+import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
 import EmptyState from "@/components/ds/EmptyState";
-import { DS_V3 } from "@/lib/design-system";
 import { Avatar } from "@/components/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";

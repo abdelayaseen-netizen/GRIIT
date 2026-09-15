@@ -2,7 +2,6 @@ import { createContext, useContext, ReactNode, useEffect, useState, useMemo } fr
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
-import { FLAGS } from '@/lib/feature-flags';
 import { v2MayPromptNotificationPermission } from '@/lib/onboarding-v2-notifications';
 import { ensureOwnProfile, resetEnsureOwnProfile } from '@/lib/ensure-own-profile';
 import { clearKnownOnboardingCompleted } from '@/lib/onboarding-v2-routing';
@@ -93,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { registerForPushNotificationsAsync } = await import('@/lib/notifications');
       const { trpcMutate } = await import('@/lib/trpc');
       const { TRPC } = await import('@/lib/trpc-paths');
-      const request = !FLAGS.ONBOARDING_V2 || v2MayPromptNotificationPermission('auth_session');
+      const request = v2MayPromptNotificationPermission('auth_session');
       const token = await registerForPushNotificationsAsync({ request });
       if (cancelled || !token) return;
       try {

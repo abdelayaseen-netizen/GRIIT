@@ -40,7 +40,8 @@ import {
 } from "lucide-react-native";
 
 import { DS_V3 } from "@/lib/design-system";
-import { Button, Chip } from "@/components/ds";
+import Button from "@/components/ds/Button";
+import Chip from "@/components/ds/Chip";
 import { FLAGS } from "@/lib/feature-flags";
 import { useApp } from "@/contexts/AppContext";
 import { parseDistanceUnit } from "@/lib/distance-unit";

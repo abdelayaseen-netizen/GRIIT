@@ -4,7 +4,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { Button } from "@/components/ds";
+import Button from "@/components/ds/Button";
 
 const PT = DS_V3.space.xs / 4;
 

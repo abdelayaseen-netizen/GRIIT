@@ -11,7 +11,9 @@ import {
 } from "react-native";
 import { User, Users } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { Card, Chip, HintBox } from "@/components/ds";
+import Card from "@/components/ds/Card";
+import Chip from "@/components/ds/Chip";
+import HintBox from "@/components/ds/HintBox";
 
 export type WizardWho = "solo" | "group";
 
