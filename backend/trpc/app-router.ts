@@ -53,6 +53,8 @@ log("[app-router] importing reports");
 const { reportsRouter } = await import("./routes/reports");
 log("[app-router] importing today");
 const { todayRouter } = await import("./routes/today");
+log("[app-router] importing home");
+const { homeRouter } = await import("./routes/home");
 
 log("[app-router] all sub-routers loaded, building appRouter");
 
@@ -76,6 +78,7 @@ export const appRouter = createTRPCRouter({
   referrals: referralsRouter,
   reports: reportsRouter,
   today: todayRouter,
+  home: homeRouter,
 });
 
 export type AppRouter = typeof appRouter;
