@@ -3,32 +3,60 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { daysBetweenKeys, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 
-const STREAK_FREEZE_PER_MONTH_FREE = 1;
-const STREAK_FREEZE_PER_MONTH_PRO = 4;
+/** Free-tier monthly freeze allotment. Pro uses STREAK_FREEZE_PER_MONTH_PRO. */
+export const STREAK_FREEZE_PER_MONTH_FREE = 1;
+export const STREAK_FREEZE_PER_MONTH_PRO = 4;
 const FREEZE_ELIGIBLE_MISSED_DAYS = 1;
+/** 30-day refill window from last_freeze_used_at (same interval as the old reset clock). */
+export const FREEZE_RESET_DAYS = 30;
 
-function monthlyFreezeLimit(isPremium: boolean): number {
+export function monthlyFreezeLimit(isPremium: boolean): number {
   return isPremium ? STREAK_FREEZE_PER_MONTH_PRO : STREAK_FREEZE_PER_MONTH_FREE;
+}
+
+export function freezeWindowExpired(lastUsedAt: Date | null, now: Date): boolean {
+  if (!lastUsedAt) return false;
+  return (now.getTime() - lastUsedAt.getTime()) / (1000 * 60 * 60 * 24) >= FREEZE_RESET_DAYS;
+}
+
+export function effectiveFreezesRemaining(input: {
+  storedRemaining: number | null | undefined;
+  lastFreezeUsedAt: string | null | undefined;
+  isPro: boolean;
+  now?: Date;
+}): { remaining: number; limit: number } {
+  const limit = monthlyFreezeLimit(input.isPro);
+  const lastUsed = input.lastFreezeUsedAt ? new Date(input.lastFreezeUsedAt) : null;
+  const now = input.now ?? new Date();
+  if (freezeWindowExpired(lastUsed, now)) {
+    return { remaining: limit, limit };
+  }
+  const stored = input.storedRemaining;
+  const remaining = typeof stored === "number" && Number.isFinite(stored) ? stored : limit;
+  return { remaining: Math.max(0, remaining), limit };
 }
 
 export const streaksRouter = createTRPCRouter({
   getFreezeStatus: protectedProcedure.query(async ({ ctx }) => {
-    const { data: profile } = await ctx.supabase
+    const { data: profile, error } = await ctx.supabase
       .from("profiles")
-      .select("is_premium, streak_freeze_used_count, streak_freeze_reset_at")
+      .select("is_premium, streak_freezes_remaining, last_freeze_used_at")
       .eq("user_id", ctx.userId)
       .single();
 
-    const isPro = !!(profile as { is_premium?: boolean } | null)?.is_premium;
-    const limit = monthlyFreezeLimit(isPro);
-    let used = (profile as { streak_freeze_used_count?: number } | null)?.streak_freeze_used_count ?? 0;
-    const resetAtRaw = (profile as { streak_freeze_reset_at?: string | null } | null)?.streak_freeze_reset_at;
-    const resetAt = resetAtRaw ? new Date(resetAtRaw) : null;
-    const now = new Date();
-    if (resetAt && (now.getTime() - resetAt.getTime()) / (1000 * 60 * 60 * 24) >= 30) {
-      used = 0;
+    if (error && error.code !== "PGRST116") {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load freeze status." });
     }
-    return { remaining: Math.max(0, limit - used), limit, isPro };
+
+    const isPro = !!(profile as { is_premium?: boolean } | null)?.is_premium;
+    const { remaining, limit } = effectiveFreezesRemaining({
+      storedRemaining: (profile as { streak_freezes_remaining?: number | null } | null)
+        ?.streak_freezes_remaining,
+      lastFreezeUsedAt: (profile as { last_freeze_used_at?: string | null } | null)
+        ?.last_freeze_used_at,
+      isPro,
+    });
+    return { remaining, limit, isPro };
   }),
   /**
    * Use a streak freeze for the given missed date (e.g. yesterday).
@@ -44,32 +72,41 @@ export const streaksRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used for yesterday." });
       }
 
-      const [{ data: streak }, { data: profile }] = await Promise.all([
-        ctx.supabase.from("streaks").select("last_completed_date_key, active_streak_count").eq("user_id", ctx.userId).single(),
+      const [streakRes, profileRes] = await Promise.all([
+        ctx.supabase
+          .from("streaks")
+          .select("last_completed_date_key, active_streak_count")
+          .eq("user_id", ctx.userId)
+          .single(),
         ctx.supabase
           .from("profiles")
-          .select("streak_freeze_used_count, streak_freeze_reset_at, is_premium")
+          .select("streak_freezes_remaining, last_freeze_used_at, is_premium")
           .eq("user_id", ctx.userId)
           .single(),
       ]);
 
+      if (streakRes.error && streakRes.error.code !== "PGRST116") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load streak." });
+      }
+      if (profileRes.error && profileRes.error.code !== "PGRST116") {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+      }
+
+      const streak = streakRes.data;
+      const profile = profileRes.data as {
+        streak_freezes_remaining?: number | null;
+        last_freeze_used_at?: string | null;
+        is_premium?: boolean;
+      } | null;
+
       const lastKey = streak?.last_completed_date_key ?? null;
       const activeStreak = streak?.active_streak_count ?? 0;
-      const isPro = !!(profile as { is_premium?: boolean } | null)?.is_premium;
-      const monthlyLimit = monthlyFreezeLimit(isPro);
-      let usedCount = profile?.streak_freeze_used_count ?? 0;
-      let resetAt = profile?.streak_freeze_reset_at ? new Date(profile.streak_freeze_reset_at) : new Date();
-
-      // Monthly reset
-      const now = new Date();
-      if ((now.getTime() - resetAt.getTime()) / (1000 * 60 * 60 * 24) >= 30) {
-        usedCount = 0;
-        resetAt = now;
-        await ctx.supabase
-          .from("profiles")
-          .update({ streak_freeze_used_count: 0, streak_freeze_reset_at: resetAt.toISOString() })
-          .eq("user_id", ctx.userId);
-      }
+      const isPro = !!profile?.is_premium;
+      const { remaining } = effectiveFreezesRemaining({
+        storedRemaining: profile?.streak_freezes_remaining,
+        lastFreezeUsedAt: profile?.last_freeze_used_at,
+        isPro,
+      });
 
       const missedDays = lastKey == null ? [] : daysBetweenKeys(lastKey, yesterdayKey);
       if (missedDays.length !== FREEZE_ELIGIBLE_MISSED_DAYS || !missedDays.includes(yesterdayKey)) {
@@ -78,27 +115,20 @@ export const streaksRouter = createTRPCRouter({
       if (activeStreak <= 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "No active streak to protect." });
       }
-      if (usedCount >= monthlyLimit) {
+      if (remaining <= 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "No streak freezes left this month." });
       }
 
-      const { error: insertErr } = await ctx.supabase.from("streak_freezes").insert({
-        user_id: ctx.userId,
-        date_key: input.dateKeyToFreeze,
-      });
-      if (insertErr) {
-        if ((insertErr as { code?: string }).code === "23505") {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze already used for this day." });
-        }
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
-      }
-
-      await ctx.supabase
+      const { error: updateErr } = await ctx.supabase
         .from("profiles")
         .update({
-          streak_freeze_used_count: usedCount + 1,
+          streak_freezes_remaining: remaining - 1,
+          last_freeze_used_at: new Date().toISOString(),
         })
         .eq("user_id", ctx.userId);
+      if (updateErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
+      }
 
       return { success: true };
     }),
