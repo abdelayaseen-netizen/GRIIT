@@ -176,7 +176,6 @@ export default function HomeScreen() {
     ready: statsQuery.isFetched && homeQuery.isFetched,
     userId: user?.id,
     stats: statsQuery.data ?? stats ?? null,
-    profile: (profile as { total_days_secured?: number | null } | null) ?? null,
     securedDateKeys: homeQuery.data?.securedDateKeys ?? null,
   });
 

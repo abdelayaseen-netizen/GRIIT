@@ -4,11 +4,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
-import {
-  reconcileStreakNeeded,
-  type ReconcileProfileInput,
-  type ReconcileStatsInput,
-} from "@/lib/reconcile-needed";
+import { reconcileStreakNeeded, type ReconcileStatsInput } from "@/lib/reconcile-needed";
 
 type ReconcileStreakResult = {
   streak_broken: boolean;
@@ -25,7 +21,6 @@ export function useReconcileStreakIfNeeded(input: {
   ready: boolean;
   userId: string | undefined;
   stats: ReconcileStatsInput | null;
-  profile: ReconcileProfileInput | null;
   securedDateKeys: readonly string[] | null;
 }): void {
   const queryClient = useQueryClient();
@@ -62,7 +57,6 @@ export function useReconcileStreakIfNeeded(input: {
       !reconcileStreakNeeded({
         ready: input.ready,
         stats: input.stats,
-        profile: input.profile,
         securedDateKeys: input.securedDateKeys,
       })
     ) {
@@ -75,7 +69,6 @@ export function useReconcileStreakIfNeeded(input: {
     input.ready,
     input.userId,
     input.stats,
-    input.profile,
     input.securedDateKeys,
     mutate,
   ]);
