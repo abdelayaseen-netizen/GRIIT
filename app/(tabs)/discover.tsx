@@ -18,6 +18,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import { profilePrimaryName } from "@/lib/profile-display";
+import { runVisitorFollow } from "@/lib/visitor-follow";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 
 import {
   type DiscoverCategory,
@@ -64,6 +67,8 @@ function DiscoverScreenInner() {
     useState<DiscoverCategory>("for_you");
   const [followById, setFollowById] = useState<Record<string, FollowState>>({});
   const [followPendingId, setFollowPendingId] = useState<string | null>(null);
+  const { error: followError, showError: showFollowError, clearError: clearFollowError } =
+    useInlineError();
 
   const featuredQuery = useQuery({
     queryKey: ["discover", "featured", selectedCategory],
@@ -197,12 +202,13 @@ function DiscoverScreenInner() {
       const optimistic: FollowState = person.is_private ? "pending" : "following";
       setFollowPendingId(userId);
       setFollowById((cur) => ({ ...cur, [userId]: optimistic }));
-      try {
-        if (person.is_private) {
-          await trpcMutate(TRPC.profiles.sendFollowRequest, { userId });
-        } else {
-          await trpcMutate(TRPC.profiles.followUser, { userId });
-        }
+      clearFollowError();
+      const result = await runVisitorFollow({
+        action: person.is_private ? "request" : "follow",
+        userId,
+        mutate: trpcMutate,
+      });
+      if (result.ok) {
         trackEvent("discover_suggested_follow_tapped", {
           target_user_id: person.user_id,
           is_private: person.is_private,
@@ -210,14 +216,14 @@ function DiscoverScreenInner() {
         void queryClient.invalidateQueries({
           queryKey: ["discover", "foryou", "suggested"],
         });
-      } catch (err) {
+      } else {
         setFollowById((cur) => ({ ...cur, [userId]: previous }));
-        captureError(err, "Discover.PersonCard.follow");
-      } finally {
-        setFollowPendingId(null);
+        showFollowError(result.message);
+        captureError(new Error(result.message), "Discover.PersonCard.follow");
       }
+      setFollowPendingId(null);
     },
-    [peopleQuery.data, followPendingId, followById, queryClient],
+    [peopleQuery.data, followPendingId, followById, queryClient, clearFollowError, showFollowError],
   );
 
   const featuredLoading = featuredQuery.isPending && !featuredQuery.data;
@@ -231,6 +237,7 @@ function DiscoverScreenInner() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
+      <InlineError message={followError} onDismiss={clearFollowError} />
       <DiscoverV3
         category={selectedCategory}
         onCategory={handleCategorySelect}

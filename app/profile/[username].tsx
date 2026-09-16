@@ -27,6 +27,9 @@ import { DS_V3 } from "@/lib/design-system";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { visitorFollowControl } from "@/lib/profile-v2-visibility";
+import { runVisitorFollow } from "@/lib/visitor-follow";
+import { useInlineError } from "@/hooks/useInlineError";
+import { InlineError } from "@/components/InlineError";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -64,6 +67,8 @@ export default function VisitorProfileScreen() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [followBusy, setFollowBusy] = useState(false);
+  const { error: followError, showError: showFollowError, clearError: clearFollowError } =
+    useInlineError();
   const [showUnfollow, setShowUnfollow] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [tab, setTab] = useState<"Challenges" | "Proofs" | "Badges">("Challenges");
@@ -138,6 +143,7 @@ export default function VisitorProfileScreen() {
       queryKey: ["profiles", "getRecord", ownerId, previewStranger ? "stranger" : "live"],
     });
     await queryClient.invalidateQueries({ queryKey: ["publicProfile", decoded] });
+    await queryClient.invalidateQueries({ queryKey: ["profile", ownerId, "followCounts"] });
   }, [queryClient, ownerId, previewStranger, decoded]);
 
   const onFollow = async () => {
@@ -152,32 +158,38 @@ export default function VisitorProfileScreen() {
       return;
     }
     setFollowBusy(true);
-    try {
-      if (followCtrl.action === "request") {
-        await trpcMutate(TRPC.profiles.sendFollowRequest, { userId: ownerId });
-      } else {
-        await trpcMutate(TRPC.profiles.followUser, { userId: ownerId });
-      }
+    clearFollowError();
+    const result = await runVisitorFollow({
+      action: followCtrl.action,
+      userId: ownerId,
+      mutate: trpcMutate,
+    });
+    if (result.ok) {
       await invalidate();
-    } catch (e) {
-      captureError(e, "VisitorFollow");
-    } finally {
-      setFollowBusy(false);
+    } else {
+      showFollowError(result.message);
+      captureError(new Error(result.message), "VisitorFollow");
     }
+    setFollowBusy(false);
   };
 
   const onUnfollow = async () => {
     setShowUnfollow(false);
     if (!ownerId) return;
     setFollowBusy(true);
-    try {
-      await trpcMutate(TRPC.profiles.unfollowUser, { userId: ownerId });
+    clearFollowError();
+    const result = await runVisitorFollow({
+      action: "unfollow",
+      userId: ownerId,
+      mutate: trpcMutate,
+    });
+    if (result.ok) {
       await invalidate();
-    } catch (e) {
-      captureError(e, "VisitorUnfollow");
-    } finally {
-      setFollowBusy(false);
+    } else {
+      showFollowError(result.message);
+      captureError(new Error(result.message), "VisitorUnfollow");
     }
+    setFollowBusy(false);
   };
 
   const onMore = () => {
@@ -248,6 +260,7 @@ export default function VisitorProfileScreen() {
             {previewStranger ? (
               <Text style={styles.previewNote}>Preview · how a stranger sees this profile</Text>
             ) : null}
+            <InlineError message={followError} onDismiss={clearFollowError} />
             <ProfileV3
               title={name || handle}
               handle={handle}

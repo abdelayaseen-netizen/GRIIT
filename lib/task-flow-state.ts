@@ -38,6 +38,12 @@ export function initialStep(type: string): TaskFlowStep {
   return "ask";
 }
 
+/** Same camera predicate TaskFlowV2 uses: capture-first type or config.require_photo. */
+export function flowOpensCamera(taskType: string, requirePhoto: boolean): boolean {
+  const t = (taskType ?? "").trim().toLowerCase();
+  return initialStep(t) === "capture" || requirePhoto === true;
+}
+
 export function fmtMmSs(sec: number): string {
   const s = Math.max(0, Math.floor(sec));
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;

@@ -14,6 +14,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
 import { FREE_ACTIVE_CHALLENGES_LIMIT, FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
+import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
 import { ensureAnonymousSession } from "@/lib/anon-auth";
 import { track, trackEvent } from "@/lib/analytics";
 import { formatTRPCError } from "@/lib/api";
@@ -195,15 +196,14 @@ export default function ChallengeDetailScreen() {
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
-      const msg = err instanceof Error ? err.message : "";
-      const code = (err as { data?: { code?: string } })?.data?.code;
-      if (
-        code === "FORBIDDEN" ||
-        msg.includes(FREE_ACTIVE_LIMIT_MESSAGE) ||
-        msg.toLowerCase().includes("up to 3 challenges")
-      ) {
+      const classified = classifyJoinChallengeError(err);
+      if (classified.kind === "limit") {
         showError(FREE_ACTIVE_LIMIT_MESSAGE);
         goPaywall();
+        return;
+      }
+      if (classified.kind === "already") {
+        showError(classified.message);
         return;
       }
       const formatted = formatTRPCError(err);

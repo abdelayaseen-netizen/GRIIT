@@ -50,6 +50,7 @@ type TaskRow = {
   type?: string;
   required?: boolean;
   duration_minutes?: number | null;
+  require_photo?: boolean;
   config?: { required?: boolean } & Record<string, unknown>;
 };
 type ActiveRow = {
@@ -149,6 +150,11 @@ export default function HomeScreen() {
           taskType: tType,
           taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
           durationMinutes: durationMinutesFromTask(t),
+          requirePhoto:
+            t.require_photo === true ||
+            t.config?.photo_required === true ||
+            t.config?.require_photo_proof === true ||
+            t.config?.require_photo === true,
         });
       }
     }
