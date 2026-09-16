@@ -16,6 +16,7 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { homePullRefreshing } from "@/lib/home-pull-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -267,11 +268,12 @@ export default function HomeScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- homeState covers all inputs
   }, [isGuest, user?.id, homeState]);
 
+  const refetchBootstrap = bootstrap.refetch;
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
-      void bootstrap.refetch();
-    }, [isGuest, user?.id, bootstrap]),
+      void refetchBootstrap();
+    }, [isGuest, user?.id, refetchBootstrap]),
   );
 
   useFocusEffect(
@@ -424,7 +426,7 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <SafeAreaView style={s.container}>
         <LiveFeedSection
-          refreshing={bootstrap.isRefetching}
+          refreshing={homePullRefreshing(bootstrap.isRefetching)}
           onRefresh={refresh}
           scope={feedScope}
           onScopeChange={setFeedScope}
