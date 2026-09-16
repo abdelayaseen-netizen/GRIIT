@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { ActionSheetIOS, Alert, Platform, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -22,6 +22,11 @@ import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { setPendingChallengeId } from "@/lib/onboarding-pending";
 import { DS_V3 } from "@/lib/design-system";
+import {
+  GROUP_CAP,
+  afterAcceptActiveId,
+  detailFooterVariant,
+} from "@/lib/group-ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
@@ -49,6 +54,15 @@ type ChallengeRow = {
   participation_type?: string | null;
   participants_count?: number | null;
   is_hard_mode?: boolean | null;
+  creator_id?: string | null;
+  memberCount?: number | null;
+  cap?: number | null;
+  viewerInviteStatus?: string | null;
+  teamMembers?: {
+    user_id: string;
+    role?: string | null;
+    profiles?: { display_name?: string | null; username?: string | null } | null;
+  }[];
   tasks?: DetailTask[];
   challenge_tasks?: DetailTask[];
 };
@@ -58,6 +72,18 @@ export default function ChallengeDetailScreen() {
   const params = (rawParams ?? {}) as Record<string, string | string[] | undefined>;
   const id = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
   const ref = typeof params.ref === "string" ? params.ref : Array.isArray(params.ref) ? params.ref[0] : undefined;
+  const inviteIdParam =
+    typeof params.inviteId === "string"
+      ? params.inviteId
+      : Array.isArray(params.inviteId)
+        ? params.inviteId[0]
+        : undefined;
+  const inviterParam =
+    typeof params.inviter === "string"
+      ? params.inviter
+      : Array.isArray(params.inviter)
+        ? params.inviter[0]
+        : undefined;
   const router = useRouter();
   const { user } = useAuth();
   const { activeChallenge, refetchAll } = useApp();
@@ -146,6 +172,30 @@ export default function ChallengeDetailScreen() {
     isPro ? 0 : myActiveCount,
     FREE_ACTIVE_CHALLENGES_LIMIT,
   );
+  const footerVariant = detailFooterVariant({
+    viewerInviteStatus: challenge?.viewerInviteStatus,
+    participationType,
+    state,
+  });
+  const creatorName = (() => {
+    const members = challenge?.teamMembers ?? [];
+    const creator = members.find((m) => m.role === "creator") ?? members[0];
+    const name = creator?.profiles?.display_name?.trim() || creator?.profiles?.username?.trim();
+    return name || "Someone";
+  })();
+  const invite =
+    footerVariant === "invited"
+      ? {
+          inviterName: inviterParam?.trim() || creatorName,
+          memberCount:
+            typeof challenge?.memberCount === "number"
+              ? challenge.memberCount
+              : typeof challenge?.participants_count === "number"
+                ? challenge.participants_count
+                : 0,
+          cap: typeof challenge?.cap === "number" ? challenge.cap : GROUP_CAP,
+        }
+      : undefined;
   const description = (challenge?.description ?? "").trim();
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -217,6 +267,100 @@ export default function ChallengeDetailScreen() {
     }
   }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall]);
 
+  const resolveInviteId = useCallback(async (): Promise<string | null> => {
+    if (inviteIdParam) return inviteIdParam;
+    if (!id) return null;
+    const opened = (await trpcMutate(TRPC.groups.openLink, { challengeId: id })) as {
+      invite?: { id?: string };
+    };
+    return typeof opened.invite?.id === "string" && opened.invite.id.length > 0 ? opened.invite.id : null;
+  }, [id, inviteIdParam]);
+
+  const onAccept = useCallback(async () => {
+    if (!id || joining) return;
+    if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setJoining(true);
+    try {
+      const inviteId = await resolveInviteId();
+      if (!inviteId) {
+        showError("This invite is no longer pending.");
+        return;
+      }
+      const result = (await trpcMutate(TRPC.groups.respond, {
+        inviteId,
+        action: "accept",
+      })) as { id?: string; status?: string };
+      await AsyncStorage.setItem(STORAGE_KEYS.HAS_JOINED_CHALLENGE, "true");
+      void registerPushTokenWithBackend().catch(() => {
+        /* non-fatal */
+      });
+      void refetchAll().catch((e: unknown) => {
+        captureError(e, "ChallengeDetailRefetchAfterAccept");
+      });
+      void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+      void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
+      void queryClient.invalidateQueries({ queryKey: ["discover"] });
+      void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
+      const refreshed = await myActiveListQuery.refetch();
+      const list = Array.isArray(refreshed.data) ? (refreshed.data as { challenge_id?: string; id?: string }[]) : [];
+      const activeId = afterAcceptActiveId(result, list, id);
+      if (activeId) {
+        router.replace(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
+      }
+    } catch (err: unknown) {
+      captureError(err, { flow: "group_accept", challengeId: id });
+      const formatted = formatTRPCError(err);
+      showError(
+        typeof formatted.message === "string" && formatted.message.trim()
+          ? `${formatted.title}: ${formatted.message}`
+          : formatted.title,
+      );
+    } finally {
+      setJoining(false);
+    }
+  }, [id, joining, resolveInviteId, showError, refetchAll, queryClient, user?.id, myActiveListQuery, router]);
+
+  const onNotNow = useCallback(() => {
+    goBack();
+  }, [goBack]);
+
+  const onDecline = useCallback(async () => {
+    if (!id) return;
+    try {
+      const inviteId = await resolveInviteId();
+      if (!inviteId) return;
+      await trpcMutate(TRPC.groups.respond, { inviteId, action: "decline" });
+      void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
+      void queryClient.invalidateQueries({ queryKey: ["activity", "notifications", user?.id] });
+      goBack();
+    } catch (err: unknown) {
+      captureError(err, { flow: "group_decline", challengeId: id });
+      const formatted = formatTRPCError(err);
+      showError(
+        typeof formatted.message === "string" && formatted.message.trim()
+          ? `${formatted.title}: ${formatted.message}`
+          : formatted.title,
+      );
+    }
+  }, [id, resolveInviteId, queryClient, user?.id, goBack, showError]);
+
+  const onMore = useCallback(() => {
+    if (challenge?.viewerInviteStatus !== "pending") return;
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ["Decline invite", "Cancel"], destructiveButtonIndex: 0, cancelButtonIndex: 1 },
+        (i) => {
+          if (i === 0) void onDecline();
+        },
+      );
+      return;
+    }
+    Alert.alert("Invite", undefined, [
+      { text: "Decline invite", style: "destructive", onPress: () => void onDecline() },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }, [challenge?.viewerInviteStatus, onDecline]);
+
   if (!id) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -264,8 +408,12 @@ export default function ChallengeDetailScreen() {
           joining={joining}
           loading={challengeQuery.isLoading && !challenge}
           error={challengeQuery.isError || (!challengeQuery.isLoading && !challenge)}
+          invite={invite}
           onBack={goBack}
+          onMore={footerVariant === "invited" ? onMore : undefined}
           onJoin={() => void onJoin()}
+          onAccept={() => void onAccept()}
+          onNotNow={onNotNow}
           onUpgrade={goPaywall}
           onRetry={() => void challengeQuery.refetch()}
         />

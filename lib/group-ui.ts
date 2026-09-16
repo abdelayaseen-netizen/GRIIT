@@ -32,7 +32,7 @@ export function groupSecuredTodayLine(securedToday: number, memberCount: number)
 
 export function memberStreakCaption(streak: number): string {
   if (streak <= 0) return "No streak yet";
-  return streak === 1 ? "1 day streak" : `${streak} day streak`;
+  return `${streak} day streak`;
 }
 
 export function groupStreakUnit(n: number): string {
@@ -113,10 +113,22 @@ export function invitedCaption(inviterName: string): string {
   return `${inviterName} invited you. Day 1 is the day you accept.`;
 }
 
-export function afterAcceptActiveId(respond: { id?: string }, enrollmentId?: string | null): string | null {
+export function afterAcceptActiveId(
+  respond: { id?: string },
+  list: { challenge_id?: string; id?: string }[],
+  challengeId: string,
+): string | null {
   if (typeof respond.id === "string" && respond.id.length > 0) return respond.id;
-  if (enrollmentId) return enrollmentId;
-  return null;
+  const match = list.find((r) => r.challenge_id === challengeId);
+  return typeof match?.id === "string" && match.id.length > 0 ? match.id : null;
+}
+
+export type InvitedFooterKind = "accept" | "not_now" | "decline";
+
+export function invitedFooterNetwork(kind: InvitedFooterKind): "respond_accept" | "respond_decline" | "none" {
+  if (kind === "accept") return "respond_accept";
+  if (kind === "decline") return "respond_decline";
+  return "none";
 }
 
 export type RosterMember = {
