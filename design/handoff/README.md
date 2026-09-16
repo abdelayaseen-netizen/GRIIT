@@ -298,13 +298,15 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 7 Create step 1 · 8 FeedPost variants · 9 Share card v1 · 10 Day secured · 11 Loading and error ·
 12 System sheet · 13 Display face · 14 Capture · 15 Secured · 16 Verified stamp · 17 Share card ink ·
 18 Prototype · 19 Welcome · 20 Challenge complete · 21 Badges · 22 Create step 1 · 23 Create step 2 ·
-24 Add task sheet · 25 Create step 3 · 26 Review sheet · 27 Launched.
+24 Add task sheet · 25 Create step 3 · 26 Review sheet · 27 Launched · 28 Active challenge ·
+29 Challenge detail.
 
 ## Source
 
 `src/tokens.ts` · `components/Primitives.tsx` · `Identity.tsx` · `Media.tsx` · `States.tsx` ·
 `Feed.tsx` · `Chrome.tsx` · `Leaderboard.tsx` · `ShareCard.tsx` · `DisplayNumber.tsx` · `Stamp.tsx` ·
 `MomentScreen.tsx` (capture, secured, selfReported, complete) · `Welcome.tsx` · `Badges.tsx` ·
+`ActiveChallenge.tsx` · `ChallengeDetail.tsx` ·
 `Prototype.tsx` (state machine). Every value comes from `tokens.ts`; no raw hex in components.
 
 ## List 1. Every tap in the prototype
@@ -375,3 +377,87 @@ summary label are gone, proof types are ghost chips with one full sentence for t
 instead of six truncated tiles, the tinted research band is a caption, and the raw validation array
 is the empty state pattern. Ampersands, em dashes and the label style used as body copy are all out.
 Source: `src/components/create/`.
+
+## Active challenge and challenge detail, Sept 8 2026
+
+The two screens the loop actually runs through, rebuilt.
+
+**Frame 28, active challenge**, the screen inside a challenge you joined. Four states: Day 1 with 0 of
+5 done, Day 12 with 3 of 5, Day 12 secured, and hard mode after a missed day. The green hero, the two
+0% tiles, the "0 in this challenge" row shown to a member and the duplicated header are gone. One
+position block, "Day 12 of 75" with the day as the only display number, then what is left, the week
+strip, difficulty. Task rows carry their real gate and their own verb: Start timer, Log pages, Take
+photo, never a generic Start. The pinned button names the next task.
+
+Four spec amendments, Sept 8: `secured_today` is a server field from `day_secures` via
+`getSecuredDateKeys` and is never derived from `tasks.every(completed_today)`, so five of five done
+with the server unsecured still reads "5 of 5 done." with a primary footer; the stamp binds to the
+completion (`verified`, `proof_photo_url`), not to `require_photo`; `reset_notice` renders only on a
+real backend reset event and never on `current_day === 1`; every numeric string in the copy table is
+a template.
+
+**Frame 29, challenge detail**, the screen before you join. Nothing here is earned, so no display
+face and no stamp. Facts are the three the creator set, "30 days · Solo · 12 people": difficulty came
+out, because it is the creator's opinion, the gate list is the truth, and it collided with Hard in the
+Enforcement picker. The task list is the screen's core, each task labelled with only the gates the app
+can enforce, camera, time window and location, in that order, and an ungated task reads
+"Self-reported" in secondary ink. The location label never prints the place. Enforcement is the creator's,
+set on the challenge and identical for everyone in it, so it is one textSecondary line under the task
+list and not a picker: hard mode reads "Hard mode. Gates are enforced; a failed gate fails the day.",
+standard reads "Standard mode. Gates are recorded, not enforced." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
+upgrade", and ended or not yet live, which drops both Join and the picker and states the date in one
+line. Solo reads "Day 1 is today." under Join; duo and team read "Join opens the invite step. You need
+a partner before Day 1."
+
+The primary button on frame 29 is `#BB471D` as briefed, with a `textPrimary` label; `#DC5401` is
+accent only there. Source: `src/components/ActiveChallenge.tsx`, `src/components/ChallengeDetail.tsx`,
+specs in `cursor/02_screens.md`.
+
+## Home, today's proof card
+
+The card lists every required task across every active enrollment for today, one row per task, grouped
+by challenge with the challenge name as a caption label above its rows. One enrollment carries no label.
+Rows are the call to action: the status dot is filled brand when done and a 1.5pt outline when not, done
+names drop to textSecondary without strike-through and stop being tappable, and each pending row opens
+that task's capture flow. There is no per-row button and no primary button under the list. Gate labels
+are the same three real gates as the challenge detail screen: Camera, Time window, Location, or
+"Self-reported". When `day_secured` comes back true the card adds one line, "Day secured."
+
+Component: `src/components/HomeV3.tsx` (`TodayCard`). Frames 01 and 30 in `GRIIT System.dc.html`.
+
+## Onboarding v2
+
+Nine screens. Welcome is screen 1 and is unchanged; screens 2 to 9 are `src/components/onboarding/`,
+sharing `OnboardingScreen` in `OnboardingChrome.tsx`: back chevron, a labelled Skip only where the
+screen is genuinely optional, an eight segment position bar with no step numbers, a 28pt title, and a
+pinned footer whose one filled button is `color.primary`.
+
+Order: Goals, WhyProof, WhyCircle, Commitment, FirstChallenge, Reminders, Account, Profile. Goals feeds
+FirstChallenge; Commitment stores the day target that drives "Day 1 of 30" on Home; the notification
+permission prompt exists only on Reminders; both Profile exits finish onboarding.
+
+Barlow Condensed does not appear in the flow. The user has earned nothing yet, so the only display
+number in onboarding is the Welcome headline. Where a screen argues for the product it uses the real
+component — the Today card from frame 30, a real feed row, the gate vocabulary from frame 29 — because
+real UI is the only illustration in this system. The three enforceable gates are camera, time window and
+location; "Verified" does not appear.
+
+Frames 31 and 32 in `GRIIT System.dc.html`. Per-screen copy tables and cut lists in
+`cursor/02_screens.md`.
+
+## Dark conversion: auth, self-report, secured
+
+Five screens that were still light theme: login, the forgot-password sent state, the self-report task
+step, the secured screen and the saving state. Frame 33. No new tokens, no new components.
+
+Every element from the light versions survives. Login keeps both fields, show/hide, "Forgot password?",
+Apple, Google and the sign-up link, and shows Sign in disabled with one caption saying what would enable
+it. The sent state now names the address the link went to and adds a Resend that locks for 60 seconds
+with a visible countdown. The self-report step keeps "Self-reported. Nothing is checked." exactly and
+adds one card spelling out what the tap records. The secured screen composes its middle: streak number,
+day and verification line, week strip, then a photo frame only when there was a photo. Saving happens in
+the button, with "Nothing is secured until the server says so." as the caption under it; the full-screen
+takeover appears only past about 800ms.
+
+Barlow Condensed appears once across the five, on the secured streak number. Per-screen token lists and
+`components/ds/` reuse notes are in `cursor/02_screens.md`.

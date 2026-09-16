@@ -907,3 +907,709 @@ Every string above with a number in it is a template. Nothing in this table is a
 or a literal 45: bind the count, the duration and the target from the fields.
 
 **Laws most at risk** 1 (ink canvas), 2 and the Sept 6 amendment (the day and the streak are the only display numbers), 6 (one fill: the secured state has none), 7 and 9 (rows on the canvas, one card only for the reset notice), 18 (the stamp is camera proof only, read off the completion and never off `require_photo`).
+
+## Challenge detail, not joined
+
+**Chunk** I. Component `ChallengeDetail` in `src/components/ChallengeDetail.tsx`. No new tokens.
+393 by 852.
+
+What a user sees when they open a challenge they have not joined. It answers one question: can I
+actually do this. The user has earned nothing here, so `displayFace` never appears on this screen and
+the Verified stamp never appears on this screen.
+
+**Data** `title`, `description` (may be empty), `duration_days`, `participation_type`
+(solo | duo | team), `participants_count`, `tasks[] {title, task_type, gates[], time_window}`,
+`state`, `active_count` and `free_limit` (free_limit state only), `ends_on` (ended only),
+`starts_on` (not_live only), `is_hard_mode` (from `challenges.is_hard_mode`).
+
+`is_hard_mode` is the creator's setting on the challenge and applies to everyone in it. Joiners do not
+choose it, so the screen states it and never offers it. There is no mode prop and no mode handler.
+
+`gates[]` holds only the three the app can enforce: `camera`, `time_window`, `location`. An empty
+array is a self-reported task. There is no fourth gate and no derived gate.
+
+**Tree**
+1. Nav bar: IconButton chevron-left, IconButton ellipsis. No title, no share button: share arrives on join
+2. Text title {title}, gutter 20, 10 below the nav
+3. description non empty only: Text secondary {description}. Empty means the row does not exist
+4. Facts chip row: "{duration_days} days", "{Solo|Duo|Team}", "{participants_count} people". Three chips, radius 12, surface, 1pt border. No difficulty chip: difficulty is the creator's opinion and the gate list is the truth, and it collided with "Hard" in the picker. No completion rate, no "joined today"
+5. Text heading "What you'll post"
+6. Task rows on the canvas with Dividers: icon by task_type 22 textSecondary, Text bodyStrong {title}, then the gate labels
+7. One mode line directly under the task list, Text caption textSecondary, from `is_hard_mode`. Same line in every state: it is a fact about the challenge, not a join choice
+8. Spacer 176, then the pinned footer
+
+**Gate label** 12/16, radius 8, 1pt border, surface ground, 12px Lucide glyph, 3 by 8 padding.
+Order is always camera, then time window, then location, whatever order the array arrives in.
+
+| gates | labels |
+|---|---|
+| ['camera'] | Camera |
+| ['time_window'] | Time window {time_window} |
+| ['location'] | Location |
+| all three | Camera · Time window {time_window} · Location |
+| [] | Self-reported, in textSecondary |
+
+The self-reported label sits in textSecondary: it is the absence of a gate, not a fourth one. The
+location label prints the word Location and never the place name. Recorded decision, Sept 8 2026.
+No label reads "Verified" on this screen: nothing has been submitted yet.
+
+**Footer, by state**
+| state | footer |
+|---|---|
+| default | primary Button "Join", then one caption line |
+| free_limit | disabled Button "Join" (surface, 1pt border, textSecondary label), Text caption "You are in {active_count} challenges. Free accounts hold {free_limit} at a time.", then Text secondary brandText "Leave one, or upgrade" |
+| ended | Text secondary "This challenge ended on {ends_on}." No Join |
+| not_live | Text secondary "This challenge starts on {starts_on}." No Join |
+
+**The caption under Join** is `participation_type` dependent: solo reads "Day 1 is today.", duo and
+team read "Join opens the invite step. You need a partner before Day 1." Nothing else on the screen
+changes with participation type. Never "begins tomorrow".
+
+**Primary button** is `color.primary #BB471D` with a `textPrimary` label. `brand #DC5401` is accent
+only here: the 1.5pt ring and the radio glyph on the selected mode card.
+
+**Vertical rhythm from the status bar down** 44 status, 44 nav, 10 to the title, 6 to the description,
+12 to the chip row, 18 to "What you'll post", 8 top and bottom inside each task row, 12 to the mode
+line, 176 spacer.
+Footer default and ended 16 above a 28 safe area; free_limit 14 above 24 because it carries three
+lines. Measured clearance above the footer: default 40, free_limit 21, ended 310.
+
+**Copy. Do not paraphrase.**
+
+| string | style |
+|---|---|
+| {title} | title |
+| {description} | secondary textSecondary |
+| {duration_days} days | caption textPrimary in a chip |
+| Solo / Duo / Team | caption textPrimary in a chip |
+| {participants_count} people | caption textPrimary in a chip |
+| What you'll post | heading |
+| Camera | 12/16 textPrimary |
+| Time window {time_window} | 12/16 textPrimary |
+| Location | 12/16 textPrimary |
+| Self-reported | 12/16 textSecondary |
+| Hard mode. Gates are enforced; a failed gate fails the day. | caption textSecondary |
+| Standard mode. Gates are recorded, not enforced. | caption textSecondary |
+| Join | bodyStrong on primary |
+| Day 1 is today. | caption textSecondary |
+| Join opens the invite step. You need a partner before Day 1. | caption textSecondary |
+| You are in {active_count} challenges. Free accounts hold {free_limit} at a time. | caption textSecondary |
+| Leave one, or upgrade | secondary brandText medium |
+| This challenge ended on {ends_on}. | secondary textSecondary |
+| This challenge starts on {starts_on}. | secondary textSecondary |
+
+Every string with a number is a template. No literal 3, no literal 30, no literal 12.
+
+**Cut from the current screen, and why**
+| cut | why |
+|---|---|
+| blue hero band | not in the palette |
+| share button before joining | there is nothing to share |
+| "9 warriors" | participants are "people", and the count is "{n} people" |
+| "0 joined today" | computed from too little data to be honest |
+| "about 1 joined today · 0% completion rate" | invented precision, and "about" is not a number the backend has |
+| the two 0% tiles | neither is a field, and both read 0 |
+| "1 days" | "{n} days", "1 day" |
+| "Easy" chip | difficulty is the creator's opinion, and the gate list is the truth |
+| "Commit to This Challenge" | the CTA is "Join" |
+| "Day resets at midnight" | not a field. The line under Join states Day 1 instead |
+| Daily Time "~5 min" | an estimate, not a gate |
+| Category "Fitness" | not a decision input on this screen |
+| the About row duplicating the description | one description, one row |
+| the task row with "Tap to start and log proof" | pre-join, there is nothing to start |
+| the Standard / Hard picker | mode is the creator's, set on the challenge and identical for everyone in it. Offering it at join implied a per participant setting that does not exist |
+
+**Laws most at risk** 2 and the Sept 6 amendment (no display face: nothing here is earned), 6 (one
+fill, the Join button), 7 and 9 (rows on the canvas, cards only for the two mode options), 18 (no
+stamp on an unjoined challenge), 23 (there is no selection language on this screen at all now), 26 (no
+tab bar, so the pinned footer is legal, and its clearance is reserved by a 176 spacer).
+
+## Home, today's proof card
+
+**Chunk** I. Component `TodayCard` in `src/components/HomeV3.tsx`. No new tokens. Frames 01 and 30.
+
+The card used to show one task, the next undone one, which made the order the app's decision. It now
+lists every required task across every active enrollment for today, one row each, so the user chooses
+what to do first.
+
+**Data** `enrollments[] {challenge_id, challenge_name, tasks[] {id, name, gates[], time_window, done}}`,
+`day_secured`.
+
+`day_secured` is the same server flag Home already uses. It is not derived in the card from
+`tasks.every(done)`: if the server has not secured the day, the card does not say it is secured.
+
+`gates[]` holds only the three gates the app can actually enforce: `camera`, `time_window`,
+`location`. An empty array is "Self-reported". The card never shows "Verified".
+
+**Tree**
+1. Card: surface, 1pt border, radius.card, padding 20, column gap 16
+2. Header row: Text heading "Today" left, count badge right (brandWash pill, radius.input, 6 by 12, caption medium brandText, "{done} / {total}")
+3. One group per enrollment, column gap 4: Text caption textSecondary {challenge_name}, then its rows. The label is omitted entirely when there is exactly one enrollment, because it groups nothing
+4. Task rows, min-height 44
+5. `day_secured` only: Text secondary medium brandText "Day secured." under the last group
+6. No per-row button. No primary button under the list
+
+**Row anatomy**
+| part | pending | done |
+|---|---|---|
+| status dot, 20 by 20, radius.pill | 1.5pt textSecondary outline, no fill | filled brand, no border |
+| name, bodyStrong | textPrimary | textSecondary, no strike-through |
+| gate line, caption textSecondary | "Camera · Time window 6–9am · Location" or "Self-reported" | same |
+| trailing | chevron-right 20 textSecondary | nothing |
+| tap target | the whole row, opens that task's capture flow | not tappable |
+
+**Order** Undone rows first inside each challenge; challenges in enrollment order. Never re-sort across
+challenges: the grouping is the user's mental model of what they joined.
+
+**Gate label strings, built in code**
+| gates[] | label |
+|---|---|
+| [] | Self-reported |
+| [camera] | Camera |
+| [time_window] | Time window {time_window} |
+| [location] | Location |
+| [camera, time_window] | Camera · Time window {time_window} |
+| [camera, time_window, location] | Camera · Time window {time_window} · Location |
+
+Order is always camera, then time window, then location, joined with " · ".
+
+**States**
+- 3 enrollments, 4 tasks, 1 done: badge "1 / 4", three group labels, the done row sits last inside its
+  group, no secured line
+- all done: badge "4 / 4", every row filled and inert, "Day secured." under the list
+- one enrollment, one task: badge "0 / 1", no group label at all, one row. The card must not render an
+  empty or dangling label row
+- loading: Skeletons for the badge and three rows. The "Today" heading renders immediately
+- no active enrollments: the card does not render. Home shows its existing empty state instead
+
+**Display face** none. The badge is a count of today's work, not an earned number, so it stays in the
+body face at caption medium. `current_day` still uses the display face elsewhere on Home.
+
+**Copy. Do not paraphrase.**
+| string | style |
+|---|---|
+| Today | heading |
+| {done} / {total} | caption medium brandText on brandWash |
+| {challenge_name} | caption textSecondary |
+| Camera | caption textSecondary |
+| Time window {time_window} | caption textSecondary |
+| Location | caption textSecondary |
+| Self-reported | caption textSecondary |
+| Day secured. | secondary medium brandText |
+
+Every string with a number is a template. There is no literal 4, no literal "6–9am".
+
+**Cut, and why**
+| cut | why |
+|---|---|
+| "Today's proof" title and the "{challenge} · Day {n}" subtitle | with every challenge in the list, one challenge name in the header was wrong. The name moved to the group label |
+| the single-task row | it made the order the app's choice |
+| the primary "Post your first proof" button under the list | with N rows there is no single next action, and a button that names one task would be arbitrary. The rows are the call to action |
+| the "Photo" trailing label | replaced by the real gate list from frame 29's vocabulary |
+
+**Interaction** The ChallengeDone interstitial stays: it still appears after the last task of one
+challenge is finished while other challenges remain. Its "Next challenge" button now returns to Home,
+where this list makes the choice, instead of routing into a specific enrollment. Nothing else about that
+screen changes.
+
+**Laws most at risk** 2 and the Sept 6 amendment (the badge is not an earned number, so no display
+face), 7 and 9 (rows inside the one card, no box inside a box), 18 (the three real gates only, and no
+"Verified" anywhere on Home), 23 (done rows are not tappable and say so by losing the chevron).
+
+# Onboarding v2
+
+**Chunk** J. `src/components/onboarding/`, one component per screen plus `OnboardingChrome.tsx`.
+No new tokens. Frames 31 (screens 2 to 9) and 32 (states beyond the happy path).
+
+Screen 1, Welcome, is unchanged and does not use the chrome: it has no back target and no position bar.
+
+**Shared chrome, screens 2 to 9** `OnboardingScreen` in `OnboardingChrome.tsx`.
+1. Status bar 44
+2. Nav row 44: back chevron-left 24 textPrimary at the left, a labelled Skip at the right or nothing.
+   There is no bare chevron skip and no unlabelled x
+3. `PositionBar`: eight 4pt segments, gap 4, brand for every segment up to and including the current
+   one, border for the rest. No "of 9", no step numbers
+4. Title block: Text title (28/34, weight 500), 8 gap, Text secondary subtitle
+5. Screen body
+6. Pinned footer: 1pt border-top, 16 top, 20 sides, 28 bottom, column gap 4. One `PrimaryButton`
+   (`color.primary`, textPrimary label) and any text links beneath it
+
+**Display face** none, on any of these eight screens. The user has earned nothing yet, so Barlow
+Condensed appears exactly once in the whole flow: the Welcome headline, already built. The streak zero
+on WhyProof, the example "Day 12" on WhyCircle and every count in the flow are SF Pro.
+
+**The three gates** `gateLabel(gates, timeWindow)` in `OnboardingChrome.tsx` is the only place a gate
+string is built, and it is the same vocabulary as frame 29: Camera, Time window {window}, Location,
+joined with " · ", or "Self-reported" for an empty list. Timer is not a gate. The word "Verified" does
+not appear anywhere in onboarding.
+
+---
+
+## 2. Goals
+
+`Goals.tsx`. Step 0. No skip: this screen is the input to screen 6, and skipping it makes that screen
+arbitrary.
+
+**Data** the six goals as they exist in `components/onboarding/v2/screens/GoalsScreen.tsx`, exported
+here as `GOALS`. Selection persists to the profile or anon profile, not only to the store.
+
+**Tree** Title "What are you building?", subtitle, then six `OptionRow`s: label bodyStrong, example
+caption. Selected is brandTint with a 1.5pt brand border and a check 20 brandText. At three picked, the
+unselected rows drop to 0.5 and stop responding rather than silently dropping an earlier pick.
+
+**Copy**
+| string | style |
+|---|---|
+| What are you building? | title |
+| Pick 1 to 3. It filters the challenges we suggest. | secondary textSecondary |
+| Physical toughness / Lifting, running, no missed sessions | bodyStrong / caption |
+| Mental discipline / Meditation, journaling, focus blocks | bodyStrong / caption |
+| Daily habits / Wake times, water, tidy space | bodyStrong / caption |
+| Reading and learning / Pages a day, a course, a language | bodyStrong / caption |
+| Cold exposure / Cold showers, plunges, breathwork | bodyStrong / caption |
+| Sleep and recovery / Phone down, lights out, rest days | bodyStrong / caption |
+| Continue | bodyStrong on primary |
+| Pick at least one | bodyStrong textSecondary on surface, disabled |
+
+**Cut** "Pick two or three" — the rule is 1 to 3, and the copy contradicted the code.
+
+---
+
+## 3. WhyProof
+
+`WhyProof.tsx`. Step 1. Skip labelled "Skip".
+
+The one argument of the flow, made with real components rather than an illustration: the Home streak
+block at zero, then the Today card from frame 30 with three rows, two done.
+
+**Tree** Title, subtitle, streak block ("Current streak", 44pt SF Pro zero, "days", "Post today to
+start."), the Today card (header "Today" + "2 / 3" badge, three rows with real gate labels), then one
+caption line under the card.
+
+**Copy**
+| string | style |
+|---|---|
+| Streaks are easy to fake. | title, kept verbatim |
+| Everywhere else you tap a box. Here the server secures the day, and only when every task in every challenge you joined is done. | secondary textSecondary |
+| Current streak | secondary textSecondary |
+| 0 | 44/48 weight 500 textPrimary, tabular. NOT the display face |
+| days | body textSecondary |
+| Post today to start. | secondary textSecondary |
+| Today | heading |
+| {done} / {total} | caption medium brandText on brandTint |
+| Run 5km / Camera · Time window 6–9am | bodyStrong / caption |
+| Read 10 pages / Self-reported | textSecondary / caption |
+| Cold shower / Camera · Location | textSecondary / caption |
+| {done} of {total}. The day is not secured, and nothing you tap changes that. | caption textSecondary |
+
+**Cut** "The day doesn't count until it's verified" — false for self-reported tasks, and it uses the
+banned word. The true claim is the subtitle: every task, every challenge, and the server decides.
+
+---
+
+## 4. WhyCircle
+
+`WhyCircle.tsx`. Step 2. Skip labelled "Skip".
+
+What a witness actually sees: one real feed row. The photo is a placeholder because this user has not
+taken one. No invented people, no borrowed faces, no counts of who is watching.
+
+**Tree** Title, subtitle, feed card (avatar 40 with a user glyph, "your username", "{challenge} · Day
+{n}" in caption, a 200pt canvas block with a camera glyph and "Your proof photo", then the secured line
+and the task summary), then the visibility line.
+
+The proof block is capped at 200pt, not the true 4:5 of `proofAspect`. A real 4:5 crop at 351 wide is
+439pt tall and pushes the secured line and the visibility sentence under the pinned footer, and those
+two lines are the screen. The feed itself still uses true 4:5; this is a preview.
+
+**Copy**
+| string | style |
+|---|---|
+| Discipline, witnessed. | title, kept verbatim |
+| This is your row in the feed once you post. | secondary textSecondary |
+| your username | bodyStrong |
+| {challenge_name} · Day {n} | caption textSecondary, SF Pro |
+| Your proof photo | caption textSecondary |
+| Day secured. | secondary medium brandText |
+| {task summary} | caption textSecondary |
+| Everyone in the challenge sees your proofs. Outside it, they go to the feed you post to: Friends, or Everyone. | secondary textSecondary |
+
+**Cut** "Nothing is public, ever" — the feed has an Everyone tab, so the line was false. "Your circle is
+watching" — cheerleading, and it implies an audience the user does not have yet. The invented avatars
+and names went with them.
+
+**Open** confirm the visibility sentence against the real privacy model before build. If posting scope
+is per-challenge rather than per-post, the line changes; it must not ship as written unless it is true.
+
+---
+
+## 5. Commitment
+
+`Commitment.tsx`. Step 3. No skip: Custom is the escape.
+
+Day target only. Standard vs Hard is not here — it is the creator's per-challenge setting, stated on the
+challenge screen (see the Challenge detail entry).
+
+**Tree** Title, subtitle, four `OptionRow`s, then a caption line naming what the pick drives.
+
+**Copy**
+| string | style |
+|---|---|
+| Set your line. | title |
+| How many days are you committing to. You can change it later, but you have to change it on purpose. | secondary textSecondary |
+| 7 days / Enough to find out whether the tasks fit your day. | bodyStrong / caption |
+| 30 days / Long enough that a bad week lands inside it. | bodyStrong / caption |
+| 75 days / Two and a half months with no gap. | bodyStrong / caption |
+| Custom / Any number from 3 to 365. | bodyStrong / caption |
+| Home counts against this: Day 1 of {target}. | caption textSecondary |
+| Lock it in | bodyStrong on primary |
+
+**Cut** "Starting", "Serious", "All in" — adjectives that rank the user before they have done anything.
+Each option now says what the number means in days.
+
+---
+
+## 6. FirstChallenge
+
+`FirstChallenge.tsx`. Step 4. No top skip; "Set this up later" in the footer is the exit.
+
+**Tree** Title, subtitle, three suggestion cards filtered by the goals from screen 2. Card: title
+bodyStrong, "{duration_days} days · {participation}" caption, one line per task with its gate label,
+then the mode line. Radio: check 20 brandText when selected, a 1.5pt textSecondary ring when not.
+Footer: Join, "Day 1 is today." centred caption, then "Browse all" and "Set this up later" side by side
+in one 44pt row.
+
+Three cards must fit above the footer, because the subtitle says three. That is why each task is one
+line with its gate right-aligned rather than two, the card padding is 12 by 14, and the two footer links
+share a row instead of stacking. Stacked links cost 48pt and put the third card behind the footer.
+
+**Copy**
+| string | style |
+|---|---|
+| Start here. | title |
+| Three that match your goals. | secondary textSecondary |
+| {duration_days} days · {participation} | caption textSecondary |
+| {task name} / {gate label} | secondary / caption |
+| Hard mode. Gates are enforced; a failed gate fails the day. | caption textSecondary |
+| Standard mode. Gates are recorded, not enforced. | caption textSecondary |
+| Join | bodyStrong on primary |
+| Day 1 is today. | caption textSecondary, centred |
+| Browse all | secondary medium textSecondary |
+| Set this up later | secondary medium textSecondary |
+
+**No-match state** subtitle becomes "Nothing in the catalogue matches {goals} yet.", the list is
+replaced by one card ("No suggestions for those goals" / "Browse the full catalogue, or start without
+one and join later from Discover."), and the footer primary becomes Browse all. The list is never padded
+with challenges that do not match: that would make screen 2 a lie.
+
+**Cut** "Day 1 begins tomorrow morning" — joining starts the day. The hardcoded "30-day reset" scaffold.
+
+---
+
+## 7. Reminders
+
+`Reminders.tsx`. Step 5. The only OS permission prompt in the flow.
+
+**Tree** Title, subtitle, a real notification preview (40 icon tile in brandTint, "GRIIT", the real body
+string, the time on the right), the "Send it at" label, four presets, "Pick a custom time".
+
+**Copy**
+| string | style |
+|---|---|
+| One reminder a day. | title |
+| It tells you what is still open. Turn it off in Settings whenever you want. | secondary textSecondary |
+| GRIIT | secondary medium |
+| {challenge}: {left} of {total} tasks left today. | caption textSecondary |
+| Send it at | label textSecondary |
+| 6:00 / AM, 8:00 / AM, 6:00 / PM, 9:00 / PM | secondary medium / 12pt |
+| Pick a custom time | secondary medium brandText |
+| Turn on reminders | bodyStrong on primary |
+| No reminders for now | secondary medium textSecondary |
+
+**Permission denied** the preview is replaced by a card ("Notifications are off for GRIIT" / "iOS is
+blocking them, so nothing can be sent. Turn them on in Settings and the time you pick here will be
+used."), the presets drop to 0.5 and stop responding, the primary becomes "Open Settings" and the link
+becomes "Continue without reminders". The screen never re-prompts: iOS will not show the sheet twice.
+
+**Cut** "We'll nudge you. Never nag." — a promise about tone rather than a statement of what the app
+does, and it was the title of a screen whose real content is a time picker.
+
+---
+
+## 8. Account
+
+`Account.tsx`. Step 6. The guest is already in; this is the upgrade.
+
+**Tree** Title, subtitle, Continue with Apple, Continue with email, "Have an account? Log in", then the
+"Saved and waiting for you" list, then the footer.
+
+**Copy**
+| string | style |
+|---|---|
+| Save your streak. | title |
+| You are in already. An account is what makes your proof, streak and challenges survive this phone. | secondary textSecondary |
+| Continue with Apple | bodyStrong on surface |
+| Continue with email | bodyStrong on surface |
+| Have an account? Log in | secondary medium brandText |
+| Saved and waiting for you | label textSecondary |
+| {challenge}, joined · {target} day target · Reminder at {time} · {goals} | secondary textSecondary, each with a check 16 brandText |
+| Continue | bodyStrong on primary |
+| Skip — I'll risk losing my progress | secondary medium textSecondary, kept verbatim |
+
+**Identity states**
+| state | body | exit |
+|---|---|---|
+| email_taken | Field with the email, notice "That email already has a GRIIT account. Log in and today's progress comes with you." | primary "Log in and bring my progress". Merge the anon session's joins and proofs. If merge is deferred, still log them in and say on screen that guest progress stays on this device. Never a bare error string |
+| confirm_email | Field with the typed address, notice "We'll confirm at {email} — correct?" | two half-width buttons, Edit on surface and Send it on primary |
+| malformed | Field with a 1.5pt danger border, circle-alert 16 + "That is not a complete email address." caption danger | primary Continue, disabled. Validation fires on blur |
+
+In all three the "Saved and waiting for you" list stays visible: it is the argument, and it is the thing
+the skip costs.
+
+---
+
+## 9. Profile
+
+`Profile.tsx`. Step 7. Skip labelled "Skip" at the top and "Skip for now" in the footer; both finish
+onboarding.
+
+**Tree** Title, subtitle, 88pt photo circle with a camera glyph and "Photo optional", then Display name,
+Username and Bio fields.
+
+**Copy**
+| string | style |
+|---|---|
+| What should we call you? | title |
+| All of this is optional. The feed shows your display name, or your username if you leave it blank. | secondary textSecondary |
+| Photo optional | caption textSecondary |
+| Display name / Username / Bio | label textSecondary |
+| Your name / username / One line, optional | secondary textSecondary, placeholders |
+| Continue | bodyStrong on primary |
+| Skip for now | secondary medium textSecondary |
+
+**Greeting fallback** `greetingName()`: display_name, then username, then first_name, then null. Home
+renders the date line alone when it is null. The literal string "User" never appears.
+
+**Exit** continue and skip both set `onboarding_completed = true` and land on Home with the joined
+challenge in the Today card.
+
+---
+
+**Cut across the flow, and why**
+| cut | why |
+|---|---|
+| "Day 1 begins tomorrow morning" | joining starts the day. Every reference is now "Day 1 is today." |
+| "The day doesn't count until it's verified" | false for self-reported tasks, and "Verified" is not a word this app uses outside a camera-proof stamp |
+| "Nothing is public, ever" | the feed has an Everyone tab |
+| GPS and TIMER shown as gates | a timer is a task type, not a gate. Camera, time window and location are the only three the server can enforce |
+| "Pick two or three" | the rule is 1 to 3 |
+| "We'll nudge you. Never nag." | a promise about tone, on a screen whose content is a time picker |
+| "Your circle is watching." | cheerleading, and an audience the user does not have on day zero |
+| "warriors" | not how anyone in this audience talks |
+| the paywall between challenge and account | asking for money before the app has delivered a single day |
+| Standard / Hard as an onboarding step | it is a per-challenge setting owned by the creator |
+| invented avatars, names and testimonials | there is no such data, and this audience reads it instantly as filler |
+
+**Laws most at risk** 1 (ink on all nine), 2 and the Sept 6 amendment (no display face anywhere in the
+flow), 6 (one filled button per screen, everything else surface or a text link), 9 (surface cards on
+canvas, no card inside a card), 18 (three gates, no "Verified"), 23 (no segmented control in the flow at
+all).
+
+# Dark conversion: auth, self-report, secured
+
+**Chunk** K. Frame 33. Five screens that were still light theme inside an otherwise dark app.
+No new tokens and no new components: everything below is DS_V3 plus `components/ds/`.
+
+Nothing was dropped in the conversion. Every field, link and button that existed on the light screens
+exists here, and the only copy that changed is copy that was wrong.
+
+**Barlow Condensed appears once in this set**: the streak number on the secured screen. It is the one
+number in the five screens the user earned. The "60s" resend countdown, "Day 1" in the self-report
+header and the day label are all SF Pro.
+
+---
+
+## 1. Login — `app/auth/login.tsx`
+
+**Tokens** `color.canvas` ground · `color.surface` + `border` inputs and the two OAuth buttons ·
+`color.primary` Sign in fill with `color.textPrimary` label · `color.brandText` for Show/Hide and
+"Sign up" · `color.textSecondary` for "Forgot password?", the "or" rule and the disabled hint ·
+`type.title` / `type.secondary` / `type.label` / `type.caption` · `radius.input` 12 on fields,
+`radius.pill` on buttons · `buttonHeight.regular` 52 · `hit` 44 on Show/Hide and every link ·
+`space.gutter` 20 sides, `space.md` 12 between fields.
+
+**Reuse** `ds/TextField` (label above, 52 min-height, trailing slot for Show/Hide), `ds/Button`
+variant primary and variant surface, `ds/Divider` for the "or" rule, `ds/TextLink`. Do not build a new
+OAuth button: it is `ds/Button` variant surface with a 20pt leading Lucide icon.
+
+**Disabled state** Sign in is `color.surface` with a 1pt border and a `color.textSecondary` label
+until both fields are non-empty. It is never hidden and never grey-on-grey: the label still clears 6.6:1.
+One caption under it says what would enable it — "Enter your email and password to continue." That
+caption disappears the moment the button is live.
+
+**Copy**
+| string | style |
+|---|---|
+| Sign in | title |
+| Your proof, streaks and challenges are on the account, not the phone. | secondary textSecondary |
+| Email / Password | label textSecondary |
+| you@email.com / Your password | secondary textSecondary, placeholders |
+| Show / Hide | secondary medium brandText |
+| Forgot password? | secondary medium textSecondary |
+| Sign in | bodyStrong, textPrimary on primary |
+| Enter your email and password to continue. | caption textSecondary, disabled state only |
+| or | caption textSecondary |
+| Sign in with Apple | bodyStrong on surface, apple 20 |
+| Sign in with Google | bodyStrong on surface, chrome 20 |
+| Don't have an account? / Sign up | secondary textSecondary / secondary medium brandText |
+
+---
+
+## 2. Forgot password, sent — `app/auth/forgot-password.tsx`
+
+The light version was a heading, a line and a button floating in a void. The address the link went to is
+the one fact the user needs, so it is now a surface card with a `color.brandTint` icon tile.
+
+**Tokens** `color.surface` + `border` card · `color.brandTint` icon tile with `color.brandText`
+mail 20 · `radius.card` 20 on the card, `radius.input` 12 on the tile · `color.primary` for Back to
+sign in · `type.title` / `type.bodyStrong` for the address / `type.label` "Sent to" / `type.caption`.
+
+**Reuse** `ds/Card`, `ds/Button` primary, `ds/TextLink` for Resend. The countdown needs no component:
+it is the same TextLink at 0.6 opacity with an inert label.
+
+**Resend** `color.brandText` TextLink when available. During the 60s lock it is
+`color.textSecondary` at 0.6 opacity, inert, reading "Didn't get it? Resend in {n}s" and counting down
+by the second. The countdown is SF Pro, not the display face: a cooldown is not an earned number.
+
+**Copy**
+| string | style |
+|---|---|
+| Check your email | title |
+| A reset link is on its way. It expires in 60 minutes. | secondary textSecondary |
+| Sent to | label textSecondary |
+| {email} | bodyStrong |
+| Wrong address? Go back and send it again. | caption textSecondary |
+| Back to sign in | bodyStrong on primary |
+| Didn't get it? Resend | secondary medium brandText |
+| Didn't get it? Resend in {n}s | secondary medium textSecondary, 0.6 opacity, inert |
+
+---
+
+## 3. Self-report step — `components/task-v2/steps`
+
+**Tokens** `color.canvas` · `color.surface` + `border` for the "what this records" card ·
+`color.primary` for "I did it" · surface for "Not yet" · `type.title` task name · `type.secondary`
+for the honesty line · `space.section` 32 above the title.
+
+**Reuse** `ds/NavBar` (back chevron + title), `ds/Card`, `ds/Button` primary and surface, `ds/Icon`.
+
+The header is "Day {n} · Self-report" in `type.bodyStrong` beside the back chevron. "Self-reported.
+Nothing is checked." sits directly under the task title, unchanged, as `type.secondary`
+`color.textSecondary` — not in a pill, not in a warning colour. It is a fact, not an alert.
+
+The card under it spells out what the tap actually does, three rows with 20pt Lucide icons: today is
+marked done, the challenge sees it as self-reported, and none of the three gates applied. That card is
+the only thing added to this screen, and it exists because "nothing is checked" raises exactly that
+question.
+
+**Copy**
+| string | style |
+|---|---|
+| Day {n} · Self-report | bodyStrong |
+| {task title} | title |
+| Self-reported. Nothing is checked. | secondary textSecondary, kept exactly |
+| What this records | label textSecondary |
+| Today is marked done for this task | secondary textSecondary, check 20 |
+| Your challenge sees it as self-reported | secondary textSecondary, users 20 |
+| No camera, no time window, no location | secondary textSecondary, shield-off 20 |
+| I did it | bodyStrong on primary |
+| Nothing is secured until the server says so. | caption textSecondary, centred |
+| Not yet | bodyStrong on surface |
+
+---
+
+## 4. Secured — `app/task/secured.tsx`
+
+The light build had the number, the line, the pill, then a screen of black with the week strip pinned to
+the bottom. The middle is now composed: the number, the line, the pill and the strip are one block, and
+Done is a full-width primary in the footer.
+
+**Tokens** `numberSize.mid` 160 in `displayFace` at `color.textPrimary` — the only display number on
+these five screens · `color.brand` for secured week squares and the today outline
+(`selectedBorder` 1.5pt) · `color.surface` + `border` for the verification pill and the photo frame ·
+`radius.pill` on the pill, `radius.input` 12 on week squares, `radius.card` 20 on the photo ·
+`color.primary` Done · `motion.daySecuredMs` 400 for the count-up.
+
+**Reuse** `ds/DisplayNumber` size mid, `ds/WeekStrip` (the Home component, unchanged),
+`ds/Button` primary. The verification pill is `ds/Chip` variant surface with a leading 16pt icon — not
+a new component, and not the Stamp: the Stamp is camera-proof only and this screen must show both cases.
+
+**Two variants, one layout**
+- camera proof: pill reads "Camera proof. Checked on the server." with a camera 16, and the real photo
+  fills a `radius.card` frame under the week strip at 240pt
+- self-reported: pill reads "Self-reported. Nothing was checked." with a shield-off 16, and there is no
+  photo frame at all. One caption takes its place. A grey placeholder box would be a picture of a proof
+  that does not exist
+
+Law 19 holds: the count-up and the square fill are the one animated moment, 400ms, one haptic.
+
+**Copy**
+| string | style |
+|---|---|
+| Current streak | label textSecondary |
+| {streak} | numberSize.mid, displayFace, textPrimary |
+| day / days | body textSecondary |
+| Day {n}. Self reported. | bodyStrong |
+| Day {n}. Camera proof. | bodyStrong |
+| Self-reported. Nothing was checked. | caption textSecondary in a surface pill |
+| Camera proof. Checked on the server. | caption textSecondary in a surface pill |
+| Today's proof | caption textSecondary, photo frame placeholder only |
+| {n} more days this week to keep the count. | caption textSecondary, self-reported variant |
+| Done | bodyStrong on primary |
+
+---
+
+## 5. Saving — in the button, then a takeover
+
+The sentence stays; it moves. "Nothing is secured until the server says so." is now a
+`type.caption` `color.textSecondary` line under the button, where it reads as the rule rather than an
+interruption.
+
+**Under ~800ms, in place**: "I did it" keeps its `color.primary` fill, its label becomes "Saving…" and
+a 20pt spinner takes the leading slot. The button keeps its 52pt height and full width, so nothing below
+it moves. "Not yet" drops to inert. The caption does not change.
+
+**Over ~800ms, takeover**: a `color.canvas` full-screen layer, 44pt spinner, `type.heading` "Saving
+your day", and the same sentence in `type.secondary` under it. No progress bar, no percentage: the
+client does not know how long the server will take.
+
+**Tokens** `color.primary` fill held through the saving state · `color.textPrimary` at 0.35 alpha for
+the spinner track, `color.textPrimary` for its head · `buttonHeight.regular` 52 ·
+`type.caption` / `type.heading` / `type.secondary`.
+
+**Reuse** `ds/Button` with a `loading` prop (it already renders a leading slot — pass the spinner
+there rather than swapping in a new component), `ds/Spinner` at 20 and 44.
+
+**Copy**
+| string | style |
+|---|---|
+| Saving… | bodyStrong, textPrimary on primary |
+| Nothing is secured until the server says so. | caption textSecondary under the button, kept |
+| Saving your day | heading, takeover only |
+
+---
+
+**Cut in the conversion, and why**
+| cut | why |
+|---|---|
+| the white grounds on all five | law 1: the canvas is ink on every screen |
+| the full-screen saving takeover as the default | it interrupted a 300ms round trip. It now only appears past ~800ms |
+| the grey placeholder box on a self-reported secured screen | it is a picture of a proof that does not exist |
+| the week strip pinned to the bottom of the secured screen | it belongs to the number, not to the footer. Pinned, it left a screen of empty black between them |
+| the grey pill's neutral grey | not a DS_V3 colour. It is now surface with a 1pt border |
+| a hidden Sign in button while the form is incomplete | a button that vanishes cannot explain itself. Disabled plus one caption does |
+
+**Laws most at risk** 1 (five light screens, now ink), 2 and the Sept 6 amendment (one display number in
+the set, on the secured streak, and the resend countdown stays SF Pro), 6 (one primary fill per screen),
+9 (surface cards on canvas, no card inside a card), 18 (the Stamp does not appear on the self-reported
+secured screen), 19 (the count-up is still the one moment).

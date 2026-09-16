@@ -9,6 +9,7 @@ export const color = {
   border: '#2E2B27',          // card edges, dividers, segmented track
   textPrimary: '#F5F3EE',     // 17.3:1 on canvas, 15.8:1 on surface
   textSecondary: '#A39E95',   // 7.2:1 on canvas, 6.6:1 on surface
+  primary: '#BB471D',         // primary button fill, law 6; textPrimary label, 4.6:1
   brand: '#DC5401',           // fills, week strip, active outlines
   brandText: '#E8600F',       // orange as text: 5.6:1 on canvas, 5.1:1 on surface
   brandTint: '#3A1F10',       // hint grounds, selected chips, your own row

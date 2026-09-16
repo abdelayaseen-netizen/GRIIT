@@ -56,6 +56,11 @@
       <a href="#f26" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">26 Review</a>
       <a href="#f27" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">27 Launched</a>
       <a href="#f28" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">28 Active challenge</a>
+      <a href="#f29" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">29 Challenge detail</a>
+      <a href="#f30" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">30 Today's proof list</a>
+      <a href="#f31" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">31 Onboarding v2</a>
+      <a href="#f32" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">32 Onboarding states</a>
+      <a href="#f33" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">33 Dark conversion</a>
     </div>
   </div>
 
@@ -65,7 +70,7 @@
     <div id="f1" data-screen-label="01 Home" style="display:flex;flex-direction:column;gap:16px;width:390px;">
       <div style="display:flex;flex-direction:column;gap:6px;">
         <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">01 Home</div>
-        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Canvas is ink #0F0F0F and the greeting uses the display name, not "Welcome" with a "?" avatar. The away banner is one caption line, and the feed switcher is ghost chips under the Feed heading, not a second segmented control.</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Canvas is ink #0F0F0F and the greeting uses the display name, not "Welcome" with a "?" avatar. The away banner is one caption line, and the feed switcher is ghost chips under the Feed heading, not a second segmented control. Today's card lists every required task for the day, one row each: the rows are the call to action, so the single primary button is gone. One enrollment means no grouping label. Frame 30 carries the other two states.</div>
       </div>
       <div style="position:relative;width:390px;min-height:844px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;">
         <sc-if value="{{ guides }}" hint-placeholder-val="{{ false }}">
@@ -92,19 +97,20 @@
         </div>
         <div style="padding:20px 20px 0;">
           <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-              <div style="display:flex;flex-direction:column;gap:4px;">
-                <div style="font-size:20px;line-height:25px;font-weight:500;">Today's proof</div>
-                <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Drink Water Today · Day <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:1px;">1</span></div>
-              </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;">Today</div>
               <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 1</div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:24px;height:24px;border-radius:999px;background:#2E2B27;flex:none;"></div>
-              <div style="font-size:17px;line-height:22px;font-weight:500;flex:1;">Drink water and post a photo</div>
-              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Photo</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink water and post a photo</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
             </div>
-            <div style="height:52px;border-radius:999px;background:#DC5401;color:#0F0F0F;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="camera" style="width:24px;height:24px;color:#0F0F0F;"></i>Post your first proof</div>
           </div>
         </div>
         <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
@@ -2529,6 +2535,1110 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- 30 TODAY'S PROOF LIST -->
+    <div id="f30" data-screen-label="30 Today's proof list" style="display:flex;flex-direction:column;gap:16px;width:1290px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">30 Today's proof, card states</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:980px;">Every required task across every active enrollment, one row each, so the user picks the order. Undone rows first inside each challenge, challenges in enrollment order. The status dot is filled brand when done and a 1.5pt outline when not; done names drop to textSecondary and lose the chevron, and the row stops being a tap target. Gate labels are the same three real gates as frame 29. There is no per row button and no primary button under the list: the rows are the call to action. Nothing here uses the display face, because the badge is a count of today's work, not an earned number.</div>
+      </div>
+      <div style="display:flex;gap:24px;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · 3 enrollments, 4 tasks, 1 done</div>
+          <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;">Today</div>
+              <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">1 / 4</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 Day Hard</div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Workout, outdoors</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Time window 6–9am</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Progress photo</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+                </div>
+                
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Cold Shower</div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Run Before Work</div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Run 5km</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Time window 6–9am · Location</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · all done</div>
+          <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;">Today</div>
+              <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">4 / 4</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 Day Hard</div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Workout, outdoors</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Time window 6–9am</div>
+                </div>
+                
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Read 10 pages</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+                </div>
+                
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Progress photo</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+                </div>
+                
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Cold Shower</div>
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Cold shower</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+                </div>
+                
+              </div>
+            </div>
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Day secured.</div>
+          </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · one enrollment, one task</div>
+          <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;">
+            <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;">Today</div>
+              <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 1</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+                <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink water and post a photo</div>
+                  <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+                </div>
+                <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 29 CHALLENGE DETAIL, NOT JOINED -->
+    <div id="f29" data-screen-label="29 Challenge detail" style="display:flex;flex-direction:column;gap:16px;width:1740px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">29 Challenge detail, not joined, 393 by 852</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:980px;">The user has earned nothing here, so no display numbers and no stamp. Facts are the three the creator set: difficulty came out, because difficulty is the creator's opinion and the gate list is the truth. The task list carries the only three gates the app can enforce, and anything ungated says so. Enforcement is the creator's, set on the challenge and the same for everyone in it, so it is one line under the task list and not a choice.</div>
+      </div>
+      <div style="display:flex;gap:24px;align-items:flex-start;">
+
+        <!-- A: DEFAULT -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">A. Not enrolled</div>
+          <div style="position:relative;width:393px;height:852px;background:#0F0F0F;border-radius:44px;overflow:hidden;">
+            <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+            <div style="height:44px;padding:0 12px 0 20px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+              <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            </div>
+            <div style="padding:10px 20px 0;font-size:28px;line-height:34px;font-weight:500;letter-spacing:-0.01em;color:#F5F3EE;">Morning 30</div>
+            <div style="padding:6px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Two sessions a day, one of them outside before nine.</div>
+            <div style="padding:12px 20px 0;display:flex;flex-wrap:wrap;gap:8px;">
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">30 days</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">Solo</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">12 people</div>
+            </div>
+            <div style="padding:18px 20px 0;font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">What you'll post</div>
+            <div style="padding:0 20px;">
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="sunrise" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Outdoor session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="clock" style="width:12px;height:12px;color:#A39E95;"></i>Time window 6&ndash;9am</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="map-pin" style="width:12px;height:12px;color:#A39E95;"></i>Location</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="dumbbell" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Second session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="book-open" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#A39E95;">Self-reported</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:12px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:10px;align-items:center;">
+              <div style="width:100%;height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Join</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Day 1 is today.</div>
+            </div>
+          </div>
+          <div style="width:393px;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Solo keeps the line above. Participation type duo or team replaces it with <span style="color:#F5F3EE;">Join opens the invite step. You need a partner before Day 1.</span> Nothing else on the screen changes.</div>
+        </div>
+
+        <!-- B: FREE TIER LIMIT -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">B. Free limit reached</div>
+          <div style="position:relative;width:393px;height:852px;background:#0F0F0F;border-radius:44px;overflow:hidden;">
+            <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+            <div style="height:44px;padding:0 12px 0 20px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+              <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            </div>
+            <div style="padding:10px 20px 0;font-size:28px;line-height:34px;font-weight:500;letter-spacing:-0.01em;color:#F5F3EE;">Morning 30</div>
+            <div style="padding:6px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Two sessions a day, one of them outside before nine.</div>
+            <div style="padding:12px 20px 0;display:flex;flex-wrap:wrap;gap:8px;">
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">30 days</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">Solo</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">12 people</div>
+            </div>
+            <div style="padding:18px 20px 0;font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">What you'll post</div>
+            <div style="padding:0 20px;">
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="sunrise" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Outdoor session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="clock" style="width:12px;height:12px;color:#A39E95;"></i>Time window 6&ndash;9am</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="map-pin" style="width:12px;height:12px;color:#A39E95;"></i>Location</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="dumbbell" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Second session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="book-open" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#A39E95;">Self-reported</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:12px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:14px 20px 24px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:8px;align-items:center;">
+              <div style="width:100%;height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#A39E95;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Join</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">You are in 3 challenges. Free accounts hold 3 at a time.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Leave one, or upgrade</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- C: ENDED -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">C. Ended</div>
+          <div style="position:relative;width:393px;height:852px;background:#0F0F0F;border-radius:44px;overflow:hidden;">
+            <div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;"></i></span></div>
+            <div style="height:44px;padding:0 12px 0 20px;display:flex;align-items:center;justify-content:space-between;">
+              <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+              <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:24px;height:24px;color:#F5F3EE;"></i></div>
+            </div>
+            <div style="padding:10px 20px 0;font-size:28px;line-height:34px;font-weight:500;letter-spacing:-0.01em;color:#F5F3EE;">Morning 30</div>
+            <div style="padding:6px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Two sessions a day, one of them outside before nine.</div>
+            <div style="padding:12px 20px 0;display:flex;flex-wrap:wrap;gap:8px;">
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">30 days</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">Solo</div>
+              <div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#F5F3EE;">12 people</div>
+            </div>
+            <div style="padding:18px 20px 0;font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">What you'll post</div>
+            <div style="padding:0 20px;">
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="sunrise" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Outdoor session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="clock" style="width:12px;height:12px;color:#A39E95;"></i>Time window 6&ndash;9am</div>
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="map-pin" style="width:12px;height:12px;color:#A39E95;"></i>Location</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="dumbbell" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Second session</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                  </div>
+                </div>
+              </div>
+              <div style="height:1px;background:#2E2B27;"></div>
+              <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+                <i data-lucide="book-open" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#A39E95;">Self-reported</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="padding:12px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;">
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">This challenge ended on 12 August.</div>
+            </div>
+          </div>
+          <div style="width:393px;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Not yet live uses the same frame with one line changed: <span style="color:#F5F3EE;">This challenge starts on 14 September.</span></div>
+        </div>
+
+        <!-- D: GATE LABEL BREAKDOWN -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">D. Gate labels, every combination</div>
+          <div style="width:393px;background:#0F0F0F;border-radius:44px;border:1px solid #2E2B27;padding:24px 20px;">
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;padding-bottom:16px;">Three gates exist. Labels are the gate names, in this order, and nothing else. No label claims verification.</div>
+            <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+              <i data-lucide="camera" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Camera only</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+              <i data-lucide="clock" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Time window only</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="clock" style="width:12px;height:12px;color:#A39E95;"></i>Time window 6&ndash;9am</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+              <i data-lucide="map-pin" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Location only</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="map-pin" style="width:12px;height:12px;color:#A39E95;"></i>Location</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div style="padding:8px 0;display:flex;gap:14px;align-items:flex-start;">
+              <i data-lucide="shield-check" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">All three</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="camera" style="width:12px;height:12px;color:#A39E95;"></i>Camera</div>
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="clock" style="width:12px;height:12px;color:#A39E95;"></i>Time window 6&ndash;9am</div>
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#F5F3EE;"><i data-lucide="map-pin" style="width:12px;height:12px;color:#A39E95;"></i>Location</div>
+                </div>
+              </div>
+            </div>
+            <div style="height:1px;background:#2E2B27;"></div>
+            <div style="padding:8px 0 0;display:flex;gap:14px;align-items:flex-start;">
+              <i data-lucide="pencil" style="width:22px;height:22px;color:#A39E95;flex:none;margin-top:1px;"></i>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">No gate</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:12px;border:1px solid #2E2B27;background:#1A1917;font-size:12px;line-height:16px;color:#A39E95;">Self-reported</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="width:393px;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">The self-reported label sits in secondary ink: it is the absence of a gate, not a fourth one. The time window prints the creator's hours; the location label never prints the place.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 31 ONBOARDING V2 -->
+    <div id="f31" data-screen-label="31 Onboarding v2" style="display:flex;flex-direction:column;gap:16px;width:2085px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">31 Onboarding v2, screens 2 to 9, 393 by 852</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:980px;">Welcome is screen 1 and is unchanged. Screens 2 to 9 share one chrome: back chevron, a labelled Skip only where a screen is genuinely optional, the eight segment position bar, a 28pt title, and a pinned footer whose primary is #BB471D. No display face anywhere in the flow, because this user has earned nothing yet. Where a screen shows what the app does it shows the real component: the Today card from frame 30, a real feed row, the gate vocabulary from frame 29. The word Verified does not appear, and the only proof mechanics named are camera, time window and location.</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">2 · Goals</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">What are you building?</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick 1 to 3. It filters the challenges we suggest.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="border-radius:20px;background:#3A1F10;border:1.5px solid #DC5401;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Physical toughness</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Lifting, running, no missed sessions</div>
+          </div><i data-lucide="check" style="width:20px;height:20px;color:#E8600F;flex:none;"></i>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Mental discipline</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Meditation, journaling, focus blocks</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#3A1F10;border:1.5px solid #DC5401;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Daily habits</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Wake times, water, tidy space</div>
+          </div><i data-lucide="check" style="width:20px;height:20px;color:#E8600F;flex:none;"></i>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Reading and learning</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Pages a day, a course, a language</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold exposure</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Cold showers, plunges, breathwork</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Sleep and recovery</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Phone down, lights out, rest days</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">3 · WhyProof</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="min-height:44px;padding:0 12px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip</div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Streaks are easy to fake.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Everywhere else you tap a box. Here the server secures the day, and only when every task in every challenge you joined is done.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-size:44px;line-height:48px;font-weight:500;color:#F5F3EE;font-variant-numeric:tabular-nums;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Post today to start.</div>
+      </div>
+      <div style="padding:16px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">2 / 3</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Run 5km</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Time window 6–9am</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+          </div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Read 10 pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div>
+          </div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Cold shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Two of three. The day is not secured, and nothing you tap changes that.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">4 · WhyCircle</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="min-height:44px;padding:0 12px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip</div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Discipline, witnessed.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">This is your row in the feed once you post.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;overflow:hidden;">
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="user" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">your username</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 Day Hard · Day 12</div>
+            </div>
+          </div>
+          <div style="height:200px;background:#0F0F0F;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+            <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Your proof photo</div>
+          </div>
+          <div style="padding:14px 16px;display:flex;align-items:center;gap:8px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Day secured.</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Run 5km, read 10 pages, cold shower.</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Everyone in the challenge sees your proofs. Outside it, they go to the feed you post to: Friends, or Everyone.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">5 · Commitment</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Set your line.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">How many days are you committing to. You can change it later, but you have to change it on purpose.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">7 days</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Enough to find out whether the tasks fit your day.</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#3A1F10;border:1.5px solid #DC5401;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">30 days</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Long enough that a bad week lands inside it.</div>
+          </div><i data-lucide="check" style="width:20px;height:20px;color:#E8600F;flex:none;"></i>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 days</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Two and a half months with no gap.</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Custom</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Any number from 3 to 365.</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Home counts against this: Day 1 of 30.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Lock it in</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">6 · FirstChallenge</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Start here.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Three that match your goals.</div>
+      </div>
+      <div style="padding:12px 20px 0;display:flex;flex-direction:column;gap:6px;">
+        <div style="border-radius:20px;background:#3A1F10;border:1.5px solid #DC5401;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 Day Hard</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 days · Solo</div>
+            </div><i data-lucide="check" style="width:20px;height:20px;color:#E8600F;flex:none;"></i>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;"><div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Workout, outdoors</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera · Time window 6–9am</div></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;"><div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Read 10 pages</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Self-reported</div></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;"><div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Progress photo</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera</div></div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold Shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">30 days · Solo</div>
+            </div><div style="width:20px;height:20px;border-radius:999px;border:1.5px solid #A39E95;flex:none;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;"><div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Cold shower</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera · Location</div></div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Standard mode. Gates are recorded, not enforced.</div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Run Before Work</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">30 days · Solo</div>
+            </div><div style="width:20px;height:20px;border-radius:999px;border:1.5px solid #A39E95;flex:none;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;"><div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Run 5km</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera · Time window 6–9am · Location</div></div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Join</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Day 1 is today.</div><div style="display:flex;gap:8px;"><div style="flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Browse all</div><div style="flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Set this up later</div></div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">7 · Reminders</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">One reminder a day.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">It tells you what is still open. Turn it off in Settings whenever you want.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 Day Hard: 2 of 3 tasks left today.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6:00 PM</div>
+        </div>
+      </div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Send it at</div>
+      <div style="padding:8px 20px 0;display:flex;gap:8px;">
+        <div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">6:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">AM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">8:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">AM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">6:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#E8600F;">PM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">9:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">PM</div>
+          </div>
+      </div>
+      <div style="padding:8px 20px 0;"><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Pick a custom time</div></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Turn on reminders</div><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">No reminders for now</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8 · Account</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Save your streak.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You are in already. An account is what makes your proof, streak and challenges survive this phone.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;"><i data-lucide="apple" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Continue with Apple</div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;"><i data-lucide="mail" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Continue with email</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Have an account? Log in</div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Saved and waiting for you</div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">75 Day Hard, joined</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">30 day target</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Reminder at 6:00 PM</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Physical toughness, daily habits</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip — I'll risk losing my progress</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">9 · Profile</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="min-height:44px;padding:0 12px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip</div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">What should we call you?</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">All of this is optional. The feed shows your display name, or your username if you leave it blank.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div style="width:88px;height:88px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i></div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Photo optional</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Display name</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Display name</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Username</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Username</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Bio</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Bio</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip for now</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 32 ONBOARDING V2, EXTRA STATES -->
+    <div id="f32" data-screen-label="32 Onboarding states" style="display:flex;flex-direction:column;gap:16px;width:2085px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">32 Onboarding v2, states beyond the happy path</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:980px;">Nothing here pads. Goals blocks Continue and says what would unblock it, FirstChallenge names the goals that returned nothing rather than filling the list with unrelated challenges, and each identity case ends in a path forward instead of an error string.</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">2 · Goals, none picked</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">What are you building?</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Pick 1 to 3. It filters the challenges we suggest.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Physical toughness</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Lifting, running, no missed sessions</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Mental discipline</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Meditation, journaling, focus blocks</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Daily habits</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Wake times, water, tidy space</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Reading and learning</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Pages a day, a course, a language</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold exposure</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Cold showers, plunges, breathwork</div>
+          </div>
+        </div>
+        <div style="border-radius:20px;background:#1A1917;border:1px solid #2E2B27;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Sleep and recovery</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Phone down, lights out, rest days</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#A39E95;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Pick at least one</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">6 · FirstChallenge, no matches</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Start here.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Nothing in the catalogue matches cold exposure and sleep and recovery yet.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <i data-lucide="search-x" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">No suggestions for those goals</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Browse the full catalogue, or start without one and join later from Discover.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Browse all</div><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Set this up later</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">7 · Reminders, permission denied</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">One reminder a day.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">It tells you what is still open. Turn it off in Settings whenever you want.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <i data-lucide="bell-off" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Notifications are off for GRIIT</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">iOS is blocking them, so nothing can be sent. Turn them on in Settings and the time you pick here will be used.</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Send it at</div>
+      <div style="padding:8px 20px 0;display:flex;gap:8px;opacity:0.5;">
+        <div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">6:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">AM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">8:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">AM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">6:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#E8600F;">PM</div>
+          </div><div style="flex:1;min-height:60px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">9:00</div>
+            <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">PM</div>
+          </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Open Settings</div><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Continue without reminders</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8 · Account, email already has an account</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Save your streak.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You are in already. An account is what makes your proof, streak and challenges survive this phone.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Email</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">yaseen@gmail.com</div>
+        </div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+          <i data-lucide="info" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>
+          <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">That email already has a GRIIT account. Log in and today's progress comes with you.</div>
+        </div>
+        <div style="height:52px;border-radius:999px;background:#BB471D;border:none;color:#F5F3EE;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Log in and bring my progress</div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Saved and waiting for you</div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">75 Day Hard, joined</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">30 day target</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Reminder at 6:00 PM</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Physical toughness, daily habits</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip — I'll risk losing my progress</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8 · Account, confirm the address</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Save your streak.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You are in already. An account is what makes your proof, streak and challenges survive this phone.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Email</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">yaseen@gmial.com</div>
+        </div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+          <i data-lucide="help-circle" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>
+          <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">We'll confirm at yaseen@gmial.com — correct?</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Edit</div>
+          <div style="flex:1;height:52px;border-radius:999px;background:#BB471D;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Send it</div>
+        </div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Saved and waiting for you</div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">75 Day Hard, joined</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">30 day target</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Reminder at 6:00 PM</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Physical toughness, daily habits</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip — I'll risk losing my progress</div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8 · Account, malformed email</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="width:44px;"></div>
+      </div><div style="padding:4px 20px 0;display:flex;gap:4px;"><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#DC5401;"></div><div style="flex:1;height:4px;border-radius:999px;background:#2E2B27;"></div></div><div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Save your streak.</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">You are in already. An account is what makes your proof, streak and challenges survive this phone.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Email</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1.5px solid #E5533D;padding:15px 16px;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">yaseen@</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;"><i data-lucide="circle-alert" style="width:16px;height:16px;color:#E5533D;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#E5533D;">That is not a complete email address.</div></div>
+        <div style="padding-top:4px;"><div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#A39E95;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:22px;font-weight:500;">Continue</div></div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Saved and waiting for you</div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">75 Day Hard, joined</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">30 day target</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Reminder at 6:00 PM</div></div>
+        <div style="display:flex;align-items:center;gap:10px;min-height:24px;"><i data-lucide="check" style="width:16px;height:16px;color:#E8600F;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Physical toughness, daily habits</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;"><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Skip — I'll risk losing my progress</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 33 DARK CONVERSION, AUTH AND SECURED -->
+    <div id="f33" data-screen-label="33 Dark conversion" style="display:flex;flex-direction:column;gap:16px;width:2085px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">33 Login, reset, self-report, secured, saving</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:980px;">Five light-theme screens brought onto the ink canvas with no new colours. Every element on each screen survives: nothing was dropped in the conversion, and the only copy that changed is copy that was wrong. Barlow Condensed appears once in the set, on the secured streak number, because that is the one number here the user earned. The primary fill is #BB471D and there is one per screen; Apple, Google and "Not yet" are surface buttons, and "Resend" and "Sign up" are text links.</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">1 · Login, empty, Sign in disabled</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Sign in</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your proof, streaks and challenges are on the account, not the phone.</div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Email</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">you@email.com</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Password</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your password</div><div style="min-height:44px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Show</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;"><div style="min-height:44px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Forgot password?</div></div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#A39E95;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Sign in</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Enter your email and password to continue.</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;height:1px;background:#2E2B27;"></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">or</div><div style="flex:1;height:1px;background:#2E2B27;"></div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="apple" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Sign in with Apple</div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="chrome" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Sign in with Google</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Don't have an account?</div><div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Sign up</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">1 · Login, both fields filled</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Sign in</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your proof, streaks and challenges are on the account, not the phone.</div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Email</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">yaseen@gmail.com</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Password</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">••••••••••</div><div style="min-height:44px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Hide</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;"><div style="min-height:44px;display:flex;align-items:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Forgot password?</div></div>
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Sign in</div>
+        
+      </div>
+      <div style="padding:20px 20px 0;display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;height:1px;background:#2E2B27;"></div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">or</div><div style="flex:1;height:1px;background:#2E2B27;"></div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="apple" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Sign in with Apple</div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="chrome" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Sign in with Google</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Don't have an account?</div><div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Sign up</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">2 · Reset sent, resend on countdown</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Check your email</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A reset link is on its way. It expires in 60 minutes.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="mail" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Sent to</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">yaseen@gmail.com</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Wrong address? Go back and send it again.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;flex-direction:column;gap:4px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Back to sign in</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;opacity:0.6;">Didn't get it? Resend in 48s</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">2 · Reset sent, resend available</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Check your email</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A reset link is on its way. It expires in 60 minutes.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="mail" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Sent to</div>
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">yaseen@gmail.com</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Wrong address? Go back and send it again.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;flex-direction:column;gap:4px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Back to sign in</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Didn't get it? Resend</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">3 · Self-report step</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 1 · Self-report</div>
+      </div>
+      <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Self-reported. Nothing is checked.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What this records</div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="check" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Today is marked done for this task</div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="users" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your challenge sees it as self-reported</div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="shield-off" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">No camera, no time window, no location</div></div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;flex-direction:column;gap:8px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">I did it</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Not yet</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">5 · Saving in the button, under 800ms</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 1 · Self-report</div>
+      </div>
+      <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Self-reported. Nothing is checked.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What this records</div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="check" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Today is marked done for this task</div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="users" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your challenge sees it as self-reported</div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;"><i data-lucide="shield-off" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">No camera, no time window, no location</div></div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;display:flex;flex-direction:column;gap:8px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><div style="width:20px;height:20px;border-radius:999px;border:2px solid rgba(245,243,238,0.35);border-top-color:#F5F3EE;"></div>Saving…</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Not yet</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">5 · Saving takeover, over 800ms</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 1 · Self-report</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:#0F0F0F;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:0 40px;">
+        <div style="width:44px;height:44px;border-radius:999px;border:3px solid rgba(245,243,238,0.25);border-top-color:#F5F3EE;"></div>
+        <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;text-align:center;">Saving your day</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+      </div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">4 · Secured, self-reported</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;justify-content:flex-end;"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="x" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div></div>
+      <div style="padding:8px 20px 0;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:160px;line-height:150px;">1</div>
+        <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">day</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 1. Self reported.</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;">
+          <i data-lucide="shield-off" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported. Nothing was checked.</div>
+        </div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">M</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">T</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">W</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">T</div><div style="width:100%;aspect-ratio:1;border-radius:12px;background:#DC5401;border:1.5px solid #DC5401;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">F</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">S</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">S</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div></div></div>
+      <div style="padding:24px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Six more days this week to keep the count.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Done</div></div></div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">4 · Secured, camera proof</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;justify-content:flex-end;"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="x" style="width:24px;height:24px;color:#A39E95;flex:none;"></i></div></div>
+      <div style="padding:8px 20px 0;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:160px;line-height:150px;">1</div>
+        <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">day</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 1. Self reported.</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;">
+          <i data-lucide="camera" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera proof. Checked on the server.</div>
+        </div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">M</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">T</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">W</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">T</div><div style="width:100%;aspect-ratio:1;border-radius:12px;background:#DC5401;border:1.5px solid #DC5401;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">F</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">S</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">S</div><div style="width:100%;aspect-ratio:1;border-radius:12px;border:1px solid #2E2B27;"></div></div></div></div>
+      <div style="padding:24px 20px 0;">
+        <div style="border-radius:20px;overflow:hidden;border:1px solid #2E2B27;height:240px;background:#1A1917;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Today's proof</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Done</div></div></div></div>
       </div>
     </div>
 
