@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -133,7 +132,7 @@ export function CreateWizardV2() {
   const [newTaskOpen, setNewTaskOpen] = useState<boolean>(false);
   const [launchBusy, setLaunchBusy] = useState<boolean>(false);
   const [launchError, setLaunchError] = useState<string>("");
-  const [launched, setLaunched] = useState<{ title: string; group: boolean } | null>(null);
+  const [launched, setLaunched] = useState<{ title: string; group: boolean; challengeId: string } | null>(null);
 
   const isDirty = useMemo(() => {
     return (
@@ -292,7 +291,7 @@ export function CreateWizardV2() {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
       setConfirmOpen(false);
-      setLaunched({ title: state.title.trim(), group: state.who === "group" });
+      setLaunched({ title: state.title.trim(), group: state.who === "group", challengeId: result.id });
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
       const msg = err instanceof Error ? err.message : "";
@@ -323,7 +322,7 @@ export function CreateWizardV2() {
               label="Invite friends"
               variant="secondary"
               onPress={() => {
-                void Share.share({ message: launched.title });
+                router.push(ROUTES.CHALLENGE_INVITE(launched.challengeId) as never);
               }}
             />
           ) : null}

@@ -164,6 +164,26 @@ export function pickerRowState(input: { enrolled: boolean; invited: boolean }): 
   return "invite";
 }
 
+export type FollowPerson = {
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
+export function mergeFollowGraph(
+  following: FollowPerson[],
+  followers: FollowPerson[],
+  selfId?: string,
+): FollowPerson[] {
+  const byId = new Map<string, FollowPerson>();
+  for (const row of [...following, ...followers]) {
+    if (selfId && row.user_id === selfId) continue;
+    if (!byId.has(row.user_id)) byId.set(row.user_id, row);
+  }
+  return [...byId.values()];
+}
+
 export function pickerCaption(n: number): string {
   return `People you follow, and people who follow you. ${ofTen(n)} in the group.`;
 }

@@ -7,7 +7,10 @@ import {
   invitedFooterNetwork,
   memberStreakCaption,
   memberTrailing,
+  groupInviteShareMessage,
+  openLinkRoute,
   pendingTrailing,
+  pickerRowState,
   showInvitedSection,
   sortRoster,
 } from "./group-ui";
@@ -135,5 +138,30 @@ describe("roster", () => {
     expect(pendingTrailing(false)).toBe("invited");
     expect(memberTrailing(pendingTrailing(true))).toEqual({ label: "Cancel", tone: "secondary" });
     expect(memberTrailing(pendingTrailing(false))).toEqual({ label: "Invited", tone: "secondary" });
+  });
+});
+
+describe("invite picker", () => {
+  it("row state machine is invite → invited / in", () => {
+    expect(pickerRowState({ enrolled: false, invited: false })).toBe("invite");
+    expect(pickerRowState({ enrolled: false, invited: true })).toBe("invited");
+    expect(pickerRowState({ enrolled: true, invited: true })).toBe("in");
+    expect(pickerRowState({ enrolled: true, invited: false })).toBe("in");
+  });
+
+  it("share message is {title} on GRIIT. Join me: {url}", () => {
+    expect(groupInviteShareMessage("Morning run", "https://griit.fit/invite/abc")).toBe(
+      "Morning run on GRIIT. Join me: https://griit.fit/invite/abc",
+    );
+  });
+
+  it("openLink routes by state", () => {
+    expect(openLinkRoute("ch-1", { state: "full" })).toEqual({ kind: "full" });
+    expect(openLinkRoute("ch-1", { state: "ended" })).toEqual({ kind: "ended" });
+    expect(openLinkRoute("ch-1", { invite: { id: "inv-1", status: "pending" } })).toEqual({
+      kind: "challenge",
+      challengeId: "ch-1",
+      inviteId: "inv-1",
+    });
   });
 });
