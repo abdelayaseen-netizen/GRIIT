@@ -25,8 +25,6 @@ export const profileUpdateInputSchema = z.object({
   onboarding_completed_at: z.string().max(64).optional(),
   primary_goal: z.string().max(128).optional(),
   daily_time_budget: z.string().max(32).optional(),
-  starter_challenge_id: z.string().max(64).optional(),
-  preferred_secure_time: z.string().max(16).optional(),
   onboarding_answers: z.record(z.string(), z.unknown()).optional(),
   profile_visibility: z.enum(VISIBILITY_LEVELS).optional(),
   challenge_visibility: z.enum(VISIBILITY_LEVELS).optional(),

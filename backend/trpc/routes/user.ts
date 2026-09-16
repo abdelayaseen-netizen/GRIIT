@@ -60,7 +60,6 @@ export const userRouter = createTRPCRouter({
           onboarding_social_style: input.socialStyle ?? null,
           onboarding_training_time: input.trainingTime ?? null,
           notification_time_preference: notificationTimeFromTrainingTime(input.trainingTime),
-          preferred_secure_time: notificationTimeFromTrainingTime(input.trainingTime),
           initial_challenge_id: input.selectedChallengeId
             ? ONBOARDING_CHALLENGE_IDS[input.selectedChallengeId] ?? null
             : null,

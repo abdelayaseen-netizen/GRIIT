@@ -29,7 +29,6 @@ const PROFILE_UPDATE_KEYS = [
   "username", "display_name", "bio", "avatar_url", "cover_url",
   "onboarding_completed", "onboarding_completed_at", "onboarding_answers",
   "primary_goal", "daily_time_budget",
-  "starter_challenge_id", "preferred_secure_time",
   "profile_visibility", "challenge_visibility", "activity_visibility", "weekly_goal",
   "target_streak",
   "timezone", "distance_unit",
