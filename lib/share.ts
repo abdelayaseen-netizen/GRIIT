@@ -8,6 +8,7 @@ import {
 } from "@/lib/deep-links";
 import { DEEP_LINK_BASE_URL } from "@/lib/config";
 import { trackEvent } from "@/lib/analytics";
+import { groupInviteShareMessage } from "@/lib/group-ui";
 
 async function shareOrCopy(message: string, title?: string): Promise<void> {
   if (Platform.OS === "web") {
@@ -67,7 +68,7 @@ export async function inviteToChallenge(
 ): Promise<void> {
   const inviteCode = challenge.inviteCode ?? challenge.id;
   const url = inviteDeepLink(inviteCode, refUserId);
-  const message = `Join me on "${challenge.name}" on GRIIT. Let's hold each other accountable.\n\n${url}`;
+  const message = groupInviteShareMessage(challenge.name, url);
   await shareOrCopy(message, "Join my challenge");
 }
 

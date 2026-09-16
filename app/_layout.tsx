@@ -234,6 +234,8 @@ function RootLayoutNav() {
           presentation: "card"
         }} 
       />
+      <Stack.Screen name="challenge/[id]/members" options={{ headerShown: false }} />
+      <Stack.Screen name="challenge/[id]/invite" options={{ headerShown: false }} />
       <Stack.Screen name="invite/[code]" options={{ headerShown: false }} />
       <Stack.Screen name="paywall" options={{ headerShown: false }} />
       <Stack.Screen name="create-team" options={{ title: "Create team", presentation: "modal" }} />

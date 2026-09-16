@@ -8,7 +8,7 @@ const DEVICE_ID_MAX = 256;
 
 const NOTIF_SELECT = "id, user_id, type, title, body, data, read, created_at";
 
-type NotifType = "respect" | "comment" | "follow" | "rank" | "follow_request" | "general";
+type NotifType = "respect" | "comment" | "follow" | "rank" | "follow_request" | "challenge_invite" | "general";
 
 function anchorVerb(
   routineAnchor: string | null,
@@ -79,7 +79,7 @@ function mapDbRow(r: DbNotifRow) {
   const reminder_type =
     typeof dataObj["reminder_type"] === "string" ? dataObj["reminder_type"] : null;
 
-  const allowed = new Set(["respect", "comment", "follow", "rank", "follow_request"]);
+  const allowed = new Set(["respect", "comment", "follow", "rank", "follow_request", "challenge_invite"]);
   const typeStr = String(r.type ?? "general");
   const type: NotifType = allowed.has(typeStr) ? (typeStr as NotifType) : "general";
 

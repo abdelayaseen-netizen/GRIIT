@@ -59,6 +59,7 @@ type ChallengeRow = {
   difficulty?: string | null;
   is_hard_mode?: boolean | null;
   participants_count?: number | null;
+  participation_type?: string | null;
   challenge_tasks?: TaskRow[] | null;
 };
 
@@ -116,7 +117,7 @@ export default function ActiveChallengeDetailScreen() {
           `
           id, challenge_id, current_day, start_at, started_at, created_at,
           challenges (
-            id, title, description, duration_days, difficulty, is_hard_mode, participants_count,
+            id, title, description, duration_days, difficulty, is_hard_mode, participants_count, participation_type,
             challenge_tasks (
               id, title, task_type, order_index, config, require_photo,
               min_duration_minutes, target_mode, start_value, start_duration_minutes
@@ -174,6 +175,12 @@ export default function ActiveChallengeDetailScreen() {
   const description = challenge?.description?.trim() || undefined;
   const participantsCount =
     typeof challenge?.participants_count === "number" ? challenge.participants_count : 0;
+  const participationType =
+    challenge?.participation_type === "team"
+      ? "team"
+      : challenge?.participation_type === "duo"
+        ? "duo"
+        : "solo";
   const difficulty = mapDifficulty({
     isHardMode: challenge?.is_hard_mode,
     difficulty: challenge?.difficulty,
@@ -322,8 +329,12 @@ export default function ActiveChallengeDetailScreen() {
 
   const handleParticipants = useCallback(() => {
     if (!challengeId) return;
+    if (participationType === "team") {
+      router.push(ROUTES.CHALLENGE_MEMBERS(challengeId) as never);
+      return;
+    }
     router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
-  }, [challengeId, router]);
+  }, [challengeId, participationType, router]);
 
   if (!id) {
     return (
@@ -364,6 +375,7 @@ export default function ActiveChallengeDetailScreen() {
           weekSecured={weekSecured}
           todayIndex={todayIndex}
           participantsCount={participantsCount}
+          participationType={participationType}
           description={description}
           resetNotice={RESET_NOTICE}
           loading={isLoading && !activeChallenge}

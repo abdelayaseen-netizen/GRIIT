@@ -33,6 +33,11 @@ import {
   type GateKind,
   type ParticipationType,
 } from "@/lib/challenge-detail-mapping";
+import {
+  GROUP_INVITE_ONLY_CAPTION,
+  invitedCaption,
+  ofTen,
+} from "@/lib/group-ui";
 
 const PT = DS_V3.space.xs / 4;
 const ICON = 22;
@@ -64,6 +69,12 @@ const PARTICIPATION_LABEL: Record<ParticipationType, string> = {
   team: "Team",
 };
 
+export type ChallengeDetailInvite = {
+  inviterName: string;
+  memberCount: number;
+  cap: number;
+};
+
 export type ChallengeDetailV3Props = {
   title: string;
   description?: string;
@@ -80,9 +91,12 @@ export type ChallengeDetailV3Props = {
   joining?: boolean;
   loading?: boolean;
   error?: boolean;
+  invite?: ChallengeDetailInvite;
   onBack: () => void;
   onMore?: () => void;
   onJoin?: () => void;
+  onAccept?: () => void;
+  onNotNow?: () => void;
   onUpgrade?: () => void;
   onRetry?: () => void;
 };
@@ -121,9 +135,17 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
   const insets = useSafeAreaInsets();
   const closed = p.state === "ended" || p.state === "not_live";
   const blocked = p.state === "free_limit";
+  const invited = !!p.invite;
+  const inviteOnly = p.participationType === "team" && !p.invite;
   const description = (p.description ?? "").trim();
   const footerPad = blocked ? 24 : 28;
   const footerTop = blocked ? 14 : DS_V3.space.lg;
+  const peopleChip =
+    invited
+      ? ofTen(p.invite!.memberCount)
+      : p.participationType === "team"
+        ? ofTen(p.participantsCount)
+        : peopleLabel(p.participantsCount);
 
   if (p.error) {
     return (
@@ -158,7 +180,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         <View style={styles.chips}>
           <FactChip label={formatDays(p.durationDays)} />
           <FactChip label={PARTICIPATION_LABEL[p.participationType]} />
-          <FactChip label={peopleLabel(p.participantsCount)} />
+          <FactChip label={peopleChip} muted={invited || p.participationType === "team"} />
         </View>
 
         <Text style={styles.heading}>{"What you'll post"}</Text>
@@ -197,7 +219,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
             ? "Hard mode. Gates are enforced; a failed gate fails the day."
             : "Standard mode. Gates are recorded, not enforced."}
         </Text>
-        <View style={styles.footerClear} />
+        <View style={invited ? styles.footerClearInvited : styles.footerClear} />
       </ScrollView>
 
       <View
@@ -217,6 +239,29 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
               ? `This challenge ended on ${p.endsOn}.`
               : `This challenge starts on ${p.startsOn}.`}
           </Text>
+        ) : invited ? (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Accept"
+              disabled={p.joining}
+              onPress={p.joining ? undefined : p.onAccept}
+              style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
+            >
+              <Text style={styles.joinLabel}>Accept</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Not now"
+              onPress={p.onNotNow}
+              hitSlop={8}
+            >
+              <Text style={styles.notNow}>Not now</Text>
+            </Pressable>
+            <Text style={styles.joinCaption}>{invitedCaption(p.invite!.inviterName)}</Text>
+          </>
+        ) : inviteOnly ? (
+          <Text style={styles.joinCaption}>{GROUP_INVITE_ONLY_CAPTION}</Text>
         ) : (
           <>
             {blocked ? (
@@ -281,10 +326,10 @@ function Nav({ onBack, onMore }: { onBack: () => void; onMore?: () => void }) {
   );
 }
 
-function FactChip({ label }: { label: string }) {
+function FactChip({ label, muted }: { label: string; muted?: boolean }) {
   return (
     <View style={styles.chip}>
-      <Text style={styles.chipText}>{label}</Text>
+      <Text style={muted ? styles.chipTextMuted : styles.chipText}>{label}</Text>
     </View>
   );
 }
@@ -355,6 +400,18 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  chipTextMuted: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  notNow: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   heading: {
     paddingTop: 18,
@@ -432,6 +489,9 @@ const styles = StyleSheet.create({
   },
   footerClear: {
     height: FOOTER_CLEAR,
+  },
+  footerClearInvited: {
+    height: FOOTER_CLEAR + DS_V3.size.tap,
   },
   footer: {
     position: "absolute",
