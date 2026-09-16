@@ -190,4 +190,10 @@ describe("gates", () => {
     expect(homeProofGate("photo")).toBe("Photo");
     expect(homeProofGate("timer", 45)).toBe("Timer 45 min");
   });
+
+  it("manual/simple tiles match TaskFlowV2 ask — not Photo via mapTaskType", () => {
+    expect(homeProofGate("manual")).toBe("Self-reported");
+    expect(homeProofGate("simple")).toBe("Self-reported");
+    expect(homeProofGate("manual", undefined, true)).toBe("Photo");
+  });
 });

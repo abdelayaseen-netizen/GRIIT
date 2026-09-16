@@ -94,4 +94,23 @@ describe("selectHomeProofCard", () => {
     expect(card.posted).toBe(true);
     expect(homeProofCtaLabel(card)).toBe("Posted today");
   });
+
+  it("manual task without require_photo is Self-reported, not Photo", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Make your bed",
+          challengeName: "Bed",
+          taskType: "manual",
+          requirePhoto: false,
+        }),
+      ],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: true,
+      securedToday: false,
+    });
+    expect(card.gate).toBe("Self-reported");
+    expect(card.gate).not.toBe("Photo");
+  });
 });

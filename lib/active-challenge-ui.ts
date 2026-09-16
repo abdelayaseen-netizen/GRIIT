@@ -1,3 +1,5 @@
+import { flowOpensCamera } from "@/lib/task-flow-state";
+
 /**
  * Active challenge (frame 28) binding. Server fields only.
  * secured_today / week_secured come from getSecuredDateKeys, never from task rows.
@@ -159,13 +161,17 @@ export function participantsLine(count: number): string {
   return `${count} in this challenge`;
 }
 
-/** Home Today's proof caption. Never a constant "Photo". */
-export function homeProofGate(taskType: string, durationMinutes?: number): string {
-  const t = mapTaskType(taskType);
-  if (t === "timer" || t === "workout") {
+/** Home Today's proof caption. Photo only when TaskFlowV2 will open the camera. */
+export function homeProofGate(
+  taskType: string,
+  durationMinutes?: number,
+  requirePhoto = false,
+): string {
+  const raw = (taskType ?? "").trim().toLowerCase();
+  if (raw === "timer" || raw === "workout" || raw === "run") {
     return durationMinutes && durationMinutes > 0 ? `Timer ${durationMinutes} min` : "Timer";
   }
-  if (t === "photo") return "Photo";
+  if (flowOpensCamera(raw, requirePhoto)) return "Photo";
   return "Self-reported";
 }
 

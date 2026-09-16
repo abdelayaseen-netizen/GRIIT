@@ -50,6 +50,7 @@ export type StreakHeroV4Task = {
   taskType: string;
   taskConfig: string;
   durationMinutes?: number;
+  requirePhoto?: boolean;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';

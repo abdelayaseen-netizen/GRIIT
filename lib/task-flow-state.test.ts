@@ -10,6 +10,7 @@ import {
   discardPhotoStep,
   finishSubmitOutcome,
   fmtMmSs,
+  flowOpensCamera,
   initialStep,
   isHonest,
   journalReady,
@@ -40,6 +41,16 @@ describe("initialStep", () => {
     expect(initialStep("manual")).toBe("ask");
     expect(initialStep("simple")).toBe("ask");
     expect(initialStep("unknown")).toBe("ask");
+  });
+});
+
+describe("flowOpensCamera", () => {
+  it("matches TaskFlowV2: photo type or require_photo, never mapped manual→photo", () => {
+    expect(flowOpensCamera("photo", false)).toBe(true);
+    expect(flowOpensCamera("manual", false)).toBe(false);
+    expect(flowOpensCamera("simple", false)).toBe(false);
+    expect(flowOpensCamera("journal", false)).toBe(false);
+    expect(flowOpensCamera("manual", true)).toBe(true);
   });
 });
 

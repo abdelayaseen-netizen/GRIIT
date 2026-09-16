@@ -15,6 +15,7 @@ export type HomeProofTask = {
   challengeSecuredToday: boolean;
   taskType?: string;
   durationMinutes?: number;
+  requirePhoto?: boolean;
 };
 
 export type HomeProofCard = {
@@ -52,7 +53,7 @@ export function selectHomeProofCard(input: {
     day: displayDay(task?.currentDay ?? 1, task?.challengeSecuredToday ?? false),
     dayTotal: homeDayTotal(durationDays, input.targetStreak),
     taskText: task?.name ?? "",
-    gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes),
+    gate: homeProofGate(task?.taskType ?? "", task?.durationMinutes, task?.requirePhoto === true),
     doneCount: input.tasksDoneToday,
     totalCount: input.totalTasksToday || 1,
     posted: input.securedToday,
