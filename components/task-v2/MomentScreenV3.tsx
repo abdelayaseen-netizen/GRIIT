@@ -13,6 +13,7 @@ import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
 import { taskWord } from "@/lib/active-challenge-ui";
+import { securedHasCameraProof } from "@/lib/secured-layout";
 import Button from "@/components/ds/Button";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
@@ -130,6 +131,11 @@ export default function MomentScreenV3({
   const copy = stateLine({ variant, day, remaining, target: goal });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
   const shareLabel = variant === "complete" ? "Complete" : "Verified";
+  const showPhotoFrame =
+    proofSource != null ||
+    securedHasCameraProof({
+      proofUri: proofUri ?? null,
+    });
 
   const settleCount = useCallback(() => {
     if (variant === "verified" || variant === "daySecured") {
@@ -182,7 +188,7 @@ export default function MomentScreenV3({
       <View style={[styles.top, { paddingTop: insets.top + DS_V3.space.md }]}>
         <DisplayNumber
           value={variant === "complete" ? goal : streak}
-          size="moment"
+          size={variant === "complete" ? "moment" : "mid"}
           animateFrom={justMoved ? streakBefore : undefined}
           onSettled={justMoved ? settleCount : undefined}
         />
@@ -208,11 +214,7 @@ export default function MomentScreenV3({
         )
       ) : (
         <View style={styles.media}>
-          {variant === "selfReported" ? (
-            <View style={styles.selfCard}>
-              <Text style={styles.selfCardText}>Self-reported. Nothing was checked.</Text>
-            </View>
-          ) : (
+          {showPhotoFrame ? (
             <ProofImage
               uri={proofUri}
               source={proofSource}
@@ -220,7 +222,7 @@ export default function MomentScreenV3({
               stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
               scrim={stampOn && (variant === "verified" || variant === "daySecured")}
             />
-          )}
+          ) : null}
         </View>
       )}
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
@@ -282,17 +284,6 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
     paddingBottom: DS_V3.size.button * 3,
     justifyContent: "flex-start",
-  },
-  selfCard: {
-    backgroundColor: DS_V3.color.surface,
-    borderRadius: DS_V3.radius.card,
-    padding: DS_V3.space.gutter,
-  },
-  selfCardText: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: "400",
-    color: DS_V3.color.textPrimary,
   },
   completeStamp: {
     marginTop: DS_V3.space.gutter,
