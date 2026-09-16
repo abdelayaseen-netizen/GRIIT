@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import PushedHeader from "@/components/ds/PushedHeader";
 import { TaskChrome } from "./TaskChrome";
 import { styles } from "./taskFlowStyles";
 import { useTaskFlowV2 } from "./useTaskFlowV2";
@@ -29,11 +30,18 @@ export function TaskFlowV2() {
       style={[
         styles.root,
         f.dark && { backgroundColor: DS_COLORS_V2.surface.camera },
-        f.step === "verifying" && { backgroundColor: DS_V3.color.canvas },
+        (f.step === "verifying" || f.step === "ask") && { backgroundColor: DS_V3.color.canvas },
       ]}
     >
       {!f.hideChrome ? (
-        <TaskChrome title={`Day ${f.currentDay} · ${f.chromeTitle}`} dark={f.dark} onBack={f.goBack} />
+        f.step === "ask" ? (
+          <PushedHeader
+            title={`Day ${f.currentDay} · ${f.chromeTitle}`}
+            onBack={f.goBack}
+          />
+        ) : (
+          <TaskChrome title={`Day ${f.currentDay} · ${f.chromeTitle}`} dark={f.dark} onBack={f.goBack} />
+        )
       ) : null}
 
       {f.step === "blocked" ? (
