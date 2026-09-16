@@ -16,9 +16,12 @@ import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Button from "@/components/ds/Button";
+import Card from "@/components/ds/Card";
 import PushedHeader from "@/components/ds/PushedHeader";
 import TextField from "@/components/ds/TextField";
+import TextLink from "@/components/ds/TextLink";
 import { useResendCountdown } from "@/lib/use-resend-countdown";
+import { Mail } from "lucide-react-native";
 
 function ForgotPasswordScreenInner() {
   const router = useRouter();
@@ -102,19 +105,30 @@ function ForgotPasswordScreenInner() {
       {sent ? (
         <View style={styles.sent}>
           <Text style={styles.title}>Check your email</Text>
-          <Text style={styles.body}>
-            We sent a link to {email.trim()}. Use it to reset your password.
+          <Text style={styles.subtitle}>
+            A reset link is on its way. It expires in 60 minutes.
           </Text>
+          <Card>
+            <View style={styles.sentRow}>
+              <View style={styles.mailTile}>
+                <Mail size={DS_V3.space.gutter} color={DS_V3.color.brandText} />
+              </View>
+              <View style={styles.sentCopy}>
+                <Text style={styles.sentLabel}>Sent to</Text>
+                <Text style={styles.sentAddress}>{email.trim()}</Text>
+              </View>
+            </View>
+          </Card>
+          <Text style={styles.wrong}>Wrong address? Go back and send it again.</Text>
           <Button
-            label="Back to Sign In"
+            label="Back to sign in"
             onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
             accessibilityLabel="Back to sign in"
           />
-          <Button
-            label={locked ? `Resend in ${secondsLeft}s` : "Resend"}
-            variant="secondary"
-            disabled={locked}
-            loading={loading}
+          <TextLink
+            label={locked ? `Didn't get it? Resend in ${secondsLeft}s` : "Didn't get it? Resend"}
+            inert={locked}
+            disabled={loading}
             onPress={handleResend}
           />
           {formError ? (
@@ -161,7 +175,7 @@ function ForgotPasswordScreenInner() {
               </Text>
             ) : null}
             <Button
-              label="Back to Sign In"
+              label="Back to sign in"
               variant="tertiary"
               ink
               disabled={loading}
@@ -216,10 +230,41 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
-  body: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
+  sentAddress: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  sentLabel: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
+  sentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.lg,
+  },
+  mailTile: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sentCopy: {
+    flex: 1,
+    gap: DS_V3.space.xs,
+  },
+  wrong: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   error: {

@@ -13,3 +13,8 @@ export function securedHasCameraProof(completion: {
     Boolean(completion.proofUri)
   );
 }
+
+/** Remaining Mon–Sun days after today. Monday = 0. */
+export function moreDaysThisWeek(todayIndex: number): number {
+  return Math.max(0, 6 - todayIndex);
+}

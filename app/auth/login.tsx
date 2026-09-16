@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
 import { captureError } from "@/lib/sentry";
@@ -28,8 +27,7 @@ import TextField from "@/components/ds/TextField";
 import TextLink from "@/components/ds/TextLink";
 import * as Haptics from "expo-haptics";
 
-const ICON = DS_V3.space.xs * 6;
-const LOGIN_DISABLED_CAPTION = "Please enter your email and password.";
+const LOGIN_DISABLED_CAPTION = "Enter your email and password to continue.";
 
 function LoginScreenInner() {
   const router = useRouter();
@@ -204,8 +202,10 @@ function LoginScreenInner() {
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>Welcome back.</Text>
-          <Text style={styles.subtitle}>Sign in to continue building your streak.</Text>
+          <Text style={styles.title}>Sign in</Text>
+          <Text style={styles.subtitle}>
+            Your proof, streaks and challenges are on the account, not the phone.
+          </Text>
 
           <View style={styles.stack}>
             <TextField
@@ -215,7 +215,7 @@ function LoginScreenInner() {
                 setEmail(t);
                 setFormError("");
               }}
-              placeholder="Email"
+              placeholder="you@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -233,7 +233,7 @@ function LoginScreenInner() {
                 setPassword(t);
                 setFormError("");
               }}
-              placeholder="Password"
+              placeholder="Your password"
               secureTextEntry={!showPassword}
               returnKeyType="go"
               onSubmitEditing={() => live && handleSignIn()}
@@ -243,14 +243,10 @@ function LoginScreenInner() {
                 <Pressable
                   onPress={() => setShowPassword((p) => !p)}
                   accessibilityRole="button"
-                  accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                  accessibilityLabel={showPassword ? "Hide" : "Show"}
                   style={styles.eye}
                 >
-                  {showPassword ? (
-                    <EyeOff size={ICON} color={DS_V3.color.textSecondary} />
-                  ) : (
-                    <Eye size={ICON} color={DS_V3.color.textSecondary} />
-                  )}
+                  <Text style={styles.showHide}>{showPassword ? "Hide" : "Show"}</Text>
                 </Pressable>
               }
             />
@@ -258,6 +254,7 @@ function LoginScreenInner() {
             <View style={styles.forgot}>
               <TextLink
                 label="Forgot password?"
+                tone="secondary"
                 onPress={handleForgotPassword}
                 disabled={loading}
               />
@@ -310,7 +307,7 @@ function LoginScreenInner() {
                 label="Sign up"
                 onPress={handleSignUpLink}
                 disabled={loading}
-                accessibilityLabel="Don't have an account. Sign up instead"
+                accessibilityLabel="Don't have an account? Sign up"
               />
             </View>
           </View>
@@ -402,9 +399,15 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   footerText: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  showHide: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
   },
 });
