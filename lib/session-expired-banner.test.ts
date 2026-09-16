@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   SESSION_EXPIRED_PAD,
   sessionExpiredBannerOffset,
+  showSessionExpiredBanner,
 } from "./session-expired-banner";
 
 describe("sessionExpiredBannerOffset", () => {
@@ -13,6 +14,15 @@ describe("sessionExpiredBannerOffset", () => {
       paddingVertical: SESSION_EXPIRED_PAD,
     });
     expect(SESSION_EXPIRED_PAD).toBe(12);
+  });
+});
+
+describe("showSessionExpiredBanner", () => {
+  it("never renders on /auth/*", () => {
+    const msg = "Session expired. Please sign in again.";
+    expect(showSessionExpiredBanner("/auth/forgot-password", msg)).toBe(false);
+    expect(showSessionExpiredBanner("/auth/login", msg)).toBe(false);
+    expect(showSessionExpiredBanner("/", msg)).toBe(true);
   });
 });
 

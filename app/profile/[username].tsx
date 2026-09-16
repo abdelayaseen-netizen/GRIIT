@@ -103,7 +103,7 @@ export default function VisitorProfileScreen() {
         userId: ownerId,
         ...(previewStranger ? { preview: "stranger" as const } : {}),
       }) as Promise<RecordPayload>,
-    enabled: !!ownerId && (!isSelf || previewStranger),
+    enabled: !!ownerId && !!user?.id && (!isSelf || previewStranger),
     staleTime: 60 * 1000,
   });
   if (recordQ.isError) captureError(recordQ.error, "Visitor.getRecord");
@@ -125,7 +125,7 @@ export default function VisitorProfileScreen() {
         following: number;
       }>,
     staleTime: 60 * 1000,
-    enabled: !!ownerId,
+    enabled: !!ownerId && !!user?.id,
   });
 
   const rec = recordQ.data;
