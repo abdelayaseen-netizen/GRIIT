@@ -1119,7 +1119,7 @@ face), 7 and 9 (rows inside the one card, no box inside a box), 18 (the three re
 # Onboarding v2
 
 **Chunk** J. `src/components/onboarding/`, one component per screen plus `OnboardingChrome.tsx`.
-No new tokens. Frames 31 (screens 2 to 9) and 32 (states beyond the happy path).
+No new tokens. Frames 31 (screens 2 to 9) and 32 (states beyond the happy path), in `GRIIT Onboarding and Auth.dc.html`.
 
 Screen 1, Welcome, is unchanged and does not use the chrome: it has no back target and no position bar.
 
@@ -1417,7 +1417,7 @@ all).
 
 # Dark conversion: auth, self-report, secured
 
-**Chunk** K. Frame 33. Five screens that were still light theme inside an otherwise dark app.
+**Chunk** K. Frame 33, in `GRIIT Onboarding and Auth.dc.html`. Five screens that were still light theme inside an otherwise dark app.
 No new tokens and no new components: everything below is DS_V3 plus `components/ds/`.
 
 Nothing was dropped in the conversion. Every field, link and button that existed on the light screens
@@ -1540,6 +1540,8 @@ these five screens · `color.brand` for secured week squares and the today outli
 `radius.pill` on the pill, `radius.input` 12 on week squares, `radius.card` 20 on the photo ·
 `color.primary` Done · `motion.daySecuredMs` 400 for the count-up.
 
+The photo frame is 176pt, not 240. At 240 the composed middle ends 4pt above the pinned Done button, which is inside measurement error on a 393 wide phone; 176 leaves 65.
+
 **Reuse** `ds/DisplayNumber` size mid, `ds/WeekStrip` (the Home component, unchanged),
 `ds/Button` primary. The verification pill is `ds/Chip` variant surface with a leading 16pt icon — not
 a new component, and not the Stamp: the Stamp is camera-proof only and this screen must show both cases.
@@ -1613,3 +1615,171 @@ there rather than swapping in a new component), `ds/Spinner` at 20 and 44.
 the set, on the secured streak, and the resend countdown stays SF Pro), 6 (one primary fill per screen),
 9 (surface cards on canvas, no card inside a card), 18 (the Stamp does not appear on the self-reported
 secured screen), 19 (the count-up is still the one moment).
+
+# Group challenges
+
+**Chunk** L. Frames 34 to 38, in `GRIIT Group Challenges.dc.html`. No new tokens.
+
+Individual streaks stay individual. The group is a shared room with a fixed cap of ten, and the cap is
+stated wherever a seat count is actionable.
+
+**One new component proposed**: `ds/MemberRow` — avatar 40, name + a caption line, and a trailing
+status caption. The roster and the invite picker are the same row with a different trailing slot, and
+`ds/ListRow` cannot carry an avatar. Everything else below is existing `components/ds/`.
+
+---
+
+## 34. Roster — `app/challenge/[id]/members`
+
+Opens from the social row on the active challenge screen.
+
+**Tokens** `color.canvas` · `color.surface` + `border` for the empty-state card · `displayFace` at
+`numberSize.home` 64 for the group streak · `color.brandText` for "Secured today" ·
+`color.textSecondary` for "Not yet today", every member streak and the Cancel affordance ·
+`color.primary` Invite · `type.label` section labels · `radius.card` 20 · `space.gutter` 20 ·
+`hit` 44 per row.
+
+**Reuse** `ds/PushedHeader` (back chevron + challenge name), `ds/DisplayNumber` size home,
+`ds/Divider` between rows, `ds/Button` primary, `ds/Card` for the empty state, `ds/MemberRow` (new).
+
+**Group streak** the only display number on the screen. Every member's own streak is a
+`type.caption` line under their name in the body face — a teammate's streak is their earned number,
+not the viewer's. The number carries one caption, "Counts only days every member secured", because a
+group streak nobody can define is a vanity metric. If the backend defines it differently, change the
+caption to match the query; do not ship the number without a definition beside it.
+
+**Order** creator first with a "Creator" label, then by streak descending. Not alphabetical: the list is
+a standings board and the first thing a member looks for is who is carrying the group.
+
+**Copy**
+| string | style |
+|---|---|
+| Group streak | label textSecondary |
+| {group_streak} | numberSize.home, displayFace |
+| days / day | body textSecondary |
+| {secured_today} of {member_count} secured today | secondary textSecondary |
+| Counts only days every member secured. | caption textSecondary |
+| In this group · {n} of 10 | label textSecondary |
+| Creator | label textSecondary, beside the name |
+| {n} day streak | caption textSecondary |
+| No streak yet | caption textSecondary |
+| Secured today | caption brandText |
+| Not yet today | caption textSecondary |
+| Invited | label textSecondary, section |
+| Cancel | secondary medium textSecondary, creator only |
+| Invited | caption textSecondary, non-creator view of a pending row |
+| Invite | bodyStrong on primary, user-plus 20 |
+| Just you so far. | bodyStrong |
+| Up to nine more can join. The group streak starts on the first day all of you secure. | secondary textSecondary |
+
+The Invited section does not render when there are no pending invites. Members see "Invited" as an inert
+caption where the creator sees "Cancel".
+
+---
+
+## 35. Invite picker — pushed from Invite
+
+**Tokens** `color.brandText` for the live Invite affordance · `color.textSecondary` for "Invited" and
+"In" · `color.surface` + `border` for the empty and full cards and the Share button ·
+`radius.pill` on the Share button · `border` for the Divider above it.
+
+**Reuse** `ds/PushedHeader`, `ds/MemberRow` (new, same as the roster with a different trailing slot),
+`ds/Divider`, `ds/Button` variant surface, `ds/Card`.
+
+The trailing element is a state, not a button: `color.brandText` "Invite" when actionable, an inert
+`type.caption` "Invited" after the tap, an inert "In" when the person is already enrolled with the row
+at normal opacity (they are not an error, they are already here).
+
+"Share a link" is pinned to the bottom above a Divider and survives every state including the empty one,
+because it is the only path that reaches someone you do not follow.
+
+**Copy**
+| string | style |
+|---|---|
+| Invite to {challenge} | bodyStrong, header |
+| People you follow, and people who follow you. {n} of 10 in the group. | caption textSecondary |
+| {display_name} / @{username} | bodyStrong / caption textSecondary |
+| Invite | secondary medium brandText |
+| Invited | caption textSecondary, inert |
+| In | caption textSecondary, inert |
+| Share a link | bodyStrong on surface, link 20 |
+| Follow people to invite them here. | bodyStrong |
+| A link works on anyone, follower or not. | secondary textSecondary |
+| This group is full. Ten is the cap, and someone has to leave before you can invite again. | secondary textSecondary |
+
+**Full state** rows drop to 0.4 and go inert, the Invite affordance greys to textSecondary, and the card
+at the top states the cap. Share a link stays live: the link itself will refuse at the server, and
+hiding it would imply the group can be grown some other way.
+
+---
+
+## 36. Invite notification — one row in Activity
+
+**Tokens** `color.surface` ground when unread, `color.canvas` when read · `color.brand` for the 8pt
+unread dot · `type.secondary` at weight 500 / `color.textPrimary` unread, weight 400 /
+`color.textSecondary` read.
+
+**Reuse** `ds/NotificationRow` if it exists, otherwise `ds/MemberRow` with a timestamp caption. No new
+component.
+
+Both states are the same height, so marking read does not reflow the list. The unread dot becomes a
+chevron on read: the row stays tappable after it has been seen, because a pending invite is still
+pending.
+
+**Copy**
+| string | style |
+|---|---|
+| {inviter} invited you to {challenge} | secondary medium textPrimary (unread) / secondary textSecondary (read) |
+| {relative time} | caption textSecondary |
+
+---
+
+## 37. Challenge detail, invited — `ChallengeDetailV3`
+
+Same layout as the not-joined state. Two changes.
+
+**Footer** Join is replaced by primary "Accept" and tertiary "Not now". Above them, one centred caption:
+"{inviter} invited you. Day 1 is the day you accept." That sentence does the work the old
+"Day 1 is today." did, and it names who is asking.
+
+**Facts row** the member chip reads "{n} of 10" instead of "{n} people". In a group the cap is the fact
+that matters: it tells the viewer whether there is room before they tap Accept.
+
+**Tokens** `color.primary` Accept · `color.textSecondary` Not now · `color.surface` + `border`
+chips · unchanged everywhere else.
+
+**Reuse** the existing `ChallengeDetail` component with an `invite` prop:
+`{inviter_name, member_count, cap}`. Do not fork the screen.
+
+**Copy**
+| string | style |
+|---|---|
+| {n} of 10 | caption textSecondary in a surface chip |
+| {inviter} invited you. Day 1 is the day you accept. | caption textSecondary, centred |
+| Accept | bodyStrong on primary |
+| Not now | secondary medium textSecondary |
+
+"Not now" dismisses without declining: the invite stays in Activity. A destructive decline belongs in
+the overflow menu, not beside Accept.
+
+---
+
+## 38. Active challenge, the social row
+
+The existing row, new copy: "{n} in this challenge" becomes "{n} of 10 in this group". Same
+`ds/ListRow`, same users 24 icon, same chevron, same 44pt height. It names the cap because it is the
+entry point to the roster, and someone deciding whether to invite needs to know how many seats are left.
+
+Solo challenges keep the row hidden entirely when `participants_count` is 1 — unchanged.
+
+| string | style |
+|---|---|
+| {n} of 10 in this group | bodyStrong |
+
+---
+
+**Laws most at risk** 2 and the Sept 6 amendment (the group streak is the only display number on the
+roster; member streaks are captions in the body face), 6 (one primary per screen — Invite on the roster,
+Accept on the detail card, and Share a link is surface), 9 (rows on the canvas with Dividers, cards only
+for the empty and full states), 23 (trailing states are captions, not buttons, so nothing looks tappable
+that is not).

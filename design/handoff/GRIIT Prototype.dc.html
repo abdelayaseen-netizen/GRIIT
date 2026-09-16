@@ -9,7 +9,10 @@
 <x-dc>
 <helmet>
 <style>
-  body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
   * { box-sizing:border-box; }
   a { color:#E8600F; text-decoration:none; }
   a:hover { color:#F5F3EE; }

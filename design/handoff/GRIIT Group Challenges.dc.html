@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT consistency pass, part three</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Group challenges</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;max-width:640px;">Frames 34 to 38. Individual streaks stay individual; the group is a shared room with a cap of ten. Same tokens, same laws. Frames 1 to 30 are in GRIIT System, 31 to 33 in GRIIT Onboarding and Auth.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT System.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← Frames 1 to 30</a>
+      <a href="GRIIT Onboarding and Auth.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← Frames 31 to 33</a>
+      <a href="#f34" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">34 Roster</a>
+      <a href="#f35" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">35 Invite picker</a>
+      <a href="#f36" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">36 Invite notification</a>
+      <a href="#f37" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">37 Detail, invited</a>
+      <a href="#f38" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">38 Group row</a>
+    </div>
+  </div>
+
+  <div id="f34" data-screen-label="34 Roster" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">34 Roster, app/challenge/[id]/members</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">Group streak is the one earned number here, so it is the only display face on the screen: every member's own streak is a caption in the body face beside their name. The number carries one caption naming what it counts, because a group streak that nobody can define is a vanity metric. Rows are creator first, then by streak descending.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · 4 of 10, two invites pending</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 Hard</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Group streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">9</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">3 of 4 secured today</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;padding-top:2px;">Counts only days every member secured.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;padding-bottom:4px;">In this group · 4 of 10</div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen</div><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Creator</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">12 day streak</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;text-align:right;">Secured today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">12 day streak</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;text-align:right;">Secured today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">K</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Khalid</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6 day streak</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;text-align:right;">Secured today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">S</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Sami</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2 day streak</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Not yet today</div>
+        </div>
+      </div>
+      <div style="padding:28px 20px 0;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;padding-bottom:4px;">Invited</div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">B</div></div>
+          <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Bilal</div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Cancel</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">O</div></div>
+          <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Omar</div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Cancel</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="user-plus" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Invite</div></div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · fresh group, just the creator</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 Hard</div>
+      </div>
+      <div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Group streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">0 of 1 secured today</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;padding-top:2px;">Counts only days every member secured.</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;padding-bottom:4px;">In this group · 1 of 10</div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen</div><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Creator</div></div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">No streak yet</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Not yet today</div>
+        </div>
+      </div>
+      <div style="padding:28px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <i data-lucide="users" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Just you so far.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Up to nine more can join. The group streak starts on the first day all of you secure.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="user-plus" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Invite</div></div></div></div>
+    </div>
+  </div>
+
+  <div id="f35" data-screen-label="35 Invite picker" style="display:flex;flex-direction:column;gap:16px;width:1280px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">35 Invite picker, pushed from Invite</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">Trailing state per row rather than a button: Invite in brandText, Invited and In as inert captions. "Share a link" sits below a Divider pinned to the bottom, because it is the only path that works on someone you do not follow and it must survive every state, including the empty one.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · mutuals, mixed states</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Invite to 75 Hard</div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">People you follow, and people who follow you. 4 of 10 in the group.</div>
+      <div style="padding:12px 20px 0;">
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@amir</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">In</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">R</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Rayan</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@rayan</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Invited</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">T</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Tariq</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@tariq</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">H</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Hamza</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@hamza</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">I</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Idris</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@idris</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Invite</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:0 0 28px;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:16px 20px 0;"><div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="link" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Share a link</div></div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · you follow no one</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Invite to 75 Hard</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <i data-lucide="user-plus" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Follow people to invite them here.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A link works on anyone, follower or not.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:0 0 28px;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:16px 20px 0;"><div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="link" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Share a link</div></div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · group full at ten</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Invite to 75 Hard</div>
+      </div>
+      <div style="padding:16px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+          <i data-lucide="users" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">This group is full. Ten is the cap, and someone has to leave before you can invite again.</div>
+        </div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.4;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@amir</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.4;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">R</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Rayan</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@rayan</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.4;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">T</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Tariq</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@tariq</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.4;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">H</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Hamza</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@hamza</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Invite</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.4;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">I</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Idris</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">@idris</div>
+          </div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Invite</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:0 0 28px;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:16px 20px 0;"><div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="link" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Share a link</div></div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div id="f36" data-screen-label="36 Invite notification" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">36 Invite notification, in the Activity list</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">Unread is a surface ground with a medium label and a 8pt brand dot; read drops to canvas, weight 400, textSecondary, and the dot becomes a chevron. Same row, same height either way, so the list does not reflow when it is marked read. The third row is an ordinary activity row for contrast.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Unread, read, and an ordinary row</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Activity</div>
+      </div>
+      <div style="padding:12px 0 0;">
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;min-height:44px;background:#1A1917;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Yaseen invited you to 75 Hard</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2h</div>
+          </div>
+          <div style="width:8px;height:8px;border-radius:999px;background:#DC5401;flex:none;"></div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;min-height:44px;background:transparent;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Yaseen invited you to 75 Hard</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2h</div>
+          </div>
+          <i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Amir secured Day 12</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">5h</div>
+          </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+        </div>
+      </div></div></div>
+  </div>
+
+  <div id="f37" data-screen-label="37 Detail invited" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">37 Challenge detail, invited state</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">The same ChallengeDetailV3 layout, with Join replaced by Accept and a tertiary Not now. The caption above the button names who invited you and what accepting costs. The facts row gains "4 of 10" in place of "{n} people": in a group the cap is the fact that matters.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Pending invite, or arrived by link</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;"></div>
+      </div>
+      <div style="padding:10px 20px 0;font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">75 Hard</div>
+      <div style="padding:12px 20px 0;display:flex;flex-wrap:wrap;gap:8px;"><div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 days</div><div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Group</div><div style="padding:6px 12px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">4 of 10</div></div>
+      <div style="padding:18px 20px 0;font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">What you'll post</div>
+      <div style="padding:4px 20px 0;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Workout, outdoors</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera · Time window 6–9am</div>
+          </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Read 10 pages</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Self-reported</div>
+          </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;">
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Progress photo</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Camera</div>
+          </div>
+      </div>
+      <div style="padding:12px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hard mode. Gates are enforced; a failed gate fails the day.</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;padding-bottom:4px;">Yaseen invited you. Day 1 is the day you accept.</div>
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Accept</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Not now</div>
+      </div></div></div>
+  </div>
+
+  <div id="f38" data-screen-label="38 Group row" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">38 Active challenge, the social row</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">Same ListRow, same icon, same chevron, new copy. It is the entry point to the roster, so it names the cap: a user deciding whether to invite needs to know there are six seats left.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:8px;width:393px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Before</div>
+        <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:8px 20px;">
+          <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+            <i data-lucide="users" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">4 in this challenge</div>
+            <i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:393px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">After</div>
+        <div style="background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:8px 20px;">
+          <div style="padding:16px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+            <i data-lucide="users" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">4 of 10 in this group</div>
+            <i data-lucide="chevron-right" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.icons(); }
+  componentDidUpdate() { this.icons(); }
+  icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
