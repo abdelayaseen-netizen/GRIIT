@@ -5,7 +5,11 @@ import {
   challengeInviteLine,
   detailFooterVariant,
   invitedFooterNetwork,
+  memberStreakCaption,
   memberTrailing,
+  pendingTrailing,
+  showInvitedSection,
+  sortRoster,
 } from "./group-ui";
 
 describe("MemberRow trailing states", () => {
@@ -83,5 +87,53 @@ describe("Accept and Not now", () => {
     expect(invitedFooterNetwork("not_now")).toBe("none");
     expect(invitedFooterNetwork("accept")).toBe("respond_accept");
     expect(invitedFooterNetwork("decline")).toBe("respond_decline");
+  });
+});
+
+describe("roster", () => {
+  const a = {
+    userId: "a",
+    displayName: "A",
+    role: "member",
+    currentStreak: 4,
+    securedToday: true,
+    joinedAt: "2026-01-02",
+  };
+  const creator = {
+    userId: "c",
+    displayName: "Creator",
+    role: "creator",
+    currentStreak: 1,
+    securedToday: false,
+    joinedAt: "2026-01-01",
+  };
+  const b = {
+    userId: "b",
+    displayName: "B",
+    role: "member",
+    currentStreak: 9,
+    securedToday: false,
+    joinedAt: "2026-01-03",
+  };
+
+  it("orders creator first, then streak descending", () => {
+    expect(sortRoster([a, b, creator]).map((m) => m.userId)).toEqual(["c", "b", "a"]);
+  });
+
+  it("selects streak captions", () => {
+    expect(memberStreakCaption(0)).toBe("No streak yet");
+    expect(memberStreakCaption(3)).toBe("3 day streak");
+  });
+
+  it("hides Invited section when none", () => {
+    expect(showInvitedSection(0)).toBe(false);
+    expect(showInvitedSection(2)).toBe(true);
+  });
+
+  it("creator vs member trailing on pending rows", () => {
+    expect(pendingTrailing(true)).toBe("cancel");
+    expect(pendingTrailing(false)).toBe("invited");
+    expect(memberTrailing(pendingTrailing(true))).toEqual({ label: "Cancel", tone: "secondary" });
+    expect(memberTrailing(pendingTrailing(false))).toEqual({ label: "Invited", tone: "secondary" });
   });
 });

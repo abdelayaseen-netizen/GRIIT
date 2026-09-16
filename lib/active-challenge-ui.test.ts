@@ -5,6 +5,7 @@ import {
   footerAction,
   hasCameraProof,
   homeProofGate,
+  participantsLine,
   pendingGate,
   securedTodayFromKeys,
   statusLine,
@@ -195,5 +196,12 @@ describe("gates", () => {
     expect(homeProofGate("manual")).toBe("Self-reported");
     expect(homeProofGate("simple")).toBe("Self-reported");
     expect(homeProofGate("manual", undefined, true)).toBe("Photo");
+  });
+});
+
+describe("social row", () => {
+  it("names the cap for a group and keeps solo copy", () => {
+    expect(participantsLine(3, "team")).toBe("3 of 10 in this group");
+    expect(participantsLine(3)).toBe("3 in this challenge");
   });
 });

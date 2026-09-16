@@ -152,6 +152,10 @@ export function pendingTrailing(isCreator: boolean): MemberTrailing {
   return isCreator ? "cancel" : "invited";
 }
 
+export function showInvitedSection(pendingCount: number): boolean {
+  return pendingCount > 0;
+}
+
 export type PickerRowState = "invite" | "invited" | "in";
 
 export function pickerRowState(input: { enrolled: boolean; invited: boolean }): PickerRowState {

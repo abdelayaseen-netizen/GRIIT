@@ -78,6 +78,7 @@ export type ActiveChallengeV3Props = {
   weekSecured: boolean[];
   todayIndex: number;
   participantsCount: number;
+  participationType?: "solo" | "duo" | "team";
   description?: string;
   resetNotice?: boolean;
   loading?: boolean;
@@ -266,17 +267,19 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 </View>
               );
             })}
-            {p.participantsCount > 1 ? (
+            {p.participationType === "team" || p.participantsCount > 1 ? (
               <>
                 <View style={styles.divider} />
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={participantsLine(p.participantsCount)}
+                  accessibilityLabel={participantsLine(p.participantsCount, p.participationType)}
                   onPress={p.onParticipants}
                   style={styles.taskRow}
                 >
                   <Users size={ICON} color={DS_V3.color.textSecondary} />
-                  <Text style={styles.taskTitle}>{participantsLine(p.participantsCount)}</Text>
+                  <Text style={styles.taskTitle}>
+                    {participantsLine(p.participantsCount, p.participationType)}
+                  </Text>
                   <ChevronRight size={ICON} color={DS_V3.color.textSecondary} />
                 </Pressable>
               </>

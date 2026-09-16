@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionSheetIOS, Alert, Platform, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useLocalSearchParams, usePathname, useRouter, Stack } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
@@ -85,6 +85,7 @@ export default function ChallengeDetailScreen() {
         ? params.inviter[0]
         : undefined;
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const { activeChallenge, refetchAll } = useApp();
   const { isPro } = useProStatus();
@@ -118,8 +119,9 @@ export default function ChallengeDetailScreen() {
 
   useEffect(() => {
     if (!activeChallengeId) return;
+    if (pathname.includes("/members") || pathname.includes("/invite")) return;
     router.replace(ROUTES.CHALLENGE_ACTIVE(activeChallengeId) as never);
-  }, [activeChallengeId, router]);
+  }, [activeChallengeId, router, pathname]);
 
   const challengeQuery = useQuery({
     queryKey: ["challenge", id],
