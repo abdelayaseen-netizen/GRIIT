@@ -28,6 +28,7 @@ import {
 } from "@/lib/task-session-store";
 import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
+import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import {
   type TaskFlowStep,
   checkinGpsNextStep,
@@ -111,6 +112,7 @@ export function useTaskFlowV2() {
   } | null>(null);
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
 
   const windowEval = evaluateScheduleWindow({
     start: config.schedule_window_start,
@@ -243,7 +245,11 @@ export function useTaskFlowV2() {
   };
 
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
-    setStep("verifying");
+    setSaving(true);
+    let cancelled = false;
+    const takeoverTimer = setTimeout(() => {
+      if (!cancelled) setStep("verifying");
+    }, VERIFYING_TAKEOVER_MS);
     try {
       const complete = await completeTask({
         activeChallengeId,
@@ -251,6 +257,9 @@ export function useTaskFlowV2() {
         ...payload,
       });
       if (finishSubmitOutcome({ complete }) === "failed" || !complete) {
+        cancelled = true;
+        clearTimeout(takeoverTimer);
+        setSaving(false);
         setFailCode(undefined);
         setFailNote("Couldn't save. Try again.");
         setStep("failed");
@@ -271,6 +280,9 @@ export function useTaskFlowV2() {
         secureDay,
       });
       if (after.ui.kind === "challenge_done") {
+        cancelled = true;
+        clearTimeout(takeoverTimer);
+        setSaving(false);
         setChallengeDone({
           challengeTitle: after.ui.challengeTitle,
           remainingChallenges: after.ui.remainingChallenges,
@@ -320,9 +332,15 @@ export function useTaskFlowV2() {
       setResult(assembled);
       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
       void endLiveActivity();
+      cancelled = true;
+      clearTimeout(takeoverTimer);
+      setSaving(false);
       // secureDay already awaited invalidate+refetch (useAppChallengeMutations 291–296).
       router.push(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
     } catch (err) {
+      cancelled = true;
+      clearTimeout(takeoverTimer);
+      setSaving(false);
       setFailCode(failureErrorCode(err));
       setFailNote(err instanceof Error ? err.message : "Couldn't save. Try again.");
       setStep("failed");
@@ -630,6 +648,7 @@ export function useTaskFlowV2() {
     discardAsk,
     taskRequired,
     verifyLine,
+    saving,
     chromeTitle: chromeTitle(taskType),
     goBack,
     exit,

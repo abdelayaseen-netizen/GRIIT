@@ -164,7 +164,7 @@ export function TaskFlowV2() {
       ) : null}
 
       {f.step === "ask" ? (
-        <AskStep taskName={f.taskName} onDidIt={f.onDidIt} onNotYet={f.exit} />
+        <AskStep taskName={f.taskName} loading={f.saving} onDidIt={f.onDidIt} onNotYet={f.exit} />
       ) : null}
 
       {f.step === "verifying" ? <VerifyingStep taskType={f.taskType} /> : null}
