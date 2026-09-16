@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
@@ -24,9 +25,9 @@ function InviteRedirectScreenInner() {
   }, [code, refParam, router]);
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+    <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }} edges={["top"]}>
       <ActivityIndicator size="large" />
-    </View>
+    </SafeAreaView>
   );
 }
 

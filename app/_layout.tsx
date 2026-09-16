@@ -9,6 +9,7 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired, sessionExpiredMessageForAuthState } from "@/lib/auth-expiry";
+import { sessionExpiredBannerOffset } from "@/lib/session-expired-banner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
@@ -197,7 +198,7 @@ function RootLayoutNav() {
         <Pressable
           style={[
             layoutStyles.sessionExpiredBanner,
-            { paddingTop: 12 + insets.top },
+            sessionExpiredBannerOffset(insets.top),
           ]}
           onPress={() => setSessionExpiredMessage(null)}
           accessibilityRole="button"
@@ -382,7 +383,6 @@ const layoutStyles = StyleSheet.create({
   flex1: { flex: 1 },
   sessionExpiredBanner: {
     backgroundColor: DS_COLORS.errorText,
-    paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: "center",
   },
