@@ -15,6 +15,7 @@ import {
   FREE_ACTIVE_LIMIT_MESSAGE,
 } from "../../../lib/free-challenge-limit";
 import { guestUsername } from "../../lib/guest-username";
+import { GROUP_MAX_MEMBERS } from "../../lib/group-challenges";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -248,11 +249,10 @@ export const challengesCreateProcedures = {
         }
       }
 
-      const isTeamOrShared =
-        input.participationType === "team" ||
-        input.participationType === "shared_goal" ||
-        input.participationType === "duo";
-      const runStatus = isTeamOrShared ? "waiting" : null;
+      const isGroup = input.participationType === "team";
+      const isWaitingRoom =
+        input.participationType === "shared_goal" || input.participationType === "duo";
+      const runStatus = isGroup ? "active" : isWaitingRoom ? "waiting" : null;
       const isOneDay = input.type === "one_day";
       const challengeStatus = input.status ?? "published";
       const insertPayload: Record<string, unknown> = {
@@ -268,12 +268,15 @@ export const challengesCreateProcedures = {
         replay_policy: input.replayPolicy || "allow_replay",
         require_same_rules: input.requireSameRules ?? true,
         show_replay_label: input.showReplayLabel ?? true,
-        visibility: (input.visibility || "FRIENDS").toUpperCase(),
+        visibility: isGroup ? "PRIVATE" : (input.visibility || "FRIENDS").toUpperCase(),
         participation_type: input.participationType ?? "solo",
-        team_size: input.teamSize ?? 1,
+        team_size: isGroup ? GROUP_MAX_MEMBERS : (input.teamSize ?? 1),
         run_status: runStatus,
         is_hard_mode: input.isHardMode ?? false,
       };
+      if (isGroup) {
+        insertPayload.started_at = new Date().toISOString();
+      }
       if (isOneDay) {
         const start = input.liveDate ? new Date(input.liveDate) : new Date();
         if (Number.isNaN(start.getTime())) {
@@ -314,7 +317,7 @@ export const challengesCreateProcedures = {
         metadata: { title: (challenge as { title?: string }).title ?? input.title },
       });
 
-      if (isTeamOrShared) {
+      if (isGroup || isWaitingRoom) {
         const { error: memberError } = await ctx.supabase.from("challenge_members").insert({
           challenge_id: challenge.id,
           user_id: ctx.userId,
@@ -341,7 +344,7 @@ export const challengesCreateProcedures = {
 
       if (input.tasks.length === 0) {
         const activeChallengeNoTasks =
-          challengeStatus === "published" && !isTeamOrShared
+          challengeStatus === "published" && !isWaitingRoom
             ? await autoJoinCreatorAfterCreate(
                 ctx.supabase,
                 ctx.userId,
@@ -350,6 +353,12 @@ export const challengesCreateProcedures = {
                 "[challenges.create] Auto-join (no tasks) failed — non-fatal"
               )
             : null;
+        if (isGroup && challengeStatus === "published" && !activeChallengeNoTasks) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to enroll creator.",
+          });
+        }
         return { ...challenge, tasks: [], activeChallenge: activeChallengeNoTasks };
       }
 
@@ -418,7 +427,7 @@ export const challengesCreateProcedures = {
       }
 
       let activeChallenge: Awaited<ReturnType<typeof joinChallengeDirect>> | null = null;
-      if (challengeStatus === "published" && !isTeamOrShared) {
+      if (challengeStatus === "published" && !isWaitingRoom) {
         activeChallenge = await autoJoinCreatorAfterCreate(
           ctx.supabase,
           ctx.userId,
@@ -426,6 +435,12 @@ export const challengesCreateProcedures = {
           input.title,
           "[challenges.create] Auto-join failed — non-fatal"
         );
+      }
+      if (isGroup && challengeStatus === "published" && !activeChallenge) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to enroll creator.",
+        });
       }
 
       return {

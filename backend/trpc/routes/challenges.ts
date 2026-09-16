@@ -15,6 +15,7 @@ import { challengesJoinProcedures } from "./challenges-join";
 import { challengesCreateProcedures } from "./challenges-create";
 import { logger } from "../../lib/logger";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
+import { GROUP_MAX_MEMBERS, shouldEvaluateTeamDay } from "../../lib/group-challenges";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
@@ -161,10 +162,12 @@ export const challengesRouter = createTRPCRouter({
       const isTeam = participationType === "team" || participationType === "shared_goal";
 
       if (isTeam && runStatus === "active" && participationType === "team") {
-        const today = new Date().toISOString().slice(0, 10);
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: yesterday });
-        await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: today });
+        if (shouldEvaluateTeamDay(participationType)) {
+          const today = new Date().toISOString().slice(0, 10);
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: yesterday });
+          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: input.id, p_date_key: today });
+        }
       }
 
       type TeamMemberOut = {
@@ -282,12 +285,42 @@ export const challengesRouter = createTRPCRouter({
       const normalized = with24hEndsAt(data as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & typeof data);
       const meta = (data as { metadata?: Record<string, unknown> }).metadata;
       const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
+
+      let memberCount: number | undefined;
+      let viewerInviteStatus: "none" | "pending" | "accepted" | "declined" | "member" | undefined;
+      if (participationType === "team") {
+        memberCount = teamMembers.filter((m) => m.status === "active").length;
+        viewerInviteStatus = "none";
+        if (ctx.userId) {
+          const isMember = teamMembers.some(
+            (m) => m.user_id === ctx.userId && m.status === "active"
+          );
+          if (isMember) {
+            viewerInviteStatus = "member";
+          } else {
+            const { data: inviteRow } = await server
+              .from("challenge_invites")
+              .select("status")
+              .eq("challenge_id", input.id)
+              .eq("invited_user_id", ctx.userId)
+              .maybeSingle();
+            const st = String((inviteRow as { status?: string } | null)?.status ?? "");
+            if (st === "pending" || st === "accepted" || st === "declined") {
+              viewerInviteStatus = st;
+            }
+          }
+        }
+      }
+
       return {
         ...normalized,
         short_hook,
         tasks: mapTaskRowsToApi((data.challenge_tasks ?? []) as ChallengeTaskRowRaw[]),
         ...(isTeam ? { teamMembers } : {}),
         ...(participationType === "shared_goal" ? { sharedGoalTotal } : {}),
+        ...(participationType === "team"
+          ? { memberCount, cap: GROUP_MAX_MEMBERS, viewerInviteStatus }
+          : {}),
       };
     }),
 

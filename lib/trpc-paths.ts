@@ -68,6 +68,13 @@ export const TRPC = {
     startTeamChallenge: 'challenges.startTeamChallenge',
     getTeamMembers: 'challenges.getTeamMembers',
   },
+  groups: {
+    invite: 'groups.invite',
+    respond: 'groups.respond',
+    cancel: 'groups.cancel',
+    openLink: 'groups.openLink',
+    members: 'groups.members',
+  },
   sharedGoal: {
     logProgress: 'sharedGoal.logProgress',
     getRecentLogs: 'sharedGoal.getRecentLogs',

@@ -14,6 +14,7 @@ import {
 import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
 import { NOT_ALL_REQUIRED_MESSAGE } from "../../../lib/day-secure-ui";
 import { displayDay } from "../../../lib/challenge-day";
+import { shouldEvaluateTeamDay } from "../../lib/group-challenges";
 import type { PgError } from "../../types/db";
 import {
   type ChallengeTaskConfig,
@@ -1236,11 +1237,16 @@ export const checkinsRouter = createTRPCRouter({
       const daySecured = displayDay(currentDayAfter, true);
       if (challengeId) {
         const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
-        if ((chTeam as { participation_type?: string })?.participation_type === "team" && (chTeam as { run_status?: string })?.run_status === "active") {
-          const today = getTodayDateKey(tz);
-          const yesterday = getYesterdayDateKey(tz);
-          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
-          await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
+        if (
+          (chTeam as { participation_type?: string })?.participation_type === "team" &&
+          (chTeam as { run_status?: string })?.run_status === "active"
+        ) {
+          if (shouldEvaluateTeamDay((chTeam as { participation_type?: string })?.participation_type)) {
+            const today = getTodayDateKey(tz);
+            const yesterday = getYesterdayDateKey(tz);
+            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
+            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
+          }
         }
       }
       const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();

@@ -77,10 +77,16 @@ export const challengesJoinProcedures = {
 
       const ch = challenge as { id: string; participation_type?: string; team_size?: number; run_status?: string };
       const participationType = (ch.participation_type ?? "solo") as "solo" | "duo" | "team" | "shared_goal";
+      if (participationType === "team") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Join this group with an invite.",
+        });
+      }
       const teamSize = ch.team_size ?? 1;
-      const isTeamOrShared =
-        participationType === "team" || participationType === "duo" || participationType === "shared_goal";
-      const isTeamWaiting = isTeamOrShared && ch.run_status === "waiting";
+      const isWaitingRoom =
+        participationType === "duo" || participationType === "shared_goal";
+      const isTeamWaiting = isWaitingRoom && ch.run_status === "waiting";
 
       if (isTeamWaiting) {
         const { data: existingMember } = await ctx.supabase
@@ -117,26 +123,14 @@ export const challengesJoinProcedures = {
           await ctx.supabase.rpc("start_team_challenge", {
             p_challenge_id: input.challengeId,
           });
-          if (participationType === "team") {
-            const { data: myActive } = await ctx.supabase
-              .from("active_challenges")
-              .select("id, user_id, challenge_id, status, current_day, created_at")
-              .eq("user_id", ctx.userId)
-              .eq("challenge_id", input.challengeId)
-              .eq("status", "active")
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            if (myActive) return myActive;
-          }
           return { joined: true, runStatus: "active" as const };
         }
 
         return { joined: true, runStatus: "waiting" as const };
       }
 
-      // For team/shared_goal challenges that are already active, insert into challenge_members and joinChallengeDirect
-      if (isTeamOrShared && !isTeamWaiting) {
+      // Duo / shared_goal that are already active: add as member then joinChallengeDirect
+      if (isWaitingRoom && !isTeamWaiting) {
         // Already active — add as member if not already
         const { data: existingMember } = await ctx.supabase
           .from("challenge_members")
