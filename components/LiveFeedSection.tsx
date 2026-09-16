@@ -55,6 +55,8 @@ type LiveFeedSectionProps = {
    * the parent renders its own equivalent UI (e.g. HomeHeaderV2 on home).
    */
   hideHeaderToggle?: boolean;
+  /** Active enrollments from home.bootstrap — do not refetch listMyActive. */
+  activeChallengesCount?: number;
 };
 
 function FriendsEmptyState({
@@ -98,6 +100,7 @@ function LiveFeedSection({
   scope: scopeProp,
   onScopeChange,
   hideHeaderToggle,
+  activeChallengesCount = 0,
 }: LiveFeedSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -137,13 +140,6 @@ function LiveFeedSection({
     staleTime: 60 * 1000,
   });
 
-  const myActiveQuery = useQuery({
-    queryKey: ["challenges", "listMyActive", user?.id],
-    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-    enabled: !!user?.id,
-    staleTime: 60 * 1000,
-  });
-
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
@@ -173,8 +169,6 @@ function LiveFeedSection({
       trackEvent("feed_viewed", { post_count: postCount });
     }
   }, [feedQuery.data?.posts?.length]);
-  const activeChallengesCount = Array.isArray(myActiveQuery.data) ? myActiveQuery.data.length : 0;
-
   const postsWithComments = useMemo(() => finalFeed.filter((p) => p.commentCount > 0), [finalFeed]);
 
   const commentPreviewResults = useQueries({

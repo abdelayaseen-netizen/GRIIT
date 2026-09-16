@@ -423,6 +423,11 @@ export default function HomeScreen() {
           scope={feedScope}
           onScopeChange={setFeedScope}
           hideHeaderToggle
+          activeChallengesCount={
+            Array.isArray(bootstrap.data?.activeChallenges)
+              ? bootstrap.data.activeChallenges.length
+              : 0
+          }
           ListHeaderComponent={
             <HomeV3
               title={greetingTitle(profile ?? {})}
