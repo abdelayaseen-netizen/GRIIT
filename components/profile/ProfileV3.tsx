@@ -17,6 +17,9 @@ import ProofImage from "@/components/ds/ProofImage";
 import RootHeader from "@/components/ds/RootHeader";
 import SegmentedControl from "@/components/ds/SegmentedControl";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
+import { streakLineFor } from "@/lib/home-streak";
+
+export { streakLineFor };
 
 /** Same rows BadgeRows took: `record.badges` from badgeRowsFromProgress. */
 export function badgeItemsFromRows(
@@ -34,10 +37,6 @@ const TABS = ["Challenges", "Proofs", "Badges"] as const;
 export const PROFILE_V3_FOOTNOTE =
   "Five marks, each earned by verified days only. Nothing here can be bought or awarded.";
 const FOOTNOTE = PROFILE_V3_FOOTNOTE;
-
-export function streakLineFor(current: number): string {
-  return current === 0 ? "Post today to start." : "Day secured.";
-}
 
 export type ProfileV3Run = {
   id: string;
@@ -61,6 +60,7 @@ export type ProfileV3Props = {
   bio: string;
   streak: number;
   best: number;
+  todaySecured: boolean;
   consistency: string;
   consistencySub: string;
   tab: (typeof TABS)[number];
@@ -95,6 +95,7 @@ export function ProfileV3({
   bio,
   streak,
   best,
+  todaySecured,
   consistency,
   consistencySub,
   tab,
@@ -217,7 +218,7 @@ export function ProfileV3({
             <DisplayNumber value={streak} size="home" />
             <Text style={styles.days}>{dayWord(streak)}</Text>
           </View>
-          <Text style={styles.secondary}>{streakLineFor(streak)}</Text>
+          <Text style={styles.secondary}>{streakLineFor(streak, todaySecured)}</Text>
         </Card>
       </View>
 

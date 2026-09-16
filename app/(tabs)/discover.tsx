@@ -9,6 +9,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -19,6 +20,7 @@ import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { runVisitorFollow } from "@/lib/visitor-follow";
+import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 
@@ -62,6 +64,8 @@ function personStatus(person: SuggestedPerson): string {
 
 function DiscoverScreenInner() {
   const router = useRouter();
+  const { user } = useAuth();
+  const signedIn = !!user?.id;
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] =
     useState<DiscoverCategory>("for_you");
@@ -80,6 +84,7 @@ function DiscoverScreenInner() {
             : selectedCategory,
       }) as Promise<HeroFeaturedData | null>,
     staleTime: 60 * 1000,
+    enabled: signedIn,
   });
 
   const trendingQuery = useQuery({
@@ -87,6 +92,7 @@ function DiscoverScreenInner() {
     queryFn: () =>
       trpcQuery(TRPC.feed.getTrending, { limit: 8 }) as Promise<TrendingResponse>,
     staleTime: 5 * 60 * 1000,
+    enabled: signedIn,
   });
 
   const recommendedQuery = useQuery({
@@ -94,6 +100,7 @@ function DiscoverScreenInner() {
     queryFn: () =>
       trpcQuery(TRPC.challenges.getRecommended) as Promise<RecommendedResponse>,
     staleTime: 5 * 60 * 1000,
+    enabled: signedIn,
   });
 
   const peopleQuery = useQuery({
@@ -101,6 +108,7 @@ function DiscoverScreenInner() {
     queryFn: () =>
       trpcQuery(TRPC.profiles.suggested, { limit: 6 }) as Promise<SuggestedPerson[]>,
     staleTime: 5 * 60 * 1000,
+    enabled: signedIn,
   });
 
   const streakAtRiskQuery = useQuery({
@@ -108,6 +116,7 @@ function DiscoverScreenInner() {
     queryFn: () =>
       trpcQuery(TRPC.feed.getStreakAtRisk) as Promise<StreakAtRiskData | null>,
     staleTime: 5 * 60 * 1000,
+    enabled: signedIn,
   });
 
   if (featuredQuery.isError)
@@ -216,6 +225,7 @@ function DiscoverScreenInner() {
         void queryClient.invalidateQueries({
           queryKey: ["discover", "foryou", "suggested"],
         });
+        if (user?.id) void invalidateAfterFollow(queryClient, user.id, userId);
       } else {
         setFollowById((cur) => ({ ...cur, [userId]: previous }));
         showFollowError(result.message);
@@ -223,7 +233,7 @@ function DiscoverScreenInner() {
       }
       setFollowPendingId(null);
     },
-    [peopleQuery.data, followPendingId, followById, queryClient, clearFollowError, showFollowError],
+    [peopleQuery.data, followPendingId, followById, queryClient, clearFollowError, showFollowError, user?.id],
   );
 
   const featuredLoading = featuredQuery.isPending && !featuredQuery.data;

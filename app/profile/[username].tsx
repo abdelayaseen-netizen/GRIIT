@@ -28,6 +28,7 @@ import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { visitorFollowControl } from "@/lib/profile-v2-visibility";
 import { runVisitorFollow } from "@/lib/visitor-follow";
+import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -103,7 +104,7 @@ export default function VisitorProfileScreen() {
         userId: ownerId,
         ...(previewStranger ? { preview: "stranger" as const } : {}),
       }) as Promise<RecordPayload>,
-    enabled: !!ownerId && (!isSelf || previewStranger),
+    enabled: !!ownerId && !!user?.id && (!isSelf || previewStranger),
     staleTime: 60 * 1000,
   });
   if (recordQ.isError) captureError(recordQ.error, "Visitor.getRecord");
@@ -125,7 +126,7 @@ export default function VisitorProfileScreen() {
         following: number;
       }>,
     staleTime: 60 * 1000,
-    enabled: !!ownerId,
+    enabled: !!ownerId && !!user?.id,
   });
 
   const rec = recordQ.data;
@@ -138,13 +139,12 @@ export default function VisitorProfileScreen() {
   const followStatus = followQ.data?.status ?? "none";
   const followCtrl = visitorFollowControl(vis, followStatus);
   const invalidate = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["followStatus", ownerId] });
+    if (user?.id) await invalidateAfterFollow(queryClient, user.id, ownerId);
     await queryClient.invalidateQueries({
       queryKey: ["profiles", "getRecord", ownerId, previewStranger ? "stranger" : "live"],
     });
     await queryClient.invalidateQueries({ queryKey: ["publicProfile", decoded] });
-    await queryClient.invalidateQueries({ queryKey: ["profile", ownerId, "followCounts"] });
-  }, [queryClient, ownerId, previewStranger, decoded]);
+  }, [queryClient, ownerId, previewStranger, decoded, user?.id]);
 
   const onFollow = async () => {
     if (!ownerId || followBusy || isSelf) return;
@@ -270,6 +270,9 @@ export default function VisitorProfileScreen() {
               bio={bio}
               streak={rec?.streak.current ?? 0}
               best={rec?.streak.best ?? 0}
+              todaySecured={
+                !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
+              }
               consistency={rec?.consistency.rate ?? "No due days"}
               consistencySub={
                 joined
@@ -282,7 +285,7 @@ export default function VisitorProfileScreen() {
                 id: r.id,
                 name: r.name,
                 day: r.day,
-                length: r.length,
+                length: r.dayTotal,
               }))}
               proofs={proofs}
               badges={badgeItemsFromRows(

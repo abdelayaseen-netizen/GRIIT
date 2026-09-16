@@ -10,14 +10,16 @@ import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { feedNoPhotoCopy } from "@/lib/feed-copy";
-import { dayWord } from "@/lib/format-days";
+import { feedFinishedCopy, feedHasCameraProof, feedNoPhotoCopy } from "@/lib/feed-copy";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 const ICON = DS_V3.space.xs * 6;
 
 export type FeedPostV3Props = {
   post: LiveFeedPost;
+  /** Viewer's target_streak — applied only for own finished/day copy. */
+  viewerTargetStreak?: number | null;
+  viewerUserId?: string | null;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
@@ -32,6 +34,8 @@ function variantOf(post: LiveFeedPost): "photo" | "noPhoto" | "finished" {
 
 export default function FeedPostV3({
   post,
+  viewerTargetStreak,
+  viewerUserId,
   onLike,
   onComment,
   onShare,
@@ -41,6 +45,8 @@ export default function FeedPostV3({
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
   const photo = post.proofPhotoUrl ?? post.photoUrl;
+  const ownTarget = viewerUserId && post.userId === viewerUserId ? viewerTargetStreak : null;
+  const cameraProof = feedHasCameraProof(post);
 
   if (variant === "noPhoto") {
     return (
@@ -75,8 +81,7 @@ export default function FeedPostV3({
           </View>
         </View>
         <Text style={styles.summary}>
-          Finished. {post.currentDay} of {post.totalDays}{" "}
-          {dayWord(post.totalDays)} verified.
+          {feedFinishedCopy({ ...post, targetStreak: ownTarget })}
         </Text>
         <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
       </Card>
@@ -102,7 +107,7 @@ export default function FeedPostV3({
         title={post.challengeName}
         caption={post.caption ?? undefined}
         scrim
-        stamp={post.verified ? "Verified" : undefined}
+        stamp={cameraProof ? "Verified" : undefined}
         recyclingKey={post.id}
       />
       <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />

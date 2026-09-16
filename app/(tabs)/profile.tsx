@@ -18,6 +18,12 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { resolveHomeTimeZone } from "@/lib/home-streak";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { profileConsistencyFromBootstrap } from "@/lib/profile-consistency";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -53,6 +59,7 @@ export default function ProfileScreen() {
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, refetchAll } = useApp();
+  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
   const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "challenges");
 
@@ -155,11 +162,28 @@ export default function ProfileScreen() {
   const handle = profile.username?.trim() ?? "";
   const name = profilePrimaryName(profile) || handle;
   const bio = (profile.bio ?? "").trim();
-  const followers = followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0);
-  const following = followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0);
+  const bootstrapFollows = bootstrap.data?.followCounts;
+  const followers =
+    bootstrapFollows?.followers ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0));
+  const following =
+    bootstrapFollows?.following ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
   const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
-  const joined = (record?.runs.length ?? 0) > 0;
-  const streak = record?.streak.current ?? 0;
+  const activeChallenges = bootstrap.data?.activeChallenges;
+  const joined = Array.isArray(activeChallenges) && activeChallenges.length > 0;
+  const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
+  const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
+  const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
+  const todaySecured = homeSecuredToday(
+    Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : [],
+    getTodayDateKey(homeTimeZone),
+  );
+  const consistency = profileConsistencyFromBootstrap({
+    activeChallenges,
+    securedDateKeys: bootstrap.data?.securedDateKeys,
+    weekDateKeys: getCurrentWeekDateKeys(homeTimeZone),
+  });
 
   return (
     <ErrorBoundary>
@@ -181,8 +205,9 @@ export default function ProfileScreen() {
             following={following}
             bio={bio}
             streak={streak}
-            best={record?.streak.best ?? 0}
-            consistency={record?.consistency.rate ?? "No due days"}
+            best={best}
+            todaySecured={todaySecured}
+            consistency={consistency}
             consistencySub={
               joined
                 ? "Post every day. Missed days count."
@@ -199,7 +224,7 @@ export default function ProfileScreen() {
               id: r.id,
               name: r.name,
               day: r.day,
-              length: r.length,
+              length: r.dayTotal,
             }))}
             proofs={proofs}
             badges={badgeItemsFromRows(

@@ -27,3 +27,8 @@ export function sessionExpiredMessageForAuthState(
   if (hasSession) return null;
   return current;
 }
+
+/** A 401 with no session is an unauthenticated call, not an expiry. */
+export function shouldNotifySessionExpired(hasSession: boolean): boolean {
+  return hasSession;
+}

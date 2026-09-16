@@ -57,6 +57,8 @@ type LiveFeedSectionProps = {
   hideHeaderToggle?: boolean;
   /** Active enrollments from home.bootstrap — do not refetch listMyActive. */
   activeChallengesCount?: number;
+  /** Own posts: feed Y uses homeDayTotal(duration_days, target_streak). */
+  viewerTargetStreak?: number | null;
 };
 
 function FriendsEmptyState({
@@ -101,6 +103,7 @@ function LiveFeedSection({
   onScopeChange,
   hideHeaderToggle,
   activeChallengesCount = 0,
+  viewerTargetStreak,
 }: LiveFeedSectionProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -414,6 +417,8 @@ function LiveFeedSection({
         <View style={styles.v3Item}>
           <FeedPostV3
             post={item}
+            viewerUserId={user?.id}
+            viewerTargetStreak={viewerTargetStreak}
             onLike={() => void onRespect(item)}
             onComment={() => openPost(item)}
             onShare={() => void onShare(item)}
@@ -422,7 +427,7 @@ function LiveFeedSection({
         </View>
       );
     },
-    [navigateProfile, onRespect, onShare, openPost, previewByPostId, submitComment, openPostMenu]
+    [navigateProfile, onRespect, onShare, openPost, previewByPostId, submitComment, openPostMenu, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {

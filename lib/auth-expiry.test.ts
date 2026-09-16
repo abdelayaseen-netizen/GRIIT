@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { sessionExpiredMessageForAuthState } from "@/lib/auth-expiry";
+import {
+  sessionExpiredMessageForAuthState,
+  shouldNotifySessionExpired,
+} from "@/lib/auth-expiry";
 
 describe("sessionExpiredMessageForAuthState", () => {
   it("clears the banner when auth state becomes signed-in", () => {
@@ -12,6 +15,11 @@ describe("sessionExpiredMessageForAuthState", () => {
     expect(
       sessionExpiredMessageForAuthState(false, "Session expired. Please sign in again."),
     ).toBe("Session expired. Please sign in again.");
+  });
+
+  it("does not treat a signed-out 401 as expiry", () => {
+    expect(shouldNotifySessionExpired(false)).toBe(false);
+    expect(shouldNotifySessionExpired(true)).toBe(true);
   });
 
   it("stays empty when there is no banner", () => {

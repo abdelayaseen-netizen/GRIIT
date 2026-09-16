@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments, router } from "expo-router";
+import { Stack, usePathname, useRouter, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
@@ -9,6 +9,10 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { onSessionExpired, sessionExpiredMessageForAuthState } from "@/lib/auth-expiry";
+import {
+  sessionExpiredBannerOffset,
+  showSessionExpiredBanner,
+} from "@/lib/session-expired-banner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
@@ -183,8 +187,10 @@ function AuthRedirector() {
 
 function RootLayoutNav() {
   const { user } = useAuth();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
+  const showExpired = showSessionExpiredBanner(pathname, sessionExpiredMessage);
 
   useEffect(() => {
     const next = sessionExpiredMessageForAuthState(!!user, sessionExpiredMessage);
@@ -193,11 +199,11 @@ function RootLayoutNav() {
 
   return (
     <View style={layoutStyles.flex1}>
-      {sessionExpiredMessage ? (
+      {showExpired ? (
         <Pressable
           style={[
             layoutStyles.sessionExpiredBanner,
-            { paddingTop: 12 + insets.top },
+            sessionExpiredBannerOffset(insets.top),
           ]}
           onPress={() => setSessionExpiredMessage(null)}
           accessibilityRole="button"
@@ -206,7 +212,7 @@ function RootLayoutNav() {
           <Text style={layoutStyles.sessionExpiredText}>{sessionExpiredMessage}</Text>
         </Pressable>
       ) : null}
-      <OfflineBanner />
+      <OfflineBanner insetTop={showExpired ? 0 : insets.top} />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
@@ -382,7 +388,6 @@ const layoutStyles = StyleSheet.create({
   flex1: { flex: 1 },
   sessionExpiredBanner: {
     backgroundColor: DS_COLORS.errorText,
-    paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: "center",
   },

@@ -1,7 +1,7 @@
 import { serialize, deserialize } from "superjson";
 import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
-import { notifySessionExpired } from "./auth-expiry";
+import { notifySessionExpired, shouldNotifySessionExpired } from "./auth-expiry";
 import { captureError } from "@/lib/sentry";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -31,12 +31,15 @@ export async function trpcQuery<T = unknown>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      await supabase.auth.signOut();
-      const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-      await runClientSignOutCleanup();
-      const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-      await clearOnboardingStorage();
-      notifySessionExpired();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (shouldNotifySessionExpired(!!session)) {
+        await supabase.auth.signOut();
+        const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
+        await runClientSignOutCleanup();
+        const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+        await clearOnboardingStorage();
+        notifySessionExpired();
+      }
     }
     throw new Error(`tRPC query failed: ${path} (${response.status})`);
   }
@@ -72,12 +75,15 @@ export async function trpcMutate<T = unknown>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      await supabase.auth.signOut();
-      const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-      await runClientSignOutCleanup();
-      const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-      await clearOnboardingStorage();
-      notifySessionExpired();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (shouldNotifySessionExpired(!!session)) {
+        await supabase.auth.signOut();
+        const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
+        await runClientSignOutCleanup();
+        const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+        await clearOnboardingStorage();
+        notifySessionExpired();
+      }
     }
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
     let errorData: Record<string, unknown> | undefined;

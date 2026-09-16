@@ -1,5 +1,6 @@
 import React from "react";
 import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { TaskChrome } from "./TaskChrome";
@@ -24,6 +25,7 @@ import { WriteStep } from "./steps/WriteStep";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
+  const insets = useSafeAreaInsets();
 
   return (
     <View
@@ -34,14 +36,16 @@ export function TaskFlowV2() {
       ]}
     >
       {!f.hideChrome ? (
-        f.step === "ask" ? (
-          <PushedHeader
-            title={`Day ${f.currentDay} · ${f.chromeTitle}`}
-            onBack={f.goBack}
-          />
-        ) : (
-          <TaskChrome title={`Day ${f.currentDay} · ${f.chromeTitle}`} dark={f.dark} onBack={f.goBack} />
-        )
+        <View style={{ paddingTop: insets.top }}>
+          {f.step === "ask" ? (
+            <PushedHeader
+              title={`Day ${f.currentDay} · ${f.chromeTitle}`}
+              onBack={f.goBack}
+            />
+          ) : (
+            <TaskChrome title={`Day ${f.currentDay} · ${f.chromeTitle}`} dark={f.dark} onBack={f.goBack} />
+          )}
+        </View>
       ) : null}
 
       {f.step === "blocked" ? (
