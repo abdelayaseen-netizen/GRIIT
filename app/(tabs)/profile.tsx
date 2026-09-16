@@ -18,6 +18,7 @@ import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -53,6 +54,7 @@ export default function ProfileScreen() {
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, refetchAll } = useApp();
+  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
   const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "challenges");
 
@@ -155,11 +157,17 @@ export default function ProfileScreen() {
   const handle = profile.username?.trim() ?? "";
   const name = profilePrimaryName(profile) || handle;
   const bio = (profile.bio ?? "").trim();
-  const followers = followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0);
-  const following = followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0);
+  const bootstrapFollows = bootstrap.data?.followCounts;
+  const followers =
+    bootstrapFollows?.followers ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0));
+  const following =
+    bootstrapFollows?.following ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
   const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
   const joined = (record?.runs.length ?? 0) > 0;
-  const streak = record?.streak.current ?? 0;
+  const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
+  const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
 
   return (
     <ErrorBoundary>
@@ -181,7 +189,7 @@ export default function ProfileScreen() {
             following={following}
             bio={bio}
             streak={streak}
-            best={record?.streak.best ?? 0}
+            best={best}
             consistency={record?.consistency.rate ?? "No due days"}
             consistencySub={
               joined

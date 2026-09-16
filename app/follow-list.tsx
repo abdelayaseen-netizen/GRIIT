@@ -18,6 +18,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system"
 import { useAuth } from "@/contexts/AuthContext";
+import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -75,9 +76,7 @@ export default function FollowListScreen() {
   const invalidateFollow = useCallback(async () => {
     await qc.invalidateQueries({ queryKey: ["followList"] });
     await qc.invalidateQueries({ queryKey: ["publicProfile"] });
-    if (user?.id) {
-      await qc.invalidateQueries({ queryKey: ["profile", user.id, "followCounts"] });
-    }
+    if (user?.id) await invalidateAfterFollow(qc, user.id);
   }, [qc, user?.id]);
 
   const runUnfollow = useCallback(

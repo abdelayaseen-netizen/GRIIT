@@ -28,6 +28,7 @@ import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { visitorFollowControl } from "@/lib/profile-v2-visibility";
 import { runVisitorFollow } from "@/lib/visitor-follow";
+import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -138,13 +139,12 @@ export default function VisitorProfileScreen() {
   const followStatus = followQ.data?.status ?? "none";
   const followCtrl = visitorFollowControl(vis, followStatus);
   const invalidate = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["followStatus", ownerId] });
+    if (user?.id) await invalidateAfterFollow(queryClient, user.id, ownerId);
     await queryClient.invalidateQueries({
       queryKey: ["profiles", "getRecord", ownerId, previewStranger ? "stranger" : "live"],
     });
     await queryClient.invalidateQueries({ queryKey: ["publicProfile", decoded] });
-    await queryClient.invalidateQueries({ queryKey: ["profile", ownerId, "followCounts"] });
-  }, [queryClient, ownerId, previewStranger, decoded]);
+  }, [queryClient, ownerId, previewStranger, decoded, user?.id]);
 
   const onFollow = async () => {
     if (!ownerId || followBusy || isSelf) return;

@@ -20,6 +20,7 @@ import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import { profilePrimaryName } from "@/lib/profile-display";
 import { runVisitorFollow } from "@/lib/visitor-follow";
+import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 
@@ -224,6 +225,7 @@ function DiscoverScreenInner() {
         void queryClient.invalidateQueries({
           queryKey: ["discover", "foryou", "suggested"],
         });
+        if (user?.id) void invalidateAfterFollow(queryClient, user.id, userId);
       } else {
         setFollowById((cur) => ({ ...cur, [userId]: previous }));
         showFollowError(result.message);
@@ -231,7 +233,7 @@ function DiscoverScreenInner() {
       }
       setFollowPendingId(null);
     },
-    [peopleQuery.data, followPendingId, followById, queryClient, clearFollowError, showFollowError],
+    [peopleQuery.data, followPendingId, followById, queryClient, clearFollowError, showFollowError, user?.id],
   );
 
   const featuredLoading = featuredQuery.isPending && !featuredQuery.data;
