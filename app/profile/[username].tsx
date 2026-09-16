@@ -177,14 +177,19 @@ export default function VisitorProfileScreen() {
     setShowUnfollow(false);
     if (!ownerId) return;
     setFollowBusy(true);
-    try {
-      await trpcMutate(TRPC.profiles.unfollowUser, { userId: ownerId });
+    clearFollowError();
+    const result = await runVisitorFollow({
+      action: "unfollow",
+      userId: ownerId,
+      mutate: trpcMutate,
+    });
+    if (result.ok) {
       await invalidate();
-    } catch (e) {
-      captureError(e, "VisitorUnfollow");
-    } finally {
-      setFollowBusy(false);
+    } else {
+      showFollowError(result.message);
+      captureError(new Error(result.message), "VisitorUnfollow");
     }
+    setFollowBusy(false);
   };
 
   const onMore = () => {

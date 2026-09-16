@@ -1,7 +1,7 @@
 import { inlineServerError } from "@/lib/inline-server-error";
 import { TRPC } from "@/lib/trpc-paths";
 
-export type VisitorFollowAction = "follow" | "request";
+export type VisitorFollowAction = "follow" | "request" | "unfollow";
 
 export type VisitorFollowResult = { ok: true } | { ok: false; message: string };
 
@@ -23,7 +23,11 @@ export async function runVisitorFollow(args: {
   mutate: (path: string, input: { userId: string }) => Promise<unknown>;
 }): Promise<VisitorFollowResult> {
   const first =
-    args.action === "request" ? TRPC.profiles.sendFollowRequest : TRPC.profiles.followUser;
+    args.action === "unfollow"
+      ? TRPC.profiles.unfollowUser
+      : args.action === "request"
+        ? TRPC.profiles.sendFollowRequest
+        : TRPC.profiles.followUser;
   try {
     await args.mutate(first, { userId: args.userId });
     return { ok: true };

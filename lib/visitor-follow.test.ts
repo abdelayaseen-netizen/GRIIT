@@ -43,6 +43,32 @@ describe("runVisitorFollow", () => {
     expect(result).toEqual({ ok: false, message: GENERIC_INLINE_ERROR });
   });
 
+  it("unfollow failure is an inline error, not silence", async () => {
+    const mutate = vi.fn().mockRejectedValue(new Error("Failed to fetch"));
+    const result = await runVisitorFollow({
+      action: "unfollow",
+      userId: "11111111-1111-4111-8111-111111111111",
+      mutate,
+    });
+    expect(mutate).toHaveBeenCalledWith(TRPC.profiles.unfollowUser, {
+      userId: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(result).toEqual({ ok: false, message: GENERIC_INLINE_ERROR });
+  });
+
+  it("discover request-follow failure is an inline error, not silence", async () => {
+    const mutate = vi.fn().mockRejectedValue(new Error("Failed to fetch"));
+    const result = await runVisitorFollow({
+      action: "request",
+      userId: "11111111-1111-4111-8111-111111111111",
+      mutate,
+    });
+    expect(mutate).toHaveBeenCalledWith(TRPC.profiles.sendFollowRequest, {
+      userId: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(result).toEqual({ ok: false, message: GENERIC_INLINE_ERROR });
+  });
+
   it("keeps the server BAD_REQUEST text", async () => {
     const err = Object.assign(new Error("Cannot follow yourself."), {
       data: { code: "BAD_REQUEST" },
