@@ -33,11 +33,6 @@ export const FLAGS = {
    */
   RUN_GOAL_CONFIG: false,
   /**
-   * OnboardingFlowV2. Default off. Set EXPO_PUBLIC_ONBOARDING_V2=1 to test
-   * without flipping the hardcoded fallback.
-   */
-  ONBOARDING_V2: process.env.EXPO_PUBLIC_ONBOARDING_V2 === "1" || true,
-  /**
    * Daylight v3: gates the Home "secured" transition on real server-side
    * verification confirmation. Default false — completeTask() still calls the
    * real server, but the celebration shows immediately on success rather than

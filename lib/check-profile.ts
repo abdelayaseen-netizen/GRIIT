@@ -4,7 +4,6 @@
  */
 
 import { supabase } from "@/lib/supabase";
-import { FLAGS } from "@/lib/feature-flags";
 import { captureError } from "@/lib/sentry";
 
 export const PROFILE_CHECK_TIMEOUT_MS = 2500;
@@ -41,13 +40,12 @@ function fetchProfile(userId: string) {
 }
 
 export function interpretProfileCheckResult(
-  result: ProfileCheckRow | TimedOut | null,
-  onboardingV2: boolean
+  result: ProfileCheckRow | TimedOut | null
 ): ProfileCheckOutcome {
   if (result && typeof result === "object" && "timedOut" in result) {
     return {
       hasProfile: false,
-      onboardingCompleted: onboardingV2 ? null : false,
+      onboardingCompleted: null,
       profileCreatedAt: null,
       cacheCompleted: false,
     };
@@ -72,10 +70,8 @@ export function interpretProfileCheckResult(
 
 export async function checkProfile(
   userId: string,
-  retry = 0,
-  opts?: { onboardingV2?: boolean }
+  retry = 0
 ): Promise<ProfileCheckOutcome> {
-  const onboardingV2 = opts?.onboardingV2 ?? FLAGS.ONBOARDING_V2;
   const maxRetries = 1;
   const timedOut: TimedOut = { timedOut: true };
   try {
@@ -94,12 +90,12 @@ export async function checkProfile(
       result = await fetchProfile(userId);
     }
 
-    return interpretProfileCheckResult(result, onboardingV2);
+    return interpretProfileCheckResult(result);
   } catch (err) {
     captureError(err, "AuthRedirectorCheckProfile");
     if (retry < maxRetries) {
-      return checkProfile(userId, retry + 1, opts);
+      return checkProfile(userId, retry + 1);
     }
-    return interpretProfileCheckResult(timedOut, onboardingV2);
+    return interpretProfileCheckResult(timedOut);
   }
 }

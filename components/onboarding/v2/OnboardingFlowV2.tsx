@@ -2,7 +2,7 @@
  * OnboardingFlowV2 — Chunk A order.
  * No dead ends.
  *
- * Rendered by app/onboarding/index.tsx ONLY when FLAGS.ONBOARDING_V2 is true.
+ * Rendered by app/onboarding/index.tsx.
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
