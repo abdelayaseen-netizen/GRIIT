@@ -26,7 +26,6 @@ import { queryClient } from "@/lib/query-client";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
-import { FLAGS } from "@/lib/feature-flags";
 import {
   dbCompletedForLaunch,
   clearKnownOnboardingCompleted,
