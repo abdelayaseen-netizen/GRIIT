@@ -282,7 +282,7 @@ export default function VisitorProfileScreen() {
                 id: r.id,
                 name: r.name,
                 day: r.day,
-                length: r.length,
+                length: r.dayTotal,
               }))}
               proofs={proofs}
               badges={badgeItemsFromRows(

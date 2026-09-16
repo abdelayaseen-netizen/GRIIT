@@ -434,6 +434,7 @@ export default function HomeScreen() {
               ? bootstrap.data.activeChallenges.length
               : 0
           }
+          viewerTargetStreak={profile?.target_streak ?? null}
           ListHeaderComponent={
             <HomeV3
               title={greetingTitle(profile ?? {})}

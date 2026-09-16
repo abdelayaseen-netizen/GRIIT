@@ -136,6 +136,8 @@ export type ProfileRecord = {
     name: string;
     day: number;
     length: number;
+    /** homeDayTotal(duration_days, target_streak) — profile row Y. */
+    dayTotal: number;
     dayLabel: string;
     meta: string;
     verified: number;
@@ -311,6 +313,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
         name: range.name,
         day,
         length: range.durationDays,
+        dayTotal: homeDayTotal(range.durationDays, input.targetStreak),
         dayLabel: `Day ${day} of ${homeDayTotal(range.durationDays, input.targetStreak)}`,
         meta: `${verified} verified · ${missed} missed · ${range.tasksPerDay} tasks daily`,
         verified,

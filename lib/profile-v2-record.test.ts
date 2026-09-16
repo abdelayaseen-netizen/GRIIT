@@ -294,6 +294,17 @@ describe("Profile → Challenges list", () => {
     });
     expect(rec.runs.map((r) => r.name)).toEqual(["Read Something"]);
   });
+
+  it("row Y is homeDayTotal(duration_days, target_streak), not raw length", () => {
+    const rec = buildProfileRecord({
+      ...fixtureNone(),
+      targetStreak: 75,
+      ranges: [readSomething("2026-09-05", 1)],
+    });
+    expect(rec.runs[0]?.length).toBe(1);
+    expect(rec.runs[0]?.dayTotal).toBe(75);
+    expect(rec.runs[0]?.dayLabel).toBe("Day 1 of 75");
+  });
 });
 
 describe("token map — brand.primary is not retargeted", () => {
