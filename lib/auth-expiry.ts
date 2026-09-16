@@ -18,3 +18,12 @@ export function onSessionExpired(listener: SessionExpiredListener): () => void {
 export function notifySessionExpired(): void {
   listeners.forEach((l) => l());
 }
+
+/** Banner is a leftover 401. Any signed-in session (sign-in, sign-up, restore) clears it. */
+export function sessionExpiredMessageForAuthState(
+  hasSession: boolean,
+  current: string | null,
+): string | null {
+  if (hasSession) return null;
+  return current;
+}

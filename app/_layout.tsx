@@ -8,7 +8,8 @@ import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platfo
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { onSessionExpired } from "@/lib/auth-expiry";
+import { onSessionExpired, sessionExpiredMessageForAuthState } from "@/lib/auth-expiry";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { BarlowCondensed_600SemiBold } from "@expo-google-fonts/barlow-condensed";
@@ -181,13 +182,23 @@ function AuthRedirector() {
 }
 
 function RootLayoutNav() {
+  const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { message: sessionExpiredMessage, setMessage: setSessionExpiredMessage } = useSessionExpired();
+
+  useEffect(() => {
+    const next = sessionExpiredMessageForAuthState(!!user, sessionExpiredMessage);
+    if (next !== sessionExpiredMessage) setSessionExpiredMessage(next);
+  }, [user, sessionExpiredMessage, setSessionExpiredMessage]);
 
   return (
     <View style={layoutStyles.flex1}>
       {sessionExpiredMessage ? (
         <Pressable
-          style={layoutStyles.sessionExpiredBanner}
+          style={[
+            layoutStyles.sessionExpiredBanner,
+            { paddingTop: 12 + insets.top },
+          ]}
           onPress={() => setSessionExpiredMessage(null)}
           accessibilityRole="button"
           accessibilityLabel="Dismiss session expired message"
