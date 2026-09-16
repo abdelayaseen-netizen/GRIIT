@@ -114,11 +114,11 @@ async function insertInviteNotification(
   };
   const { error } = await supabase.from("in_app_notifications").insert(payload);
   if (error) {
-    const fallback = { ...payload, type: "general" };
-    const { error: fallbackErr } = await supabase.from("in_app_notifications").insert(fallback);
-    if (fallbackErr) {
-      logger.error({ err: fallbackErr }, "[groups.invite] notification insert failed");
-    }
+    logger.error({ err: error }, "[groups.invite] notification insert failed");
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to send invite notification.",
+    });
   }
 }
 

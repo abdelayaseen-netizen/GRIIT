@@ -80,6 +80,7 @@ type MockOpts = {
     duration_type?: string;
     duration_days?: number;
   };
+  notificationInsertError?: { message: string } | null;
 };
 
 function createMockSupabase(opts: MockOpts = {}) {
@@ -229,14 +230,23 @@ function createMockSupabase(opts: MockOpts = {}) {
                 : state.table === "challenge_tasks"
                   ? [{ id: TASK, ...(typeof row === "object" && !Array.isArray(row) ? row : {}) }]
                   : row;
+        const insertError =
+          state.table === "in_app_notifications" ? opts.notificationInsertError ?? null : null;
         return {
           select: () => ({
-            single: () => Promise.resolve({ data: Array.isArray(base) ? base[0] : base, error: null }),
+            single: () =>
+              Promise.resolve({
+                data: insertError ? null : Array.isArray(base) ? base[0] : base,
+                error: insertError,
+              }),
             then: (resolve: (v: unknown) => unknown) =>
-              Promise.resolve({ data: Array.isArray(base) ? base : [base], error: null }).then(resolve),
+              Promise.resolve({
+                data: insertError ? null : Array.isArray(base) ? base : [base],
+                error: insertError,
+              }).then(resolve),
           }),
           then: (resolve: (v: unknown) => unknown) =>
-            Promise.resolve({ data: base, error: null }).then(resolve),
+            Promise.resolve({ data: insertError ? null : base, error: insertError }).then(resolve),
         };
       },
       update: (row: unknown) => {
@@ -322,6 +332,44 @@ describe("groups.invite", () => {
       code: "FORBIDDEN",
       message: GROUP_FULL_MESSAGE,
     });
+  });
+
+  it("inserts an in_app_notifications row of type challenge_invite", async () => {
+    const { supabase, inserts } = createMockSupabase({
+      viewerIsMember: true,
+      enrolledCount: 1,
+      pendingCount: 0,
+    });
+    const caller = createTestCaller({ userId: CREATOR, supabase });
+    if (!caller) return;
+
+    await caller.groups.invite({ challengeId: CH, userId: INVITEE });
+    const notification = inserts.find((i) => i.table === "in_app_notifications")?.row as {
+      type?: string;
+      user_id?: string;
+    };
+    expect(notification).toMatchObject({ type: "challenge_invite", user_id: INVITEE });
+    expect(inserts.filter((i) => i.table === "in_app_notifications")).toHaveLength(1);
+  });
+
+  it("throws when the challenge_invite notification insert fails", async () => {
+    const { supabase, inserts } = createMockSupabase({
+      viewerIsMember: true,
+      enrolledCount: 1,
+      pendingCount: 0,
+      notificationInsertError: { message: "in_app_notifications_type_check" },
+    });
+    const caller = createTestCaller({ userId: CREATOR, supabase });
+    if (!caller) return;
+
+    await expect(caller.groups.invite({ challengeId: CH, userId: INVITEE })).rejects.toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to send invite notification.",
+    });
+    const notificationTypes = inserts
+      .filter((i) => i.table === "in_app_notifications")
+      .map((i) => (i.row as { type?: string }).type);
+    expect(notificationTypes).toEqual(["challenge_invite"]);
   });
 });
 
