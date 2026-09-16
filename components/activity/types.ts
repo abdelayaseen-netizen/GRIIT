@@ -2,7 +2,7 @@ export type LeaderScope = "global" | "friends" | "challenge";
 
 export type NotifRow = {
   id: string;
-  type: "respect" | "comment" | "follow" | "follow_request" | "rank" | "general";
+  type: "respect" | "comment" | "follow" | "follow_request" | "rank" | "challenge_invite" | "general";
   read: boolean;
   createdAt: string;
   title?: string | null;

@@ -9,11 +9,18 @@ import { captureError } from "@/lib/sentry";
 import { DS_V3 } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { ROUTES } from "@/lib/routes";
+import {
+  challengeIdFromInviteNotification,
+  challengeInviteFromNotification,
+  inviteIdFromNotification,
+  isChallengeInviteNotification,
+} from "@/lib/group-ui";
 import type { NotifRow } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import ListRow from "@/components/ds/ListRow";
+import MemberRow from "@/components/ds/MemberRow";
 import Skeleton from "@/components/ds/Skeleton";
 
 const ICON = DS_V3.space.xs * 6;
@@ -61,7 +68,10 @@ function notifTitle(n: NotifRow): string {
       const gap = n.metadata.rankGap;
       return `You're #${rank} on ${challengeName}. ${gap} pts behind #${Number(rank) - 1}`;
     }
+    case "challenge_invite":
+      return challengeInviteFromNotification(n);
     default:
+      if (isChallengeInviteNotification(n)) return challengeInviteFromNotification(n);
       break;
   }
   const t = (n.title ?? "").trim();
@@ -106,29 +116,52 @@ function NotificationsBody({
   }, [query.data?.unread, query.data?.earlier]);
 
   const renderItem = useCallback(
-    ({ item }: { item: NotifRow }) => (
-      <NotificationRow
-        n={item}
-        onFollow={onFollow}
-        userId={userId}
-        onPress={
-          (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
-            ? () => router.push(ROUTES.POST_ID(String(item.metadata.event_id)) as never)
-            : item.type === "follow" || item.type === "follow_request"
-              ? item.actorId
+    ({ item }: { item: NotifRow }) => {
+      if (isChallengeInviteNotification(item)) {
+        const challengeId = challengeIdFromInviteNotification(item);
+        const inviteId = inviteIdFromNotification(item);
+        return (
+          <MemberRow
+            displayName={challengeInviteFromNotification(item)}
+            caption={relativeTime(item.createdAt)}
+            avatarUri={item.actorAvatarUrl}
+            avatarName={item.actorDisplayName ?? item.actorUsername}
+            unread={!item.read}
+            onPress={
+              challengeId
                 ? () => {
-                    const uname = item.actorUsername?.trim();
-                    if (uname && uname !== "?" && uname.length >= 2) {
-                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(uname)) as never);
-                    } else if (item.actorId) {
-                      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.actorId)) as never);
-                    }
+                    const q = inviteId ? `?inviteId=${encodeURIComponent(inviteId)}` : "";
+                    router.push(`${ROUTES.CHALLENGE_ID(challengeId)}${q}` as never);
                   }
                 : undefined
-              : undefined
-        }
-      />
-    ),
+            }
+          />
+        );
+      }
+      return (
+        <NotificationRow
+          n={item}
+          onFollow={onFollow}
+          userId={userId}
+          onPress={
+            (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
+              ? () => router.push(ROUTES.POST_ID(String(item.metadata.event_id)) as never)
+              : item.type === "follow" || item.type === "follow_request"
+                ? item.actorId
+                  ? () => {
+                      const uname = item.actorUsername?.trim();
+                      if (uname && uname !== "?" && uname.length >= 2) {
+                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(uname)) as never);
+                      } else if (item.actorId) {
+                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.actorId)) as never);
+                      }
+                    }
+                  : undefined
+                : undefined
+          }
+        />
+      );
+    },
     [onFollow, userId, router],
   );
 
