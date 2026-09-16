@@ -8,6 +8,9 @@ import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { User } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { initialsFrom } from "@/lib/avatar-initials";
+
+export { initialsFrom };
 
 const RING = DS_V3.space.xs / 2;
 const ICON = DS_V3.space.xs * 6;
@@ -20,14 +23,6 @@ export type AvatarProps = {
   displayName?: string | null;
   ring?: boolean;
 };
-
-export function initialsFrom(displayName?: string | null): string | null {
-  if (!displayName) return null;
-  if (/^user_/i.test(displayName.trim())) return null;
-  const parts = displayName.trim().split(/\s+/).slice(0, 2);
-  const letters = parts.map((p) => p[0] ?? "").join("");
-  return letters ? letters.toUpperCase() : null;
-}
 
 function typeForSize(size: AvatarSize) {
   if (size === DS_V3.size.avatar.xs) return DS_V3.type.caption;

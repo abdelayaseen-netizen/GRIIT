@@ -24,14 +24,12 @@ export function getFeedAvatarBgFromUserId(userId: string): string {
 /** Initials: first letter of first + last name (or first two chars of single token). */
 export function getDisplayInitials(displayName: string): string {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
+  if (parts.length === 0) return "";
   if (parts.length === 1) {
-    const a = parts[0] ?? "";
-    return a.slice(0, 2).toUpperCase();
+    const letters = [...(parts[0] ?? "").matchAll(/\p{L}/gu)].map((m) => m[0]);
+    return letters.slice(0, 2).join("").toUpperCase();
   }
-  const first = parts[0] ?? "";
-  const last = parts[parts.length - 1] ?? "";
-  const a = first.charAt(0);
-  const b = last.charAt(0);
-  return `${a}${b}`.toUpperCase();
+  const first = (parts[0] ?? "").match(/\p{L}/u)?.[0] ?? "";
+  const last = (parts[parts.length - 1] ?? "").match(/\p{L}/u)?.[0] ?? "";
+  return `${first}${last}`.toUpperCase();
 }
