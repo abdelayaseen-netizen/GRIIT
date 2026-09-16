@@ -6,6 +6,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { AccessibilityInfo, StatusBar, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import { Camera, ShieldOff } from "lucide-react-native";
 import type ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
@@ -13,13 +14,28 @@ import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
 import { taskWord } from "@/lib/active-challenge-ui";
+import { moreDaysThisWeek, securedHasCameraProof } from "@/lib/secured-layout";
+import {
+  formatSecuredKeepCount,
+  formatSecuredStateLine,
+  SECURED_DONE,
+  SECURED_PILL_CAMERA,
+  SECURED_PILL_SELF,
+  SECURED_STREAK_LABEL,
+  SECURED_TODAY_PROOF,
+} from "@/lib/simple-log";
 import Button from "@/components/ds/Button";
+import Chip from "@/components/ds/Chip";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import Stamp from "@/components/ds/Stamp";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import ShareCardV3 from "@/components/share/ShareCardV3";
 import ContactSheet, { type ContactSheetProof } from "./ContactSheet";
+
+const PHOTO_FRAME = DS_V3.space.gutter * 12;
+const CHIP_ICON = DS_V3.space.lg;
+const PT = DS_V3.space.xs / 4;
 
 export type MomentVariant = "verified" | "daySecured" | "tasksLeft" | "selfReported" | "complete";
 
@@ -60,14 +76,18 @@ export function weekFromSecuredKeys(
   };
 }
 
+function isSecuredVariant(variant: MomentVariant): boolean {
+  return variant === "verified" || variant === "daySecured" || variant === "selfReported";
+}
+
 function stateLine(args: {
   variant: MomentVariant;
   day: number;
   remaining: number;
   target: number;
+  camera: boolean;
 }): string {
-  if (args.variant === "verified") return `Day ${args.day}. Verified.`;
-  if (args.variant === "selfReported") return `Day ${args.day}. Self reported.`;
+  if (isSecuredVariant(args.variant)) return formatSecuredStateLine(args.day, args.camera);
   if (args.variant === "tasksLeft") return `${args.remaining} ${taskWord(args.remaining)} left.`;
   if (args.variant === "complete") return `${args.target} days. Every one witnessed.`;
   return "Day secured.";
@@ -114,25 +134,30 @@ export default function MomentScreenV3({
 }: MomentScreenV3Props) {
   const insets = useSafeAreaInsets();
   const shotRef = useRef<ViewShot>(null);
-  const counts =
-    variant === "verified" || variant === "daySecured" || variant === "selfReported";
+  const counts = isSecuredVariant(variant);
+  const camera =
+    variant === "verified" ||
+    (counts &&
+      variant !== "selfReported" &&
+      (securedHasCameraProof({ proofUri: proofUri ?? null }) || proofSource != null));
   const justMoved = counts && streakBefore != null && streakBefore !== streak;
-  const [stampOn, setStampOn] = useState(!justMoved && (variant === "verified" || variant === "daySecured"));
+  const [stampOn, setStampOn] = useState(!justMoved && camera);
   const [completeStamp, setCompleteStamp] = useState(false);
   const weekToday = week ? todayIndex : weekFromToday().todayIndex;
-  const fillToday =
-    fillTodayProp ?? (justMoved && counts);
+  const fillToday = fillTodayProp ?? (justMoved && counts);
   const rawDays = week ?? weekFromToday().days;
   const weekDays = fillToday
     ? rawDays.map((d, i) => (i === weekToday ? { ...d, filled: false } : d))
     : rawDays;
   const goal = target ?? streak;
-  const copy = stateLine({ variant, day, remaining, target: goal });
+  const copy = stateLine({ variant, day, remaining, target: goal, camera });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
   const shareLabel = variant === "complete" ? "Complete" : "Verified";
+  const hasPhoto = proofSource != null || Boolean(proofUri);
+  const keepCount = formatSecuredKeepCount(moreDaysThisWeek(weekToday));
 
   const settleCount = useCallback(() => {
-    if (variant === "verified" || variant === "daySecured") {
+    if (camera) {
       setStampOn(true);
       if (justMoved) {
         void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
@@ -140,7 +165,7 @@ export default function MomentScreenV3({
         });
       }
     }
-  }, [variant, justMoved]);
+  }, [camera, justMoved]);
 
   const settleSheet = useCallback(() => {
     setCompleteStamp(true);
@@ -179,54 +204,79 @@ export default function MomentScreenV3({
           label={shareLabel}
         />
       </View>
-      <View style={[styles.top, { paddingTop: insets.top + DS_V3.space.md }]}>
-        <DisplayNumber
-          value={variant === "complete" ? goal : streak}
-          size="moment"
-          animateFrom={justMoved ? streakBefore : undefined}
-          onSettled={justMoved ? settleCount : undefined}
-        />
-        <Text style={styles.copy}>{copy}</Text>
-      </View>
-      {variant === "complete" ? (
-        proofs && proofs.length > 0 ? (
-          <View style={styles.media}>
-            <ContactSheet proofs={proofs} target={goal} onRevealed={settleSheet} />
-            {completeStamp ? (
-              <View style={styles.completeStamp}>
-                <Stamp label="Complete" onInk />
-              </View>
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.media}>
-            {/* TODO(backend): proofs for contact sheet */}
-            <View style={styles.completeStamp}>
-              <Stamp label="Complete" onInk />
-            </View>
-          </View>
-        )
-      ) : (
-        <View style={styles.media}>
-          {variant === "selfReported" ? (
-            <View style={styles.selfCard}>
-              <Text style={styles.selfCardText}>Self-reported. Nothing was checked.</Text>
+      {counts ? (
+        <View style={[styles.block, { paddingTop: insets.top + DS_V3.space.md }]}>
+          <Text style={styles.streakLabel}>{SECURED_STREAK_LABEL}</Text>
+          <DisplayNumber
+            value={streak}
+            size="mid"
+            animateFrom={justMoved ? streakBefore : undefined}
+            onSettled={justMoved ? settleCount : undefined}
+          />
+          <Text style={styles.unit}>{streak === 1 ? "day" : "days"}</Text>
+          <Text style={styles.copy}>{copy}</Text>
+          <Chip
+            variant="form"
+            label={camera ? SECURED_PILL_CAMERA : SECURED_PILL_SELF}
+            icon={
+              camera ? (
+                <Camera size={CHIP_ICON} color={DS_V3.color.textSecondary} />
+              ) : (
+                <ShieldOff size={CHIP_ICON} color={DS_V3.color.textSecondary} />
+              )
+            }
+          />
+          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
+          {camera ? (
+            <View style={styles.photoFrame}>
+              <ProofImage
+                uri={proofUri}
+                source={proofSource}
+                size="feed"
+                title={hasPhoto ? undefined : SECURED_TODAY_PROOF}
+                stamp={stampOn && hasPhoto ? "Verified" : false}
+                scrim={stampOn && hasPhoto}
+              />
             </View>
           ) : (
-            <ProofImage
-              uri={proofUri}
-              source={proofSource}
-              size="feed"
-              stamp={stampOn && (variant === "verified" || variant === "daySecured") ? "Verified" : false}
-              scrim={stampOn && (variant === "verified" || variant === "daySecured")}
-            />
+            <Text style={styles.keep}>{keepCount}</Text>
           )}
         </View>
+      ) : (
+        <>
+          <View style={[styles.top, { paddingTop: insets.top + DS_V3.space.md }]}>
+            <DisplayNumber
+              value={variant === "complete" ? goal : streak}
+              size={variant === "complete" ? "moment" : "mid"}
+              animateFrom={justMoved ? streakBefore : undefined}
+              onSettled={justMoved ? settleCount : undefined}
+            />
+            <Text style={styles.copy}>{copy}</Text>
+          </View>
+          {variant === "complete" ? (
+            proofs && proofs.length > 0 ? (
+              <View style={styles.media}>
+                <ContactSheet proofs={proofs} target={goal} onRevealed={settleSheet} />
+                {completeStamp ? (
+                  <View style={styles.completeStamp}>
+                    <Stamp label="Complete" onInk />
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+              <View style={styles.media}>
+                {/* TODO(backend): proofs for contact sheet */}
+                <View style={styles.completeStamp}>
+                  <Stamp label="Complete" onInk />
+                </View>
+              </View>
+            )
+          ) : (
+            <View style={styles.media} />
+          )}
+        </>
       )}
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
-        {variant !== "complete" ? (
-          <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} fillMs={300} />
-        ) : null}
         {variant === "complete" ? (
           <>
             <Button label="Start the next one" onPress={onNext} />
@@ -235,19 +285,17 @@ export default function MomentScreenV3({
                 <Button label="Share" variant="secondary" onPress={() => void share()} />
               </View>
               <View style={styles.flex}>
-                <Button label="Done" variant="tertiary" onPress={onDone} />
+                <Button label={SECURED_DONE} variant="tertiary" onPress={onDone} />
               </View>
             </View>
           </>
         ) : variant === "tasksLeft" ? (
-          <Button label="Next task" onPress={onNext ?? onDone} />
-        ) : variant === "selfReported" ? (
-          <Button label="Done" variant="tertiary" ink onPress={onDone} />
-        ) : (
           <>
-            <Button label="Share" onPress={() => void share()} />
-            <Button label="Done" variant="tertiary" ink onPress={onDone} />
+            <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} fillMs={300} />
+            <Button label="Next task" onPress={onNext ?? onDone} />
           </>
+        ) : (
+          <Button label={SECURED_DONE} onPress={onDone} />
         )}
       </View>
     </View>
@@ -264,15 +312,49 @@ const styles = StyleSheet.create({
     left: -9999,
     top: 0,
   },
+  block: {
+    flex: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.size.button + DS_V3.space.section,
+    gap: DS_V3.space.md,
+  },
   top: {
     paddingHorizontal: DS_V3.space.gutter,
     gap: DS_V3.space.xs,
+  },
+  streakLabel: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
+  },
+  unit: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   copy: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  keep: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  photoFrame: {
+    height: PHOTO_FRAME,
+    borderRadius: DS_V3.radius.card,
+    overflow: "hidden",
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
   },
   media: {
     flexGrow: 1,
@@ -282,17 +364,6 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
     paddingBottom: DS_V3.size.button * 3,
     justifyContent: "flex-start",
-  },
-  selfCard: {
-    backgroundColor: DS_V3.color.surface,
-    borderRadius: DS_V3.radius.card,
-    padding: DS_V3.space.gutter,
-  },
-  selfCardText: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: "400",
-    color: DS_V3.color.textPrimary,
   },
   completeStamp: {
     marginTop: DS_V3.space.gutter,

@@ -28,6 +28,8 @@ export type ButtonProps = {
   size?: ButtonSize;
   destructive?: boolean;
   submitting?: boolean;
+  /** Alias of `submitting`. One spinner API. */
+  loading?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
   onPress?: () => void;
@@ -44,6 +46,7 @@ export default function Button({
   size = "regular",
   destructive,
   submitting,
+  loading,
   disabled,
   icon,
   onPress,
@@ -52,9 +55,10 @@ export default function Button({
   ink,
 }: ButtonProps) {
   const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
-  const blocked = Boolean(disabled || submitting);
+  const spinning = Boolean(submitting || loading);
+  const blocked = Boolean(disabled || spinning);
   const pad = Math.max(0, (DS_V3.size.tap - height) / 2);
-  const disabledLook = Boolean(disabled) && !submitting;
+  const disabledLook = Boolean(disabled) && !spinning;
   const labelColor = disabledLook
     ? DS_V3.color.textSecondary
     : variant === "primary"
@@ -85,11 +89,11 @@ export default function Button({
         (variant === "secondary" || disabledLook) && styles.secondary,
         variant === "tertiary" && !disabledLook && styles.tertiary,
         disabledLook && styles.disabledFill,
-        submitting && styles.submitting,
+        spinning && styles.submitting,
         !blocked && pressed ? styles.pressed : null,
       ]}
     >
-      {submitting ? (
+      {spinning ? (
         <ActivityIndicator
           color={spinnerColor}
           size="small"

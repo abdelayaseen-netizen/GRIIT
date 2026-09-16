@@ -5,7 +5,7 @@
  * form chips are Create wizard only (spec Never).
  */
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 
 const PT = DS_V3.space.xs / 4;
@@ -18,6 +18,7 @@ export type ChipProps = {
   selected?: boolean;
   variant?: ChipVariant;
   disabled?: boolean;
+  icon?: React.ReactNode;
   onPress?: () => void;
 };
 
@@ -26,6 +27,7 @@ export default function Chip({
   selected = false,
   variant = "ghost",
   disabled = false,
+  icon,
   onPress,
 }: ChipProps) {
   const ghost = variant === "ghost";
@@ -52,6 +54,11 @@ export default function Chip({
         disabled ? styles.disabled : null,
       ]}
     >
+      {icon ? (
+        <View style={styles.icon} accessibilityElementsHidden>
+          {icon}
+        </View>
+      ) : null}
       <Text
         style={[
           styles.label,
@@ -73,6 +80,14 @@ const styles = StyleSheet.create({
     paddingVertical: DS_V3.space.md,
     paddingHorizontal: DS_V3.space.lg,
     borderRadius: DS_V3.radius.input,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: DS_V3.space.sm,
+  },
+  icon: {
+    width: DS_V3.space.lg,
+    height: DS_V3.space.lg,
     alignItems: "center",
     justifyContent: "center",
   },

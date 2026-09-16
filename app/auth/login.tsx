@@ -3,27 +3,31 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Eye, EyeOff, ChevronLeft } from "lucide-react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3 } from "@/lib/design-system";
+import { loginCanSubmit } from "@/lib/login-can-submit";
 import { ROUTES } from "@/lib/routes";
-import FormInput from "@/components/shared/FormInput";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Button from "@/components/ds/Button";
+import Divider from "@/components/ds/Divider";
+import PushedHeader from "@/components/ds/PushedHeader";
+import TextField from "@/components/ds/TextField";
+import TextLink from "@/components/ds/TextLink";
 import * as Haptics from "expo-haptics";
 
-const PADDING_H = 20;
+const LOGIN_DISABLED_CAPTION = "Enter your email and password to continue.";
 
 function LoginScreenInner() {
   const router = useRouter();
@@ -32,23 +36,16 @@ function LoginScreenInner() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>("");
-  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+  const live = loginCanSubmit(email, password);
 
   useEffect(() => {
     if (Platform.OS === "ios") {
       AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
     }
   }, []);
-
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
-
-  const inputBorder = useCallback(
-    (field: string) => (focusedField === field ? DS_COLORS.borderFocus : DS_COLORS.border),
-    [focusedField]
-  );
 
   const handleSignIn = useCallback(async (): Promise<void> => {
     if (loading) return;
@@ -57,7 +54,7 @@ function LoginScreenInner() {
 
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password) {
-      setFormError("Please enter your email and password.");
+      setFormError(LOGIN_DISABLED_CAPTION);
       setLoading(false);
       return;
     }
@@ -195,154 +192,124 @@ function LoginScreenInner() {
   }, [router]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <PushedHeader title="" onBack={handleBack} />
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            onPress={handleBack}
-            style={styles.backBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <ChevronLeft size={24} color={DS_COLORS.textPrimary} strokeWidth={2} />
-          </TouchableOpacity>
+          <Text style={styles.title}>Sign in</Text>
+          <Text style={styles.subtitle}>
+            Your proof, streaks and challenges are on the account, not the phone.
+          </Text>
 
-          <Text style={styles.title}>Welcome back.</Text>
-          <Text style={styles.subtitle}>Sign in to continue building your streak.</Text>
+          <View style={styles.stack}>
+            <TextField
+              label="Email"
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                setFormError("");
+              }}
+              placeholder="you@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              editable={!loading}
+              accessibilityLabel="Email address"
+            />
 
-          <View style={styles.gap32} />
-
-          <FormInput
-            label="Email"
-            value={email}
-            onChangeText={(t) => {
-              setEmail(t);
-              setFormError("");
-            }}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            returnKeyType="next"
-            onSubmitEditing={() => passwordRef.current?.focus()}
-            editable={!loading}
-            onFocus={() => setFocusedField("email")}
-            onBlur={() => setFocusedField(null)}
-            inputStyle={{ borderColor: inputBorder("email"), marginBottom: 12 }}
-            containerStyle={{ marginBottom: 0 }}
-            accessibilityLabel="Email address"
-          />
-
-          <View style={[styles.passwordWrap, { borderColor: inputBorder("password") }]}>
-            <TextInput
+            <TextField
               ref={passwordRef}
-              style={styles.passwordInput}
-              placeholder="Password"
-              placeholderTextColor={DS_COLORS.textMuted}
+              label="Password"
               value={password}
-              onChangeText={(t) => { setPassword(t); setFormError(""); }}
-              onFocus={() => setFocusedField("password")}
-              onBlur={() => setFocusedField(null)}
+              onChangeText={(t) => {
+                setPassword(t);
+                setFormError("");
+              }}
+              placeholder="Your password"
               secureTextEntry={!showPassword}
               returnKeyType="go"
-              onSubmitEditing={() => canSubmit && handleSignIn()}
+              onSubmitEditing={() => live && handleSignIn()}
               editable={!loading}
               accessibilityLabel="Password"
+              trailing={
+                <Pressable
+                  onPress={() => setShowPassword((p) => !p)}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? "Hide" : "Show"}
+                  style={styles.eye}
+                >
+                  <Text style={styles.showHide}>{showPassword ? "Hide" : "Show"}</Text>
+                </Pressable>
+              }
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword((p) => !p)}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <EyeOff size={22} color={DS_COLORS.textSecondary} />
-              ) : (
-                <Eye size={22} color={DS_COLORS.textSecondary} />
-              )}
-            </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity
-            onPress={handleForgotPassword}
-            style={styles.forgotLink}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Forgot password?"
-          >
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
+            <View style={styles.forgot}>
+              <TextLink
+                label="Forgot password?"
+                tone="secondary"
+                onPress={handleForgotPassword}
+                disabled={loading}
+              />
+            </View>
 
-          <View style={styles.gap16} />
+            <Button
+              label="Sign in"
+              disabled={!live}
+              loading={loading}
+              onPress={handleSignIn}
+              accessibilityLabel="Log in to GRIIT"
+            />
+            {!live && !loading ? (
+              <Text style={styles.caption}>{LOGIN_DISABLED_CAPTION}</Text>
+            ) : null}
 
-          <TouchableOpacity
-            style={[styles.cta, (!canSubmit || loading) && styles.ctaDisabled]}
-            onPress={handleSignIn}
-            disabled={!canSubmit || loading}
-            activeOpacity={0.9}
-            accessibilityRole="button"
-            accessibilityLabel="Log in to GRIIT"
-            accessibilityState={{ disabled: !canSubmit || loading }}
-          >
-            {loading ? (
-              <ActivityIndicator color={DS_COLORS.textPrimary} size="small" />
-            ) : (
-              <Text style={[styles.ctaText, (!canSubmit || loading) && styles.ctaTextDisabled]}>Sign in</Text>
-            )}
-          </TouchableOpacity>
+            {formError ? (
+              <Text style={styles.error} accessibilityLiveRegion="polite">
+                {formError}
+              </Text>
+            ) : null}
 
-          {formError ? (
-            <Text style={styles.inlineError} accessibilityLiveRegion="polite">
-              {formError}
-            </Text>
-          ) : null}
+            <View style={styles.orRow}>
+              <Divider style={styles.orLine} />
+              <Text style={styles.orText}>or</Text>
+              <Divider style={styles.orLine} />
+            </View>
 
-          <View style={styles.gap16} />
+            {Platform.OS === "ios" && appleAuthAvailable ? (
+              <Button
+                label="Sign in with Apple"
+                variant="secondary"
+                disabled={loading}
+                onPress={handleApple}
+                accessibilityLabel="Continue with Apple"
+              />
+            ) : null}
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {Platform.OS === "ios" && appleAuthAvailable && (
-            <TouchableOpacity
-              style={styles.btnApple}
-              onPress={handleApple}
+            <Button
+              label="Sign in with Google"
+              variant="secondary"
               disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel="Continue with Apple"
-            >
-              <Text style={styles.btnAppleText}>Sign in with Apple</Text>
-            </TouchableOpacity>
-          )}
+              onPress={handleGoogle}
+              accessibilityLabel="Continue with Google"
+            />
 
-          <TouchableOpacity
-            style={styles.btnGoogle}
-            onPress={handleGoogle}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Continue with Google"
-          >
-            <Text style={styles.btnGoogleText}>Sign in with Google</Text>
-          </TouchableOpacity>
-
-          <View style={styles.gap24} />
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
-            <TouchableOpacity
-              onPress={handleSignUpLink}
-              disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel="Don't have an account — sign up instead"
-            >
-              <Text style={styles.footerLink}>Sign up</Text>
-            </TouchableOpacity>
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+              <TextLink
+                label="Sign up"
+                onPress={handleSignUpLink}
+                disabled={loading}
+                accessibilityLabel="Don't have an account? Sign up"
+              />
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -359,118 +326,88 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  keyboard: { flex: 1 },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: PADDING_H,
-    paddingTop: 16,
-    paddingBottom: 32,
+  container: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
   },
-  backBtn: {
-    alignSelf: "flex-start",
-    padding: 8,
-    marginBottom: 24,
+  flex: {
+    flex: 1,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.section,
   },
   title: {
-    fontSize: 28,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
-    color: DS_COLORS.textPrimary,
-    marginTop: 32,
-    marginBottom: 8,
+    marginTop: DS_V3.space.lg,
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   subtitle: {
-    fontSize: 15,
-    fontWeight: "400",
-    color: DS_COLORS.textSecondary,
-    marginBottom: 0,
+    marginTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  gap32: { height: 32 },
-  gap16: { height: 16 },
-  gap24: { height: 24 },
-  input: {
-    backgroundColor: DS_COLORS.card,
-    borderWidth: 1,
-    borderRadius: DS_RADIUS.MD,
-    height: 52,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: DS_COLORS.textPrimary,
-    marginBottom: 12,
+  stack: {
+    marginTop: DS_V3.space.section,
+    gap: DS_V3.space.md,
   },
-  passwordWrap: {
+  forgot: {
+    alignItems: "flex-end",
+  },
+  eye: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  caption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
+  },
+  orRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: DS_COLORS.card,
-    borderWidth: 1,
-    borderRadius: DS_RADIUS.MD,
-    height: 52,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    gap: DS_V3.space.md,
   },
-  passwordInput: {
+  orLine: {
     flex: 1,
-    fontSize: 15,
-    color: DS_COLORS.textPrimary,
-    paddingVertical: 0,
   },
-  forgotLink: { alignSelf: "flex-end", marginBottom: 8 },
-  forgotText: { fontSize: 13, color: DS_COLORS.accent, fontWeight: "500" },
-  cta: {
-    height: 56,
-    borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_COLORS.accent,
-    alignItems: "center",
-    justifyContent: "center",
+  orText: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
-  ctaDisabled: {
-    backgroundColor: DS_COLORS.buttonDisabledBg,
-  },
-  ctaText: {
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
-  },
-  ctaTextDisabled: {
-    color: DS_COLORS.buttonDisabledText,
-  },
-  inlineError: {
-    fontSize: 13,
-    color: DS_COLORS.errorText,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: DS_COLORS.border },
-  dividerText: { fontSize: 13, color: DS_COLORS.textSecondary, marginHorizontal: 12 },
-  btnApple: {
-    height: 52,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.card,
-    borderWidth: 1,
-    borderColor: DS_COLORS.textPrimary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  btnAppleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
-  btnGoogle: {
-    height: 52,
-    borderRadius: DS_RADIUS.button,
-    backgroundColor: DS_COLORS.textPrimary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnGoogleText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
   footer: {
+    marginTop: DS_V3.space.sm,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    flexWrap: "wrap",
   },
-  footerText: { fontSize: 15, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
+  footerText: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  showHide: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
+  },
 });
