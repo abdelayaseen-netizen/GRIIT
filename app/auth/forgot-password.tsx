@@ -1,56 +1,66 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
-import { useTheme } from "@/contexts/ThemeContext";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Button from "@/components/ds/Button";
+import PushedHeader from "@/components/ds/PushedHeader";
+import TextField from "@/components/ds/TextField";
+import { useResendCountdown } from "@/lib/use-resend-countdown";
 
 function ForgotPasswordScreenInner() {
   const router = useRouter();
-  const { colors: themeColors } = useTheme();
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [sent, setSent] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>("");
   const isSubmittingRef = useRef<boolean>(false);
+  const { secondsLeft, locked, start } = useResendCountdown();
+
+  useEffect(() => {
+    if (sent) start();
+  }, [sent, start]);
+
+  const sendReset = async (): Promise<boolean> => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      setFormError("Please enter your email address.");
+      return false;
+    }
+    if (!trimmed.includes("@")) {
+      setFormError("Please enter a valid email address.");
+      return false;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: undefined,
+    });
+    if (error) {
+      setFormError(error.message);
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async () => {
     if (loading || isSubmittingRef.current) return;
     setFormError("");
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed) {
-      setFormError("Please enter your email address.");
-      return;
-    }
-    if (!trimmed.includes("@")) {
-      setFormError("Please enter a valid email address.");
-      return;
-    }
     isSubmittingRef.current = true;
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-        redirectTo: undefined,
-      });
-      if (error) {
-        setFormError(error.message);
-        return;
-      }
-      setSent(true);
+      const ok = await sendReset();
+      if (ok) setSent(true);
     } catch (e: unknown) {
       captureError(e, "AuthForgotPassword");
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
@@ -60,83 +70,107 @@ function ForgotPasswordScreenInner() {
     }
   };
 
-  if (sent) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top", "bottom"]}>
-        <View style={styles.sentBlock}>
-          <Text style={[styles.sentTitle, { color: themeColors.text.primary }]}>Check your email</Text>
-          <Text style={[styles.sentBody, { color: themeColors.text.secondary }]}>
-            We sent a link to {email.trim()}. Use it to reset your password.
-          </Text>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: themeColors.accent }]}
-            onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Back to sign in"
-          >
-            <Text style={styles.buttonText}>Back to Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleResend = async () => {
+    if (locked || loading || isSubmittingRef.current) return;
+    setFormError("");
+    isSubmittingRef.current = true;
+    setLoading(true);
+    try {
+      const ok = await sendReset();
+      if (ok) start();
+    } catch (e: unknown) {
+      captureError(e, "AuthForgotPasswordResend");
+      setFormError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+      isSubmittingRef.current = false;
+    }
+  };
+
+  const goLogin = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(ROUTES.AUTH_LOGIN as never);
+    }
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: themeColors.text.primary }]}>Reset password</Text>
-            <Text style={[styles.subtitle, { color: themeColors.text.secondary }]}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" />
+      <PushedHeader title="Reset password" onBack={goLogin} />
+      {sent ? (
+        <View style={styles.sent}>
+          <Text style={styles.title}>Check your email</Text>
+          <Text style={styles.body}>
+            We sent a link to {email.trim()}. Use it to reset your password.
+          </Text>
+          <Button
+            label="Back to Sign In"
+            onPress={() => router.replace(ROUTES.AUTH_LOGIN as never)}
+            accessibilityLabel="Back to sign in"
+          />
+          <Button
+            label={locked ? `Resend in ${secondsLeft}s` : "Resend"}
+            variant="secondary"
+            disabled={locked}
+            loading={loading}
+            onPress={handleResend}
+          />
+          {formError ? (
+            <Text style={styles.error} accessibilityLiveRegion="polite">
+              {formError}
+            </Text>
+          ) : null}
+        </View>
+      ) : (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.flex}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.subtitle}>
               Enter your email and we{"'"}ll send you a link to reset your password.
             </Text>
-          </View>
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: themeColors.text.primary }]}>Email</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: themeColors.card, borderColor: themeColors.border, color: themeColors.text.primary }]}
-                placeholder="your@email.com"
-                placeholderTextColor={themeColors.text.tertiary}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                editable={!loading}
-                accessibilityLabel="Email address"
-              />
-            </View>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: themeColors.accent }, loading && styles.buttonDisabled]}
+            <TextField
+              label="Email"
+              value={email}
+              onChangeText={(t) => {
+                setEmail(t);
+                setFormError("");
+              }}
+              placeholder="your@email.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              editable={!loading}
+              accessibilityLabel="Email address"
+            />
+            <Button
+              label="Send reset link"
+              loading={loading}
               onPress={handleSubmit}
-              disabled={loading}
-              activeOpacity={0.8}
-              accessibilityRole="button"
               accessibilityLabel="Send password reset link"
-              accessibilityState={{ disabled: loading }}
-            >
-              {loading ? <ActivityIndicator color={DS_COLORS.white} /> : <Text style={styles.buttonText}>Send reset link</Text>}
-            </TouchableOpacity>
+            />
             {formError ? (
-              <Text style={styles.formError} accessibilityLiveRegion="polite">
+              <Text style={styles.error} accessibilityLiveRegion="polite">
                 {formError}
               </Text>
             ) : null}
-            <TouchableOpacity
-              style={[styles.backLink, { borderColor: themeColors.border }]}
-              onPress={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_HOME as never))}
+            <Button
+              label="Back to Sign In"
+              variant="tertiary"
+              ink
               disabled={loading}
-              activeOpacity={0.8}
-              accessibilityRole="button"
+              onPress={goLogin}
               accessibilityLabel="Back to sign in without resetting"
-            >
-              <Text style={[styles.backLinkText, { color: themeColors.text.primary }]}>Back to Sign In</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 }
@@ -150,45 +184,48 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS.background },
-  keyboardView: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 },
-  header: { alignItems: "center", marginBottom: 32 },
-  title: { fontSize: 24, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 8 },
-  subtitle: { fontSize: 15, textAlign: "center", paddingHorizontal: 8 },
-  form: { width: "100%" },
-  inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginBottom: 8 },
-  input: {
-    borderWidth: 1,
-    borderRadius: DS_RADIUS.MD,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
+  container: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
   },
-  button: {
-    borderRadius: DS_RADIUS.MD,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
+  flex: {
+    flex: 1,
   },
-  buttonDisabled: { opacity: 0.6 },
-  formError: {
-    color: DS_COLORS.errorText,
-    fontSize: 13,
-    marginTop: 8,
-    textAlign: "center",
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.section,
+    gap: DS_V3.space.lg,
   },
-  buttonText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
-  backLink: {
-    borderWidth: 1,
-    borderRadius: DS_RADIUS.MD,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 16,
+  sent: {
+    flex: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    gap: DS_V3.space.lg,
   },
-  backLinkText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  sentBlock: { paddingHorizontal: 24, alignItems: "center" },
-  sentTitle: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, marginBottom: 12 },
-  sentBody: { fontSize: 15, textAlign: "center", marginBottom: 24 },
+  title: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  subtitle: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  body: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
+  },
 });
