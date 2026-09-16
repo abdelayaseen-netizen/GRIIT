@@ -42,6 +42,11 @@ export function homeStreakLine(
   return "Post today to start.";
 }
 
+/** ProfileV3 alias — same function as Home. */
+export function streakLineFor(current: number, todaySecured: boolean): string {
+  return homeStreakLine(current, todaySecured);
+}
+
 /**
  * Home calendar tz: profile IANA if set, else the device zone.
  * `getTodayDateKey(undefined)` is UTC — Friday 10:23pm ET becomes Saturday.

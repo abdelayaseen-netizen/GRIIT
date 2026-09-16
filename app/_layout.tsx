@@ -212,7 +212,7 @@ function RootLayoutNav() {
           <Text style={layoutStyles.sessionExpiredText}>{sessionExpiredMessage}</Text>
         </Pressable>
       ) : null}
-      <OfflineBanner />
+      <OfflineBanner insetTop={showExpired ? 0 : insets.top} />
       <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />

@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   homeStreakLine,
   resolveDisplayedStreak,
   resolveHomeStatsReady,
   resolveHomeTimeZone,
+  streakLineFor,
 } from "@/lib/home-streak";
 
 describe("resolveDisplayedStreak", () => {
@@ -29,6 +32,26 @@ describe("homeStreakLine", () => {
   it("says Post today to start only at streak 0", () => {
     expect(homeStreakLine(0, false)).toBe("Post today to start.");
     expect(homeStreakLine(0, true)).toBe("Day secured.");
+  });
+
+  it("Home and Profile produce the same line for the same inputs", () => {
+    const cases: [number, boolean][] = [
+      [0, false],
+      [0, true],
+      [1, false],
+      [1, true],
+      [7, false],
+    ];
+    for (const [streak, secured] of cases) {
+      expect(streakLineFor(streak, secured)).toBe(homeStreakLine(streak, secured));
+    }
+    const homeSrc = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    const profileSrc = readFileSync(
+      resolve(__dirname, "../components/profile/ProfileV3.tsx"),
+      "utf8",
+    );
+    expect(homeSrc).toContain("homeStreakLine(");
+    expect(profileSrc).toContain("streakLineFor(streak, todaySecured)");
   });
 });
 

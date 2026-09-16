@@ -270,6 +270,9 @@ export default function VisitorProfileScreen() {
               bio={bio}
               streak={rec?.streak.current ?? 0}
               best={rec?.streak.best ?? 0}
+              todaySecured={
+                !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
+              }
               consistency={rec?.consistency.rate ?? "No due days"}
               consistencySub={
                 joined
