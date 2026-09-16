@@ -442,13 +442,13 @@ component — the Today card from frame 30, a real feed row, the gate vocabulary
 real UI is the only illustration in this system. The three enforceable gates are camera, time window and
 location; "Verified" does not appear.
 
-Frames 31 and 32 in `GRIIT System.dc.html`. Per-screen copy tables and cut lists in
+Frames 31 and 32 in `GRIIT Onboarding and Auth.dc.html`. Per-screen copy tables and cut lists in
 `cursor/02_screens.md`.
 
 ## Dark conversion: auth, self-report, secured
 
 Five screens that were still light theme: login, the forgot-password sent state, the self-report task
-step, the secured screen and the saving state. Frame 33. No new tokens, no new components.
+step, the secured screen and the saving state. Frame 33, in `GRIIT Onboarding and Auth.dc.html`. No new tokens, no new components.
 
 Every element from the light versions survives. Login keeps both fields, show/hide, "Forgot password?",
 Apple, Google and the sign-up link, and shows Sign in disabled with one caption saying what would enable
@@ -461,3 +461,33 @@ takeover appears only past about 800ms.
 
 Barlow Condensed appears once across the five, on the secured streak number. Per-screen token lists and
 `components/ds/` reuse notes are in `cursor/02_screens.md`.
+
+## Where the frames live
+
+`GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33, and
+`GRIIT Group Challenges.dc.html` holds 34 to 38.
+
+They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
+synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
+enough that the page never became interactive. The index chip row in each document links to the other,
+so the split is invisible when navigating. Keep new frame sets in the smaller document, or start a third
+once it passes roughly 30 phones.
+
+## Group challenges
+
+Frames 34 to 38. Individual streaks stay individual; the group is a shared room capped at ten, and the
+cap is stated wherever a seat count is actionable — the roster header, the invite picker, the detail
+chip, and the social row on the active challenge screen.
+
+The roster shows the group streak as the one display number on the screen, with a caption naming what it
+counts, and every member's own streak as a caption in the body face beside their name. Creator first,
+then by streak. Pending invites are a separate labelled section; the creator sees Cancel where members
+see an inert "Invited". The invite picker uses trailing states rather than buttons (Invite in brandText,
+Invited and In inert) and keeps "Share a link" pinned above a Divider in every state, including the
+empty one, because a link is the only path to someone you do not follow. The invited detail card is the
+existing `ChallengeDetail` with an `invite` prop: Join becomes Accept plus a tertiary Not now, under
+a caption naming the inviter.
+
+One component is proposed: `ds/MemberRow` — avatar, name, a caption line and a trailing status slot.
+The roster and the picker are the same row with different trailing content, and `ds/ListRow` cannot
+carry an avatar. Per-screen token lists and copy tables are in `cursor/02_screens.md`.
