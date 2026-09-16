@@ -9,7 +9,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
-import { escapeLikeWildcards, requireUuidForPostgrestOr } from "../../lib/sanitize-search";
+import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 
 /** Discover v3 category chips → DB `challenges.category` values. */
@@ -100,15 +100,13 @@ export const challengesDiscoverProcedures = {
       .order("created_at", { ascending: false })
       .limit(50);
 
-    if (ctx.userId) {
-      const safeUserId = requireUuidForPostgrestOr(ctx.userId);
-      q = q.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
-    } else {
-      q = q.eq("visibility", "PUBLIC");
-    }
+    q = q.eq("visibility", "PUBLIC").neq("visibility", "PRIVATE");
 
-    const { data: chRows, error } = await q;
+    const { data: chRowsRaw, error } = await q;
     requireNoError(error, "Failed to load discover challenges.");
+    const chRows = (chRowsRaw ?? []).filter(
+      (c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() !== "PRIVATE"
+    );
 
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const dayStart = new Date();
@@ -742,12 +740,7 @@ export const challengesDiscoverProcedures = {
         .order("created_at", { ascending: false })
         .range(safeOffset, safeOffset + limit - 1);
 
-      if (ctx.userId) {
-        const safeUserId = requireUuidForPostgrestOr(ctx.userId);
-        query = query.or(`visibility.eq.PUBLIC,creator_id.eq.${safeUserId}`);
-      } else {
-        query = query.eq("visibility", "PUBLIC");
-      }
+      query = query.eq("visibility", "PUBLIC").neq("visibility", "PRIVATE");
 
       const search = input?.search?.trim();
       if (search) {

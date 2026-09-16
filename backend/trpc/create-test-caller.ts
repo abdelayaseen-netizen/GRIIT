@@ -20,6 +20,34 @@ export type TestAppCaller = {
       newStreakCount: number;
     }>;
   };
+  challenges: {
+    create: (input: Record<string, unknown>) => Promise<{
+      id: string;
+      visibility: string;
+      run_status: string | null;
+      participation_type: string;
+      activeChallenge: { id: string } | null;
+    }>;
+  };
+  groups: {
+    invite: (input: { challengeId: string; userId: string }) => Promise<{
+      inviteId: string;
+      status: string;
+    }>;
+    respond: (input: { inviteId: string; action: "accept" | "decline" }) => Promise<{
+      status: string;
+    }>;
+    cancel: (input: { inviteId: string }) => Promise<{ status: string }>;
+    openLink: (input: { challengeId: string }) => Promise<
+      | { state: "full" | "ended" }
+      | { invite: { id: string; status: string; invited_by: string; invited_user_id: string } }
+    >;
+    members: (input: { challengeId: string }) => Promise<{
+      groupStreak: number;
+      members: unknown[];
+      pendingInvites: unknown[];
+    }>;
+  };
 };
 
 export function createTestCaller(ctx: {
@@ -27,7 +55,7 @@ export function createTestCaller(ctx: {
   supabase: unknown;
   req?: Request;
 }): TestAppCaller | undefined {
-  const create = (appRouter as { createCaller?: (c: unknown) => TestAppCaller }).createCaller;
+  const create = (appRouter as unknown as { createCaller?: (c: unknown) => TestAppCaller }).createCaller;
   return create?.({
     userId: ctx.userId,
     supabase: ctx.supabase,
