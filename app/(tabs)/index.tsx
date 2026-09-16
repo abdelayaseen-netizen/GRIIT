@@ -25,7 +25,7 @@ import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { countFriendsPostedAway } from "@/lib/home-away-count";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
-import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
+import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
@@ -439,13 +439,7 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={
-                streak == null
-                  ? "Updating streak."
-                  : todaySecured
-                    ? "Day secured."
-                    : "Post today to start."
-              }
+              streakLine={homeStreakLine(streak, todaySecured)}
               proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
 import {
+  homeStreakLine,
   resolveDisplayedStreak,
   resolveHomeStatsReady,
   resolveHomeTimeZone,
@@ -16,6 +17,18 @@ describe("resolveDisplayedStreak", () => {
     expect(resolveDisplayedStreak(true, null)).toBe(0);
     expect(resolveDisplayedStreak(true, undefined)).toBe(0);
     expect(resolveDisplayedStreak(true, 4)).toBe(4);
+  });
+});
+
+describe("homeStreakLine", () => {
+  it("says Post today to keep it when streak ≥ 1 and today is open", () => {
+    expect(homeStreakLine(1, false)).toBe("Post today to keep it.");
+    expect(homeStreakLine(7, false)).toBe("Post today to keep it.");
+  });
+
+  it("says Post today to start only at streak 0", () => {
+    expect(homeStreakLine(0, false)).toBe("Post today to start.");
+    expect(homeStreakLine(0, true)).toBe("Day secured.");
   });
 });
 

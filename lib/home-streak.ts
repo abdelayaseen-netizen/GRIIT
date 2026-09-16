@@ -31,6 +31,17 @@ export function resolveDisplayedStreak(
   return activeStreak ?? 0;
 }
 
+/** Home hero subline. "Post today to start." is streak 0 only. */
+export function homeStreakLine(
+  streak: number | null,
+  todaySecured: boolean,
+): string {
+  if (streak == null) return "Updating streak.";
+  if (todaySecured) return "Day secured.";
+  if (streak >= 1) return "Post today to keep it.";
+  return "Post today to start.";
+}
+
 /**
  * Home calendar tz: profile IANA if set, else the device zone.
  * `getTodayDateKey(undefined)` is UTC — Friday 10:23pm ET becomes Saturday.
