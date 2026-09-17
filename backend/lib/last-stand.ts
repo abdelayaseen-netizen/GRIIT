@@ -4,8 +4,17 @@
 
 export const MAX_LAST_STANDS = 2;
 
-/** Returns whether user earns a Last Stand this secure (6+ days in last 7 and available < 2). */
-export function shouldEarnLastStand(securedDaysInLast7: number, currentAvailable: number): boolean {
+export function canSpendLastStand(subscriptionStatus: string): boolean {
+  return subscriptionStatus === "premium" || subscriptionStatus === "trial";
+}
+
+/** Earn only on premium|trial (contradiction 24). 6+ of last 7 and available < 2. */
+export function shouldEarnLastStand(
+  securedDaysInLast7: number,
+  currentAvailable: number,
+  subscriptionStatus: string,
+): boolean {
+  if (!canSpendLastStand(subscriptionStatus)) return false;
   const available = Math.min(MAX_LAST_STANDS, Math.max(0, currentAvailable));
   return securedDaysInLast7 >= 6 && available < MAX_LAST_STANDS;
 }

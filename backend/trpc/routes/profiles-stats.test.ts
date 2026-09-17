@@ -151,7 +151,7 @@ function createCaller(opts?: {
               count: null,
             }).then(onFulfilled, onRejected);
           }
-          if (state.table === "last_stand_uses") {
+          if (state.table === "last_stand_uses" || state.table === "freeze_uses") {
             return Promise.resolve({ data: [], error: null, count: null }).then(
               onFulfilled,
               onRejected
@@ -191,7 +191,8 @@ describe("profiles.getStats", () => {
     }
     const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "profiles-stats.ts"), "utf8");
     expect(src).toContain(".select(GET_STATS_PROFILE_SELECT)");
-    expect(src).toContain(".select(RECONCILE_PROFILE_SELECT)");
+    const miss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../lib/miss-reconcile.ts"), "utf8");
+    expect(miss).toContain(RECONCILE_PROFILE_SELECT);
   });
 
   it("mocked reads return challenge and streak totals", async () => {

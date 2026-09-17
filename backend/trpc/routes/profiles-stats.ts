@@ -5,170 +5,45 @@ import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/
 import {
   getTodayDateKey,
   getYesterdayDateKey,
-  dateKeyInTimeZone,
   daysBetweenKeys,
   getWeekStartDateKey,
   getWeekEndDateKey,
   addCalendarDaysToDateKey,
   getProfileTimeZoneForUser,
 } from "../../lib/date-utils";
-import type { ProfileWithExpoRow, PushTokenRow, StreakRow } from "../../types/db";
+import type { StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { logger } from "../../lib/logger";
+import { reconcileMissForUser } from "../../lib/miss-reconcile";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
-  "total_days_secured, tier, subscription_status, timezone, reminder_timezone, last_freeze_used_at";
+  "total_days_secured, tier, subscription_status, timezone, reminder_timezone";
 
 export const RECONCILE_PROFILE_SELECT =
-  "subscription_status, timezone, reminder_timezone, last_freeze_used_at";
+  "subscription_status, timezone, reminder_timezone";
 
 export const profilesStatsProcedures = {
   /**
-   * Last Stand consumption and streak zeroing.
-   * Frozen day = date key of profiles.last_freeze_used_at in the profile TZ.
-   * Must run before getStats so Home never writes on a query path.
+   * Last Stand consumption and streak zeroing via miss-reconcile.
+   * Frozen days come from freeze_uses. Must run before getStats.
    */
   reconcileStreak: protectedProcedure.mutation(async ({ ctx }) => {
-    const [streakData, profileResult, lastStandUsesResult] = await Promise.all([
-      ctx.supabase
-        .from("streaks")
-        .select(
-          "user_id, active_streak_count, longest_streak_count, last_completed_date_key, last_stands_available, last_stands_used_total"
-        )
-        .eq("user_id", ctx.userId)
-        .maybeSingle(),
-      ctx.supabase
-        .from("profiles")
-        .select(RECONCILE_PROFILE_SELECT)
-        .eq("user_id", ctx.userId)
-        .maybeSingle(),
-      ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
-    ]);
-
-    if (streakData.error && streakData.error.code !== "PGRST116") {
-      logger.error(
-        { error: streakData.error, userId: ctx.userId },
-        "[profiles.reconcileStreak] streaks read failed"
-      );
+    try {
+      const result = await reconcileMissForUser(ctx.supabase, ctx.userId);
+      return {
+        streak_broken: result.streak_broken,
+        previous_streak: result.previous_streak,
+        lastStandUsedThisSession: result.lastStandUsedThisSession,
+        lastStandsAvailable: result.lastStandsAvailable,
+      };
+    } catch (error) {
+      logger.error({ error, userId: ctx.userId }, "[profiles.reconcileStreak] miss reconcile failed");
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to reconcile streak.",
       });
     }
-    if (profileResult.error && profileResult.error.code !== "PGRST116") {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
-    }
-    if (lastStandUsesResult.error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to load streak.",
-      });
-    }
-
-    const profileRow = profileResult;
-    const streakRow = streakData.data ?? null;
-
-    const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
-    const tzRaw = profileRow?.data as
-      | { timezone?: string | null; reminder_timezone?: string | null; last_freeze_used_at?: string | null }
-      | null;
-    const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
-    const todayKey = getTodayDateKey(tz);
-    const yesterdayKey = getYesterdayDateKey(tz);
-    const lastFreezeUsedAt = tzRaw?.last_freeze_used_at ?? null;
-    const frozenDateKeys = new Set(
-      lastFreezeUsedAt ? [dateKeyInTimeZone(new Date(lastFreezeUsedAt), tz)] : []
-    );
-    const lastStandUsedDateKeys = new Set(
-      (lastStandUsesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
-    );
-
-    let effectiveMissedDays = 0;
-    let missedDateKeys: string[] = [];
-    if (lastCompletedDateKey != null && lastCompletedDateKey < todayKey) {
-      missedDateKeys = daysBetweenKeys(lastCompletedDateKey, yesterdayKey);
-      effectiveMissedDays = missedDateKeys.filter(
-        (k: string) => !frozenDateKeys.has(k) && !lastStandUsedDateKeys.has(k)
-      ).length;
-    }
-
-    let lastStandsAvailable = Math.min(
-      2,
-      Math.max(0, (streakRow as StreakRow | null)?.last_stands_available ?? 0)
-    );
-    let lastStandUsedThisSession = false;
-    let streak_broken = false;
-    let previous_streak = 0;
-
-    const subscriptionStatus =
-      (profileRow?.data as { subscription_status?: string } | null)?.subscription_status ?? "free";
-    const isPremiumForLastStand =
-      subscriptionStatus === "premium" || subscriptionStatus === "trial";
-
-    if (effectiveMissedDays === 1 && lastStandsAvailable > 0) {
-      if (isPremiumForLastStand) {
-        const dateToProtect = missedDateKeys.filter(
-          (k: string) => !frozenDateKeys.has(k) && !lastStandUsedDateKeys.has(k)
-        )[0];
-        if (dateToProtect) {
-          const { error: insertErr } = await ctx.supabase
-            .from("last_stand_uses")
-            .insert({ user_id: ctx.userId, date_key: dateToProtect });
-          if (!insertErr) {
-            const newAvailable = lastStandsAvailable - 1;
-            const newUsedTotal =
-              ((streakRow as StreakRow | null)?.last_stands_used_total ?? 0) + 1;
-            await ctx.supabase
-              .from("streaks")
-              .update({
-                last_stands_available: newAvailable,
-                last_stands_used_total: newUsedTotal,
-              })
-              .eq("user_id", ctx.userId);
-            lastStandsAvailable = newAvailable;
-            lastStandUsedThisSession = true;
-            const { sendExpoPush } = await import("../../lib/push");
-            const [pushRes, profileTokenRes] = await Promise.all([
-              ctx.supabase.from("push_tokens").select("token").eq("user_id", ctx.userId).limit(200),
-              ctx.supabase
-                .from("profiles")
-                .select("expo_push_token")
-                .eq("user_id", ctx.userId)
-                .single(),
-            ]);
-            const tokens = (pushRes?.data ?? []).map((r: PushTokenRow) => r.token).filter(Boolean);
-            const pt =
-              (profileTokenRes?.data as ProfileWithExpoRow | null)?.expo_push_token ?? null;
-            const allT = [...new Set([...tokens, pt].filter(Boolean))].filter(
-              (t: string | null | undefined): t is string => typeof t === "string"
-            );
-            try {
-              await sendExpoPush(allT, "Last Stand used", "Your streak continues.");
-            } catch (pushErr) {
-              logger.error({ err: pushErr }, "[PUSH] Failed to send Last Stand notification");
-            }
-          }
-        }
-      }
-    } else if (effectiveMissedDays >= 1 && lastStandsAvailable === 0) {
-      const activeStreakBefore = streakRow?.active_streak_count ?? 0;
-      if (activeStreakBefore > 0) {
-        await ctx.supabase
-          .from("streaks")
-          .update({ active_streak_count: 0 })
-          .eq("user_id", ctx.userId);
-        streak_broken = true;
-        previous_streak = activeStreakBefore;
-      }
-    }
-
-    return {
-      streak_broken,
-      previous_streak,
-      lastStandUsedThisSession,
-      lastStandsAvailable,
-    };
   }),
 
   getStats: protectedProcedure.query(async ({ ctx }) => {
@@ -178,6 +53,7 @@ export const profilesStatsProcedures = {
       streakData,
       profileResult,
       lastStandUsesResult,
+      freezeUsesResult,
     ] = await Promise.all([
       ctx.supabase
         .from("active_challenges")
@@ -204,12 +80,13 @@ export const profilesStatsProcedures = {
         .eq("user_id", ctx.userId)
         .maybeSingle(),
       ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
+      ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
     ]);
 
     if (profileResult.error && profileResult.error.code !== "PGRST116") {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
     }
-    if (lastStandUsesResult.error) {
+    if (lastStandUsesResult.error || freezeUsesResult.error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to load streak.",
@@ -235,14 +112,13 @@ export const profilesStatsProcedures = {
 
     const lastCompletedDateKey = streakRow?.last_completed_date_key ?? null;
     const tzRaw = profileRow?.data as
-      | { timezone?: string | null; reminder_timezone?: string | null; last_freeze_used_at?: string | null }
+      | { timezone?: string | null; reminder_timezone?: string | null }
       | null;
     const tz = tzRaw?.timezone?.trim() || tzRaw?.reminder_timezone?.trim() || "UTC";
     const todayKey = getTodayDateKey(tz);
     const yesterdayKey = getYesterdayDateKey(tz);
-    const lastFreezeUsedAt = tzRaw?.last_freeze_used_at ?? null;
     const frozenDateKeys = new Set(
-      lastFreezeUsedAt ? [dateKeyInTimeZone(new Date(lastFreezeUsedAt), tz)] : []
+      (freezeUsesResult.data ?? []).map((r: { date_key: string }) => r.date_key)
     );
 
     let effectiveMissedDays = 0;

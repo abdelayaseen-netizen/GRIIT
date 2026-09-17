@@ -12,22 +12,26 @@ describe("Last Stand", () => {
   });
 
   it("shouldEarnLastStand: 6/7 secured and 0 available → true", () => {
-    expect(shouldEarnLastStand(6, 0)).toBe(true);
-    expect(shouldEarnLastStand(7, 0)).toBe(true);
+    expect(shouldEarnLastStand(6, 0, "premium")).toBe(true);
+    expect(shouldEarnLastStand(7, 0, "trial")).toBe(true);
   });
 
   it("shouldEarnLastStand: 6/7 secured and 1 available → true", () => {
-    expect(shouldEarnLastStand(6, 1)).toBe(true);
+    expect(shouldEarnLastStand(6, 1, "premium")).toBe(true);
   });
 
   it("shouldEarnLastStand: 6/7 secured and 2 available → false (cap)", () => {
-    expect(shouldEarnLastStand(6, 2)).toBe(false);
-    expect(shouldEarnLastStand(7, 2)).toBe(false);
+    expect(shouldEarnLastStand(6, 2, "premium")).toBe(false);
+    expect(shouldEarnLastStand(7, 2, "premium")).toBe(false);
   });
 
   it("shouldEarnLastStand: 5/7 secured → false", () => {
-    expect(shouldEarnLastStand(5, 0)).toBe(false);
-    expect(shouldEarnLastStand(5, 1)).toBe(false);
+    expect(shouldEarnLastStand(5, 0, "premium")).toBe(false);
+    expect(shouldEarnLastStand(5, 1, "premium")).toBe(false);
+  });
+
+  it("shouldEarnLastStand: free user never earns", () => {
+    expect(shouldEarnLastStand(7, 0, "free")).toBe(false);
   });
 
   it("newAvailableAfterEarn: never exceeds 2", () => {
@@ -53,6 +57,6 @@ describe("Last Stand", () => {
 
   it("cannot exceed 2 Last Stands", () => {
     expect(newAvailableAfterEarn(2)).toBe(2);
-    expect(shouldEarnLastStand(7, 2)).toBe(false);
+    expect(shouldEarnLastStand(7, 2, "premium")).toBe(false);
   });
 });
