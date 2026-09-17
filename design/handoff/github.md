@@ -3,13 +3,26 @@ branch: main
 
 ## Last sync
 
-date: 2026-09-17T11:02:30Z
-tree: 9a065f7838c6
+date: 2026-09-17T21:34:05Z
+tree: f9a5ec94160a
 
 ### Updated in this project
 
+- Built frames 52 to 57 (the morning after, the two zeros, the freeze offer, partial miss in the record, roster yesterday, the evening reminders) from a read of the streak, freeze and Last Stand rules.
+- Established from code that Last Stand is automatic, premium/trial-only and retrospective — no grace window or countdown exists, so the brief's grace-window screens were not designed.
+- Established that freezes are manual and unreachable: `streaks.useFreeze` is called from no client path and `StreakFreezeModal`'s primary only dismisses the modal.
+- Logged contradictions 20 to 32, including two that break the freeze outright (the cron nulls the field `useFreeze` validates against; only one day can ever be frozen) and a free-tier trap where Last Stands are earned but unspendable.
+- Recorded a ten-row Decisions table for the rules the code does not have (partial-miss data, group yesterday state, freeze restore semantics, evening notification count).
+
+- Built frames 47 to 51 (multi-challenge day, task-done/day-open, Counter/Timer/Run steps, add-task second pass, comments sheet and respect state).
+- Confirmed `ds/Sheet` and `ds/CommentRow` shipped as chunks N and M proposed, and used both as-is.
+- Corrected the timer honesty copy against `RunningStep`/`TimerEntryStep`: the timer is wall-clock, so "leaving the app pauses it" is false. `strict_timer_mode` is hardcoded false in `taskStrictAndPhoto()` and asserted by tests, so no screen describes strict timer behaviour.
+- Confirmed no `MapView` anywhere under `components/`; the Run step and place screen are designed without a map and say so.
+- Logged contradictions 10 to 19, including `FeedPostV3.tsx:132` rendering the respect heart with no `fill`, `SessionStep` using "verified", and `FeedPostCard` importing `DS_DAYLIGHT` inside a dark app.
+
 - Built frames 42 to 46 (add task sheet, preview row, Home card, time gate, discard sheet) on the one-type/zero-to-three-gates model.
 - Audited the repo against that model and recorded nine contradictions with paths: ten `WizardTaskType` values vs five types, `require_heart_rate` as a forbidden fourth proof mechanism, timer strictness columns, no time-window columns or server check at all, `routine_anchor` overlap, `verification_method` derived from type, retired types in the starter seed, and `WhoRespectedSheet` still on pre-DS_V3 tokens.
+- Read `NewTaskSheet.tsx` in full: it asks "what proves it" twice (a `photo` chip in `PROOF_TYPES` plus a separate "Verified proof" switch), and `requirePhoto: type === "photo" || verified` makes that switch inert on a Photo task.
 - Proposed `ds/Sheet` and `ds/Switch`: `components/ds/` has neither, and the three existing sheets disagree with each other.
 
 - Built frames 39 to 41 (post detail with comments, writing task step, consistency record) from a read of `components/ds/{Skeleton, TextField, ProofImage, MemberRow, Stamp, Card, PushedHeader}.tsx`.
@@ -55,5 +68,15 @@ tree: 9a065f7838c6
 | 45 Time gate | `components/task-v2/`, `backend/trpc/routes/checkins.ts` |
 | 46 Discard sheet | `components/task-v2/steps/DiscardPhotoModal.tsx`, `components/feed/WhoRespectedSheet.tsx` |
 | Task model audit | `backend/lib/challenge-tasks.ts`, `backend/trpc/routes/challenges.ts`, `backend/lib/starter-seed.ts` |
+| 47 Multi-challenge day | `app/(tabs)/index.tsx`, `backend/trpc/routes/today.ts` |
+| 48 Task done, day open | `components/task-v2/steps/{ChallengeDoneStep,ConfirmationStep}.tsx`, `components/task-v2/ChallengeDoneScreen.tsx` |
+| 49 Counter, Timer, Run | `components/task-v2/steps/{CountStep,TimerEntryStep,RunningStep,SessionStep}.tsx`, `lib/task-flow-state.ts` |
+| 50 Add task, second pass | `components/create/NewTaskSheet.tsx`, `components/ds/{Chip,TextField,Sheet}.tsx` |
+| 51 Comments and respect | `components/feed/{FeedPostV3,FeedEngagementRow,WhoRespectedSheet}.tsx`, `components/ds/{CommentRow,Sheet}.tsx` |
+| 52 The morning after, 53 Two zeros | `backend/trpc/routes/profiles-stats.ts`, `lib/use-reconcile-streak.ts`, `app/(tabs)/index.tsx` |
+| 54 The freeze | `backend/trpc/routes/streaks.ts`, `components/StreakFreezeModal.tsx` |
+| 55 Partial miss | `backend/lib/{daily-reset,last-stand}.ts`, `app/profile/consistency.tsx` |
+| 56 Roster yesterday | `app/challenge/[id]/members.tsx`, `components/ds/MemberRow.tsx` |
+| 57 The evening before | `lib/notifications.ts`, `lib/notification-copy.ts` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |

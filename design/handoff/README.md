@@ -302,7 +302,10 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 29 Challenge detail · 30 Today's proof list · 31 Onboarding v2 · 32 Onboarding states ·
 33 Dark conversion · 34 Roster · 35 Invite picker · 36 Invite notification · 37 Detail invited ·
 38 Group row · 39 Post detail · 40 Writing step · 41 Consistency record · 42 Add task sheet ·
-43 Preview rows · 44 Home card · 45 Time gate · 46 Discard sheet.
+43 Preview rows · 44 Home card · 45 Time gate · 46 Discard sheet · 47 Multi-challenge day ·
+48 Task done day open · 49 Counter Timer Run · 50 Add task second pass · 51 Comments and respect ·
+52 The morning after · 53 Two zeros · 54 The freeze · 55 Partial miss · 56 Roster yesterday ·
+57 The evening before.
 
 ## Source
 
@@ -469,7 +472,8 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 
 `GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33,
 `GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
-39 to 41, and `GRIIT Task Model.dc.html` holds 42 to 46.
+39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51, and
+`GRIIT The Miss.dc.html` holds 52 to 57.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -539,3 +543,55 @@ green).
 paths, for the migration plan — ten `WizardTaskType` values against five types, a heart-rate proof
 mechanism the model forbids, and the fact that the Time gate has no columns and no server check yet, so
 it must not ship until `checkins.ts` can reject a late check-in.
+
+## Closing the task-completion loop
+
+Frames 47 to 51. A day across several challenges is one card with one section per challenge, separated
+by Dividers, every row leading with the same status ring — three sibling cards would crowd the screen the
+way law 22 forbids a card inside a card.
+
+Frame 48 is the state the app never had: task done, day still open. It carries no streak number at all,
+because one task of six moves nothing, and it replaces both screens that grew in its place. Completing
+the last required task skips it entirely and goes to the Secured screen, which is where the number
+lives; the router branches on the server's `secured_today`, never on a client count.
+
+The Counter, Timer and Run steps are converted, with no display face on any of them — work in flight is
+not earned. The timer copy is corrected against the code: it runs on the wall clock and leaving the app
+does not stop it, so "leaving the app pauses it" must not ship. Nothing in the repo sets
+`strict_timer_mode` true, so no screen describes strict timer behaviour. There is no map anywhere in
+the app, so the Run step and the place screen show numbers and say so.
+
+The add-task sheet gains a live preview of the row the task will produce (which retires the "No gates"
+caption), a 3 × 2 type grid so no chip is orphaned, and a "Common tasks" starter row. Comments open in
+the `ds/Sheet` that shipped after chunk N rather than a route, and the respect heart finally fills —
+`FeedPostV3` passes a colour with no `fill`, which is the whole bug.
+
+Ten more repo contradictions are logged in `cursor/02_screens.md`, numbered 10 to 19, with paths.
+
+## The miss
+
+Frames 52 to 57. Everything before this designed the success path; the morning after an unsecured day,
+Home said "0 days · Post today to start." and accounted for nothing.
+
+The morning-after block sits between the streak hero and Today and states fact, then cost, then cushion:
+what was not secured, which tasks were missed, and what happened to the streak. It needs no new endpoint
+— `profiles.reconcileStreak` already returns `streak_broken`, `previous_streak` and
+`lastStandUsedThisSession`, and the client currently sends them to analytics and renders none of them.
+No red, no consolation, and the Last Stand variant is a receipt rather than a celebration.
+
+The rules turned out narrower than the brief assumed. **Last Stand has no grace window and no
+countdown** — it is applied automatically, retrospectively, to premium and trial users only, so there is
+nothing for the user to complete and no frames for it beyond the receipt and a record row. **Freezes are
+manual and currently unreachable**: `streaks.useFreeze` validates properly and nothing calls it, while
+`StreakFreezeModal`'s "Use streak freeze" button only dismisses the modal. Frame 54 is therefore an
+offer with its cost named, and "No, let it reset" at full tertiary weight.
+
+A partial day earns nothing — a day is secured or it is not — but the record now shows the 4 of 6 and
+names the tasks that were missing, and a Last Stand day is its own third state alongside camera proof
+and self-reported. The roster gains "Missed yesterday" in the existing caption slot with no colour and no
+icon, and the group streak line names who broke it. The evening reminders drop from four to two.
+
+A ten-row **Decisions for Yaseen** table and thirteen more repo contradictions, numbered 20 to 32, are in
+`cursor/02_screens.md` — including two that make the freeze mechanic non-functional today: the cron
+nulls `last_completed_date_key`, which is the field `useFreeze` needs to validate, and only one day
+can ever be frozen because the frozen set is derived from a single timestamp column.
