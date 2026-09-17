@@ -22,8 +22,10 @@ import {
   CHALLENGE_PACKS,
   wizardTasksFromPack,
 } from "@/lib/challenge-packs";
+import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
 
 export type WizardTaskType =
+  | TaskModelType
   | "simple"
   | "photo"
   | "timer"
@@ -52,6 +54,10 @@ export type WizardTask = {
   runTarget?: number;
   runTrackingMode?: RunTrackingMode;
   runUnit?: RunUnit;
+  config?: Record<string, unknown>;
+  gates?: TaskGate[];
+  gateTime?: GateTime;
+  unit?: string;
 };
 
 export type WizardPack = {

@@ -46,7 +46,7 @@ import {
   type WizardPhotoProof,
 } from "@/components/create/v2/StepRules";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
-import { NewTaskSheet } from "@/components/create/NewTaskSheet";
+import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
@@ -475,7 +475,7 @@ export function CreateWizardV2() {
           </View>
         </Modal>
 
-        <NewTaskSheet
+        <AddTaskSheet
           visible={newTaskOpen}
           onClose={() => setNewTaskOpen(false)}
           onSave={(task) => {
