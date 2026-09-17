@@ -40,17 +40,26 @@ describe("initialStep", () => {
     expect(initialStep("reading")).toBe("count");
     expect(initialStep("manual")).toBe("ask");
     expect(initialStep("simple")).toBe("ask");
+    expect(initialStep("check_off")).toBe("ask");
     expect(initialStep("unknown")).toBe("ask");
+  });
+
+  it("a task with gates [\"camera\"] never enters AskStep", () => {
+    expect(initialStep("check_off", ["camera"])).toBe("capture");
+    expect(initialStep("manual", ["camera"])).toBe("capture");
+    expect(initialStep("simple", ["camera"])).toBe("capture");
+    expect(initialStep("check_off", ["camera"])).not.toBe("ask");
+    expect(initialStep("counter", ["camera"])).toBe("count");
   });
 });
 
 describe("flowOpensCamera", () => {
-  it("matches TaskFlowV2: photo type or require_photo, never mapped manual→photo", () => {
-    expect(flowOpensCamera("photo", false)).toBe(true);
-    expect(flowOpensCamera("manual", false)).toBe(false);
-    expect(flowOpensCamera("simple", false)).toBe(false);
-    expect(flowOpensCamera("journal", false)).toBe(false);
-    expect(flowOpensCamera("manual", true)).toBe(true);
+  it("reads the normalized gates array and nothing else", () => {
+    expect(flowOpensCamera(["camera"])).toBe(true);
+    expect(flowOpensCamera(["time", "camera"])).toBe(true);
+    expect(flowOpensCamera([])).toBe(false);
+    expect(flowOpensCamera(["time"])).toBe(false);
+    expect(flowOpensCamera(["location"])).toBe(false);
   });
 });
 
@@ -63,6 +72,9 @@ describe("chromeTitle", () => {
     expect(chromeTitle("manual")).toBe("Self-report");
     expect(chromeTitle("timer")).toBe("Timer");
     expect(chromeTitle("journal")).toBe("Journal");
+    expect(chromeTitle("check_off", ["camera"])).toBe("Camera");
+    expect(chromeTitle("manual", ["camera"])).toBe("Camera");
+    expect(chromeTitle("check_off")).toBe("Self-report");
   });
 });
 
@@ -220,6 +232,9 @@ describe("resolveGoBack", () => {
     expect(resolveGoBack({ step: "capture", caption: "", taskType: "manual" })).toEqual({
       action: "set_step",
       step: "ask",
+    });
+    expect(resolveGoBack({ step: "capture", caption: "", taskType: "check_off", gates: ["camera"] })).toEqual({
+      action: "exit",
     });
     expect(resolveGoBack({ step: "capture", caption: "", taskType: "photo" })).toEqual({ action: "exit" });
   });

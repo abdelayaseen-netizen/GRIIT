@@ -136,7 +136,7 @@ export function TaskFlowV2() {
           photoUri={f.photoUri}
           challengeName={f.challengeName}
           currentDay={f.currentDay}
-          taskType={f.taskType}
+          gateLabel={f.chromeTitle}
           caption={f.caption}
           onCaption={f.setCaption}
           onRetake={f.onRetake}

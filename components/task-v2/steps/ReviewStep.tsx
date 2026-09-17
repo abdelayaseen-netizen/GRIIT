@@ -3,14 +3,13 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
-import { chromeTitle } from "@/lib/task-flow-state";
 import { styles } from "../taskFlowStyles";
 
 type Props = {
   photoUri: string;
   challengeName: string;
   currentDay: number;
-  taskType: string;
+  gateLabel: string;
   caption: string;
   onCaption: (t: string) => void;
   onRetake: () => void;
@@ -21,7 +20,7 @@ export function ReviewStep({
   photoUri,
   challengeName,
   currentDay,
-  taskType,
+  gateLabel,
   caption,
   onCaption,
   onRetake,
@@ -39,7 +38,7 @@ export function ReviewStep({
             {challengeName}
           </Text>
           <Text style={styles.cap92} numberOfLines={1}>
-            Day {currentDay} · {chromeTitle(taskType)}
+            Day {currentDay} · {gateLabel}
           </Text>
           {caption ? (
             <Text style={styles.cap100} numberOfLines={1}>

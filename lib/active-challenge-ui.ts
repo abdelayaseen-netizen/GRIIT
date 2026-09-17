@@ -172,7 +172,7 @@ export function homeProofGate(
   if (raw === "timer" || raw === "workout" || raw === "run") {
     return durationMinutes && durationMinutes > 0 ? `Timer ${durationMinutes} min` : "Timer";
   }
-  if (flowOpensCamera(raw, requirePhoto)) return "Photo";
+  if (flowOpensCamera(requirePhoto ? ["camera"] : raw === "photo" ? ["camera"] : [])) return "Photo";
   return "Self-reported";
 }
 

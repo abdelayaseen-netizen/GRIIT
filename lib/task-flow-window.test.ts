@@ -5,6 +5,7 @@ import {
   flowFooterBrand,
   flowFooterCaption,
   flowHeaderTitle,
+  gatesFromConfig,
   isWindowClosedError,
 } from "@/lib/task-flow-window";
 import { WINDOW_CLOSED_FORBIDDEN } from "@/lib/task-ui";
@@ -23,6 +24,22 @@ describe("flowHeaderTitle", () => {
 
   it("falls back when there is no time gate", () => {
     expect(flowHeaderTitle(2, null, "Self-report")).toBe("Day 2 · Self-report");
+  });
+
+  it("Day n · Camera when the camera gate is the header fallback", () => {
+    expect(flowHeaderTitle(1, null, "Camera")).toBe("Day 1 · Camera");
+  });
+});
+
+describe("gatesFromConfig", () => {
+  it("reads the backend gates array and drops anything else", () => {
+    expect(gatesFromConfig({ gates: ["camera"] })).toEqual(["camera"]);
+    expect(gatesFromConfig({ gates: ["camera", "time"], require_photo: true })).toEqual([
+      "camera",
+      "time",
+    ]);
+    expect(gatesFromConfig({ require_photo: true })).toEqual([]);
+    expect(gatesFromConfig({ gates: ["heart_rate", "camera"] })).toEqual(["camera"]);
   });
 });
 
