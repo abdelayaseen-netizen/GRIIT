@@ -191,8 +191,8 @@ describe("fixture A — 12 due days", () => {
       { label: "Aug 2026", value: "6 of 7", pct: 6 / 7 },
     ]);
     expect(rec.detail.byChallenge).toEqual([
-      { label: "Read Something", value: "10 of 11" },
-      { label: "Cold Plunge Ladder", value: "2 of 2" },
+      { label: "Read Something", value: "10 of 11", camera: 0, selfReported: 0 },
+      { label: "Cold Plunge Ladder", value: "2 of 2", camera: 0, selfReported: 0 },
     ]);
   });
 

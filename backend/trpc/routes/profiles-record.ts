@@ -24,6 +24,7 @@ import { followRowAccepted } from "../../lib/feed-activity-hydrate";
 import { buildProfileRecord, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { proofPhotosByDateKey, type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
+import { splitSecuredProof } from "../../lib/proof-predicate";
 import {
   mutualFollowAccepted,
   parseVisibility,
@@ -82,6 +83,8 @@ function emptyRecord(): ProfileRecord {
       longestStreak: 0,
       months: [],
       byChallenge: [],
+      cameraDays: 0,
+      selfReportedDays: 0,
     },
   };
 }
@@ -265,7 +268,7 @@ export const profilesRecordProcedures = {
           securedDateKeys.length > 0
             ? db
                 .from("check_ins")
-                .select("date_key, photo_url, proof_url, completion_image_url")
+                .select("date_key, active_challenge_id, photo_url, proof_url, completion_image_url")
                 .eq("user_id", ownerId)
                 .in("date_key", securedDateKeys)
                 .limit(400)
@@ -328,11 +331,38 @@ export const profilesRecordProcedures = {
         imageUrl: photos.get(proof.dateKey) ?? null,
       }));
 
+      const enrollmentIds = [
+        ...record.runs.map((r) => r.id),
+        ...record.completed.map((c) => c.id),
+      ];
+      const split = splitSecuredProof({
+        securedDateKeys,
+        checkIns: checkInRows,
+        enrollmentIds,
+      });
+      const bySplit = new Map(split.byEnrollment.map((row) => [row.id, row]));
+      const byChallenge = record.detail.byChallenge.map((row, i) => {
+        const id = enrollmentIds[i];
+        const part = id ? bySplit.get(id) : undefined;
+        return {
+          ...row,
+          camera: part?.camera ?? 0,
+          selfReported: part?.selfReported ?? 0,
+        };
+      });
+
       const sliced: ProfileRecord = {
         ...record,
         proofs: gate.activity ? proofs : [],
         consistency: gate.activity ? { ...record.consistency } : EMPTY_CONSISTENCY,
-        detail: gate.activity ? record.detail : emptyRecord().detail,
+        detail: gate.activity
+          ? {
+              ...record.detail,
+              cameraDays: split.cameraDays,
+              selfReportedDays: split.selfReportedDays,
+              byChallenge,
+            }
+          : emptyRecord().detail,
         runs: gate.challenges ? record.runs : [],
         completed: gate.challenges ? record.completed : [],
         badges: relationship === "self" ? record.badges : [],

@@ -161,7 +161,14 @@ export type ProfileRecord = {
     firstProof: string;
     longestStreak: number;
     months: { label: string; value: string; pct: number }[];
-    byChallenge: { label: string; value: string }[];
+    byChallenge: {
+      label: string;
+      value: string;
+      camera: number;
+      selfReported: number;
+    }[];
+    cameraDays: number;
+    selfReportedDays: number;
   };
 };
 
@@ -383,8 +390,18 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .reverse();
 
   const byChallenge = [
-    ...runs.map((r) => ({ label: r.name, value: `${r.verified} of ${r.verified + r.missed}` })),
-    ...completed.map((c) => ({ label: c.name, value: c.value })),
+    ...runs.map((r) => ({
+      label: r.name,
+      value: `${r.verified} of ${r.verified + r.missed}`,
+      camera: 0,
+      selfReported: 0,
+    })),
+    ...completed.map((c) => ({
+      label: c.name,
+      value: c.value,
+      camera: 0,
+      selfReported: 0,
+    })),
   ];
 
   const totalVerified = dueDayKeys.filter((k) => k < input.todayKey && secured.has(k)).length;
@@ -426,6 +443,8 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       longestStreak: input.bestStreak,
       months,
       byChallenge,
+      cameraDays: 0,
+      selfReportedDays: 0,
     },
   };
 }

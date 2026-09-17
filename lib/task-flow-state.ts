@@ -79,7 +79,8 @@ export function chromeFlags(step: TaskFlowStep): { dark: boolean; hideChrome: bo
       step === "confirmation" ||
       step === "challenge_done" ||
       step === "verifying" ||
-      step === "capture",
+      step === "capture" ||
+      step === "write",
   };
 }
 

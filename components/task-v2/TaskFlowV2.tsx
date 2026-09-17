@@ -146,7 +146,15 @@ export function TaskFlowV2() {
       ) : null}
 
       {f.step === "write" ? (
-        <WriteStep text={f.text} minWords={f.minWords} onChangeText={f.setText} onPost={f.onJournalPost} />
+        <WriteStep
+          text={f.text}
+          minWords={f.minWords}
+          currentDay={f.currentDay}
+          taskName={f.taskName}
+          onChangeText={f.setText}
+          onPost={f.onJournalPost}
+          onBack={f.goBack}
+        />
       ) : null}
 
       {f.step === "count" ? (

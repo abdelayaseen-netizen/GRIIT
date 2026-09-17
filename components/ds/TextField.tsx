@@ -34,6 +34,9 @@ export type TextFieldProps = {
   | "onFocus"
   | "onBlur"
   | "textContentType"
+  | "multiline"
+  | "maxLength"
+  | "numberOfLines"
 >;
 
 const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
