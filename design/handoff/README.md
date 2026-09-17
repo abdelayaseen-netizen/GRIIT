@@ -299,7 +299,10 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 12 System sheet · 13 Display face · 14 Capture · 15 Secured · 16 Verified stamp · 17 Share card ink ·
 18 Prototype · 19 Welcome · 20 Challenge complete · 21 Badges · 22 Create step 1 · 23 Create step 2 ·
 24 Add task sheet · 25 Create step 3 · 26 Review sheet · 27 Launched · 28 Active challenge ·
-29 Challenge detail.
+29 Challenge detail · 30 Today's proof list · 31 Onboarding v2 · 32 Onboarding states ·
+33 Dark conversion · 34 Roster · 35 Invite picker · 36 Invite notification · 37 Detail invited ·
+38 Group row · 39 Post detail · 40 Writing step · 41 Consistency record · 42 Add task sheet ·
+43 Preview rows · 44 Home card · 45 Time gate · 46 Discard sheet.
 
 ## Source
 
@@ -464,8 +467,9 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 
 ## Where the frames live
 
-`GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33, and
-`GRIIT Group Challenges.dc.html` holds 34 to 38.
+`GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33,
+`GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
+39 to 41, and `GRIIT Task Model.dc.html` holds 42 to 46.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -479,15 +483,59 @@ Frames 34 to 38. Individual streaks stay individual; the group is a shared room 
 cap is stated wherever a seat count is actionable — the roster header, the invite picker, the detail
 chip, and the social row on the active challenge screen.
 
-The roster shows the group streak as the one display number on the screen, with a caption naming what it
-counts, and every member's own streak as a caption in the body face beside their name. Creator first,
-then by streak. Pending invites are a separate labelled section; the creator sees Cancel where members
-see an inert "Invited". The invite picker uses trailing states rather than buttons (Invite in brandText,
-Invited and In inert) and keeps "Share a link" pinned above a Divider in every state, including the
-empty one, because a link is the only path to someone you do not follow. The invited detail card is the
-existing `ChallengeDetail` with an `invite` prop: Join becomes Accept plus a tertiary Not now, under
-a caption naming the inviter.
+The roster shows the group streak as the one DisplayNumber on the screen, with a caption naming what it
+counts, and every member's own streak as a ListRow subtitle. Creator first, then by streak. Pending
+invites are a separate labelled section; the creator sees a flush tertiary Cancel where members see an
+inert "Invited". The invite picker uses trailing states rather than a button per row, and keeps "Share a
+link" pinned above a Divider in every state, including the empty one, because a link is the only path to
+someone you do not follow. The invited detail card is the existing `ChallengeDetail` with an `invite`
+prop: Join becomes Accept plus a tertiary Not now, under a caption naming the inviter.
 
-One component is proposed: `ds/MemberRow` — avatar, name, a caption line and a trailing status slot.
-The roster and the picker are the same row with different trailing content, and `ds/ListRow` cannot
-carry an avatar. Per-screen token lists and copy tables are in `cursor/02_screens.md`.
+**No new components.** The reuse notes in `cursor/02_screens.md` are grounded in a read of
+`components/ds/` at `main` — the roster and picker rows are `ListRow` with an `Avatar` in its
+`icon` slot, the fresh-group state is `EmptyState` on the canvas, and the button variants are
+`primary` / `secondary` / `tertiary`. Two conflicts with the shipped code are recorded there rather
+than papered over: `Button variant="primary"` fills `DS_V3.color.brand` with an `onBrand` label
+while the frames draw brief 16's `#BB471D` on `#F5F3EE`, and `ListRow`'s title is always
+`textPrimary`, so the read state of a notification row needs a prop on `ListRow`.
+
+## Post detail, writing step, consistency record
+
+Frames 39 to 41, the last three light-theme screens.
+
+Post detail leads with `ProofImage size="feed"` and lets the component place the Stamp inside its own
+scrim — passed only when the completion carried camera proof. Comments are rows on the canvas with
+Dividers; the composer is a pinned `TextField` with a 44pt round Send that is surface-with-border until
+there is text. Loading is the `Skeleton` card recipe, static, never a spinner. "No comments yet." is one
+line, not an `EmptyState`, because the composer below it is already the action.
+
+The writing step puts a bare `TextInput` on the canvas rather than a `TextField` — 250 words do not
+belong in a 52pt bordered box. The counter is a caption on a 2pt rule that fills with brand, not a
+`DisplayNumber`: words typed are not earned. The CTA names the remaining work and is disabled until
+the count is met.
+
+The consistency record shows secured days over days elapsed as its one hero number, then splits the
+secured total into camera proof and self-reported inside the same stats Card, below a Divider. No Stamp
+appears anywhere on that screen: it would imply the aggregate was checked.
+
+One component is proposed, `ds/CommentRow` — avatar 32, a name and time baseline, wrapping body text.
+`ds/MemberRow` (which shipped after chunk L) hardcodes avatar 40 and a status trailing slot, and
+`ds/ListRow` cannot wrap. Per-screen token lists and copy tables are in `cursor/02_screens.md`.
+
+## The task model
+
+A task has one type and zero to three gates. Types: Check off, Timer, Counter, Text, Run. Gates: Camera,
+Time, Location. "Photo" is not a type and "verified proof" is not a toggle — both are the Camera gate.
+The gate line reads "Camera · By 7:00 am · Location", or "Self-reported" when there are no gates, built
+by one function in one order and called by every screen that shows a task.
+
+Frames 42 to 46 cover the add-task sheet (name, then what you do, then what proves it), the task preview
+row, the Home card with six tasks including a closed time window, the time gate in the completion flow,
+and the discard sheet. Two components are proposed: `ds/Sheet` (there is none, and the three hand-rolled
+sheets in the app disagree with each other and with DS_V3) and `ds/Switch` (RN's default track is iOS
+green).
+
+`cursor/02_screens.md` carries a numbered list of places the shipped code contradicts the model, with
+paths, for the migration plan — ten `WizardTaskType` values against five types, a heart-rate proof
+mechanism the model forbids, and the fact that the Time gate has no columns and no server check yet, so
+it must not ship until `checkins.ts` can reject a late check-in.

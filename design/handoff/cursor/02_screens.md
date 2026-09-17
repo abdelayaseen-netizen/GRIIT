@@ -1618,14 +1618,43 @@ secured screen), 19 (the count-up is still the one moment).
 
 # Group challenges
 
-**Chunk** L. Frames 34 to 38, in `GRIIT Group Challenges.dc.html`. No new tokens.
+**Chunk** L. Frames 34 to 38, in `GRIIT Group Challenges.dc.html`. No new tokens, **no new
+components**.
 
 Individual streaks stay individual. The group is a shared room with a fixed cap of ten, and the cap is
 stated wherever a seat count is actionable.
 
-**One new component proposed**: `ds/MemberRow` — avatar 40, name + a caption line, and a trailing
-status caption. The roster and the invite picker are the same row with a different trailing slot, and
-`ds/ListRow` cannot carry an avatar. Everything else below is existing `components/ds/`.
+**Grounded against the repo** at `abdelayaseen-netizen/GRIIT@main`, tree `e1d9232f932e`. Every
+component named below was read: `components/ds/{ListRow, Button, Card, Avatar, PushedHeader, Chip,
+DisplayNumber, Divider, EmptyState}.tsx`. Three corrections to the first draft of this chunk came out
+of that read, recorded at the end.
+
+**The ds/ API, as it actually is** — bind to these names, not to prose:
+
+| component | the props these screens use |
+|---|---|
+| `ListRow` | `icon?: ReactNode` (arbitrary leading slot), `title`, `subtitle?`, `trailing?: ReactNode`, `rank?`, `highlight?`, `divider?` (**default true**), `onPress?` |
+| `Button` | `label`, `variant?: "primary" \| "secondary" \| "tertiary"` (default primary), `size?: "regular" \| "small"`, `icon?`, `loading?`/`submitting?`, `disabled?`, `flush?`, `ink?`, `destructive?` |
+| `Avatar` | `size?: 32 \| 40 \| 56 \| 96`, `uri?`, `displayName?`, `ring?` |
+| `PushedHeader` | `title`, `onBack`, `trailing?` |
+| `Card` | `tint?` plus ViewProps |
+| `Chip` | `label`, `selected?`, `variant?: "ghost" \| "form"`, `disabled?`, `icon?`, `onPress?` |
+| `DisplayNumber` | `value`, `size?: "inline" \| "home" \| "moment" \| "mid" \| "share"`, `animateFrom?`, `haptic?`, `onSettled?` |
+| `EmptyState` | `icon?`, `heading`, `body`, `actionLabel`, `onAction?`, `variant?: "empty" \| "error"` |
+
+Four things follow from that and are binding on every screen below.
+
+1. **`ListRow` carries an avatar.** Its `icon` prop is an untyped `ReactNode` in a slot with a 24pt
+   *minimum*, so `icon={<Avatar size={40} …/>}` works with no change to the component. The roster and
+   the invite picker are `ListRow` + `Avatar`, not a new row component.
+2. **`ListRow` draws its own divider** (`divider` defaults true). Do not wrap rows in `Divider`;
+   pass `divider={false}` on the last row of a section instead.
+3. **`Button variant="primary"` fills `DS_V3.color.brand` with an `onBrand` label**, and its header
+   comment cites law 7: never `textPrimary` on brand. The frames draw the primary as `#BB471D` with a
+   `#F5F3EE` label because brief 16 locked that pair. **Those two disagree**, and this chunk does not
+   resolve it: use `<Button variant="primary">` as it ships, and if `#BB471D` is the intended
+   primary, change `DS_V3.color.brand`/`onBrand` once, centrally, rather than overriding per screen.
+4. **`PushedHeader` centres its title** between two 44pt sides. The frames were corrected to match.
 
 ---
 
@@ -1633,104 +1662,122 @@ status caption. The roster and the invite picker are the same row with a differe
 
 Opens from the social row on the active challenge screen.
 
-**Tokens** `color.canvas` · `color.surface` + `border` for the empty-state card · `displayFace` at
-`numberSize.home` 64 for the group streak · `color.brandText` for "Secured today" ·
-`color.textSecondary` for "Not yet today", every member streak and the Cancel affordance ·
-`color.primary` Invite · `type.label` section labels · `radius.card` 20 · `space.gutter` 20 ·
-`hit` 44 per row.
+**Reuse** `PushedHeader` (`title={challenge.title}`, `onBack`) · `DisplayNumber`
+`size="home"` for the group streak · `ListRow` with `icon={<Avatar size={40} displayName={…} uri={…}/>}`,
+`title={display_name}`, `subtitle` for their streak, `trailing` for the secured status ·
+`Button variant="primary"` with a `user-plus` icon for Invite · `Button variant="tertiary"`
+`size="small"` `flush` for each Cancel · `EmptyState` for the fresh group.
 
-**Reuse** `ds/PushedHeader` (back chevron + challenge name), `ds/DisplayNumber` size home,
-`ds/Divider` between rows, `ds/Button` primary, `ds/Card` for the empty state, `ds/MemberRow` (new).
+**Tokens** `DS_V3.color.canvas` ground · `color.brandText` "Secured today" ·
+`color.textSecondary` "Not yet today", member streaks, section labels · `numberSize.home` ·
+`type.label` / `type.bodyStrong` / `type.caption` · `space.gutter` · `size.tap` 44 ·
+`size.avatar.md` 40.
 
-**Group streak** the only display number on the screen. Every member's own streak is a
-`type.caption` line under their name in the body face — a teammate's streak is their earned number,
-not the viewer's. The number carries one caption, "Counts only days every member secured", because a
-group streak nobody can define is a vanity metric. If the backend defines it differently, change the
-caption to match the query; do not ship the number without a definition beside it.
+**Group streak** the only `DisplayNumber` on the screen. Each member's own streak is a `subtitle` in
+the body face — a teammate's streak is their earned number, not the viewer's. The number carries one
+caption, "Counts only days every member secured", because a group streak nobody can define is a vanity
+metric. If the backend computes it differently, change the caption to match the query; do not ship the
+number without a definition beside it.
 
-**Order** creator first with a "Creator" label, then by streak descending. Not alphabetical: the list is
-a standings board and the first thing a member looks for is who is carrying the group.
+**Order** creator first, then by streak descending. Not alphabetical: the list is a standings board.
+The creator's row takes `rank` = nothing and a "Creator" label beside the name; do not use
+`highlight`, which is `brandTint` and reads as a selection.
 
 **Copy**
 | string | style |
 |---|---|
 | Group streak | label textSecondary |
-| {group_streak} | numberSize.home, displayFace |
+| {group_streak} | DisplayNumber size home |
 | days / day | body textSecondary |
 | {secured_today} of {member_count} secured today | secondary textSecondary |
 | Counts only days every member secured. | caption textSecondary |
 | In this group · {n} of 10 | label textSecondary |
 | Creator | label textSecondary, beside the name |
-| {n} day streak | caption textSecondary |
-| No streak yet | caption textSecondary |
-| Secured today | caption brandText |
-| Not yet today | caption textSecondary |
+| {n} day streak | ListRow subtitle |
+| No streak yet | ListRow subtitle |
+| Secured today | caption brandText, trailing |
+| Not yet today | caption textSecondary, trailing |
 | Invited | label textSecondary, section |
-| Cancel | secondary medium textSecondary, creator only |
-| Invited | caption textSecondary, non-creator view of a pending row |
-| Invite | bodyStrong on primary, user-plus 20 |
-| Just you so far. | bodyStrong |
-| Up to nine more can join. The group streak starts on the first day all of you secure. | secondary textSecondary |
+| Cancel | Button tertiary small flush, creator only |
+| Invited | caption textSecondary, member's view of a pending row |
+| Invite | Button primary, user-plus icon |
+| Just you so far. | EmptyState heading |
+| Up to nine more can join. The group streak starts on the first day all of you secure. | EmptyState body |
 
 The Invited section does not render when there are no pending invites. Members see "Invited" as an inert
-caption where the creator sees "Cancel".
+caption where the creator sees Cancel.
+
+**Empty roster** `EmptyState` sits on the canvas, never inside a `Card` (its header cites law 21),
+and it owns its own single `Button` — so the pinned footer is absent in that state and Invite is the
+EmptyState action. One primary on screen, law 6 intact.
 
 ---
 
 ## 35. Invite picker — pushed from Invite
 
-**Tokens** `color.brandText` for the live Invite affordance · `color.textSecondary` for "Invited" and
-"In" · `color.surface` + `border` for the empty and full cards and the Share button ·
-`radius.pill` on the Share button · `border` for the Divider above it.
+**Reuse** `PushedHeader` · `ListRow` + `Avatar size={40}` (`subtitle={"@"+username}`) ·
+`Button variant="tertiary"` `size="small"` `flush` as the row `trailing` for a live Invite ·
+a plain `type.caption` `Text` as `trailing` for the inert states · `Divider` above the pinned
+Share button · `Button variant="secondary"` with a `link` icon for Share a link · `Card` for the
+full-group notice · `EmptyState` for no mutuals.
 
-**Reuse** `ds/PushedHeader`, `ds/MemberRow` (new, same as the roster with a different trailing slot),
-`ds/Divider`, `ds/Button` variant surface, `ds/Card`.
+**Tokens** `color.brandText` (the tertiary Button's default label colour) for Invite ·
+`color.textSecondary` "Invited" and "In" · `color.surface` + `color.border` on the secondary
+Button and the Card · `radius.pill` · `radius.card` 20.
 
-The trailing element is a state, not a button: `color.brandText` "Invite" when actionable, an inert
-`type.caption` "Invited" after the tap, an inert "In" when the person is already enrolled with the row
-at normal opacity (they are not an error, they are already here).
+The trailing element is a *state*, not always a control: a tertiary `Button` when actionable, then an
+inert caption after the tap. "In" is an inert caption at full row opacity — someone already enrolled is
+not an error.
 
-"Share a link" is pinned to the bottom above a Divider and survives every state including the empty one,
-because it is the only path that reaches someone you do not follow.
+"Share a link" is pinned above a `Divider` and survives every state including the empty one, because it
+is the only path that reaches someone you do not follow.
 
 **Copy**
 | string | style |
 |---|---|
-| Invite to {challenge} | bodyStrong, header |
+| Invite to {challenge} | PushedHeader title |
 | People you follow, and people who follow you. {n} of 10 in the group. | caption textSecondary |
-| {display_name} / @{username} | bodyStrong / caption textSecondary |
-| Invite | secondary medium brandText |
+| {display_name} / @{username} | ListRow title / subtitle |
+| Invite | Button tertiary small flush |
 | Invited | caption textSecondary, inert |
 | In | caption textSecondary, inert |
-| Share a link | bodyStrong on surface, link 20 |
-| Follow people to invite them here. | bodyStrong |
-| A link works on anyone, follower or not. | secondary textSecondary |
-| This group is full. Ten is the cap, and someone has to leave before you can invite again. | secondary textSecondary |
+| Share a link | Button secondary, link icon |
+| Follow people to invite them here. | EmptyState heading |
+| A link works on anyone, follower or not. | EmptyState body |
+| This group is full. Ten is the cap, and someone has to leave before you can invite again. | Card, secondary textSecondary |
 
-**Full state** rows drop to 0.4 and go inert, the Invite affordance greys to textSecondary, and the card
-at the top states the cap. Share a link stays live: the link itself will refuse at the server, and
-hiding it would imply the group can be grown some other way.
+**Full state** rows go inert at 0.4, which is `Chip`'s disabled opacity and the value to match; the
+Invite affordance becomes a `disabled` Button, whose label the component already renders in
+`textSecondary`. Share a link stays live: the server refuses an over-cap join, and hiding the link
+would imply the group can be grown another way.
 
 ---
 
 ## 36. Invite notification — one row in Activity
 
-**Tokens** `color.surface` ground when unread, `color.canvas` when read · `color.brand` for the 8pt
-unread dot · `type.secondary` at weight 500 / `color.textPrimary` unread, weight 400 /
-`color.textSecondary` read.
+**There is no `NotificationRow` in `components/ds/`** — the directory holds 24 files and none of them
+is a notification row. This is `ListRow` with `icon={<Avatar size={40} displayName={inviter}/>}`,
+`title` carrying the sentence, `subtitle` the relative time, and `onPress` set (which makes
+`ListRow` render its own `ChevronRight` when `trailing` is undefined).
 
-**Reuse** `ds/NotificationRow` if it exists, otherwise `ds/MemberRow` with a timestamp caption. No new
-component.
+**Unread** pass `trailing={<UnreadDot/>}` — an 8pt `color.brand` circle — and the row's own chevron
+is suppressed, because `ListRow` only falls back to the chevron when `trailing` is undefined. Ground
+the unread row in `color.surface` via the `style` passthrough on the wrapping `View`; `ListRow`
+itself takes no style prop, so wrap it.
 
-Both states are the same height, so marking read does not reflow the list. The unread dot becomes a
-chevron on read: the row stays tappable after it has been seen, because a pending invite is still
-pending.
+**Read** drop `trailing` entirely and let the chevron come back. Both states are the same height, so
+marking read does not reflow the list, and the row stays tappable: a pending invite is still pending.
 
 **Copy**
 | string | style |
 |---|---|
-| {inviter} invited you to {challenge} | secondary medium textPrimary (unread) / secondary textSecondary (read) |
-| {relative time} | caption textSecondary |
+| {inviter} invited you to {challenge} | ListRow title (bodyStrong) unread; textSecondary when read |
+| {relative time} | ListRow subtitle |
+
+Note `ListRow`'s `title` is always `type.bodyStrong` in `textPrimary`. The read treatment needs
+either a `read` prop on `ListRow` or a local `Text` in place of `title` — that is the one place in
+this chunk where the shipped component does not cover the design. Prefer adding the prop to `ListRow`
+over building a second row component.
 
 ---
 
@@ -1738,48 +1785,503 @@ pending.
 
 Same layout as the not-joined state. Two changes.
 
-**Footer** Join is replaced by primary "Accept" and tertiary "Not now". Above them, one centred caption:
-"{inviter} invited you. Day 1 is the day you accept." That sentence does the work the old
-"Day 1 is today." did, and it names who is asking.
+**Footer** Join is replaced by `Button variant="primary"` "Accept" and `Button variant="tertiary"`
+"Not now". Above them, one centred caption: "{inviter} invited you. Day 1 is the day you accept." That
+sentence does the work "Day 1 is today." did, and it names who is asking.
 
 **Facts row** the member chip reads "{n} of 10" instead of "{n} people". In a group the cap is the fact
 that matters: it tells the viewer whether there is room before they tap Accept.
 
-**Tokens** `color.primary` Accept · `color.textSecondary` Not now · `color.surface` + `border`
-chips · unchanged everywhere else.
+The facts row is **not** `ds/Chip`. `Chip` is a `Pressable` with `ghost` (transparent) and
+`form` (Create wizard only) variants; the facts are not tappable and must not look it. They stay the
+plain surface pills specified in the Challenge detail entry — `color.surface`, 1pt `color.border`,
+`radius.input`, `type.caption`.
 
-**Reuse** the existing `ChallengeDetail` component with an `invite` prop:
-`{inviter_name, member_count, cap}`. Do not fork the screen.
+**Reuse** the existing `ChallengeDetail` with an `invite` prop `{inviter_name, member_count, cap}`.
+Do not fork the screen.
 
 **Copy**
 | string | style |
 |---|---|
-| {n} of 10 | caption textSecondary in a surface chip |
+| {n} of 10 | caption textSecondary, surface pill |
 | {inviter} invited you. Day 1 is the day you accept. | caption textSecondary, centred |
-| Accept | bodyStrong on primary |
-| Not now | secondary medium textSecondary |
+| Accept | Button primary |
+| Not now | Button tertiary |
 
-"Not now" dismisses without declining: the invite stays in Activity. A destructive decline belongs in
-the overflow menu, not beside Accept.
+"Not now" dismisses without declining: the invite stays in Activity. A destructive decline belongs in the
+overflow menu, not beside Accept — and `Button` has a `destructive` flag for it there.
 
 ---
 
 ## 38. Active challenge, the social row
 
-The existing row, new copy: "{n} in this challenge" becomes "{n} of 10 in this group". Same
-`ds/ListRow`, same users 24 icon, same chevron, same 44pt height. It names the cap because it is the
+The existing row, new copy: "{n} in this challenge" becomes "{n} of 10 in this group". Same `ListRow`,
+same `users` 24 icon, same `onPress` chevron, same 44pt minimum. It names the cap because it is the
 entry point to the roster, and someone deciding whether to invite needs to know how many seats are left.
 
-Solo challenges keep the row hidden entirely when `participants_count` is 1 — unchanged.
+Solo challenges keep the row hidden when `participants_count` is 1 — unchanged.
 
 | string | style |
 |---|---|
-| {n} of 10 in this group | bodyStrong |
+| {n} of 10 in this group | ListRow title |
 
 ---
 
-**Laws most at risk** 2 and the Sept 6 amendment (the group streak is the only display number on the
-roster; member streaks are captions in the body face), 6 (one primary per screen — Invite on the roster,
-Accept on the detail card, and Share a link is surface), 9 (rows on the canvas with Dividers, cards only
-for the empty and full states), 23 (trailing states are captions, not buttons, so nothing looks tappable
-that is not).
+**Corrected after reading the repo**
+| first draft said | the source says |
+|---|---|
+| add `ds/MemberRow`, because "`ds/ListRow` cannot carry an avatar" | `ListRow.tsx` takes `icon?: React.ReactNode` in a min-24 slot. An `Avatar size={40}` drops straight in. **The proposal is withdrawn: this chunk adds no components.** |
+| "`ds/Button` variant surface" | the variants are `primary`, `secondary`, `tertiary`. Surface-with-border is `secondary` |
+| "`ds/NotificationRow` if it exists" | it does not. The row is `ListRow` + `Avatar`, and the only real gap is a read/dimmed title, which should be a prop on `ListRow` |
+| `Divider` between roster rows | `ListRow` draws its own; pass `divider={false}` to suppress |
+| the fresh-group state as a `Card` | `EmptyState` exists, owns its own button, and its header cites law 21: on canvas, never inside a Card. Frame corrected |
+| `PushedHeader` with a left-aligned title | it centres the title between two 44pt sides. Frames corrected |
+| the facts row as `ds/Chip` | `Chip` is pressable, ghost or form only. The facts row stays a plain surface pill |
+
+**Laws most at risk** 2 (the group streak is the only `DisplayNumber` on the roster; member streaks are
+subtitles in the body face), 6 (one primary per screen — and the empty roster hands its single primary to
+`EmptyState` rather than showing two), 7 (the `#BB471D` / `onBrand` conflict above — resolve it in
+`lib/design-system.ts`, not per screen), 21 (rows on canvas, `EmptyState` never inside a Card),
+23 (trailing states are captions or flush tertiary Buttons, so nothing looks tappable that is not).
+
+# Post detail, writing step, consistency record
+
+**Chunk** M. Frames 39 to 41, in `GRIIT Post Writing Record.dc.html`. No new tokens.
+
+The last three light-theme screens. Grounded against `abdelayaseen-netizen/GRIIT@main`, tree
+`2d9cb6d709d1`: `components/ds/` holds 25 files and every component named below was read.
+
+**Two things the repo settled**
+
+1. **`ds/MemberRow` exists.** Chunk L proposed it, then withdrew the proposal; it has since been
+   built, with the roster/picker/notification behaviour in its header comment. The comment rows on
+   frame 39 are *not* MemberRow — it hardcodes `size.avatar.sm` (40) and a single-line caption, and a
+   comment needs avatar 32 with the name and time on one baseline above wrapping body text.
+2. **There is no `StatCard`, `ProgressBar` or `SectionLabel`.** The stats block is `Card` with a
+   two-column grid of plain `Text` pairs; the month bars are two nested `View`s.
+
+**One new component, justified**: `ds/CommentRow` — `Avatar size={32}`, a name + time baseline row,
+and `type.body` text below. It is not MemberRow (wrong avatar size, wrong text hierarchy, and its
+trailing slot is a status, not a timestamp) and not `ListRow` (title is single-line `bodyStrong`,
+and comment text wraps). Frame 39 uses it three times and the notification list does not use it at all,
+so it is the one place in this chunk where nothing shipped fits.
+
+---
+
+## 39. Post detail — `app/post/[id].tsx`
+
+**Reuse** `PushedHeader` `title="Proof"` · `ProofImage size="feed"` with `stamp` — the component
+already places the Stamp bottom-right inside the frame on its own scrim, so do not add one outside it ·
+`Avatar size={DS_V3.size.avatar.md}` (40) for the author · `Divider` between comments ·
+`TextField` for the composer · `Skeleton` for loading · `ds/CommentRow` (new).
+
+**Tokens** `color.canvas` · `color.surface` + `color.border` on the TextField and the Send button ·
+`color.primary` on Send once there is text · `type.bodyStrong` author, `type.secondary` the
+completion line and comment author, `type.body` comment text, `type.caption` times ·
+`radius.card` 20 on the proof, `radius.input` 12 on the field, `radius.pill` on Send ·
+`size.button` 52 field min-height · `size.tap` 44 Send.
+
+**Stamp** only when the completion carried camera proof. `ProofImage`'s `stamp` prop takes
+`"Verified" | "Complete"`; pass nothing on a self-reported post. `Stamp.tsx`'s own header says never
+on self-reported content.
+
+**Send** `color.surface` with a 1pt border and a `textSecondary` `arrow-up` while the field is
+empty, `color.primary` with a `textPrimary` glyph once there is text. It is a 44pt circle, not a
+text button: the field is the affordance and the glyph is the commit.
+
+**Scroll** the screen scrolls under the pinned composer. The frames clip the content region at 667pt
+(852 − 44 status − 44 header − 97 composer), which is the real viewport.
+
+Frame 39A is shown **mid-scroll**, with the proof running off the top of the clip, because that is the
+reading state: a 4:5 proof at 353pt wide is 441pt tall and takes 66% of the viewport, so at scroll-top
+only one comment is reachable. Anyone reading comments has already scrolled the photo up. 39B (empty)
+and 39C (loading) are shown at scroll-top, where the proof is the content.
+
+**Loading** `Skeleton variant="proof"` for the 4:5 block, then `Skeleton lines={2}` twice. Both are
+`color.border` bars on `Card`, static — `Skeleton.tsx` cites law 19 and does not pulse. No spinner:
+a spinner says "wait", the recipe says "a proof and two comments are coming".
+
+**Copy**
+| string | style |
+|---|---|
+| Proof | PushedHeader title |
+| {author} | bodyStrong |
+| {relative time} | caption textSecondary |
+| {name} completed {task} · {challenge} | secondary textSecondary |
+| {n} comments | label textSecondary |
+| {commenter} | secondary medium textPrimary |
+| {comment text} | body textPrimary |
+| Add a comment | TextField placeholder, textSecondary |
+| No comments yet. | secondary textSecondary |
+
+The empty state is one line on the canvas. No `EmptyState`, no button: the composer below it is the
+action, and an EmptyState here would put two calls to action on one screen.
+
+---
+
+## 40. Writing task step — `components/task-v2/steps`
+
+**Reuse** `PushedHeader` `title={`Day ${n} · Write`}` · `Button variant="primary"` with
+`disabled` until the count is met. Nothing else: the writing surface is a bare `TextInput` on the
+canvas.
+
+**Tokens** `color.canvas` · `type.title` task name · `type.caption` the honesty line, the counter
+and the footer caption · `type.body` the typed text and the placeholder · `color.brand` the 2pt
+progress rule · `color.brandText` the counter once the target is met · `space.gutter` 20.
+
+**The writing area fills the space** between the counter rule and the pinned footer — flex it, never a
+fixed pixel height. On a 393×852 phone that is about 515pt, which holds roughly 150 words at 22pt lines.
+A larger target scrolls, which is fine in the app but cannot be shown complete in a frame, so the sample
+target is 150 rather than 250.
+
+**No TextField.** `TextField` is a 52pt surface box with a border — right for an email, wrong for 250
+words. The writing area is `color.canvas` with no chrome at all, so the words sit on the ground the way
+they do in a notes app, and the only thing between the title and the text is the counter.
+
+**Counter** `type.caption`, "{written} of {n}", on a 2pt `color.border` rule that fills with
+`color.brand`. Words typed are not an earned number, so this is **not** `DisplayNumber` and not the
+display face. It turns `color.brandText` when the target is met — the one colour change on the screen. It keeps
+counting past the target ("155 of 150"): clamping at the target would hide the fact that the entry is
+already long enough, and nobody stops mid-sentence on the 150th word.
+
+**CTA** "Write {remaining} more words" while short, disabled (`color.surface`, 1pt border,
+`textSecondary` label — `Button`'s own disabled treatment). Becomes an enabled "Post" at the target.
+The label states the remaining work rather than the rule, so the user never taps to find out why it
+will not go.
+
+**Copy**
+| string | style |
+|---|---|
+| Day {n} · Write | PushedHeader title |
+| {task title} | title |
+| {target} words. Counted, not read. | caption textSecondary, kept exactly |
+| Words | label textSecondary |
+| {written} of {n} | caption textSecondary, brandText at target |
+| Write here | body textSecondary, placeholder |
+| Write {remaining} more words | Button primary, disabled |
+| Post | Button primary |
+| Nothing is secured until the server says so. | caption textSecondary, centred |
+
+Pluralise the CTA at one word remaining: "Write 1 more word".
+
+---
+
+## 41. Consistency record — `app/profile/record`
+
+**Reuse** `PushedHeader` `title="Consistency"` · `DisplayNumber size="home"` for the secured count ·
+`Card` for the stats block · `Divider` inside the card and between rows.
+
+**Tokens** `numberSize.home` 64 for the hero, `numberSize.inline` for the two display cells ·
+`color.brand` the month bars · `color.surface` + `color.border` the card and the bar troughs ·
+`type.label` cell labels and section labels · `type.caption` ratios and the footer.
+
+**Hero** secured days over days elapsed — "9 of 12", with "Day 12 of 75." under it. One
+`DisplayNumber`; "of 12" is `type.body` in `textSecondary`. A single ratio in the display face
+would read as two earned numbers.
+
+**The verification split, as the brief requires.** Longest streak, Total secured and Completion all
+include self-reported days. Immediately under the four cells, inside the same `Card` and below a
+`Divider`, two rows break the secured total apart: "Camera proof {n} days" with a `camera` 16, and
+"Self-reported {n} days" with a `shield-off` 16. Same card, because the split is a reading of the
+number above it, not a separate fact — law 22 holds, no card inside a card.
+
+**No Stamp on this screen, in any state.** The Stamp is a per-completion claim; a stamp beside an
+aggregate that includes self-reported days would be exactly the implication the brief forbids.
+
+**Rows** "By month" is a 44pt row: month in `type.secondary`, a 6pt `radius.pill` bar, then
+"{x} of {y}" in `type.caption` right-aligned at a fixed 56pt so the bars end on one line. A month with
+no days does not render a row — an empty month is not a fact worth 44pt. "By challenge" rows carry the
+challenge name, its own camera/self-reported breakdown as a caption, and its ratio.
+
+**Copy**
+| string | style |
+|---|---|
+| Consistency | PushedHeader title |
+| Days secured | label textSecondary |
+| {secured} | DisplayNumber size home |
+| of {elapsed} | body textSecondary |
+| Day {n} of {N}. | secondary textSecondary |
+| Longest streak / Total secured | label textSecondary, value DisplayNumber inline + "days" caption |
+| Completion / First proof | label textSecondary, value heading in the body face |
+| Camera proof / Self-reported | secondary textSecondary, value bodyStrong |
+| {n} days | bodyStrong |
+| By month / By challenge | label textSecondary |
+| {x} of {y} | caption textSecondary |
+| {n} camera proof, {n} self-reported | caption textSecondary |
+| A day counts as secured when every task in it was done. Self-reported days count toward the streak and are listed separately above. Nothing here is a claim that they were checked. | caption textSecondary |
+
+Completion is a percentage of days elapsed, not of `duration_days` — a 75 day challenge on Day 12 is
+not 12% complete, it is 75% consistent. If the backend computes it the other way, change the label, not
+the number.
+
+---
+
+**Laws most at risk** 2 (three display numbers across the three screens: the record hero and its two
+inline cells. The word counter and the comment count are body face), 6 (one primary per screen, and the
+comment empty state adds none), 9 and 22 (the verification split lives inside the stats Card, not in a
+second card), 13 (the proof is `ProofImage size="feed"`, 4:5, unchanged), 18 (no Stamp on a
+self-reported post and none anywhere on the record), 19 (`Skeleton` is static; no pulsing, no spinner),
+21 (`EmptyState` is not used for "No comments yet." — one line on canvas, because the composer is the
+action).
+
+# Task model, Home task list, discard sheet
+
+**Chunk** N. Frames 42 to 46, in `GRIIT Task Model.dc.html`. No new tokens.
+
+Grounded against `abdelayaseen-netizen/GRIIT@main`, tree `9a065f7838c6`. Read:
+`components/create/v2/StepTasks.tsx`, `components/create/NewTaskSheet.tsx` (listing),
+`components/task-v2/steps/DiscardPhotoModal.tsx`, `components/feed/WhoRespectedSheet.tsx`,
+`lib/group-ui.ts`, plus a repo-wide search for `task_type` / `require_photo` / `TaskType`.
+
+## The model
+
+A task has **one type** (what you do) and **zero to three gates** (what proves it).
+
+| types | what it means |
+|---|---|
+| `check_off` | Tap it when it is done. |
+| `timer` | Runs in the app. It has to reach the time. |
+| `counter` | Hit a number each day, with a unit. |
+| `text` | Write a number of words. Counted, not read. |
+| `run` | Distance and time come from GPS. |
+
+| gates | what it enforces | copy on the sheet |
+|---|---|---|
+| `camera` | a photo taken in the app, not the library | A photo taken in the app. |
+| `time` | `by HH:MM`, or `between HH:MM and HH:MM`, in the user's timezone | Only counts inside the window. |
+| `location` | within a radius of a place they set | Only counts at this place. |
+
+There is no fourth gate. "Photo" is not a type and "verified proof" is not a toggle: both are the Camera
+gate. `require_photo`, `require_photo_proof` and `photo_required` all collapse into `gates: ["camera"]`.
+
+**One gate-line function, one order** — camera, then time, then location, joined with " · ", and
+"Self-reported" for an empty list. Put it in `lib/task-ui.ts` beside `lib/group-ui.ts` and let every
+screen call it. The frames show: "Self-reported" · "Between 9:30 and 10:30 am" · "Camera · By 7:00 am" ·
+"Camera · By 7:00 am · Location".
+
+**Two new components, justified**
+
+| component | why nothing shipped fits |
+|---|---|
+| `ds/Sheet` | there is no sheet in `components/ds/`. The three that exist are each hand-rolled and inconsistent: `WhoRespectedSheet` uses the **legacy** `DS_COLORS`/`DS_RADIUS`/`DS_TYPOGRAPHY` (pre-DS_V3, with `WEIGHT_SEMIBOLD` — a weight law 3 forbids), `DiscardPhotoModal` pulls `taskFlowStyles`, and `AuthGateModal`/`StreakFreezeModal` are separate again. Props: `visible`, `onDismiss`, `heading`, `children`, `footer`; 60% ink scrim, `color.surface` ground, `radius.card × 1.2` top corners, 34pt bottom inset |
+| `ds/Switch` | the gate rows need one, and there is none. It must be 51×31 with a `color.brand` on-track and a `color.border` off-track, because RN's platform default is iOS green — a colour in no GRIIT palette |
+
+---
+
+## 42. Add task sheet — `components/create/AddTaskSheet`
+
+**Order is the design**: task name, then *what you do*, then *what proves it*. The old sheet mixed a
+"photo" type into the type list and a "require photo proof" switch into the same screen, which let a user
+build a photo task with photo proof switched off.
+
+**Reuse** `ds/TextField` for the name · `ds/Chip` for the five types (`variant="form"`, which is
+what that variant is for) · `ds/SegmentedControl` for By / Between · `ds/ListRow` for Set place ·
+`ds/Divider` between gate rows · `ds/Button variant="primary"` for Add task · `ds/Sheet` and
+`ds/Switch` (new).
+
+**Tokens** `color.surface` + `color.border` fields and chips · `color.brandTint` +
+`color.selectedBorder` 1.5pt on the selected chip, label `color.brandText` · `color.brand` switch
+on-track · `color.primary` Add task · `type.label` section labels · `type.caption` the type line and
+all three gate lines · `radius.input` 12 on fields and chips · `size.button` 52 · `size.tap` 44.
+
+**One caption, not five.** The type row shows a single `type.caption` line describing the *selected*
+type. Five permanent explanations is five things to read on a sheet whose job is two decisions.
+
+**The type's own field** appears directly under that caption and only for types that have one: Timer →
+duration chips 5/10/15/30 + custom; Counter → target + unit; Text → min words; Run → distance + unit;
+Check off → nothing. Check off having no field is the reason it is the default.
+
+**Gate reveals** are indented to the gate's text column (38pt) so they read as belonging to the switch
+above them. Time reveals a By/Between segmented control and one or two time pickers; Location reveals a
+Set place row. Camera reveals nothing — there is nothing to configure about a photo.
+
+**No-gate note.** With all three off, one caption under the rows reads: "No gates. The row will read
+\"Self-reported\"." The sheet tells the truth before the task is added, not after.
+
+**Copy**
+| string | style |
+|---|---|
+| New task | Sheet heading / bodyStrong |
+| Task name | label textSecondary |
+| Name it | TextField placeholder |
+| What you do | label textSecondary |
+| Check off · Timer · Counter · Text · Run | Chip variant form |
+| Tap it when it is done. | caption textSecondary |
+| Runs in the app. It has to reach the time. | caption textSecondary |
+| Hit a number each day. | caption textSecondary |
+| Write a number of words. Counted, not read. | caption textSecondary |
+| Distance and time come from GPS. | caption textSecondary |
+| What proves it | label textSecondary |
+| Camera / A photo taken in the app. | bodyStrong / caption |
+| Time / Only counts inside the window. | bodyStrong / caption |
+| Location / Only counts at this place. | bodyStrong / caption |
+| By / Between | SegmentedControl |
+| By / From / To | label textSecondary, time pickers |
+| Set place | body textPrimary, ListRow with chevron |
+| No gates. The row will read "Self-reported". | caption textSecondary |
+| Add task | Button primary |
+
+**Scroll** the sheet content scrolls under the pinned footer. The frames clip at 664pt
+(808 sheet − 44 header − 100 footer); B and D are shown mid-scroll so every gate row and its revealed
+fields are visible at once, which is also how a user configuring gates has the sheet positioned.
+
+---
+
+## 43. Task preview row
+
+One row shape everywhere a task is read back — the wizard list and the Home card. Title
+`type.bodyStrong`, gate line `type.caption` from the one function. `ds/ListRow` with
+`title`/`subtitle` covers it; the wizard list adds a flush tertiary "Edit" as `trailing`.
+
+**The type is not in the row.** What you do is already the title ("Run 5km", "Read 10 pages"); what
+proves it is the only thing a reader cannot infer. The current `StepTasks` renders `{t.type}` as the
+caption — a raw enum value, user-facing. That line is what this row replaces.
+
+---
+
+## 44. Home, today's proof card — amends the "Home, today's proof card" entry
+
+Two changes to that spec.
+
+**Gate line** the task row caption is now the gate line from the shared function, replacing the earlier
+`gateLabel` sketch. Same order, same "Self-reported".
+
+**Window closed** a pending row whose time window has passed reads
+"Window closed · 6:00–9:00 am" in `type.caption`, goes inert (no chevron, no `onPress`), and the whole
+row drops to 0.55 opacity with a `color.border` status ring instead of the `textSecondary` one. It is
+not done and it is not pending: it is over. The day cannot be secured, and the row says why without an
+alert.
+
+**The CTA is conditional.** With more than one task there is no single next action, so the card has no
+button and the rows are the call to action. With exactly one task the button stays — then it is not a
+guess. Six tasks is the real case: the "Iron man" challenge has six.
+
+| string | style |
+|---|---|
+| Window closed · {from}–{to} | caption textSecondary |
+| {done} / {total} | caption medium brandText on brandTint |
+| Post your proof | Button primary, single-task card only |
+
+---
+
+## 45. Time gate in the flow
+
+**Header** `PushedHeader` title is "Day {n} · By 7:00 am" or "Day {n} · Between 9:30 and 10:30 am". The
+window is in the chrome so it is never a surprise at the moment of posting.
+
+**Three states**
+| state | treatment |
+|---|---|
+| inside | normal flow. Caption under the button is the usual "Nothing is secured until the server says so." |
+| under 15 minutes | the same caption position turns `color.brandText` and reads "{n} minutes left in the window." It is a caption, not a banner: the action has not changed, only the urgency |
+| closed | a `Card` with a `clock` 24: "Window closed at 7:00 am. Today is not secured." and one line naming who set the window. The footer holds **only** a tertiary "Back" |
+
+No override, no "post anyway", no appeal. A gate the user can talk past is not a gate, and the whole
+product rests on that.
+
+| string | style |
+|---|---|
+| Day {n} · By {time} | PushedHeader title |
+| {n} minutes left in the window. | caption brandText, centred |
+| Window closed at {time}. Today is not secured. | bodyStrong |
+| The window is set by the challenge. Tomorrow opens at midnight. | secondary textSecondary |
+| Back | Button tertiary |
+
+---
+
+## 46. Discard challenge
+
+`ds/Sheet` (new) replacing `Alert.alert`. 60% ink scrim, `color.surface` sheet, heading
+`type.heading`, one `type.secondary` line, then `Button variant="primary" destructive` and
+`Button variant="tertiary"`.
+
+`color.danger` is the destructive fill — the only place in the system a button is not
+`color.primary`. `Button` already has a `destructive` flag; use it rather than passing a colour.
+
+| string | style |
+|---|---|
+| Discard challenge? | heading |
+| You'll lose what you've entered so far. | secondary textSecondary |
+| Discard | Button primary destructive, color.danger |
+| Keep editing | Button tertiary |
+
+`DiscardPhotoModal` should move to the same component and inherit this shape: same sheet, heading
+"Discard photo?", the same two buttons. It currently has no body line and no scrim treatment from DS_V3.
+
+---
+
+## Contradictions in the repo, for the migration plan
+
+Cite these by path. Every one of them is a place the shipped code cannot express the model.
+
+**1. `WizardTaskType` has ten values, the model has five.**
+`components/create/v2/StepTasks.tsx:26` —
+`simple | photo | timer | journal | run | counter | workout | reading | checkin | water`.
+
+| current | maps to | gates |
+|---|---|---|
+| `simple`, `checkin` | `check_off` | none added |
+| `photo` | `check_off` | **+ camera** |
+| `timer` | `timer` | none added |
+| `workout` | `timer` if it has a duration, else `check_off` | none added |
+| `journal` | `text` | none added |
+| `counter`, `water`, `reading` | `counter` | none added; `water` and `reading` become a **unit**, not a type |
+| `run` | `run` | none added |
+
+`water` and `reading` are the clearest case: they are a counter with a unit ("oz", "pages"), and
+`claude/design/task-completion-v2/src/taskTypes.js:98` already admits it —
+`TASK_TYPES.water = { ...TASK_TYPES.counter }`.
+
+**2. The DB already collapses two of them, which helps.**
+`backend/trpc/routes/challenges.ts:21` `dbTaskType()` and
+`backend/lib/challenge-tasks.ts:191` `toTaskType()` both map `simple` and `photo` → `"manual"`,
+so photo-ness already lives in config, not in the type. `challenges.ts:42` sets
+`require_photo_proof: task.type === "photo" ? true : (task.requirePhotoProof ?? false)` — that line
+*is* the type-to-gate migration, already written. It becomes `gates: ["camera"]`.
+
+**3. There is a fourth proof mechanism in the schema that the model forbids.**
+`backend/trpc/routes/challenges-create.ts:417` selects `require_heart_rate, heart_rate_threshold`,
+and `checkins.ts:131` reads them. Heart rate is not one of the three gates and cannot be enforced
+honestly (no wearable integration is named anywhere in the code paths read). Decide explicitly: drop the
+columns, or keep them dormant and never render them. Do not let them become a fourth gate by accident.
+
+**4. Timer strictness is not a gate, and three columns imply it is.**
+`timer_direction`, `timer_hard_mode` (`challenges-create.ts:417`) and `strict_timer_mode`
+(`challenges.ts:39`) describe how the Timer *type* behaves, not what proves it. They stay on the type,
+under `config`, and never appear in the "What proves it" section.
+
+**5. Location maps cleanly. Time does not exist at all.**
+`require_location, location_name, location_latitude, location_longitude, location_radius_meters`
+(`challenges-create.ts:417`) → `gates: ["location"]` with its config, no schema change needed.
+
+There are **no time-window columns anywhere in the repo**. The Time gate is net-new: it needs
+`gate_time_mode ("by" | "between")`, `gate_time_start`, `gate_time_end` and the challenge's
+timezone, plus a server-side check in `backend/trpc/routes/checkins.ts` that rejects a check-in outside
+the window. Until that check exists the gate must not ship — an unenforced gate shown as a gate is the
+one thing this product cannot do.
+
+**6. `routine_anchor` / `routine_anchor_custom` overlap the Time gate.**
+Also `challenges-create.ts:417`. A soft "morning / evening" anchor and a hard window are two answers to
+one question. Pick the gate and migrate anchors to it (morning → "By 12:00 pm" or similar), or keep
+anchors purely as copy with no enforcement and no gate-line presence.
+
+**7. `verification_method` is derived from the type.**
+`checkins.ts:825` — `taskType === "photo" || requirePhoto ? "photo" : taskType === "timer" ? "timer"
+: "manual"`. Under the model it derives from the **gates**: camera → "photo", no gates → "self_reported".
+The string "manual" is doing two jobs today, "self-reported" and "unknown".
+
+**8. The starter seed uses retired types.**
+`backend/lib/starter-seed.ts:6-11` seeds `checkin`, `timer` and `journal`. The `checkin` and
+`journal` rows need remapping in the same migration, or the onboarding starters arrive as types that no
+longer exist.
+
+**9. `WhoRespectedSheet` is on the pre-DS_V3 token set.**
+It imports `DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY` and uses `WEIGHT_SEMIBOLD` (600 body text, which law
+3 forbids) and hardcoded 16/14/12pt sizes. When `ds/Sheet` lands, that file should be the first thing
+moved onto it.
+
+**Laws most at risk** 2 (no display face anywhere in chunk N — no number here is earned), 3 (the legacy
+semibold in `WhoRespectedSheet`), 6 (one filled button per sheet or screen, and the multi-task Home card
+has none), 9 and 22 (gate reveals are indented rows inside the sheet, not cards), 18 (the camera gate is
+the only thing that can produce a Stamp, and "Verified" appears nowhere in chunk N), 23 (a
+window-closed row loses its chevron and its handler together).

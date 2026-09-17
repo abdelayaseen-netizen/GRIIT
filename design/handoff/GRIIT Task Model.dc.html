@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT consistency pass, chunk N</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Task model, Home task list, discard sheet</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;max-width:660px;">Frames 42 to 46. One type, zero to three gates. Photo stops being a type and verified proof stops being a toggle: both are the Camera gate. Frames 1 to 30 are in GRIIT System, 31 to 33 in Onboarding and Auth, 34 to 38 in Group Challenges, 39 to 41 in Post Writing Record.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT System.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 1 to 30</a>
+      <a href="GRIIT Post Writing Record.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 39 to 41</a>
+      <a href="#f42" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">42 Add task sheet</a>
+      <a href="#f43" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">43 Preview rows</a>
+      <a href="#f44" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">44 Home card</a>
+      <a href="#f45" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">45 Time gate</a>
+      <a href="#f46" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">46 Discard</a>
+    </div>
+  </div>
+
+  <div id="f42" data-screen-label="42 Add task sheet" style="display:flex;flex-direction:column;gap:16px;width:1710px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">42 Add task sheet, components/create/AddTaskSheet</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">Two questions, in this order: what you do, then what proves it. The type row is five chips with one caption describing the selection, so the sheet never shows five explanations at once. The three gates are switches that reveal their own fields, and each carries one blunt line about what it enforces. A task with no gates says so on the sheet, before it is added, because that is what the row will read.</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · default, Check off, no gates</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;left:0;right:0;top:44px;bottom:0;background:#0F0F0F;border-radius:24px 24px 0 0;border-top:1px solid #2E2B27;">
+      <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">New task</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-sheet-scroll style="height:664px;overflow:hidden;">
+      <div style="padding:8px 20px 0;"><div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Task name</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Name it</div></div>
+        </div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What you do</div>
+      <div style="padding:8px 20px 0;display:flex;flex-wrap:wrap;gap:8px;"><div style="padding:8px 14px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Check off</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Timer</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Counter</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Text</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Run</div></div>
+      <div style="padding:8px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Tap it when it is done.</div>
+      
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What proves it</div>
+      <div style="padding:0 20px;">
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="camera" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Camera</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A photo taken in the app.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="clock" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Time</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts inside the window.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="map-pin" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Location</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts at this place.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">No gates. The row will read "Self-reported".</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Add task</div></div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · Run + Time, By 7:00 am</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;left:0;right:0;top:44px;bottom:0;background:#0F0F0F;border-radius:24px 24px 0 0;border-top:1px solid #2E2B27;">
+      <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">New task</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-sheet-scroll style="height:664px;overflow:hidden;">
+      <div style="margin-top:-63px;padding:8px 20px 0;"><div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Task name</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Run 5km</div></div>
+        </div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What you do</div>
+      <div style="padding:8px 20px 0;display:flex;flex-wrap:wrap;gap:8px;"><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Check off</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Timer</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Counter</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Text</div><div style="padding:8px 14px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Run</div></div>
+      <div style="padding:8px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Distance and time come from GPS.</div>
+      <div style="padding:16px 20px 0;"><div style="display:flex;gap:8px;"><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Distance</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">5</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Unit</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">km</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div></div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What proves it</div>
+      <div style="padding:0 20px;">
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="camera" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Camera</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A photo taken in the app.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="clock" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Time</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts inside the window.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#DC5401;padding:2px;display:flex;align-items:center;justify-content:flex-end;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div><div style="padding:0 0 16px 38px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;padding:3px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;gap:3px;">
+            <div style="flex:1;min-height:38px;border-radius:9px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">By</div>
+            <div style="flex:1;min-height:38px;border-radius:9px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Between</div>
+          </div>
+            <div style="display:flex;gap:8px;"><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">7:00 am</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="map-pin" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Location</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts at this place.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div>
+      </div>
+      
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Add task</div></div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · Check off + Time, Between</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;left:0;right:0;top:44px;bottom:0;background:#0F0F0F;border-radius:24px 24px 0 0;border-top:1px solid #2E2B27;">
+      <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">New task</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-sheet-scroll style="height:664px;overflow:hidden;">
+      <div style="padding:8px 20px 0;"><div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Task name</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Make the bed</div></div>
+        </div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What you do</div>
+      <div style="padding:8px 20px 0;display:flex;flex-wrap:wrap;gap:8px;"><div style="padding:8px 14px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Check off</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Timer</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Counter</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Text</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Run</div></div>
+      <div style="padding:8px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Tap it when it is done.</div>
+      
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What proves it</div>
+      <div style="padding:0 20px;">
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="camera" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Camera</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A photo taken in the app.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="clock" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Time</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts inside the window.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#DC5401;padding:2px;display:flex;align-items:center;justify-content:flex-end;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div><div style="padding:0 0 16px 38px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;padding:3px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;gap:3px;">
+            <div style="flex:1;min-height:38px;border-radius:9px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">By</div>
+            <div style="flex:1;min-height:38px;border-radius:9px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Between</div>
+          </div>
+            <div style="display:flex;gap:8px;"><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">From</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">9:30 am</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">To</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">10:30 am</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="map-pin" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Location</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts at this place.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#2E2B27;padding:2px;display:flex;align-items:center;justify-content:flex-start;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div>
+      </div>
+      
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Add task</div></div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">D · Counter + all three gates</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;left:0;right:0;top:44px;bottom:0;background:#0F0F0F;border-radius:24px 24px 0 0;border-top:1px solid #2E2B27;">
+      <div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">New task</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-sheet-scroll style="height:664px;overflow:hidden;">
+      <div style="margin-top:-133px;padding:8px 20px 0;"><div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Task name</div>
+          <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;"><div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Drink 64 oz</div></div>
+        </div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What you do</div>
+      <div style="padding:8px 20px 0;display:flex;flex-wrap:wrap;gap:8px;"><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Check off</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Timer</div><div style="padding:8px 14px;border-radius:12px;background:#3A1F10;border:1.5px solid #DC5401;font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Counter</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Text</div><div style="padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;font-size:15px;line-height:20px;font-weight:400;color:#F5F3EE;">Run</div></div>
+      <div style="padding:8px 20px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Hit a number each day.</div>
+      <div style="padding:16px 20px 0;"><div style="display:flex;gap:8px;"><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Target</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">64</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Unit</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">oz</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div></div></div>
+      <div style="padding:20px 20px 0;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">What proves it</div>
+      <div style="padding:0 20px;">
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="camera" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Camera</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A photo taken in the app.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#DC5401;padding:2px;display:flex;align-items:center;justify-content:flex-end;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="clock" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Time</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts inside the window.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#DC5401;padding:2px;display:flex;align-items:center;justify-content:flex-end;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div><div style="padding:0 0 16px 38px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;padding:3px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;gap:3px;">
+            <div style="flex:1;min-height:38px;border-radius:9px;background:#2E2B27;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">By</div>
+            <div style="flex:1;min-height:38px;border-radius:9px;background:transparent;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Between</div>
+          </div>
+            <div style="display:flex;gap:8px;"><div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By</div>
+              <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">7:00 am</div><i data-lucide="chevron-down" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            </div></div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:14px;min-height:44px;">
+            <i data-lucide="map-pin" style="width:24px;height:24px;color:#A39E95;flex:none;"></i>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Location</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Only counts at this place.</div></div>
+            <div style="width:51px;height:31px;border-radius:999px;background:#DC5401;padding:2px;display:flex;align-items:center;justify-content:flex-end;flex:none;"><div style="width:27px;height:27px;border-radius:999px;background:#F5F3EE;"></div></div>
+          </div><div style="padding:0 0 16px 38px;">
+            <div style="min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 16px;display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Set place</div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Add task</div></div>
+    </div></div></div>
+    </div>
+  </div>
+
+  <div id="f43" data-screen-label="43 Preview rows" style="display:flex;flex-direction:column;gap:16px;width:900px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">43 Task preview row, wizard list and Home card</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">One row shape everywhere a task is read back: title bodyStrong, gate line caption. The gate line is built by one function in one order, camera then time then location, and "Self-reported" when the list is empty. The type never appears in the row: what you do is in the title, and what proves it is the only thing the reader cannot infer.</div>
+    </div>
+    <div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:8px 20px;">
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Make the bed</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div></div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Edit</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Run 5km</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Between 9:30 and 10:30 am</div></div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Edit</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div></div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Edit</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink 64 oz</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am · Location</div></div>
+          <div style="font-size:15px;line-height:20px;font-weight:500;color:#E8600F;">Edit</div>
+        </div>
+      </div>
+  </div>
+
+  <div id="f44" data-screen-label="44 Home card" style="display:flex;flex-direction:column;gap:16px;width:900px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">44 Home, today's proof card, six tasks and one</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">Six tasks is the real case. With more than one task the big button goes: there is no single next action, and a button naming one of six would be arbitrary, so the rows are the call to action. With exactly one task the button stays, because then it is not a guess. A pending row whose time window has closed goes inert and says so, with the window it missed.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · six tasks, 2 done, 1 window closed</div><div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">2 / 6</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;padding-bottom:2px;">Iron man</div><div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Workout, outdoors</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+            </div>
+          </div><div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;background:#DC5401;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Progress photo</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+            </div>
+          </div><div style="display:flex;align-items:center;gap:12px;min-height:44px;opacity:0.55;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #2E2B27;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#A39E95;">Cold shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Window closed · 6:00–9:00 am</div>
+            </div>
+          </div><div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+          </div><div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink 64 oz</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+          </div><div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Morning pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+          </div>
+          </div>
+          
+        </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · one task, CTA stays</div><div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 1</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;">
+            <div style="width:20px;height:20px;border-radius:999px;flex:none;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink water and post a photo</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i>
+          </div>
+          </div>
+          <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="camera" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>Post your proof</div>
+        </div></div></div>
+    </div>
+  </div>
+
+  <div id="f45" data-screen-label="45 Time gate in flow" style="display:flex;flex-direction:column;gap:16px;width:1280px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">45 Time gate in the completion flow</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">The header carries the window so it is never a surprise. Under fifteen minutes the caption under the button turns brandText and counts the minutes; it does not become a banner, because the action has not changed. Closed, the screen offers exactly one thing: Back. No override, no post anyway, no appeal.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · inside the window</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 4 · By 7:00 am</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="aspect-ratio:4/5;border-radius:20px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:6px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="camera" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Take photo</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · 12 minutes left</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 4 · By 7:00 am</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="aspect-ratio:4/5;border-radius:20px;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera</div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:6px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;"><i data-lucide="camera" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i>Take photo</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;color:#E8600F;">12 minutes left in the window.</div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · window closed</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 4 · By 7:00 am</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:32px 20px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+      </div>
+      <div style="padding:24px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:flex-start;">
+          <i data-lucide="clock" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Window closed at 7:00 am. Today is not secured.</div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">The window is set by the challenge. Tomorrow opens at midnight.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:6px;">
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Back</div>
+        
+      </div></div></div>
+    </div>
+  </div>
+
+  <div id="f46" data-screen-label="46 Discard sheet" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">46 Discard challenge, replacing the native alert</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">A bottom sheet on a 60% ink scrim: heading, one line, a destructive primary and a tertiary. The destructive fill is color.danger, the only place in the system a button is not #BB471D.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Discard sheet over the wizard</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(15,15,15,0.6);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#1A1917;border-top:1px solid #2E2B27;border-radius:24px 24px 0 0;padding:28px 20px 34px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Discard challenge?</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;padding-bottom:14px;">You'll lose what you've entered so far.</div>
+        <div style="height:52px;border-radius:999px;background:#E5533D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Discard</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Keep editing</div>
+      </div></div></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.icons(); }
+  componentDidUpdate() { this.icons(); }
+  icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

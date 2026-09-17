@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT consistency pass, part four</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Post detail, writing step, consistency record</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;max-width:640px;">Frames 39 to 41, the last three light-theme screens. Same tokens, same laws. Frames 1 to 30 are in GRIIT System, 31 to 33 in GRIIT Onboarding and Auth, 34 to 38 in GRIIT Group Challenges.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT System.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 1 to 30</a>
+      <a href="GRIIT Onboarding and Auth.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 31 to 33</a>
+      <a href="GRIIT Group Challenges.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 34 to 38</a>
+      <a href="#f39" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">39 Post detail</a>
+      <a href="#f40" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">40 Writing step</a>
+      <a href="#f41" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">41 Consistency record</a>
+    </div>
+  </div>
+
+  <div id="f39" data-screen-label="39 Post detail" style="display:flex;flex-direction:column;gap:16px;width:1280px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">39 Post detail with comments, app/post/[id].tsx</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">The proof is the screen, so it leads at ProofImage feed size and the Stamp sits inside it on the scrim, where the component already puts it. Comments are rows on the canvas with Dividers, avatar 32, name and time on one baseline, the text below. The composer is pinned: a surface TextField and a 44pt round Send that is surface-with-border until there is text and #BB471D after. Loading is the Skeleton card recipe, two static bars per card and a 4:5 border block for the proof, with no pulsing.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · three comments</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Proof</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-scroll style="height:667px;overflow:hidden;">
+      <div style="margin-top:-268px;padding:8px 20px 0;">
+        <div style="position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Proof photo, 4:5</div>
+          <div style="position:absolute;right:16px;bottom:16px;border:1.5px solid #F5F3EE;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;color:#F5F3EE;">VERIFIED</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2h</div>
+        </div>
+      </div>
+      <div style="padding:12px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Amir completed Workout, outdoors · 75 Hard</div>
+      <div style="padding:20px 20px 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">3 comments</div>
+      <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:32px;height:32px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:12px;font-weight:500;color:#A39E95;">K</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Khalid</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">1h</div></div>
+            <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">6am is the only time that sticks.</div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+      <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:32px;height:32px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:12px;font-weight:500;color:#A39E95;">S</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Sami</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">48m</div></div>
+            <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Which park is this</div>
+          </div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+      <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:32px;height:32px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:12px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Yaseen</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">20m</div></div>
+            <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Day 12 and not one missed.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 20px 28px;display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;">
+            <div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Respect. What time was this</div>
+          </div>
+          <div style="width:44px;height:44px;border-radius:999px;background:#BB471D;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="arrow-up" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></div>
+        </div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · no comments yet</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Proof</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-scroll style="height:667px;overflow:hidden;">
+      <div style="padding:8px 20px 0;">
+        <div style="position:relative;aspect-ratio:4/5;border-radius:20px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;">
+          <i data-lucide="camera" style="width:28px;height:28px;color:#A39E95;flex:none;"></i><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Proof photo, 4:5</div>
+          <div style="position:absolute;right:16px;bottom:16px;border:1.5px solid #F5F3EE;border-radius:12px;padding:6px 10px;font-family:'Barlow Condensed',sans-serif;font-size:12px;line-height:12px;font-weight:600;letter-spacing:0.08em;color:#F5F3EE;">VERIFIED</div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2h</div>
+        </div>
+      </div>
+      <div style="padding:12px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Amir completed Workout, outdoors · 75 Hard</div>
+      <div style="padding:24px 20px 0;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">No comments yet.</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 20px 28px;display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;">
+            <div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Add a comment</div>
+          </div>
+          <div style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="arrow-up" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+        </div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · loading, card recipe</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Proof</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div data-scroll style="height:667px;overflow:hidden;">
+      <div style="padding:8px 20px 0;"><div style="aspect-ratio:4/5;border-radius:20px;background:#2E2B27;"></div></div>
+      <div style="padding:16px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+          <div style="height:20px;border-radius:12px;background:#2E2B27;width:60%;"></div><div style="height:20px;border-radius:12px;background:#2E2B27;width:40%;"></div>
+        </div>
+      </div>
+      <div style="padding:16px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+          <div style="height:20px;border-radius:12px;background:#2E2B27;width:60%;"></div><div style="height:20px;border-radius:12px;background:#2E2B27;width:40%;"></div>
+        </div>
+      </div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#0F0F0F;">
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 20px 28px;display:flex;align-items:center;gap:12px;">
+          <div style="flex:1;min-height:52px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;padding:15px 20px;display:flex;align-items:center;">
+            <div style="flex:1;font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Add a comment</div>
+          </div>
+          <div style="width:44px;height:44px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="arrow-up" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+        </div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div id="f40" data-screen-label="40 Writing step" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">40 Writing task step, components/task-v2/steps</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">The text area is the screen: canvas, no field chrome, no card, so the words sit on the ground the way they do in a notes app. The counter is a caption on a 2pt rule rather than a number in the display face, because words typed are not an earned number. The CTA states the remaining work and is disabled until the count is met, at which point it becomes Post.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · empty, 0 of 150</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 12 · Write</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Morning pages</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">150 words. Counted, not read.</div>
+      </div>
+      <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Words</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">0 of 150</div>
+      </div>
+      <div style="padding:8px 20px 0;">
+        <div style="height:2px;border-radius:999px;background:#2E2B27;overflow:hidden;"><div style="height:2px;width:0%;background:#DC5401;"></div></div>
+      </div>
+      <div style="padding:20px 20px 0;height:515px;overflow:hidden;">
+        <div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;">Write here</div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:6px;">
+        <div style="height:52px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;color:#A39E95;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Write 150 more words</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · count met, 155 of 150</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Day 12 · Write</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:28px;line-height:34px;font-weight:500;color:#F5F3EE;">Morning pages</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">150 words. Counted, not read.</div>
+      </div>
+      <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Words</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#E8600F;">155 of 150</div>
+      </div>
+      <div style="padding:8px 20px 0;">
+        <div style="height:2px;border-radius:999px;background:#2E2B27;overflow:hidden;"><div style="height:2px;width:100%;background:#DC5401;"></div></div>
+      </div>
+      <div style="padding:20px 20px 0;height:515px;overflow:hidden;">
+        <div style="display:flex;flex-direction:column;gap:16px;"><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Out before six. The street was empty except for the man who sweeps the lot behind the bakery, and he nodded like he had been expecting me. Twelve days in and the part that changed is not the legs, it is that I stopped negotiating at four in the morning. The alarm goes and the argument does not start.</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">Yesterday I wanted to skip the second session, so I wrote down why instead of deciding. Reading it back it was three excuses about the weather wearing one coat. I went anyway. Ninety minutes, nothing heroic, and the rest of the day came easier because the hard part was already behind me and nobody had to talk me into it.</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;">The reading is what I still fight. Ten pages is nothing until the phone is in reach, and then it is a wall. Leaving it on the counter overnight has worked four days out of five.</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 28px;background:#0F0F0F;border-top:1px solid #2E2B27;display:flex;flex-direction:column;gap:6px;">
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Post</div>
+        <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">Nothing is secured until the server says so.</div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div id="f41" data-screen-label="41 Consistency record" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">41 Consistency record, app/profile/record</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:800px;">The hero is the secured count over days elapsed, one display number. Under the four stat cells, a split that the brief requires: camera proof and self-reported are counted separately, inside the same card, so the totals above can include self-reported days without the screen implying they were checked. The footer caption says exactly that. There is no Stamp anywhere on this screen.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Day 12, 9 secured, 6 camera proof</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Consistency</div>
+        <div style="width:44px;"></div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Days secured</div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">9</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">of 12</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Day 12 of 75.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Longest streak</div>
+            <div style="display:flex;align-items:baseline;gap:5px;">
+              <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:28px;line-height:28px;">9</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">days</div>
+            </div>
+          </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Total secured</div>
+            <div style="display:flex;align-items:baseline;gap:5px;">
+              <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:28px;line-height:28px;">9</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">days</div>
+            </div>
+          </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Completion</div>
+            <div style="display:flex;align-items:baseline;gap:5px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">75%</div>
+              
+            </div>
+          </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">First proof</div>
+            <div style="display:flex;align-items:baseline;gap:5px;">
+              <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">5 Sep</div>
+              
+            </div>
+          </div>
+          </div>
+          <div style="height:1px;background:#2E2B27;"></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <i data-lucide="camera" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Camera proof</div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">6 days</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <i data-lucide="shield-off" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Self-reported</div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">3 days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By month</div>
+      <div style="padding:0 20px;">
+        <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:44px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Sep</div>
+          <div style="flex:1;height:6px;border-radius:999px;background:#2E2B27;overflow:hidden;"><div style="height:6px;width:75%;background:#DC5401;"></div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;width:56px;text-align:right;">9 of 12</div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By challenge</div>
+      <div style="padding:0 20px;">
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">75 Hard</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6 camera proof, 3 self-reported</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">9 of 12</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:14px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold Shower</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">4 camera proof</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">4 of 4</div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 28px;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A day counts as secured when every task in it was done. Self-reported days count toward the streak and are listed separately above. Nothing here is a claim that they were checked.</div></div></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.icons(); }
+  componentDidUpdate() { this.icons(); }
+  icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
