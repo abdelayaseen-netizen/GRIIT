@@ -19,6 +19,7 @@ export type TaskFlowStep =
   | "verifying"
   | "confirmation"
   | "challenge_done"
+  | "day_open"
   | "blocked"
   | "failed"
   | "window_closed";
@@ -84,6 +85,7 @@ export function chromeFlags(step: TaskFlowStep): { dark: boolean; hideChrome: bo
     hideChrome:
       step === "confirmation" ||
       step === "challenge_done" ||
+      step === "day_open" ||
       step === "verifying" ||
       step === "capture" ||
       step === "write" ||
@@ -238,16 +240,16 @@ export function logReady(args: {
   return args.workoutMin != null && args.workoutMin >= args.minDurationMinutes;
 }
 
-export type FinishSubmitOutcome = "failed" | "challenge_done" | "secured_nav";
+export type FinishSubmitOutcome = "failed" | "day_open" | "secured_nav";
 
-/** Success never lands on the in-flow `confirmation` step — it navigates to secured. */
+/** Branch on the server's secured_today after the check-in resolves. Never a client row count. */
 export function finishSubmitOutcome(args: {
   complete: unknown | null | undefined;
-  afterUiKind?: string;
+  securedToday: boolean;
 }): FinishSubmitOutcome {
   if (!args.complete) return "failed";
-  if (args.afterUiKind === "challenge_done") return "challenge_done";
-  return "secured_nav";
+  if (args.securedToday) return "secured_nav";
+  return "day_open";
 }
 
 export function blockedEyebrow(windowStatus: string): "NOT OPEN YET" | "OUT OF RANGE" {

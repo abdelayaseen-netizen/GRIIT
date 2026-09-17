@@ -1,35 +1,109 @@
 /**
- * Challenge done, user day not secured — other enrollments still have tasks.
- * Ink, DS_V3, no display face. Nothing earned yet.
+ * Task done, day still open — frame 48.
+ * No PushedHeader. No display face. No streak number.
  */
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ChevronRight, CircleDashed } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
-import { challengeDoneLine, challengeDoneTitle } from "@/lib/task-completion-result";
+import Divider from "@/components/ds/Divider";
+import { StatusRing } from "@/components/home/HomeV3";
+import {
+  DAY_OPEN_ALSO,
+  DAY_OPEN_DONE,
+  DAY_OPEN_NEXT,
+  type DayOpenAlso,
+  type DayOpenModel,
+} from "@/lib/day-open";
+import { homeProofTitleMuted, type HomeProofRow } from "@/lib/home-proof-card";
+
+const RING = DS_V3.space.gutter;
 
 export default function ChallengeDoneScreen({
-  challengeTitle,
-  remainingChallenges,
+  model,
+  onOpenTask,
   onNext,
   onDone,
 }: {
-  challengeTitle: string;
-  remainingChallenges: number;
+  model: DayOpenModel;
+  onOpenTask: (id: string) => void;
   onNext: () => void;
   onDone: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const renderRow = (row: HomeProofRow) => {
+    const pending = !row.done && !row.closed;
+    const inner = (
+      <>
+        <StatusRing row={row} />
+        <View style={styles.taskCopy}>
+          <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
+          <Text style={styles.caption}>{row.caption}</Text>
+        </View>
+        {pending ? (
+          <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
+        ) : null}
+      </>
+    );
+    if (!pending) {
+      return (
+        <View key={row.id} style={styles.proofRow}>
+          {inner}
+        </View>
+      );
+    }
+    return (
+      <Pressable
+        key={row.id}
+        accessibilityRole="button"
+        accessibilityLabel={row.name}
+        onPress={() => onOpenTask(row.id)}
+        style={styles.proofRow}
+      >
+        {inner}
+      </Pressable>
+    );
+  };
+
+  const renderAlso = (row: DayOpenAlso) => (
+    <Pressable
+      key={row.id}
+      accessibilityRole="button"
+      accessibilityLabel={row.line}
+      onPress={() => (row.nextId ? onOpenTask(row.nextId) : undefined)}
+      style={styles.proofRow}
+    >
+      <CircleDashed size={RING} color={DS_V3.color.textSecondary} />
+      <Text style={[styles.task, styles.flex]}>{row.line}</Text>
+      <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
+    </Pressable>
+  );
+
   return (
     <View style={styles.root}>
-      <View style={[styles.body, { paddingTop: insets.top + DS_V3.space.section }]}>
-        <Text style={styles.title}>{challengeDoneTitle(challengeTitle)}</Text>
-        <Text style={styles.line}>{challengeDoneLine(remainingChallenges)}</Text>
-      </View>
+      <ScrollView
+        contentContainerStyle={[
+          styles.body,
+          { paddingTop: insets.top + DS_V3.size.tap, paddingBottom: insets.bottom + DS_V3.space.section * 4 },
+        ]}
+      >
+        <Text style={styles.title}>{model.title}</Text>
+        <Text style={styles.left}>{model.leftLine}</Text>
+        <Text style={styles.label}>{model.contextLine}</Text>
+        {model.rows.map(renderRow)}
+        {model.alsoToday.length > 0 ? (
+          <>
+            <Divider style={styles.alsoDivider} />
+            <Text style={styles.label}>{DAY_OPEN_ALSO}</Text>
+            {model.alsoToday.map(renderAlso)}
+          </>
+        ) : null}
+      </ScrollView>
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
-        <Button label="Next challenge" onPress={onNext} />
-        <Button label="Done" variant="tertiary" ink onPress={onDone} />
+        <Button label={DAY_OPEN_NEXT} onPress={onNext} />
+        <Button label={DAY_OPEN_DONE} variant="tertiary" ink onPress={onDone} />
       </View>
     </View>
   );
@@ -45,15 +119,50 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.sm,
   },
   title: {
-    fontSize: DS_V3.type.heading.fontSize,
-    lineHeight: DS_V3.type.heading.lineHeight,
-    fontWeight: DS_V3.type.heading.fontWeight,
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
   },
-  line: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
+  left: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  label: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: DS_V3.type.label.textTransform,
+    color: DS_V3.color.textSecondary,
+    marginTop: DS_V3.space.sm,
+  },
+  alsoDivider: {
+    marginTop: DS_V3.space.lg,
+  },
+  proofRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
+  },
+  taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
+  flex: { flex: 1 },
+  task: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  taskMuted: {
+    color: DS_V3.color.textSecondary,
+  },
+  caption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   footer: {

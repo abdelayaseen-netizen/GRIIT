@@ -143,6 +143,7 @@ describe("chromeFlags", () => {
     expect(chromeFlags("verifying")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("confirmation")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("challenge_done")).toEqual({ dark: false, hideChrome: true });
+    expect(chromeFlags("day_open")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("entry")).toEqual({ dark: false, hideChrome: false });
     expect(chromeFlags("failed")).toEqual({ dark: false, hideChrome: false });
     expect(chromeFlags("window_closed")).toEqual({ dark: false, hideChrome: true });
@@ -351,12 +352,24 @@ describe("input ready / what done means", () => {
 });
 
 describe("finishSubmitOutcome", () => {
-  it("failed when complete is missing; challenge_done when the after-UI says so; else leave to secured", () => {
-    expect(finishSubmitOutcome({ complete: null })).toBe("failed");
-    expect(finishSubmitOutcome({ complete: undefined })).toBe("failed");
-    expect(finishSubmitOutcome({ complete: {}, afterUiKind: "challenge_done" })).toBe("challenge_done");
-    expect(finishSubmitOutcome({ complete: {}, afterUiKind: "secured" })).toBe("secured_nav");
-    expect(finishSubmitOutcome({ complete: {} })).toBe("secured_nav");
+  it("5 of 6 done → frame 48 because the server is not secured", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 1 }, securedToday: false })).toBe("day_open");
+  });
+
+  it("6 of 6 but server not secured → frame 48, never Secured", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: false })).toBe("day_open");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: false })).not.toBe("secured_nav");
+  });
+
+  it("server secured → Secured screen; never frame 48", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: true })).toBe("secured_nav");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 1 }, securedToday: true })).toBe("secured_nav");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: true })).not.toBe("day_open");
+  });
+
+  it("failed when complete is missing", () => {
+    expect(finishSubmitOutcome({ complete: null, securedToday: false })).toBe("failed");
+    expect(finishSubmitOutcome({ complete: undefined, securedToday: true })).toBe("failed");
   });
 });
 

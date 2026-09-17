@@ -30,6 +30,7 @@ export type HomeProofTask = {
   gateTime?: GateTime | null;
   windowState?: WindowState;
   hasCameraProof?: boolean;
+  taskConfig?: string;
 };
 
 export type HomeProofRow = {

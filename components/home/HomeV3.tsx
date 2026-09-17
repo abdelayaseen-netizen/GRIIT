@@ -37,7 +37,7 @@ const STROKE = (DS_V3.space.xs * 3) / 8;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
-function StatusRing({ row }: { row: HomeProofRow }) {
+export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
   if (state === "done") {
     return (

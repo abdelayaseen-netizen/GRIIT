@@ -213,11 +213,11 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "challenge_done" && f.challengeDone ? (
+      {f.step === "day_open" && f.dayOpen ? (
         <ChallengeDoneStep
-          challengeTitle={f.challengeDone.challengeTitle}
-          remainingChallenges={f.challengeDone.remainingChallenges}
-          onNext={() => void f.goNextChallenge()}
+          model={f.dayOpen}
+          onOpenTask={f.openDayOpenTask}
+          onNext={f.goNextTask}
           onDone={f.exit}
         />
       ) : null}
