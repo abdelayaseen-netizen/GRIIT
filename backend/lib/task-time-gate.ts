@@ -72,8 +72,28 @@ export function withWindowState<T extends TaskModelRow>(
   row: T,
   timeZone: string,
   now: Date = new Date()
-): T & { windowState: WindowState } {
-  return { ...row, windowState: windowStateFor(row, timeZone, now) };
+): T & { windowState: WindowState; minutesLeft: number | null } {
+  const windowState = windowStateFor(row, timeZone, now);
+  return {
+    ...row,
+    windowState,
+    minutesLeft: windowState === "closing" ? minutesLeftFor(row, timeZone, now) : null,
+  };
+}
+
+/** Minutes remaining in the window. Null when there is no open window. */
+export function minutesLeftFor(
+  row: TaskModelRow,
+  timeZone: string,
+  now: Date = new Date()
+): number | null {
+  if (!gatesFor(row).includes("time")) return null;
+  const bounds = windowBounds(row);
+  if (!bounds) return null;
+  const current = currentMinutesInTimeZone(now, timeZone);
+  const remaining = bounds.end - current;
+  if (remaining < 0) return null;
+  return remaining;
 }
 
 /** Reject a check-in outside the window. Server-side, before any write. */

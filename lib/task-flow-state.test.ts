@@ -133,6 +133,7 @@ describe("chromeFlags", () => {
     expect(chromeFlags("challenge_done")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("entry")).toEqual({ dark: false, hideChrome: false });
     expect(chromeFlags("failed")).toEqual({ dark: false, hideChrome: false });
+    expect(chromeFlags("window_closed")).toEqual({ dark: false, hideChrome: true });
   });
 });
 

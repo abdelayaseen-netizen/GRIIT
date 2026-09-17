@@ -61,6 +61,10 @@ export type TaskCompleteConfig = {
   pages?: number;
   /** Defaults true when omitted — matches `isTaskRequired`. */
   required?: boolean;
+  gates?: import("@/backend/lib/task-model").TaskGate[];
+  gateTime?: import("@/backend/lib/task-model").GateTime;
+  windowState?: import("@/backend/lib/task-time-gate").WindowState;
+  minutesLeft?: number;
 };
 
 export function parseConfig(taskConfigStr: string | undefined): TaskCompleteConfig {
