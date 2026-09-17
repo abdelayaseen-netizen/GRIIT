@@ -38,6 +38,13 @@ import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
+import {
+  TIMER_PHOTO_AFTER,
+  workDoneLine,
+  workStepHeader,
+  workStepOwnsChrome,
+  workThenCamera,
+} from "@/lib/work-step";
 import { closedWindowTime } from "@/lib/task-ui";
 import {
   flowAllowsSubmit,
@@ -133,6 +140,7 @@ export function useTaskFlowV2() {
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
+  const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [sessionUp, setSessionUp] = useState(0);
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
@@ -163,9 +171,7 @@ export function useTaskFlowV2() {
       setSoundOn(s.soundOn);
       const remaining = s.requiredSeconds - (Date.now() - Date.parse(s.startedAtIso)) / 1000;
       setStep(timerResumeStep(remaining));
-      if (remaining <= 0) void submitTimer();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, taskId, dateKey, taskType]);
 
   useEffect(() => {
@@ -198,9 +204,12 @@ export function useTaskFlowV2() {
     void refreshGps();
   }, [taskType, refreshGps]);
 
-  const remainingSec = startedAtIso
-    ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
-    : requiredSeconds;
+  const remainingSec =
+    pausedRemaining != null
+      ? pausedRemaining
+      : startedAtIso
+        ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
+        : requiredSeconds;
 
   const exit = useCallback(() => {
     void endLiveActivity();
@@ -466,6 +475,7 @@ export function useTaskFlowV2() {
       return;
     }
     const iso = started.started_at;
+    setPausedRemaining(null);
     setStartedAtIso(iso);
     if (userId) {
       await saveLocalTimerSession(userId, {
@@ -559,6 +569,20 @@ export function useTaskFlowV2() {
     await cancelTimerDoneNotification(taskId);
     void endLiveActivity();
     exit();
+  };
+
+  const pauseTimer = () => {
+    if (pausedRemaining != null) return;
+    setPausedRemaining(remainingSec);
+  };
+
+  const resetTimer = async () => {
+    setPausedRemaining(null);
+    setStartedAtIso(null);
+    if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
+    await cancelTimerDoneNotification(taskId);
+    void endLiveActivity();
+    setStep("entry");
   };
 
   useEffect(() => {
@@ -707,10 +731,22 @@ export function useTaskFlowV2() {
     verifyLine,
     saving,
     chromeTitle: chromeTitle(taskType, gates),
-    headerTitle: flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
+    headerTitle: workStepOwnsChrome(step, taskType)
+      ? workStepHeader(currentDay, gates, taskType)
+      : flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
+    workDone: workThenCamera(taskType, gates)
+      ? workDoneLine(
+          taskType === "timer"
+            ? fmtMmSs(requiredSeconds)
+            : taskType === "run"
+              ? fmtMmSs(durationSec ?? 0)
+              : String(count),
+        )
+      : null,
+    photoAfter: workThenCamera(taskType, gates) && taskType === "timer" ? TIMER_PHOTO_AFTER : null,
     closedAt: closedWindowTime(gateTime),
     windowForbidden,
     windowState,
@@ -743,7 +779,9 @@ export function useTaskFlowV2() {
     },
     onReviewPost,
     cancelTimer,
-    submitWithoutPhoto,
+    pauseTimer,
+    resetTimer,
+    submitTimer,
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
     onOpenCountKeypad: () => {
       setKeypad({ field: "count" });

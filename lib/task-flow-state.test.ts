@@ -66,11 +66,13 @@ describe("flowOpensCamera", () => {
 describe("chromeTitle", () => {
   it("uses the TaskFlowV2 labels", () => {
     expect(chromeTitle("photo")).toBe("Photo proof");
-    expect(chromeTitle("water")).toBe("Water");
-    expect(chromeTitle("reading")).toBe("Pages");
+    expect(chromeTitle("water")).toBe("Counter");
+    expect(chromeTitle("reading")).toBe("Counter");
+    expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("simple")).toBe("Self-report");
     expect(chromeTitle("manual")).toBe("Self-report");
     expect(chromeTitle("timer")).toBe("Timer");
+    expect(chromeTitle("run")).toBe("Run");
     expect(chromeTitle("journal")).toBe("Journal");
     expect(chromeTitle("check_off", ["camera"])).toBe("Camera");
     expect(chromeTitle("manual", ["camera"])).toBe("Camera");
@@ -169,14 +171,14 @@ describe("checkinGpsNextStep", () => {
 });
 
 describe("timer resume and auto-submit", () => {
-  it("restores verifying when the session is already elapsed", () => {
-    expect(timerResumeStep(0)).toBe("verifying");
-    expect(timerResumeStep(-1)).toBe("verifying");
+  it("restores running so Post can open at zero", () => {
+    expect(timerResumeStep(0)).toBe("running");
+    expect(timerResumeStep(-1)).toBe("running");
     expect(timerResumeStep(1)).toBe("running");
   });
 
-  it("auto-submits only while running with a start and remaining <= 0", () => {
-    expect(timerShouldAutoSubmit("running", 0, true)).toBe(true);
+  it("does not auto-submit; Post opens when remaining is zero", () => {
+    expect(timerShouldAutoSubmit("running", 0, true)).toBe(false);
     expect(timerShouldAutoSubmit("running", 1, true)).toBe(false);
     expect(timerShouldAutoSubmit("entry", 0, true)).toBe(false);
     expect(timerShouldAutoSubmit("running", 0, false)).toBe(false);

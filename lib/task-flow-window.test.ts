@@ -29,6 +29,10 @@ describe("flowHeaderTitle", () => {
   it("Day n · Camera when the camera gate is the header fallback", () => {
     expect(flowHeaderTitle(1, null, "Camera")).toBe("Day 1 · Camera");
   });
+
+  it("Camera outranks a time window in the header", () => {
+    expect(flowHeaderTitle(12, bySeven, "Camera")).toBe("Day 12 · Camera");
+  });
 });
 
 describe("gatesFromConfig", () => {

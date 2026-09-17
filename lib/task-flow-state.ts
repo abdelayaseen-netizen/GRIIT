@@ -27,9 +27,10 @@ export type TaskFlowStep =
 export function chromeTitle(type: string, gates: readonly TaskGate[] = []): string {
   if (gates.includes("camera")) return "Camera";
   if (gates.includes("location")) return "Location";
+  if (type === "counter" || type === "water" || type === "reading") return "Counter";
+  if (type === "timer") return "Timer";
+  if (type === "run") return "Run";
   if (type === "photo") return "Photo proof";
-  if (type === "water") return "Water";
-  if (type === "reading") return "Pages";
   if (type === "simple" || type === "manual" || type === "check_off") return "Self-report";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
@@ -111,12 +112,12 @@ export function checkinGpsNextStep(
   return null;
 }
 
-export function timerResumeStep(remainingSeconds: number): "verifying" | "running" {
-  return remainingSeconds <= 0 ? "verifying" : "running";
+export function timerResumeStep(_remainingSeconds: number): "running" {
+  return "running";
 }
 
-export function timerShouldAutoSubmit(step: TaskFlowStep, remainingSeconds: number, hasStart: boolean): boolean {
-  return step === "running" && hasStart && remainingSeconds <= 0;
+export function timerShouldAutoSubmit(_step: TaskFlowStep, _remainingSeconds: number, _hasStart: boolean): boolean {
+  return false;
 }
 
 export type GoBackDecision =

@@ -143,6 +143,7 @@ export function flowHeaderTitle(
   gateTime: GateTime | null | undefined,
   fallback: string,
 ): string {
+  if (fallback === "Camera" || fallback === "Location") return `Day ${day} · ${fallback}`;
   const time = formatGateTime(gateTime);
   if (time) return `Day ${day} · ${time}`;
   return `Day ${day} · ${fallback}`;
