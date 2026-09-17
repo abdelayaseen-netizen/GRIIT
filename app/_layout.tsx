@@ -4,10 +4,10 @@ import * as Sentry from "@sentry/react-native";
 import React, { useEffect, useState, useCallback, createContext, useContext, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform } from "react-native";
+import { ActivityIndicator, View, StatusBar, Text, Pressable, StyleSheet, Platform, AppState } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, focusManager } from "@tanstack/react-query";
 import { onSessionExpired, sessionExpiredMessageForAuthState } from "@/lib/auth-expiry";
 import {
   sessionExpiredBannerOffset,
@@ -28,6 +28,7 @@ import { DS_COLORS } from "@/lib/design-system";
 import CelebrationOverlay from "@/components/shared/CelebrationOverlay";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { queryClient } from "@/lib/query-client";
+import { queryFocusedFromAppState } from "@/lib/query-focus";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
@@ -57,6 +58,15 @@ import { posthog } from "@/lib/posthog";
 const COLD_START_AT = Date.now();
 
 initialiseSentry();
+
+if (Platform.OS !== "web") {
+  focusManager.setEventListener((handleFocus) => {
+    const sub = AppState.addEventListener("change", (state) => {
+      handleFocus(queryFocusedFromAppState(state));
+    });
+    return () => sub.remove();
+  });
+}
 
 // push_token migration: see supabase/migrations/20260429083000_add_push_token_to_profiles.sql
 

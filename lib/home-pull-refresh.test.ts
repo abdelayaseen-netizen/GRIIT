@@ -99,4 +99,12 @@ describe("Home RefreshControl wiring", () => {
     expect(block).toContain("[isGuest, user?.id, refetchBootstrap]");
     expect(block).not.toContain("[isGuest, user?.id, bootstrap]");
   });
+
+  it("has one liveFeed query, owned by the list", () => {
+    expect(homeSrc).not.toContain('queryKey: ["liveFeed", feedScope');
+    expect(homeSrc).not.toContain("countFriendsPostedAway");
+    expect(feedSrc).toContain('queryKey: ["liveFeed", scope, user?.id ?? ""]');
+    expect(feedSrc).toContain("countFriendsPostedAway(feedQuery.data?.posts");
+    expect(feedSrc).toContain("React.cloneElement(ListHeaderComponent, { awayCount })");
+  });
 });

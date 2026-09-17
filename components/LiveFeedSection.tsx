@@ -31,6 +31,7 @@ import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
+import { countFriendsPostedAway } from "@/lib/home-away-count";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -39,7 +40,7 @@ const RESPECT_DEBOUNCE_MS = 300;
 type LiveFeedScope = "following" | "everyone";
 
 type LiveFeedSectionProps = {
-  ListHeaderComponent?: React.ReactElement | null;
+  ListHeaderComponent?: React.ReactElement<{ awayCount?: number }> | null;
   /** Optional parent-driven refresh (e.g. home tab refetches stats + feed together). Falls back to internal feed refetch. */
   onRefresh?: () => Promise<void> | void;
   /**
@@ -141,6 +142,8 @@ function LiveFeedSection({
     enabled: !!user?.id,
     staleTime: 60 * 1000,
   });
+
+  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id);
 
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
@@ -483,9 +486,13 @@ function LiveFeedSection({
 
   if (!user?.id) return null;
 
+  const header = ListHeaderComponent
+    ? React.cloneElement(ListHeaderComponent, { awayCount })
+    : null;
+
   const composedHeader = (
     <>
-      {ListHeaderComponent ?? null}
+      {header}
       {hideHeaderToggle ? null : (
         <View style={styles.feedHeader}>
           <View style={styles.feedHeaderLeft}>
