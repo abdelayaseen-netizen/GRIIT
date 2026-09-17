@@ -81,6 +81,7 @@ import {
   verificationMethodFor,
   type TaskModelRow,
 } from "../../lib/task-model";
+import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -153,6 +154,7 @@ export const checkinsRouter = createTRPCRouter({
       const task = taskRow as TaskRowWithVerification;
       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
       const config = cfg as TaskConfig;
+      assertTimeGate(task, profileTz);
       const checkInTz = resolveCheckInTimeZone(config.schedule_timezone, profileTz);
       const dateKey = getTodayDateKey(checkInTz);
       // Alias for legacy locals in this mutation that still say `tz`.
@@ -1165,7 +1167,7 @@ export const checkinsRouter = createTRPCRouter({
     requireNoError(error, "Failed to load check-ins.");
     return (data ?? []).map((row) => {
       const task = taskById.get(String((row as { task_id?: string }).task_id));
-      return task ? overlayTaskModel(row as Record<string, unknown>, task) : row;
+      return task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), profileTz) : row;
     });
   }),
 
@@ -1211,7 +1213,9 @@ export const checkinsRouter = createTRPCRouter({
       }
       for (const row of data ?? []) {
         const task = taskById.get(String((row as { task_id?: string }).task_id));
-        merged.push(task ? overlayTaskModel(row as Record<string, unknown>, task) : row);
+        merged.push(
+          task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), tz) : row
+        );
       }
     }
     return merged;
