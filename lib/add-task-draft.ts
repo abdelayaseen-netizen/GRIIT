@@ -3,6 +3,7 @@
  */
 
 import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
+import { gateLine } from "@/lib/task-ui";
 
 export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
@@ -11,7 +12,13 @@ export const ADD_TASK_WHAT_YOU_DO = "What you do";
 export const ADD_TASK_WHAT_PROVES = "What proves it";
 export const ADD_TASK_CTA = "Add task";
 export const ADD_TASK_SET_PLACE = "Set place";
-export const NO_GATES_CAPTION = 'No gates. The row will read "Self-reported".';
+export const ADD_TASK_COMMON = "Common tasks";
+export const ADD_TASK_SEARCH_PLACE = "Search an address";
+export const ADD_TASK_USE_LOCATION = "Use my current location";
+export const ADD_TASK_HOW_CLOSE = "How close you have to be";
+export const ADD_TASK_SAVE_PLACE = "Save place";
+export const ADD_TASK_PLACE_NO_MAP =
+  "Bigger radius, easier to pass. There is no map in the design system, so the radius is a number, not a circle on a map.";
 
 export const ADD_TASK_TYPE_CHIPS: { id: TaskModelType; label: string }[] = [
   { id: "check_off", label: "Check off" },
@@ -23,6 +30,31 @@ export const ADD_TASK_TYPE_CHIPS: { id: TaskModelType; label: string }[] = [
 
 export const TIMER_CHIPS = [5, 10, 15, 30] as const;
 export const TIMER_CUSTOM = "Custom";
+
+export const PLACE_RADIUS_CHIPS = [
+  { meters: 100, label: "100 m" },
+  { meters: 250, label: "250 m" },
+  { meters: 1000, label: "1 km" },
+] as const;
+
+export type AddTaskStarter = {
+  label: string;
+  name: string;
+  type: TaskModelType;
+  counterTarget?: string;
+  counterUnit?: string;
+  minWords?: string;
+  runDistance?: string;
+};
+
+export const ADD_TASK_STARTERS: AddTaskStarter[] = [
+  { label: "Pray", name: "Pray", type: "check_off" },
+  { label: "Run", name: "Run", type: "run", runDistance: "5" },
+  { label: "Read", name: "Read", type: "counter", counterTarget: "10", counterUnit: "pages" },
+  { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "oz" },
+  { label: "Journal", name: "Journal", type: "text", minWords: "30" },
+  { label: "Workout", name: "Workout", type: "check_off" },
+];
 
 export type AddTaskDraft = {
   name: string;
@@ -41,6 +73,10 @@ export type AddTaskDraft = {
   byTime: string;
   fromTime: string;
   toTime: string;
+  placeName: string;
+  placeLat: number | null;
+  placeLng: number | null;
+  placeRadius: number;
 };
 
 export const ADD_TASK_DEFAULT: AddTaskDraft = {
@@ -60,6 +96,10 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   byTime: "07:00",
   fromTime: "09:30",
   toTime: "10:30",
+  placeName: "",
+  placeLat: null,
+  placeLng: null,
+  placeRadius: 100,
 };
 
 export function gatesFromDraft(draft: AddTaskDraft): TaskGate[] {
@@ -87,24 +127,67 @@ export function timerMinutesFromDraft(draft: AddTaskDraft): number {
 }
 
 export function configFromDraft(draft: AddTaskDraft): Record<string, unknown> {
+  let config: Record<string, unknown> = {};
   switch (draft.type) {
     case "timer":
-      return { durationMinutes: timerMinutesFromDraft(draft) };
+      config = { durationMinutes: timerMinutesFromDraft(draft) };
+      break;
     case "counter":
-      return {
+      config = {
         targetValue: parseInt(draft.counterTarget, 10) || 0,
         unit: draft.counterUnit.trim(),
       };
+      break;
     case "text":
-      return { minWords: parseInt(draft.minWords, 10) || 0 };
+      config = { minWords: parseInt(draft.minWords, 10) || 0 };
+      break;
     case "run":
-      return {
+      config = {
         distance: parseFloat(draft.runDistance) || 0,
         unit: draft.runUnit,
       };
+      break;
     default:
-      return {};
+      config = {};
   }
+  if (draft.location && canSavePlace(draft)) {
+    config = {
+      ...config,
+      location_name: draft.placeName.trim() || undefined,
+      location_latitude: draft.placeLat,
+      location_longitude: draft.placeLng,
+      location_radius_meters: draft.placeRadius,
+    };
+  }
+  return config;
+}
+
+export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
+  return {
+    ...ADD_TASK_DEFAULT,
+    name: starter.name,
+    type: starter.type,
+    counterTarget: starter.counterTarget ?? "",
+    counterUnit: starter.counterUnit ?? "",
+    minWords: starter.minWords ?? "",
+    runDistance: starter.runDistance ?? "",
+  };
+}
+
+export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
+  return {
+    title: draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER,
+    caption: gateLine(gatesFromDraft(draft), gateTimeFromDraft(draft) ?? null),
+  };
+}
+
+export function placeAccuracyLine(meters: number): string {
+  return `Accurate to about ${Math.max(0, Math.round(meters))} m right now`;
+}
+
+export function canSavePlace(draft: Pick<AddTaskDraft, "placeName" | "placeLat" | "placeLng">): boolean {
+  if (draft.placeName.trim()) return true;
+  return draft.placeLat != null && draft.placeLng != null;
 }
 
 export type AddTaskPayload = {
