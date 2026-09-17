@@ -12,6 +12,7 @@ export type HomeProofTask = {
   id?: string;
   name: string;
   challengeName: string;
+  activeChallengeId?: string;
   currentDay: number;
   durationDays?: number;
   done: boolean;
@@ -36,18 +37,22 @@ export type HomeProofRow = {
   hasCameraProof: boolean;
 };
 
-export type HomeProofCard = {
+export type HomeProofSection = {
+  id: string;
   challenge: string;
   day: number;
   dayTotal: number;
-  taskText: string;
-  gate: string;
   doneCount: number;
   totalCount: number;
+  rows: HomeProofRow[];
+  showCta: boolean;
+};
+
+export type HomeProofCard = {
   posted: boolean;
   hasChallenge: boolean;
   firstProofEver: boolean;
-  rows: HomeProofRow[];
+  sections: HomeProofSection[];
   showCta: boolean;
 };
 
@@ -75,6 +80,40 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   };
 }
 
+export type HomeProofRing = "done" | "pending" | "closed";
+
+export function homeProofRingState(row: Pick<HomeProofRow, "done" | "closed">): HomeProofRing {
+  if (row.done) return "done";
+  if (row.closed) return "closed";
+  return "pending";
+}
+
+function sectionKey(task: HomeProofTask): string {
+  return task.activeChallengeId || task.challengeName;
+}
+
+function sectionFromTasks(
+  id: string,
+  tasks: HomeProofTask[],
+  targetStreak: number | null | undefined,
+  securedToday: boolean,
+): HomeProofSection {
+  const first = tasks[0]!;
+  const durationDays = first.durationDays ?? first.currentDay ?? 1;
+  const only = tasks.length === 1 ? tasks[0] : null;
+  return {
+    id,
+    challenge: first.challengeName,
+    day: displayDay(first.currentDay, first.challengeSecuredToday),
+    dayTotal: homeDayTotal(durationDays, targetStreak),
+    doneCount: tasks.filter((t) => t.done).length,
+    totalCount: tasks.length,
+    rows: tasks.map(homeProofRow),
+    showCta:
+      !securedToday && only != null && only.done !== true && only.windowState !== "closed",
+  };
+}
+
 export function selectHomeProofCard(input: {
   tasks: HomeProofTask[];
   tasksDoneToday: number;
@@ -84,28 +123,25 @@ export function selectHomeProofCard(input: {
   /** Server getSecuredDateKeys only. Never task.done / checkins. */
   securedToday: boolean;
 }): HomeProofCard {
-  const task = input.tasks.find((t) => !t.done) ?? input.tasks[0] ?? null;
-  const hasChallenge = input.tasks.length > 0;
-  const durationDays = task?.durationDays ?? task?.currentDay ?? 1;
-  const rows = input.tasks.map(homeProofRow);
-  const only = input.tasks.length === 1 ? input.tasks[0] : null;
-  const showCta =
-    !input.securedToday &&
-    only != null &&
-    only.done !== true &&
-    only.windowState !== "closed";
+  const order: string[] = [];
+  const groups = new Map<string, HomeProofTask[]>();
+  for (const task of input.tasks) {
+    const key = sectionKey(task);
+    const list = groups.get(key);
+    if (list) list.push(task);
+    else {
+      groups.set(key, [task]);
+      order.push(key);
+    }
+  }
+  const sections = order.map((id) =>
+    sectionFromTasks(id, groups.get(id)!, input.targetStreak, input.securedToday),
+  );
   return {
-    challenge: task?.challengeName ?? "",
-    day: displayDay(task?.currentDay ?? 1, task?.challengeSecuredToday ?? false),
-    dayTotal: homeDayTotal(durationDays, input.targetStreak),
-    taskText: task?.name ?? "",
-    gate: task ? gateLine(rowGates(task), task.gateTime) : "",
-    doneCount: input.tasksDoneToday,
-    totalCount: input.totalTasksToday || 1,
     posted: input.securedToday,
-    hasChallenge,
+    hasChallenge: input.tasks.length > 0,
     firstProofEver: input.firstProofEver,
-    rows,
-    showCta,
+    sections,
+    showCta: sections.some((s) => s.showCta),
   };
 }

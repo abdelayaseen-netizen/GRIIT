@@ -3,6 +3,7 @@
  * Characterises the branches in components/task-v2/TaskFlowV2.tsx.
  */
 
+import type { TaskGate } from "@/backend/lib/task-model";
 import type { VerificationKind } from "@/lib/task-completion-result";
 
 export type TaskFlowStep =
@@ -22,27 +23,31 @@ export type TaskFlowStep =
   | "failed"
   | "window_closed";
 
-export function chromeTitle(type: string): string {
+export function chromeTitle(type: string, gates: readonly TaskGate[] = []): string {
+  if (gates.includes("camera")) return "Camera";
+  if (gates.includes("location")) return "Location";
   if (type === "photo") return "Photo proof";
   if (type === "water") return "Water";
   if (type === "reading") return "Pages";
-  if (type === "simple" || type === "manual") return "Self-report";
+  if (type === "simple" || type === "manual" || type === "check_off") return "Self-report";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-export function initialStep(type: string): TaskFlowStep {
-  if (type === "photo") return "capture";
-  if (type === "timer" || type === "checkin") return "entry";
-  if (type === "run" || type === "workout") return "log";
-  if (type === "journal") return "write";
-  if (type === "counter" || type === "water" || type === "reading") return "count";
-  return "ask";
+export function initialStep(type: string, gates: readonly TaskGate[] = []): TaskFlowStep {
+  let step: TaskFlowStep;
+  if (type === "photo") step = "capture";
+  else if (type === "timer" || type === "checkin") step = "entry";
+  else if (type === "run" || type === "workout") step = "log";
+  else if (type === "journal") step = "write";
+  else if (type === "counter" || type === "water" || type === "reading") step = "count";
+  else step = "ask";
+  if (step === "ask" && gates.includes("camera")) return "capture";
+  return step;
 }
 
-/** Same camera predicate TaskFlowV2 uses: capture-first type or config.require_photo. */
-export function flowOpensCamera(taskType: string, requirePhoto: boolean): boolean {
-  const t = (taskType ?? "").trim().toLowerCase();
-  return initialStep(t) === "capture" || requirePhoto === true;
+/** Camera gate on the backend's normalized `gates` array. Nothing else. */
+export function flowOpensCamera(gates: readonly TaskGate[]): boolean {
+  return gates.includes("camera");
 }
 
 export function fmtMmSs(sec: number): string {
@@ -122,6 +127,7 @@ export function resolveGoBack(args: {
   step: TaskFlowStep;
   caption: string;
   taskType: string;
+  gates?: readonly TaskGate[];
 }): GoBackDecision {
   if (args.step === "review") {
     if (args.caption.trim()) return { action: "discard_ask" };
@@ -140,7 +146,10 @@ export function resolveGoBack(args: {
       return { action: "set_step", step: "count" };
     }
     if (args.taskType === "checkin") return { action: "set_step", step: "entry" };
-    if (args.taskType === "simple" || args.taskType === "manual") return { action: "set_step", step: "ask" };
+    if (args.taskType === "simple" || args.taskType === "manual" || args.taskType === "check_off") {
+      if (args.gates?.includes("camera")) return { action: "exit" };
+      return { action: "set_step", step: "ask" };
+    }
   }
   return { action: "exit" };
 }
@@ -149,6 +158,7 @@ export function resolveGoBackFromFailure(args: {
   requirePhoto: boolean;
   hasPhoto: boolean;
   taskType: string;
+  gates?: readonly TaskGate[];
 }): TaskFlowStep {
   if (args.requirePhoto && !args.hasPhoto) return "capture";
   if (args.hasPhoto) return "review";
@@ -156,7 +166,7 @@ export function resolveGoBackFromFailure(args: {
   if (args.taskType === "journal") return "write";
   if (args.taskType === "counter" || args.taskType === "water" || args.taskType === "reading") return "count";
   if (args.taskType === "run" || args.taskType === "workout") return "log";
-  return initialStep(args.taskType);
+  return initialStep(args.taskType, args.gates);
 }
 
 export type RetryFailedDecision =

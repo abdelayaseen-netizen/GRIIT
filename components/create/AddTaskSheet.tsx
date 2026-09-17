@@ -81,7 +81,7 @@ export default function AddTaskSheet({
       footer={
         <Button
           label={ADD_TASK_CTA}
-          disabled={!canSubmitDraft(draft)}
+          disabled={!draft.name.trim()}
           onPress={save}
         />
       }

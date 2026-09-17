@@ -35,6 +35,7 @@ import {
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
 import { displayDay } from "@/lib/challenge-day";
+import { homeDayTotal } from "@/lib/home-day-total";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 
@@ -169,8 +170,9 @@ export default function ActiveChallengeDetailScreen() {
       : 1;
   const challenge = activeChallenge?.challenges;
   const challengeId = challenge?.id ?? activeChallenge?.challenge_id ?? "";
-  const durationDays =
+  const enrollmentDuration =
     challenge?.duration_days && challenge.duration_days > 0 ? challenge.duration_days : 1;
+  const durationDays = homeDayTotal(enrollmentDuration, profile?.target_streak ?? null);
   const title = challenge?.title?.trim() || "Challenge";
   const description = challenge?.description?.trim() || undefined;
   const participantsCount =
@@ -236,7 +238,7 @@ export default function ActiveChallengeDetailScreen() {
   const tasks: ActiveChallengeTask[] = useMemo(() => {
     return rawTasks.map((row) => {
       const taskType = mapTaskType(row.task_type);
-      const targets = getDailyTargetForChallengeTask(row, currentDay, durationDays);
+      const targets = getDailyTargetForChallengeTask(row, currentDay, enrollmentDuration);
       const cin = checkinByTask.get(row.id);
       const cfg = row.config;
       return {
@@ -256,7 +258,7 @@ export default function ActiveChallengeDetailScreen() {
         proof_photo_url: cin ? proofUrl(cin) : null,
       };
     });
-  }, [rawTasks, checkinByTask, currentDay, durationDays]);
+  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration]);
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =

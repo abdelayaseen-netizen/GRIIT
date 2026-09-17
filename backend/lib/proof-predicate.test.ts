@@ -68,4 +68,25 @@ describe("splitSecuredProof", () => {
       "https://cdn/x.jpg",
     );
   });
+
+  it("one photo completion: Home, feed, and record all agree via hasCameraProof", () => {
+    const photo = "https://cdn/proof.jpg";
+    const home = clientHasCameraProof({ proof_photo_url: photo });
+    const feed = hasCameraProof({ proof_photo_url: photo });
+    const record = hasCameraProof({
+      proof_photo_url: proofPhotoUrlFromCheckIn({ proof_url: photo }),
+    });
+    expect(home).toBe(true);
+    expect(feed).toBe(true);
+    expect(record).toBe(true);
+    expect(home).toBe(feed);
+    expect(feed).toBe(record);
+  });
+
+  it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {
+    // backend/trpc/routes/checkins.ts:772-774
+    const written = { proof_url: "https://cdn/p.jpg", proof_photo_url: null as string | null, verified: undefined };
+    expect(hasCameraProof(written)).toBe(false);
+    expect(checkInHasCameraProof({ date_key: "2026-09-17", ...written })).toBe(true);
+  });
 });

@@ -1,4 +1,4 @@
-import type { GateTime } from "@/backend/lib/task-model";
+import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import {
   WINDOW_CLOSED_FORBIDDEN,
@@ -7,6 +7,12 @@ import {
 } from "@/lib/task-ui";
 
 export { WINDOW_CLOSED_FORBIDDEN, flowHeaderTitle, minutesLeftCaption };
+
+export function gatesFromConfig(config: Record<string, unknown> | null | undefined): TaskGate[] {
+  const raw = config?.gates;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((g): g is TaskGate => g === "camera" || g === "time" || g === "location");
+}
 
 export function gateTimeFromConfig(config: Record<string, unknown> | null | undefined): GateTime | null {
   const raw = config?.gateTime;

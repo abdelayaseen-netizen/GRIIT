@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, CheckSquare, Footprints, Hash, Medal, Pencil, Snowflake, Timer } from "lucide-react-native";
+import { Bell, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -13,13 +13,12 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
-import Stamp from "@/components/ds/Stamp";
 import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
-import { HOME_PROOF_CTA_TODAY, type HomeProofRow } from "@/lib/home-proof-card";
+import { HOME_PROOF_CTA_TODAY, homeProofRingState, type HomeProofCard, type HomeProofRow } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -27,13 +26,21 @@ const PT = DS_V3.space.xs / 4;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
-function TypeIcon({ type, color }: { type: string; color: string }) {
-  const props = { size: ICON, color, strokeWidth: 2 };
-  if (type === "timer") return <Timer {...props} />;
-  if (type === "counter") return <Hash {...props} />;
-  if (type === "text") return <Pencil {...props} />;
-  if (type === "run") return <Footprints {...props} />;
-  return <CheckSquare {...props} />;
+function StatusRing({ row }: { row: HomeProofRow }) {
+  const state = homeProofRingState(row);
+  if (state === "done") {
+    return (
+      <View style={[styles.ring, styles.ringDone]} accessibilityLabel="Done">
+        <Check size={DS_V3.space.lg} color={DS_V3.color.onBrand} strokeWidth={2.5} />
+      </View>
+    );
+  }
+  return (
+    <View
+      style={[styles.ring, state === "closed" ? styles.ringClosed : styles.ringPending]}
+      accessibilityLabel={state === "closed" ? "Window closed" : "Pending"}
+    />
+  );
 }
 
 export function greetingTitle(p: {
@@ -44,20 +51,7 @@ export function greetingTitle(p: {
   return greetingName(p);
 }
 
-export type HomeV3Proof = {
-  challenge: string;
-  day: number;
-  dayTotal: number;
-  taskText: string;
-  gate: string;
-  doneCount: number;
-  totalCount: number;
-  posted: boolean;
-  hasChallenge: boolean;
-  firstProofEver: boolean;
-  rows: HomeProofRow[];
-  showCta: boolean;
-};
+export type HomeV3Proof = HomeProofCard;
 
 export type HomeV3Props = {
   title: string | null;
@@ -143,13 +137,36 @@ export function HomeV3({
     awayCount === 0
       ? null
       : `${awayCount} friends posted while you were away.`;
-  const proofSub = proof?.hasChallenge ? (
-    <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" /> of {proof.dayTotal}
-    </Text>
-  ) : (
-    <Text style={styles.secondary}>No active challenge</Text>
-  );
+  const renderRow = (row: HomeProofRow) => {
+    const closed = row.closed;
+    const inner = (
+      <>
+        <StatusRing row={row} />
+        <View style={styles.taskCopy}>
+          <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
+          <Text style={styles.caption}>{row.caption}</Text>
+        </View>
+      </>
+    );
+    if (row.done || closed) {
+      return (
+        <View key={row.id} style={styles.proofRow}>
+          {inner}
+        </View>
+      );
+    }
+    return (
+      <Pressable
+        key={row.id}
+        accessibilityRole="button"
+        accessibilityLabel={row.name}
+        onPress={() => onPressTask?.(row.id)}
+        style={styles.proofRow}
+      >
+        {inner}
+      </Pressable>
+    );
+  };
 
   return (
     <View style={styles.root}>
@@ -184,59 +201,32 @@ export function HomeV3({
       {proof ? (
         <View style={styles.gutter}>
           <Card>
-            <View style={styles.proofHead}>
-              <View style={styles.flex}>
-                <Text style={styles.heading}>Today&apos;s proof</Text>
-                {proofSub}
-              </View>
-              <View style={styles.countChip}>
-                <Text style={styles.countTxt}>
-                  {proof.doneCount} / {proof.totalCount}
-                </Text>
-              </View>
-            </View>
-            {proof.rows.map((row) => {
-              const closed = row.closed;
-              const inner = (
-                <>
-                  <TypeIcon
-                    type={row.type}
-                    color={row.done ? DS_V3.color.brandText : DS_V3.color.textSecondary}
-                  />
-                  <View style={styles.taskCopy}>
-                    <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
-                    <Text style={styles.caption}>{row.caption}</Text>
+            <Text style={styles.heading}>Today&apos;s proof</Text>
+            {proof.hasChallenge ? (
+              proof.sections.map((section, i) => (
+                <View key={section.id} style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
+                  <View style={styles.proofHead}>
+                    <View style={styles.flex}>
+                      <Text style={styles.secondary}>
+                        {section.challenge} · Day <DisplayNumber value={section.day} size="inline" /> of{" "}
+                        {section.dayTotal}
+                      </Text>
+                    </View>
+                    <View style={styles.countChip}>
+                      <Text style={styles.countTxt}>
+                        {section.doneCount} / {section.totalCount}
+                      </Text>
+                    </View>
                   </View>
-                  {row.done ? (
-                    row.hasCameraProof ? <Stamp label="Complete" /> : <Check size={ICON} color={DS_V3.color.brandText} />
+                  {section.rows.map(renderRow)}
+                  {section.showCta ? (
+                    <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
                   ) : null}
-                </>
-              );
-              if (row.done || closed) {
-                return (
-                  <View
-                    key={row.id}
-                    style={[styles.proofRow, closed ? styles.proofRowClosed : null]}
-                  >
-                    {inner}
-                  </View>
-                );
-              }
-              return (
-                <Pressable
-                  key={row.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={row.name}
-                  onPress={() => onPressTask?.(row.id)}
-                  style={styles.proofRow}
-                >
-                  {inner}
-                </Pressable>
-              );
-            })}
-            {proof.showCta ? (
-              <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
-            ) : null}
+                </View>
+              ))
+            ) : (
+              <Text style={[styles.secondary, styles.sectionFirst]}>No active challenge</Text>
+            )}
           </Card>
         </View>
       ) : null}
@@ -319,6 +309,12 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
     marginBottom: DS_V3.space.lg,
   },
+  sectionFirst: {
+    marginTop: DS_V3.space.lg,
+  },
+  sectionGap: {
+    marginTop: DS_V3.space.section,
+  },
   flex: { flex: 1, gap: DS_V3.space.xs },
   heading: {
     fontSize: DS_V3.type.heading.fontSize,
@@ -351,12 +347,24 @@ const styles = StyleSheet.create({
     minHeight: DS_V3.size.tap,
     marginBottom: DS_V3.space.md,
   },
-  proofRowClosed: {
-    opacity: 0.55,
-    borderWidth: PT,
+  ring: {
+    width: ICON,
+    height: ICON,
+    borderRadius: ICON / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringDone: {
+    backgroundColor: DS_V3.color.brand,
+  },
+  ringPending: {
+    borderWidth: PT * 2,
+    borderColor: DS_V3.color.textSecondary,
+  },
+  ringClosed: {
+    borderWidth: PT * 2,
     borderColor: DS_V3.color.border,
-    borderRadius: DS_V3.radius.input,
-    paddingHorizontal: DS_V3.space.md,
+    opacity: 0.55,
   },
   taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
   taskDot: {

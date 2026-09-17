@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { feedDayTotal, homeOrProfileDayTotal } from "./day-total-source";
-import { feedFinishedCopy, feedHasCameraProof } from "./feed-copy";
+import { feedFinishedCopy } from "./feed-copy";
+import { hasCameraProof } from "./active-challenge-ui";
 
 describe("day total source", () => {
   it("Home / profile rows: target_streak wins when longer than duration_days", () => {
@@ -24,7 +25,7 @@ describe("feedFinishedCopy", () => {
         hasProof: false,
       }),
     ).toBe("Finished. 2 of 75 days.");
-    expect(feedHasCameraProof({ hasProof: false })).toBe(false);
+    expect(hasCameraProof({ proof_photo_url: null })).toBe(false);
   });
 
   it("says verified only when the completion has camera proof", () => {

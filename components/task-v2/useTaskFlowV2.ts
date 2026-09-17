@@ -38,6 +38,7 @@ import {
   flowFooterCaption,
   flowHeaderTitle,
   gateTimeFromConfig,
+  gatesFromConfig,
   isWindowClosedError,
   minutesLeftFromConfig,
   windowStateFromConfig,
@@ -50,6 +51,7 @@ import {
   clockLabel,
   discardPhotoStep,
   finishSubmitOutcome,
+  flowOpensCamera,
   fmtMmSs,
   initialStep,
   isHonest,
@@ -93,7 +95,11 @@ export function useTaskFlowV2() {
   const minWords = config.min_words ?? 150;
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
-  const requirePhoto = config.require_photo === true;
+  const gates = useMemo(
+    () => gatesFromConfig(config as Record<string, unknown>),
+    [config],
+  );
+  const requirePhoto = flowOpensCamera(gates);
   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
   const windowState = windowStateFromConfig(config as Record<string, unknown>);
   const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
@@ -102,7 +108,7 @@ export function useTaskFlowV2() {
   const place = config.location_name || "the saved location";
 
   const [step, setStep] = useState<TaskFlowStep>(() =>
-    windowState === "closed" ? "window_closed" : initialStep(taskType),
+    windowState === "closed" ? "window_closed" : initialStep(taskType, gatesFromConfig(config as Record<string, unknown>)),
   );
   const [caption, setCaption] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -236,7 +242,7 @@ export function useTaskFlowV2() {
   }, []);
 
   const goBack = useCallback(() => {
-    const decision = resolveGoBack({ step, caption, taskType });
+    const decision = resolveGoBack({ step, caption, taskType, gates });
     if (decision.action === "discard_ask") {
       setDiscardAsk(true);
       return;
@@ -248,7 +254,7 @@ export function useTaskFlowV2() {
       return;
     }
     exit();
-  }, [step, caption, taskType, exit]);
+  }, [step, caption, taskType, gates, exit]);
 
   const uploadPhoto = async (): Promise<string | null> => {
     if (!photoUri) return null;
@@ -524,7 +530,7 @@ export function useTaskFlowV2() {
   const goBackFromFailure = () => {
     setFailNote("");
     setFailCode(undefined);
-    setStep(resolveGoBackFromFailure({ requirePhoto, hasPhoto: !!photoUri, taskType }));
+    setStep(resolveGoBackFromFailure({ requirePhoto, hasPhoto: !!photoUri, taskType, gates }));
   };
 
   const cancelTimer = async () => {
@@ -679,8 +685,8 @@ export function useTaskFlowV2() {
     taskRequired,
     verifyLine,
     saving,
-    chromeTitle: chromeTitle(taskType),
-    headerTitle: flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType)),
+    chromeTitle: chromeTitle(taskType, gates),
+    headerTitle: flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
