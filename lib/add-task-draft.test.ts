@@ -72,4 +72,14 @@ describe("add-task draft", () => {
     expect(row.gateTime).toEqual({ mode: "between", start: "09:30", end: "10:30" });
     expect(row.durationMinutes).toBe(10);
   });
+
+  it("Add task CTA is disabled until the name is non-empty", () => {
+    expect(!draft({ name: "" }).name.trim()).toBe(true);
+    expect(!draft({ name: "   " }).name.trim()).toBe(true);
+    expect(!draft({ name: "Cold shower" }).name.trim()).toBe(false);
+    expect(canSubmitDraft(draft({ name: "Cold shower" }))).toBe(true);
+    expect(
+      canSubmitDraft(draft({ name: "Run", type: "timer", timerPreset: "custom", customMinutes: "" })),
+    ).toBe(false);
+  });
 });
