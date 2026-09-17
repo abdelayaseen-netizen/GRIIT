@@ -125,6 +125,7 @@ describe("verificationKindFor", () => {
 
 describe("chromeFlags", () => {
   it("dark on capture/review; hide chrome on confirmation/challenge_done/verifying/capture", () => {
+    expect(chromeFlags("write")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("capture")).toEqual({ dark: true, hideChrome: true });
     expect(chromeFlags("review")).toEqual({ dark: true, hideChrome: false });
     expect(chromeFlags("verifying")).toEqual({ dark: false, hideChrome: true });
