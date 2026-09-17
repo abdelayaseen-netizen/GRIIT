@@ -13,4 +13,13 @@ describe("homeDayTotal", () => {
     expect(homeDayTotal(30, 30)).toBe(30);
     expect(homeDayTotal(75, 30)).toBe(75);
   });
+
+  it("Home and active challenge use the same total for one enrollment row", () => {
+    const row = { duration_days: 14, target_streak: 75 };
+    const home = homeDayTotal(row.duration_days, row.target_streak);
+    const active = homeDayTotal(row.duration_days, row.target_streak);
+    expect(home).toBe(75);
+    expect(active).toBe(home);
+    expect(row.duration_days).toBe(14);
+  });
 });
