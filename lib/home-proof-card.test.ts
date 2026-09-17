@@ -29,8 +29,9 @@ describe("selectHomeProofCard", () => {
     expect(card.posted).toBe(false);
     expect(card.doneCount).toBe(2);
     expect(card.totalCount).toBe(3);
+    expect(card.showCta).toBe(false);
     expect(homeProofCtaLabel(card)).toBe(HOME_PROOF_CTA_TODAY);
-    expect(homeProofCtaLabel(card)).toBe("Post today's proof");
+    expect(homeProofCtaLabel(card)).toBe("Post your proof");
   });
 
   it("3 enrollments, 2 secured, third on current_day 1 unsecured shows Day 1", () => {
@@ -112,5 +113,78 @@ describe("selectHomeProofCard", () => {
     });
     expect(card.gate).toBe("Self-reported");
     expect(card.gate).not.toBe("Photo");
+    expect(card.showCta).toBe(true);
+    expect(card.rows[0]?.caption).toBe("Self-reported");
+  });
+
+  it("six tasks: 2 done, 1 closed, 3 pending → no button, captions match", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          id: "1",
+          name: "Shower",
+          challengeName: "Morning",
+          done: true,
+          hasCameraProof: true,
+          gates: ["camera"],
+        }),
+        task({
+          id: "2",
+          name: "Make bed",
+          challengeName: "Morning",
+          done: true,
+          hasCameraProof: false,
+          gates: [],
+        }),
+        task({
+          id: "3",
+          name: "Run",
+          challengeName: "Morning",
+          done: false,
+          windowState: "closed",
+          gates: ["time"],
+          gateTime: { mode: "between", start: "06:00", end: "09:00" },
+        }),
+        task({
+          id: "4",
+          name: "Journal",
+          challengeName: "Morning",
+          done: false,
+          gates: ["camera"],
+        }),
+        task({
+          id: "5",
+          name: "Read",
+          challengeName: "Morning",
+          done: false,
+          gates: ["time"],
+          gateTime: { mode: "by", start: "07:00", end: null },
+        }),
+        task({
+          id: "6",
+          name: "Water",
+          challengeName: "Morning",
+          done: false,
+          gates: [],
+        }),
+      ],
+      tasksDoneToday: 2,
+      totalTasksToday: 6,
+      firstProofEver: false,
+      securedToday: false,
+    });
+    expect(card.showCta).toBe(false);
+    expect(card.rows).toHaveLength(6);
+    expect(card.rows[0]).toMatchObject({ done: true, hasCameraProof: true, caption: "Camera" });
+    expect(card.rows[1]).toMatchObject({ done: true, hasCameraProof: false, caption: "Self-reported" });
+    expect(card.rows[2]).toMatchObject({
+      closed: true,
+      caption: "Window closed · 6:00–9:00 am",
+    });
+    expect(card.rows[3]?.caption).toBe("Camera");
+    expect(card.rows[4]?.caption).toBe("By 7:00 am");
+    expect(card.rows[5]?.caption).toBe("Self-reported");
+    expect(card.doneCount).toBe(2);
+    expect(card.totalCount).toBe(6);
   });
 });

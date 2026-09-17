@@ -19,7 +19,8 @@ export type TaskFlowStep =
   | "confirmation"
   | "challenge_done"
   | "blocked"
-  | "failed";
+  | "failed"
+  | "window_closed";
 
 export function chromeTitle(type: string): string {
   if (type === "photo") return "Photo proof";
@@ -80,7 +81,8 @@ export function chromeFlags(step: TaskFlowStep): { dark: boolean; hideChrome: bo
       step === "challenge_done" ||
       step === "verifying" ||
       step === "capture" ||
-      step === "write",
+      step === "write" ||
+      step === "window_closed",
   };
 }
 

@@ -62,7 +62,9 @@ export default function Button({
   const labelColor = disabledLook
     ? DS_V3.color.textSecondary
     : variant === "primary"
-      ? DS_V3.color.onBrand
+      ? destructive
+        ? DS_V3.color.textPrimary
+        : DS_V3.color.onBrand
       : variant === "secondary"
         ? DS_V3.color.textPrimary
         : destructive
@@ -85,7 +87,8 @@ export default function Button({
         { height, minHeight: height, minWidth: DS_V3.size.tap },
         flush ? styles.padFlush : size === "small" ? styles.padSmall : styles.padRegular,
         flush ? styles.flush : null,
-        variant === "primary" && !disabledLook && styles.primary,
+        variant === "primary" && !disabledLook && !destructive && styles.primary,
+        variant === "primary" && !disabledLook && destructive && styles.primaryDestructive,
         (variant === "secondary" || disabledLook) && styles.secondary,
         variant === "tertiary" && !disabledLook && styles.tertiary,
         disabledLook && styles.disabledFill,
@@ -133,6 +136,9 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: DS_V3.color.brand,
+  },
+  primaryDestructive: {
+    backgroundColor: DS_V3.color.danger,
   },
   secondary: {
     backgroundColor: DS_V3.color.surface,

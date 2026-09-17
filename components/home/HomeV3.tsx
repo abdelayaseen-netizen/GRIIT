@@ -2,8 +2,8 @@
  * HomeV3 — frame 01 + 02_screens.md Home tree (presentation).
  */
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Bell, Camera, Check, Medal, Snowflake } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Bell, Check, CheckSquare, Footprints, Hash, Medal, Pencil, Snowflake, Timer } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -13,17 +13,28 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
+import Stamp from "@/components/ds/Stamp";
 import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
-import { homeProofCtaLabel } from "@/lib/home-proof-card";
+import { HOME_PROOF_CTA_TODAY, type HomeProofRow } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
+const PT = DS_V3.space.xs / 4;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+function TypeIcon({ type, color }: { type: string; color: string }) {
+  const props = { size: ICON, color, strokeWidth: 2 };
+  if (type === "timer") return <Timer {...props} />;
+  if (type === "counter") return <Hash {...props} />;
+  if (type === "text") return <Pencil {...props} />;
+  if (type === "run") return <Footprints {...props} />;
+  return <CheckSquare {...props} />;
+}
 
 export function greetingTitle(p: {
   display_name?: string | null;
@@ -44,6 +55,8 @@ export type HomeV3Proof = {
   posted: boolean;
   hasChallenge: boolean;
   firstProofEver: boolean;
+  rows: HomeProofRow[];
+  showCta: boolean;
 };
 
 export type HomeV3Props = {
@@ -58,6 +71,7 @@ export type HomeV3Props = {
   onChangeFeedScope: (s: FeedScope) => void;
   onPressBell: () => void;
   onPressProof: () => void;
+  onPressTask?: (id: string) => void;
   awayCount?: number;
   freezesLeft: number;
   badgeName: string;
@@ -79,6 +93,7 @@ export function HomeV3({
   onChangeFeedScope,
   onPressBell,
   onPressProof,
+  onPressTask,
   awayCount = 0,
   freezesLeft,
   badgeName,
@@ -180,23 +195,48 @@ export function HomeV3({
                 </Text>
               </View>
             </View>
-            <View style={styles.taskRow}>
-              <View style={[styles.taskDot, { backgroundColor: secured.circleFill }]} />
-              <Text style={styles.task}>{proof.taskText}</Text>
-              <Text style={styles.caption}>{proof.gate}</Text>
-            </View>
-            {secured.posted ? (
-              <View style={styles.done}>
-                <Check size={ICON} color={DS_V3.color.brandText} />
-                <Text style={styles.doneTxt}>Posted today</Text>
-              </View>
-            ) : (
-              <Button
-                label={homeProofCtaLabel(proof)}
-                icon={<Camera size={ICON} color={DS_V3.color.onBrand} />}
-                onPress={onPressProof}
-              />
-            )}
+            {proof.rows.map((row) => {
+              const closed = row.closed;
+              const inner = (
+                <>
+                  <TypeIcon
+                    type={row.type}
+                    color={row.done ? DS_V3.color.brandText : DS_V3.color.textSecondary}
+                  />
+                  <View style={styles.taskCopy}>
+                    <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
+                    <Text style={styles.caption}>{row.caption}</Text>
+                  </View>
+                  {row.done ? (
+                    row.hasCameraProof ? <Stamp label="Complete" /> : <Check size={ICON} color={DS_V3.color.brandText} />
+                  ) : null}
+                </>
+              );
+              if (row.done || closed) {
+                return (
+                  <View
+                    key={row.id}
+                    style={[styles.proofRow, closed ? styles.proofRowClosed : null]}
+                  >
+                    {inner}
+                  </View>
+                );
+              }
+              return (
+                <Pressable
+                  key={row.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={row.name}
+                  onPress={() => onPressTask?.(row.id)}
+                  style={styles.proofRow}
+                >
+                  {inner}
+                </Pressable>
+              );
+            })}
+            {proof.showCta ? (
+              <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
+            ) : null}
           </Card>
         </View>
       ) : null}
@@ -304,6 +344,21 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
     marginBottom: DS_V3.space.lg,
   },
+  proofRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
+    marginBottom: DS_V3.space.md,
+  },
+  proofRowClosed: {
+    opacity: 0.55,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.input,
+    paddingHorizontal: DS_V3.space.md,
+  },
+  taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
   taskDot: {
     width: DS_V3.space.xs * 6,
     height: DS_V3.space.xs * 6,
@@ -311,11 +366,13 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.border,
   },
   task: {
-    flex: 1,
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  taskDone: {
+    color: DS_V3.color.textSecondary,
   },
   caption: {
     fontSize: DS_V3.type.caption.fontSize,

@@ -13,6 +13,7 @@ import {
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
+import ListRow from "@/components/ds/ListRow";
 import SegmentedControl from "@/components/ds/SegmentedControl";
 import type {
   WizardCategory,
@@ -22,8 +23,11 @@ import {
   CHALLENGE_PACKS,
   wizardTasksFromPack,
 } from "@/lib/challenge-packs";
+import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
+import { wizardGateLine } from "@/lib/task-ui";
 
 export type WizardTaskType =
+  | TaskModelType
   | "simple"
   | "photo"
   | "timer"
@@ -52,6 +56,10 @@ export type WizardTask = {
   runTarget?: number;
   runTrackingMode?: RunTrackingMode;
   runUnit?: RunUnit;
+  config?: Record<string, unknown>;
+  gates?: TaskGate[];
+  gateTime?: GateTime;
+  unit?: string;
 };
 
 export type WizardPack = {
@@ -130,7 +138,7 @@ export type StepTasksProps = {
   onChangePack: (pack: WizardPack | null) => void;
   customTasks: WizardTask[];
   onAddCustomTask: () => void;
-  onRemoveCustomTask: (index: number) => void;
+  onEditCustomTask: (index: number) => void;
 };
 
 export function StepTasks({
@@ -140,7 +148,7 @@ export function StepTasks({
   onChangePack,
   customTasks,
   onAddCustomTask,
-  onRemoveCustomTask,
+  onEditCustomTask,
 }: StepTasksProps) {
   const mode = useCustom ? "Custom" : "Starter packs";
 
@@ -182,9 +190,10 @@ export function StepTasks({
                   {on ? (
                     <View style={styles.taskLines}>
                       {p.tasks.map((t) => (
-                        <Text key={t.name} style={[styles.caption, styles.muted]}>
-                          {t.name}
-                        </Text>
+                        <View key={t.name} style={styles.packTask}>
+                          <Text style={styles.bodyStrong}>{t.name}</Text>
+                          <Text style={[styles.caption, styles.muted]}>{wizardGateLine(t)}</Text>
+                        </View>
                       ))}
                     </View>
                   ) : i < PACKS.length - 1 ? (
@@ -202,25 +211,26 @@ export function StepTasks({
             />
           ) : (
             <>
-              {customTasks.map((t, i) => (
-                <View key={`${t.name}-${i}`}>
-                  <View style={styles.taskRow}>
-                    <View style={styles.packBody}>
-                      <Text style={styles.bodyStrong}>{t.name}</Text>
-                      <Text style={[styles.caption, styles.muted]}>{t.type}</Text>
-                    </View>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Edit ${t.name}`}
-                      onPress={() => onRemoveCustomTask(i)}
-                      style={styles.editHit}
-                    >
-                      <Text style={styles.edit}>Edit</Text>
-                    </Pressable>
-                  </View>
-                  {i < customTasks.length - 1 ? <View style={styles.divider} /> : null}
-                </View>
-              ))}
+              <View style={styles.rowsFlush}>
+                {customTasks.map((t, i) => (
+                  <ListRow
+                    key={`${t.name}-${i}`}
+                    title={t.name}
+                    subtitle={wizardGateLine(t)}
+                    divider={i < customTasks.length - 1}
+                    trailing={
+                      <Button
+                        label="Edit"
+                        variant="tertiary"
+                        size="small"
+                        flush
+                        onPress={() => onEditCustomTask(i)}
+                        accessibilityLabel={`Edit ${t.name}`}
+                      />
+                    }
+                  />
+                ))}
+              </View>
               <View style={styles.addWrap}>
                 <Button label="Add a task" variant="secondary" onPress={onAddCustomTask} />
               </View>
@@ -287,28 +297,13 @@ const styles = StyleSheet.create({
     paddingLeft: DS_V3.space.xs * 14,
     paddingRight: DS_V3.space.lg,
     paddingBottom: DS_V3.space.md,
-    gap: DS_V3.space.xs,
+    gap: DS_V3.space.md,
   },
+  packTask: { gap: DS_V3.space.xs / 2 },
+  rowsFlush: { marginHorizontal: -DS_V3.space.gutter },
   divider: {
     height: PT,
     backgroundColor: DS_V3.color.border,
-  },
-  taskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.lg,
-    minHeight: DS_V3.size.tap,
-    paddingVertical: DS_V3.space.gutter,
-  },
-  editHit: {
-    minHeight: DS_V3.size.tap,
-    justifyContent: "center",
-  },
-  edit: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
   },
   addWrap: { marginTop: DS_V3.space.gutter },
 });

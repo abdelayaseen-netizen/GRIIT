@@ -27,6 +27,9 @@ type Props = {
   minWords: number;
   currentDay: number;
   taskName: string;
+  headerTitle?: string;
+  footerCaption?: string;
+  footerBrand?: boolean;
   onChangeText: (t: string) => void;
   onPost: () => void;
   onBack: () => void;
@@ -39,6 +42,9 @@ export function WriteStep({
   minWords,
   currentDay,
   taskName,
+  headerTitle,
+  footerCaption = WRITE_FOOTER_CAPTION,
+  footerBrand,
   onChangeText,
   onPost,
   onBack,
@@ -52,7 +58,7 @@ export function WriteStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={writeStepHeader(currentDay)} onBack={onBack} />
+        <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} onBack={onBack} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -83,7 +89,7 @@ export function WriteStep({
           disabled={!enabled}
           onPress={onPost}
         />
-        <Text style={styles.caption}>{WRITE_FOOTER_CAPTION}</Text>
+        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
       </View>
     </View>
   );
@@ -164,5 +170,8 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
     textAlign: "center",
+  },
+  captionBrand: {
+    color: DS_V3.color.brandText,
   },
 });

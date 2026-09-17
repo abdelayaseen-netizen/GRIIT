@@ -29,6 +29,19 @@ import {
 import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
+import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
+import { closedWindowTime } from "@/lib/task-ui";
+import {
+  flowAllowsSubmit,
+  flowFooterBrand,
+  flowFooterCaption,
+  flowHeaderTitle,
+  gateTimeFromConfig,
+  isWindowClosedError,
+  minutesLeftFromConfig,
+  windowStateFromConfig,
+} from "@/lib/task-flow-window";
 import {
   type TaskFlowStep,
   checkinGpsNextStep,
@@ -81,11 +94,16 @@ export function useTaskFlowV2() {
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
   const requirePhoto = config.require_photo === true;
+  const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
+  const windowState = windowStateFromConfig(config as Record<string, unknown>);
+  const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
   const counterUnit = counterUnitFromTaskType(taskType);
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 
-  const [step, setStep] = useState<TaskFlowStep>(() => initialStep(taskType));
+  const [step, setStep] = useState<TaskFlowStep>(() =>
+    windowState === "closed" ? "window_closed" : initialStep(taskType),
+  );
   const [caption, setCaption] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
@@ -113,6 +131,7 @@ export function useTaskFlowV2() {
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [windowForbidden, setWindowForbidden] = useState(false);
 
   const windowEval = evaluateScheduleWindow({
     start: config.schedule_window_start,
@@ -245,6 +264,11 @@ export function useTaskFlowV2() {
   };
 
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
+    if (!flowAllowsSubmit(windowState)) {
+      setWindowForbidden(true);
+      setStep("window_closed");
+      return;
+    }
     setSaving(true);
     let cancelled = false;
     const takeoverTimer = setTimeout(() => {
@@ -341,6 +365,12 @@ export function useTaskFlowV2() {
       cancelled = true;
       clearTimeout(takeoverTimer);
       setSaving(false);
+      const msg = err instanceof Error ? err.message : "";
+      if (isWindowClosedError(msg)) {
+        setWindowForbidden(true);
+        setStep("window_closed");
+        return;
+      }
       setFailCode(failureErrorCode(err));
       setFailNote(err instanceof Error ? err.message : "Couldn't save. Try again.");
       setStep("failed");
@@ -650,6 +680,13 @@ export function useTaskFlowV2() {
     verifyLine,
     saving,
     chromeTitle: chromeTitle(taskType),
+    headerTitle: flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType)),
+    footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
+    writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
+    footerBrand: flowFooterBrand(windowState),
+    closedAt: closedWindowTime(gateTime),
+    windowForbidden,
+    windowState,
     goBack,
     exit,
     refreshGps,

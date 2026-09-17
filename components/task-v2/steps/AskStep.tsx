@@ -20,11 +20,20 @@ const ROW_ICONS = [Check, Users, ShieldOff] as const;
 type Props = {
   taskName: string;
   loading?: boolean;
+  footerCaption?: string;
+  footerBrand?: boolean;
   onDidIt: () => void;
   onNotYet: () => void;
 };
 
-export function AskStep({ taskName, loading, onDidIt, onNotYet }: Props) {
+export function AskStep({
+  taskName,
+  loading,
+  footerCaption = SIMPLE_ASK_CAPTION,
+  footerBrand,
+  onDidIt,
+  onNotYet,
+}: Props) {
   return (
     <View style={styles.body}>
       <Text style={styles.title}>{taskName}</Text>
@@ -45,7 +54,7 @@ export function AskStep({ taskName, loading, onDidIt, onNotYet }: Props) {
       </Card>
       <View style={styles.footer}>
         <Button label={loading ? SIMPLE_ASK_SAVING : SIMPLE_ASK_CTA} loading={loading} onPress={onDidIt} />
-        <Text style={styles.caption}>{SIMPLE_ASK_CAPTION}</Text>
+        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
         <Button
           label={SIMPLE_ASK_NOT_YET}
           variant="secondary"
@@ -111,5 +120,8 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
     textAlign: "center",
+  },
+  captionBrand: {
+    color: DS_V3.color.brandText,
   },
 });

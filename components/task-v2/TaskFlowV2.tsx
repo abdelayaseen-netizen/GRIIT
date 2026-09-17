@@ -21,6 +21,7 @@ import { RunningStep } from "./steps/RunningStep";
 import { SessionStep } from "./steps/SessionStep";
 import { TimerEntryStep } from "./steps/TimerEntryStep";
 import { VerifyingStep } from "./steps/VerifyingStep";
+import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 
 export function TaskFlowV2() {
@@ -39,13 +40,21 @@ export function TaskFlowV2() {
         <View style={{ paddingTop: insets.top }}>
           {f.step === "ask" ? (
             <PushedHeader
-              title={`Day ${f.currentDay} · ${f.chromeTitle}`}
+              title={f.headerTitle}
               onBack={f.goBack}
             />
           ) : (
-            <TaskChrome title={`Day ${f.currentDay} · ${f.chromeTitle}`} dark={f.dark} onBack={f.goBack} />
+            <TaskChrome title={f.headerTitle} dark={f.dark} onBack={f.goBack} />
           )}
         </View>
+      ) : null}
+
+      {f.step === "window_closed" ? (
+        <WindowClosedStep
+          closedAt={f.closedAt}
+          onBack={f.exit}
+          forbidden={f.windowForbidden}
+        />
       ) : null}
 
       {f.step === "blocked" ? (
@@ -151,6 +160,9 @@ export function TaskFlowV2() {
           minWords={f.minWords}
           currentDay={f.currentDay}
           taskName={f.taskName}
+          headerTitle={f.headerTitle}
+          footerCaption={f.writeFooterCaption}
+          footerBrand={f.footerBrand}
           onChangeText={f.setText}
           onPost={f.onJournalPost}
           onBack={f.goBack}
@@ -176,7 +188,14 @@ export function TaskFlowV2() {
       ) : null}
 
       {f.step === "ask" ? (
-        <AskStep taskName={f.taskName} loading={f.saving} onDidIt={f.onDidIt} onNotYet={f.exit} />
+        <AskStep
+          taskName={f.taskName}
+          loading={f.saving}
+          footerCaption={f.footerCaption}
+          footerBrand={f.footerBrand}
+          onDidIt={f.onDidIt}
+          onNotYet={f.exit}
+        />
       ) : null}
 
       {f.step === "verifying" ? <VerifyingStep taskType={f.taskType} /> : null}
@@ -215,7 +234,11 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.discardAsk ? <DiscardPhotoModal onDiscard={f.onDiscardPhoto} onKeep={f.onKeepPhoto} /> : null}
+      <DiscardPhotoModal
+        visible={f.discardAsk}
+        onDiscard={f.onDiscardPhoto}
+        onKeep={f.onKeepPhoto}
+      />
     </View>
   );
 }

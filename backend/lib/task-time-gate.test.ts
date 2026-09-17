@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TRPCError } from "@trpc/server";
-import { assertTimeGate, windowStateFor } from "./task-time-gate";
+import { assertTimeGate, minutesLeftFor, windowStateFor, withWindowState } from "./task-time-gate";
 
 const NY = "America/New_York";
 const TOKYO = "Asia/Tokyo";
@@ -71,5 +71,20 @@ describe("windowStateFor", () => {
     expect(windowStateFor({ task_type: "check_off" }, NY, utc("2026-09-17T10:46:00.000Z"))).toBe(
       null
     );
+  });
+});
+
+describe("minutesLeftFor", () => {
+  it("14 minutes left at 06:46 for by 07:00", () => {
+    expect(minutesLeftFor(bySeven, NY, utc("2026-09-17T10:46:00.000Z"))).toBe(14);
+  });
+
+  it("withWindowState attaches minutesLeft only when closing", () => {
+    const closing = withWindowState(bySeven, NY, utc("2026-09-17T10:46:00.000Z"));
+    expect(closing.windowState).toBe("closing");
+    expect(closing.minutesLeft).toBe(14);
+    const open = withWindowState(bySeven, NY, utc("2026-09-17T10:00:00.000Z"));
+    expect(open.windowState).toBe("open");
+    expect(open.minutesLeft).toBeNull();
   });
 });

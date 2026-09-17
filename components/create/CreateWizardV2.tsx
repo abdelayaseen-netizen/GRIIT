@@ -28,7 +28,7 @@ import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import Sheet from "@/components/ds/Sheet";
 
 import {
   StepBasics,
@@ -46,7 +46,8 @@ import {
   type WizardPhotoProof,
 } from "@/components/create/v2/StepRules";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
-import { NewTaskSheet } from "@/components/create/NewTaskSheet";
+import AddTaskSheet from "@/components/create/AddTaskSheet";
+import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
@@ -130,6 +131,7 @@ export function CreateWizardV2() {
   const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
   const [cancelOpen, setCancelOpen] = useState<boolean>(false);
   const [newTaskOpen, setNewTaskOpen] = useState<boolean>(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [launchBusy, setLaunchBusy] = useState<boolean>(false);
   const [launchError, setLaunchError] = useState<string>("");
   const [launched, setLaunched] = useState<{ title: string; group: boolean; challengeId: string } | null>(null);
@@ -179,10 +181,10 @@ export function CreateWizardV2() {
   const addCustomTask = useCallback((task: WizardTask) => {
     setState((p) => ({ ...p, customTasks: [...p.customTasks, task] }));
   }, []);
-  const removeCustomTask = useCallback((index: number) => {
+  const replaceCustomTask = useCallback((index: number, task: WizardTask) => {
     setState((p) => ({
       ...p,
-      customTasks: p.customTasks.filter((_, i) => i !== index),
+      customTasks: p.customTasks.map((row, i) => (i === index ? task : row)),
     }));
   }, []);
   const setDifficulty = useCallback((d: WizardDifficulty) => {
@@ -367,8 +369,14 @@ export function CreateWizardV2() {
               pack={state.pack}
               onChangePack={setPack}
               customTasks={state.customTasks}
-              onAddCustomTask={() => setNewTaskOpen(true)}
-              onRemoveCustomTask={removeCustomTask}
+              onAddCustomTask={() => {
+                setEditingIndex(null);
+                setNewTaskOpen(true);
+              }}
+              onEditCustomTask={(index) => {
+                setEditingIndex(index);
+                setNewTaskOpen(true);
+              }}
             />
           ) : null}
           {state.step === 3 ? (
@@ -391,17 +399,30 @@ export function CreateWizardV2() {
           />
         </WizardFooter>
 
-        <ConfirmDialog
+        <Sheet
           visible={cancelOpen}
-          title="Discard challenge?"
-          message="You'll lose what you've entered so far."
-          confirmLabel="Discard"
-          onCancel={() => setCancelOpen(false)}
-          onConfirm={() => {
-            setCancelOpen(false);
-            router.back();
-          }}
-        />
+          onDismiss={() => setCancelOpen(false)}
+          heading="Discard challenge?"
+          footer={
+            <>
+              <Button
+                label="Discard"
+                destructive
+                onPress={() => {
+                  setCancelOpen(false);
+                  router.back();
+                }}
+              />
+              <Button
+                label="Keep editing"
+                variant="tertiary"
+                onPress={() => setCancelOpen(false)}
+              />
+            </>
+          }
+        >
+          <Text style={styles.secondary}>You&apos;ll lose what you&apos;ve entered so far.</Text>
+        </Sheet>
 
         <Modal
           visible={confirmOpen}
@@ -475,11 +496,19 @@ export function CreateWizardV2() {
           </View>
         </Modal>
 
-        <NewTaskSheet
+        <AddTaskSheet
           visible={newTaskOpen}
-          onClose={() => setNewTaskOpen(false)}
+          initial={
+            editingIndex != null ? draftFromWizardTask(state.customTasks[editingIndex] ?? { name: "", type: "check_off" }) : null
+          }
+          onClose={() => {
+            setEditingIndex(null);
+            setNewTaskOpen(false);
+          }}
           onSave={(task) => {
-            addCustomTask(task);
+            if (editingIndex != null) replaceCustomTask(editingIndex, task);
+            else addCustomTask(task);
+            setEditingIndex(null);
             setNewTaskOpen(false);
           }}
         />
