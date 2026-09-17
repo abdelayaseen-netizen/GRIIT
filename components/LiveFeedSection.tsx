@@ -21,6 +21,7 @@ import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
+import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
@@ -237,9 +238,9 @@ function LiveFeedSection({
       respectLastAt.current.set(post.id, now);
 
       const prevR = post.reactedByMe;
-      const prevC = post.respectCount;
-      const nextC = Math.max(0, prevC + (prevR ? -1 : 1));
-      updatePost(post.id, (p) => ({ ...p, reactedByMe: !prevR, respectCount: nextC }));
+      const prev = { reactedByMe: prevR, respectCount: post.respectCount };
+      const next = optimisticRespect(prev);
+      updatePost(post.id, (p) => ({ ...p, ...next }));
       try {
         const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
           reacted?: boolean;
@@ -247,8 +248,7 @@ function LiveFeedSection({
         };
         updatePost(post.id, (p) => ({
           ...p,
-          reactedByMe: !!result.reacted,
-          respectCount: Math.max(0, result.reactionCount ?? nextC),
+          ...settleRespect(result, next),
         }));
         if (!prevR) {
           try {
@@ -263,7 +263,7 @@ function LiveFeedSection({
         void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
         captureError(e, "LiveFeedRespect");
-        updatePost(post.id, (p) => ({ ...p, reactedByMe: prevR, respectCount: prevC }));
+        updatePost(post.id, (p) => ({ ...p, ...rollbackRespect(prev) }));
       }
     },
     [updatePost, queryClient]

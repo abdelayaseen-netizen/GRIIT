@@ -132,7 +132,11 @@ function ActionRow({
   return (
     <View style={styles.actions}>
       <Pressable accessibilityRole="button" accessibilityLabel="Like" onPress={onLike} style={styles.hit}>
-        <Heart size={ICON} color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary} />
+        <Heart
+          size={ICON}
+          color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary}
+          fill={liked ? DS_V3.color.brandText : "none"}
+        />
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
         <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
