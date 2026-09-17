@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
+  COMMENTS_HEADING,
+  composerFieldGround,
   commentsCountLabel,
   commentsSectionKind,
   completionLine,
@@ -62,6 +64,14 @@ describe("comments section render", () => {
     expect(commentsCountLabel(0)).toBe("0 comments");
     expect(commentsCountLabel(3)).toBe("3 comments");
     expect(COMMENT_PLACEHOLDER).toBe("Add a comment");
+    expect(COMMENTS_HEADING).toBe("Comments");
+  });
+});
+
+describe("composerFieldGround", () => {
+  it("inverts the field against its ground", () => {
+    expect(composerFieldGround("sheet")).toBe("canvas");
+    expect(composerFieldGround("route")).toBe("surface");
   });
 });
 

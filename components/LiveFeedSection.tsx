@@ -25,6 +25,7 @@ import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-re
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
+import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import EmptyState from "@/components/ds/EmptyState";
 import { Avatar } from "@/components/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -121,6 +122,7 @@ function LiveFeedSection({
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [blockTarget, setBlockTarget] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
+  const [commentEventId, setCommentEventId] = useState<string | null>(null);
   const [isPulling, setIsPulling] = useState(false);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
@@ -323,13 +325,6 @@ function LiveFeedSection({
     [router, user?.id]
   );
 
-  const openPost = useCallback(
-    (post: LiveFeedPost) => {
-      router.push(ROUTES.POST_ID(post.id) as never);
-    },
-    [router]
-  );
-
   const handleDeletePost = useCallback(
     async (post: LiveFeedPost) => {
       try {
@@ -422,14 +417,14 @@ function LiveFeedSection({
             viewerUserId={user?.id}
             viewerTargetStreak={viewerTargetStreak}
             onLike={() => void onRespect(item)}
-            onComment={() => openPost(item)}
+            onComment={() => setCommentEventId(item.id)}
             onShare={() => void onShare(item)}
             onProfilePress={() => navigateProfile(item)}
           />
         </View>
       );
     },
-    [navigateProfile, onRespect, onShare, openPost, previewByPostId, submitComment, openPostMenu, user?.id, viewerTargetStreak]
+    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {
@@ -681,6 +676,12 @@ function LiveFeedSection({
         destructive
         onCancel={() => setBlockTarget(null)}
         onConfirm={() => void handleConfirmBlock()}
+      />
+
+      <CommentsSheet
+        visible={commentEventId !== null}
+        eventId={commentEventId ?? ""}
+        onClose={() => setCommentEventId(null)}
       />
     </View>
   );

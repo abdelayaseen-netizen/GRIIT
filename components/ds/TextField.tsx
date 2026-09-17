@@ -21,6 +21,8 @@ export type TextFieldProps = {
   placeholder?: string;
   trailing?: React.ReactNode;
   accessibilityLabel?: string;
+  /** Default surface. Canvas on a surface sheet so the field stays one step from its ground. */
+  ground?: "surface" | "canvas";
 } & Pick<
   TextInputProps,
   | "secureTextEntry"
@@ -47,6 +49,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
     placeholder,
     trailing,
     accessibilityLabel,
+    ground = "surface",
     editable = true,
     ...input
   },
@@ -55,7 +58,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   return (
     <View>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={styles.field}>
+      <View style={[styles.field, ground === "canvas" && styles.fieldCanvas]}>
         <TextInput
           ref={ref}
           value={value}
@@ -92,6 +95,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.lg,
     flexDirection: "row",
     alignItems: "center",
+  },
+  fieldCanvas: {
+    backgroundColor: DS_V3.color.canvas,
   },
   input: {
     flex: 1,

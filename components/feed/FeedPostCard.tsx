@@ -11,7 +11,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera, Heart } from "lucide-react-native";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
@@ -21,6 +21,49 @@ import { Avatar } from "@/components/Avatar";
 import { ImageViewerModal } from "@/components/shared/ImageViewerModal";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
+
+/** Dead card — tokens must still be DS_V3 (contradiction 18). */
+const V = {
+  color: {
+    inkMuted: DS_V3.color.textSecondary,
+    photoGradientStrong: DS_V3.color.canvas,
+    accent: DS_V3.color.brand,
+    textOnPhoto: DS_V3.color.textPrimary,
+    textOnPhotoDim: DS_V3.color.textSecondary,
+    placeholder: DS_V3.color.textSecondary,
+    canvas: DS_V3.color.canvas,
+    photoPlaceholder: DS_V3.color.surface,
+    glassChipOnPhotoBg: DS_V3.color.brandTint,
+    glassChipOnPhotoBorder: DS_V3.color.border,
+    ink: DS_V3.color.textPrimary,
+    inkSecondary: DS_V3.color.textSecondary,
+    inkMuted2: DS_V3.color.textSecondary,
+    fieldNeutral: DS_V3.color.surface,
+    cardBorder: DS_V3.color.border,
+    white: DS_V3.color.onBrand,
+    dividerStrong: DS_V3.color.border,
+  },
+  space: {
+    cardPad: DS_V3.space.gutter,
+    screenH: DS_V3.space.gutter,
+  },
+  radius: {
+    card: DS_V3.radius.card,
+    pill: DS_V3.radius.pill,
+    field: DS_V3.radius.input,
+  },
+  size: {
+    metaSm: DS_V3.type.caption.fontSize,
+    bodyLg: DS_V3.type.heading.fontSize,
+    meta: DS_V3.type.caption.fontSize,
+    body: DS_V3.type.body.fontSize,
+    bodySm: DS_V3.type.secondary.fontSize,
+  },
+  weight: {
+    semibold: DS_V3.type.bodyStrong.fontWeight,
+    regular: DS_V3.type.body.fontWeight,
+  },
+};
 
 type Props = {
   post: LiveFeedPost;
@@ -158,12 +201,12 @@ function FeedPostCardInner({
                 />
               ) : (
                 <View style={styles.placeholder}>
-                  <Camera size={40} color={DS_DAYLIGHT.color.inkMuted} style={{ opacity: 0.5 }} />
+                  <Camera size={40} color={V.color.inkMuted} style={{ opacity: 0.5 }} />
                 </View>
               )}
 
               <LinearGradient
-                colors={["transparent", DS_DAYLIGHT.color.photoGradientStrong]}
+                colors={["transparent", V.color.photoGradientStrong]}
                 style={styles.photoGradient}
                 pointerEvents="none"
               />
@@ -178,12 +221,12 @@ function FeedPostCardInner({
                   },
                 ]}
               >
-                <Heart size={80} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
+                <Heart size={80} color={V.color.accent} fill={V.color.accent} />
               </Animated.View>
 
               {post.respectCount > 0 ? (
                 <View style={styles.kudosChip} pointerEvents="none">
-                  <Heart size={13} color={DS_DAYLIGHT.color.textOnPhoto} fill={DS_DAYLIGHT.color.textOnPhoto} />
+                  <Heart size={13} color={V.color.textOnPhoto} fill={V.color.textOnPhoto} />
                   <Text style={styles.kudosChipText}>{post.respectCount}</Text>
                 </View>
               ) : null}
@@ -237,7 +280,7 @@ function FeedPostCardInner({
           <TextInput
             style={styles.quickCommentInput}
             placeholder="Add a comment..."
-            placeholderTextColor={DS_DAYLIGHT.color.placeholder}
+            placeholderTextColor={V.color.placeholder}
             value={quickDraft}
             onChangeText={setQuickDraft}
             maxLength={200}
@@ -305,15 +348,15 @@ export const FeedPostCard = React.memo(FeedPostCardInner);
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_DAYLIGHT.color.canvas,
+    backgroundColor: V.color.canvas,
     paddingTop: 6,
   },
   proofWrap: {
-    marginHorizontal: DS_DAYLIGHT.space.cardPad,
+    marginHorizontal: V.space.cardPad,
     marginTop: 13,
-    borderRadius: DS_DAYLIGHT.radius.card,
+    borderRadius: V.radius.card,
     overflow: "hidden",
-    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
+    backgroundColor: V.color.photoPlaceholder,
   },
   heroPressable: {
     width: "100%",
@@ -340,7 +383,7 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
+    backgroundColor: V.color.photoPlaceholder,
   },
   photoGradient: {
     position: "absolute",
@@ -365,17 +408,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: DS_DAYLIGHT.color.glassChipOnPhotoBg,
+    backgroundColor: V.color.glassChipOnPhotoBg,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.glassChipOnPhotoBorder,
+    borderColor: V.color.glassChipOnPhotoBorder,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: DS_DAYLIGHT.radius.pill,
+    borderRadius: V.radius.pill,
   },
   kudosChipText: {
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.textOnPhoto,
+    fontSize: V.size.metaSm,
+    fontWeight: V.weight.semibold,
+    color: V.color.textOnPhoto,
   },
   overlayAnchored: {
     position: "absolute",
@@ -384,57 +427,57 @@ const styles = StyleSheet.create({
     bottom: 14,
   },
   overlayTitle: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.textOnPhoto,
+    fontSize: V.size.bodyLg,
+    fontWeight: V.weight.semibold,
+    color: V.color.textOnPhoto,
   },
   overlayMeta: {
     marginTop: 2,
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.textOnPhotoDim,
+    fontSize: V.size.meta,
+    fontWeight: V.weight.regular,
+    color: V.color.textOnPhotoDim,
   },
   captionWrap: {
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: V.space.cardPad,
     paddingTop: 9,
   },
   captionText: {
-    fontSize: DS_DAYLIGHT.size.body,
+    fontSize: V.size.body,
     lineHeight: 22,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: V.weight.regular,
+    color: V.color.ink,
   },
   captionName: {
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: V.weight.semibold,
+    color: V.color.ink,
   },
   respectedByRow: {
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: V.space.cardPad,
     paddingTop: 6,
   },
   respectedByText: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: V.size.meta,
+    fontWeight: V.weight.regular,
+    color: V.color.inkMuted2,
   },
   respectedByName: {
-    color: DS_DAYLIGHT.color.inkSecondary,
+    color: V.color.inkSecondary,
   },
   quickCommentRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: V.space.cardPad,
     paddingTop: 12,
   },
   quickCommentInput: {
     flex: 1,
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    color: DS_DAYLIGHT.color.ink,
-    backgroundColor: DS_DAYLIGHT.color.fieldNeutral,
+    fontSize: V.size.bodySm,
+    color: V.color.ink,
+    backgroundColor: V.color.fieldNeutral,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
-    borderRadius: DS_DAYLIGHT.radius.field,
+    borderColor: V.color.cardBorder,
+    borderRadius: V.radius.field,
     paddingHorizontal: 14,
     paddingVertical: 8,
     minHeight: 36,
@@ -442,42 +485,42 @@ const styles = StyleSheet.create({
   quickSendBtn: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: DS_DAYLIGHT.radius.field,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    borderRadius: V.radius.field,
+    backgroundColor: V.color.accent,
   },
   quickSendBtnDisabled: {
     opacity: 0.4,
   },
   quickSendText: {
-    fontSize: DS_DAYLIGHT.size.bodySm,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontSize: V.size.bodySm,
+    fontWeight: V.weight.semibold,
+    color: V.color.white,
   },
   commentPreview: {
     flexDirection: "row",
     gap: 10,
     paddingTop: 10,
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: V.space.cardPad,
   },
   commentBody: { flex: 1 },
-  commentLine: { fontSize: DS_DAYLIGHT.size.bodySm },
+  commentLine: { fontSize: V.size.bodySm },
   commentUser: {
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontWeight: V.weight.semibold,
+    color: V.color.inkSecondary,
   },
   commentText: {
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkSecondary,
+    fontWeight: V.weight.regular,
+    color: V.color.inkSecondary,
   },
   commentTime: {
     marginTop: 2,
-    fontSize: DS_DAYLIGHT.size.metaSm,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: V.size.metaSm,
+    color: V.color.inkMuted2,
   },
   divider: {
     height: 1,
-    backgroundColor: DS_DAYLIGHT.color.dividerStrong,
+    backgroundColor: V.color.dividerStrong,
     marginTop: 18,
-    marginHorizontal: DS_DAYLIGHT.space.screenH,
+    marginHorizontal: V.space.screenH,
   },
 });

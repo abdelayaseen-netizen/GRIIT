@@ -35,6 +35,7 @@ import {
   POST_DETAIL_TITLE,
   commentsCountLabel,
   commentsSectionKind,
+  composerFieldGround,
   completionLine,
   postDetailLoading,
   postDetailStamp,
@@ -299,6 +300,7 @@ function PostThreadScreenInner() {
               onChangeText={setDraft}
               placeholder={COMMENT_PLACEHOLDER}
               accessibilityLabel={COMMENT_PLACEHOLDER}
+              ground={composerFieldGround("route")}
               maxLength={200}
               multiline
             />
