@@ -61,6 +61,7 @@ export type ProfileV3Props = {
   streak: number;
   best: number;
   todaySecured: boolean;
+  totalDaysSecured?: number;
   consistency: string;
   consistencySub: string;
   tab: (typeof TABS)[number];
@@ -96,6 +97,7 @@ export function ProfileV3({
   streak,
   best,
   todaySecured,
+  totalDaysSecured = 0,
   consistency,
   consistencySub,
   tab,
@@ -218,7 +220,7 @@ export function ProfileV3({
             <DisplayNumber value={streak} size="home" />
             <Text style={styles.days}>{dayWord(streak)}</Text>
           </View>
-          <Text style={styles.secondary}>{streakLineFor(streak, todaySecured)}</Text>
+          <Text style={styles.secondary}>{streakLineFor(streak, todaySecured, totalDaysSecured)}</Text>
         </Card>
       </View>
 

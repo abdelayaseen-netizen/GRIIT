@@ -492,7 +492,7 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={homeStreakLine(streak, todaySecured)}
+              streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
               morningAfter={morningAfter}
               proof={proof}
               weekFilled={weekSecuredByIndex}

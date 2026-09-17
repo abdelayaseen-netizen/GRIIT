@@ -273,6 +273,7 @@ export default function VisitorProfileScreen() {
               todaySecured={
                 !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
               }
+              totalDaysSecured={rec?.detail.totalVerified ?? 0}
               consistency={rec?.consistency.rate ?? "No due days"}
               consistencySub={
                 joined

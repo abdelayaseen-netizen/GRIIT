@@ -29,21 +29,28 @@ describe("homeStreakLine", () => {
     expect(homeStreakLine(7, false)).toBe("Post today to keep it.");
   });
 
-  it("says Post today to start only at streak 0", () => {
+  it("says Post today to start only at streak 0 with no days secured", () => {
     expect(homeStreakLine(0, false)).toBe("Post today to start.");
+    expect(homeStreakLine(0, false, 0)).toBe("Post today to start.");
     expect(homeStreakLine(0, true)).toBe("Day secured.");
   });
 
+  it("says Streak reset when streak is 0 after days have been secured", () => {
+    expect(homeStreakLine(0, false, 1)).toBe("Streak reset. Post today to start again.");
+    expect(homeStreakLine(0, false, 12)).toBe("Streak reset. Post today to start again.");
+  });
+
   it("Home and Profile produce the same line for the same inputs", () => {
-    const cases: [number, boolean][] = [
-      [0, false],
-      [0, true],
-      [1, false],
-      [1, true],
-      [7, false],
+    const cases: [number, boolean, number][] = [
+      [0, false, 0],
+      [0, false, 4],
+      [0, true, 4],
+      [1, false, 1],
+      [1, true, 1],
+      [7, false, 7],
     ];
-    for (const [streak, secured] of cases) {
-      expect(streakLineFor(streak, secured)).toBe(homeStreakLine(streak, secured));
+    for (const [streak, secured, total] of cases) {
+      expect(streakLineFor(streak, secured, total)).toBe(homeStreakLine(streak, secured, total));
     }
     const homeSrc = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     const profileSrc = readFileSync(
@@ -51,7 +58,7 @@ describe("homeStreakLine", () => {
       "utf8",
     );
     expect(homeSrc).toContain("homeStreakLine(");
-    expect(profileSrc).toContain("streakLineFor(streak, todaySecured)");
+    expect(profileSrc).toContain("streakLineFor(streak, todaySecured, totalDaysSecured)");
   });
 });
 
