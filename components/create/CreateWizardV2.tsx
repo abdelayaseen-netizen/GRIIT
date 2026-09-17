@@ -28,7 +28,7 @@ import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import Sheet from "@/components/ds/Sheet";
 
 import {
   StepBasics,
@@ -399,17 +399,30 @@ export function CreateWizardV2() {
           />
         </WizardFooter>
 
-        <ConfirmDialog
+        <Sheet
           visible={cancelOpen}
-          title="Discard challenge?"
-          message="You'll lose what you've entered so far."
-          confirmLabel="Discard"
-          onCancel={() => setCancelOpen(false)}
-          onConfirm={() => {
-            setCancelOpen(false);
-            router.back();
-          }}
-        />
+          onDismiss={() => setCancelOpen(false)}
+          heading="Discard challenge?"
+          footer={
+            <>
+              <Button
+                label="Discard"
+                destructive
+                onPress={() => {
+                  setCancelOpen(false);
+                  router.back();
+                }}
+              />
+              <Button
+                label="Keep editing"
+                variant="tertiary"
+                onPress={() => setCancelOpen(false)}
+              />
+            </>
+          }
+        >
+          <Text style={styles.secondary}>You&apos;ll lose what you&apos;ve entered so far.</Text>
+        </Sheet>
 
         <Modal
           visible={confirmOpen}
