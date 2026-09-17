@@ -1,0 +1,17 @@
+name: daily-reset
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+
+jobs:
+  daily-reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST internal daily-reset
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -fsS -X POST \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            https://grit-backend-production.up.railway.app/internal/daily-reset
