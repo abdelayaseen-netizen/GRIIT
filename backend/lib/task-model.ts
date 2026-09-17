@@ -61,7 +61,14 @@ export function isTaskModelType(type: string): type is TaskModelType {
 /** Handoff mapping table — existing rows keep working; no SQL backfill. */
 export function normalizeTaskType(row: TaskModelRow): TaskModelType {
   const t = rawType(row);
-  if (t === "check_off" || t === "simple" || t === "checkin" || t === "manual" || t === "photo") {
+  if (
+    t === "check_off" ||
+    t === "simple" ||
+    t === "checkin" ||
+    t === "checklist" ||
+    t === "manual" ||
+    t === "photo"
+  ) {
     return "check_off";
   }
   if (t === "timer") return "timer";
@@ -95,6 +102,16 @@ export function gatesFor(row: TaskModelRow): TaskGate[] {
 
 export function verificationMethodFor(gates: readonly TaskGate[]): "photo" | "self_reported" {
   return gates.includes("camera") ? "photo" : "self_reported";
+}
+
+/** Challenge-level proof label. Location is a gate, never a type. */
+export function deriveProofType(
+  tasks: TaskModelRow[] | null | undefined
+): "photo" | "self_reported" {
+  for (const row of tasks ?? []) {
+    if (gatesFor(row).includes("camera")) return "photo";
+  }
+  return "self_reported";
 }
 
 export function gateTimeFor(row: TaskModelRow): GateTime {

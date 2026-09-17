@@ -7,6 +7,7 @@ import {
   type ChallengeTaskApiShape,
   mapTaskRowsToApi,
 } from "../../lib/challenge-tasks";
+import { deriveProofType } from "../../lib/task-model";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
@@ -37,20 +38,7 @@ function dbCategoriesForChip(chip: DiscoverCategory): string[] {
   }
 }
 
-type ProofType = "photo" | "text" | "location";
-
-function deriveProofType(tasks: ChallengeTaskRowRaw[] | null | undefined): ProofType {
-  const list = tasks ?? [];
-  for (const t of list) {
-    const tt = String(t.task_type ?? "").toLowerCase();
-    const cfg = (t.config ?? {}) as Record<string, unknown>;
-    if (tt === "location" || cfg.require_location === true) return "location";
-    if (tt === "photo" || cfg.require_photo_proof === true || cfg.photo_required === true) {
-      return "photo";
-    }
-  }
-  return "text";
-}
+type ProofType = "photo" | "self_reported";
 
 type DiscoverDifficulty = "EASY" | "MED" | "HARD";
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildTaskInsertPayload } from "./challenge-tasks";
 import { STARTER_DEFINITIONS } from "./starter-seed";
 import {
+  deriveProofType,
   gatesFor,
   gateTimeFor,
   normalizeTaskType,
@@ -14,6 +15,7 @@ describe("normalizeTaskType — handoff mapping table", () => {
   const rows: { raw: string; expected: string; extra?: TaskModelRow }[] = [
     { raw: "simple", expected: "check_off" },
     { raw: "checkin", expected: "check_off" },
+    { raw: "checklist", expected: "check_off" },
     { raw: "manual", expected: "check_off" },
     { raw: "photo", expected: "check_off" },
     { raw: "timer", expected: "timer" },
@@ -85,6 +87,23 @@ describe("verificationMethodFor", () => {
     expect(verificationMethodFor([])).toBe("self_reported");
     expect(verificationMethodFor(["time"])).toBe("self_reported");
     expect(verificationMethodFor(["location"])).toBe("self_reported");
+  });
+});
+
+describe("deriveProofType", () => {
+  it("location-gated check_off is self_reported unless camera is also on", () => {
+    expect(
+      deriveProofType([{ task_type: "check_off", require_location: true }])
+    ).toBe("self_reported");
+    expect(
+      deriveProofType([
+        { task_type: "check_off", require_location: true, require_photo: true },
+      ])
+    ).toBe("photo");
+  });
+
+  it("does not treat location as a type", () => {
+    expect(deriveProofType([{ task_type: "location" }])).toBe("self_reported");
   });
 });
 
