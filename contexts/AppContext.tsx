@@ -216,7 +216,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const resolvedProfile = profile;
   const profileTimezone = (resolvedProfile as { timezone?: string | null } | null)?.timezone;
-  useNotificationScheduler({ user, stats, activeChallenge, timezone: profileTimezone });
 
   useEffect(() => {
     if (!user) return;
@@ -295,6 +294,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const canSecureDay = useMemo(() => {
     return computeProgress.progress === 100 && computeProgress.totalRequired > 0;
   }, [computeProgress]);
+
+  const eveningRemaining = useMemo(() => {
+    const requiredTasks =
+      (challenge?.challenge_tasks as
+        | { id: string; type?: string; config?: { required?: boolean; require_photo_proof?: boolean; photo_required?: boolean } }[]
+        | undefined)?.filter((t) => (t.config?.required ?? true) === true) ?? [];
+    const completed = new Set(
+      todayCheckins
+        .filter((c: TodayCheckinForUser) => c.status === "completed")
+        .map((c: TodayCheckinForUser) => c.task_id)
+    );
+    const leftover = requiredTasks.filter((t) => !completed.has(t.id));
+    const cameraRemaining = leftover.filter((t) => {
+      const cfg = t.config ?? {};
+      return t.type === "photo" || cfg.require_photo_proof === true || cfg.photo_required === true;
+    }).length;
+    return {
+      remaining: leftover.length,
+      total: requiredTasks.length,
+      challenge: typeof challenge?.title === "string" ? challenge.title : "GRIIT",
+      cameraRemaining,
+    };
+  }, [challenge, todayCheckins]);
+
+  useNotificationScheduler({
+    user,
+    stats,
+    activeChallenge,
+    timezone: profileTimezone,
+    evening: eveningRemaining,
+  });
 
   const { completeTask, secureDay } = useAppChallengeMutations({
     user,

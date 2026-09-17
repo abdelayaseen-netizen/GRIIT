@@ -54,3 +54,40 @@ export function computeGroupStreak(input: {
   }
   return streak;
 }
+
+export function memberYesterdayState(
+  securedKeys: Set<string> | undefined,
+  yesterdayKey: string,
+): "secured" | "missed" {
+  return securedKeys?.has(yesterdayKey) === true ? "secured" : "missed";
+}
+
+/**
+ * Name of the first enrolled member who missed yesterday after a qualifying
+ * day-before. Null when the group streak is still live or never existed.
+ */
+export function groupStreakBrokeBy(input: {
+  todayKey: string;
+  members: { userId: string; joinedDateKey: string; displayName: string }[];
+  securedKeysByUser: Map<string, Set<string>>;
+}): string | null {
+  const { todayKey, members, securedKeysByUser } = input;
+  if (members.length === 0) return null;
+
+  const qualifies = (dateKey: string): boolean => {
+    const enrolled = members.filter((m) => m.joinedDateKey <= dateKey);
+    if (enrolled.length === 0) return false;
+    return enrolled.every((m) => securedKeysByUser.get(m.userId)?.has(dateKey) === true);
+  };
+
+  const yesterdayKey = addCalendarDaysToDateKey(todayKey, -1);
+  const dayBeforeKey = addCalendarDaysToDateKey(todayKey, -2);
+  if (qualifies(todayKey) || qualifies(yesterdayKey)) return null;
+  if (!qualifies(dayBeforeKey)) return null;
+
+  const misser = members.find(
+    (m) =>
+      m.joinedDateKey <= yesterdayKey && securedKeysByUser.get(m.userId)?.has(yesterdayKey) !== true,
+  );
+  return misser?.displayName ?? null;
+}

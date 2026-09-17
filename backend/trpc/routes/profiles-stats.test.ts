@@ -86,6 +86,12 @@ function createCaller(opts?: {
   lastFreezeUsedAt?: string | null;
   streakOverrides?: Record<string, unknown>;
   onStreakUpdate?: (payload: Record<string, unknown>) => void;
+  yesterdayTasks?: { id: string; title: string; challenge_id: string }[];
+  yesterdayCheckIns?: { task_id: string; date_key: string; status: string }[];
+  activeChallengeRows?: { id: string; challenge_id: string; status: string; start_at: string; end_at: string }[];
+  lastStandDateKeys?: string[];
+  freezeDateKeys?: string[];
+  yesterdaySecured?: boolean;
 }) {
   const router = createTRPCRouter(profilesStatsProcedures);
   const profile = {
@@ -107,6 +113,9 @@ function createCaller(opts?: {
           if (col === "status") state.status = String(val);
           return inner;
         },
+        in: () => inner,
+        gte: () => inner,
+        lte: () => inner,
         limit: () => inner,
         update: (payload: Record<string, unknown>) => {
           if (state.table === "streaks") opts?.onStreakUpdate?.(payload);
@@ -134,6 +143,12 @@ function createCaller(opts?: {
             }
             return Promise.resolve({ data: streak, error: null });
           }
+          if (state.table === "day_secures") {
+            return Promise.resolve({
+              data: opts?.yesterdaySecured ? { date_key: getYesterdayDateKey("UTC") } : null,
+              error: null,
+            });
+          }
           return Promise.resolve({ data: null, error: null });
         },
         then: (onFulfilled: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) => {
@@ -152,10 +167,39 @@ function createCaller(opts?: {
             }).then(onFulfilled, onRejected);
           }
           if (state.table === "last_stand_uses") {
-            return Promise.resolve({ data: [], error: null, count: null }).then(
-              onFulfilled,
-              onRejected
-            );
+            return Promise.resolve({
+              data: (opts?.lastStandDateKeys ?? []).map((date_key) => ({ date_key })),
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (state.table === "freeze_uses") {
+            return Promise.resolve({
+              data: (opts?.freezeDateKeys ?? []).map((date_key) => ({ date_key })),
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (state.table === "challenge_tasks") {
+            return Promise.resolve({
+              data: opts?.yesterdayTasks ?? [],
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (state.table === "check_ins") {
+            return Promise.resolve({
+              data: opts?.yesterdayCheckIns ?? [],
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (state.table === "active_challenges" && opts?.activeChallengeRows) {
+            return Promise.resolve({
+              data: opts.activeChallengeRows,
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
           }
           return Promise.resolve({ data: [], error: null, count: null }).then(
             onFulfilled,
@@ -191,7 +235,8 @@ describe("profiles.getStats", () => {
     }
     const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "profiles-stats.ts"), "utf8");
     expect(src).toContain(".select(GET_STATS_PROFILE_SELECT)");
-    expect(src).toContain(".select(RECONCILE_PROFILE_SELECT)");
+    const miss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../lib/miss-reconcile.ts"), "utf8");
+    expect(miss).toContain(RECONCILE_PROFILE_SELECT);
   });
 
   it("mocked reads return challenge and streak totals", async () => {
@@ -217,6 +262,29 @@ describe("profiles.getStats", () => {
       effectiveMissedDays: 0,
       totalDaysSecured: 7,
       lastStandsAvailable: 0,
+      lastStandUsedThisSession: false,
+      streakLostNoLastStand: false,
+    });
+  });
+
+  it("makes lastStandUsedThisSession and streakLostNoLastStand real", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const stood = createCaller({
+      lastStandDateKeys: [yesterday],
+      streakOverrides: { active_streak_count: 4, last_completed_date_key: addCalendarDaysToDateKey(yesterday, -1) },
+    });
+    await expect(stood.getStats()).resolves.toMatchObject({
+      lastStandUsedThisSession: true,
+      streakLostNoLastStand: false,
+    });
+    const lost = createCaller({
+      streakOverrides: { active_streak_count: 0, last_completed_date_key: addCalendarDaysToDateKey(yesterday, -1) },
+    });
+    await expect(lost.getStats()).resolves.toMatchObject({
+      lastStandUsedThisSession: false,
+      streakLostNoLastStand: true,
     });
   });
 
@@ -246,8 +314,40 @@ describe("profiles.reconcileStreak", () => {
       previous_streak: 5,
       lastStandUsedThisSession: false,
       lastStandsAvailable: 0,
+      missedTaskNames: [],
+      done: 0,
+      total: 0,
     });
     expect(updates).toEqual([{ active_streak_count: 0 }]);
+  });
+
+  it("returns yesterday done/total and missed task names", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const caller = createCaller({
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-01T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [
+        { id: "t1", title: "Run", challenge_id: CHALLENGE },
+        { id: "t2", title: "Read", challenge_id: CHALLENGE },
+        { id: "t3", title: "Write", challenge_id: CHALLENGE },
+      ],
+      yesterdayCheckIns: [
+        { task_id: "t1", date_key: "2026-09-13", status: "completed" },
+      ],
+    });
+    await expect(caller.reconcileStreak()).resolves.toMatchObject({
+      missedTaskNames: ["Read", "Write"],
+      done: 1,
+      total: 3,
+    });
   });
 
   it("throws when the streaks read fails", async () => {

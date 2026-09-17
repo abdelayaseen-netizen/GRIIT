@@ -32,7 +32,6 @@ import { useFeedToggle } from "@/store/feedToggleStore";
 import { StreakFreezeModal } from "@/components/StreakFreezeModal";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
-import { scheduleStreakReminder } from "@/lib/notifications";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
@@ -269,12 +268,6 @@ export default function HomeScreen() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- profile identity covered via profile?.username
   }, [isGuest, user?.id, profile?.username, streak, securedDateKeys]);
-
-  React.useEffect(() => {
-    if (isGuest || !user?.id) return;
-    if (streak == null) return;
-    void scheduleStreakReminder(streak);
-  }, [isGuest, user?.id, streak]);
 
   // Jeopardy modal — show once per calendar day when streak is at risk.
   React.useEffect(() => {

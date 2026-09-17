@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   GROUP_MAX_MEMBERS,
   computeGroupStreak,
+  groupStreakBrokeBy,
+  memberYesterdayState,
   shouldEvaluateTeamDay,
 } from "./group-challenges";
 
@@ -77,5 +79,46 @@ describe("computeGroupStreak", () => {
       [C, keys(d3, d4)],
     ]);
     expect(computeGroupStreak({ todayKey: today, members, securedKeysByUser })).toBe(4);
+  });
+});
+
+describe("groupStreakBrokeBy", () => {
+  it("names the member who missed yesterday after a qualifying day-before", () => {
+    expect(
+      groupStreakBrokeBy({
+        todayKey: "2026-09-16",
+        members: [
+          { userId: A, joinedDateKey: "2026-09-13", displayName: "Ada" },
+          { userId: B, joinedDateKey: "2026-09-13", displayName: "Bea" },
+        ],
+        securedKeysByUser: new Map([
+          [A, keys("2026-09-13", "2026-09-14")],
+          [B, keys("2026-09-13", "2026-09-14", "2026-09-15")],
+        ]),
+      }),
+    ).toBe("Ada");
+  });
+
+  it("is null while the group streak is still live", () => {
+    expect(
+      groupStreakBrokeBy({
+        todayKey: "2026-09-16",
+        members: [
+          { userId: A, joinedDateKey: "2026-09-13", displayName: "Ada" },
+          { userId: B, joinedDateKey: "2026-09-13", displayName: "Bea" },
+        ],
+        securedKeysByUser: new Map([
+          [A, keys("2026-09-15")],
+          [B, keys("2026-09-15")],
+        ]),
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("memberYesterdayState", () => {
+  it("is secured or missed from day_secures at the yesterday key", () => {
+    expect(memberYesterdayState(keys("2026-09-15"), "2026-09-15")).toBe("secured");
+    expect(memberYesterdayState(keys("2026-09-14"), "2026-09-15")).toBe("missed");
   });
 });
