@@ -6,6 +6,7 @@
 
 import { homeDayTotal } from "@/lib/home-day-total";
 import { dayWord } from "@/lib/format-days";
+import { hasCameraProof } from "@/lib/active-challenge-ui";
 
 export type FeedNoPhotoInput = {
   eventType: string;
@@ -33,15 +34,6 @@ export function feedNoPhotoCopy(post: FeedNoPhotoInput): string {
   }
 }
 
-/** Camera proof on the completion — never `post.verified` / require_photo. */
-export function feedHasCameraProof(post: {
-  proofPhotoUrl?: string | null;
-  photoUrl?: string | null;
-  hasProof?: boolean;
-}): boolean {
-  return Boolean(post.proofPhotoUrl || (post.hasProof && post.photoUrl));
-}
-
 /**
  * Feed Y: duration_days (post.totalDays). Own posts also apply target_streak.
  * Never render currentDay > Y.
@@ -64,5 +56,9 @@ export function feedFinishedCopy(post: {
 }): string {
   const y = feedDisplayTotal(post.totalDays, post.currentDay, post.targetStreak);
   const base = `Finished. ${post.currentDay} of ${y} ${dayWord(y)}`;
-  return feedHasCameraProof(post) ? `${base} verified.` : `${base}.`;
+  return hasCameraProof({
+    proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
+  })
+    ? `${base} verified.`
+    : `${base}.`;
 }

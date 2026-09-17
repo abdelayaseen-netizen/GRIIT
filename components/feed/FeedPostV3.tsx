@@ -10,7 +10,8 @@ import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { feedFinishedCopy, feedHasCameraProof, feedNoPhotoCopy } from "@/lib/feed-copy";
+import { feedFinishedCopy, feedNoPhotoCopy } from "@/lib/feed-copy";
+import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 const ICON = DS_V3.space.xs * 6;
@@ -46,7 +47,9 @@ export default function FeedPostV3({
   const when = formatTimeAgoCompact(post.createdAt);
   const photo = post.proofPhotoUrl ?? post.photoUrl;
   const ownTarget = viewerUserId && post.userId === viewerUserId ? viewerTargetStreak : null;
-  const cameraProof = feedHasCameraProof(post);
+  const cameraProof = hasCameraProof({
+    proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
+  });
 
   if (variant === "noPhoto") {
     return (

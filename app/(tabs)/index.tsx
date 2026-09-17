@@ -20,6 +20,8 @@ import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
+import { hasCameraProof } from "@/lib/active-challenge-ui";
+import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
@@ -118,6 +120,8 @@ export default function HomeScreen() {
       task_id?: string;
       status?: string;
       verification_status?: string | null;
+      verified?: boolean | null;
+      photo_url?: string | null;
       proof_url?: string | null;
       completion_image_url?: string | null;
       proof_photo_url?: string | null;
@@ -137,10 +141,10 @@ export default function HomeScreen() {
       const proofByTask = new Map(
         doneRows.map((c) => [
           String(c.task_id),
-          c.verification_status === "verified" ||
-            Boolean(c.proof_url) ||
-            Boolean(c.completion_image_url) ||
-            Boolean(c.proof_photo_url),
+          hasCameraProof({
+            verified: c.verified === true,
+            proof_photo_url: c.proof_photo_url ?? proofPhotoUrlFromCheckIn(c),
+          }),
         ]),
       );
       const challengeName = ac.challenges?.title ?? "Challenge";

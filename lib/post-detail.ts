@@ -1,5 +1,5 @@
 import type { StampLabel } from "@/components/ds/Stamp";
-import { feedHasCameraProof } from "@/lib/feed-copy";
+import { hasCameraProof } from "@/lib/active-challenge-ui";
 
 export const POST_DETAIL_TITLE = "Proof";
 export const COMMENT_PLACEHOLDER = "Add a comment";
@@ -23,7 +23,11 @@ export function postDetailStamp(post: {
   photoUrl?: string | null;
   hasProof?: boolean;
 }): StampLabel | undefined {
-  return feedHasCameraProof(post) ? "Verified" : undefined;
+  return hasCameraProof({
+    proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
+  })
+    ? "Verified"
+    : undefined;
 }
 
 export function sendComposerArmed(text: string): boolean {
