@@ -30,6 +30,8 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
+import { runHomePullRefresh } from "@/lib/home-pull-refresh";
+import { countFriendsPostedAway } from "@/lib/home-away-count";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -38,11 +40,9 @@ const RESPECT_DEBOUNCE_MS = 300;
 type LiveFeedScope = "following" | "everyone";
 
 type LiveFeedSectionProps = {
-  ListHeaderComponent?: React.ReactElement | null;
+  ListHeaderComponent?: React.ReactElement<{ awayCount?: number }> | null;
   /** Optional parent-driven refresh (e.g. home tab refetches stats + feed together). Falls back to internal feed refetch. */
   onRefresh?: () => Promise<void> | void;
-  /** Composed with the internal feedQuery.isRefetching. */
-  refreshing?: boolean;
   /**
    * Controlled scope. When provided, the home owns the source of truth and
    * the internal toggle calls `onScopeChange` instead of mutating local state.
@@ -98,7 +98,6 @@ function FriendsEmptyState({
 function LiveFeedSection({
   ListHeaderComponent,
   onRefresh,
-  refreshing,
   scope: scopeProp,
   onScopeChange,
   hideHeaderToggle,
@@ -121,6 +120,7 @@ function LiveFeedSection({
   const [androidMenuPost, setAndroidMenuPost] = useState<LiveFeedPost | null>(null);
   const [blockTarget, setBlockTarget] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
+  const [isPulling, setIsPulling] = useState(false);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
   const listRef = useRef<FlashListRef<LiveFeedPost> | null>(null);
@@ -142,6 +142,8 @@ function LiveFeedSection({
     enabled: !!user?.id,
     staleTime: 60 * 1000,
   });
+
+  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id);
 
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
@@ -466,16 +468,16 @@ function LiveFeedSection({
     return <FriendsEmptyState scope={scope} onPressDiscover={goToDiscover} />;
   }, [feedQuery, scope, goToDiscover]);
 
+  const refetchFeed = feedQuery.refetch;
   const handleRefresh = useCallback(() => {
-    if (onRefresh) {
-      const result = onRefresh();
-      if (result && typeof (result as Promise<void>).then === "function") {
-        void (result as Promise<void>);
+    return runHomePullRefresh(async () => {
+      if (onRefresh) {
+        await onRefresh();
+        return;
       }
-      return;
-    }
-    void feedQuery.refetch();
-  }, [onRefresh, feedQuery]);
+      await refetchFeed();
+    }, setIsPulling);
+  }, [onRefresh, refetchFeed]);
 
   const scrollToFeed = useCallback(() => {
     if (finalFeed.length === 0) return;
@@ -484,9 +486,13 @@ function LiveFeedSection({
 
   if (!user?.id) return null;
 
+  const header = ListHeaderComponent
+    ? React.cloneElement(ListHeaderComponent, { awayCount })
+    : null;
+
   const composedHeader = (
     <>
-      {ListHeaderComponent ?? null}
+      {header}
       {hideHeaderToggle ? null : (
         <View style={styles.feedHeader}>
           <View style={styles.feedHeaderLeft}>
@@ -562,7 +568,7 @@ function LiveFeedSection({
         }
         refreshControl={
           <RefreshControl
-            refreshing={(refreshing ?? false) || feedQuery.isRefetching}
+            refreshing={isPulling}
             onRefresh={handleRefresh}
             tintColor={DS_COLORS.ACCENT}
           />

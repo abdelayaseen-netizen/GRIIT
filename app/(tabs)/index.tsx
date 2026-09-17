@@ -9,14 +9,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
-import { trpcQuery } from "@/lib/trpc";
-import { TRPC } from "@/lib/trpc-paths";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { homePullRefreshing } from "@/lib/home-pull-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -24,7 +21,6 @@ import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { countFriendsPostedAway } from "@/lib/home-away-count";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -41,7 +37,6 @@ import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -301,9 +296,9 @@ export default function HomeScreen() {
   );
 
   const refresh = useCallback(async () => {
-    await Promise.all([bootstrap.refetch(), refetchAll()]);
+    await Promise.all([refetchBootstrap(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-  }, [bootstrap, refetchAll, queryClient]);
+  }, [refetchBootstrap, refetchAll, queryClient]);
 
   // ────────────── handlers ──────────────
 
@@ -354,21 +349,6 @@ export default function HomeScreen() {
   const onJeopardyDismiss = useCallback(() => {
     setShowJeopardyModal(false);
   }, []);
-
-  const liveFeedQuery = useQuery({
-    queryKey: ["liveFeed", feedScope, user?.id ?? ""],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getLiveFeed, { scope: feedScope, limit: 20 }) as Promise<{
-        posts: LiveFeedPost[];
-      }>,
-    enabled: !isGuest && !!user?.id && bootstrap.isSuccess,
-    staleTime: 60 * 1000,
-  });
-
-  const awayCount = useMemo(
-    () => countFriendsPostedAway(liveFeedQuery.data?.posts ?? [], user?.id),
-    [liveFeedQuery.data?.posts, user?.id]
-  );
 
   const nextBadge = useMemo(() => {
     const mark = nextProfileV2Badge({
@@ -426,7 +406,6 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <SafeAreaView style={s.container}>
         <LiveFeedSection
-          refreshing={homePullRefreshing(bootstrap.isRefetching)}
           onRefresh={refresh}
           scope={feedScope}
           onScopeChange={setFeedScope}
@@ -450,7 +429,6 @@ export default function HomeScreen() {
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
-              awayCount={awayCount}
               freezesLeft={freezeStatus?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}

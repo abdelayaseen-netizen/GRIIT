@@ -1,11 +1,19 @@
 /**
- * Home pull-to-refresh. RefreshControl must track isRefetching, not isFetching:
- * the cold-start bootstrap fetch is isPending+isFetching, and Home already has
- * a loading prop for that. isFetching true with data is a pull (or a loop).
+ * Home pull-to-refresh. RefreshControl tracks a local isPulling flag, never a
+ * query's isRefetching: focus, window-focus, feed refetch, and reconcile
+ * invalidate all set isRefetching without a user pull.
  */
 
-export function homePullRefreshing(isRefetching: boolean): boolean {
-  return isRefetching;
+export async function runHomePullRefresh(
+  work: () => Promise<unknown>,
+  setPulling: (value: boolean) => void,
+): Promise<void> {
+  setPulling(true);
+  try {
+    await work();
+  } finally {
+    setPulling(false);
+  }
 }
 
 /**

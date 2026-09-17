@@ -58,7 +58,7 @@ export type HomeV3Props = {
   onChangeFeedScope: (s: FeedScope) => void;
   onPressBell: () => void;
   onPressProof: () => void;
-  awayCount: number;
+  awayCount?: number;
   freezesLeft: number;
   badgeName: string;
   badgePct: number;
@@ -79,7 +79,7 @@ export function HomeV3({
   onChangeFeedScope,
   onPressBell,
   onPressProof,
-  awayCount,
+  awayCount = 0,
   freezesLeft,
   badgeName,
   badgePct,
