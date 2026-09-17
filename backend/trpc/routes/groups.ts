@@ -11,8 +11,10 @@ import {
   GROUP_MAX_MEMBERS,
   computeGroupStreak,
   dateKeyFromJoinedAt,
+  groupStreakBrokeBy,
+  memberYesterdayState,
 } from "../../lib/group-challenges";
-import { getTodayDateKey } from "../../lib/date-utils";
+import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
 
 type ChallengeInviteRow = {
   id: string;
@@ -592,16 +594,30 @@ export const groupsRouter = createTRPCRouter({
 
       const viewer = profileMap.get(ctx.userId);
       const todayKey = getTodayDateKey(viewer?.timezone ?? viewer?.reminder_timezone ?? "UTC");
+      const yesterdayKey = addCalendarDaysToDateKey(todayKey, -1);
+      const groupMembers = enrolled.map((m) => ({
+        userId: m.userId,
+        joinedDateKey: m.joinedDateKey,
+        displayName: m.displayName,
+      }));
       const groupStreak = computeGroupStreak({
         todayKey,
-        members: enrolled.map((m) => ({ userId: m.userId, joinedDateKey: m.joinedDateKey })),
+        members: groupMembers,
         securedKeysByUser,
       });
 
       return {
         cap: GROUP_MAX_MEMBERS,
         groupStreak,
-        members: enrolled.map(({ joinedDateKey: _joinedDateKey, ...rest }) => rest),
+        groupStreakBrokeBy: groupStreakBrokeBy({
+          todayKey,
+          members: groupMembers,
+          securedKeysByUser,
+        }),
+        members: enrolled.map(({ joinedDateKey: _joinedDateKey, ...rest }) => ({
+          ...rest,
+          yesterdayState: memberYesterdayState(securedKeysByUser.get(rest.userId), yesterdayKey),
+        })),
         pendingInvites,
       };
     }),

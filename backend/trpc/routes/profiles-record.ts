@@ -18,6 +18,12 @@ import {
   dateKeyFromIsoInTimeZone,
   getTodayDateKey,
 } from "../../lib/date-utils";
+import {
+  buildRecordDays,
+  monthKeyFromDateKey,
+  type EnrollmentTasks,
+} from "../../lib/record-days";
+import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-tasks";
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
@@ -46,7 +52,7 @@ type ChallengeRow = {
   duration_days?: number | null;
 };
 
-type TaskCountRow = { challenge_id: string };
+type TaskCountRow = { challenge_id: string; id?: string; title?: string | null; config?: ChallengeTaskRowRaw["config"] };
 
 const EMPTY_CONSISTENCY: ProfileRecord["consistency"] = {
   rate: "",
@@ -96,6 +102,7 @@ export const profilesRecordProcedures = {
         .object({
           userId: z.string().uuid().optional(),
           preview: z.enum(["stranger"]).optional(),
+          monthKey: z.string().regex(/^\d{4}-\d{2}$/).optional(),
         })
         .optional()
     )
@@ -199,11 +206,15 @@ export const profilesRecordProcedures = {
         };
       };
 
-      if (!gate.profile) {
-        return finish(emptyRecord());
-      }
+      const monthKey = input?.monthKey ?? monthKeyFromDateKey(todayKey);
 
-      const [streakRes, activeRes, completedRes, securesRes, unlocksRes] = await Promise.all([
+      if (!gate.profile) {
+        return finish(emptyRecord(), { monthKey, days: [] });
+      }
+      const monthStart = `${monthKey}-01`;
+      const monthEnd = `${monthKey}-31`;
+
+      const [streakRes, activeRes, completedRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
         db
           .from("streaks")
           .select("active_streak_count, longest_streak_count, last_completed_date_key")
@@ -232,6 +243,8 @@ export const profilesRecordProcedures = {
           .select("achievement_key, unlocked_at")
           .eq("user_id", ownerId)
           .limit(200),
+        db.from("freeze_uses").select("date_key").eq("user_id", ownerId).limit(365),
+        db.from("last_stand_uses").select("date_key").eq("user_id", ownerId).limit(365),
       ]);
 
       if (streakRes.error) {
@@ -263,16 +276,19 @@ export const profilesRecordProcedures = {
             ? db.from("challenges").select("id, title, duration_days").in("id", challengeIds).limit(50)
             : Promise.resolve({ data: [], error: null }),
           challengeIds.length > 0
-            ? db.from("challenge_tasks").select("challenge_id").in("challenge_id", challengeIds).limit(400)
-            : Promise.resolve({ data: [], error: null }),
-          securedDateKeys.length > 0
             ? db
-                .from("check_ins")
-                .select("date_key, active_challenge_id, photo_url, proof_url, completion_image_url")
-                .eq("user_id", ownerId)
-                .in("date_key", securedDateKeys)
+                .from("challenge_tasks")
+                .select("id, title, challenge_id, config")
+                .in("challenge_id", challengeIds)
                 .limit(400)
             : Promise.resolve({ data: [], error: null }),
+          db
+            .from("check_ins")
+            .select("date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url")
+            .eq("user_id", ownerId)
+            .gte("date_key", monthStart)
+            .lte("date_key", monthEnd)
+            .limit(800),
         ]);
         if (chRes.error) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: chRes.error.message });
@@ -351,6 +367,29 @@ export const profilesRecordProcedures = {
         };
       });
 
+      const enrollments: EnrollmentTasks[] = acRows.map((row) => ({
+        startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
+        endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
+        tasks: taskRows
+          .filter((t) => t.challenge_id === row.challenge_id)
+          .filter((t) => isTaskRequired(t as ChallengeTaskRowRaw))
+          .map((t) => ({
+            id: t.id ?? "",
+            title: (t.title ?? "Task").trim() || "Task",
+          }))
+          .filter((t) => t.id),
+      }));
+      const days = gate.activity
+        ? buildRecordDays({
+            monthKey,
+            securedDateKeys,
+            lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+            frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+            enrollments,
+            checkIns: checkInRows as (CheckInProofRow & { task_id?: string; status?: string })[],
+          })
+        : [];
+
       const sliced: ProfileRecord = {
         ...record,
         proofs: gate.activity ? proofs : [],
@@ -368,6 +407,6 @@ export const profilesRecordProcedures = {
         badges: relationship === "self" ? record.badges : [],
       };
 
-      return finish(sliced);
+      return finish(sliced, { monthKey, days });
     }),
 };

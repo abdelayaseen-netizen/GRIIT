@@ -15,6 +15,7 @@ import type { StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { logger } from "../../lib/logger";
 import { reconcileMissForUser } from "../../lib/miss-reconcile";
+import { loadDayTaskTally } from "../../lib/record-days";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -31,11 +32,17 @@ export const profilesStatsProcedures = {
   reconcileStreak: protectedProcedure.mutation(async ({ ctx }) => {
     try {
       const result = await reconcileMissForUser(ctx.supabase, ctx.userId);
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const yesterdayKey = getYesterdayDateKey(tz);
+      const tally = await loadDayTaskTally(ctx.supabase, ctx.userId, yesterdayKey, tz);
       return {
         streak_broken: result.streak_broken,
         previous_streak: result.previous_streak,
         lastStandUsedThisSession: result.lastStandUsedThisSession,
         lastStandsAvailable: result.lastStandsAvailable,
+        missedTaskNames: tally.missedTaskNames,
+        done: tally.done,
+        total: tally.total,
       };
     } catch (error) {
       logger.error({ error, userId: ctx.userId }, "[profiles.reconcileStreak] miss reconcile failed");
@@ -130,6 +137,14 @@ export const profilesStatsProcedures = {
       ).length;
     }
 
+    const { data: yesterdaySecure } = await ctx.supabase
+      .from("day_secures")
+      .select("date_key")
+      .eq("user_id", ctx.userId)
+      .eq("date_key", yesterdayKey)
+      .maybeSingle();
+    const yesterdaySecured = Boolean(yesterdaySecure);
+
     const lastStandsAvailable = Math.min(
       2,
       Math.max(0, (streakRow as StreakRow | null)?.last_stands_available ?? 0)
@@ -165,8 +180,12 @@ export const profilesStatsProcedures = {
       pointsToNextTier,
       nextTierName,
       lastStandsAvailable,
-      lastStandUsedThisSession: false,
-      streakLostNoLastStand: false,
+      lastStandUsedThisSession: lastStandUsedDateKeys.has(yesterdayKey),
+      streakLostNoLastStand:
+        activeStreak === 0 &&
+        !yesterdaySecured &&
+        !lastStandUsedDateKeys.has(yesterdayKey) &&
+        !frozenDateKeys.has(yesterdayKey),
       lastStandRequiresPremium,
     };
   }),
