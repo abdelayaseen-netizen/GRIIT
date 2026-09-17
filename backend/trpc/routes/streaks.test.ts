@@ -4,9 +4,11 @@ import {
   STREAK_FREEZE_PER_MONTH_PRO,
   effectiveFreezesRemaining,
   monthlyFreezeLimit,
+  restoreStreakCount,
   streaksRouter,
 } from "./streaks";
 import { addCalendarDaysToDateKey, getTodayDateKey, getYesterdayDateKey } from "../../lib/date-utils";
+import { evaluateMiss } from "../../lib/miss-reconcile";
 
 vi.mock("../../lib/supabase-server", () => ({
   getSupabaseServer: () => null,
@@ -26,7 +28,11 @@ function createCaller(opts?: {
   activeStreakCount?: number;
   failProfile?: boolean;
   failUpdate?: boolean;
+  securedDateKeys?: string[];
+  freezeKeys?: string[];
   onProfileUpdate?: (payload: Record<string, unknown>) => void;
+  onStreakUpdate?: (payload: Record<string, unknown>) => void;
+  onFreezeInsert?: (payload: Record<string, unknown>) => void;
 }) {
   const profile = {
     is_premium: opts?.isPremium ?? false,
@@ -37,16 +43,19 @@ function createCaller(opts?: {
   };
   const streak = {
     last_completed_date_key: opts?.lastCompletedDateKey ?? addCalendarDaysToDateKey(getTodayDateKey("UTC"), -2),
-    active_streak_count: opts?.activeStreakCount ?? 4,
+    active_streak_count: opts?.activeStreakCount ?? 0,
   };
+  const freezeKeys = [...(opts?.freezeKeys ?? [])];
 
   const supabase = {
     from: (table: string) => {
       const inner: Record<string, unknown> = {
         select: () => inner,
         eq: () => inner,
+        limit: () => inner,
         update: (payload: Record<string, unknown>) => {
-          opts?.onProfileUpdate?.(payload);
+          if (table === "profiles") opts?.onProfileUpdate?.(payload);
+          if (table === "streaks") opts?.onStreakUpdate?.(payload);
           if (opts?.failUpdate) {
             return {
               eq: () =>
@@ -56,9 +65,22 @@ function createCaller(opts?: {
                 }),
             };
           }
+          if (table === "profiles") {
+            Object.assign(profile, payload);
+          }
+          if (table === "streaks") {
+            Object.assign(streak, payload);
+          }
           return {
             eq: () => Promise.resolve({ data: null, error: null }),
           };
+        },
+        insert: (payload: Record<string, unknown>) => {
+          if (table === "freeze_uses") {
+            opts?.onFreezeInsert?.(payload);
+            if (typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
+          }
+          return Promise.resolve({ data: null, error: null });
         },
         single: () => {
           if (table === "profiles") {
@@ -84,18 +106,36 @@ function createCaller(opts?: {
           }
           return Promise.resolve({ data: null, error: null });
         },
+        then: (onFulfilled: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) => {
+          if (table === "day_secures") {
+            return Promise.resolve({
+              data: (opts?.securedDateKeys ?? []).map((date_key) => ({ date_key })),
+              error: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (table === "freeze_uses") {
+            return Promise.resolve({
+              data: freezeKeys.map((date_key) => ({ date_key })),
+              error: null,
+            }).then(onFulfilled, onRejected);
+          }
+          return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
+        },
       };
       return inner;
     },
   };
 
-  return streaksRouter.createCaller({
-    userId: USER,
-    supabase: supabase as never,
-    req: {} as Request,
-    requestId: "test",
-    clientIp: "127.0.0.1",
-  });
+  return {
+    caller: streaksRouter.createCaller({
+      userId: USER,
+      supabase: supabase as never,
+      req: {} as Request,
+      requestId: "test",
+      clientIp: "127.0.0.1",
+    }),
+    freezeKeys,
+  };
 }
 
 describe("monthly freeze limit", () => {
@@ -142,9 +182,28 @@ describe("effectiveFreezesRemaining", () => {
   });
 });
 
+describe("restoreStreakCount", () => {
+  it("keeps a live count and reconstructs from last_completed after a reset", () => {
+    expect(
+      restoreStreakCount({
+        activeStreakCount: 12,
+        lastCompletedDateKey: "2026-09-12",
+        securedDateKeys: [],
+      }),
+    ).toBe(12);
+    expect(
+      restoreStreakCount({
+        activeStreakCount: 0,
+        lastCompletedDateKey: "2026-09-12",
+        securedDateKeys: ["2026-09-10", "2026-09-11", "2026-09-12"],
+      }),
+    ).toBe(3);
+  });
+});
+
 describe("streaks.getFreezeStatus", () => {
   it("returns remaining from streak_freezes_remaining and free limit", async () => {
-    const caller = createCaller({ remaining: 1, lastFreezeUsedAt: "2026-09-10T00:00:00.000Z" });
+    const { caller } = createCaller({ remaining: 1, lastFreezeUsedAt: "2026-09-10T00:00:00.000Z" });
     await expect(caller.getFreezeStatus()).resolves.toEqual({
       remaining: 1,
       limit: STREAK_FREEZE_PER_MONTH_FREE,
@@ -153,7 +212,7 @@ describe("streaks.getFreezeStatus", () => {
   });
 
   it("returns the Pro limit when last_freeze_used_at is null even if stored remaining is 1", async () => {
-    const caller = createCaller({
+    const { caller } = createCaller({
       remaining: 1,
       lastFreezeUsedAt: null,
       isPremium: true,
@@ -166,7 +225,7 @@ describe("streaks.getFreezeStatus", () => {
   });
 
   it("refills remaining to the limit after the 30-day window", async () => {
-    const caller = createCaller({
+    const { caller } = createCaller({
       remaining: 0,
       lastFreezeUsedAt: "2026-08-01T00:00:00.000Z",
       isPremium: true,
@@ -179,7 +238,7 @@ describe("streaks.getFreezeStatus", () => {
   });
 
   it("throws when the profile read fails", async () => {
-    const caller = createCaller({ failProfile: true });
+    const { caller } = createCaller({ failProfile: true });
     await expect(caller.getFreezeStatus()).rejects.toMatchObject({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to load freeze status.",
@@ -188,29 +247,103 @@ describe("streaks.getFreezeStatus", () => {
 });
 
 describe("streaks.useFreeze", () => {
-  it("decrements streak_freezes_remaining and sets last_freeze_used_at", async () => {
+  it("restores the streak and inserts freeze_uses", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
     const yesterday = getYesterdayDateKey("UTC");
     const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
-    const updates: Record<string, unknown>[] = [];
+    const inserts: Record<string, unknown>[] = [];
+    const streakUpdates: Record<string, unknown>[] = [];
 
-    const caller = createCaller({
+    const { caller } = createCaller({
       remaining: 1,
       lastFreezeUsedAt: null,
       lastCompletedDateKey: lastCompleted,
-      activeStreakCount: 3,
-      onProfileUpdate: (payload) => updates.push(payload),
+      activeStreakCount: 0,
+      securedDateKeys: [
+        addCalendarDaysToDateKey(lastCompleted, -2),
+        addCalendarDaysToDateKey(lastCompleted, -1),
+        lastCompleted,
+      ],
+      onFreezeInsert: (payload) => inserts.push(payload),
+      onStreakUpdate: (payload) => streakUpdates.push(payload),
     });
 
     await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).resolves.toEqual({
-      success: true,
+      restoredStreak: 3,
+      remaining: 0,
     });
-    expect(updates).toEqual([
-      {
-        streak_freezes_remaining: 0,
-        last_freeze_used_at: "2026-09-14T15:00:00.000Z",
+    expect(inserts).toEqual([{ user_id: USER, date_key: yesterday }]);
+    expect(streakUpdates).toEqual([{ active_streak_count: 3 }]);
+  });
+
+  it("keeps both keys frozen after a second Pro use inside 30 days", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const firstYesterday = getYesterdayDateKey("UTC");
+    const firstLast = addCalendarDaysToDateKey(firstYesterday, -1);
+    const freezeKeys: string[] = [];
+
+    const first = createCaller({
+      isPremium: true,
+      remaining: 4,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: firstLast,
+      activeStreakCount: 5,
+      freezeKeys,
+      onFreezeInsert: (payload) => {
+        if (typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
       },
-    ]);
+    });
+    await first.caller.useFreeze({ dateKeyToFreeze: firstYesterday });
+
+    vi.setSystemTime(new Date("2026-09-15T15:00:00.000Z"));
+    const secondYesterday = getYesterdayDateKey("UTC");
+    const secondLast = addCalendarDaysToDateKey(secondYesterday, -1);
+    const second = createCaller({
+      isPremium: true,
+      remaining: 3,
+      lastFreezeUsedAt: "2026-09-14T15:00:00.000Z",
+      lastCompletedDateKey: secondLast,
+      activeStreakCount: 0,
+      freezeKeys,
+      securedDateKeys: [secondLast],
+      onFreezeInsert: (payload) => {
+        if (typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
+      },
+    });
+    await second.caller.useFreeze({ dateKeyToFreeze: secondYesterday });
+    expect(freezeKeys).toEqual([firstYesterday, secondYesterday]);
+
+    const miss = evaluateMiss({
+      userId: USER,
+      todayKey: getTodayDateKey("UTC"),
+      yesterdayKey: secondYesterday,
+      lastCompletedDateKey: secondLast,
+      activeStreakCount: 5,
+      lastStandsAvailable: 0,
+      lastStandsUsedTotal: 0,
+      subscriptionStatus: "premium",
+      frozenDateKeys: freezeKeys,
+      lastStandUsedDateKeys: [],
+    });
+    expect(miss.effectiveMissedDays).toBe(0);
+    expect(miss.write.kind).toBe("noop");
+  });
+
+  it("forbids a free user's second use", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const { caller } = createCaller({
+      remaining: 0,
+      lastFreezeUsedAt: "2026-09-13T15:00:00.000Z",
+      lastCompletedDateKey: lastCompleted,
+      activeStreakCount: 4,
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
   });
 });
