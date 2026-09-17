@@ -16,7 +16,6 @@ import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { homePullRefreshing } from "@/lib/home-pull-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -301,9 +300,9 @@ export default function HomeScreen() {
   );
 
   const refresh = useCallback(async () => {
-    await Promise.all([bootstrap.refetch(), refetchAll()]);
+    await Promise.all([refetchBootstrap(), refetchAll()]);
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-  }, [bootstrap, refetchAll, queryClient]);
+  }, [refetchBootstrap, refetchAll, queryClient]);
 
   // ────────────── handlers ──────────────
 
@@ -426,7 +425,6 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <SafeAreaView style={s.container}>
         <LiveFeedSection
-          refreshing={homePullRefreshing(bootstrap.isRefetching)}
           onRefresh={refresh}
           scope={feedScope}
           onScopeChange={setFeedScope}

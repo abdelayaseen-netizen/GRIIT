@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { homeFocusRefetchDeps, homePullRefreshing } from "./home-pull-refresh";
+import { homeFocusRefetchDeps, runHomePullRefresh } from "./home-pull-refresh";
 
 /** Models React Navigation: a new callback while focused immediately re-invokes. */
 function countFocusedRefetchInvocations(
@@ -28,18 +28,34 @@ function countFocusedRefetchInvocations(
   return invocations;
 }
 
-describe("homePullRefreshing", () => {
-  it("is false during the cold-start fetch (isFetching, not isRefetching)", () => {
-    const isFetching = true;
-    const isPending = true;
-    const isRefetching = isFetching && !isPending;
-    expect(isRefetching).toBe(false);
-    expect(homePullRefreshing(isRefetching)).toBe(false);
+describe("runHomePullRefresh", () => {
+  it("is true only while the user-initiated work is in flight", async () => {
+    const flags: boolean[] = [];
+    let setPulling = (v: boolean) => {
+      flags.push(v);
+    };
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const done = runHomePullRefresh(() => gate, setPulling);
+    expect(flags).toEqual([true]);
+    release();
+    await done;
+    expect(flags).toEqual([true, false]);
   });
 
-  it("is true only while refetching data Home already rendered", () => {
-    expect(homePullRefreshing(true)).toBe(true);
-    expect(homePullRefreshing(false)).toBe(false);
+  it("clears pulling when the work rejects", async () => {
+    const flags: boolean[] = [];
+    await expect(
+      runHomePullRefresh(
+        () => Promise.reject(new Error("net")),
+        (v) => {
+          flags.push(v);
+        },
+      ),
+    ).rejects.toThrow("net");
+    expect(flags).toEqual([true, false]);
   });
 });
 
@@ -58,17 +74,27 @@ describe("home focus refetch deps", () => {
 });
 
 describe("Home RefreshControl wiring", () => {
-  const src = readFileSync(join(process.cwd(), "app/(tabs)/index.tsx"), "utf8");
+  const homeSrc = readFileSync(join(process.cwd(), "app/(tabs)/index.tsx"), "utf8");
+  const feedSrc = readFileSync(join(process.cwd(), "components/LiveFeedSection.tsx"), "utf8");
 
-  it("binds RefreshControl to isRefetching, not isFetching", () => {
-    expect(src).toContain("refreshing={homePullRefreshing(bootstrap.isRefetching)}");
-    expect(src).not.toMatch(/refreshing=\{bootstrap\.isFetching\}/);
+  it("does not bind RefreshControl to any query isRefetching", () => {
+    expect(homeSrc).not.toMatch(/refreshing=\{homePullRefreshing\(bootstrap\.isRefetching\)\}/);
+    expect(homeSrc).not.toMatch(/bootstrap\.isRefetching/);
+    expect(feedSrc).toContain("refreshing={isPulling}");
+    expect(feedSrc).not.toMatch(/feedQuery\.isRefetching/);
+    expect(feedSrc).not.toMatch(/isRefetching/);
+  });
+
+  it("sets isPulling in onRefresh and clears it when the awaited work settles", () => {
+    expect(feedSrc).toContain("runHomePullRefresh");
+    expect(feedSrc).toContain("setIsPulling");
+    expect(homeSrc).toContain("const refetchBootstrap = bootstrap.refetch");
   });
 
   it("does not list the bootstrap query result in the tab-focus refetch effect", () => {
-    const start = src.indexOf("const refetchBootstrap = bootstrap.refetch");
+    const start = homeSrc.indexOf("const refetchBootstrap = bootstrap.refetch");
     expect(start).toBeGreaterThan(-1);
-    const block = src.slice(start, start + 400);
+    const block = homeSrc.slice(start, start + 400);
     expect(block).toContain("void refetchBootstrap()");
     expect(block).toContain("[isGuest, user?.id, refetchBootstrap]");
     expect(block).not.toContain("[isGuest, user?.id, bootstrap]");
