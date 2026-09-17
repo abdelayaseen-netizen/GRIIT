@@ -38,6 +38,15 @@ import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
+import {
+  MISS_ACK_STORAGE_KEY,
+  morningAfterCost,
+  morningAfterCushion,
+  morningAfterFreezeCaption,
+  morningAfterVariant,
+  morningAfterVisible,
+} from "@/lib/morning-after";
+import type { StatsFromApi } from "@/types";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -81,6 +90,7 @@ export default function HomeScreen() {
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeModal, setShowFreezeModal] = React.useState(false);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
+  const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -100,13 +110,19 @@ export default function HomeScreen() {
     initFeedToggle(followCounts?.following ?? 0);
   }, [followCounts?.following, initFeedToggle]);
 
-  useReconcileStreakIfNeeded({
+  const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
     ready: bootstrap.isSuccess,
     userId: user?.id,
     stats: bootstrap.data?.stats ?? stats ?? null,
     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
   });
+
+  React.useEffect(() => {
+    void AsyncStorage.getItem(MISS_ACK_STORAGE_KEY).then((value) => {
+      setMissAckDateKey(value);
+    });
+  }, []);
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
@@ -204,6 +220,39 @@ export default function HomeScreen() {
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
     [securedDateKeys, homeTimeZone]
   );
+
+  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+  const morningAfter = useMemo(() => {
+    if (missAckDateKey === undefined || recon.result == null) return null;
+    const statsRow = resolvedStats as StatsFromApi | null;
+    const variant = morningAfterVariant({
+      lastStandUsed: Boolean(
+        recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
+      ),
+      reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
+      freezeRemaining: freezeStatus?.remaining ?? 0,
+    });
+    if (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null) {
+      return null;
+    }
+    return {
+      cost: morningAfterCost(
+        recon.result.done ?? 0,
+        recon.result.total ?? 0,
+        recon.result.missedTaskNames ?? [],
+      ),
+      cushion: morningAfterCushion(variant, {
+        longest: statsRow?.longestStreak ?? 0,
+        lastStandsLeft: recon.result.lastStandsAvailable ?? statsRow?.lastStandsAvailable ?? 0,
+      }),
+      freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
+      onDismiss: () => {
+        setMissAckDateKey(yesterdayKey);
+        void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+      },
+      onUseFreeze: variant === "freeze" ? () => setShowFreezeModal(true) : undefined,
+    };
+  }, [freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, yesterdayKey]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -444,6 +493,7 @@ export default function HomeScreen() {
               title={greetingTitle(profile ?? {})}
               streak={streak}
               streakLine={homeStreakLine(streak, todaySecured)}
+              morningAfter={morningAfter}
               proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
