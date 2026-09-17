@@ -146,6 +146,57 @@ export function payloadFromDraft(draft: AddTaskDraft): AddTaskPayload {
   };
 }
 
+export function draftFromWizardTask(task: {
+  name: string;
+  type: string;
+  config?: Record<string, unknown>;
+  gates?: TaskGate[];
+  gateTime?: GateTime;
+  durationMinutes?: number;
+  minWords?: number;
+  targetValue?: number;
+  unit?: string;
+  requirePhoto?: boolean;
+}): AddTaskDraft {
+  const type: TaskModelType =
+    task.type === "timer" || task.type === "counter" || task.type === "text" || task.type === "run"
+      ? task.type
+      : "check_off";
+  const mins =
+    task.durationMinutes ??
+    (typeof task.config?.durationMinutes === "number" ? task.config.durationMinutes : 5);
+  const timerPreset = (TIMER_CHIPS as readonly number[]).includes(mins) ? mins : "custom";
+  const target =
+    task.targetValue ??
+    (typeof task.config?.targetValue === "number" ? task.config.targetValue : undefined);
+  const minWords =
+    task.minWords ?? (typeof task.config?.minWords === "number" ? task.config.minWords : undefined);
+  const distance =
+    typeof task.config?.distance === "number" ? task.config.distance : target;
+  const unit =
+    task.unit ?? (typeof task.config?.unit === "string" ? task.config.unit : "");
+  const gates = task.gates ?? (task.requirePhoto ? (["camera"] as TaskGate[]) : []);
+  return {
+    ...ADD_TASK_DEFAULT,
+    name: task.name,
+    type,
+    timerPreset: timerPreset === "custom" ? "custom" : timerPreset,
+    customMinutes: timerPreset === "custom" && mins > 0 ? String(mins) : "",
+    counterTarget: target != null ? String(target) : "",
+    counterUnit: unit,
+    minWords: minWords != null ? String(minWords) : "",
+    runDistance: distance != null ? String(distance) : "",
+    runUnit: unit === "mi" ? "mi" : "km",
+    camera: gates.includes("camera"),
+    time: gates.includes("time"),
+    location: gates.includes("location"),
+    timeMode: task.gateTime?.mode === "between" ? "between" : "by",
+    byTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.byTime,
+    fromTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.fromTime,
+    toTime: task.gateTime?.end ?? ADD_TASK_DEFAULT.toTime,
+  };
+}
+
 export function canSubmitDraft(draft: AddTaskDraft): boolean {
   if (!draft.name.trim()) return false;
   if (draft.type === "timer") return timerMinutesFromDraft(draft) > 0;

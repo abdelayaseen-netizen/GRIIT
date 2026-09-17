@@ -109,6 +109,17 @@ export function typeCaption(type: TaskModelType | string): string {
   return TYPE_CAPTION.check_off;
 }
 
+/** Wizard / pack rows: use stored gates, else camera from requirePhoto. */
+export function wizardGateLine(task: {
+  gates?: readonly TaskGate[] | null;
+  gateTime?: GateTime | null;
+  requirePhoto?: boolean;
+}): string {
+  if (task.gates && task.gates.length > 0) return gateLine(task.gates, task.gateTime);
+  if (task.requirePhoto) return gateLine(["camera"], task.gateTime);
+  return gateLine(task.gates ?? [], task.gateTime);
+}
+
 export function minutesLeftCaption(minutes: number): string {
   return `${minutes} minutes left in the window.`;
 }

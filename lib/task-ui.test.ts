@@ -8,6 +8,7 @@ import {
   formatWindowRange,
   gateLine,
   typeCaption,
+  wizardGateLine,
 } from "@/lib/task-ui";
 
 const bySeven: GateTime = { mode: "by", start: "07:00", end: null };
@@ -84,6 +85,17 @@ describe("gateLine", () => {
     expect(gateLine(["camera", "time", "location"], betweenNineThirty)).toBe(
       "Camera · Between 9:30 and 10:30 am · Location",
     );
+  });
+});
+
+describe("wizardGateLine", () => {
+  it("prefers gates over requirePhoto", () => {
+    expect(wizardGateLine({ gates: ["location"], requirePhoto: true })).toBe("Location");
+  });
+
+  it("camera from requirePhoto when gates are missing", () => {
+    expect(wizardGateLine({ requirePhoto: true })).toBe("Camera");
+    expect(wizardGateLine({ requirePhoto: false })).toBe("Self-reported");
   });
 });
 
