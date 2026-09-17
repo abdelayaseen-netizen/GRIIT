@@ -15,6 +15,7 @@ import {
   scheduleTaskWindowAlerts,
 } from "@/lib/notifications";
 import { getTodayDateKey, countSecuredLast7Days } from "@/lib/date-utils";
+import type { EveningRemaining } from "@/lib/evening-secure";
 import { deriveUserRank } from "@/lib/derive-user-rank";
 import type { StatsFromApi, ActiveChallengeFromApi } from "@/types";
 
@@ -24,13 +25,14 @@ export interface UseNotificationSchedulerOptions {
   activeChallenge: ActiveChallengeFromApi | null;
   /** IANA timezone from profiles.timezone — aligns with server date_key. */
   timezone?: string | null;
+  evening?: EveningRemaining;
 }
 
 /**
  * Schedules local notifications (secure reminder, lapsed, morning, weekly, countdowns, task windows).
  * Fire-and-forget — no return value.
  */
-export function useNotificationScheduler({ user, stats, activeChallenge, timezone }: UseNotificationSchedulerOptions): void {
+export function useNotificationScheduler({ user, stats, activeChallenge, timezone, evening }: UseNotificationSchedulerOptions): void {
   useEffect(() => {
     if (Platform.OS === "web" || !user || !stats) return;
     const todayKey = getTodayDateKey(timezone);
@@ -41,11 +43,11 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
     if (lastKey === todayKey) {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount).catch(() => {
+      scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount, evening).catch(() => {
         // error swallowed — handle in UI
       });
     } else {
-      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount).catch(() => {
+      scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount, evening).catch(() => {
         // error swallowed — handle in UI
       });
     }
@@ -184,5 +186,9 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
     timezone,
     activeChallenge?.id,
     activeChallenge?.challenges,
+    evening?.remaining,
+    evening?.total,
+    evening?.challenge,
+    evening?.cameraRemaining,
   ]);
 }

@@ -31,7 +31,6 @@ import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { captureError } from "@/lib/sentry";
 import { DS_COLORS } from "@/lib/design-system";
-import { getStreakAtRiskCopy } from "@/constants/identity-copy";
 import {
   pickTemplate,
   type NotifVars,
@@ -39,6 +38,7 @@ import {
   pickTaskPrepTemplate,
   normalizeTaskTypeForPrep,
 } from "@/lib/notification-copy";
+import { eveningSecureCopy, type EveningRemaining } from "@/lib/evening-secure";
 import { trackNotificationScheduled, type ReminderType } from "@/lib/analytics";
 
 // Foreground: banner/alert + sound (also set in registerForPushNotificationsAsync)
@@ -107,37 +107,50 @@ export async function cancelSecureReminders(): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
     await Notifications.cancelScheduledNotificationAsync(TWO_HOURS_LEFT_ID);
     await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
+    await Notifications.cancelScheduledNotificationAsync("streak-reminder-10pm");
   } catch {
     // ignore
   }
 }
 
 /**
- * Schedule the next "Time to secure your day" notification at preferred time on or after `afterDate`.
- * Call after secure (with tomorrow) or on app open (with today or tomorrow depending on secured today).
- * Optional streakCount improves copy (e.g. "Your X-day streak is at risk!").
+ * Schedule the two evening reminders: 20:00 and 22:00.
+ * Call after secure (with tomorrow) or on app open.
+ * lastStandsRemaining is unused; kept so existing callers do not shift.
  */
 export async function scheduleNextSecureReminder(
   preferredTime: string,
   afterDate?: Date,
-  lastStandsRemaining?: number,
-  streakCount?: number
+  _lastStandsRemaining?: number,
+  streakCount?: number,
+  remaining?: EveningRemaining,
 ): Promise<void> {
   try {
     const { hour, minute } = parsePreferredTime(preferredTime);
     const from = afterDate ?? new Date();
     const triggerDate = nextOccurrence(from, hour, minute);
-
-    const triggerDateKey = triggerDate.toISOString().slice(0, 10);
-    const vars: NotifVars = { streak: streakCount ?? 0, tasks: 0 };
-    const { title, body } = pickTemplate("secure_reminder", vars, triggerDateKey);
+    const evening: EveningRemaining = remaining ?? {
+      remaining: 0,
+      total: 0,
+      challenge: "GRIIT",
+    };
+    const vars: NotifVars = { streak: streakCount ?? 0, tasks: evening.remaining };
+    const eight = eveningSecureCopy({
+      hour: 20,
+      remaining: vars.tasks ?? 0,
+      total: evening.total,
+      challenge: evening.challenge,
+      cameraRemaining: evening.cameraRemaining,
+      streak: vars.streak ?? 0,
+    });
 
     await Notifications.cancelScheduledNotificationAsync(SECURE_REMINDER_ID);
+    await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
     await Notifications.scheduleNotificationAsync({
       identifier: SECURE_REMINDER_ID,
       content: scheduleWithReminderType({
-        title,
-        body,
+        title: eight.title,
+        body: eight.body,
         sound: true,
       }, "daily_streak"),
       trigger: {
@@ -148,51 +161,34 @@ export async function scheduleNextSecureReminder(
     trackNotificationScheduled({ reminder_type: "daily_streak", scheduled_for: triggerDate.toISOString() });
 
     if (ENABLE_TWO_HOURS_LEFT) {
-      const twoHoursLeft = new Date(triggerDate);
-      twoHoursLeft.setHours(twoHoursLeft.getHours() + 2, 0, 0, 0);
-      if (twoHoursLeft.getTime() > Date.now()) {
+      const ten = new Date(triggerDate);
+      ten.setHours(22, 0, 0, 0);
+      if (ten.getTime() <= triggerDate.getTime()) {
+        ten.setDate(ten.getDate() + 1);
+      }
+      if (ten.getTime() > Date.now()) {
+        const tenCopy = eveningSecureCopy({
+          hour: 22,
+          remaining: vars.tasks ?? 0,
+          total: evening.total,
+          challenge: evening.challenge,
+          cameraRemaining: evening.cameraRemaining,
+          streak: vars.streak ?? 0,
+        });
         await Notifications.cancelScheduledNotificationAsync(TWO_HOURS_LEFT_ID);
-        const twoHoursBody =
-          streakCount != null && streakCount > 0
-            ? `Only 2 hours left to secure today. Don't break your ${streakCount}-day streak!`
-            : "Only 2 hours left to secure today. Don't break your streak!";
         await Notifications.scheduleNotificationAsync({
           identifier: TWO_HOURS_LEFT_ID,
           content: scheduleWithReminderType({
-            title: "2 hours left",
-            body: twoHoursBody,
+            title: tenCopy.title,
+            body: tenCopy.body,
             sound: true,
           }, "streak_at_risk"),
           trigger: {
             type: "date",
-            date: twoHoursLeft,
+            date: ten,
           } as Notifications.NotificationTriggerInput,
         });
-        trackNotificationScheduled({ reminder_type: "streak_at_risk", scheduled_for: twoHoursLeft.toISOString() });
-      }
-    }
-    if (!afterDate) {
-      const now = new Date();
-      const streakAtRisk = new Date(now);
-      streakAtRisk.setHours(23, 15, 0, 0);
-      if (streakAtRisk.getTime() > now.getTime()) {
-        await Notifications.cancelScheduledNotificationAsync(STREAK_AT_RISK_ID);
-        const riskCopy = getStreakAtRiskCopy(streakCount ?? 0);
-        const lsText =
-          lastStandsRemaining !== undefined && lastStandsRemaining >= 0
-            ? ` You have ${lastStandsRemaining} Last Stand(s) remaining.`
-            : "";
-        const riskBody = `${riskCopy.body}${lsText}`;
-        await Notifications.scheduleNotificationAsync({
-          identifier: STREAK_AT_RISK_ID,
-          content: scheduleWithReminderType({
-            title: riskCopy.title,
-            body: riskBody,
-            sound: true,
-          }, "streak_at_risk"),
-          trigger: { type: "date", date: streakAtRisk } as Notifications.NotificationTriggerInput,
-        });
-        trackNotificationScheduled({ reminder_type: "streak_at_risk", scheduled_for: streakAtRisk.toISOString() });
+        trackNotificationScheduled({ reminder_type: "streak_at_risk", scheduled_for: ten.toISOString() });
       }
     }
   } catch {
@@ -312,7 +308,7 @@ export async function cancelLapsedUserReminders(): Promise<void> {
 const MILESTONE_DAYS: readonly number[] = [7, 14, 30, 60, 100];
 
 /**
- * If the next day (streakCount + 1) is a milestone, schedule "One more day!" 12 hours from now.
+ * If the next day (streakCount + 1) is a milestone, schedule "One more day" 12 hours from now.
  * Call from secure-day success handler.
  */
 export async function scheduleMilestoneApproachingIfNeeded(streakCount: number): Promise<void> {
@@ -324,8 +320,8 @@ export async function scheduleMilestoneApproachingIfNeeded(streakCount: number):
     await Notifications.scheduleNotificationAsync({
       identifier: MILESTONE_APPROACHING_ID,
       content: scheduleWithReminderType({
-        title: "One more day!",
-        body: `Tomorrow is Day ${nextDay}! Complete your tasks to hit this milestone.`,
+        title: "One more day",
+        body: `Tomorrow is Day ${nextDay}. Complete your tasks to hit this milestone.`,
         sound: true,
       }, "milestone_celebration"),
       trigger: { type: "date", date: in12h } as Notifications.NotificationTriggerInput,
@@ -672,39 +668,6 @@ export async function scheduleTaskReminder(params: {
     captureError(error, "scheduleTaskReminder");
   }
 }
-
-const STREAK_REMINDER_10PM_ID = "streak-reminder-10pm";
-
-/**
- * Schedule the 10pm streak reminder for users who haven't checked in.
- */
-export async function scheduleStreakReminder(streakCount: number): Promise<void> {
-  try {
-    // Cancellation is best-effort; stale notification is harmless
-    await Notifications.cancelScheduledNotificationAsync(STREAK_REMINDER_10PM_ID).catch(() => {});
-
-    await Notifications.scheduleNotificationAsync({
-      identifier: STREAK_REMINDER_10PM_ID,
-      content: scheduleWithReminderType({
-        title:
-          streakCount > 0
-            ? `Your ${streakCount}-day streak ends at midnight`
-            : `Don't forget to check in today`,
-        body: "Complete your tasks to keep the streak alive",
-        sound: true,
-        data: { type: "streak_reminder" },
-      }, "daily_streak"),
-      trigger: {
-        type: SchedulableTriggerInputTypes.DAILY,
-        hour: 22,
-        minute: 0,
-      },
-    });
-  } catch (error) {
-    captureError(error, "scheduleStreakReminder");
-  }
-}
-
 
 /**
  * Cancel ALL scheduled notifications (e.g. sign out).
