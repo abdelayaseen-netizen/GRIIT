@@ -140,6 +140,15 @@ export const challengesCreateProcedures = {
           ])
           .optional(),
         routineAnchorCustom: z.string().max(80).optional(),
+        gates: z.array(z.enum(["camera", "time", "location"])).max(3).optional(),
+        gateTime: z
+          .object({
+            mode: z.enum(["by", "between"]).nullable().optional(),
+            start: z.string().max(8).nullable().optional(),
+            end: z.string().max(8).nullable().optional(),
+          })
+          .optional(),
+        config: z.record(z.string(), z.unknown()).optional(),
       })).min(0).max(50),
     }).superRefine((data, ctx) => {
       if (data.participationType !== "shared_goal" && data.tasks.length < 1) {
@@ -404,6 +413,9 @@ export const challengesCreateProcedures = {
             startDurationMinutes: task.startDurationMinutes,
             routineAnchor: task.routineAnchor,
             routineAnchorCustom: task.routineAnchorCustom,
+            gates: task.gates,
+            gateTime: task.gateTime,
+            config: task.config,
           },
           challenge.id,
           i
@@ -414,7 +426,7 @@ export const challengesCreateProcedures = {
         .from("challenge_tasks")
         .insert(tasksToInsert)
         .select(
-          "id, challenge_id, title, task_type, order_index, config, created_at, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom"
+          "id, challenge_id, title, task_type, order_index, config, created_at, require_photo, timer_direction, timer_hard_mode, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom, gate_time_mode, gate_time_start, gate_time_end"
         );
 
       if (tasksError) {

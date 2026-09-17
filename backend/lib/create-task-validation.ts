@@ -27,9 +27,12 @@ export function validateCreateTask(
 
   switch (task.type) {
     case "journal":
+    case "text":
       if (task.minWords != null && task.minWords <= 0) {
         return `Task "${task.title}": Minimum words must be positive`;
       }
+      break;
+    case "check_off":
       break;
     case "timer":
       if (!task.durationMinutes || task.durationMinutes <= 0) {

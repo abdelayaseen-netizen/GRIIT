@@ -9,6 +9,7 @@ import {
   mapTaskRowsToApi,
   isTaskRequired,
 } from "../../lib/challenge-tasks";
+import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
@@ -73,7 +74,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select(
-          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)",
+          `id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (${CHALLENGE_TASK_SELECT})`,
           { count: "exact" }
         )
         .eq("visibility", "PUBLIC")
@@ -133,7 +134,7 @@ export const challengesRouter = createTRPCRouter({
       const { data, error } = await server
         .from("challenges")
         .select(
-          "id, title, description, metadata, duration_days, difficulty, is_hard_mode, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)"
+          `id, title, description, metadata, duration_days, difficulty, is_hard_mode, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (${CHALLENGE_TASK_SELECT})`
         )
         .eq("id", input.id)
         .single();

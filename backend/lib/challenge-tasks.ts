@@ -4,6 +4,14 @@
  */
 
 import type { TaskConfig } from "./task-config";
+import {
+  gateTimeFor,
+  gatesFor,
+  isTaskModelType,
+  overlayTaskModel,
+  type TaskGate,
+  verificationMethodFor,
+} from "./task-model";
 
 
 
@@ -51,6 +59,9 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   start_duration_minutes?: number | null;
   routine_anchor?: string | null;
   routine_anchor_custom?: string | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
 };
 
 /** API shape returned to frontend (flat fields) */
@@ -96,7 +107,7 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
   const cfg = config as Record<string, unknown>;
   const required =
     typeof row.config === "object" && row.config !== null ? cfg.required !== false : true;
-  return {
+  const mapped: ChallengeTaskApiShape = {
     id: row.id,
     title: row.title ?? null,
     type,
@@ -106,7 +117,7 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
     photo_required: config.photo_required ?? false,
     require_photo_proof: config.require_photo_proof ?? false,
     strict_timer_mode: config.strict_timer_mode ?? false,
-    verification_method: config.verification_method ?? null,
+    verification_method: verificationMethodFor(gatesFor(r)),
     verification_rule_json: (config.verification_rule_json as VerificationRuleStrava) ?? null,
     order_index: row.order_index ?? null,
     require_photo: r.require_photo ?? config.require_photo_proof ?? false,
@@ -149,7 +160,12 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
       typeof r.routine_anchor_custom === "string"
         ? r.routine_anchor_custom
         : null,
+    gate_time_mode: r.gate_time_mode ?? null,
+    gate_time_start: r.gate_time_start ?? null,
+    gate_time_end: r.gate_time_end ?? null,
+    gateTime: gateTimeFor(r),
   };
+  return overlayTaskModel(mapped, r);
 }
 
 /** Map an array of raw task rows to API shape. */
@@ -189,9 +205,32 @@ export function getTaskVerification(row: ChallengeTaskRowRaw | null | undefined)
 
 /** Map UI task type to DB task_type (e.g. simple/photo -> manual). */
 function toTaskType(type: string): string {
+  if (isTaskModelType(type)) return type;
   if (type === "simple" || type === "photo") return "manual";
   if (type === "workout") return "run";
   return type;
+}
+
+function taskHasGate(task: { gates?: unknown; [key: string]: unknown }, gate: TaskGate): boolean {
+  return Array.isArray(task.gates) && task.gates.includes(gate);
+}
+
+function readGateTime(task: Record<string, unknown>): {
+  mode: "by" | "between" | null;
+  start: string | null;
+  end: string | null;
+} {
+  const raw = task.gateTime;
+  if (!raw || typeof raw !== "object") {
+    return { mode: null, start: null, end: null };
+  }
+  const gt = raw as { mode?: unknown; start?: unknown; end?: unknown };
+  const mode = gt.mode === "by" || gt.mode === "between" ? gt.mode : null;
+  return {
+    mode,
+    start: typeof gt.start === "string" && gt.start.trim() ? gt.start.trim() : null,
+    end: typeof gt.end === "string" && gt.end.trim() ? gt.end.trim() : null,
+  };
 }
 
 /** Build config object for a task from create-flow input. */
@@ -225,11 +264,11 @@ function buildTaskConfigFromInput(task: {
   [key: string]: unknown;
 }): ChallengeTaskConfig {
   const rawType = task.type ?? "manual";
-  const type = rawType === "workout" ? "run" : rawType;
+  const type = rawType === "workout" ? "run" : rawType === "text" ? "text" : rawType === "check_off" ? "check_off" : rawType;
   const config: ChallengeTaskConfig = {
     required: task.required ?? true,
   };
-  if (type === "journal") {
+  if (type === "journal" || type === "text") {
     config.min_words = typeof task.minWords === "number" ? task.minWords : 20;
     if (typeof task.journalPrompt === "string" && task.journalPrompt.trim()) {
       config.journal_prompt = task.journalPrompt.trim();
@@ -275,7 +314,7 @@ function buildTaskConfigFromInput(task: {
   if (type === "counter" && typeof task.unit === "string" && task.unit.trim()) {
     config.unit_label = task.unit.trim();
   }
-  if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo") {
+  if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo" || taskHasGate(task, "camera")) {
     config.photo_required = true;
     config.require_photo_proof = true;
   }
@@ -355,6 +394,10 @@ export function buildTaskInsertPayload(
   start_duration_minutes: number | null;
   routine_anchor: string | null;
   routine_anchor_custom: string | null;
+  require_location?: boolean;
+  gate_time_mode: "by" | "between" | null;
+  gate_time_start: string | null;
+  gate_time_end: string | null;
 } {
   const task_type = toTaskType(task.type ?? "manual");
   const t = task as Record<string, unknown>;
@@ -401,7 +444,29 @@ export function buildTaskInsertPayload(
     require_strava: t.require_strava === true ? true : undefined,
     strava_min_distance_meters: typeof t.strava_min_distance_meters === "number" ? t.strava_min_distance_meters : undefined,
     strava_activity_type: typeof t.strava_activity_type === "string" ? t.strava_activity_type : undefined,
+    gates: t.gates,
   });
+  if (t.config && typeof t.config === "object" && !Array.isArray(t.config)) {
+    const extra = t.config as Record<string, unknown>;
+    if (typeof extra.strict_timer_mode === "boolean") config.strict_timer_mode = extra.strict_timer_mode;
+    if (typeof extra.timer_hard_mode === "boolean") config.timer_hard_mode = extra.timer_hard_mode;
+    if (typeof extra.duration_minutes === "number") config.duration_minutes = extra.duration_minutes;
+    if (typeof extra.min_words === "number") config.min_words = extra.min_words;
+    if (typeof extra.unit === "string") config.unit = extra.unit;
+    if (typeof extra.unit_label === "string") config.unit_label = extra.unit_label;
+    if (typeof extra.target_value === "number") config.target_value = extra.target_value;
+    if (typeof extra.target_count === "number") config.target_count = extra.target_count;
+  }
+  const camera =
+    task.photoRequired === true ||
+    task.requirePhotoProof === true ||
+    task.type === "photo" ||
+    taskHasGate(t, "camera");
+  const location = t.require_location === true || taskHasGate(t, "location");
+  if (location) config.require_location = true;
+  const gateTime = taskHasGate(t, "time")
+    ? readGateTime(t)
+    : { mode: null, start: null, end: null };
   return {
     challenge_id: challengeId,
     title: task.title,
@@ -413,6 +478,10 @@ export function buildTaskInsertPayload(
     start_duration_minutes: startDur,
     routine_anchor: routineAnchor,
     routine_anchor_custom: routineAnchorCustom,
-    ...(task.photoRequired === true || task.requirePhotoProof === true ? { require_photo: true } : {}),
+    require_photo: camera || undefined,
+    require_location: location || undefined,
+    gate_time_mode: gateTime.mode,
+    gate_time_start: gateTime.start,
+    gate_time_end: gateTime.end,
   };
 }
