@@ -74,13 +74,19 @@ import {
   type TimerSessionKind,
 } from "../../lib/timer-session";
 import type { VerificationKind } from "../../../lib/task-completion-result";
+import {
+  CHALLENGE_TASK_SELECT,
+  gatesFor,
+  overlayTaskModel,
+  verificationMethodFor,
+  type TaskModelRow,
+} from "../../lib/task-model";
+import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
   timer_direction?: string | null;
   timer_hard_mode?: boolean | null;
-  require_heart_rate?: boolean | null;
-  heart_rate_threshold?: number | null;
   require_location?: boolean | null;
   location_name?: string | null;
   location_latitude?: number | null;
@@ -90,6 +96,9 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   target_mode?: string | null;
   start_value?: number | null;
   start_duration_minutes?: number | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
 };
 
 export const checkinsRouter = createTRPCRouter({
@@ -128,7 +137,7 @@ export const checkinsRouter = createTRPCRouter({
       const { data: taskRow, error: taskFetchError } = await ctx.supabase
         .from("challenge_tasks")
         .select(
-          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_heart_rate, heart_rate_threshold, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes"
+          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, gate_time_mode, gate_time_start, gate_time_end"
         )
         .eq("id", input.taskId)
         .single();
@@ -145,6 +154,7 @@ export const checkinsRouter = createTRPCRouter({
       const task = taskRow as TaskRowWithVerification;
       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
       const config = cfg as TaskConfig;
+      assertTimeGate(task, profileTz);
       const checkInTz = resolveCheckInTimeZone(config.schedule_timezone, profileTz);
       const dateKey = getTodayDateKey(checkInTz);
       // Alias for legacy locals in this mutation that still say `tz`.
@@ -210,8 +220,7 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
-      const ruleFromCfg = cfg.verification_rule_json as { min_avg_bpm?: number } | undefined;
-      const { needsProof, minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
+      const { minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
       const taskType = task?.task_type ?? "manual";
       const dailyTargets = getDailyTargetForChallengeTask(
         {
@@ -225,7 +234,7 @@ export const checkinsRouter = createTRPCRouter({
         rampDayNumber,
         totalDur
       );
-      const requirePhoto = !isMinimumDay && (task?.require_photo === true || needsProof);
+      const requirePhoto = !isMinimumDay && gatesFor(task).includes("camera");
       const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
       // DB maps UI "photo" → task_type "manual"; detect photo proof via flags/payload.
       const isPhotoProof =
@@ -239,7 +248,7 @@ export const checkinsRouter = createTRPCRouter({
         taskType === "workout" ||
         (typeof input.workout_kind === "string" && input.workout_kind.length > 0);
       // Journal only — do not treat DB "manual" (photo/simple) as journal proof.
-      const isJournalProof = taskType === "journal";
+      const isJournalProof = taskType === "journal" || taskType === "text";
       const isCounterProof =
         taskType === "counter" ||
         taskType === "water" ||
@@ -247,7 +256,7 @@ export const checkinsRouter = createTRPCRouter({
       const isCheckinProof = taskType === "checkin";
       // DB maps UI "simple" → task_type "manual"; exclude photo-proof manuals.
       const isSimpleProof =
-        (taskType === "simple" || taskType === "manual") &&
+        (taskType === "simple" || taskType === "manual" || taskType === "check_off") &&
         !isPhotoProof &&
         !isRunProof &&
         !isWorkoutProof &&
@@ -388,16 +397,6 @@ export const checkinsRouter = createTRPCRouter({
 
       if (!isMinimumDay) {
         assertHardModeCameraOnly(cfg, photoUrl, input.proofUrl);
-      }
-
-      const requireHeartRate =
-        !isMinimumDay && (task?.require_heart_rate === true || cfg.verification_method === "heart_rate");
-      if (requireHeartRate) {
-        const threshold = (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ?? (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
-        const avg = input.heart_rate_avg ?? 0;
-        if (!avg || avg < threshold) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires an elevated heart rate. Your average was ${avg} BPM but ${threshold} BPM is needed.` });
-        }
       }
 
       // Location gate only when a verifiable target exists (both coords numeric).
@@ -819,10 +818,7 @@ export const checkinsRouter = createTRPCRouter({
       const { data: chForEvent } = await ctx.supabase.from("challenges").select("title").eq("id", challenge_id).maybeSingle();
       const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
-      const cfgVm = cfg as { verification_method?: string };
-      const hrThreshold = (typeof task?.heart_rate_threshold === "number" ? task.heart_rate_threshold : null) ?? (typeof ruleFromCfg?.min_avg_bpm === "number" ? ruleFromCfg.min_avg_bpm : 100);
-      const heartRateVerified = !!(input.heart_rate_avg && input.heart_rate_avg >= hrThreshold);
-      const verificationMethod = cfgVm.verification_method ?? (taskType === "photo" || requirePhoto ? "photo" : taskType === "timer" ? "timer" : "manual");
+      const verificationMethod = verificationMethodFor(gatesFor(task));
       const activityEventPayload = {
         user_id: ctx.userId,
         event_type: "task_completed" as const,
@@ -837,7 +833,7 @@ export const checkinsRouter = createTRPCRouter({
           verification_method: verificationMethod,
           is_hard_mode: cfg.hard_mode === true,
           task_mode: input.task_mode,
-          heart_rate_verified: requireHeartRate ? heartRateVerified : false,
+          heart_rate_verified: false,
           location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
         },
       };
@@ -1140,10 +1136,11 @@ export const checkinsRouter = createTRPCRouter({
       .eq("id", input.activeChallengeId)
       .maybeSingle();
     const challengeId = (acRow as { challenge_id?: string } | null)?.challenge_id;
+    let taskById = new Map<string, TaskModelRow>();
     if (challengeId) {
       const { data: tasks } = await ctx.supabase
         .from("challenge_tasks")
-        .select("config")
+        .select(CHALLENGE_TASK_SELECT)
         .eq("challenge_id", challengeId)
         .limit(200);
       for (const t of tasks ?? []) {
@@ -1155,6 +1152,9 @@ export const checkinsRouter = createTRPCRouter({
           )
         );
       }
+      taskById = new Map(
+        (tasks ?? []).map((t) => [String((t as { id?: string }).id), t as TaskModelRow])
+      );
     }
     const { data, error } = await ctx.supabase
       .from("check_ins")
@@ -1165,26 +1165,58 @@ export const checkinsRouter = createTRPCRouter({
       .in("date_key", [...dateKeys])
       .limit(100);
     requireNoError(error, "Failed to load check-ins.");
-    return data ?? [];
+    return (data ?? []).map((row) => {
+      const task = taskById.get(String((row as { task_id?: string }).task_id));
+      return task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), profileTz) : row;
+    });
   }),
 
   getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
     const dateKey = getTodayDateKey(tz);
-    const { data: acList, error: acErr } = await ctx.supabase.from("active_challenges").select("id").eq("user_id", ctx.userId).eq("status", "active").limit(50);
+    const { data: acList, error: acErr } = await ctx.supabase
+      .from("active_challenges")
+      .select("id, challenge_id")
+      .eq("user_id", ctx.userId)
+      .eq("status", "active")
+      .limit(50);
     requireNoError(acErr, "Failed to load active challenges.");
-    const acIds = (acList ?? []).map((r: { id: string }) => r.id);
+    const acRows = Array.isArray(acList) ? acList : [];
+    const acIds = acRows.map((r: { id: string }) => r.id);
     if (acIds.length === 0) return [];
+    const challengeIds = [
+      ...new Set(
+        acRows
+          .map((r: { challenge_id?: string }) => r.challenge_id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      ),
+    ];
+    const taskById = new Map<string, TaskModelRow>();
+    if (challengeIds.length > 0) {
+      const { data: tasks } = await ctx.supabase
+        .from("challenge_tasks")
+        .select(CHALLENGE_TASK_SELECT)
+        .in("challenge_id", challengeIds)
+        .limit(500);
+      for (const t of tasks ?? []) {
+        taskById.set(String((t as { id?: string }).id), t as TaskModelRow);
+      }
+    }
     const rows = await Promise.all(
       acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
-    const merged: NonNullable<(typeof rows)[0]["data"]> = [];
+    const merged: Record<string, unknown>[] = [];
     for (const { data, error } of rows) {
       if (error) {
         logger.error({ err: error }, "[getTodayCheckinsForUser] Supabase error");
         requireNoError(error, "Failed to load today check-ins.");
       }
-      if (data?.length) merged.push(...data);
+      for (const row of data ?? []) {
+        const task = taskById.get(String((row as { task_id?: string }).task_id));
+        merged.push(
+          task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), tz) : row
+        );
+      }
     }
     return merged;
   }),

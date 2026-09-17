@@ -17,23 +17,7 @@ import {
   type EvRow,
 } from "../../lib/feed-activity-hydrate";
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
-
-type ProofType = "photo" | "text" | "location";
-
-function deriveProofTypeFromTasks(
-  tasks: { task_type?: string | null; config?: Record<string, unknown> | null }[] | null | undefined
-): ProofType {
-  const list = tasks ?? [];
-  for (const t of list) {
-    const tt = String(t.task_type ?? "").toLowerCase();
-    const cfg = (t.config ?? {}) as Record<string, unknown>;
-    if (tt === "location" || cfg.require_location === true) return "location";
-    if (tt === "photo" || cfg.require_photo_proof === true || cfg.photo_required === true) {
-      return "photo";
-    }
-  }
-  return "text";
-}
+import { deriveProofType } from "../../lib/task-model";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -972,7 +956,7 @@ export const feedRouter = createTRPCRouter({
       challenge_name: (challenge.title ?? "Challenge").trim() || "Challenge",
       streak_length: streakLength,
       hours_remaining: Math.max(0, Math.round(hoursRemaining * 10) / 10),
-      proof_type: deriveProofTypeFromTasks(challenge.challenge_tasks ?? null),
+      proof_type: deriveProofType(challenge.challenge_tasks ?? null),
     };
   }),
 

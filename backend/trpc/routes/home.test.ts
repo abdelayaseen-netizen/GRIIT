@@ -107,7 +107,19 @@ function createMockSupabase(opts?: { failFollows?: boolean }) {
         return { data: [], error: null, count: n };
       }
       if (table === "challenge_tasks") {
-        return { data: [{ config: { required: true } }], error: null, count: null };
+        return {
+          data: [
+            {
+              id: TASK,
+              title: "500 words",
+              task_type: "journal",
+              order_index: 0,
+              config: { required: true },
+            },
+          ],
+          error: null,
+          count: null,
+        };
       }
       if (table === "check_ins") {
         const rich = lastSelect.includes("note_text");
@@ -120,8 +132,11 @@ function createMockSupabase(opts?: { failFollows?: boolean }) {
         if (lastSelect.includes("challenge_tasks") || lastSelect.includes("*")) {
           return { data: [activeEnrollment], error: null, count: null };
         }
-        if (lastSelect.includes("challenge_id") && !lastSelect.includes("user_id")) {
+        if (lastSelect.trim() === "challenge_id") {
           return { data: { challenge_id: CH }, error: null, count: null };
+        }
+        if (lastSelect.includes("id") && lastSelect.includes("challenge_id") && !lastSelect.includes("user_id")) {
+          return { data: [{ id: AC, challenge_id: CH }], error: null, count: null };
         }
         if (lastSelect.includes("id, user_id, challenge_id")) {
           return { data: { id: AC, user_id: USER, challenge_id: CH }, error: null, count: null };

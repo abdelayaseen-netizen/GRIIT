@@ -9,6 +9,9 @@ import {
   mapTaskRowsToApi,
   isTaskRequired,
 } from "../../lib/challenge-tasks";
+import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
+import { withWindowState } from "../../lib/task-time-gate";
+import { getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
@@ -73,7 +76,7 @@ export const challengesRouter = createTRPCRouter({
       let query = ctx.supabase
         .from("challenges")
         .select(
-          "id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)",
+          `id, title, description, metadata, duration_days, difficulty, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, challenge_tasks (${CHALLENGE_TASK_SELECT})`,
           { count: "exact" }
         )
         .eq("visibility", "PUBLIC")
@@ -133,7 +136,7 @@ export const challengesRouter = createTRPCRouter({
       const { data, error } = await server
         .from("challenges")
         .select(
-          "id, title, description, metadata, duration_days, difficulty, is_hard_mode, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (id, title, task_type, order_index, config, target_mode, start_value, start_duration_minutes, routine_anchor, routine_anchor_custom)"
+          `id, title, description, metadata, duration_days, difficulty, is_hard_mode, category, status, visibility, is_featured, participants_count, created_at, creator_id, duration_type, ends_at, live_date, participation_type, team_size, shared_goal_target, shared_goal_unit, deadline_type, deadline_date, started_at, run_status, challenge_tasks (${CHALLENGE_TASK_SELECT})`
         )
         .eq("id", input.id)
         .single();
@@ -327,6 +330,7 @@ export const challengesRouter = createTRPCRouter({
   // Premium status read from profiles table (validated server-side only). When enforcing join limits, read subscription_status from DB.
   getActive: protectedProcedure
     .query(async ({ ctx }) => {
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
       const { data, error } = await ctx.supabase
         .from('active_challenges')
         .select(`
@@ -347,7 +351,9 @@ export const challengesRouter = createTRPCRouter({
       }
       if (data?.challenges?.challenge_tasks) {
         const d = data as { challenges: { challenge_tasks: ChallengeTaskRowRaw[] } };
-        d.challenges.challenge_tasks = mapTaskRowsToApi(d.challenges.challenge_tasks) as unknown as ChallengeTaskRowRaw[];
+        d.challenges.challenge_tasks = mapTaskRowsToApi(d.challenges.challenge_tasks).map((t) =>
+          withWindowState(t, tz)
+        ) as unknown as ChallengeTaskRowRaw[];
       }
       return data;
     }),
@@ -356,6 +362,7 @@ export const challengesRouter = createTRPCRouter({
   listMyActive: protectedProcedure
     .query(async ({ ctx }) => {
       try {
+        const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
         const { data, error } = await ctx.supabase
           .from('active_challenges')
           .select(`
@@ -377,9 +384,10 @@ export const challengesRouter = createTRPCRouter({
         const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
         for (const row of list) {
           if (row.challenges?.challenge_tasks) {
-            (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks = mapTaskRowsToApi(
-              row.challenges.challenge_tasks
-            ) as unknown as ChallengeTaskRowRaw[];
+            (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks =
+              mapTaskRowsToApi(row.challenges.challenge_tasks).map((t) =>
+                withWindowState(t, tz)
+              ) as unknown as ChallengeTaskRowRaw[];
           }
         }
         return list;
