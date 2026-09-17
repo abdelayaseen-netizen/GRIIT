@@ -34,6 +34,7 @@ import {
   assertChallengeQueryOk,
 } from "../../lib/checkin-complete-gates";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
+import { completeCameraProofWrite } from "../../lib/complete-camera-proof";
 import { parseSecureDayRpcRow } from "../../lib/secure-day-rpc";
 import {
   buildPhotoVerification,
@@ -772,6 +773,18 @@ export const checkinsRouter = createTRPCRouter({
       if (proofUrl != null) payload.proof_url = proofUrl;
       if (proofUrl) payload.completion_image_url = proofUrl;
       if (photoUrl) payload.photo_url = photoUrl;
+      // Capture source: proof_payload_json.captured_in_app === true
+      // (backend/lib/complete-camera-proof.ts; same check as photo-verification.ts:112).
+      // Library pick (captured_in_app false) does not set proof_photo_url / verified.
+      const cameraProof = completeCameraProofWrite({
+        photoUrl,
+        proofPayload: input.proof_payload_json,
+      });
+      if (cameraProof) {
+        payload.proof_photo_url = cameraProof.proof_photo_url;
+        payload.verified = cameraProof.verified;
+        payload.verification_method = cameraProof.verification_method;
+      }
       if (input.heart_rate_avg != null) payload.heart_rate_avg = input.heart_rate_avg;
       if (input.heart_rate_peak != null) payload.heart_rate_peak = input.heart_rate_peak;
       if (input.location_latitude != null) payload.location_latitude = input.location_latitude;
@@ -786,7 +799,7 @@ export const checkinsRouter = createTRPCRouter({
         .from("check_ins")
         .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
         .select(
-          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
+          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_photo_url, verified, verification_method, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
         )
         .single();
       if (error) {
@@ -830,6 +843,7 @@ export const checkinsRouter = createTRPCRouter({
           challenge_name: challengeTitleForFeed,
           has_photo: !!proofUrl,
           photo_url: proofUrl ?? null,
+          proof_photo_url: cameraProof?.proof_photo_url ?? null,
           verification_method: verificationMethod,
           is_hard_mode: cfg.hard_mode === true,
           task_mode: input.task_mode,

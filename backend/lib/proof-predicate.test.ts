@@ -82,11 +82,4 @@ describe("splitSecuredProof", () => {
     expect(home).toBe(feed);
     expect(feed).toBe(record);
   });
-
-  it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {
-    // backend/trpc/routes/checkins.ts:772-774
-    const written = { proof_url: "https://cdn/p.jpg", proof_photo_url: null as string | null, verified: undefined };
-    expect(hasCameraProof(written)).toBe(false);
-    expect(checkInHasCameraProof({ date_key: "2026-09-17", ...written })).toBe(true);
-  });
 });
