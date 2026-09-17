@@ -47,6 +47,10 @@ type TaskRow = {
   required?: boolean;
   duration_minutes?: number | null;
   require_photo?: boolean;
+  gates?: import("@/backend/lib/task-model").TaskGate[];
+  gateTime?: import("@/backend/lib/task-model").GateTime | null;
+  windowState?: import("@/backend/lib/task-time-gate").WindowState;
+  minutesLeft?: number | null;
   config?: { required?: boolean } & Record<string, unknown>;
 };
 type ActiveRow = {
@@ -107,9 +111,17 @@ export default function HomeScreen() {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
       ? bootstrap.data.activeChallenges
       : []) as ActiveRow[];
-    const checkins = Array.isArray(bootstrap.data?.todayCheckinsForUser)
+    const checkins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
       ? bootstrap.data.todayCheckinsForUser
-      : [];
+      : []) as {
+      active_challenge_id?: string;
+      task_id?: string;
+      status?: string;
+      verification_status?: string | null;
+      proof_url?: string | null;
+      completion_image_url?: string | null;
+      proof_photo_url?: string | null;
+    }[];
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
@@ -118,10 +130,18 @@ export default function HomeScreen() {
         const cfg = t.config as { required?: boolean } | undefined;
         return (cfg?.required ?? true) === true;
       });
-      const doneSet = new Set(
-        checkins
-          .filter((c) => c.active_challenge_id === ac.id && c.status === "completed")
-          .map((c) => c.task_id),
+      const doneRows = checkins.filter(
+        (c) => c.active_challenge_id === ac.id && c.status === "completed",
+      );
+      const doneSet = new Set(doneRows.map((c) => c.task_id));
+      const proofByTask = new Map(
+        doneRows.map((c) => [
+          String(c.task_id),
+          c.verification_status === "verified" ||
+            Boolean(c.proof_url) ||
+            Boolean(c.completion_image_url) ||
+            Boolean(c.proof_photo_url),
+        ]),
       );
       const challengeName = ac.challenges?.title ?? "Challenge";
       const currentDay = ac.current_day ?? 1;
@@ -151,6 +171,12 @@ export default function HomeScreen() {
             t.config?.photo_required === true ||
             t.config?.require_photo_proof === true ||
             t.config?.require_photo === true,
+          type: t.type,
+          gates: t.gates,
+          gateTime: t.gateTime ?? null,
+          windowState: t.windowState ?? null,
+          minutesLeft: t.minutesLeft ?? null,
+          hasCameraProof: proofByTask.get(t.id) === true,
         });
       }
     }
@@ -429,6 +455,11 @@ export default function HomeScreen() {
               onChangeFeedScope={setFeedScope}
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
+              onPressTask={(id) => {
+                const next = heroTasks.find((h) => h.id === id);
+                if (!next || next.windowState === "closed") return;
+                onPressTask(next);
+              }}
               freezesLeft={freezeStatus?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}

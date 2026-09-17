@@ -1203,7 +1203,7 @@ export const checkinsRouter = createTRPCRouter({
       }
     }
     const rows = await Promise.all(
-      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
+      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
     const merged: Record<string, unknown>[] = [];
     for (const { data, error } of rows) {

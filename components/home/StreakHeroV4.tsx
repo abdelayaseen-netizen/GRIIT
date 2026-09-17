@@ -51,6 +51,12 @@ export type StreakHeroV4Task = {
   taskConfig: string;
   durationMinutes?: number;
   requirePhoto?: boolean;
+  type?: string;
+  gates?: import("@/backend/lib/task-model").TaskGate[];
+  gateTime?: import("@/backend/lib/task-model").GateTime | null;
+  windowState?: import("@/backend/lib/task-time-gate").WindowState;
+  minutesLeft?: number | null;
+  hasCameraProof?: boolean;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';
