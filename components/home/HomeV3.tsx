@@ -19,7 +19,7 @@ import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
-import { HOME_PROOF_CTA_TODAY, type HomeProofRow } from "@/lib/home-proof-card";
+import { HOME_PROOF_CTA_TODAY, type HomeProofCard, type HomeProofRow } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -44,20 +44,7 @@ export function greetingTitle(p: {
   return greetingName(p);
 }
 
-export type HomeV3Proof = {
-  challenge: string;
-  day: number;
-  dayTotal: number;
-  taskText: string;
-  gate: string;
-  doneCount: number;
-  totalCount: number;
-  posted: boolean;
-  hasChallenge: boolean;
-  firstProofEver: boolean;
-  rows: HomeProofRow[];
-  showCta: boolean;
-};
+export type HomeV3Proof = HomeProofCard;
 
 export type HomeV3Props = {
   title: string | null;
@@ -143,13 +130,45 @@ export function HomeV3({
     awayCount === 0
       ? null
       : `${awayCount} friends posted while you were away.`;
-  const proofSub = proof?.hasChallenge ? (
-    <Text style={styles.secondary}>
-      {proof.challenge} · Day <DisplayNumber value={proof.day} size="inline" /> of {proof.dayTotal}
-    </Text>
-  ) : (
-    <Text style={styles.secondary}>No active challenge</Text>
-  );
+  const renderRow = (row: HomeProofRow) => {
+    const closed = row.closed;
+    const inner = (
+      <>
+        <TypeIcon
+          type={row.type}
+          color={row.done ? DS_V3.color.brandText : DS_V3.color.textSecondary}
+        />
+        <View style={styles.taskCopy}>
+          <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
+          <Text style={styles.caption}>{row.caption}</Text>
+        </View>
+        {row.done ? (
+          row.hasCameraProof ? <Stamp label="Complete" /> : <Check size={ICON} color={DS_V3.color.brandText} />
+        ) : null}
+      </>
+    );
+    if (row.done || closed) {
+      return (
+        <View
+          key={row.id}
+          style={[styles.proofRow, closed ? styles.proofRowClosed : null]}
+        >
+          {inner}
+        </View>
+      );
+    }
+    return (
+      <Pressable
+        key={row.id}
+        accessibilityRole="button"
+        accessibilityLabel={row.name}
+        onPress={() => onPressTask?.(row.id)}
+        style={styles.proofRow}
+      >
+        {inner}
+      </Pressable>
+    );
+  };
 
   return (
     <View style={styles.root}>
@@ -184,59 +203,32 @@ export function HomeV3({
       {proof ? (
         <View style={styles.gutter}>
           <Card>
-            <View style={styles.proofHead}>
-              <View style={styles.flex}>
-                <Text style={styles.heading}>Today&apos;s proof</Text>
-                {proofSub}
-              </View>
-              <View style={styles.countChip}>
-                <Text style={styles.countTxt}>
-                  {proof.doneCount} / {proof.totalCount}
-                </Text>
-              </View>
-            </View>
-            {proof.rows.map((row) => {
-              const closed = row.closed;
-              const inner = (
-                <>
-                  <TypeIcon
-                    type={row.type}
-                    color={row.done ? DS_V3.color.brandText : DS_V3.color.textSecondary}
-                  />
-                  <View style={styles.taskCopy}>
-                    <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
-                    <Text style={styles.caption}>{row.caption}</Text>
+            <Text style={styles.heading}>Today&apos;s proof</Text>
+            {proof.hasChallenge ? (
+              proof.sections.map((section, i) => (
+                <View key={section.id} style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
+                  <View style={styles.proofHead}>
+                    <View style={styles.flex}>
+                      <Text style={styles.secondary}>
+                        {section.challenge} · Day <DisplayNumber value={section.day} size="inline" /> of{" "}
+                        {section.dayTotal}
+                      </Text>
+                    </View>
+                    <View style={styles.countChip}>
+                      <Text style={styles.countTxt}>
+                        {section.doneCount} / {section.totalCount}
+                      </Text>
+                    </View>
                   </View>
-                  {row.done ? (
-                    row.hasCameraProof ? <Stamp label="Complete" /> : <Check size={ICON} color={DS_V3.color.brandText} />
+                  {section.rows.map(renderRow)}
+                  {section.showCta ? (
+                    <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
                   ) : null}
-                </>
-              );
-              if (row.done || closed) {
-                return (
-                  <View
-                    key={row.id}
-                    style={[styles.proofRow, closed ? styles.proofRowClosed : null]}
-                  >
-                    {inner}
-                  </View>
-                );
-              }
-              return (
-                <Pressable
-                  key={row.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={row.name}
-                  onPress={() => onPressTask?.(row.id)}
-                  style={styles.proofRow}
-                >
-                  {inner}
-                </Pressable>
-              );
-            })}
-            {proof.showCta ? (
-              <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
-            ) : null}
+                </View>
+              ))
+            ) : (
+              <Text style={[styles.secondary, styles.sectionFirst]}>No active challenge</Text>
+            )}
           </Card>
         </View>
       ) : null}
@@ -318,6 +310,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: DS_V3.space.md,
     marginBottom: DS_V3.space.lg,
+  },
+  sectionFirst: {
+    marginTop: DS_V3.space.lg,
+  },
+  sectionGap: {
+    marginTop: DS_V3.space.section,
   },
   flex: { flex: 1, gap: DS_V3.space.xs },
   heading: {

@@ -13,7 +13,98 @@ function task(partial: Partial<HomeProofTask> & Pick<HomeProofTask, "name" | "ch
 }
 
 describe("selectHomeProofCard", () => {
-  it("3 enrollments, 2 complete, card shows the incomplete one, CTA is Post today's proof", () => {
+  it("two challenges × two tasks: one section each, tasks never cross", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          id: "i1",
+          name: "Outdoor workout",
+          challengeName: "Iron man",
+          activeChallengeId: "ac-iron",
+          durationDays: 14,
+        }),
+        task({
+          id: "i2",
+          name: "Read ten pages",
+          challengeName: "Iron man",
+          activeChallengeId: "ac-iron",
+          durationDays: 14,
+        }),
+        task({
+          id: "g1",
+          name: "Write 3 gratitudes",
+          challengeName: "Daily Gratitude",
+          activeChallengeId: "ac-grat",
+          durationDays: 30,
+        }),
+        task({
+          id: "g2",
+          name: "Evening note",
+          challengeName: "Daily Gratitude",
+          activeChallengeId: "ac-grat",
+          durationDays: 30,
+        }),
+      ],
+      tasksDoneToday: 0,
+      totalTasksToday: 4,
+      firstProofEver: false,
+      securedToday: false,
+    });
+    expect(card.sections).toHaveLength(2);
+    expect(card.sections[0]).toMatchObject({
+      challenge: "Iron man",
+      doneCount: 0,
+      totalCount: 2,
+    });
+    expect(card.sections[0]?.rows.map((r) => r.name)).toEqual(["Outdoor workout", "Read ten pages"]);
+    expect(card.sections[1]).toMatchObject({
+      challenge: "Daily Gratitude",
+      doneCount: 0,
+      totalCount: 2,
+    });
+    expect(card.sections[1]?.rows.map((r) => r.name)).toEqual(["Write 3 gratitudes", "Evening note"]);
+    expect(card.sections[0]?.rows.some((r) => r.name === "Write 3 gratitudes")).toBe(false);
+    expect(card.sections[1]?.rows.some((r) => r.name === "Read ten pages")).toBe(false);
+  });
+
+  it("Iron man + Daily Gratitude + Quick Steps render three sections", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({ id: "1", name: "Workout", challengeName: "Iron man", activeChallengeId: "ac-iron" }),
+        task({ id: "2", name: "Read ten pages", challengeName: "Iron man", activeChallengeId: "ac-iron" }),
+        task({ id: "3", name: "Gallon of water", challengeName: "Iron man", activeChallengeId: "ac-iron" }),
+        task({ id: "4", name: "Outdoor photo", challengeName: "Iron man", activeChallengeId: "ac-iron" }),
+        task({
+          id: "5",
+          name: "Write 3 gratitudes",
+          challengeName: "Daily Gratitude",
+          activeChallengeId: "ac-grat",
+        }),
+        task({
+          id: "6",
+          name: "Log your steps",
+          challengeName: "Quick Steps",
+          activeChallengeId: "ac-steps",
+        }),
+      ],
+      tasksDoneToday: 0,
+      totalTasksToday: 6,
+      firstProofEver: false,
+      securedToday: false,
+    });
+    expect(card.sections).toHaveLength(3);
+    expect(card.sections.map((s) => s.challenge)).toEqual([
+      "Iron man",
+      "Daily Gratitude",
+      "Quick Steps",
+    ]);
+    expect(card.sections.map((s) => s.totalCount)).toEqual([4, 1, 1]);
+    expect(card.sections[0]?.rows).toHaveLength(4);
+    expect(card.sections[1]?.rows.map((r) => r.name)).toEqual(["Write 3 gratitudes"]);
+    expect(card.sections[2]?.rows.map((r) => r.name)).toEqual(["Log your steps"]);
+  });
+
+  it("3 enrollments, 2 complete: each challenge keeps its own chip, CTA on the incomplete one", () => {
     const card = selectHomeProofCard({
       tasks: [
         task({ name: "Run 1 mile", challengeName: "Run", currentDay: 3, done: true, challengeSecuredToday: true }),
@@ -25,16 +116,18 @@ describe("selectHomeProofCard", () => {
       firstProofEver: false,
       securedToday: false,
     });
-    expect(card.taskText).toBe("Journal");
+    expect(card.sections).toHaveLength(3);
+    expect(card.sections[0]).toMatchObject({ challenge: "Run", doneCount: 1, totalCount: 1, showCta: false });
+    expect(card.sections[1]).toMatchObject({ challenge: "Read", doneCount: 1, totalCount: 1, showCta: false });
+    expect(card.sections[2]).toMatchObject({ challenge: "Write", doneCount: 0, totalCount: 1, showCta: true });
+    expect(card.sections[2]?.rows[0]?.name).toBe("Journal");
     expect(card.posted).toBe(false);
-    expect(card.doneCount).toBe(2);
-    expect(card.totalCount).toBe(3);
-    expect(card.showCta).toBe(false);
+    expect(card.showCta).toBe(true);
     expect(homeProofCtaLabel(card)).toBe(HOME_PROOF_CTA_TODAY);
     expect(homeProofCtaLabel(card)).toBe("Post your proof");
   });
 
-  it("3 enrollments, 2 secured, third on current_day 1 unsecured shows Day 1", () => {
+  it("3 enrollments, 2 secured, third on current_day 1 unsecured shows Day 1 on that section", () => {
     const card = selectHomeProofCard({
       tasks: [
         task({ name: "Run 1 mile", challengeName: "Run", currentDay: 3, done: true, challengeSecuredToday: true }),
@@ -46,11 +139,11 @@ describe("selectHomeProofCard", () => {
       firstProofEver: false,
       securedToday: false,
     });
-    expect(card.day).toBe(1);
-    expect(card.day).not.toBe(0);
-    expect(card.day).not.toBe(2);
-    expect(card.challenge).toBe("Write");
-    expect(card.dayTotal).toBe(1);
+    expect(card.sections[2]?.day).toBe(1);
+    expect(card.sections[2]?.day).not.toBe(0);
+    expect(card.sections[2]?.day).not.toBe(2);
+    expect(card.sections[2]?.challenge).toBe("Write");
+    expect(card.sections[2]?.dayTotal).toBe(1);
   });
 
   it("dayTotal uses target_streak when longer than duration", () => {
@@ -69,7 +162,7 @@ describe("selectHomeProofCard", () => {
       targetStreak: 75,
       securedToday: false,
     });
-    expect(card.dayTotal).toBe(75);
+    expect(card.sections[0]?.dayTotal).toBe(75);
   });
 
   it("checkin done but securedDateKeys lacks today → posted is false", () => {
@@ -111,10 +204,9 @@ describe("selectHomeProofCard", () => {
       firstProofEver: true,
       securedToday: false,
     });
-    expect(card.gate).toBe("Self-reported");
-    expect(card.gate).not.toBe("Photo");
-    expect(card.showCta).toBe(true);
-    expect(card.rows[0]?.caption).toBe("Self-reported");
+    expect(card.sections[0]?.rows[0]?.caption).toBe("Self-reported");
+    expect(card.sections[0]?.rows[0]?.caption).not.toBe("Photo");
+    expect(card.sections[0]?.showCta).toBe(true);
   });
 
   it("six tasks: 2 done, 1 closed, 3 pending → no button, captions match", () => {
@@ -173,18 +265,19 @@ describe("selectHomeProofCard", () => {
       firstProofEver: false,
       securedToday: false,
     });
-    expect(card.showCta).toBe(false);
-    expect(card.rows).toHaveLength(6);
-    expect(card.rows[0]).toMatchObject({ done: true, hasCameraProof: true, caption: "Camera" });
-    expect(card.rows[1]).toMatchObject({ done: true, hasCameraProof: false, caption: "Self-reported" });
-    expect(card.rows[2]).toMatchObject({
+    expect(card.sections).toHaveLength(1);
+    expect(card.sections[0]?.showCta).toBe(false);
+    expect(card.sections[0]?.rows).toHaveLength(6);
+    expect(card.sections[0]?.rows[0]).toMatchObject({ done: true, hasCameraProof: true, caption: "Camera" });
+    expect(card.sections[0]?.rows[1]).toMatchObject({ done: true, hasCameraProof: false, caption: "Self-reported" });
+    expect(card.sections[0]?.rows[2]).toMatchObject({
       closed: true,
       caption: "Window closed · 6:00–9:00 am",
     });
-    expect(card.rows[3]?.caption).toBe("Camera");
-    expect(card.rows[4]?.caption).toBe("By 7:00 am");
-    expect(card.rows[5]?.caption).toBe("Self-reported");
-    expect(card.doneCount).toBe(2);
-    expect(card.totalCount).toBe(6);
+    expect(card.sections[0]?.rows[3]?.caption).toBe("Camera");
+    expect(card.sections[0]?.rows[4]?.caption).toBe("By 7:00 am");
+    expect(card.sections[0]?.rows[5]?.caption).toBe("Self-reported");
+    expect(card.sections[0]?.doneCount).toBe(2);
+    expect(card.sections[0]?.totalCount).toBe(6);
   });
 });
