@@ -12,8 +12,10 @@ import { ROUTES } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import {
+  groupBrokeYesterdayLine,
   groupSecuredTodayLine,
   groupStreakUnit,
+  rosterTrailing,
   memberStreakCaption,
   membersInGroupLabel,
   pendingTrailing,
@@ -34,6 +36,7 @@ const ICON = DS_V3.space.gutter;
 type MembersPayload = {
   cap: number;
   groupStreak: number;
+  groupStreakBrokeBy?: string | null;
   members: (RosterMember & { avatar?: string | null })[];
   pendingInvites: {
     inviteId: string;
@@ -93,6 +96,7 @@ export default function ChallengeMembersScreen() {
   const memberCount = roster.length;
   const securedToday = roster.filter((m) => m.securedToday).length;
   const groupStreak = membersQuery.data?.groupStreak ?? 0;
+  const groupStreakBrokeBy = membersQuery.data?.groupStreakBrokeBy ?? null;
   const justYou = memberCount <= 1 && pending.length === 0;
   const title = challengeQuery.data?.title?.trim() || "Challenge";
 
@@ -138,7 +142,9 @@ export default function ChallengeMembersScreen() {
                   <Text style={styles.unit}>{groupStreakUnit(groupStreak)}</Text>
                 </View>
                 <Text style={styles.securedLine}>
-                  {groupSecuredTodayLine(securedToday, memberCount)}
+                  {groupStreakBrokeBy
+                    ? groupBrokeYesterdayLine(groupStreakBrokeBy)
+                    : groupSecuredTodayLine(securedToday, memberCount)}
                 </Text>
                 <Text style={styles.caption}>Counts only days every member secured.</Text>
                 <Text style={styles.section}>{membersInGroupLabel(memberCount)}</Text>
@@ -160,7 +166,10 @@ export default function ChallengeMembersScreen() {
                       caption={memberStreakCaption(m.currentStreak)}
                       avatarUri={(m as { avatar?: string | null }).avatar}
                       nameAside={m.role === "creator" ? "Creator" : undefined}
-                      trailing={m.securedToday ? "secured" : "not_yet"}
+                      trailing={rosterTrailing({
+                        securedToday: m.securedToday,
+                        yesterdayState: m.yesterdayState,
+                      })}
                       divider={i < roster.length - 1 || pending.length > 0}
                     />
                   ))
