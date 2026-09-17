@@ -80,6 +80,14 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   };
 }
 
+export type HomeProofRing = "done" | "pending" | "closed";
+
+export function homeProofRingState(row: Pick<HomeProofRow, "done" | "closed">): HomeProofRing {
+  if (row.done) return "done";
+  if (row.closed) return "closed";
+  return "pending";
+}
+
 function sectionKey(task: HomeProofTask): string {
   return task.activeChallengeId || task.challengeName;
 }

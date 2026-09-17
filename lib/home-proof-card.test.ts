@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HOME_PROOF_CTA_TODAY, homeProofCtaLabel, selectHomeProofCard } from "@/lib/home-proof-card";
+import { HOME_PROOF_CTA_TODAY, homeProofCtaLabel, homeProofRingState, selectHomeProofCard } from "@/lib/home-proof-card";
 import type { HomeProofTask } from "@/lib/home-proof-card";
 
 function task(partial: Partial<HomeProofTask> & Pick<HomeProofTask, "name" | "challengeName">): HomeProofTask {
@@ -279,5 +279,13 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[0]?.rows[5]?.caption).toBe("Self-reported");
     expect(card.sections[0]?.doneCount).toBe(2);
     expect(card.sections[0]?.totalCount).toBe(6);
+  });
+});
+
+describe("homeProofRingState", () => {
+  it("done is brand-filled, pending is a textSecondary ring, closed is a border ring", () => {
+    expect(homeProofRingState({ done: true, closed: false })).toBe("done");
+    expect(homeProofRingState({ done: false, closed: false })).toBe("pending");
+    expect(homeProofRingState({ done: false, closed: true })).toBe("closed");
   });
 });

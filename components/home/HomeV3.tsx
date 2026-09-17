@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, CheckSquare, Footprints, Hash, Medal, Pencil, Snowflake, Timer } from "lucide-react-native";
+import { Bell, Check, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -13,13 +13,12 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
-import Stamp from "@/components/ds/Stamp";
 import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
-import { HOME_PROOF_CTA_TODAY, type HomeProofCard, type HomeProofRow } from "@/lib/home-proof-card";
+import { HOME_PROOF_CTA_TODAY, homeProofRingState, type HomeProofCard, type HomeProofRow } from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
 const META = DS_V3.space.lg;
@@ -27,13 +26,21 @@ const PT = DS_V3.space.xs / 4;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
-function TypeIcon({ type, color }: { type: string; color: string }) {
-  const props = { size: ICON, color, strokeWidth: 2 };
-  if (type === "timer") return <Timer {...props} />;
-  if (type === "counter") return <Hash {...props} />;
-  if (type === "text") return <Pencil {...props} />;
-  if (type === "run") return <Footprints {...props} />;
-  return <CheckSquare {...props} />;
+function StatusRing({ row }: { row: HomeProofRow }) {
+  const state = homeProofRingState(row);
+  if (state === "done") {
+    return (
+      <View style={[styles.ring, styles.ringDone]} accessibilityLabel="Done">
+        <Check size={DS_V3.space.lg} color={DS_V3.color.onBrand} strokeWidth={2.5} />
+      </View>
+    );
+  }
+  return (
+    <View
+      style={[styles.ring, state === "closed" ? styles.ringClosed : styles.ringPending]}
+      accessibilityLabel={state === "closed" ? "Window closed" : "Pending"}
+    />
+  );
 }
 
 export function greetingTitle(p: {
@@ -134,25 +141,16 @@ export function HomeV3({
     const closed = row.closed;
     const inner = (
       <>
-        <TypeIcon
-          type={row.type}
-          color={row.done ? DS_V3.color.brandText : DS_V3.color.textSecondary}
-        />
+        <StatusRing row={row} />
         <View style={styles.taskCopy}>
           <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
           <Text style={styles.caption}>{row.caption}</Text>
         </View>
-        {row.done ? (
-          row.hasCameraProof ? <Stamp label="Complete" /> : <Check size={ICON} color={DS_V3.color.brandText} />
-        ) : null}
       </>
     );
     if (row.done || closed) {
       return (
-        <View
-          key={row.id}
-          style={[styles.proofRow, closed ? styles.proofRowClosed : null]}
-        >
+        <View key={row.id} style={styles.proofRow}>
           {inner}
         </View>
       );
@@ -349,12 +347,24 @@ const styles = StyleSheet.create({
     minHeight: DS_V3.size.tap,
     marginBottom: DS_V3.space.md,
   },
-  proofRowClosed: {
-    opacity: 0.55,
-    borderWidth: PT,
+  ring: {
+    width: ICON,
+    height: ICON,
+    borderRadius: ICON / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringDone: {
+    backgroundColor: DS_V3.color.brand,
+  },
+  ringPending: {
+    borderWidth: PT * 2,
+    borderColor: DS_V3.color.textSecondary,
+  },
+  ringClosed: {
+    borderWidth: PT * 2,
     borderColor: DS_V3.color.border,
-    borderRadius: DS_V3.radius.input,
-    paddingHorizontal: DS_V3.space.md,
+    opacity: 0.55,
   },
   taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
   taskDot: {
