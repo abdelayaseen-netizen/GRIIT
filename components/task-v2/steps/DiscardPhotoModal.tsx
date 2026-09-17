@@ -1,24 +1,25 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { styles } from "../taskFlowStyles";
+import Button from "@/components/ds/Button";
+import Sheet from "@/components/ds/Sheet";
 
 type Props = {
+  visible?: boolean;
   onDiscard: () => void;
   onKeep: () => void;
 };
 
-export function DiscardPhotoModal({ onDiscard, onKeep }: Props) {
+export function DiscardPhotoModal({ visible = true, onDiscard, onKeep }: Props) {
   return (
-    <View style={styles.modal}>
-      <View style={styles.modalCard}>
-        <Text style={styles.title}>Discard photo?</Text>
-        <Pressable onPress={onDiscard} accessibilityRole="button" accessibilityLabel="Discard" style={styles.inkBtn}>
-          <Text style={styles.inkBtnText}>Discard</Text>
-        </Pressable>
-        <Pressable onPress={onKeep} accessibilityRole="button" accessibilityLabel="Keep" style={styles.textBtn}>
-          <Text style={styles.shareText}>Keep</Text>
-        </Pressable>
-      </View>
-    </View>
+    <Sheet
+      visible={visible}
+      onDismiss={onKeep}
+      heading="Discard photo?"
+      footer={
+        <>
+          <Button label="Discard" destructive onPress={onDiscard} />
+          <Button label="Keep photo" variant="tertiary" onPress={onKeep} />
+        </>
+      }
+    />
   );
 }

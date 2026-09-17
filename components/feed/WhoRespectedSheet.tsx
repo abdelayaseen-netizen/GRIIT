@@ -1,22 +1,15 @@
 import React, { useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  Modal,
-} from "react-native";
-import { X } from "lucide-react-native";
+import { View, Text, StyleSheet, FlatList } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { Avatar } from "@/components/Avatar";
-import { DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
+import { DS_V3 } from "@/lib/design-system";
+import Sheet from "@/components/ds/Sheet";
+import MemberRow from "@/components/ds/MemberRow";
+import Spinner from "@/components/ds/Spinner";
 
 type RespectedUser = {
   userId: string;
@@ -59,152 +52,61 @@ export function WhoRespectedSheet({ visible, eventId, onClose }: Props) {
     [onClose, router, user?.id]
   );
 
-  const renderRespectedRow = useCallback(
-    ({ item }: { item: RespectedUser }) => (
-      <Pressable
-        style={styles.row}
-        onPress={() => navigateToProfile(item)}
-        accessibilityRole="button"
-        accessibilityLabel={`View profile for ${item.displayName || item.username || "member"}`}
-      >
-        <Avatar
-          url={item.avatarUrl}
-          name={item.displayName || item.username || "?"}
-          userId={item.userId}
-          size={36}
-        />
-        <View style={styles.rowText}>
-          <Text style={styles.displayName} numberOfLines={1}>
-            {item.displayName || item.username}
-          </Text>
-          {item.username ? (
-            <Text style={styles.username} numberOfLines={1}>
-              @{item.username}
-            </Text>
-          ) : null}
-        </View>
-      </Pressable>
-    ),
-    [navigateToProfile]
-  );
+  const rows = query.data ?? [];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss"
-        />
-        <View style={styles.sheet}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Respects</Text>
-            <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
-              <X size={20} color={DS_COLORS.TEXT_SECONDARY} />
-            </Pressable>
-          </View>
-
-          {query.isPending ? (
-            <View style={styles.center}>
-              <ActivityIndicator color={DS_COLORS.ACCENT} />
-            </View>
-          ) : query.isError ? (
-            <View style={styles.center}>
-              <Text style={styles.errorText}>{"Couldn't load respects"}</Text>
-            </View>
-          ) : (query.data ?? []).length === 0 ? (
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>No respects yet</Text>
-            </View>
-          ) : (
-            <FlatList
-              style={styles.list}
-              data={query.data}
-              keyExtractor={(item) => item.userId}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              removeClippedSubviews
-              renderItem={renderRespectedRow}
-              contentContainerStyle={styles.listContent}
+    <Sheet visible={visible} onDismiss={onClose} heading="Respects">
+      {query.isPending ? (
+        <View style={styles.center}>
+          <Spinner size={44} />
+        </View>
+      ) : query.isError ? (
+        <View style={styles.center}>
+          <Text style={styles.meta}>{"Couldn't load respects"}</Text>
+        </View>
+      ) : rows.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.meta}>No respects yet</Text>
+        </View>
+      ) : (
+        <FlatList
+          style={styles.list}
+          data={rows}
+          keyExtractor={(item) => item.userId}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews
+          renderItem={({ item }) => (
+            <MemberRow
+              displayName={item.displayName || item.username}
+              caption={item.username ? `@${item.username}` : undefined}
+              avatarUri={item.avatarUrl}
+              avatarName={item.displayName || item.username}
+              onPress={() => navigateToProfile(item)}
             />
           )}
-        </View>
-      </View>
-    </Modal>
+        />
+      )}
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: DS_COLORS.OVERLAY_BLACK_40,
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: DS_COLORS.BG_CARD,
-    borderTopLeftRadius: DS_RADIUS.card * 1.5,
-    borderTopRightRadius: DS_RADIUS.card * 1.5,
-    maxHeight: "60%",
-    minHeight: 200,
-    paddingBottom: 34,
-  },
   list: {
     flexGrow: 0,
-    maxHeight: 360,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DS_COLORS.BORDER,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+    maxHeight: DS_V3.space.xs * 90,
+    marginHorizontal: -DS_V3.space.gutter,
   },
   center: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 40,
+    paddingVertical: DS_V3.space.section,
   },
-  errorText: {
-    fontSize: 14,
-    color: DS_COLORS.TEXT_SECONDARY,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: DS_COLORS.TEXT_MUTED,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
-  },
-  rowText: {
-    flex: 1,
-    minWidth: 0,
-  },
-  displayName: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: DS_COLORS.TEXT_PRIMARY,
-  },
-  username: {
-    fontSize: 12,
-    color: DS_COLORS.TEXT_MUTED,
-    marginTop: 1,
+  meta: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
 });

@@ -215,7 +215,11 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.discardAsk ? <DiscardPhotoModal onDiscard={f.onDiscardPhoto} onKeep={f.onKeepPhoto} /> : null}
+      <DiscardPhotoModal
+        visible={f.discardAsk}
+        onDiscard={f.onDiscardPhoto}
+        onKeep={f.onKeepPhoto}
+      />
     </View>
   );
 }
