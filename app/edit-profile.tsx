@@ -25,7 +25,7 @@ import { pickAvatar } from "@/lib/pick-avatar";
 import { normalizeProfileUsername, usernameFieldState, usernameSaveBlocked } from "@/lib/profile-v2-username";
 import { PROFILE_USERNAME_MAX } from "@/lib/profile-update-schema";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
-import { Avatar } from "@/components/shared/Avatar";
+import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -189,10 +189,9 @@ export default function EditProfileScreen() {
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <View style={styles.avatarBlock}>
               <Avatar
-                url={avatarUrl}
-                name={displayName || originalUsername}
+                uri={avatarUrl}
+                displayName={displayName || originalUsername}
                 size={96}
-                userId={user?.id}
               />
               <Pressable onPress={() => void handlePhoto()} accessibilityRole="button" style={styles.photoBtn}>
                 <Text style={styles.photoBtnTxt}>Change photo</Text>
