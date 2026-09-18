@@ -13,11 +13,13 @@ import {
   freezeNoneShowsSeePro,
   freezeOfferBody,
   freezeRefillDateLabel,
+  freezeCloseAcksDateKey,
   freezeRefuseAcksDateKey,
   freezeSheetNetwork,
   freezeSheetVariant,
   freezeUseCallsMutation,
 } from "./freeze-sheet";
+import { morningAfterVisible } from "./morning-after";
 
 describe("freeze sheet", () => {
   it("success path invalidates bootstrap, getStats, getFreezeStatus, and getRecord", () => {
@@ -53,11 +55,27 @@ describe("freeze sheet", () => {
     expect(home).toContain("setFreezeError(inlineServerError(err))");
     expect(freezeUseCallsMutation()).toBe(true);
     expect(freezeRefuseAcksDateKey()).toBe(true);
+    expect(freezeCloseAcksDateKey()).toBe(false);
+    const freezeUi = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
+    expect(freezeUi).not.toContain("onDismiss={onRefuse}");
+    expect(freezeUi).toContain("onDismiss={onClose}");
+    expect(freezeUi).toContain(`<Button label={NO_LET_IT_RESET} variant="tertiary" onPress={onRefuse} />`);
+    const closeIdx = home.indexOf("onClose={() => {");
+    const refuseIdx = home.indexOf("onRefuse={() => {");
+    expect(closeIdx).toBeGreaterThan(-1);
+    expect(refuseIdx).toBeGreaterThan(-1);
+    const closeBlock = home.slice(closeIdx, closeIdx + 180);
+    const refuseBlock = home.slice(refuseIdx, refuseIdx + 280);
+    expect(closeBlock).not.toContain("missAckPayload");
+    expect(closeBlock).not.toContain("AsyncStorage.setItem");
+    expect(refuseBlock).toContain("missAckPayload");
+    expect(refuseBlock).toContain("AsyncStorage.setItem");
     const sheet = readFileSync(resolve(__dirname, "../components/ds/Sheet.tsx"), "utf8");
     expect(sheet).toContain("zIndex: 1");
     expect(sheet).toContain("pointerEvents=\"box-none\"");
-    const freezeUi = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
     expect(freezeUi).toContain("error ? <Text style={styles.error}>{error}</Text>");
+    expect(morningAfterVisible("freeze", null, "2026-09-17")).toBe(true);
+    expect(morningAfterVisible("freeze", "2026-09-17", "2026-09-17")).toBe(false);
   });
 
   it("matches the frame 54 table", () => {

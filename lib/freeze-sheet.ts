@@ -77,6 +77,11 @@ export function freezeRefuseAcksDateKey(): boolean {
   return true;
 }
 
+/** Scrim / hardware back close the sheet only. They must not ack. */
+export function freezeCloseAcksDateKey(): boolean {
+  return false;
+}
+
 export function freezeUseCallsMutation(): boolean {
   return true;
 }

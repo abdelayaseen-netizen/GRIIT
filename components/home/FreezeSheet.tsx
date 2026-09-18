@@ -69,7 +69,7 @@ export function FreezeSheet({
   return (
     <Sheet
       visible={visible}
-      onDismiss={onRefuse}
+      onDismiss={onClose}
       heading={USE_A_FREEZE_FOR_YESTERDAY_Q}
       footer={
         <>
