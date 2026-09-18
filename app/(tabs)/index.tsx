@@ -49,6 +49,7 @@ import {
   morningAfterCost,
   morningAfterCushion,
   morningAfterFreezeCaption,
+  morningAfterKeepsLostStreak,
   morningAfterVariant,
   morningAfterVisible,
 } from "@/lib/morning-after";
@@ -118,12 +119,19 @@ export default function HomeScreen() {
     initFeedToggle(followCounts?.following ?? 0);
   }, [followCounts?.following, initFeedToggle]);
 
+  const homeTimeZone = resolveHomeTimeZone(
+    (profile as { timezone?: string | null } | null)?.timezone,
+    getDeviceIanaTimeZone(),
+  );
+  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
     ready: bootstrap.isSuccess,
     userId: user?.id,
     stats: bootstrap.data?.stats ?? stats ?? null,
     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
+    yesterdayKey,
   });
 
   React.useEffect(() => {
@@ -219,31 +227,31 @@ export default function HomeScreen() {
   });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
 
-  const homeTimeZone = resolveHomeTimeZone(
-    (profile as { timezone?: string | null } | null)?.timezone,
-    getDeviceIanaTimeZone(),
-  );
-
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
     [securedDateKeys, homeTimeZone]
   );
 
-  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
   const morningAfter = useMemo(() => {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
+    const lostStreak = recon.result.lostStreak;
     const variant = morningAfterVariant({
       lastStandUsed: Boolean(
         recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
       ),
       reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
       freezeRemaining: freezeStatus?.remaining ?? 0,
-      lostStreak: recon.result.lostStreak,
+      lostStreak,
     });
-    if (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null) {
+    const keepLost = morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey);
+    if (
+      !keepLost &&
+      (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null)
+    ) {
       return null;
     }
+    if (variant == null) return null;
     return {
       cost: morningAfterCost(
         recon.result.done ?? 0,

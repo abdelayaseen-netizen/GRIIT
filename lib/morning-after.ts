@@ -20,8 +20,18 @@ export function morningAfterVariant(input: MorningAfterInput): MorningAfterVaria
   if (typeof input.lostStreak === "number" && input.lostStreak > 0 && input.freezeRemaining > 0) {
     return "freeze";
   }
+  if (typeof input.lostStreak === "number" && input.lostStreak > 0) return "reset";
   if (input.reset) return "reset";
   return null;
+}
+
+/** Show while lostStreak > 0 and the date key is not acknowledged, regardless of today. */
+export function morningAfterKeepsLostStreak(
+  lostStreak: number | undefined,
+  ackedDateKey: string | null | undefined,
+  dateKey: string,
+): boolean {
+  return typeof lostStreak === "number" && lostStreak > 0 && !isMissAcked(ackedDateKey, dateKey);
 }
 
 export function isMissAcked(ackedDateKey: string | null | undefined, dateKey: string): boolean {

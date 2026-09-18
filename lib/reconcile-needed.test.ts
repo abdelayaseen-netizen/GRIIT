@@ -74,6 +74,20 @@ describe("reconcileStreakNeeded", () => {
     ).toBe(true);
   });
 
+  it("yesterday missed still reconciles after today is secured", () => {
+    expect(
+      reconcileStreakNeeded({
+        ready: true,
+        stats: {
+          lastCompletedDateKey: "2026-09-17",
+          effectiveMissedDays: 0,
+        },
+        securedDateKeys: ["2026-09-15", "2026-09-17"],
+        yesterdayKey: "2026-09-16",
+      }),
+    ).toBe(true);
+  });
+
   it("Last Stand receipt still reconciles so yesterday's tally is on the return", () => {
     expect(
       reconcileStreakNeeded({
