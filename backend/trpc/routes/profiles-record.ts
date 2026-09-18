@@ -91,8 +91,13 @@ function emptyRecord(): ProfileRecord {
       byChallenge: [],
       cameraDays: 0,
       selfReportedDays: 0,
-    },
+      lastStandDays: 0,
+    } as ProfileRecord["detail"],
   };
+}
+
+export function lastStandDaysAllTime(uses: readonly { date_key: string }[]): number {
+  return uses.length;
 }
 
 export const profilesRecordProcedures = {
@@ -395,12 +400,15 @@ export const profilesRecordProcedures = {
         proofs: gate.activity ? proofs : [],
         consistency: gate.activity ? { ...record.consistency } : EMPTY_CONSISTENCY,
         detail: gate.activity
-          ? {
+          ? ({
               ...record.detail,
               cameraDays: split.cameraDays,
               selfReportedDays: split.selfReportedDays,
+              lastStandDays: lastStandDaysAllTime(
+                (standRes.data ?? []) as { date_key: string }[],
+              ),
               byChallenge,
-            }
+            } as ProfileRecord["detail"])
           : emptyRecord().detail,
         runs: gate.challenges ? record.runs : [],
         completed: gate.challenges ? record.completed : [],
