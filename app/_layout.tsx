@@ -407,5 +407,5 @@ const layoutStyles = StyleSheet.create({
 });
 
 function ThemeAwareStatusBar() {
-  return <StatusBar barStyle="dark-content" backgroundColor="transparent" />;
+  return <StatusBar barStyle="light-content" backgroundColor="transparent" />;
 }

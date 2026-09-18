@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -162,6 +163,7 @@ export default function EditProfileScreen() {
 
   return (
     <ErrorBoundary>
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.nav}>
           <Pressable onPress={requestClose} accessibilityRole="button" accessibilityLabel="Cancel" style={styles.navBtn}>
