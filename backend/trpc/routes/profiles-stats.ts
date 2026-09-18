@@ -16,6 +16,7 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { logger } from "../../lib/logger";
 import { reconcileMissForUser } from "../../lib/miss-reconcile";
 import { loadDayTaskTally } from "../../lib/record-days";
+import { restoreStreakCount } from "./streaks";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -33,11 +34,42 @@ export const profilesStatsProcedures = {
     try {
       const result = await reconcileMissForUser(ctx.supabase, ctx.userId);
       const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
       const yesterdayKey = getYesterdayDateKey(tz);
-      const tally = await loadDayTaskTally(ctx.supabase, ctx.userId, yesterdayKey, tz);
+      const [tally, securesRes, standRes, freezeRes, streakAfter] = await Promise.all([
+        loadDayTaskTally(ctx.supabase, ctx.userId, yesterdayKey, tz),
+        ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(400),
+        ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
+        ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
+        ctx.supabase
+          .from("streaks")
+          .select("active_streak_count, last_completed_date_key")
+          .eq("user_id", ctx.userId)
+          .maybeSingle(),
+      ]);
+      const securedDateKeys = (securesRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      const lastStandDateKeys = (standRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      const frozenDateKeys = (freezeRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      const yesterdayMissed = !securedDateKeys.includes(yesterdayKey);
+      const yesterdayCovered =
+        lastStandDateKeys.includes(yesterdayKey) || frozenDateKeys.includes(yesterdayKey);
+      const lostStreak =
+        yesterdayMissed && !yesterdayCovered
+          ? restoreStreakCount({
+              todayKey,
+              lastCompletedDateKey:
+                (streakAfter.data as { last_completed_date_key?: string | null } | null)
+                  ?.last_completed_date_key ?? result.lastCompletedDateKey,
+              securedDateKeys,
+              lastStandDateKeys,
+              // Same prospective yesterday bridge as useFreeze (streaks.ts:178-181).
+              frozenDateKeys: [...frozenDateKeys, yesterdayKey],
+            })
+          : undefined;
       return {
         streak_broken: result.streak_broken,
         previous_streak: result.previous_streak,
+        ...(lostStreak !== undefined ? { lostStreak } : {}),
         lastStandUsedThisSession: result.lastStandUsedThisSession,
         lastStandsAvailable: result.lastStandsAvailable,
         missedTaskNames: tally.missedTaskNames,
