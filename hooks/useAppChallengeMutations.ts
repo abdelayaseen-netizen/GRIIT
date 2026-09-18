@@ -327,7 +327,14 @@ export function useAppChallengeMutations({
         const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
         const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount).catch((err: unknown) => {
+        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount, {
+          remaining: 0,
+          total: 0,
+          challenge:
+            result.challengeName ??
+            (activeChallenge as { challenges?: { title?: string } } | null)?.challenges?.title ??
+            "GRIIT",
+        }).catch((err: unknown) => {
           captureError(err, "scheduleNextSecureReminder");
         });
         await cancelLapsedUserReminders();

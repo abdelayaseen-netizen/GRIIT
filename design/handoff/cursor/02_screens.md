@@ -2029,7 +2029,7 @@ action).
 **Chunk** N. Frames 42 to 46, in `GRIIT Task Model.dc.html`. No new tokens.
 
 Grounded against `abdelayaseen-netizen/GRIIT@main`, tree `9a065f7838c6`. Read:
-`components/create/v2/StepTasks.tsx`, `components/create/NewTaskSheet.tsx` (listing),
+`components/create/v2/StepTasks.tsx`, `components/create/NewTaskSheet.tsx`,
 `components/task-v2/steps/DiscardPhotoModal.tsx`, `components/feed/WhoRespectedSheet.tsx`,
 `lib/group-ui.ts`, plus a repo-wide search for `task_type` / `require_photo` / `TaskType`.
 
@@ -2070,9 +2070,32 @@ screen call it. The frames show: "Self-reported" · "Between 9:30 and 10:30 am" 
 
 ## 42. Add task sheet — `components/create/AddTaskSheet`
 
-**Order is the design**: task name, then *what you do*, then *what proves it*. The old sheet mixed a
-"photo" type into the type list and a "require photo proof" switch into the same screen, which let a user
-build a photo task with photo proof switched off.
+**Order is the design**: task name, then *what you do*, then *what proves it*.
+
+The shipped sheet, `components/create/NewTaskSheet.tsx`, asks one question twice. Its section is headed
+"Proof type" and holds ten `PROOF_TYPES` chips — one of which is `photo`, "A photo taken in the app
+completes the day" — and then a **separate** "Verified proof" switch below the config, described as
+"Requires a photo taken in the app to complete this task each day." Two controls, one meaning.
+
+Three consequences, all in that file:
+
+1. **The switch lies on a Photo task.** `requirePhoto: state.type === "photo" || state.verified`
+   (line ~215) means a Photo task always requires a photo, while the switch beside it sits visibly off.
+   The user is shown a control that does not control anything.
+2. **`checkin` is a type whose whole content is a gate.** Its description is "The day counts when you
+   are at the saved place", and its config collects location name and radius. Under the model it is
+   `check_off` plus the Location gate — which is exactly why the sheet's own `handleSave` has to
+   special-case it with "Location is required" / "Radius is required" validation.
+3. **`verifiedLocked` encodes a rule the model makes unnecessary.** Verified and manual Run tracking are
+   mutually exclusive, with the hint "Manual runs can't be verified." Once camera is a gate and Run's
+   tracking mode is type config, the two stop interacting and both the lock and the hint go.
+
+Also in that file and worth carrying over rather than re-deciding: it already renders RN `Switch` with
+`trackColor={{ false: color.border, true: color.brand }}` and `thumbColor={color.textPrimary}` — so
+`ds/Switch` is an extraction of behaviour already written, not a new decision. Two things should *not*
+carry over: the word "Verified" as a user-facing control label (the gate is "Camera"), and the
+`nameCard` / `configInput` treatment, which puts `color.canvas` fields inside a `color.surface`
+sheet — inverted from every other field in the system.
 
 **Reuse** `ds/TextField` for the name · `ds/Chip` for the five types (`variant="form"`, which is
 what that variant is for) · `ds/SegmentedControl` for By / Between · `ds/ListRow` for Set place ·
@@ -2147,9 +2170,13 @@ Two changes to that spec.
 `gateLabel` sketch. Same order, same "Self-reported".
 
 **Window closed** a pending row whose time window has passed reads
-"Window closed · 6:00–9:00 am" in `type.caption`, goes inert (no chevron, no `onPress`), and the whole
-row drops to 0.55 opacity with a `color.border` status ring instead of the `textSecondary` one. It is
-not done and it is not pending: it is over. The day cannot be secured, and the row says why without an
+"Window closed · 6:00–9:00 am" in `type.caption`, goes inert (no chevron, no `onPress`), and takes a
+`color.border` status ring instead of the `textSecondary` one. It is not done and it is not pending:
+it is over.
+
+**Do not dim the row.** `textSecondary` on `surface` is 6.59:1; the same colours under an
+`opacity: 0.55` wrapper measure 2.89:1 and fail the 4.5:1 floor at body scale. The missing ring colour
+and the missing chevron carry "inert" on their own — alpha-muting body type is never the way to say it. The day cannot be secured, and the row says why without an
 alert.
 
 **The CTA is conditional.** With more than one task there is no single next action, so the card has no
@@ -2198,11 +2225,16 @@ product rests on that.
 `color.danger` is the destructive fill — the only place in the system a button is not
 `color.primary`. `Button` already has a `destructive` flag; use it rather than passing a colour.
 
+**The label is `color.canvas`, not `color.textPrimary`.** `#F5F3EE` on `color.danger` measures
+3.36:1 and fails; `#0F0F0F` on the same fill is 5.14:1. The primary's light-on-brand pairing does not
+carry over — `#F5F3EE` on `#BB471D` is 4.7:1 and passes, which is why the difference is easy to miss.
+If `Button`'s `destructive` branch inherits the primary label colour, that is a bug in the component.
+
 | string | style |
 |---|---|
 | Discard challenge? | heading |
 | You'll lose what you've entered so far. | secondary textSecondary |
-| Discard | Button primary destructive, color.danger |
+| Discard | Button primary destructive, `color.danger` fill with a **`color.canvas` label** |
 | Keep editing | Button tertiary |
 
 `DiscardPhotoModal` should move to the same component and inherit this shape: same sheet, heading
@@ -2285,3 +2317,647 @@ semibold in `WhoRespectedSheet`), 6 (one filled button per sheet or screen, and 
 has none), 9 and 22 (gate reveals are indented rows inside the sheet, not cards), 18 (the camera gate is
 the only thing that can produce a Stamp, and "Verified" appears nowhere in chunk N), 23 (a
 window-closed row loses its chevron and its handler together).
+
+# Closing the task-completion loop
+
+**Chunk** O. Frames 47 to 51, in `GRIIT Completion Loop.dc.html`. No new tokens, **no new components**.
+
+Grounded against `abdelayaseen-netizen/GRIIT@main`, tree `f9a5ec94160a`. Read:
+`components/task-v2/steps/{CountStep, TimerEntryStep, RunningStep, SessionStep, ChallengeDoneStep}.tsx`,
+`components/ds/CommentRow.tsx`, `components/feed/{FeedPostV3, FeedEngagementRow, WhoRespectedSheet}.tsx`,
+plus repo-wide searches for `timer_hard_mode` / `AppState` and for `MapView`.
+
+**Two things the repo settled before this chunk starts**
+
+1. **`ds/Sheet` shipped.** `WhoRespectedSheet` now renders
+   `<Sheet visible onDismiss heading="Respects">` — chunk N's proposal was built and the legacy
+   `DS_COLORS` import is gone from it. The comments sheet in frame 51 uses that component as-is.
+2. **`ds/CommentRow` shipped**, exactly as specified in chunk M: `Avatar size={COMMENT_AVATAR_SIZE}`,
+   name and time on one baseline, `type.body` below. Frame 51 uses it unchanged.
+
+**The timer honesty line was wrong in the brief, and the repo says so.** `RunningStep.tsx` reads
+"Runs on the clock. Lock your phone, put it down — we'll tell you when it's done", and
+`TimerEntryStep.tsx` agrees: "Runs on the clock — lock your phone if you want". The timer is
+wall-clock, computed from `startedAtIso` plus `requiredSeconds`, with a notification at the end.
+So **"Leaving the app pauses it" must not ship** — it is false. The line on frame 49 is
+"Runs on the clock. Lock the phone if you want." and, in the running state, "Leaving the app does not
+stop it."
+
+`timer_hard_mode` is **not** an app-backgrounding rule. It is a column read in
+`backend/lib/challenge-tasks.ts:125` and `backend/trpc/routes/checkins.ts:89`, defaulting from
+`strict_timer_mode`, and `challenges.ts:42` `taskStrictAndPhoto()` hardcodes `strict_timer_mode:
+false` for every input — the tests at `challenges-create.test.ts:33-36` assert exactly that. **Nothing
+sets it true.** Until a code path does, no screen may describe strict timer behaviour, because there is
+none.
+
+**There is no map.** A search for `MapView` across `components/` returns nothing, and no map library
+appears in the paths read. Both the Run step and the place screen therefore show numbers and say so, in
+one `type.secondary` line, rather than a grey rectangle standing in for a map.
+
+---
+
+## 47. Home, a multi-challenge day — amends frame 44
+
+**One card, one section per challenge, `Divider` between.** Not one card per challenge.
+
+The justification against laws 21 and 22: law 22 forbids a card inside a card, and three sibling cards
+reach the same crowding by another route — three headers, three chips, three borders, stacked under the
+streak block that already sits above them. The card **is** the day. The challenge is a section inside
+it, which is what a `type.label`-scale header and a `Divider` are for. Law 21 keeps rows on the
+canvas of their container; sections do not change that.
+
+**Section head** challenge title `type.bodyStrong`, "Day {n} of {N}" `type.caption`, and that
+challenge's own done/total chip right-aligned. The card keeps its own total chip in the header, so the
+day and each challenge are both countable without arithmetic.
+
+**One leading slot, three states.** A status ring, 20×20, `radius.pill`:
+
+| state | ring | title | trailing | tappable |
+|---|---|---|---|---|
+| done | `color.brand` fill + `check` 12 in `color.canvas` | textSecondary | nothing | no |
+| pending | 1.5pt `color.textSecondary` ring, no fill | textPrimary | `chevron-right` 20 | yes |
+| window closed | 1.5pt `color.border` ring, no fill | textSecondary | nothing | no |
+
+**No type icon in the row and no COMPLETE chip.** The type is already the title; a second glyph competes
+with the only column that carries state. The chip duplicated the ring it sat beside.
+
+**Do not dim the closed row** — the border ring and the missing chevron carry inert on their own. Same
+finding as chunk N: `textSecondary` on `surface` is 6.59:1, and an `opacity: 0.55` wrapper drops it
+to 2.89:1.
+
+| string | style |
+|---|---|
+| Today | heading |
+| {done} / {total} | caption medium brandText on brandTint |
+| {challenge_title} | bodyStrong |
+| Day {n} of {N} | caption textSecondary |
+| Window closed · {from}–{to} | caption textSecondary |
+
+---
+
+## 48. Task done, day still open — the missing state
+
+**This replaces both ad-hoc screens.** Build 57 showed a giant "2" with "3 tasks left." after one task
+of six, and `ChallengeDoneScreen` ("{challenge} done. {n} challenge left today.") after another.
+Neither is the Secured screen, because the day was not secured.
+
+**No streak number on this screen, at any size, in any face.** The streak has not changed: one task of
+six moves nothing. Showing "2" there is precisely the claim this product exists to refuse, and it is why
+the ad-hoc screen was worse than no screen.
+
+**Tree** no `PushedHeader` (there is nothing to go back to mid-flow — the footer owns both exits), a
+44pt spacer, then:
+1. `type.title` "{task} done."
+2. `type.secondary` "{n} left to secure today." — counts every remaining required task across every
+   active challenge, because that is what securing the day needs
+3. `type.label` "{challenge} · Day {n} of {N}"
+4. the same challenge's remaining tasks as status-ring rows; pending ones tap into their flow
+5. `Divider`, then `type.label` "Also today" and one collapsed row per other challenge with
+   remaining work: `circle-dashed` 20, "{challenge} · {n} left", chevron
+6. footer: `Button variant="primary"` "Next task" (opens the first pending row, in the same challenge
+   first) and `Button variant="tertiary"` "Done"
+
+Sections 5 and its label do not render when nothing else is open.
+
+**The two screens are never both shown.** Completing the **last** required task of the day does not land
+here: it goes straight to the Secured screen (chunk K frame 4), which is the one screen that shows the
+streak, because at that moment the streak has actually moved. The flow router must branch on the
+server's `secured_today` after the check-in resolves — not on a client count of rows. If the server
+says the day is not secured, this screen shows even when every row looks done; that is the same rule as
+the Active challenge spec.
+
+| string | style |
+|---|---|
+| {task} done. | title |
+| {n} left to secure today. | secondary textSecondary |
+| {challenge} · Day {n} of {N} | label textSecondary |
+| Also today | label textSecondary |
+| {challenge} · {n} left | bodyStrong |
+| Next task | Button primary |
+| Done | Button tertiary |
+
+**Retire** `ChallengeDoneScreen` and `ChallengeDoneStep`. Its "{n} challenge left today" framing
+counted challenges when the unit that secures a day is tasks, and its "Next challenge" button routed
+into a specific enrollment — the decision the Home list now makes.
+
+---
+
+## 49. Counter, Timer and Run steps
+
+All three on one chrome: `PushedHeader`, `type.title` task name, one `type.caption` honesty line,
+a pinned `Button variant="primary"`, and the standing caption "Nothing is secured until the server says
+so."
+
+**The header names the gate when there is one, the type when there is not** — "Day 12 · Camera" over
+"Day 12 · Timer". What the user has to satisfy outranks what they are doing.
+
+**No display face on any of the three.** A count you typed, a timer counting down and a distance in
+progress are work in flight. The numbers are large in the body face: 44/48 for the counter and the run
+figures, 76pt for the timer, all `fontVariantNumeric: tabular-nums` so they do not jitter.
+
+### Counter
+Count as "{n} of {target} {unit}" — the number 44pt `color.textPrimary`, the rest `type.heading`
+`color.textSecondary`. Then a 132pt `color.primary` circle "Add one" (the existing
+`CountStep` press-and-hold-to-type gesture carries over, but it must not be the only route), and
+"Remove one" / "Type it" as flush tertiary buttons.
+
+CTA "Log {n} of {target}", disabled, becoming "Post" at target. The shipped label is
+"{count} of {goal} logged", which reads as a receipt for something already recorded; "Log …" names the
+action that has not happened yet.
+
+Honesty line: "Self-entered count. Nothing is checked." — the shipped string is
+"Self-entered count · nothing is checked.", and the only change is sentence case and a full stop, to
+match every other honesty line in the system.
+
+### Timer
+Before start: `type.label` "Timer", the duration at 76pt, `type.secondary` "It has to reach zero.",
+CTA "Start {mm:ss}". Running: the label becomes "Ends {clock}", the figure counts down,
+`type.secondary` reads "Leaving the app does not stop it.", and "Pause" / "Reset" are flush tertiaries.
+CTA is a disabled "Post" with the caption "Post opens when the timer reaches zero."
+
+Keep the existing "Sound when it ends" switch from `TimerEntryStep` — with `ds/Switch` now, not RN's.
+
+### Run
+Distance and elapsed side by side, split by a 1pt `color.border` rule; distance carries
+"of {target} {unit}" and elapsed carries pace. A `Card` states GPS status and, in one
+`type.secondary` line, that there is no map. CTA "Start", then "Post" once the target distance is met,
+with "Stop" as a flush tertiary while running.
+
+### The Camera gate comes last
+With Camera on a Counter, Timer or Run task, the capture step follows the work and never precedes it:
+the count, the timer or the run resolves first, the step shows a `check` 20 `color.brandText` with
+"{duration} done", and then the 4:5 capture frame. Otherwise the app can be handed a photo for a timer
+that never ran, which is a gate in name only.
+
+| string | style |
+|---|---|
+| Day {n} · {Counter\|Timer\|Run} | PushedHeader title, no gate |
+| Day {n} · Camera | PushedHeader title, gate present |
+| Self-entered count. Nothing is checked. | caption textSecondary |
+| Runs on the clock. Lock the phone if you want. | caption textSecondary |
+| It has to reach zero. | secondary textSecondary |
+| Ends {clock} | label textSecondary |
+| Leaving the app does not stop it. | secondary textSecondary |
+| Distance and time come from GPS. | caption textSecondary |
+| Waiting for GPS / GPS locked | bodyStrong |
+| There is no map in the design system, so the run shows numbers only. | secondary textSecondary |
+| Add one | secondary medium, on the primary circle |
+| Remove one | Button tertiary flush |
+| Type it | Button tertiary flush, brandText |
+| Log {n} of {target} | Button primary, disabled |
+| Post | Button primary |
+| Post opens when the timer reaches zero. | caption textSecondary |
+| The photo comes after the timer | caption textSecondary |
+| {duration} done | secondary textSecondary with check 20 brandText |
+
+---
+
+## 50. Add task sheet, second pass
+
+Frame 42's order and copy stand. Three additions and one retirement.
+
+**The sheet is taller than the phone.** At 393×852 the content runs about 830pt against a 664pt clip
+(852 − 44 status − 44 header − 100 footer), so it scrolls. Frame 50 shows it at two positions: A at
+scroll-top with the starters, the name field and the type grid, B scrolled to the live preview and the
+three gate rows. Do not read that as two screens.
+
+**(a) Live preview row**, at the head of "What proves it": the exact `ListRow` the task will produce,
+with its status ring, title and gate line, on `color.canvas` inside the `color.surface` sheet so it
+reads as a specimen rather than a control. It updates as the switches move. **It retires the "No gates"
+caption** from frame 42 — with all three off the preview renders "Self-reported", which shows the
+outcome instead of describing it.
+
+**(b) Type chips in a 3 × 2 grid.** Five chips in a wrapping row leaves "Run" alone on line two. A grid
+of equal columns gives every type the same weight; the sixth cell stays empty rather than stretching
+four chips to fill it. A horizontal scroller was the alternative and is worse here: five is few enough to
+show at once, and hiding two behind a scroll edge makes the set feel longer than it is.
+
+**(c) "Common tasks"**, above "What you do": a horizontal chip row — Pray, Run, Read, Water, Journal,
+Workout — that prefills name, type and gates in one tap. Everything stays editable afterwards; the chip
+does not lock or highlight persistently, because it is a shortcut and not a category. This is where
+`water` and `reading` go once they stop being task types (chunk N contradiction 1): a starter that
+prefills `counter` with a unit.
+
+**(d) Time reveal and Set place.** The By/Between segmented control and its pickers are as frame 42.
+"Set place" opens a pushed screen: a search field, a "Use my current location" row showing the live
+accuracy, recent places, then radius chips 100 m / 250 m / 1 km, and one caption saying bigger is easier
+to pass. Save is disabled until a place is chosen. **No map** — see above — so the radius is a number,
+stated, not a circle nobody can see.
+
+| string | style |
+|---|---|
+| Common tasks | label textSecondary |
+| Pray · Run · Read · Water · Journal · Workout | Chip variant form |
+| Set place | PushedHeader title |
+| Search an address | TextField placeholder |
+| Use my current location | bodyStrong, locate-fixed 24 brandText |
+| Accurate to about {n} m right now | caption textSecondary |
+| How close you have to be | label textSecondary |
+| 100 m · 250 m · 1 km | Chip variant form |
+| Bigger radius, easier to pass. There is no map in the design system, so the radius is a number, not a circle on a map. | caption textSecondary |
+| Save place | Button primary, disabled until a place is set |
+
+---
+
+## 51. Comments inline, and the respect state
+
+**Comments open in `ds/Sheet`, not a route.** `onCommentPress` presents the sheet over the feed:
+heading "Comments", the `CommentRow` list, and the composer pinned above the keyboard — the same
+composer and the same copy table as frame 39. The post stays behind the 60% scrim and the feed's scroll
+position survives, which pushing `/post/[id]` destroys. The route **stays** for deep links and
+notification taps; it is the same list in a screen instead of a sheet.
+
+Inside the sheet the composer field is `color.canvas` on the `color.surface` sheet — inverted from
+the route version, where the field is surface on canvas. Same 1pt border either way; the field stays one
+step from its ground.
+
+**The heart.** `components/feed/FeedPostV3.tsx:132` renders
+`<Heart size={ICON} color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary} />` — **no
+`fill`**. It recolours an outline, which is why respect never reads as landing. The fix is the pattern
+already written in `FeedEngagementRow.tsx`: pass `fill` with the colour.
+
+| state | icon | count |
+|---|---|---|
+| not respected | `Heart` outline, `color.textSecondary`, no fill | `type.secondary` medium textSecondary |
+| respected | `Heart` `color.brand` with `fill={color.brand}` | `type.secondary` medium brandText |
+
+Two more things in that file to reconcile, not to redesign: the un-respected outline should be
+`textSecondary` (it is `textPrimary` today, which makes an untouched heart the brightest thing in the
+row), and `FeedEngagementRow`'s spring bounce is the one animation here — law 19 allows it, one
+gesture, one spring.
+
+---
+
+## Contradictions in the repo, for the migration plan
+
+Numbered from chunk N's list, which ended at 9.
+
+**10. `ChallengeDoneScreen` counts the wrong unit.** `ChallengeDoneStep.tsx` passes
+`remainingChallenges` and the screen renders "{challenge} done. {n} challenge left today." A day is
+secured by finishing **tasks**, across every challenge; challenges remaining is not a number that
+appears in that rule. Replace with frame 48, which counts remaining required tasks.
+
+**11. There is no "task done, day open" state in the flow at all.** The steps directory holds
+`ConfirmationStep`, `ReviewStep`, `VerifyingStep`, `FailedStep`, `WindowClosedStep` and
+`ChallengeDoneStep` — and nothing between "this task is recorded" and "the day is secured". That gap
+is why two screens grew into it. Frame 48 is the state; the router branches on the server's
+`secured_today`.
+
+**12. `SessionStep` uses the forbidden word, and misstates what is checked.**
+"Stopping fills the duration field for you — the photo is still what gets verified." Two problems:
+"verified" is reserved for a camera-proof stamp and never appears in flow copy, and a photo is not
+*verified* by anything — it is *required*. Rewrite as "Stopping fills in the duration. The photo is
+still required."
+
+**13. `CountStep` special-cases a task type that the model deletes.**
+`taskType === "reading" ? <Attach a page photo> : null` — under the one-type/three-gate model,
+`reading` is `counter` with unit "pages", and an optional page photo is either the Camera gate (then
+it is not optional) or nothing. Remove the branch; the starter chip in frame 50 covers the intent.
+
+**14. `CountStep`'s CTA claims the log already happened.** "{count} of {goal} logged" is the label on
+a **disabled submit button** — nothing has been logged. "Log {n} of {target}" names the pending action.
+
+**15. Press-and-hold is the only discoverable route to typing a count.**
+`CountStep` has a visible "Type the number" tertiary *and* a 450ms hold on "Add one", explained by a
+`styles.tiny` line. Keep the visible button, keep the hold as an accelerator, and drop the instruction
+line — a gesture that needs a caption is not carrying its weight.
+
+**16. `strict_timer_mode` is dead in the write path but live in the read path.**
+`challenges.ts:42` `taskStrictAndPhoto()` returns `strict_timer_mode: false` unconditionally
+(asserted by `challenges-create.test.ts:33-36`), while `challenge-tasks.ts:125` and
+`checkins.ts:89` still read `timer_hard_mode` / `strict_timer_mode` and hand them to the client.
+A flag no writer sets and three readers respect is a trap. Either implement it with a stated rule and
+copy, or delete both columns with the chunk N migration.
+
+**17. `FeedPostV3` heart has no `fill`** — `FeedPostV3.tsx:132`. See above. Note that
+`FeedPostCard`/`FeedEngagementRow` do it correctly, so the two feed cards disagree with each other
+about what respect looks like.
+
+**18. `FeedPostCard` is on the daylight palette inside a dark app.** It imports
+`DS_DAYLIGHT.color.accent` for the double-tap heart overlay and `DS_DAYLIGHT.color.textOnPhoto` for
+the kudos chip (lines ~181-187). Whatever the migration does with that card, those two references are
+not DS_V3.
+
+**19. No map library.** `MapView` appears nowhere under `components/`. Frames 49 and 50 are designed
+without one and say so on screen. If a map is added later, the Run step and the place screen are the two
+places it belongs — and the copy lines that mention its absence come out in the same change.
+
+**Laws most at risk** 2 and the Sept 6 amendment (no display face anywhere in chunk O — the counter, the
+timer, the run figures and the respect count are all body face, and frame 48 shows no streak at all),
+6 (one filled button per screen; the multi-challenge card has none), 19 (the heart spring is the one
+animation), 21 and 22 (one card per day with sections, not three sibling cards), 18 ("verified" appears
+nowhere, and `SessionStep`'s use of it is logged above), 23 (done and closed rows lose their chevron
+and their handler together).
+
+# The miss
+
+**Chunk** P. Frames 52 to 57, in `GRIIT The Miss.dc.html`. No new tokens, **no new components**.
+
+Grounded against `abdelayaseen-netizen/GRIIT@main`, tree `f9a5ec94160a`. Read in full:
+`backend/lib/{daily-reset, last-stand, streak}.ts`,
+`backend/trpc/routes/{profiles-stats, streaks}.ts`, `lib/{notifications, use-reconcile-streak}.ts`,
+`components/StreakFreezeModal.tsx`.
+
+## The rules, as the code has them
+
+**a. What happens when a day ends unsecured.** Two independent paths, and they do not agree.
+
+| path | trigger | what it writes |
+|---|---|---|
+| `runDailyReset` — `backend/lib/daily-reset.ts:19` | cron ~00:30 UTC hitting `/internal/daily-reset` (stated in the file header) | `active_streak_count: 0` **and** `last_completed_date_key: null` (`daily-reset.ts:148-151`) |
+| `profiles.reconcileStreak` — `backend/trpc/routes/profiles-stats.ts:32` | client, from `useReconcileStreakIfNeeded` at `app/(tabs)/index.tsx:102`, once per user per JS session (`lib/use-reconcile-streak.ts:18`) | `active_streak_count: 0` **only** (`profiles-stats.ts:158-161`) |
+
+"Missed" is per-user timezone in both: `getYesterdayDateKey(tz)` with `profiles.timezone`, falling back
+to `reminder_timezone` then `"UTC"` (`profiles-stats.ts:76-77`, `daily-reset.ts:63`). A day counts as
+secured iff a `day_secures` row exists for that date key (`daily-reset.ts:78-84`) — binary, no partial.
+
+**`reconcileStreak` already returns everything frame 52 needs**:
+`{ streak_broken, previous_streak, lastStandUsedThisSession, lastStandsAvailable }`
+(`profiles-stats.ts:165-170`). The client receives it and renders none of it — `previous_streak` goes
+into `trackEvent("streak_broken")` and is discarded (`use-reconcile-streak.ts:28-34`). **The morning-after
+block needs no new endpoint.**
+
+**b. Freezes are manual, and unreachable.** `streaks.useFreeze` (`backend/trpc/routes/streaks.ts:66`)
+validates: the date must be yesterday (`:73`), exactly one missed day (`:119-121`), an active streak
+(`:122`), and remaining > 0 (`:125`). Limits are `STREAK_FREEZE_PER_MONTH_FREE = 1` /
+`_PRO = 4` (`streaks.ts:7-8`) with a 30-day refill from `last_freeze_used_at`
+(`FREEZE_RESET_DAYS = 30`, `:11`; `effectiveFreezesRemaining` `:22`).
+
+**No client code calls it.** `StreakFreezeModal`'s `onUseFreeze` is wired at
+`app/(tabs)/index.tsx:474` to `() => setShowFreezeModal(false)` — the button offering
+"Use streak freeze (1 remaining)" only dismisses the modal. So: **manual, offered, and does nothing.**
+
+**c. Last Stand is automatic, enforced, and real.** `backend/lib/last-stand.ts`:
+`MAX_LAST_STANDS = 2`; earned when `securedDaysInLast7 >= 6` and available < 2
+(`shouldEarnLastStand`, `:8`). Consumed automatically on a miss by **both** reset paths —
+`daily-reset.ts:137` and `profiles-stats.ts:107` — gated on `subscription_status` being
+`premium` or `trial`, inserting a `last_stand_uses` row and keeping the streak.
+
+Both paths then exclude `last_stand_uses` date keys from `effectiveMissedDays`
+(`profiles-stats.ts:88-91`), which is how the streak survives.
+
+**There is no grace window and no countdown.** Nothing is granted, nothing expires, and the user does
+nothing: it is applied retrospectively and announced by push. Brief item 4's "grace window on Home, the
+countdown, what completing it means" **describes a rule the code does not have** — so there are no frames
+for it. What exists is a receipt, which is frame 52B, plus a row in the record (frame 55).
+
+**d. Partial miss is not distinguished anywhere.** `day_secures` is binary. Nothing in the paths read
+compares completed tasks against required tasks for a past day. The raw material exists —
+`check_ins` rows are per task per `date_key`, counted by `getCheckinHeatmap`
+(`profiles-stats.ts:~400`) — but no endpoint aggregates them against a required count, so "4 of 6"
+needs a new query. Decision below.
+
+**e. Groups.** I did not find a yesterday-state field on the roster payload in the routes read. Frame 56
+assumes one derived from each member's `day_secures` row for the group's yesterday key. Decision below.
+
+**f. Notifications before a day ends.** `SECURE_REMINDER_TIME = "20:00"` is a **constant, not a user
+setting** — `lib/notifications.ts:21`, with the comment "Production has no
+profiles.preferred_secure_time". Four things can fire in one evening:
+
+| id | time | source |
+|---|---|---|
+| `secure-day-reminder` | 20:00 | `scheduleNextSecureReminder`, `notifications.ts:~118` |
+| `secure-two-hours-left` | 22:00 (trigger + 2h) | same fn, `ENABLE_TWO_HOURS_LEFT` `:83` |
+| `streak-at-risk-45min` | 23:15 | same fn, `:178` |
+| `streak-reminder-10pm` | 22:00 daily | `scheduleStreakReminder`, `:~560` |
+
+Two of those are at 22:00. And the body can never name the count: `vars` is built as
+`{ streak: streakCount ?? 0, tasks: 0 }` — **`tasks` is hardcoded 0** (`notifications.ts:~130`).
+
+---
+
+## Decisions for Yaseen
+
+| # | question | code today | recommendation | why |
+|---|---|---|---|---|
+| 1 | Freeze automatic or manual? | manual, and unreachable | **manual, wired** | An automatic freeze spends a scarce thing without asking, and the user finds out afterwards. A freeze is the one place the product should ask. Frame 54 is the offer. |
+| 2 | Should `useFreeze` restore the streak directly? | it only decrements the counter and stamps `last_freeze_used_at`; the streak survives because both readers exclude that date key | **make it explicit** — have `useFreeze` return the restored streak, and set `active_streak_count` back | Today the restore is a side effect of a filter. Frame 54 promises "your 12-day streak comes back"; that promise needs a write, not an inference. |
+| 3 | More than one freeze inside 30 days? | impossible — `frozenDateKeys` is derived from the single `last_freeze_used_at` timestamp (`profiles-stats.ts:79-81`), so a second freeze overwrites the first | **add a `freeze_uses` table**, mirroring `last_stand_uses` | A Pro tier that advertises four a month cannot deliver two. This is a data-model bug, not a design choice. |
+| 4 | Can a free user ever spend a Last Stand? | no — both paths require premium/trial, but `shouldEarnLastStand` has no tier check, and `getStats` returns `lastStandRequiresPremium` for exactly this case (`profiles-stats.ts:270`) | **do not let free users earn them** | Earning a cushion you can never spend, then being told at the moment of loss that it needed Pro, is the worst possible time to sell. Either gate the earn or gate nothing. |
+| 5 | Partial miss: does 4 of 6 earn anything? | nothing distinguishes it | **no, and show the 4** | Your lean, and it is right: a day is secured or it is not. But the record showing only "missed" is shorter than the truth. Frame 55 shows the count and earns nothing from it. |
+| 6 | Does a Last Stand day appear as secured? | it is excluded from missed days, so it reads as secured everywhere | **its own third state** | It is not camera proof and not self-reported. Frame 55 gives it a line in the split and a row label, "Held by a Last Stand". |
+| 7 | Which field distinguishes the two zeros? | `total_days_secured` (`getStats.totalDaysSecured`) and `longest_streak_count` both work | **`total_days_secured > 0`** | `longest_streak_count` is 0 for a user whose only secured days were never consecutive. Days secured is the honest test of "have you ever done this". |
+| 8 | Group roster yesterday state | not found in the routes read | **derive per member from `day_secures` at the group's yesterday key** | The roster already reads `getSecuredDateKeys`-shaped data for today; yesterday is the same query one key back. |
+| 9 | Four evening notifications? | yes, two of them at 22:00 | **two: 20:00 and 22:00** | Frame 57. Delete `streak-at-risk-45min` (23:15 is not an honest moment, it is a panic) and collapse the duplicate 22:00 pair. |
+| 10 | Dismissal of the morning-after block | no such state exists | **once read, per date key** — persist `miss_ack_date_key` locally | It is a receipt, not a nag. It should not greet them twice. |
+
+---
+
+## 52. The morning after
+
+One block, between the streak hero and the Today card, dismissible with an `x` in a 44pt slot. Order is
+fixed: **fact, cost, cushion.**
+
+**Tokens** `color.surface` + `border`, `radius.card` 20 · `type.bodyStrong` the fact ·
+`type.secondary` the cost and cushion lines · `color.primary` for the freeze action when there is one ·
+`type.caption` for its cost line. **No `color.danger` anywhere** — a miss is a fact, not an error, and
+the one red in this system is destructive confirmation.
+
+**Reuse** `ds/Card`, `ds/Button variant="primary"`, `ds/Icon`. Nothing new.
+
+**Data** all of it from `reconcileStreak`'s existing return plus the day's task rows:
+`streak_broken`, `previous_streak`, `lastStandUsedThisSession`, `lastStandsAvailable`, and
+`streaks.getFreezeStatus` for `{ remaining, limit }`.
+
+| variant | lines |
+|---|---|
+| reset | "Yesterday wasn't secured." / "{done} of {total} tasks. {missed task names}." / "Your streak reset to 0. Your longest was {longest} days." |
+| Last Stand | … / … / "A Last Stand covered it, so the streak continues. {n} left." |
+| freeze available | … / … / "Your streak reset to 0. A freeze can undo that for yesterday." + primary "Use a freeze for yesterday" + caption "{n} left. It refills 30 days after you use it." |
+
+**Copy**
+| string | style |
+|---|---|
+| Yesterday wasn't secured. | bodyStrong |
+| {done} of {total} tasks. {missed}. | secondary textSecondary |
+| Your streak reset to 0. Your longest was {n} days. | secondary textSecondary |
+| A Last Stand covered it, so the streak continues. {n} left. | secondary textSecondary |
+| Your streak reset to 0. A freeze can undo that for yesterday. | secondary textSecondary |
+| Use a freeze for yesterday | Button primary |
+| {n} left. It refills 30 days after you use it. | caption textSecondary, centred |
+
+The Last Stand variant is a **receipt, not a celebration**: same card, same weight, no icon, no colour
+change, and the streak hero above it is unchanged because the streak genuinely did not move.
+
+Name the missed tasks. "4 of 6" without them makes the user go looking, and the two they missed is the
+only actionable thing on the screen.
+
+---
+
+## 53. The streak hero at zero
+
+Two zeros, one line apart.
+
+| condition | line |
+|---|---|
+| `totalDaysSecured === 0` | "Post today to start." |
+| `totalDaysSecured > 0` | "Streak reset. Post today to start again." |
+
+Both at `type.secondary` `color.textSecondary` under the `DisplayNumber`. The number itself is
+unchanged — 0 in the display face, because a reset zero is still the true earned number.
+
+---
+
+## 54. The freeze offer, and the refusal
+
+`ds/Sheet` over Home. Heading `type.heading`, one `type.secondary` line stating the trade and its
+cost, then `Button variant="primary"` and `Button variant="tertiary"`.
+
+| state | copy |
+|---|---|
+| one or more left | "Use a freeze for yesterday?" / "Your {n}-day streak comes back. {m} left, and it refills 30 days after you use it." / "Use the freeze" / "No, let it reset" |
+| none left | "No freezes left" / "Yours refills on {date}. Pro carries four a month instead of one." / "See Pro" / "Close" |
+
+**"No, let it reset" is a real answer** at ordinary tertiary weight. The shipped modal's equivalent is
+"Let it reset" in `DS_COLORS.textMuted` at 13pt — quieter than the body text above it, which makes
+refusal look like a mistake.
+
+**Nothing celebrates.** No flame, no colour, no animation. A freeze is a thing you spend, and the sheet
+names what it costs before you spend it. The shipped modal opens with a `Flame` in
+`GRIIT_COLORS.primary` — that is the treatment for a milestone, not for a loss.
+
+**Where it appears** from the morning-after block's primary. Not on launch unprompted: an interstitial
+before the user has seen the fact is asking for money before stating the price.
+
+---
+
+## 55. Consistency, with the partial admitted — amends frame 41
+
+Two additions to that entry.
+
+**A third line in the split.** Under Camera proof and Self-reported, inside the same `Card`: "Held by a
+Last Stand — {n} days" with a `shield` 16. A Last Stand day is none of the other two things, and
+folding it into either would be the exact claim the record must not make.
+
+**A day-by-day section** under "By month", one 44pt row per day of the selected month:
+
+| label | detail | style |
+|---|---|---|
+| Secured | "{n} of {n} · {m} camera proof" | label `bodyStrong`-weight secondary in textPrimary |
+| Not secured | "{done} of {total} · {missed task names}" | label secondary in textSecondary |
+| Held by a Last Stand | "{done} of {total} · nothing was checked" | same |
+
+**No total on the screen moves for a partial day.** Days secured, Completion, Longest streak and Total
+secured are all unchanged by a 4 of 6. The footer caption says so: "A day is secured or it is not. A
+part-done day counts for nothing, and the count is here so the record is not shorter than the truth."
+
+This needs a new query: completed `check_ins` per `date_key` against the required task count for that
+day. See decision 5.
+
+---
+
+## 56. Group roster, yesterday — amends frame 34
+
+The trailing caption gains one value. Same slot, same `type.caption`, same
+`color.textSecondary`:
+
+| value | when |
+|---|---|
+| Secured today | `day_secures` row for today |
+| Not yet today | no row today, and they secured yesterday |
+| Missed yesterday | no `day_secures` row for the group's yesterday key |
+
+**No colour, no icon, no red.** The words are enough, and a shaming treatment turns the roster into a
+place people stop opening. "Secured today" keeps its `color.brandText`; "Missed yesterday" does not get
+an opposite.
+
+**The group streak line names who.** "Broke yesterday, when {name} missed." A group number that drops
+without a reason is the same honesty gap as a personal one, and in a group of four everyone knows anyway
+— saying it is less pointed than making them work it out.
+
+---
+
+## 57. The evening before
+
+**Two notifications, not four.** Delete `streak-at-risk-45min` (23:15) and collapse the duplicate
+22:00 pair — `secure-two-hours-left` and `streak-reminder-10pm` fire at the same minute with different
+copy. 23:15 is not an honest last moment; it is a panic with 45 minutes of runway.
+
+**The count is the message.** `vars.tasks` must carry the real remaining count — it is hardcoded 0
+today, which is why the shipped copy falls back to streak language.
+
+| time | state | title | body |
+|---|---|---|---|
+| 20:00 | nothing done | GRIIT | {challenge}: {total} tasks left today. Four hours to secure. |
+| 20:00 | partial | GRIIT | {challenge}: {n} of {total} left today. Four hours to secure. |
+| 20:00 | only camera tasks left | GRIIT | {challenge}: {n} left, both need a photo. Four hours to secure. |
+| 22:00 | streak at stake | GRIIT | {n} left. A {streak}-day streak ends at midnight. |
+| 22:00 | no streak yet | GRIIT | {n} left. Two hours to secure today. |
+
+Singular/plural: "{n} left, and it needs a photo" at one.
+
+**No exclamation marks.** The shipped strings break this repeatedly:
+"Don't break your ${streakCount}-day streak!" (`notifications.ts:~155`), "One more day!" and
+"Tomorrow is Day ${nextDay}!" (`:~330`). "Complete your tasks to keep the streak alive"
+(`:~570`) is also outside this voice — it is a slogan, not a count.
+
+The camera-tasks variant matters because it is the one case where a late reminder changes the outcome: a
+self-reported task can be logged at 23:58, a photo cannot be taken of a workout that did not happen.
+
+---
+
+## Contradictions in the repo, for the migration plan
+
+Numbered from 20; chunk O ended at 19.
+
+**20. Two reset paths write different things.** `daily-reset.ts:148-151` nulls
+`last_completed_date_key`; `profiles-stats.ts:158-161` leaves it. Whichever runs second sees a
+different world, and `useFreeze` depends on `last_completed_date_key` to compute `missedDays`
+(`streaks.ts:119`) — so **after the cron has run, a freeze can never validate**, because the key is
+null and `missedDays` is `[]`. The freeze is unusable by 00:30 UTC regardless of the user's timezone.
+
+**21. `StreakFreezeModal`'s primary button does nothing.**
+`app/(tabs)/index.tsx:474` — `onUseFreeze={() => setShowFreezeModal(false)}`. It offers "Use streak
+freeze (1 remaining)" and dismisses. `streaks.useFreeze` is called from no client path.
+
+**22. `useFreeze` never restores the streak.** `streaks.ts:127-131` updates
+`streak_freezes_remaining` and `last_freeze_used_at` and nothing else. The streak survives only
+because two readers exclude that date key. See decision 2.
+
+**23. Only one day can ever be frozen.** `frozenDateKeys` is a `Set` built from the single
+`last_freeze_used_at` timestamp (`profiles-stats.ts:79-81`, and identically at `:238-240`). A Pro
+user's second freeze in 30 days silently un-freezes the first. See decision 3.
+
+**24. Free users earn Last Stands they can never spend.** `shouldEarnLastStand`
+(`last-stand.ts:8`) has no tier check; both consumption paths require premium/trial
+(`daily-reset.ts:137`, `profiles-stats.ts:109`). `getStats` has a field for the resulting dead end,
+`lastStandRequiresPremium` (`:270`).
+
+**25. Two different push copies for one event.** `daily-reset.ts:~210` sends "Last Stand activated /
+Your {n}-day streak was saved. {n} Last Stands remaining."; `profiles-stats.ts:~140` sends "Last Stand
+used / Your streak continues." Same event, whichever path got there first.
+
+**26. `reconcileStreak`'s return value is computed and discarded.**
+`use-reconcile-streak.ts:28-34` uses `previous_streak` for analytics and invalidates the query.
+`streak_broken` and `lastStandUsedThisSession` are never rendered. Frame 52 needs no new endpoint.
+
+**27. `getStats` returns two fields hardcoded false.** `lastStandUsedThisSession: false` and
+`streakLostNoLastStand: false` (`profiles-stats.ts:287-288`) — placeholders the real values for which
+exist on `reconcileStreak`. A consumer trusting `getStats` for either gets a wrong answer.
+
+**28. `vars.tasks` is hardcoded 0 in the secure reminder.** `notifications.ts:~130`. The 8pm
+reminder cannot name the count it exists to name.
+
+**29. Four evening notifications, two at the same minute.** See the table above.
+
+**30. Notification copy breaks the voice in at least four places.** Exclamation marks at
+`notifications.ts:~155`, `:~330` (twice), and slogan copy at `:~570`. Also
+`getStreakAtRiskCopy` from `@/constants/identity-copy` is unread here and should be audited in the
+same pass.
+
+**31. `StreakFreezeModal` is on the pre-DS_V3 palette.** It imports `DS_COLORS`, `GRIIT_COLORS`
+and `DS_RADIUS`, uses `DS_COLORS.white` on `GRIIT_COLORS.primary`, and hardcodes 18/14/13pt. When
+`ds/Sheet` takes it over (frame 54), all of that goes.
+
+**32. The modal says "week", the code says 30 days.** "No freezes left this week — upgrade to Premium
+for more" and `accessibilityLabel` "…{n} remaining this week" (`StreakFreezeModal.tsx:38,46`), against
+`FREEZE_RESET_DAYS = 30` (`streaks.ts:11`). It also calls the freeze a "last stand" in that same
+accessibility label, conflating the two mechanics.
+
+**Laws most at risk** 2 (the streak hero and the record hero are the only display numbers in the chunk;
+the notification counts, the task counts and the freeze counts are all body face), 6 (one filled button
+per screen — the morning-after block's freeze action is the screen's only primary, and the Last Stand and
+reset variants have none), 9 and 22 (the morning-after block is one card above the Today card, not a card
+inside it; the Last Stand line lives inside the existing stats card), 18 (a Last Stand day is explicitly
+not camera proof and carries no Stamp), 21 (roster rows stay on the canvas with their caption slot
+unchanged).

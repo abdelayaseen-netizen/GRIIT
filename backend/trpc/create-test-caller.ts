@@ -44,6 +44,7 @@ export type TestAppCaller = {
     >;
     members: (input: { challengeId: string }) => Promise<{
       groupStreak: number;
+      groupStreakBrokeBy: string | null;
       members: unknown[];
       pendingInvites: unknown[];
     }>;

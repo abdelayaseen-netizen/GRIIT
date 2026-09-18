@@ -81,6 +81,16 @@ type MockOpts = {
     duration_days?: number;
   };
   notificationInsertError?: { message: string } | null;
+  memberRows?: { user_id: string; role: string; status: string; joined_at: string }[];
+  profileRows?: {
+    user_id: string;
+    display_name?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+    timezone?: string | null;
+    reminder_timezone?: string | null;
+  }[];
+  daySecureRows?: { user_id: string; date_key: string }[];
 };
 
 function createMockSupabase(opts: MockOpts = {}) {
@@ -162,7 +172,9 @@ function createMockSupabase(opts: MockOpts = {}) {
       }
       if (state.table === "challenge_members") {
         return {
-          data: [{ user_id: CREATOR, role: "creator", status: "active", joined_at: "2026-09-13T00:00:00.000Z" }],
+          data: opts.memberRows ?? [
+            { user_id: CREATOR, role: "creator", status: "active", joined_at: "2026-09-13T00:00:00.000Z" },
+          ],
           error: null,
         };
       }
@@ -170,13 +182,13 @@ function createMockSupabase(opts: MockOpts = {}) {
         return { data: existingInvite ? [existingInvite] : [], error: null };
       }
       if (state.table === "day_secures") {
-        return { data: [], error: null };
+        return { data: opts.daySecureRows ?? [], error: null };
       }
       if (state.table === "streaks") {
         return { data: [], error: null };
       }
       if (state.table === "profiles") {
-        return { data: [], error: null };
+        return { data: opts.profileRows ?? [], error: null };
       }
       return { data: [], error: null };
     };
@@ -423,6 +435,56 @@ describe("groups.respond", () => {
     await expect(caller.groups.respond({ inviteId: INVITE, action: "accept" })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
+  });
+});
+
+describe("groups.members", () => {
+  it("adds yesterdayState and names who broke the group streak", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-16T15:00:00.000Z"));
+    const { supabase } = createMockSupabase({
+      viewerIsMember: true,
+      memberRows: [
+        { user_id: CREATOR, role: "creator", status: "active", joined_at: "2026-09-13T00:00:00.000Z" },
+        { user_id: INVITEE, role: "member", status: "active", joined_at: "2026-09-13T00:00:00.000Z" },
+      ],
+      profileRows: [
+        {
+          user_id: CREATOR,
+          display_name: "Ada",
+          username: "ada",
+          timezone: "UTC",
+          reminder_timezone: "UTC",
+          avatar_url: null,
+        },
+        {
+          user_id: INVITEE,
+          display_name: "Bea",
+          username: "bea",
+          timezone: "UTC",
+          reminder_timezone: "UTC",
+          avatar_url: null,
+        },
+      ],
+      daySecureRows: [
+        { user_id: CREATOR, date_key: "2026-09-13" },
+        { user_id: CREATOR, date_key: "2026-09-14" },
+        { user_id: INVITEE, date_key: "2026-09-13" },
+        { user_id: INVITEE, date_key: "2026-09-14" },
+        { user_id: INVITEE, date_key: "2026-09-15" },
+      ],
+    });
+    const caller = createTestCaller({ userId: CREATOR, supabase });
+    if (!caller) return;
+    const result = await caller.groups.members({ challengeId: CH });
+    expect(result.groupStreakBrokeBy).toBe("Ada");
+    expect(result.members).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: CREATOR, yesterdayState: "missed" }),
+        expect.objectContaining({ userId: INVITEE, yesterdayState: "secured" }),
+      ]),
+    );
+    vi.useRealTimers();
   });
 });
 
