@@ -25,8 +25,6 @@ export const TIMER_PAUSE = "Pause";
 export const TIMER_RESET = "Reset";
 
 export const RUN_HONESTY = "Distance and time come from GPS.";
-export const RUN_NO_MAP =
-  "There is no map in the design system, so the run shows numbers only.";
 export const RUN_GPS_WAITING = "Waiting for GPS";
 export const RUN_GPS_LOCKED = "GPS locked";
 export const RUN_START = "Start";
@@ -98,4 +96,9 @@ export function timerPostEnabled(remainingSeconds: number): boolean {
 
 export function workDoneLine(duration: string): string {
   return `${duration} done`;
+}
+
+/** Manual run entry leaves this slot empty. GPS-sourced values get the caption. */
+export function runHonestyLine(fromGps: boolean): string | null {
+  return fromGps ? RUN_HONESTY : null;
 }
