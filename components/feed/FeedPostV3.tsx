@@ -2,7 +2,7 @@
  * FeedPostV3 — 01_components.md FeedPost. Screen component, ds primitives only.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Heart, MessageCircle, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
@@ -13,6 +13,7 @@ import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { feedFinishedCopy, feedNoPhotoCopy } from "@/lib/feed-copy";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { respectHeart } from "@/lib/feed-respect";
 
 const ICON = DS_V3.space.xs * 6;
 
@@ -86,7 +87,13 @@ export default function FeedPostV3({
         <Text style={styles.summary}>
           {feedFinishedCopy({ ...post, targetStreak: ownTarget })}
         </Text>
-        <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
+        <ActionRow
+          liked={post.reactedByMe}
+          respectCount={post.respectCount}
+          onLike={onLike}
+          onComment={onComment}
+          onShare={onShare}
+        />
       </Card>
     );
   }
@@ -113,31 +120,68 @@ export default function FeedPostV3({
         stamp={cameraProof ? "Verified" : undefined}
         recyclingKey={post.id}
       />
-      <ActionRow liked={post.reactedByMe} onLike={onLike} onComment={onComment} onShare={onShare} />
+      <ActionRow
+        liked={post.reactedByMe}
+        respectCount={post.respectCount}
+        onLike={onLike}
+        onComment={onComment}
+        onShare={onShare}
+      />
     </Card>
   );
 }
 
 function ActionRow({
   liked,
+  respectCount,
   onLike,
   onComment,
   onShare,
 }: {
   liked: boolean;
+  respectCount: number;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
 }) {
+  const bounce = React.useRef(new Animated.Value(1)).current;
+  const heart = respectHeart(liked);
+
   return (
     <View style={styles.actions}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Like" onPress={onLike} style={styles.hit}>
-        <Heart
-          size={ICON}
-          color={liked ? DS_V3.color.brandText : DS_V3.color.textPrimary}
-          fill={liked ? DS_V3.color.brandText : "none"}
-        />
-      </Pressable>
+      <View style={styles.respect}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={liked ? "Remove respect" : "Give respect"}
+          accessibilityState={{ selected: liked }}
+          onPress={() => {
+            bounce.setValue(1);
+            Animated.sequence([
+              Animated.spring(bounce, {
+                toValue: 1.3,
+                friction: 3,
+                tension: 300,
+                useNativeDriver: true,
+              }),
+              Animated.spring(bounce, {
+                toValue: 1,
+                friction: 4,
+                tension: 200,
+                useNativeDriver: true,
+              }),
+            ]).start();
+            onLike();
+          }}
+          style={styles.hit}
+        >
+          <Animated.View style={{ transform: [{ scale: bounce }] }}>
+            <Heart size={ICON} color={heart.color} fill={heart.fill} />
+          </Animated.View>
+        </Pressable>
+        {respectCount > 0 ? (
+          <Text style={[styles.count, { color: heart.countColor }]}>{respectCount}</Text>
+        ) : null}
+      </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
         <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
@@ -182,8 +226,18 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
+    alignItems: "center",
     gap: DS_V3.space.sm,
     marginTop: DS_V3.space.md,
+  },
+  respect: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  count: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
   },
   hit: {
     width: DS_V3.size.tap,

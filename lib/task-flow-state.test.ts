@@ -66,11 +66,13 @@ describe("flowOpensCamera", () => {
 describe("chromeTitle", () => {
   it("uses the TaskFlowV2 labels", () => {
     expect(chromeTitle("photo")).toBe("Photo proof");
-    expect(chromeTitle("water")).toBe("Water");
-    expect(chromeTitle("reading")).toBe("Pages");
+    expect(chromeTitle("water")).toBe("Counter");
+    expect(chromeTitle("reading")).toBe("Counter");
+    expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("simple")).toBe("Self-report");
     expect(chromeTitle("manual")).toBe("Self-report");
     expect(chromeTitle("timer")).toBe("Timer");
+    expect(chromeTitle("run")).toBe("Run");
     expect(chromeTitle("journal")).toBe("Journal");
     expect(chromeTitle("check_off", ["camera"])).toBe("Camera");
     expect(chromeTitle("manual", ["camera"])).toBe("Camera");
@@ -143,6 +145,7 @@ describe("chromeFlags", () => {
     expect(chromeFlags("verifying")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("confirmation")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("challenge_done")).toEqual({ dark: false, hideChrome: true });
+    expect(chromeFlags("day_open")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("entry")).toEqual({ dark: false, hideChrome: false });
     expect(chromeFlags("failed")).toEqual({ dark: false, hideChrome: false });
     expect(chromeFlags("window_closed")).toEqual({ dark: false, hideChrome: true });
@@ -168,14 +171,14 @@ describe("checkinGpsNextStep", () => {
 });
 
 describe("timer resume and auto-submit", () => {
-  it("restores verifying when the session is already elapsed", () => {
-    expect(timerResumeStep(0)).toBe("verifying");
-    expect(timerResumeStep(-1)).toBe("verifying");
+  it("restores running so Post can open at zero", () => {
+    expect(timerResumeStep(0)).toBe("running");
+    expect(timerResumeStep(-1)).toBe("running");
     expect(timerResumeStep(1)).toBe("running");
   });
 
-  it("auto-submits only while running with a start and remaining <= 0", () => {
-    expect(timerShouldAutoSubmit("running", 0, true)).toBe(true);
+  it("does not auto-submit; Post opens when remaining is zero", () => {
+    expect(timerShouldAutoSubmit("running", 0, true)).toBe(false);
     expect(timerShouldAutoSubmit("running", 1, true)).toBe(false);
     expect(timerShouldAutoSubmit("entry", 0, true)).toBe(false);
     expect(timerShouldAutoSubmit("running", 0, false)).toBe(false);
@@ -351,12 +354,24 @@ describe("input ready / what done means", () => {
 });
 
 describe("finishSubmitOutcome", () => {
-  it("failed when complete is missing; challenge_done when the after-UI says so; else leave to secured", () => {
-    expect(finishSubmitOutcome({ complete: null })).toBe("failed");
-    expect(finishSubmitOutcome({ complete: undefined })).toBe("failed");
-    expect(finishSubmitOutcome({ complete: {}, afterUiKind: "challenge_done" })).toBe("challenge_done");
-    expect(finishSubmitOutcome({ complete: {}, afterUiKind: "secured" })).toBe("secured_nav");
-    expect(finishSubmitOutcome({ complete: {} })).toBe("secured_nav");
+  it("5 of 6 done → frame 48 because the server is not secured", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 1 }, securedToday: false })).toBe("day_open");
+  });
+
+  it("6 of 6 but server not secured → frame 48, never Secured", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: false })).toBe("day_open");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: false })).not.toBe("secured_nav");
+  });
+
+  it("server secured → Secured screen; never frame 48", () => {
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: true })).toBe("secured_nav");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 1 }, securedToday: true })).toBe("secured_nav");
+    expect(finishSubmitOutcome({ complete: { requiredRemaining: 0 }, securedToday: true })).not.toBe("day_open");
+  });
+
+  it("failed when complete is missing", () => {
+    expect(finishSubmitOutcome({ complete: null, securedToday: false })).toBe("failed");
+    expect(finishSubmitOutcome({ complete: undefined, securedToday: true })).toBe("failed");
   });
 });
 

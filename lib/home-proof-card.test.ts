@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { HOME_PROOF_CTA_TODAY, homeProofCtaLabel, homeProofRingState, selectHomeProofCard } from "@/lib/home-proof-card";
+import {
+  HOME_PROOF_CTA_TODAY,
+  HOME_PROOF_HEADING,
+  homeProofCtaLabel,
+  homeProofDayLine,
+  homeProofRingState,
+  homeProofTitleMuted,
+  selectHomeProofCard,
+} from "@/lib/home-proof-card";
 import type { HomeProofTask } from "@/lib/home-proof-card";
 
 function task(partial: Partial<HomeProofTask> & Pick<HomeProofTask, "name" | "challengeName">): HomeProofTask {
@@ -99,9 +107,14 @@ describe("selectHomeProofCard", () => {
       "Quick Steps",
     ]);
     expect(card.sections.map((s) => s.totalCount)).toEqual([4, 1, 1]);
+    expect(card.sections.map((s) => s.doneCount)).toEqual([0, 0, 0]);
+    expect(card.doneCount).toBe(0);
+    expect(card.totalCount).toBe(6);
     expect(card.sections[0]?.rows).toHaveLength(4);
     expect(card.sections[1]?.rows.map((r) => r.name)).toEqual(["Write 3 gratitudes"]);
     expect(card.sections[2]?.rows.map((r) => r.name)).toEqual(["Log your steps"]);
+    expect(homeProofDayLine(card.sections[0]!.day, card.sections[0]!.dayTotal)).toBe("Day 1 of 1");
+    expect(HOME_PROOF_HEADING).toBe("Today");
   });
 
   it("3 enrollments, 2 complete: each challenge keeps its own chip, CTA on the incomplete one", () => {
@@ -117,6 +130,8 @@ describe("selectHomeProofCard", () => {
       securedToday: false,
     });
     expect(card.sections).toHaveLength(3);
+    expect(card.doneCount).toBe(2);
+    expect(card.totalCount).toBe(3);
     expect(card.sections[0]).toMatchObject({ challenge: "Run", doneCount: 1, totalCount: 1, showCta: false });
     expect(card.sections[1]).toMatchObject({ challenge: "Read", doneCount: 1, totalCount: 1, showCta: false });
     expect(card.sections[2]).toMatchObject({ challenge: "Write", doneCount: 0, totalCount: 1, showCta: true });
@@ -287,5 +302,11 @@ describe("homeProofRingState", () => {
     expect(homeProofRingState({ done: true, closed: false })).toBe("done");
     expect(homeProofRingState({ done: false, closed: false })).toBe("pending");
     expect(homeProofRingState({ done: false, closed: true })).toBe("closed");
+  });
+
+  it("closed and done titles are muted; pending is not; closed is not dimmed", () => {
+    expect(homeProofTitleMuted({ done: true, closed: false })).toBe(true);
+    expect(homeProofTitleMuted({ done: false, closed: true })).toBe(true);
+    expect(homeProofTitleMuted({ done: false, closed: false })).toBe(false);
   });
 });

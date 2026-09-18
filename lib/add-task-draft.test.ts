@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   ADD_TASK_DEFAULT,
+  ADD_TASK_STARTERS,
+  applyStarter,
   canSubmitDraft,
   gatesFromDraft,
   payloadFromDraft,
+  previewFromDraft,
   type AddTaskDraft,
 } from "@/lib/add-task-draft";
 
@@ -81,5 +84,36 @@ describe("add-task draft", () => {
     expect(
       canSubmitDraft(draft({ name: "Run", type: "timer", timerPreset: "custom", customMinutes: "" })),
     ).toBe(false);
+  });
+
+  it("starters prefill name, type, and counter unit for water/reading", () => {
+    const water = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Water")!);
+    expect(water.name).toBe("Water");
+    expect(water.type).toBe("counter");
+    expect(water.counterUnit).toBe("oz");
+    const read = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Read")!);
+    expect(read.name).toBe("Read");
+    expect(read.type).toBe("counter");
+    expect(read.counterUnit).toBe("pages");
+    const pray = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Pray")!);
+    expect(pray.type).toBe("check_off");
+    expect(pray.name).toBe("Pray");
+  });
+
+  it("preview caption updates with the gate switches", () => {
+    expect(previewFromDraft(draft({ name: "Journal" })).caption).toBe("Self-reported");
+    expect(previewFromDraft(draft({ name: "Journal", camera: true })).caption).toBe("Camera");
+    expect(
+      previewFromDraft(
+        draft({
+          name: "Journal",
+          camera: true,
+          time: true,
+          timeMode: "by",
+          byTime: "07:00",
+        }),
+      ).caption,
+    ).toBe("Camera · By 7:00 am");
+    expect(previewFromDraft(draft({ name: "" })).title).toBe("Name it");
   });
 });

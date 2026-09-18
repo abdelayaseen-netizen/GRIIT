@@ -16,7 +16,14 @@ import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
 import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
-import { attemptSecureDayAfterComplete, pickNextUndoneEnrollmentId } from "@/lib/day-secure-ui";
+import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
+import {
+  dayOpenTaskHref,
+  selectDayOpen,
+  serverSecuredToday,
+  type DayOpenModel,
+} from "@/lib/day-open";
+import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { taskSecuredHref } from "@/lib/task-secured-nav";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
@@ -31,6 +38,13 @@ import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
+import {
+  TIMER_PHOTO_AFTER,
+  workDoneLine,
+  workStepHeader,
+  workStepOwnsChrome,
+  workThenCamera,
+} from "@/lib/work-step";
 import { closedWindowTime } from "@/lib/task-ui";
 import {
   flowAllowsSubmit,
@@ -126,14 +140,12 @@ export function useTaskFlowV2() {
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
+  const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [sessionUp, setSessionUp] = useState(0);
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
-  const [challengeDone, setChallengeDone] = useState<{
-    challengeTitle: string;
-    remainingChallenges: number;
-  } | null>(null);
+  const [dayOpen, setDayOpen] = useState<DayOpenModel | null>(null);
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -159,9 +171,7 @@ export function useTaskFlowV2() {
       setSoundOn(s.soundOn);
       const remaining = s.requiredSeconds - (Date.now() - Date.parse(s.startedAtIso)) / 1000;
       setStep(timerResumeStep(remaining));
-      if (remaining <= 0) void submitTimer();
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, taskId, dateKey, taskType]);
 
   useEffect(() => {
@@ -194,9 +204,12 @@ export function useTaskFlowV2() {
     void refreshGps();
   }, [taskType, refreshGps]);
 
-  const remainingSec = startedAtIso
-    ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
-    : requiredSeconds;
+  const remainingSec =
+    pausedRemaining != null
+      ? pausedRemaining
+      : startedAtIso
+        ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
+        : requiredSeconds;
 
   const exit = useCallback(() => {
     void endLiveActivity();
@@ -204,37 +217,25 @@ export function useTaskFlowV2() {
     else router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
 
-  const goNextChallenge = useCallback(async () => {
-    if (!activeChallengeId) {
-      exit();
-      return;
-    }
-    try {
-      const [activeList, checkins] = await Promise.all([
-        trpcQuery(TRPC.challenges.listMyActive) as Promise<
-          {
-            id: string;
-            challenges?: { challenge_tasks?: { id: string; config?: { required?: boolean } }[] };
-          }[]
-        >,
-        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-          { active_challenge_id?: string; task_id?: string; status?: string }[]
-        >,
-      ]);
-      const nextId = pickNextUndoneEnrollmentId({
-        currentId: activeChallengeId,
-        enrollments: Array.isArray(activeList) ? activeList : [],
-        completed: Array.isArray(checkins) ? checkins : [],
-      });
-      if (nextId) {
-        router.replace(ROUTES.CHALLENGE_ACTIVE(nextId) as never);
+  const openDayOpenTask = useCallback(
+    (id: string) => {
+      const t = dayOpen?.tasks.find((row) => (row.id ?? "") === id);
+      if (!t) {
+        exit();
         return;
       }
-    } catch {
-      /* fall through to exit */
+      router.replace(dayOpenTaskHref(t) as never);
+    },
+    [dayOpen, exit, router],
+  );
+
+  const goNextTask = useCallback(() => {
+    if (dayOpen?.nextId) {
+      openDayOpenTask(dayOpen.nextId);
+      return;
     }
     exit();
-  }, [activeChallengeId, exit, router]);
+  }, [dayOpen, exit, openDayOpenTask]);
 
   const persistUnit = useCallback((next: DistanceUnit) => {
     setUnit(next);
@@ -286,7 +287,7 @@ export function useTaskFlowV2() {
         taskId,
         ...payload,
       });
-      if (finishSubmitOutcome({ complete }) === "failed" || !complete) {
+      if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;
         clearTimeout(takeoverTimer);
         setSaving(false);
@@ -309,19 +310,6 @@ export function useTaskFlowV2() {
         challengeTitle: complete.challengeName ?? challengeName,
         secureDay,
       });
-      if (after.ui.kind === "challenge_done") {
-        cancelled = true;
-        clearTimeout(takeoverTimer);
-        setSaving(false);
-        setChallengeDone({
-          challengeTitle: after.ui.challengeTitle,
-          remainingChallenges: after.ui.remainingChallenges,
-        });
-        if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
-        void endLiveActivity();
-        setStep("challenge_done");
-        return;
-      }
       if (after.result) {
         const r = after.result as {
           success?: boolean;
@@ -339,6 +327,53 @@ export function useTaskFlowV2() {
           challenge_done: r.challenge_done,
           remaining_challenges: r.remaining_challenges,
         };
+      }
+      const securedToday = serverSecuredToday({
+        dayAlreadySecured: complete.dayAlreadySecured === true,
+        secureDaySecured: after.ui.kind === "secured" || after.result?.secured === true,
+      });
+      if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
+      void endLiveActivity();
+      cancelled = true;
+      clearTimeout(takeoverTimer);
+      setSaving(false);
+      if (finishSubmitOutcome({ complete, securedToday }) === "day_open") {
+        let tasks = dayOpenTasksFromActive({ enrollments: [], completed: [] });
+        try {
+          const [activeList, checkins] = await Promise.all([
+            trpcQuery(TRPC.challenges.listMyActive) as Promise<Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]>,
+            trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
+              Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
+            >,
+          ]);
+          tasks = dayOpenTasksFromActive({
+            enrollments: Array.isArray(activeList) ? activeList : [],
+            completed: Array.isArray(checkins) ? checkins : [],
+          });
+        } catch {
+          tasks = [
+            {
+              id: taskId,
+              name: taskName,
+              challengeName: complete.challengeName ?? challengeName,
+              activeChallengeId,
+              currentDay: complete.challengeDay ?? currentDay,
+              durationDays: complete.challengeLength ?? durationDays,
+              done: true,
+              challengeSecuredToday: false,
+            },
+          ];
+        }
+        setDayOpen(
+          selectDayOpen({
+            taskName,
+            challengeId: activeChallengeId,
+            tasks,
+            targetStreak: profile?.target_streak,
+          }),
+        );
+        setStep("day_open");
+        return;
       }
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
@@ -360,11 +395,6 @@ export function useTaskFlowV2() {
           : null,
       });
       setResult(assembled);
-      if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
-      void endLiveActivity();
-      cancelled = true;
-      clearTimeout(takeoverTimer);
-      setSaving(false);
       // secureDay already awaited invalidate+refetch (useAppChallengeMutations 291–296).
       router.push(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
     } catch (err) {
@@ -445,6 +475,7 @@ export function useTaskFlowV2() {
       return;
     }
     const iso = started.started_at;
+    setPausedRemaining(null);
     setStartedAtIso(iso);
     if (userId) {
       await saveLocalTimerSession(userId, {
@@ -538,6 +569,20 @@ export function useTaskFlowV2() {
     await cancelTimerDoneNotification(taskId);
     void endLiveActivity();
     exit();
+  };
+
+  const pauseTimer = () => {
+    if (pausedRemaining != null) return;
+    setPausedRemaining(remainingSec);
+  };
+
+  const resetTimer = async () => {
+    setPausedRemaining(null);
+    setStartedAtIso(null);
+    if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
+    await cancelTimerDoneNotification(taskId);
+    void endLiveActivity();
+    setStep("entry");
   };
 
   useEffect(() => {
@@ -679,17 +724,29 @@ export function useTaskFlowV2() {
     counterGoal,
     counterUnit,
     result,
-    challengeDone,
+    dayOpen,
     fail,
     discardAsk,
     taskRequired,
     verifyLine,
     saving,
     chromeTitle: chromeTitle(taskType, gates),
-    headerTitle: flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
+    headerTitle: workStepOwnsChrome(step, taskType)
+      ? workStepHeader(currentDay, gates, taskType)
+      : flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
+    workDone: workThenCamera(taskType, gates)
+      ? workDoneLine(
+          taskType === "timer"
+            ? fmtMmSs(requiredSeconds)
+            : taskType === "run"
+              ? fmtMmSs(durationSec ?? 0)
+              : String(count),
+        )
+      : null,
+    photoAfter: workThenCamera(taskType, gates) && taskType === "timer" ? TIMER_PHOTO_AFTER : null,
     closedAt: closedWindowTime(gateTime),
     windowForbidden,
     windowState,
@@ -722,7 +779,9 @@ export function useTaskFlowV2() {
     },
     onReviewPost,
     cancelTimer,
-    submitWithoutPhoto,
+    pauseTimer,
+    resetTimer,
+    submitTimer,
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
     onOpenCountKeypad: () => {
       setKeypad({ field: "count" });
@@ -742,7 +801,8 @@ export function useTaskFlowV2() {
         "gps"
       ),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
-    goNextChallenge,
+    goNextTask,
+    openDayOpenTask,
     goBackFromFailure,
     retryFailedSubmit,
     onDiscardPhoto,

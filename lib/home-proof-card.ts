@@ -7,6 +7,11 @@ import { closedWindowCaption, gateLine } from "@/lib/task-ui";
 export const HOME_PROOF_CTA_TODAY = "Post your proof";
 export const HOME_PROOF_CTA_FIRST = "Post your first proof";
 export const HOME_PROOF_CTA_DONE = "Posted today";
+export const HOME_PROOF_HEADING = "Today";
+
+export function homeProofDayLine(day: number, dayTotal: number): string {
+  return `Day ${day} of ${dayTotal}`;
+}
 
 export type HomeProofTask = {
   id?: string;
@@ -25,6 +30,7 @@ export type HomeProofTask = {
   gateTime?: GateTime | null;
   windowState?: WindowState;
   hasCameraProof?: boolean;
+  taskConfig?: string;
 };
 
 export type HomeProofRow = {
@@ -36,6 +42,10 @@ export type HomeProofRow = {
   closed: boolean;
   hasCameraProof: boolean;
 };
+
+export function homeProofTitleMuted(row: Pick<HomeProofRow, "done" | "closed">): boolean {
+  return row.done || row.closed;
+}
 
 export type HomeProofSection = {
   id: string;
@@ -52,6 +62,8 @@ export type HomeProofCard = {
   posted: boolean;
   hasChallenge: boolean;
   firstProofEver: boolean;
+  doneCount: number;
+  totalCount: number;
   sections: HomeProofSection[];
   showCta: boolean;
 };
@@ -141,6 +153,8 @@ export function selectHomeProofCard(input: {
     posted: input.securedToday,
     hasChallenge: input.tasks.length > 0,
     firstProofEver: input.firstProofEver,
+    doneCount: sections.reduce((n, s) => n + s.doneCount, 0),
+    totalCount: sections.reduce((n, s) => n + s.totalCount, 0),
     sections,
     showCta: sections.some((s) => s.showCta),
   };

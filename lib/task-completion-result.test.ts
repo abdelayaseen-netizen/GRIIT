@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   assembleSubmitResult,
-  challengeDoneLine,
-  challengeDoneTitle,
   pickConfirmationChallengeDay,
   pickConfirmationCopy,
   pickConfirmationVariant,
@@ -33,7 +31,7 @@ describe("pickConfirmationVariant", () => {
 });
 
 describe("pickConfirmationCopy", () => {
-  it("uses optional-task copy and does not claim a streak move (Q12)", () => {
+  it("optional-task copy does not claim a streak move (Q12)", () => {
     expect(
       pickConfirmationCopy({
         daySecured: false,
@@ -45,12 +43,6 @@ describe("pickConfirmationCopy", () => {
       headline: "Task done",
       footnote: "This task is optional. It does not move the streak.",
     });
-  });
-
-  it("challenge-done interstitial copy is exact", () => {
-    expect(challengeDoneTitle("Write")).toBe("Write done.");
-    expect(challengeDoneLine(1)).toBe("1 challenge left today.");
-    expect(challengeDoneLine(2)).toBe("2 challenges left today.");
   });
 });
 

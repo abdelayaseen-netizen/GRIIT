@@ -116,13 +116,11 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
     min_words: config.min_words ?? null,
     photo_required: config.photo_required ?? false,
     require_photo_proof: config.require_photo_proof ?? false,
-    strict_timer_mode: config.strict_timer_mode ?? false,
     verification_method: verificationMethodFor(gatesFor(r)),
     verification_rule_json: (config.verification_rule_json as VerificationRuleStrava) ?? null,
     order_index: row.order_index ?? null,
     require_photo: r.require_photo ?? config.require_photo_proof ?? false,
     timer_direction: r.timer_direction ?? "countdown",
-    timer_hard_mode: r.timer_hard_mode ?? config.strict_timer_mode ?? config.timer_hard_mode ?? false,
     tracking_mode: typeof config.tracking_mode === "string" ? config.tracking_mode : null,
     require_heart_rate: r.require_heart_rate === true || hrFromConfig,
     heart_rate_threshold:

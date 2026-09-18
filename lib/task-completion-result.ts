@@ -3,8 +3,6 @@
  * Server-authored fields only — never invent streak or day-secured client-side.
  */
 
-import { challengeWord } from "@/lib/format-days";
-
 export type VerificationKind = "live_photo" | "timer" | "gps" | "word_count" | "self_report";
 
 export type SubmitResult = {
@@ -28,15 +26,6 @@ export function pickConfirmationChallengeDay(args: {
   dayFromSecureAfter: number;
 }): number {
   return args.dayFromComplete;
-}
-
-export function challengeDoneTitle(challengeTitle: string): string {
-  return `${challengeTitle} done.`;
-}
-
-export function challengeDoneLine(remainingChallenges: number): string {
-  const n = Math.max(0, Math.floor(remainingChallenges));
-  return `${n} ${challengeWord(n)} left today.`;
 }
 
 export function pickConfirmationCopy(args: {

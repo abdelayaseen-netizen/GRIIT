@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, Medal, Snowflake } from "lucide-react-native";
+import { Bell, Check, ChevronRight, Medal, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -13,25 +13,36 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
+import Divider from "@/components/ds/Divider";
 import WeekStrip from "@/components/ds/WeekStrip";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
-import { HOME_PROOF_CTA_TODAY, homeProofRingState, type HomeProofCard, type HomeProofRow } from "@/lib/home-proof-card";
+import {
+  HOME_PROOF_CTA_TODAY,
+  HOME_PROOF_HEADING,
+  homeProofDayLine,
+  homeProofRingState,
+  homeProofTitleMuted,
+  type HomeProofCard,
+  type HomeProofRow,
+} from "@/lib/home-proof-card";
 
 const ICON = DS_V3.space.xs * 6;
+const RING = DS_V3.space.gutter;
+const RING_CHECK = DS_V3.space.md;
 const META = DS_V3.space.lg;
-const PT = DS_V3.space.xs / 4;
+const STROKE = (DS_V3.space.xs * 3) / 8;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
-function StatusRing({ row }: { row: HomeProofRow }) {
+export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
   if (state === "done") {
     return (
       <View style={[styles.ring, styles.ringDone]} accessibilityLabel="Done">
-        <Check size={DS_V3.space.lg} color={DS_V3.color.onBrand} strokeWidth={2.5} />
+        <Check size={RING_CHECK} color={DS_V3.color.canvas} strokeWidth={2.5} />
       </View>
     );
   }
@@ -139,16 +150,20 @@ export function HomeV3({
       : `${awayCount} friends posted while you were away.`;
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
+    const pending = !row.done && !closed;
     const inner = (
       <>
         <StatusRing row={row} />
         <View style={styles.taskCopy}>
-          <Text style={[styles.task, row.done ? styles.taskDone : null]}>{row.name}</Text>
+          <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
           <Text style={styles.caption}>{row.caption}</Text>
         </View>
+        {pending ? (
+          <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
+        ) : null}
       </>
     );
-    if (row.done || closed) {
+    if (!pending) {
       return (
         <View key={row.id} style={styles.proofRow}>
           {inner}
@@ -201,27 +216,35 @@ export function HomeV3({
       {proof ? (
         <View style={styles.gutter}>
           <Card>
-            <Text style={styles.heading}>Today&apos;s proof</Text>
+            <View style={styles.cardHead}>
+              <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
+              <View style={styles.countChip}>
+                <Text style={styles.countTxt}>
+                  {proof.doneCount} / {proof.totalCount}
+                </Text>
+              </View>
+            </View>
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => (
-                <View key={section.id} style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
-                  <View style={styles.proofHead}>
-                    <View style={styles.flex}>
-                      <Text style={styles.secondary}>
-                        {section.challenge} · Day <DisplayNumber value={section.day} size="inline" /> of{" "}
-                        {section.dayTotal}
-                      </Text>
+                <View key={section.id}>
+                  {i > 0 ? <Divider style={styles.sectionDivider} /> : null}
+                  <View style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
+                    <View style={styles.proofHead}>
+                      <View style={styles.flex}>
+                        <Text style={styles.task}>{section.challenge}</Text>
+                        <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
+                      </View>
+                      <View style={styles.countChip}>
+                        <Text style={styles.countTxt}>
+                          {section.doneCount} / {section.totalCount}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.countChip}>
-                      <Text style={styles.countTxt}>
-                        {section.doneCount} / {section.totalCount}
-                      </Text>
-                    </View>
+                    {section.rows.map(renderRow)}
+                    {section.showCta ? (
+                      <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
+                    ) : null}
                   </View>
-                  {section.rows.map(renderRow)}
-                  {section.showCta ? (
-                    <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
-                  ) : null}
                 </View>
               ))
             ) : (
@@ -302,6 +325,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
   },
+  cardHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: DS_V3.space.md,
+  },
   proofHead: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -313,7 +342,10 @@ const styles = StyleSheet.create({
     marginTop: DS_V3.space.lg,
   },
   sectionGap: {
-    marginTop: DS_V3.space.section,
+    marginTop: DS_V3.space.lg,
+  },
+  sectionDivider: {
+    marginTop: DS_V3.space.lg,
   },
   flex: { flex: 1, gap: DS_V3.space.xs },
   heading: {
@@ -348,9 +380,9 @@ const styles = StyleSheet.create({
     marginBottom: DS_V3.space.md,
   },
   ring: {
-    width: ICON,
-    height: ICON,
-    borderRadius: ICON / 2,
+    width: RING,
+    height: RING,
+    borderRadius: DS_V3.radius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -358,13 +390,12 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.brand,
   },
   ringPending: {
-    borderWidth: PT * 2,
+    borderWidth: STROKE,
     borderColor: DS_V3.color.textSecondary,
   },
   ringClosed: {
-    borderWidth: PT * 2,
+    borderWidth: STROKE,
     borderColor: DS_V3.color.border,
-    opacity: 0.55,
   },
   taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
   taskDot: {
@@ -379,7 +410,7 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
   },
-  taskDone: {
+  taskMuted: {
     color: DS_V3.color.textSecondary,
   },
   caption: {

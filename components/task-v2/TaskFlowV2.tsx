@@ -23,6 +23,7 @@ import { TimerEntryStep } from "./steps/TimerEntryStep";
 import { VerifyingStep } from "./steps/VerifyingStep";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
+import { workStepOwnsChrome } from "@/lib/work-step";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
@@ -36,7 +37,7 @@ export function TaskFlowV2() {
         (f.step === "verifying" || f.step === "ask") && { backgroundColor: DS_V3.color.canvas },
       ]}
     >
-      {!f.hideChrome ? (
+      {!f.hideChrome && !workStepOwnsChrome(f.step, f.taskType) ? (
         <View style={{ paddingTop: insets.top }}>
           {f.step === "ask" ? (
             <PushedHeader
@@ -73,10 +74,14 @@ export function TaskFlowV2() {
       {f.step === "entry" && f.taskType === "timer" ? (
         <TimerEntryStep
           taskName={f.taskName}
+          headerTitle={f.headerTitle}
           requiredSeconds={f.requiredSeconds}
           soundOn={f.soundOn}
           onSoundOn={f.setSoundOn}
           onStart={() => void f.startTimer()}
+          onBack={f.goBack}
+          footerCaption={f.footerCaption}
+          footerBrand={f.footerBrand}
         />
       ) : null}
 
@@ -126,6 +131,8 @@ export function TaskFlowV2() {
           challengeName={f.challengeName}
           taskName={f.taskName}
           currentDay={f.currentDay}
+          workDone={f.workDone}
+          photoAfter={f.photoAfter}
           onCancel={f.goBack}
           onCaptured={f.onCaptured}
         />
@@ -148,9 +155,15 @@ export function TaskFlowV2() {
         <RunningStep
           remainingSec={f.remainingSec}
           taskName={f.taskName}
+          headerTitle={f.headerTitle}
           startedAtIso={f.startedAtIso}
           requiredSeconds={f.requiredSeconds}
-          onCancel={() => void f.cancelTimer()}
+          onPause={f.pauseTimer}
+          onReset={() => void f.resetTimer()}
+          onPost={() => void f.submitTimer()}
+          onBack={f.goBack}
+          footerCaption={f.footerCaption}
+          footerBrand={f.footerBrand}
         />
       ) : null}
 
@@ -174,7 +187,10 @@ export function TaskFlowV2() {
           count={f.count}
           counterGoal={f.counterGoal}
           counterUnit={f.counterUnit}
-          taskType={f.taskType}
+          taskName={f.taskName}
+          headerTitle={f.headerTitle}
+          footerCaption={f.footerCaption}
+          footerBrand={f.footerBrand}
           keypadOpen={f.keypad?.field === "count"}
           buffer={f.buffer}
           onBuffer={f.setBuffer}
@@ -182,8 +198,8 @@ export function TaskFlowV2() {
           onAddOne={f.onAddOne}
           onOpenKeypad={f.onOpenCountKeypad}
           onRemoveOne={f.onRemoveOne}
-          onAttachPhoto={f.onAttachPhoto}
           onSubmit={f.onSubmitCount}
+          onBack={f.goBack}
         />
       ) : null}
 
@@ -213,11 +229,11 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "challenge_done" && f.challengeDone ? (
+      {f.step === "day_open" && f.dayOpen ? (
         <ChallengeDoneStep
-          challengeTitle={f.challengeDone.challengeTitle}
-          remainingChallenges={f.challengeDone.remainingChallenges}
-          onNext={() => void f.goNextChallenge()}
+          model={f.dayOpen}
+          onOpenTask={f.openDayOpenTask}
+          onNext={f.goNextTask}
           onDone={f.exit}
         />
       ) : null}

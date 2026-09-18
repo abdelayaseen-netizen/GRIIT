@@ -2,6 +2,7 @@ import type { StampLabel } from "@/components/ds/Stamp";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 
 export const POST_DETAIL_TITLE = "Proof";
+export const COMMENTS_HEADING = "Comments";
 export const COMMENT_PLACEHOLDER = "Add a comment";
 export const COMMENTS_EMPTY = "No comments yet.";
 
@@ -32,6 +33,11 @@ export function postDetailStamp(post: {
 
 export function sendComposerArmed(text: string): boolean {
   return text.trim().length > 0;
+}
+
+/** Sheet field is canvas on surface; route field is surface on canvas. */
+export function composerFieldGround(surface: "sheet" | "route"): "canvas" | "surface" {
+  return surface === "sheet" ? "canvas" : "surface";
 }
 
 export function postDetailLoading(args: {

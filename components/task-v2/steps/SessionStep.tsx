@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { fmtMmSs } from "@/lib/task-flow-state";
+import { SESSION_HONESTY } from "@/lib/work-step";
 import { styles } from "../taskFlowStyles";
 
 type Props = {
@@ -15,9 +16,7 @@ export function SessionStep({ taskType, sessionUp, onStop, onCancel }: Props) {
     <View style={styles.body}>
       <Text style={styles.statLabel}>SESSION TIMER</Text>
       <Text style={styles.huge}>{fmtMmSs(sessionUp)}</Text>
-      <Text style={styles.disclosure}>
-        Counting up. Stopping fills the duration field for you — the photo is still what gets verified.
-      </Text>
+      <Text style={styles.disclosure}>{SESSION_HONESTY}</Text>
       <Pressable
         onPress={onStop}
         accessibilityRole="button"

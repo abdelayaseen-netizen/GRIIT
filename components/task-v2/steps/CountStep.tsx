@@ -1,16 +1,30 @@
 import React, { useRef } from "react";
-import { Pressable, Text, View } from "react-native";
-import { countReady } from "@/lib/task-flow-state";
-import { counterGoalCaption } from "@/lib/counter-log";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DS_V3 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
+import PushedHeader from "@/components/ds/PushedHeader";
 import { type KeypadMask } from "@/lib/keypad-masks";
 import { TaskKeypad } from "../TaskKeypad";
-import { styles } from "../taskFlowStyles";
+import {
+  COUNT_ADD,
+  COUNT_HONESTY,
+  COUNT_REMOVE,
+  COUNT_TYPE,
+  WORK_SECURED_CAPTION,
+  countCtaEnabled,
+  countCtaLabel,
+  countOfLine,
+} from "@/lib/work-step";
 
 type Props = {
   count: number;
   counterGoal: number;
   counterUnit: string;
-  taskType: string;
+  taskName: string;
+  headerTitle: string;
+  footerCaption?: string;
+  footerBrand?: boolean;
   keypadOpen: boolean;
   buffer: string;
   onBuffer: (v: string) => void;
@@ -18,15 +32,21 @@ type Props = {
   onAddOne: () => void;
   onOpenKeypad: () => void;
   onRemoveOne: () => void;
-  onAttachPhoto: () => void;
   onSubmit: () => void;
+  onBack: () => void;
 };
+
+const CIRCLE = DS_V3.size.tap * 3;
+const FIGURE = DS_V3.size.tap;
 
 export function CountStep({
   count,
   counterGoal,
   counterUnit,
-  taskType,
+  taskName,
+  headerTitle,
+  footerCaption = WORK_SECURED_CAPTION,
+  footerBrand,
   keypadOpen,
   buffer,
   onBuffer,
@@ -34,80 +54,150 @@ export function CountStep({
   onAddOne,
   onOpenKeypad,
   onRemoveOne,
-  onAttachPhoto,
   onSubmit,
+  onBack,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
-  const ready = countReady(count, counterGoal);
+  const enabled = countCtaEnabled(count, counterGoal);
+  const line = countOfLine(count, counterGoal, counterUnit);
 
   return (
-    <View style={styles.body}>
-      <View style={styles.countLine}>
-        <Text style={styles.huge}>{count}</Text>
-        <Text style={styles.unit}>
-          {counterGoalCaption(count, counterGoal, counterUnit).slice(String(count).length)}
-        </Text>
+    <View style={styles.root}>
+      <View style={{ paddingTop: insets.top }}>
+        <PushedHeader title={headerTitle} onBack={onBack} />
       </View>
-      {keypadOpen ? (
-        <TaskKeypad
-          label="Count"
-          mask={"count" as KeypadMask}
-          buffer={buffer}
-          onBuffer={onBuffer}
-          onDone={onKeypadDone}
-        />
-      ) : (
-        <>
-          <Pressable
-            onPress={() => {
-              if (holdOpenedKeypad.current) return;
-              onAddOne();
-            }}
-            onPressIn={() => {
-              holdOpenedKeypad.current = false;
-              holdTimer.current = setTimeout(() => {
-                holdOpenedKeypad.current = true;
-                onOpenKeypad();
-              }, 450);
-            }}
-            onPressOut={() => {
-              if (holdTimer.current) clearTimeout(holdTimer.current);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Add one"
-            style={styles.addOne}
-          >
-            <Text style={styles.addOneText}>Add one</Text>
-          </Pressable>
-          <View style={styles.row}>
-            <Pressable onPress={onRemoveOne} accessibilityRole="button" accessibilityLabel="Remove one" style={styles.textBtn}>
-              <Text style={styles.shareText}>Remove one</Text>
+      <View style={styles.body}>
+        <Text style={styles.title}>{taskName}</Text>
+        <Text style={styles.honesty}>{COUNT_HONESTY}</Text>
+        <View style={styles.countLine}>
+          <Text style={styles.figure}>{line.n}</Text>
+          <Text style={styles.rest}>{line.rest}</Text>
+        </View>
+        {keypadOpen ? (
+          <TaskKeypad
+            label="Count"
+            mask={"count" as KeypadMask}
+            buffer={buffer}
+            onBuffer={onBuffer}
+            onDone={onKeypadDone}
+          />
+        ) : (
+          <>
+            <Pressable
+              onPress={() => {
+                if (holdOpenedKeypad.current) return;
+                onAddOne();
+              }}
+              onPressIn={() => {
+                holdOpenedKeypad.current = false;
+                holdTimer.current = setTimeout(() => {
+                  holdOpenedKeypad.current = true;
+                  onOpenKeypad();
+                }, 450);
+              }}
+              onPressOut={() => {
+                if (holdTimer.current) clearTimeout(holdTimer.current);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={COUNT_ADD}
+              style={styles.addOne}
+            >
+              <Text style={styles.addOneText}>{COUNT_ADD}</Text>
             </Pressable>
-            <Pressable onPress={onOpenKeypad} accessibilityRole="button" accessibilityLabel="Type the number" style={styles.textBtn}>
-              <Text style={styles.shareText}>Type the number</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.tiny}>Press and hold &quot;Add one&quot; to type it instead</Text>
-          <Text style={styles.disclosure}>Self-entered count · nothing is checked.</Text>
-          {taskType === "reading" ? (
-            <Pressable onPress={onAttachPhoto} accessibilityRole="button" accessibilityLabel="Attach a page photo" style={styles.textBtn}>
-              <Text style={styles.shareText}>Attach a page photo</Text>
-            </Pressable>
-          ) : null}
-          <Pressable
-            disabled={!ready}
+            <Button label={COUNT_REMOVE} variant="tertiary" flush onPress={onRemoveOne} />
+            <Button label={COUNT_TYPE} variant="tertiary" flush onPress={onOpenKeypad} />
+          </>
+        )}
+      </View>
+      {keypadOpen ? null : (
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+          <Button
+            label={countCtaLabel(count, counterGoal)}
+            variant="primary"
+            disabled={!enabled}
             onPress={onSubmit}
-            accessibilityRole="button"
-            accessibilityLabel={!ready ? `${count} of ${counterGoal} logged` : "Submit"}
-            style={[styles.inkBtn, !ready && styles.disabledBtn]}
-          >
-            <Text style={styles.inkBtnText}>
-              {count < counterGoal ? `${count} of ${counterGoal} logged` : "Submit"}
-            </Text>
-          </Pressable>
-        </>
+          />
+          <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+        </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: DS_V3.color.canvas,
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+    alignItems: "center",
+  },
+  title: {
+    alignSelf: "stretch",
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  honesty: {
+    alignSelf: "stretch",
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  countLine: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  figure: {
+    fontSize: FIGURE,
+    lineHeight: DS_V3.space.section + DS_V3.space.lg,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textPrimary,
+    fontVariant: ["tabular-nums"],
+  },
+  rest: {
+    fontSize: DS_V3.type.heading.fontSize,
+    lineHeight: DS_V3.type.heading.lineHeight,
+    fontWeight: DS_V3.type.heading.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  addOne: {
+    width: CIRCLE,
+    height: CIRCLE,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addOneText: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.onBrand,
+  },
+  footer: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+  },
+  caption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
+  captionBrand: {
+    color: DS_V3.color.brandText,
+  },
+});

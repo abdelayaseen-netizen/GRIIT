@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { fmtMmSs, logReady } from "@/lib/task-flow-state";
 import type { DistanceUnit } from "@/lib/distance-unit";
+import { RUN_HONESTY, RUN_NO_MAP } from "@/lib/work-step";
 import { TaskKeypad } from "../TaskKeypad";
 import { styles } from "../taskFlowStyles";
 
@@ -125,18 +126,19 @@ export function LogStep({
             <Text style={styles.dashText}>Use the timer instead</Text>
           </Pressable>
           <Text style={styles.disclosure}>
-            {taskType === "run"
-              ? "Distance and duration are self-entered. Only the photo is verified."
-              : "Duration is self-entered unless the in-app timer ran. Only the photo is verified."}
+            {taskType === "run" ? RUN_HONESTY : "Duration is self-entered unless the in-app timer ran. The photo is still required."}
           </Text>
+          {taskType === "run" ? <Text style={styles.disclosure}>{RUN_NO_MAP}</Text> : null}
           <Pressable
-            disabled={!ready}
-            onPress={onNextPhoto}
+            disabled={taskType === "run" ? false : !ready}
+            onPress={taskType === "run" && !ready ? onUseTimer : onNextPhoto}
             accessibilityRole="button"
-            accessibilityLabel="Next: photo proof"
+            accessibilityLabel={taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
             style={styles.orangeBtn}
           >
-            <Text style={styles.btnText}>Next: photo proof</Text>
+            <Text style={styles.btnText}>
+              {taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
+            </Text>
           </Pressable>
         </>
       )}

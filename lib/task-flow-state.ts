@@ -19,6 +19,7 @@ export type TaskFlowStep =
   | "verifying"
   | "confirmation"
   | "challenge_done"
+  | "day_open"
   | "blocked"
   | "failed"
   | "window_closed";
@@ -26,9 +27,10 @@ export type TaskFlowStep =
 export function chromeTitle(type: string, gates: readonly TaskGate[] = []): string {
   if (gates.includes("camera")) return "Camera";
   if (gates.includes("location")) return "Location";
+  if (type === "counter" || type === "water" || type === "reading") return "Counter";
+  if (type === "timer") return "Timer";
+  if (type === "run") return "Run";
   if (type === "photo") return "Photo proof";
-  if (type === "water") return "Water";
-  if (type === "reading") return "Pages";
   if (type === "simple" || type === "manual" || type === "check_off") return "Self-report";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
@@ -84,6 +86,7 @@ export function chromeFlags(step: TaskFlowStep): { dark: boolean; hideChrome: bo
     hideChrome:
       step === "confirmation" ||
       step === "challenge_done" ||
+      step === "day_open" ||
       step === "verifying" ||
       step === "capture" ||
       step === "write" ||
@@ -109,12 +112,12 @@ export function checkinGpsNextStep(
   return null;
 }
 
-export function timerResumeStep(remainingSeconds: number): "verifying" | "running" {
-  return remainingSeconds <= 0 ? "verifying" : "running";
+export function timerResumeStep(_remainingSeconds: number): "running" {
+  return "running";
 }
 
-export function timerShouldAutoSubmit(step: TaskFlowStep, remainingSeconds: number, hasStart: boolean): boolean {
-  return step === "running" && hasStart && remainingSeconds <= 0;
+export function timerShouldAutoSubmit(_step: TaskFlowStep, _remainingSeconds: number, _hasStart: boolean): boolean {
+  return false;
 }
 
 export type GoBackDecision =
@@ -238,16 +241,16 @@ export function logReady(args: {
   return args.workoutMin != null && args.workoutMin >= args.minDurationMinutes;
 }
 
-export type FinishSubmitOutcome = "failed" | "challenge_done" | "secured_nav";
+export type FinishSubmitOutcome = "failed" | "day_open" | "secured_nav";
 
-/** Success never lands on the in-flow `confirmation` step — it navigates to secured. */
+/** Branch on the server's secured_today after the check-in resolves. Never a client row count. */
 export function finishSubmitOutcome(args: {
   complete: unknown | null | undefined;
-  afterUiKind?: string;
+  securedToday: boolean;
 }): FinishSubmitOutcome {
   if (!args.complete) return "failed";
-  if (args.afterUiKind === "challenge_done") return "challenge_done";
-  return "secured_nav";
+  if (args.securedToday) return "secured_nav";
+  return "day_open";
 }
 
 export function blockedEyebrow(windowStatus: string): "NOT OPEN YET" | "OUT OF RANGE" {

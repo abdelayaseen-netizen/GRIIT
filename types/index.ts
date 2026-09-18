@@ -8,7 +8,6 @@ export interface ChallengeTaskFromApi {
   duration_minutes?: number | null;
   min_words?: number | null;
   require_photo_proof?: boolean;
-  strict_timer_mode?: boolean;
   order_index?: number | null;
   verification_method?: string | null;
   verification_rule_json?: { sport?: string; min_distance_m?: number; min_moving_time_s?: number } | null;
