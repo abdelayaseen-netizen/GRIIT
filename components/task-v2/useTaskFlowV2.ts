@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
@@ -24,7 +24,7 @@ import {
   type DayOpenModel,
 } from "@/lib/day-open";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
-import { taskSecuredHref } from "@/lib/task-secured-nav";
+import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -150,6 +150,7 @@ export function useTaskFlowV2() {
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [windowForbidden, setWindowForbidden] = useState(false);
+  const submitInFlight = useRef(false);
 
   const windowEval = evaluateScheduleWindow({
     start: config.schedule_window_start,
@@ -271,11 +272,13 @@ export function useTaskFlowV2() {
   };
 
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
+    if (submitInFlight.current) return;
     if (!flowAllowsSubmit(windowState)) {
       setWindowForbidden(true);
       setStep("window_closed");
       return;
     }
+    submitInFlight.current = true;
     setSaving(true);
     let cancelled = false;
     const takeoverTimer = setTimeout(() => {
@@ -290,6 +293,7 @@ export function useTaskFlowV2() {
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;
         clearTimeout(takeoverTimer);
+        submitInFlight.current = false;
         setSaving(false);
         setFailCode(undefined);
         setFailNote("Couldn't save. Try again.");
@@ -373,6 +377,7 @@ export function useTaskFlowV2() {
           }),
         );
         setStep("day_open");
+        submitInFlight.current = false;
         return;
       }
       const assembled = assembleSubmitResult({
@@ -395,11 +400,24 @@ export function useTaskFlowV2() {
           : null,
       });
       setResult(assembled);
-      // secureDay already awaited invalidate+refetch (useAppChallengeMutations 291–296).
-      router.push(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+      if (
+        !canOpenSecuredScreen({
+          daySecured: assembled.daySecured,
+          newStreakCount: secure?.newStreakCount,
+        })
+      ) {
+        submitInFlight.current = false;
+        setFailNote("Couldn't confirm the streak.");
+        setStep("failed");
+        return;
+      }
+      if (securedNavOnce() === "replace") {
+        router.replace(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+      }
     } catch (err) {
       cancelled = true;
       clearTimeout(takeoverTimer);
+      submitInFlight.current = false;
       setSaving(false);
       const msg = err instanceof Error ? err.message : "";
       if (isWindowClosedError(msg)) {
