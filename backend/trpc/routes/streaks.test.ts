@@ -30,6 +30,7 @@ function createCaller(opts?: {
   failUpdate?: boolean;
   securedDateKeys?: string[];
   freezeKeys?: string[];
+  lastStandDateKeys?: string[];
   onProfileUpdate?: (payload: Record<string, unknown>) => void;
   onStreakUpdate?: (payload: Record<string, unknown>) => void;
   onFreezeInsert?: (payload: Record<string, unknown>) => void;
@@ -119,6 +120,12 @@ function createCaller(opts?: {
               error: null,
             }).then(onFulfilled, onRejected);
           }
+          if (table === "last_stand_uses") {
+            return Promise.resolve({
+              data: (opts?.lastStandDateKeys ?? []).map((date_key) => ({ date_key })),
+              error: null,
+            }).then(onFulfilled, onRejected);
+          }
           return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
         },
       };
@@ -183,21 +190,58 @@ describe("effectiveFreezesRemaining", () => {
 });
 
 describe("restoreStreakCount", () => {
-  it("keeps a live count and reconstructs from last_completed after a reset", () => {
+  const run = (
+    last: string,
+    secured: string[],
+    extra?: { lastStandDateKeys?: string[]; frozenDateKeys?: string[]; todayKey?: string },
+  ) =>
+    restoreStreakCount({
+      todayKey: extra?.todayKey ?? "2026-09-17",
+      lastCompletedDateKey: last,
+      securedDateKeys: secured,
+      lastStandDateKeys: extra?.lastStandDateKeys,
+      frozenDateKeys: extra?.frozenDateKeys,
+    });
+
+  it("bridges a Last Stand without incrementing it (streak.ts:19)", () => {
+    expect(
+      run(
+        "2026-09-10",
+        ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"],
+        { lastStandDateKeys: ["2026-09-06"] },
+      ),
+    ).toBe(9);
+  });
+
+  it("bridges a frozen day without incrementing it (streak.ts:19)", () => {
+    expect(
+      run(
+        "2026-09-10",
+        ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10"],
+        { frozenDateKeys: ["2026-09-06"] },
+      ),
+    ).toBe(9);
+  });
+
+  it("includes today when today is already secured", () => {
+    expect(
+      run(
+        "2026-09-17",
+        ["2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15", "2026-09-17"],
+        { frozenDateKeys: ["2026-09-16"], todayKey: "2026-09-17" },
+      ),
+    ).toBe(6);
+  });
+
+  it("returns 0 for an empty walk", () => {
+    expect(run("2026-09-12", [])).toBe(0);
     expect(
       restoreStreakCount({
-        activeStreakCount: 12,
-        lastCompletedDateKey: "2026-09-12",
+        todayKey: "2026-09-17",
+        lastCompletedDateKey: null,
         securedDateKeys: [],
       }),
-    ).toBe(12);
-    expect(
-      restoreStreakCount({
-        activeStreakCount: 0,
-        lastCompletedDateKey: "2026-09-12",
-        securedDateKeys: ["2026-09-10", "2026-09-11", "2026-09-12"],
-      }),
-    ).toBe(3);
+    ).toBe(0);
   });
 });
 
@@ -289,7 +333,14 @@ describe("streaks.useFreeze", () => {
       remaining: 4,
       lastFreezeUsedAt: null,
       lastCompletedDateKey: firstLast,
-      activeStreakCount: 5,
+      activeStreakCount: 0,
+      securedDateKeys: [
+        addCalendarDaysToDateKey(firstLast, -4),
+        addCalendarDaysToDateKey(firstLast, -3),
+        addCalendarDaysToDateKey(firstLast, -2),
+        addCalendarDaysToDateKey(firstLast, -1),
+        firstLast,
+      ],
       freezeKeys,
       onFreezeInsert: (payload) => {
         if (typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
@@ -345,5 +396,55 @@ describe("streaks.useFreeze", () => {
     await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
+  });
+
+  it("after a miss then secure today, freeze restores the bridged count including today", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-17T15:00:00.000Z"));
+    const today = getTodayDateKey("UTC");
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastBeforeMiss = addCalendarDaysToDateKey(yesterday, -1);
+    const inserts: Record<string, unknown>[] = [];
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: today,
+      activeStreakCount: 1,
+      securedDateKeys: [
+        addCalendarDaysToDateKey(lastBeforeMiss, -4),
+        addCalendarDaysToDateKey(lastBeforeMiss, -3),
+        addCalendarDaysToDateKey(lastBeforeMiss, -2),
+        addCalendarDaysToDateKey(lastBeforeMiss, -1),
+        lastBeforeMiss,
+        today,
+      ],
+      onFreezeInsert: (payload) => inserts.push(payload),
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).resolves.toEqual({
+      restoredStreak: 6,
+      remaining: 0,
+    });
+    expect(inserts).toEqual([{ user_id: USER, date_key: yesterday }]);
+  });
+
+  it("empty walk spends nothing and inserts no freeze_uses row", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-17T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const inserts: Record<string, unknown>[] = [];
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: lastCompleted,
+      activeStreakCount: 0,
+      securedDateKeys: [],
+      onFreezeInsert: (payload) => inserts.push(payload),
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "No streak to restore.",
+    });
+    expect(inserts).toEqual([]);
   });
 });

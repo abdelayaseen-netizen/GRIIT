@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import {
   addCalendarDaysToDateKey,
-  daysBetweenKeys,
+  getTodayDateKey,
   getYesterdayDateKey,
   getProfileTimeZoneForUser,
 } from "../../lib/date-utils";
@@ -11,12 +11,26 @@ import {
 /** Free-tier monthly freeze allotment. Pro uses STREAK_FREEZE_PER_MONTH_PRO. */
 export const STREAK_FREEZE_PER_MONTH_FREE = 1;
 export const STREAK_FREEZE_PER_MONTH_PRO = 4;
-const FREEZE_ELIGIBLE_MISSED_DAYS = 1;
 /** 30-day refill window from last_freeze_used_at (same interval as the old reset clock). */
 export const FREEZE_RESET_DAYS = 30;
 
 export function monthlyFreezeLimit(isPremium: boolean): number {
   return isPremium ? STREAK_FREEZE_PER_MONTH_PRO : STREAK_FREEZE_PER_MONTH_FREE;
+}
+
+/** Yesterday is the only hole: last completed is the day before it, or today after a same-day secure. */
+export function freezeEligibleYesterday(input: {
+  lastCompletedDateKey: string | null;
+  yesterdayKey: string;
+  todayKey: string;
+  securedDateKeys: readonly string[];
+}): boolean {
+  if (input.lastCompletedDateKey == null) return false;
+  if (input.securedDateKeys.includes(input.yesterdayKey)) return false;
+  const dayBefore = addCalendarDaysToDateKey(input.yesterdayKey, -1);
+  return (
+    input.lastCompletedDateKey === dayBefore || input.lastCompletedDateKey === input.todayKey
+  );
 }
 
 export function freezeWindowExpired(lastUsedAt: Date | null, now: Date): boolean {
@@ -25,20 +39,27 @@ export function freezeWindowExpired(lastUsedAt: Date | null, now: Date): boolean
 }
 
 export function restoreStreakCount(input: {
-  activeStreakCount: number;
+  todayKey: string;
   lastCompletedDateKey: string | null;
   securedDateKeys: readonly string[];
+  lastStandDateKeys?: readonly string[];
+  frozenDateKeys?: readonly string[];
 }): number {
-  if (input.activeStreakCount > 0) return input.activeStreakCount;
-  if (!input.lastCompletedDateKey) return 0;
-  const set = new Set(input.securedDateKeys);
+  const secured = new Set(input.securedDateKeys);
+  const bridge = new Set([
+    ...(input.lastStandDateKeys ?? []),
+    ...(input.frozenDateKeys ?? []),
+  ]);
+  const start = secured.has(input.todayKey) ? input.todayKey : input.lastCompletedDateKey;
+  if (!start) return 0;
   let n = 0;
-  let cursor = input.lastCompletedDateKey;
-  while (set.has(cursor)) {
-    n += 1;
+  let cursor = start;
+  while (secured.has(cursor) || bridge.has(cursor)) {
+    // Live increment: backend/lib/streak.ts:19 — only a secured day adds 1.
+    if (secured.has(cursor)) n += 1;
     cursor = addCalendarDaysToDateKey(cursor, -1);
   }
-  return n > 0 ? n : 1;
+  return n;
 }
 
 export function effectiveFreezesRemaining(input: {
@@ -89,13 +110,14 @@ export const streaksRouter = createTRPCRouter({
     .input(z.object({ dateKeyToFreeze: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) }))
     .mutation(async ({ input, ctx }) => {
       const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
       const yesterdayKey = getYesterdayDateKey(tz);
 
       if (input.dateKeyToFreeze !== yesterdayKey) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used for yesterday." });
       }
 
-      const [streakRes, profileRes, securesRes] = await Promise.all([
+      const [streakRes, profileRes, securesRes, standRes, freezeRes] = await Promise.all([
         ctx.supabase
           .from("streaks")
           .select("last_completed_date_key, active_streak_count")
@@ -107,6 +129,8 @@ export const streaksRouter = createTRPCRouter({
           .eq("user_id", ctx.userId)
           .single(),
         ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(400),
+        ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
+        ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
       ]);
 
       if (streakRes.error && streakRes.error.code !== "PGRST116") {
@@ -124,7 +148,6 @@ export const streaksRouter = createTRPCRouter({
       } | null;
 
       const lastKey = streak?.last_completed_date_key ?? null;
-      const activeStreak = streak?.active_streak_count ?? 0;
       const isPro = !!profile?.is_premium;
       const { remaining } = effectiveFreezesRemaining({
         storedRemaining: profile?.streak_freezes_remaining,
@@ -132,8 +155,15 @@ export const streaksRouter = createTRPCRouter({
         isPro,
       });
 
-      const missedDays = lastKey == null ? [] : daysBetweenKeys(lastKey, yesterdayKey);
-      if (missedDays.length !== FREEZE_ELIGIBLE_MISSED_DAYS || !missedDays.includes(yesterdayKey)) {
+      const securedDateKeys = (securesRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      if (
+        !freezeEligibleYesterday({
+          lastCompletedDateKey: lastKey,
+          yesterdayKey,
+          todayKey,
+          securedDateKeys,
+        })
+      ) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used when you missed exactly one day (yesterday)." });
       }
       if (remaining <= 0) {
@@ -141,9 +171,14 @@ export const streaksRouter = createTRPCRouter({
       }
 
       const previous = restoreStreakCount({
-        activeStreakCount: activeStreak,
+        todayKey,
         lastCompletedDateKey: lastKey,
-        securedDateKeys: (securesRes.data ?? []).map((r: { date_key: string }) => r.date_key),
+        securedDateKeys,
+        lastStandDateKeys: (standRes.data ?? []).map((r: { date_key: string }) => r.date_key),
+        frozenDateKeys: [
+          ...(freezeRes.data ?? []).map((r: { date_key: string }) => r.date_key),
+          yesterdayKey,
+        ],
       });
       if (previous <= 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "No streak to restore." });
