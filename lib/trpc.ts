@@ -33,9 +33,10 @@ export async function trpcQuery<T = unknown>(
     if (response.status === 401) {
       const { data: { session } } = await supabase.auth.getSession();
       if (shouldNotifySessionExpired(!!session)) {
+        const userId = session?.user?.id;
         await supabase.auth.signOut();
         const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-        await runClientSignOutCleanup();
+        await runClientSignOutCleanup(userId);
         const { clearOnboardingStorage } = await import("@/store/onboardingStore");
         await clearOnboardingStorage();
         notifySessionExpired();
@@ -77,9 +78,10 @@ export async function trpcMutate<T = unknown>(
     if (response.status === 401) {
       const { data: { session } } = await supabase.auth.getSession();
       if (shouldNotifySessionExpired(!!session)) {
+        const userId = session?.user?.id;
         await supabase.auth.signOut();
         const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-        await runClientSignOutCleanup();
+        await runClientSignOutCleanup(userId);
         const { clearOnboardingStorage } = await import("@/store/onboardingStore");
         await clearOnboardingStorage();
         notifySessionExpired();

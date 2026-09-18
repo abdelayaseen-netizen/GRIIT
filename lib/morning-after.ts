@@ -38,9 +38,18 @@ export function isMissAcked(ackedDateKey: string | null | undefined, dateKey: st
   return Boolean(ackedDateKey) && ackedDateKey === dateKey;
 }
 
+export function missAckStorageKey(userId: string): string {
+  return `${MISS_ACK_STORAGE_KEY}:${userId}`;
+}
+
 /** Persist ack for yesterday. Refusal and the X both dismiss the block for this key. */
-export function missAckPayload(dateKey: string): { key: string; value: string } {
-  return { key: MISS_ACK_STORAGE_KEY, value: dateKey };
+export function missAckPayload(userId: string, dateKey: string): { key: string; value: string } {
+  return { key: missAckStorageKey(userId), value: dateKey };
+}
+
+/** Legacy unscoped key plus the signed-in user's scoped key. */
+export function missAckKeysToClear(userId?: string | null): string[] {
+  return userId ? [MISS_ACK_STORAGE_KEY, missAckStorageKey(userId)] : [MISS_ACK_STORAGE_KEY];
 }
 
 export function morningAfterVisible(

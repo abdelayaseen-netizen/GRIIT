@@ -51,7 +51,7 @@ describe("freeze sheet", () => {
     expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
     expect(home).toContain("useFreeze.mutate()");
-    expect(home).toContain("missAckPayload(yesterdayKey)");
+    expect(home).toContain("missAckPayload(user.id, yesterdayKey)");
     expect(home).toContain("setFreezeError(inlineServerError(err))");
     expect(freezeUseCallsMutation()).toBe(true);
     expect(freezeRefuseAcksDateKey()).toBe(true);
@@ -65,7 +65,7 @@ describe("freeze sheet", () => {
     expect(closeIdx).toBeGreaterThan(-1);
     expect(refuseIdx).toBeGreaterThan(-1);
     const closeBlock = home.slice(closeIdx, closeIdx + 180);
-    const refuseBlock = home.slice(refuseIdx, refuseIdx + 280);
+    const refuseBlock = home.slice(refuseIdx, refuseIdx + 360);
     expect(closeBlock).not.toContain("missAckPayload");
     expect(closeBlock).not.toContain("AsyncStorage.setItem");
     expect(refuseBlock).toContain("missAckPayload");

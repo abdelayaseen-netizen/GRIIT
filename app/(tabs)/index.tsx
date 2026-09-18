@@ -47,6 +47,7 @@ import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import {
   MISS_ACK_STORAGE_KEY,
   missAckPayload,
+  missAckStorageKey,
   morningAfterCost,
   morningAfterCushion,
   morningAfterFreezeCaption,
@@ -137,10 +138,17 @@ export default function HomeScreen() {
   });
 
   React.useEffect(() => {
-    void AsyncStorage.getItem(MISS_ACK_STORAGE_KEY).then((value) => {
+    if (!user?.id) {
+      setMissAckDateKey(null);
+      return;
+    }
+    const scopedKey = missAckStorageKey(user.id);
+    void (async () => {
+      await AsyncStorage.removeItem(MISS_ACK_STORAGE_KEY);
+      const value = await AsyncStorage.getItem(scopedKey);
       setMissAckDateKey(value);
-    });
-  }, []);
+    })();
+  }, [user?.id]);
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
@@ -266,7 +274,8 @@ export default function HomeScreen() {
       }),
       freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
       onDismiss: () => {
-        const ack = missAckPayload(yesterdayKey);
+        if (!user?.id) return;
+        const ack = missAckPayload(user.id, yesterdayKey);
         setMissAckDateKey(ack.value);
         void AsyncStorage.setItem(ack.key, ack.value);
       },
@@ -275,7 +284,7 @@ export default function HomeScreen() {
         setShowFreezeSheet(true);
       } : undefined,
     };
-  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, yesterdayKey]);
+  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -336,9 +345,11 @@ export default function HomeScreen() {
       setFreezeSpent(true);
       setShowFreezeSheet(false);
       setFreezeError(null);
-      const ack = missAckPayload(yesterdayKey);
-      setMissAckDateKey(ack.value);
-      void AsyncStorage.setItem(ack.key, ack.value);
+      if (user?.id) {
+        const ack = missAckPayload(user.id, yesterdayKey);
+        setMissAckDateKey(ack.value);
+        void AsyncStorage.setItem(ack.key, ack.value);
+      }
       for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
         void queryClient.invalidateQueries({ queryKey: [...queryKey] });
       }
@@ -560,7 +571,8 @@ export default function HomeScreen() {
           onRefuse={() => {
             setShowFreezeSheet(false);
             setFreezeError(null);
-            const ack = missAckPayload(yesterdayKey);
+            if (!user?.id) return;
+            const ack = missAckPayload(user.id, yesterdayKey);
             setMissAckDateKey(ack.value);
             void AsyncStorage.setItem(ack.key, ack.value);
           }}
