@@ -32,7 +32,6 @@ import {
   completionPct,
   daysValue,
   heroDayLine,
-  lastStandDaysCount,
   lastStandSplitLine,
   ofElapsed,
   recordDayDetail,
@@ -72,7 +71,7 @@ export default function ConsistencyDetailScreen() {
   const months = (rec?.detail.months ?? []).filter((m) => m.pct > 0 || m.value !== "0 of 0");
   const challenges = rec?.detail.byChallenge ?? [];
   const days = rec?.days ?? [];
-  const lastStandDays = lastStandDaysCount(days);
+  const lastStandDays = rec?.detail.lastStandDays ?? 0;
 
   return (
     <ErrorBoundary>

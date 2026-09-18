@@ -31,10 +31,6 @@ export function lastStandSplitLine(n: number): string {
   return `Held by a Last Stand — ${n} days`;
 }
 
-export function lastStandDaysCount(days: readonly { state: string }[]): number {
-  return days.filter((d) => d.state === "last_stand").length;
-}
-
 /** Frozen maps to Not secured — only three labels on the record. */
 export function recordDayLabel(state: string): string {
   if (state === "last_stand") return HELD_BY_LAST_STAND_LABEL;

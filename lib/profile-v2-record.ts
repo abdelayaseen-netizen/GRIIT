@@ -169,6 +169,7 @@ export type ProfileRecord = {
     }[];
     cameraDays: number;
     selfReportedDays: number;
+    lastStandDays: number;
   };
 };
 
@@ -445,6 +446,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       byChallenge,
       cameraDays: 0,
       selfReportedDays: 0,
+      lastStandDays: 0,
     },
   };
 }

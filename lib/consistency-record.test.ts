@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CONSISTENCY_FOOTER,
@@ -9,7 +11,6 @@ import {
   completionPct,
   daysValue,
   heroDayLine,
-  lastStandDaysCount,
   lastStandSplitLine,
   ofElapsed,
   recordDayDetail,
@@ -64,8 +65,8 @@ describe("record day rows by state", () => {
     expect(recordDayDetail(row("last_stand"))).toBe("4 of 6 · nothing was checked");
     expect(recordDayDetail(row("frozen"))).toBe("4 of 6 · Run, Read");
     expect(lastStandSplitLine(2)).toBe("Held by a Last Stand — 2 days");
-    expect(lastStandDaysCount([{ state: "last_stand" }, { state: "secured" }, { state: "last_stand" }])).toBe(
-      2,
-    );
+    const src = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
+    expect(src).toContain("rec?.detail.lastStandDays ?? 0");
+    expect(src).not.toContain("lastStandDaysCount");
   });
 });
