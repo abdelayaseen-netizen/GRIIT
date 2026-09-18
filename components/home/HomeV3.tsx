@@ -28,6 +28,7 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
+import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 
 const ICON = DS_V3.space.xs * 6;
@@ -155,10 +156,7 @@ export function HomeV3({
   const freezeCaption =
     freezesLeft === 1 ? "1 freeze left" : `${freezesLeft} freezes left`;
   const badgeCaption = `${badgeName} · ${badgePct}%`;
-  const awayLine =
-    awayCount === 0
-      ? null
-      : `${awayCount} friends posted while you were away.`;
+  const awayLine = friendsPostedAwayLine(awayCount);
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
     const pending = !row.done && !closed;

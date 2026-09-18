@@ -33,7 +33,7 @@ import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
-import { countFriendsPostedAway } from "@/lib/home-away-count";
+import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
@@ -147,7 +147,21 @@ function LiveFeedSection({
     staleTime: 60 * 1000,
   });
 
-  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id);
+  const followingQuery = useQuery({
+    queryKey: ["profiles", "getFollowing", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getFollowing, { userId: user!.id }) as Promise<
+        Array<{ user_id: string }>
+      >,
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+  });
+  const followedIds = useMemo(
+    () => new Set((followingQuery.data ?? []).map((row) => row.user_id)),
+    [followingQuery.data],
+  );
+
+  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id, followedIds);
 
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
@@ -510,7 +524,7 @@ function LiveFeedSection({
         </View>
       )}
 
-      {hideHeaderToggle || finalFeed.length === 0 ? null : (
+      {hideHeaderToggle || awayCount === 0 ? null : (
         <Pressable
           style={styles.digestCard}
           onPress={scrollToFeed}
@@ -519,6 +533,7 @@ function LiveFeedSection({
         >
           <View style={styles.digestAvatars}>
             {Array.from(new Map(finalFeed.map((p) => [p.userId, p])).values())
+              .filter((p) => p.userId && followedIds.has(p.userId) && p.userId !== user?.id)
               .slice(0, 3)
               .map((p, i) => (
                 <View key={p.userId} style={[styles.digestAvatarWrap, i === 0 && { marginLeft: 0 }]}>
@@ -531,7 +546,7 @@ function LiveFeedSection({
               ))}
           </View>
           <Text style={styles.digestText} numberOfLines={2}>
-            Three friends posted while you were away.
+            {friendsPostedAwayLine(awayCount)}
           </Text>
         </Pressable>
       )}
