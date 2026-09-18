@@ -305,7 +305,8 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 43 Preview rows · 44 Home card · 45 Time gate · 46 Discard sheet · 47 Multi-challenge day ·
 48 Task done day open · 49 Counter Timer Run · 50 Add task second pass · 51 Comments and respect ·
 52 The morning after · 53 Two zeros · 54 The freeze · 55 Partial miss · 56 Roster yesterday ·
-57 The evening before.
+57 The evening before · 58 Proof moment · 59 Secured · 60 Proofs grid · 61 Run manual · 62 Controls ·
+63 Capture · 64 Edit profile · 65 Discover row · 66 One number.
 
 ## Source
 
@@ -472,8 +473,8 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 
 `GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33,
 `GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
-39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51, and
-`GRIIT The Miss.dc.html` holds 52 to 57.
+39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51,
+`GRIIT The Miss.dc.html` holds 52 to 57, and `GRIIT Proof Moment.dc.html` holds 58 to 66.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -595,3 +596,50 @@ A ten-row **Decisions for Yaseen** table and thirteen more repo contradictions, 
 `cursor/02_screens.md` — including two that make the freeze mechanic non-functional today: the cron
 nulls `last_completed_date_key`, which is the field `useFreeze` needs to validate, and only one day
 can ever be frozen because the frozen set is derived from a single timestamp column.
+
+## The proof moment, the proof grid, and the last light screens
+
+Frames 58 to 66, against build 58.
+
+**The moment after a task** now leads with the photo the user just took. A camera task that ends on a
+text list throws away its own artefact three seconds after it was made. The share choice is two buttons,
+both one tap and both advancing — "Share to the feed" and "Keep it to the record" — so nothing defaults
+silently and nothing is celebrated. A self-reported task has no photo and no share choice.
+
+**Secured** loses the empty image card and the unqualified "Day 2." A day number belongs to a challenge,
+and with three running there are three of them, so the hero is the streak and day numbers only appear
+with a challenge name attached. Zero photos shows no image area and lists the challenges; one shows it
+full width; three or more show three tiles and a +n.
+
+**Profile → Proofs** is a 3-up square grid, newest first, day burned into the tile corner.
+Self-reported days do not appear — there is no photo — but the count under the grid names them, and the
+two empty states are written separately so a user with eleven self-reported days does not read the
+new-user message.
+
+The **Run step** stops claiming GPS for numbers the user typed and stops printing a note about the
+design system on a phone. **Pause, Reset, Remove one and Type it** become surface pills instead of bare
+orange text, which puts the accent colour back on the one primary per screen. The **capture shutter**
+goes from `surface` — one step off black on a dark viewfinder — to a proper white ring and fill, and
+the top controls get scrim pills with the task and its window named. **Edit profile**, the last light
+screen, comes onto DS_V3 with every field and validation unchanged. **"Ready for more?"** becomes the
+ListRow it always was.
+
+**One consistency number.** Home said "3 days · 67%" and Profile said "2 of 7" for the same user:
+`lib/profile-consistency.ts` counts a rolling week, Home counts the streak, and
+`profiles-record.ts` already computes the correct thing that neither reads. The definition is days
+secured over due days closed, since the first due day, today excluded. The phrasing is "{secured} of
+{due} days", everywhere, with no percentage — at 13 due days one miss moves it eight points, which is
+volatility, not information.
+
+Source: `src/components/{ProofMoment, SecuredDay, ProofsGrid, ControlPill}.tsx`,
+`src/lib/consistency.ts`. Copy tables, states, the seven answered product decisions and contradictions 33 to 45 are in
+`cursor/02_screens.md`; `ds/ControlPill` is declared in `cursor/01_components.md` and the build
+order is in `cursor/05_diff_from_current_app.md`.
+
+Two things the build depends on. **The share choice rides on whichever screen is reached** — frame 58
+when the day is still open, frame 59 when that task secured it — and the two are never shown back to
+back. And **the feed row must be written unshared**: `checkins.complete` currently inserts the public
+`task_completed` row with the photo at completion (`checkins.ts:822-842`), so until it carries a
+`shared` flag that the share buttons flip, "private until you choose" is a claim the server
+contradicts. A day secured with unshared proofs shows nothing in the feed — an unshared proof is not a
+quieter post, it is not a post.

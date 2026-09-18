@@ -3,10 +3,20 @@ branch: main
 
 ## Last sync
 
-date: 2026-09-17T21:34:05Z
-tree: f9a5ec94160a
+date: 2026-09-18T22:41:47Z
+tree: 9e4f1d5897ae
 
 ### Updated in this project
+
+- Applied five v26 fixes: the share choice now rides on whichever of frame 58 / 59 is reached (never both); Proofs tiles are date-sectioned and challenge-labelled; the Discover subtitle binds `FREE_ACTIVE_CHALLENGES_LIMIT = 3` from `lib/free-challenge-limit.ts` instead of the group cap; `ds/ControlPill` is declared in `01_components.md`; `05_diff_from_current_app.md` gained the chunk-Q build order.
+- Read `lib/design-system.ts` for the real `DiscoverCTA` hexes (`#1A1410`, `#E8593C`, `#888780`, `#5F5E5A`) — the earlier "blue-grey" description was wrong.
+- Added contradiction 45: `checkins.complete` inserts the public `task_completed` row with the photo at completion (`checkins.ts:822-842`), so the share choice needs a `shared` flag written false and flipped on share.
+
+- Built frames 58 to 66 against build 58: the proof moment, Secured with 0/1/3+ photos, the Proofs grid and full view, the manual Run step, control pills, the capture shutter, Edit profile on DS_V3, the Discover row, and one consistency number.
+- Found three consistency definitions shipping at once — `lib/profile-consistency.ts` (rolling 7 days), Home's streak-derived percentage, and `profiles-record.ts`'s correct `verifiedClosed / closedDueDays` that neither surface reads.
+- Found `app/task/secured.tsx` carries a single `proofUri` param, so a day with several camera proofs cannot be represented; `splitSecuredProof` already computes what is needed.
+- Found `TaskCapture`'s shutter fill is `surface` by deliberate comment, which is near-invisible on a dark viewfinder.
+- Logged contradictions 33 to 44 and seven open product decisions.
 
 - Built frames 52 to 57 (the morning after, the two zeros, the freeze offer, partial miss in the record, roster yesterday, the evening reminders) from a read of the streak, freeze and Last Stand rules.
 - Established from code that Last Stand is automatic, premium/trial-only and retrospective — no grace window or countdown exists, so the brief's grace-window screens were not designed.
@@ -78,5 +88,13 @@ tree: f9a5ec94160a
 | 55 Partial miss | `backend/lib/{daily-reset,last-stand}.ts`, `app/profile/consistency.tsx` |
 | 56 Roster yesterday | `app/challenge/[id]/members.tsx`, `components/ds/MemberRow.tsx` |
 | 57 The evening before | `lib/notifications.ts`, `lib/notification-copy.ts` |
+| 58 Proof moment | `components/task-v2/{TaskConfirmation,MomentScreenV3}.tsx`, `components/task-v2/useTaskFlowV2.ts` |
+| 59 Secured | `app/task/secured.tsx`, `backend/lib/proof-predicate.ts` |
+| 60 Proofs grid | `app/(tabs)/profile.tsx`, `backend/trpc/routes/profiles-record.ts` |
+| 61 Run manual, 62 Controls | `components/task-v2/steps/{RunningStep,SessionStep,CountStep,TimerEntryStep}.tsx`, `components/task-v2/taskFlowStyles.ts` |
+| 63 Capture | `components/task-v2/TaskCapture.tsx` |
+| 64 Edit profile | `app/edit-profile.tsx`, `lib/profile-v2-tokens.ts` |
+| 65 Discover row | `components/home/DiscoverCTA.tsx` |
+| 66 One number | `lib/profile-consistency.ts`, `backend/trpc/routes/profiles-record.ts` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |

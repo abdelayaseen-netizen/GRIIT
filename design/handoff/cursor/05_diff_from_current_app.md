@@ -35,3 +35,30 @@ change, then the chunk that does it.
 | Create, step 3 | Three selection languages down to one: cards for Standard and Hard mode, ghost chips for public proof and category; the tinted research band to a `caption` under the chips; "75 Hard style — no exceptions" to "75 Hard style. No exceptions."; "Recommended for first challenge" to "Recommended for your first challenge"; Continue reads "Review" | F |
 | Review sheet | "Review & launch" to "Review and launch" and "Confirm & launch" to "Launch"; five bordered summary boxes to rows on the sheet ground with dividers and a tertiary Edit per row; loading changes only the button to "Launching"; the raw zod array in red to the empty state pattern with heading "Could not launch" and a retry | F |
 | Launch result | No screen today to the existing surface: "You are in.", "Day 1 begins tomorrow morning.", the challenge name, one primary "Back to Home", plus one secondary "Invite friends" for a group | F |
+
+## Chunk Q — the proof moment, the proof grid, the last light screens
+
+Frames 58 to 66, against build 58. Nine changes, one new component, one server change.
+
+| # | what the app does today | what to build | files |
+|---|---|---|---|
+| 1 | after a camera task, a text-only list; the photo just taken is not on the screen | the photo leads at 300pt, then two buttons: Share to the feed / Keep it to the record | `components/task-v2/{TaskConfirmation,useTaskFlowV2}.tsx` |
+| 2 | the last camera task of the day secures it, skips the moment screen, and the photo is never offered a choice | frame 59's footer carries the same two buttons when the closing completion has an unshared photo. Never 58 then 59 | `app/task/secured.tsx` |
+| 3 | Secured renders an empty image card when `proofUri` is absent | 0 proofs: no image area, list the challenges. 1: full width. 3+: three tiles and +n | `app/task/secured.tsx`, `components/task-v2/MomentScreenV3.tsx` |
+| 4 | Secured shows an unqualified "Day 2." | the streak is the hero; day numbers appear only with a challenge name | same |
+| 5 | Proofs tiles labelled "Day {n}" | date section headers, challenge name on the tile; full-view header is the date | `app/(tabs)/profile.tsx`, `backend/trpc/routes/profiles-record.ts` |
+| 6 | Run step claims GPS for typed values and prints a design-system note | conditional honesty line; the GPS variant is written and held | `components/task-v2/steps/RunningStep.tsx` |
+| 7 | Pause / Reset / Remove one / Type it are bare orange text in a left stack | `ds/ControlPill`, centred row, 44pt, surface + border | new `components/ds/ControlPill.tsx`; `steps/{TimerEntryStep,CountStep,SessionStep,RunningStep}.tsx` |
+| 8 | capture shutter fills `surface` (`TaskCapture.tsx:3`), near-invisible on a dark viewfinder | 78pt `textPrimary` ring + fill; scrim pills on the top controls; the middle pill names the task and its window | `components/task-v2/TaskCapture.tsx` |
+| 9 | `edit-profile.tsx` on `PROFILE_V2_COLOR` — cream, 2pt borders, `shared/Avatar` | DS_V3 surfaces, 1pt borders, `ds/Avatar`, Change photo as a ControlPill. Every field and validation unchanged | `app/edit-profile.tsx` |
+| 10 | "Ready for more?" on the legacy palette, `#1A1410` ground, `#E8593C` coral, 700 weight | a `ListRow`; subtitle binds `FREE_ACTIVE_CHALLENGES_LIMIT`, not the group cap | `components/home/DiscoverCTA.tsx` |
+| 11 | three consistency definitions ship at once | one: secured ÷ due days closed, all-time, today excluded. One phrasing: "{secured} of {due} days". No percentage | `lib/profile-consistency.ts` (delete), Home hero, `profiles-record.ts` (already correct) |
+| 12 | `checkins.complete` inserts the public feed row with the photo at completion (`checkins.ts:822-842`) | insert it `shared: false`; "Share to the feed" and the full-view Share flip it. Feed queries add `where shared = true`; record, roster, grid and consistency queries do not | `backend/trpc/routes/checkins.ts`, feed queries |
+
+**Order.** 12 first — it is the server change every share affordance depends on, and 1, 2 and 5 are
+dishonest without it. Then 1, 2, 3, 4 as one task-flow pass. Then 7 and 8, which are small and
+self-contained. 9, 10 and 11 are independent of all of it.
+
+**Deletions.** `lib/profile-consistency.ts` goes entirely; Home reads
+`consistency.verifiedClosed / closedDueDays` from `profiles.getRecord`. The shutter comment at
+`TaskCapture.tsx:3` goes with the fill it justifies.

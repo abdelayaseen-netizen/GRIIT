@@ -23,6 +23,41 @@ One tappable label. Three variants.
 
 **RN** ActivityIndicator only inside the button, never over content.
 
+## ControlPill
+
+Added in chunk Q. A secondary control that acts *on* the screen without finishing it: Pause, Reset,
+Remove one, Type it, Stop, Change photo.
+
+**Why it exists.** These were bare `brandText` labels, left-aligned in a column with large gaps — an
+unstyled link list wearing the accent colour that law 6 reserves for the one primary. Neither existing
+component fits. `Button variant="secondary"` is 52pt and full width, which reads as a second
+commitment: two of them under a timer look like two ways to finish. `Chip` is a selection with a
+persistent on state, and Pause is not a state you are in. ControlPill is the rank between them, which
+the system did not have.
+
+**Props** `label: string`; `icon?: string` (Lucide name); `disabled?: boolean`; `onPress?: () => void`
+
+**States** default; pressed opacity 0.8; disabled opacity 0.5 with a `textSecondary` label and no
+press. No selected state — if a control needs one, it is a Chip.
+
+**Tokens** ground `surface`, 1pt `border`, radius `pill`. minHeight 44, paddingHorizontal 16,
+gap 8. label `secondary` at weight 500 in `textPrimary`. icon 18 in `textSecondary`.
+
+**Layout** always a centred row directly under the element it acts on, `gap: 8`, never a left-aligned
+stack and never full width. Two or three per row; at four, the screen has a different problem.
+
+**Hit** 44 minimum, both axes. The pill *is* the target — never a text-bounds tap.
+
+**Allowed on** the task-v2 step screens (Timer: Pause, Reset · Counter: Remove one, Type it · Run:
+Stop) and Edit profile (Change photo).
+
+**Never** never in a pinned footer — the footer is for commitments, and a ControlPill there competes
+with the primary; never more than one row of them; never `brandText` on the label, which is what it
+replaced; never as the only way to reach a function (the Counter's press-and-hold is an accelerator,
+the pill is the route).
+
+**RN** `Pressable` with `android_ripple` off; the icon is `lucide-react-native` at 18.
+
 ## Card
 
 Container for content read or tapped as one unit.

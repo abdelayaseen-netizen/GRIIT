@@ -2961,3 +2961,448 @@ reset variants have none), 9 and 22 (the morning-after block is one card above t
 inside it; the Last Stand line lives inside the existing stats card), 18 (a Last Stand day is explicitly
 not camera proof and carries no Stamp), 21 (roster rows stay on the canvas with their caption slot
 unchanged).
+
+# The proof moment, the proof grid, and the last light screens
+
+**Chunk** Q. Frames 58 to 66, in `GRIIT Proof Moment.dc.html`. No new tokens, **one new component**:
+`ds/ControlPill`, declared in `cursor/01_components.md` and justified at frame 62.
+
+Grounded against `abdelayaseen-netizen/GRIIT@main`, tree `9e4f1d5897ae`, build 58 on device. Read:
+`app/task/secured.tsx`, `app/edit-profile.tsx`, `components/task-v2/{TaskCapture, TaskConfirmation,
+MomentScreenV3}.tsx`, `components/home/DiscoverCTA.tsx`, `lib/profile-consistency.ts`,
+`backend/lib/proof-predicate.ts`, `backend/trpc/routes/profiles-record.ts`.
+
+Source for this chunk: `src/components/{ProofMoment, SecuredDay, ProofsGrid, ControlPill}.tsx` and
+`src/lib/consistency.ts`.
+
+---
+
+## 58. The proof moment — after a task, day still open
+
+Amends frame 48. Same rule about the Secured screen: **these two are never both shown.** Branch on the
+server's `secured_today` after the check-in resolves.
+
+**The photo leads.** A camera task that ends on a text list throws away the one artefact the user just
+made, three seconds after making it. It renders at 300pt, `objectFit: cover`, `radius.card` — not
+full 4:5, because the sentence and the two buttons have to clear the fold underneath it.
+
+**The share choice is two buttons, both one tap, both advancing.** "Share to the feed" is the primary;
+"Keep it to the record" is a secondary at the same height. Neither is a default and neither is a
+dismissal: a photo stays private until this screen is answered. No switch, no "post anyway", no
+ceremony.
+
+**A self-reported task gets no share choice** and no photo — there is nothing to show. It keeps the
+frame 48 shape: the remaining rows of the same challenge, then "Next task" and "Done".
+
+**Copy**
+| string | style |
+|---|---|
+| {task} done. | title |
+| Camera proof, recorded. {n} left to secure today. | secondary textSecondary |
+| Self-reported, recorded. {n} left to secure today. | secondary textSecondary |
+| Camera proof, recorded. {challenge} is done for today. {n} left to secure today. | secondary textSecondary |
+| {challenge} · Day {n} of {N} | label textSecondary |
+| Share to the feed | Button primary, arrow-up-right 20 |
+| Keep it to the record | Button secondary |
+| Next task | Button primary |
+| Done | Button tertiary |
+
+`{n} left to secure today` counts required tasks across **every** active challenge, not the current
+one — that is the number the day turns on.
+
+**The rule: exactly one of frame 58 and frame 59 is ever shown, and the share choice rides on whichever
+one it is.**
+
+```
+on check-in resolved:
+  if server says secured_today  -> frame 59 (Secured)
+  else                          -> frame 58 (proof moment)
+
+the footer of whichever screen is shown:
+  if the completion that closed it carried an unshared photo
+                                -> Share to the feed / Keep it to the record
+  else                          -> Done  (59)  |  Next task / Done  (58)
+```
+
+The last camera task of the day is the case this fixes: it secures the day, so frame 58 is skipped, and
+in v25 the photo went straight to the record with no choice ever offered. Frame 59 now carries the same
+two buttons in the same order with the same labels. **Never 58 then 59** — two receipts for one tap, and
+the user would answer the same question twice.
+
+With several unshared photos in the day (frame 59C), "Share to the feed" shares **the day** as one post,
+not the closing photo alone: the screen the user is answering is a day, and posting one of four photos
+they cannot see selected is a choice they did not make. "Keep it to the record" dismisses the screen —
+it is the Done button, renamed to say what dismissing means.
+
+**States**: camera / self-reported / last task of one challenge with others open / last task of the day,
+unshared photo (frame 59 with the share footer) / last task of the day, no photo (frame 59 with Done) /
+share failed (the row stays, one caption "Not shared. It is in your record." — the proof is recorded
+either way, and sharing is not part of securing).
+
+---
+
+## 59. Secured, for a day that holds several proofs
+
+**"Day 2." is gone.** A day number belongs to a challenge; with three running there are three of them,
+and an unqualified one is unanswerable. The hero is the **streak**, which is the number the day itself
+owns. Day numbers appear only with a challenge name attached — in the caption under a single photo, or
+in the rows of the zero-photo state.
+
+**The image area, by count**
+
+| proofs | treatment |
+|---|---|
+| 0 | **no image area at all** — a `Card` listing each challenge with `shield-off` 16 and "Self-reported" |
+| 1 | the photo, full width, 240pt, with "{challenge} · Day {n} of {N}" under it |
+| 2+ | three square tiles at 112pt, the third carrying a `+n` on a 62% ink scrim; the caption names the challenges |
+
+Never an empty card. Build 58 renders the image frame whether or not `proofUri` is set, which is the
+grey box in the screenshot — `secured.tsx` passes `proofUri` as a single optional param, so the
+component has no way to know a day held four photos.
+
+**Copy**
+| string | style |
+|---|---|
+| Current streak | label textSecondary |
+| {streak} | numberSize.moment, displayFace |
+| days / day | body textSecondary |
+| Today is secured. | bodyStrong |
+| {n} tasks across {m} challenges. {k} camera proofs. | caption textSecondary |
+| {n} tasks, all self-reported. Nothing was checked. | caption textSecondary |
+| {challenge} · Day {n} of {N} | secondary textSecondary (rows) / caption textSecondary (photo caption) |
+| Self-reported | caption textSecondary |
+| +{n} | bodyStrong on a 62% ink scrim |
+| Done | Button primary |
+
+"across {m} challenges" only when m > 1.
+
+---
+
+## 60. Profile → Proofs
+
+**Sectioned by date, labelled by challenge.** "Day 13" on a tile is the ambiguity frame 59 removed: a
+single day can hold a Day 13 of Iron man and a Day 2 of Quick Steps, and with several proofs per day the
+grid would show the same number twice meaning different things, or different numbers on adjacent tiles
+from the same afternoon.
+
+- **Section header** per date, `type.label` `color.textSecondary`: "17 September · 2 proofs". The
+  date is said once, not on every tile, and it is the axis the grid is already ordered by.
+- **Tile label** the challenge name, burned into the bottom-left at 12/16 medium
+  `color.textPrimary` with a `0 1px 3px rgba(0,0,0,0.8)` shadow, `nowrap` with ellipsis at
+  `calc(100% - 16px)`. Inside the tile, not captioned below it — the grid is photographs, and a caption
+  row per tile turns it into a list.
+- The day number is **not** on the tile. At 114pt "Daily Gratitude · Day 8" cannot be read, and the
+  number is the part the user can reconstruct from the date; the challenge is the part they cannot.
+
+**Tile** square, `radius.input` 12, 3-up, 6pt gutters, `objectFit: cover` from the 4:5 original,
+newest first within each date section.
+
+**Full-view header is the date**, "17 September", for the same reason. The challenge and its day number
+go in the body line underneath — "{challenge} · Day {n} of {N} · {date}, {time}" — where there is room
+to say both and neither is ambiguous.
+
+**Self-reported days do not appear.** There is no photo. A placeholder tile is a picture of a proof that
+does not exist, which is the rule this whole system runs on. The count under the grid names them so the
+grid is never read as the whole record: "9 camera proofs. 4 more days were secured self-reported and
+have no photo."
+
+**Two different empty states**, and they must not share copy:
+
+| condition | heading | body |
+|---|---|---|
+| no camera proofs, no secured days | No camera proofs yet | A proof lands here when a task with the Camera gate is done. Nothing can be added from your library. |
+| no camera proofs, but secured days exist | No camera proofs yet | Your {n} secured days were all self-reported. A task with the Camera gate puts a photo here. |
+
+A user who has secured eleven days self-reported has not failed at anything, and must not read the
+new-user message.
+
+**Full view** `x` / "Day {n}" / overflow, the photo at its true 4:5, then task name, "{challenge} ·
+Day {n} of {N} · {date}, {time}", and a surface pill listing the gates it passed: "Camera · By 7:00 am ·
+Taken in the app". One secondary "Share". No Stamp on this screen — the pill says more than the stamp
+does, and it says it in words.
+
+Data: `profiles.getRecord` already returns `proofs: [{ id, day, thumbUrl, capturedAt }]`
+(`profiles-record.ts:350`) and `splitSecuredProof` already computes `cameraDays` /
+`selfReportedDays` (`proof-predicate.ts:59`). The grid needs the gate list added to each proof row;
+everything else exists.
+
+---
+
+## 61. Run step, typed values
+
+Same chrome as Counter and Timer (frame 49). The shipped copy asserts GPS for numbers the user typed,
+and carries a sentence about the design system that belongs in a handoff, not on a phone.
+
+| variant | honesty line |
+|---|---|
+| typed (today) | You type the distance and time. The photo is what is checked. |
+| GPS (when it exists) | Distance and time from GPS. The photo is still required. |
+| typed, no Camera gate | You type the distance and time. Nothing is checked. |
+
+Distance and Duration are two 52pt fields side by side with their units as trailing captions, then a
+derived pace line ("5:19 per km. Target met."), then the capture frame. **The photo comes after the
+numbers**, same rule as Timer + Camera: the app must not be handed a photo for a run that was never
+entered.
+
+The header names the gate: "Day {n} · Camera" when the Camera gate applies, "Day {n} · Run" when it does
+not.
+
+| string | style |
+|---|---|
+| Distance / Duration | label textSecondary |
+| km / mi / mm:ss | caption textSecondary, trailing |
+| {pace} per {unit}. Target met. | caption textSecondary |
+| {pace} per {unit}. {n} {unit} short. | caption textSecondary |
+| The photo comes after the numbers | caption textSecondary |
+| Take photo | Button primary, camera 20 |
+
+---
+
+## 62. Secondary controls
+
+Pause, Reset, Remove one and Type it were bare `brandText` labels, left-aligned in a column with large
+gaps. Three problems: they read as an unstyled link list, they spend the accent colour on the least
+important control on the screen, and their tap target is the text bounds.
+
+**They become pills**: `minHeight: 44`, `0 16px`, `radius.pill`, `color.surface`, 1pt border,
+`type.secondary` medium in `color.textPrimary`, with an 18pt `color.textSecondary` leading glyph.
+Centred in a row under the element they act on, never a left stack.
+
+`src/components/ControlPill.tsx`, declared in `cursor/01_components.md`. Applies to Timer (Pause,
+Reset), Counter (Remove one, Type it), Run (Stop), and the Edit profile "Change photo".
+
+**Why not `Button variant="secondary"`.** Secondary is `buttonHeight.regular` 52 and full width by
+default — it is a second *commitment* on the screen, and two of them side by side under a timer read as
+two ways to finish. ControlPill is 44pt, hugs its label, and never spans the column; it is the rank
+below secondary, which the system did not have. `Chip` is the other near-miss and is wrong for the
+opposite reason: a Chip is a **selection** with a persistent on state, and Pause is not a state you are
+in.
+
+---
+
+## 63. Capture
+
+**The shutter.** `TaskCapture.tsx:3` has a comment — "Shutter fill is surface (frame 14:983), not
+textPrimary" — and that is the bug: `color.surface` is `#1A1917`, one step off black, on a dark
+viewfinder. It becomes the standard camera shutter: 78pt, a 4pt `color.textPrimary` ring, a 5pt gap,
+and a `color.textPrimary` fill. That earlier frame reference was read as a rule; it was a mistake.
+
+**Top controls** each get a `rgba(15,15,15,0.55)` scrim pill so they survive a bright frame. The middle
+pill names the task and its window — "Workout, outdoors · By 7:00 am" — so the user is never guessing
+what they are shooting, and a time gate is visible at the moment it matters.
+
+One caption above the shutter: "Taken in the app. The library is not an option." That is the product's
+whole claim about photos, stated where the photo is taken.
+
+---
+
+## 64. Edit profile
+
+The last light screen. `app/edit-profile.tsx` runs on `PROFILE_V2_COLOR` — cream canvas, 2pt
+borders, `radius 16`, a 96pt `shared/Avatar`, and a bordered "Change photo" button.
+
+Everything functional stays: display-name and username fields, the debounced availability check with its
+Available / Taken / 3 characters min states, the 150-character bio counter, the discard confirm. What
+changes is only the surface: `color.canvas` ground, `color.surface` fields with 1pt `color.border`,
+`radius.input` 12, `type.label` field labels, the DS_V3 avatar treatment, and Change photo as a
+ControlPill. Save is `color.brandText` text in the nav, disabled to `color.textSecondary`.
+
+| string | style |
+|---|---|
+| Cancel | body textSecondary |
+| Edit profile | bodyStrong |
+| Save | secondary medium brandText, textSecondary when blocked |
+| Change photo | ControlPill |
+| Display name / Username / Bio | label textSecondary |
+| Available / Taken / 3 characters min | caption brandText / danger / danger |
+| Lowercase letters, numbers and underscores. Changing it breaks old links. | caption textSecondary |
+| Shown to anyone who can see your profile. | caption textSecondary |
+| {n}/150 | caption textSecondary, danger past 140 |
+
+---
+
+## 65. "Ready for more?" becomes a row
+
+`DiscoverCTA.tsx` imports `DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS` and uses
+`DISCOVER_HERO_DARK_BG`, `DISCOVER_CORAL`, `FEED_CTA_ICON_BG`, `FEED_ENGAGEMENT_MUTED` and
+`WEIGHT_BOLD` at 13pt. Resolved in `lib/design-system.ts`: a `#1A1410` ground that is neither
+`canvas` nor `surface`, an `#E8593C` coral four points off `brandText`, and a weight law 3
+forbids.
+
+It is a navigation affordance at the bottom of a list, so it is a `ListRow`: `search` 24
+`textSecondary`, "Find another challenge", a subtitle carrying a real number, and the row's own
+chevron. The question mark goes — the app knows how many challenges are running, so it says so.
+
+| string | style |
+|---|---|
+| Find another challenge | ListRow title |
+| {n} of {limit}. Free accounts hold {limit} at a time. | ListRow subtitle, free tier |
+| {n} running. | ListRow subtitle, Pro |
+| Nothing running. | ListRow subtitle, when n is 0 |
+
+The cap is `FREE_ACTIVE_CHALLENGES_LIMIT = 3` from `lib/free-challenge-limit.ts` — **active
+enrollments, created or joined**, not lifetime creates. Bind `{limit}` to the constant; do not type 3.
+Pro has no constant and no cap in that file, so the Pro subtitle states the count and nothing else: a
+limit sentence with no limit behind it is the kind of thing this pass exists to remove.
+
+v25 said "Ten is the cap", which is the **group member cap** from chunk L and has nothing to do with how
+many challenges a person may run. Two different tens would have shipped meaning two different things.
+
+---
+
+## 66. One consistency number
+
+Home showed "3 days · 67%" and Profile showed "2 of 7" for the same user on the same evening.
+
+**Why they disagreed.** `lib/profile-consistency.ts` counts secured keys inside `weekDateKeys` — a
+rolling 7-day window. Home's hero counts the current streak. Two windows, two units, and a percentage
+derived from a third thing.
+
+**One definition.** Days secured ÷ due days that have **closed**, since the user's first due day. Today
+is excluded from the ratio and reported separately: a day still open is not a miss. This is the same
+definition `profiles-record.ts` already uses for `consistency.verifiedClosed / closedDueDays`, so
+Home should read that field rather than compute its own.
+
+**One phrasing.** "{secured} of {due} days". Everywhere.
+
+**No percentage.** It is a second way of saying a number already on the screen, and at 13 due days one
+miss moves it eight points — which reads as volatility, not information. It also invites a rounding
+question the record cannot answer honestly ("67%" of what window?).
+
+| surface | headline | sub-line |
+|---|---|---|
+| Home, streak hero | {streak} days | {secured} of {due} days secured. |
+| Profile, consistency card | {secured} of {due} days | Since {date}. 1 due today. |
+| Consistency detail hero | {secured} of {due} | Day {n} of {N}. |
+| no due days yet | No due days yet. | Join a challenge to start the count. |
+| first day is today | First day is today. | Today is the first day due. |
+
+`src/lib/consistency.ts` holds the three string builders. Nothing else may phrase this.
+
+---
+
+## Decisions — answered 18 September, binding
+
+| # | question | **answer** |
+|---|---|---|
+| 1 | "Keep it to the record" — never shareable, or shareable later? | **Shareable later**, from the proof's full view |
+| 2 | Backgrounded on frame 58 without choosing? | **Unanswered is private** |
+| 3 | Share scope? | **Existing default scope, no picker** |
+| 4 | Secured with 5+ proofs? | **Three tiles and +n** |
+| 5 | Visitor-profile proof grid? | **Out of scope** |
+| 6 | GPS run path? | **Hold the GPS line** until a GPS value reaches the field |
+| 7 | Consistency window? | **All-time**, since the first due day |
+
+Original framing, for the reasoning behind each:
+
+| # | question | my recommendation |
+|---|---|---|
+| 1 | Does "Keep it to the record" mean never shareable, or shareable later from the proof's full view? | **Shareable later.** The full view has a Share button. Otherwise the choice is irreversible at the worst moment to ask. |
+| 2 | If the user backgrounds the app on frame 58 without choosing, is the proof shared? | **No.** Unanswered means private. Sharing is an action, not a default. |
+| 3 | Does sharing to the feed also post to Everyone, or only the user's Friends scope? | **Their existing default scope**, unchanged, and the button does not ask — a scope picker here is a second decision at a moment that should cost one tap. |
+| 4 | Secured screen with 5+ proofs: three tiles and +2, or a scrollable strip? | **Three and a +n.** The full set is one tap away in Proofs, and this screen is a receipt. |
+| 5 | Should the Proofs grid include other people's proofs on a visitor profile? | Out of scope here; the visitor grid already exists at 6 tiles. Flagging that it uses a different tile size than this one. |
+| 6 | Is a GPS run path planned? | Copy for it is written and held. Do not ship the GPS line until a GPS value reaches the field. |
+| 7 | Consistency window: all-time since first due day, or last 30 days? | **All-time.** A 30-day window silently forgives an old miss, and this product does not forgive silently. If you want 30 days, it needs a visible control and a stated window. |
+
+---
+
+## Contradictions in the repo, for the migration plan
+
+Numbered from 33; chunk P ended at 32.
+
+**33. `secured.tsx` can only carry one proof.** It reads a single `proofUri` route param
+(`app/task/secured.tsx`, params block) and passes it to `TaskConfirmation`. A day with four camera
+proofs across three challenges arrives as one photo with no way to know the others exist. Frame 59 needs
+the day's proof list, which `splitSecuredProof` can already produce.
+
+**34. The Secured image area renders with no image.** `TaskConfirmation` → `MomentScreenV3` draws
+the proof frame whether or not `proofUri` is set — the empty card in the build 58 screenshot. Zero
+proofs must render no image area.
+
+**35. "Day {n}" on Secured is unqualified.** `result.challengeDay` comes from one challenge's params
+while the screen represents the whole day. With three challenges the number is arbitrary.
+
+**36. `TaskCapture`'s shutter fill is `surface`, deliberately.** The file header cites a frame
+reference as the reason. It is nearly invisible on a dark viewfinder; the reference was wrong.
+
+**37. `DiscoverCTA` is on the legacy palette and uses `WEIGHT_BOLD`.** Resolved against
+`lib/design-system.ts`: `DISCOVER_HERO_DARK_BG` `#1A1410` (:346), `DISCOVER_CORAL` `#E8593C`
+(:334), `FEED_CTA_ICON_BG` `rgba(232,89,60,0.12)` (:644), `FEED_ENGAGEMENT_MUTED` `#888780`
+(:627), `FEED_SHARE_CHEVRON` `#5F5E5A` (:648), `FEED_TAB_ACTIVE_TEXT` `#F9F6F1` (:637), plus
+`WEIGHT_BOLD` at 13pt.
+
+Three problems, none of them "it looks dated": `#1A1410` is a warm near-ink that sits between
+`canvas` `#0F0F0F` and `surface` `#1A1917` without being either, so the card reads as a surface
+the system does not have; `#E8593C` is a second orange four points off `brandText` `#E8600F`, close
+enough to look like a mistake and far enough to be one; and the 700 weight is forbidden by law 3.
+`DISCOVER_CORAL` is also `DS_COLORS.primary` (:713) and the Android notification light
+(`notifications.ts:626`), so retiring it is wider than this card — flag, do not bulk-replace.
+
+**38. Two consistency definitions ship simultaneously.** `lib/profile-consistency.ts` (rolling 7 days)
+against Home's streak-derived percentage, with `profiles-record.ts`'s
+`verifiedClosed / closedDueDays` as a third, correct one that neither surface reads.
+
+**39. `edit-profile.tsx` is the last `PROFILE_V2_COLOR` screen.** Cream canvas, 2pt borders,
+`radius 16`, and a `shared/Avatar` that differs from the DS_V3 `Avatar` used everywhere else.
+
+**40. The Run step claims GPS for typed values.** Chunk O wrote "Distance and time come from GPS." on
+the strength of `RunningStep`; build 58 shows users typing both. The line is false for the manual path
+and must be conditional.
+
+**41. A design-system note is rendered on a phone.** "There is no map in the design system, so the run
+shows numbers only" was written for the handoff and reached the screen. Nothing on a device should refer
+to the design system.
+
+**42. `MomentScreenV3` uses the word "Verified" as a share label** (`:155`,
+`shareLabel = "Verified"`). Reserved for the camera-proof Stamp; on a share card over a self-reported
+day it is false.
+
+**43. `FailedStep` and `SessionStep` style link-like controls with `taskFlowStyles.shareText`**
+(`taskFlowStyles.ts:52`) — 15pt `DS_COLORS_V2.text.body`, a legacy token, for "Keep it for later" and
+"Cancel, I'll type it". Both become ControlPills.
+
+**44. Two share paths exist for the same act.** `useTaskFlowV2.ts:810` and `secured.tsx`'s
+`onShare` both call `shareProgressImage` with the same template string. Frame 58's "Share to the
+feed" is a feed post, not an OS share sheet — confirm which one the button should be, because today only
+the OS sheet exists.
+
+**45. The public feed row is written at completion, before any choice exists.**
+`backend/trpc/routes/checkins.ts:822-842` inserts the `task_completed` activity row — carrying the
+photo URL — inside `checkins.complete`. So on main, every camera proof is public the instant it is
+recorded, and frame 58's "a photo stays private until this screen is answered" is a design claim the
+server contradicts.
+
+**The behaviour to build: write the row unshared, flip it on share.**
+
+| | |
+|---|---|
+| at completion | insert the row as today, plus `shared: false` (or `visibility: 'record'`). The row exists, so nothing is lost if the app dies between the capture and the choice |
+| "Share to the feed" | flips `shared` to true and stamps `shared_at`. One write, no insert |
+| "Keep it to the record", or dismissal, or a crash | the row stays unshared, forever, until something flips it |
+| "Share" from the proof's full view (your decision 1) | the same flip, from the same row. That is the whole reason to write the row up front rather than on share — the proof already has an identity to share later |
+| unshare | out of scope for chunk Q, but the column makes it a one-line mutation when you want it |
+
+**Write-on-share was the alternative and is worse**: the completion and the post become two
+transactions, a proof captured offline has no row to attach to, and the full-view Share has to
+reconstruct a post from a check-in, which is where drift between the record and the feed starts.
+
+**What the feed shows for a day secured with unshared proofs: nothing.** No "secured a day" row, no
+photo-less placeholder, no count. An unshared proof is not a quieter post; it is not a post. The record
+holds it, the roster's "Secured today" still shows it (that is the group's own surface, not the feed),
+and the feed stays a list of things people chose to show.
+
+Consequence worth stating plainly: the feed gets quieter, and it should. Today it is a log of
+everything anyone completed, which is why respect on it means very little. A feed where every row was
+chosen is a feed where a row means something.
+
+Queries reading `task_completed` for the feed must add `where shared = true`. Queries reading it for
+the record, the roster, the Proofs grid and the consistency count must **not** — they are counting what
+happened, not what was published.
+
+**Laws most at risk** 2 (the Secured streak is the only display number in the chunk; the counter, the
+run figures, the consistency ratio and the proof count are all body face), 6 (one primary per screen —
+frame 58's two buttons are a primary and a secondary, not two primaries), 9 and 22 (the zero-proof
+challenge list is one card, and the proofs grid is tiles on the canvas), 13 (the full view keeps 4:5;
+the grid crops to square deliberately and says so), 18 (no Stamp on the proofs grid or the full view; the
+gate pill carries it in words), 21 (the two Proofs empty states are on the canvas, never in a card).
