@@ -7,6 +7,28 @@ import {
   getYesterdayDateKey,
   getProfileTimeZoneForUser,
 } from "../../lib/date-utils";
+import { getSupabaseAdmin } from "../../lib/supabase-admin";
+import { logger } from "../../lib/logger";
+
+type FreezeWriteError = {
+  code?: string;
+  message?: string;
+  details?: string;
+};
+
+function rethrowFreezeWrite(requestId: string, op: string, error: FreezeWriteError): never {
+  logger.error(
+    {
+      requestId,
+      op,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    },
+    "useFreeze write failed",
+  );
+  throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
+}
 
 /** Free-tier monthly freeze allotment. Pro uses STREAK_FREEZE_PER_MONTH_PRO. */
 export const STREAK_FREEZE_PER_MONTH_FREE = 1;
@@ -191,14 +213,15 @@ export const streaksRouter = createTRPCRouter({
       }
 
       const nextRemaining = remaining - 1;
-      const { error: insertErr } = await ctx.supabase
+      const admin = getSupabaseAdmin();
+      const { error: insertErr } = await admin
         .from("freeze_uses")
         .insert({ user_id: ctx.userId, date_key: yesterdayKey });
       if (insertErr) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
+        rethrowFreezeWrite(ctx.requestId, "freeze_uses.insert", insertErr);
       }
 
-      const { error: profileErr } = await ctx.supabase
+      const { error: profileErr } = await admin
         .from("profiles")
         .update({
           streak_freezes_remaining: nextRemaining,
@@ -206,15 +229,15 @@ export const streaksRouter = createTRPCRouter({
         })
         .eq("user_id", ctx.userId);
       if (profileErr) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
+        rethrowFreezeWrite(ctx.requestId, "profiles.update", profileErr);
       }
 
-      const { error: streakErr } = await ctx.supabase
+      const { error: streakErr } = await admin
         .from("streaks")
         .update({ active_streak_count: previous })
         .eq("user_id", ctx.userId);
       if (streakErr) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
+        rethrowFreezeWrite(ctx.requestId, "streaks.update", streakErr);
       }
 
       return { restoredStreak: previous, remaining: nextRemaining };
