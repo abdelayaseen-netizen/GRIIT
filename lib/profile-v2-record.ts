@@ -362,7 +362,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
 
   const firstDue = dueDayKeys[0] ?? null;
   const proofs = dueDayKeys
-    .filter((k) => k < input.todayKey && secured.has(k))
+    .filter((k) => k <= input.todayKey && secured.has(k))
     .map((dateKey) => ({
       dateKey,
       day: firstDue

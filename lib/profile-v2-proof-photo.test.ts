@@ -1,5 +1,13 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { proofPhotoFromCheckIn, proofPhotosByDateKey } from "@/lib/profile-v2-proof-photo";
+import {
+  isProofImageUrl,
+  proofImageUrlForCheckIn,
+  proofPhotoFromCheckIn,
+  proofPhotosByDateKey,
+  proofTilePostId,
+} from "@/lib/profile-v2-proof-photo";
 
 describe("proofPhotoFromCheckIn", () => {
   it("prefers photo_url, then proof_url, then completion_image_url", () => {
@@ -20,6 +28,51 @@ describe("proofPhotoFromCheckIn", () => {
       "https://cdn.example/c.jpg"
     );
     expect(proofPhotoFromCheckIn({ photo_url: "not-a-url" })).toBe(null);
+  });
+
+  it("reads a checkins.complete row and accepts file:// for Secured", () => {
+    // backend/trpc/routes/checkins.ts:772-774
+    const written = {
+      photo_url: "https://cdn.example/task-proofs/u/p.jpg",
+      proof_url: "https://cdn.example/task-proofs/u/p.jpg",
+      completion_image_url: "https://cdn.example/task-proofs/u/p.jpg",
+      proof_photo_url: null as string | null,
+    };
+    expect(proofImageUrlForCheckIn(written)).toBe("https://cdn.example/task-proofs/u/p.jpg");
+    expect(proofImageUrlForCheckIn({ proof_photo_url: "https://cdn.example/legacy.jpg" })).toBe(
+      "https://cdn.example/legacy.jpg",
+    );
+    expect(proofImageUrlForCheckIn({ photo_url: "file:///var/mobile/proof.jpg" })).toBe(
+      "file:///var/mobile/proof.jpg",
+    );
+    expect(isProofImageUrl("file:///var/mobile/proof.jpg")).toBe(true);
+    expect(isProofImageUrl("https://cdn.example/p.jpg")).toBe(true);
+    expect(isProofImageUrl("not-a-url")).toBe(false);
+    expect(
+      proofTilePostId(
+        [
+          {
+            id: "evt-1",
+            photoUrl: written.photo_url,
+            proofPhotoUrl: null,
+            createdAt: "2026-09-17T12:00:00.000Z",
+          },
+        ],
+        { imageUrl: written.photo_url, dateKey: "2026-09-17" },
+      ),
+    ).toBe("evt-1");
+    const image = readFileSync(resolve(__dirname, "../components/ds/ProofImage.tsx"), "utf8");
+    expect(image).toContain("isProofImageUrl(request)");
+    const feed = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
+    expect(feed).toContain("proofImageUrlForCheckIn");
+    const moment = readFileSync(
+      resolve(__dirname, "../components/task-v2/MomentScreenV3.tsx"),
+      "utf8",
+    );
+    expect(moment).toContain("proofImageUrlForCheckIn({ photo_url: proofUri })");
+    const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
+    expect(own).not.toContain("PROFILE_V3_FOOTNOTE");
+    expect(own).toContain("ROUTES.POST_ID(id)");
   });
 });
 

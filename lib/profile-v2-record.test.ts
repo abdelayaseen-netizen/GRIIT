@@ -227,6 +227,16 @@ describe("fixture B — 3 due days", () => {
     expect(rec.proofs.map((p) => p.day)).toEqual([2, 1]);
     expect(rec.badges[0]?.state).toBe("2 / 3");
   });
+
+  it("includes today in proofs when today is secured", () => {
+    const rec = buildProfileRecord({
+      ...fixtureThree(),
+      lastCompletedDateKey: TODAY,
+      securedDateKeys: unionDueDateKeys(fixtureThree().ranges, TODAY),
+    });
+    expect(rec.proofs.map((p) => p.dateKey)).toContain(TODAY);
+    expect(rec.proofs[0]?.dateKey).toBe(TODAY);
+  });
 });
 
 describe("fixture D — 30 due days", () => {

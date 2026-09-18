@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  Pressable,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,7 +37,9 @@ import { DS_V3 } from "@/lib/design-system";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, PROFILE_V3_FOOTNOTE, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { proofTilePostId } from "@/lib/profile-v2-proof-photo";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import ProofImage from "@/components/ds/ProofImage";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
@@ -70,6 +73,16 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
+
+  const postsQuery = useQuery({
+    queryKey: ["feed", "getUserPosts", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 50 }) as Promise<{
+        posts: LiveFeedPost[];
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
 
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
@@ -252,24 +265,32 @@ export default function ProfileScreen() {
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
+            onOpenProof={(p) => {
+              const id = proofTilePostId(postsQuery.data?.posts ?? [], p);
+              if (id) router.push(ROUTES.POST_ID(id) as never);
+            }}
             proofsInParent
           />
           }
           renderItem={({ item }) => (
-            <View style={styles.proofCell}>
+            <Pressable
+              style={styles.proofCell}
+              onPress={() => {
+                const id = proofTilePostId(postsQuery.data?.posts ?? [], item);
+                if (id) router.push(ROUTES.POST_ID(id) as never);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`Day ${item.day}`}
+            >
               <ProofImage
                 uri={item.imageUrl}
                 size="thumb"
                 title={`Day ${item.day}`}
                 recyclingKey={item.dateKey}
               />
-            </View>
+            </Pressable>
           )}
-          ListFooterComponent={
-            v3Tab === "Proofs" && proofs.length > 0 ? (
-              <Text style={styles.foot}>{PROFILE_V3_FOOTNOTE}</Text>
-            ) : null
-          }
+          ListFooterComponent={null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

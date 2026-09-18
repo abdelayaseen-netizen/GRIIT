@@ -14,6 +14,7 @@ import { feedFinishedCopy, feedNoPhotoCopy } from "@/lib/feed-copy";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
+import { proofImageUrlForCheckIn } from "@/lib/profile-v2-proof-photo";
 
 const ICON = DS_V3.space.xs * 6;
 
@@ -46,7 +47,10 @@ export default function FeedPostV3({
   const variant = variantOf(post);
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
-  const photo = post.proofPhotoUrl ?? post.photoUrl;
+  const photo = proofImageUrlForCheckIn({
+    photo_url: post.photoUrl,
+    proof_photo_url: post.proofPhotoUrl,
+  });
   const ownTarget = viewerUserId && post.userId === viewerUserId ? viewerTargetStreak : null;
   const cameraProof = hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,

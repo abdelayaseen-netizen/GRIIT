@@ -8,9 +8,9 @@ import {
   Alert,
   Platform,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -35,7 +35,9 @@ import HeaderIcon from "@/components/ds/HeaderIcon";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, PROFILE_V3_FOOTNOTE, ProfileV3 } from "@/components/profile/ProfileV3";
+import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { proofTilePostId } from "@/lib/profile-v2-proof-photo";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import ProofImage from "@/components/ds/ProofImage";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
@@ -124,6 +126,16 @@ export default function VisitorProfileScreen() {
       trpcQuery(TRPC.profiles.getFollowCounts, { userId: ownerId }) as Promise<{
         followers: number;
         following: number;
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !!ownerId && !!user?.id,
+  });
+
+  const postsQuery = useQuery({
+    queryKey: ["feed", "getUserPosts", ownerId],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getUserPosts, { userId: ownerId, limit: 50 }) as Promise<{
+        posts: LiveFeedPost[];
       }>,
     staleTime: 60 * 1000,
     enabled: !!ownerId && !!user?.id,
@@ -322,6 +334,10 @@ export default function VisitorProfileScreen() {
               }
               onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
+              onOpenProof={(p) => {
+                const id = proofTilePostId(postsQuery.data?.posts ?? [], p);
+                if (id) router.push(ROUTES.POST_ID(id) as never);
+              }}
               followLabel={isSelf ? undefined : followCtrl.label}
               onFollow={isSelf ? undefined : () => void onFollow()}
               followDisabled={followBusy || followCtrl.action === "idle"}
@@ -336,20 +352,24 @@ export default function VisitorProfileScreen() {
             </>
             }
             renderItem={({ item }) => (
-              <View style={styles.proofCell}>
+              <Pressable
+                style={styles.proofCell}
+                onPress={() => {
+                  const id = proofTilePostId(postsQuery.data?.posts ?? [], item);
+                  if (id) router.push(ROUTES.POST_ID(id) as never);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Day ${item.day}`}
+              >
                 <ProofImage
                   uri={item.imageUrl}
                   size="thumb"
                   title={`Day ${item.day}`}
                   recyclingKey={item.dateKey}
                 />
-              </View>
+              </Pressable>
             )}
-            ListFooterComponent={
-              tab === "Proofs" && proofs.length > 0 ? (
-                <Text style={styles.foot}>{PROFILE_V3_FOOTNOTE}</Text>
-              ) : null
-            }
+            ListFooterComponent={null}
           />
         </GriitFade>
 
