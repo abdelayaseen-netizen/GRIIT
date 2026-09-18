@@ -9,16 +9,26 @@ import {
 } from "./streaks";
 import { addCalendarDaysToDateKey, getTodayDateKey, getYesterdayDateKey } from "../../lib/date-utils";
 import { evaluateMiss } from "../../lib/miss-reconcile";
+import { getSupabaseAdmin } from "../../lib/supabase-admin";
+import { logger } from "../../lib/logger";
 
 vi.mock("../../lib/supabase-server", () => ({
   getSupabaseServer: () => null,
+}));
+
+vi.mock("../../lib/supabase-admin", () => ({
+  getSupabaseAdmin: vi.fn(),
+  hasSupabaseAdmin: () => true,
 }));
 
 const USER = "11111111-1111-4111-8111-111111111111";
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.mocked(getSupabaseAdmin).mockReset();
 });
+
+type FreezeWriteErr = { code?: string; message?: string; details?: string };
 
 function createCaller(opts?: {
   isPremium?: boolean;
@@ -28,12 +38,13 @@ function createCaller(opts?: {
   activeStreakCount?: number;
   failProfile?: boolean;
   failUpdate?: boolean;
+  failFreezeInsert?: FreezeWriteErr | null;
   securedDateKeys?: string[];
   freezeKeys?: string[];
   lastStandDateKeys?: string[];
-  onProfileUpdate?: (payload: Record<string, unknown>) => void;
-  onStreakUpdate?: (payload: Record<string, unknown>) => void;
-  onFreezeInsert?: (payload: Record<string, unknown>) => void;
+  onProfileUpdate?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
+  onStreakUpdate?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
+  onFreezeInsert?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
 }) {
   const profile = {
     is_premium: opts?.isPremium ?? false,
@@ -48,28 +59,28 @@ function createCaller(opts?: {
   };
   const freezeKeys = [...(opts?.freezeKeys ?? [])];
 
-  const supabase = {
+  const makeClient = (via: "user" | "admin") => ({
     from: (table: string) => {
       const inner: Record<string, unknown> = {
         select: () => inner,
         eq: () => inner,
         limit: () => inner,
         update: (payload: Record<string, unknown>) => {
-          if (table === "profiles") opts?.onProfileUpdate?.(payload);
-          if (table === "streaks") opts?.onStreakUpdate?.(payload);
-          if (opts?.failUpdate) {
+          if (table === "profiles") opts?.onProfileUpdate?.(payload, via);
+          if (table === "streaks") opts?.onStreakUpdate?.(payload, via);
+          if (opts?.failUpdate && via === "admin") {
             return {
               eq: () =>
                 Promise.resolve({
                   data: null,
-                  error: { message: "update failed" },
+                  error: { code: "PGRST301", message: "update failed", details: "admin update" },
                 }),
             };
           }
-          if (table === "profiles") {
+          if (via === "admin" && table === "profiles") {
             Object.assign(profile, payload);
           }
-          if (table === "streaks") {
+          if (via === "admin" && table === "streaks") {
             Object.assign(streak, payload);
           }
           return {
@@ -78,8 +89,11 @@ function createCaller(opts?: {
         },
         insert: (payload: Record<string, unknown>) => {
           if (table === "freeze_uses") {
-            opts?.onFreezeInsert?.(payload);
-            if (typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
+            opts?.onFreezeInsert?.(payload, via);
+            if (via === "admin" && opts?.failFreezeInsert) {
+              return Promise.resolve({ data: null, error: opts.failFreezeInsert });
+            }
+            if (via === "admin" && typeof payload.date_key === "string") freezeKeys.push(payload.date_key);
           }
           return Promise.resolve({ data: null, error: null });
         },
@@ -131,7 +145,11 @@ function createCaller(opts?: {
       };
       return inner;
     },
-  };
+  });
+
+  const supabase = makeClient("user");
+  const admin = makeClient("admin");
+  vi.mocked(getSupabaseAdmin).mockReturnValue(admin as never);
 
   return {
     caller: streaksRouter.createCaller({
@@ -142,6 +160,8 @@ function createCaller(opts?: {
       clientIp: "127.0.0.1",
     }),
     freezeKeys,
+    admin,
+    supabase,
   };
 }
 
@@ -299,8 +319,9 @@ describe("streaks.useFreeze", () => {
     vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
     const yesterday = getYesterdayDateKey("UTC");
     const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
-    const inserts: Record<string, unknown>[] = [];
-    const streakUpdates: Record<string, unknown>[] = [];
+    const inserts: { payload: Record<string, unknown>; via: "user" | "admin" }[] = [];
+    const streakUpdates: { payload: Record<string, unknown>; via: "user" | "admin" }[] = [];
+    const profileUpdates: { payload: Record<string, unknown>; via: "user" | "admin" }[] = [];
 
     const { caller } = createCaller({
       remaining: 1,
@@ -312,16 +333,18 @@ describe("streaks.useFreeze", () => {
         addCalendarDaysToDateKey(lastCompleted, -1),
         lastCompleted,
       ],
-      onFreezeInsert: (payload) => inserts.push(payload),
-      onStreakUpdate: (payload) => streakUpdates.push(payload),
+      onFreezeInsert: (payload, via) => inserts.push({ payload, via }),
+      onStreakUpdate: (payload, via) => streakUpdates.push({ payload, via }),
+      onProfileUpdate: (payload, via) => profileUpdates.push({ payload, via }),
     });
 
     await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).resolves.toEqual({
       restoredStreak: 3,
       remaining: 0,
     });
-    expect(inserts).toEqual([{ user_id: USER, date_key: yesterday }]);
-    expect(streakUpdates).toEqual([{ active_streak_count: 3 }]);
+    expect(inserts).toEqual([{ payload: { user_id: USER, date_key: yesterday }, via: "admin" }]);
+    expect(streakUpdates).toEqual([{ payload: { active_streak_count: 3 }, via: "admin" }]);
+    expect(profileUpdates.map((u) => u.via)).toEqual(["admin"]);
   });
 
   it("keeps both keys frozen after a second Pro use inside 30 days", async () => {
@@ -449,5 +472,51 @@ describe("streaks.useFreeze", () => {
       message: "No streak to restore.",
     });
     expect(inserts).toEqual([]);
+  });
+
+  it("logs the real write error and does not decrement or restore when freeze_uses insert fails", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const inserts: { via: "user" | "admin" }[] = [];
+    const profileUpdates: { via: "user" | "admin" }[] = [];
+    const streakUpdates: { via: "user" | "admin" }[] = [];
+    const log = vi.spyOn(logger, "error").mockImplementation(() => logger);
+
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: lastCompleted,
+      activeStreakCount: 0,
+      securedDateKeys: [lastCompleted],
+      failFreezeInsert: {
+        code: "42501",
+        message: "new row violates row-level security policy for table \"freeze_uses\"",
+        details: "RLS",
+      },
+      onFreezeInsert: (_payload, via) => inserts.push({ via }),
+      onProfileUpdate: (_payload, via) => profileUpdates.push({ via }),
+      onStreakUpdate: (_payload, via) => streakUpdates.push({ via }),
+    });
+
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to use streak freeze.",
+    });
+    expect(inserts).toEqual([{ via: "admin" }]);
+    expect(profileUpdates).toEqual([]);
+    expect(streakUpdates).toEqual([]);
+    expect(log).toHaveBeenCalledWith(
+      {
+        requestId: "test",
+        op: "freeze_uses.insert",
+        code: "42501",
+        message: "new row violates row-level security policy for table \"freeze_uses\"",
+        details: "RLS",
+      },
+      "useFreeze write failed",
+    );
+    log.mockRestore();
   });
 });
