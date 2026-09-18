@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     width: CIRCLE,
     height: CIRCLE,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.primary,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
   },

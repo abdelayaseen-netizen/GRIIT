@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { fmtMmSs, logReady } from "@/lib/task-flow-state";
 import type { DistanceUnit } from "@/lib/distance-unit";
 import { runHonestyLine } from "@/lib/work-step";
+import Button from "@/components/ds/Button";
 import { TaskKeypad } from "../TaskKeypad";
 import { styles } from "../taskFlowStyles";
 
@@ -135,17 +136,11 @@ export function LogStep({
               Duration is self-entered unless the in-app timer ran. The photo is still required.
             </Text>
           )}
-          <Pressable
+          <Button
+            label={taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
             disabled={taskType === "run" ? false : !ready}
             onPress={taskType === "run" && !ready ? onUseTimer : onNextPhoto}
-            accessibilityRole="button"
-            accessibilityLabel={taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
-            style={styles.orangeBtn}
-          >
-            <Text style={styles.btnText}>
-              {taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
-            </Text>
-          </Pressable>
+          />
         </>
       )}
     </View>

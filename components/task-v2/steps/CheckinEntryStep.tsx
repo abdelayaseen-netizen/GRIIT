@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { checkinReady } from "@/lib/task-flow-state";
+import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
 
 type Props = {
@@ -31,15 +32,7 @@ export function CheckinEntryStep({ taskName, radius, place, gps, onHere }: Props
           <Text style={styles.switchSub}>Checking location…</Text>
         )}
       </View>
-      <Pressable
-        disabled={!ready}
-        onPress={onHere}
-        accessibilityRole="button"
-        accessibilityLabel="I'm here"
-        style={[styles.orangeBtn, !ready && styles.disabledBtn]}
-      >
-        <Text style={styles.btnText}>I&apos;m here</Text>
-      </Pressable>
+      <Button label="I'm here" disabled={!ready} onPress={onHere} />
     </View>
   );
 }
