@@ -80,12 +80,12 @@ describe("morningAfter copy", () => {
 
 describe("morningAfter after today is secured", () => {
   it("keeps lostStreak across remount and does not hide on todaySecured", () => {
-    rememberReconcileResult("u-lost", {
+    rememberReconcileResult("u-lost", "2026-09-17", {
       streak_broken: true,
       previous_streak: 6,
       lostStreak: 6,
     });
-    expect(persistedReconcileResult("u-lost")?.lostStreak).toBe(6);
+    expect(persistedReconcileResult("u-lost", "2026-09-17")?.lostStreak).toBe(6);
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     expect(home).toContain("morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey)");
     expect(home).toContain("yesterdayKey,");

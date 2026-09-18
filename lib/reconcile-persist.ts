@@ -9,16 +9,27 @@ export type ReconcileStreakResult = {
   total?: number;
 };
 
-const resultByUser = new Map<string, ReconcileStreakResult>();
+const resultByUserDate = new Map<string, ReconcileStreakResult>();
 
-export function persistedReconcileResult(userId: string): ReconcileStreakResult | null {
-  return resultByUser.get(userId) ?? null;
+export function reconcilePersistKey(userId: string, dateKey: string): string {
+  return `${userId}:${dateKey}`;
 }
 
-export function rememberReconcileResult(userId: string, result: ReconcileStreakResult | null): void {
-  if (result) resultByUser.set(userId, result);
+export function persistedReconcileResult(
+  userId: string,
+  dateKey: string,
+): ReconcileStreakResult | null {
+  return resultByUserDate.get(reconcilePersistKey(userId, dateKey)) ?? null;
+}
+
+export function rememberReconcileResult(
+  userId: string,
+  dateKey: string,
+  result: ReconcileStreakResult | null,
+): void {
+  if (result) resultByUserDate.set(reconcilePersistKey(userId, dateKey), result);
 }
 
 export function clearReconcilePersist(): void {
-  resultByUser.clear();
+  resultByUserDate.clear();
 }

@@ -2,6 +2,7 @@ import { queryClient } from "@/lib/query-client";
 import { captureError, clearSentryUser } from "@/lib/sentry";
 import { resetAnalytics } from "@/lib/analytics";
 import { cancelAllNotifications } from "@/lib/notifications";
+import { clearReconcilePersist } from "@/lib/reconcile-persist";
 
 /** Run after `supabase.auth.signOut()` (or with session cleared). Clears React Query, Sentry user, PostHog session, and scheduled notifications. */
 export async function runClientSignOutCleanup(): Promise<void> {
@@ -14,6 +15,11 @@ export async function runClientSignOutCleanup(): Promise<void> {
     queryClient.clear();
   } catch (error) {
     captureError(error, "SignOutCleanup:queryClientClear");
+  }
+  try {
+    clearReconcilePersist();
+  } catch (error) {
+    captureError(error, "SignOutCleanup:clearReconcilePersist");
   }
   try {
     clearSentryUser();

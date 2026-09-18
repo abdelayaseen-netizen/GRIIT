@@ -6,6 +6,7 @@ import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { reconcileStreakNeeded, type ReconcileStatsInput } from "@/lib/reconcile-needed";
 import {
+  clearReconcilePersist,
   persistedReconcileResult,
   rememberReconcileResult,
   type ReconcileStreakResult,
@@ -26,13 +27,17 @@ export function useReconcileStreakIfNeeded(input: {
 }): { result: ReconcileStreakResult | null } {
   const queryClient = useQueryClient();
   const [result, setResult] = useState<ReconcileStreakResult | null>(() =>
-    input.userId ? persistedReconcileResult(input.userId) : null,
+    input.userId && input.yesterdayKey
+      ? persistedReconcileResult(input.userId, input.yesterdayKey)
+      : null,
   );
   const { mutate, isPending } = useMutation({
     mutationKey: ["profiles", "reconcileStreak", input.userId ?? ""],
     mutationFn: () => trpcMutate<ReconcileStreakResult>(TRPC.profiles.reconcileStreak),
     onSuccess: (recon) => {
-      if (input.userId) rememberReconcileResult(input.userId, recon ?? null);
+      if (input.userId && input.yesterdayKey) {
+        rememberReconcileResult(input.userId, input.yesterdayKey, recon ?? null);
+      }
       setResult(recon ?? null);
       if (recon?.streak_broken) {
         try {
@@ -54,9 +59,11 @@ export function useReconcileStreakIfNeeded(input: {
   useEffect(() => {
     if (!input.userId) {
       attemptedByUser.clear();
+      clearReconcilePersist();
       return;
     }
-    const cached = persistedReconcileResult(input.userId);
+    const cached =
+      input.yesterdayKey ? persistedReconcileResult(input.userId, input.yesterdayKey) : null;
     if (cached && result == null) setResult(cached);
     if (!input.enabled || pendingRef.current) return;
     if (attemptedByUser.has(input.userId)) return;
