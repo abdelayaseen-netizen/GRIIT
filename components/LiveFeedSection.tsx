@@ -27,13 +27,14 @@ import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import EmptyState from "@/components/ds/EmptyState";
-import { Avatar } from "@/components/Avatar";
+import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway } from "@/lib/home-away-count";
+import { keepLiveFeedPosts } from "@/lib/live-feed-list";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -154,20 +155,7 @@ function LiveFeedSection({
     return true;
   });
 
-  const seen = new Set<string>();
-  const dedupedFeed = posts.filter((post) => {
-    const dayKey = new Date(post.createdAt).toDateString();
-    const challengeKey = post.challengeId ?? post.challengeName ?? "unknown";
-    const key = `${post.userId}-${challengeKey}-${dayKey}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  const diverseFeed = dedupedFeed.filter((post, i, arr) => {
-    if (i === 0) return true;
-    return post.userId !== arr[i - 1]?.userId;
-  });
-  const finalFeed = diverseFeed.slice(0, 20);
+  const finalFeed = keepLiveFeedPosts(posts).slice(0, 20);
   const feedViewTracked = useRef(false);
 
   useEffect(() => {
@@ -534,7 +522,11 @@ function LiveFeedSection({
               .slice(0, 3)
               .map((p, i) => (
                 <View key={p.userId} style={[styles.digestAvatarWrap, i === 0 && { marginLeft: 0 }]}>
-                  <Avatar url={p.avatarUrl} name={p.displayName || p.username} userId={p.userId} size={28} />
+                  <Avatar
+                    size={32}
+                    uri={p.avatarUrl}
+                    displayName={p.displayName || p.username}
+                  />
                 </View>
               ))}
           </View>

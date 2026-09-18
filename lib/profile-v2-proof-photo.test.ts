@@ -64,7 +64,9 @@ describe("proofPhotoFromCheckIn", () => {
     const image = readFileSync(resolve(__dirname, "../components/ds/ProofImage.tsx"), "utf8");
     expect(image).toContain("isProofImageUrl(request)");
     const feed = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
-    expect(feed).toContain("proofImageUrlForCheckIn");
+    expect(feed).toContain("liveFeedProofUrl(post)");
+    const list = readFileSync(resolve(__dirname, "./live-feed-list.ts"), "utf8");
+    expect(list).toContain("proofImageUrlForCheckIn");
     const moment = readFileSync(
       resolve(__dirname, "../components/task-v2/MomentScreenV3.tsx"),
       "utf8",

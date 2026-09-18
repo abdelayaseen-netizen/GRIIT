@@ -14,7 +14,7 @@ import { feedFinishedCopy, feedNoPhotoCopy } from "@/lib/feed-copy";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
-import { proofImageUrlForCheckIn } from "@/lib/profile-v2-proof-photo";
+import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
 
 const ICON = DS_V3.space.xs * 6;
 
@@ -47,10 +47,8 @@ export default function FeedPostV3({
   const variant = variantOf(post);
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
-  const photo = proofImageUrlForCheckIn({
-    photo_url: post.photoUrl,
-    proof_photo_url: post.proofPhotoUrl,
-  });
+  const photo = liveFeedProofUrl(post);
+  const avatarUri = feedAvatarUri(post.avatarUrl, photo);
   const ownTarget = viewerUserId && post.userId === viewerUserId ? viewerTargetStreak : null;
   const cameraProof = hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
@@ -61,7 +59,7 @@ export default function FeedPostV3({
       <Card>
         <View style={styles.line}>
           <Pressable onPress={onProfilePress} accessibilityRole="button" accessibilityLabel={name}>
-            <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
+            <Avatar size={40} uri={avatarUri} displayName={name} />
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>{feedNoPhotoCopy(post)}</Text>
@@ -79,7 +77,7 @@ export default function FeedPostV3({
       <Card tint>
         <View style={styles.header}>
           <Pressable onPress={onProfilePress} accessibilityRole="button" accessibilityLabel={name}>
-            <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
+            <Avatar size={40} uri={avatarUri} displayName={name} />
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>{name}</Text>
@@ -106,7 +104,7 @@ export default function FeedPostV3({
     <Card>
       <View style={styles.header}>
         <Pressable onPress={onProfilePress} accessibilityRole="button" accessibilityLabel={name}>
-          <Avatar size={40} uri={post.avatarUrl ?? undefined} displayName={name} />
+          <Avatar size={40} uri={avatarUri} displayName={name} />
         </Pressable>
         <View style={styles.flex}>
           <Text style={styles.name}>{name}</Text>
