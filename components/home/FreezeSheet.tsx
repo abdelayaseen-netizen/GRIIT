@@ -29,6 +29,7 @@ export type FreezeSheetProps = {
   onRefuse: () => void;
   onSeePro: () => void;
   onClose: () => void;
+  error?: string | null;
 };
 
 export function FreezeSheet({
@@ -43,6 +44,7 @@ export function FreezeSheet({
   onRefuse,
   onSeePro,
   onClose,
+  error,
 }: FreezeSheetProps) {
   const variant = freezeSheetVariant(remaining);
   if (variant === "none") {
@@ -79,6 +81,7 @@ export function FreezeSheet({
       <Text style={styles.body}>
         {typeof restoredStreakDays === "number" ? freezeOfferBody(restoredStreakDays, remaining) : null}
       </Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </Sheet>
   );
 }
@@ -89,5 +92,12 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textPrimary,
+    marginTop: DS_V3.space.sm,
   },
 });

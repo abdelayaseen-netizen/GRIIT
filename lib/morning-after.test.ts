@@ -3,6 +3,7 @@ import {
   USE_FREEZE_FOR_YESTERDAY,
   YESTERDAY_WASNT_SECURED,
   isMissAcked,
+  missAckPayload,
   morningAfterCost,
   morningAfterCushion,
   morningAfterFreezeCaption,
@@ -40,6 +41,10 @@ describe("morningAfter dismiss", () => {
     expect(morningAfterVisible("reset", "2026-09-16", "2026-09-17")).toBe(true);
     expect(morningAfterVisible("reset", null, "2026-09-17")).toBe(true);
     expect(morningAfterVisible(null, null, "2026-09-17")).toBe(false);
+    expect(missAckPayload("2026-09-17")).toEqual({
+      key: "miss_ack_date_key",
+      value: "2026-09-17",
+    });
   });
 });
 

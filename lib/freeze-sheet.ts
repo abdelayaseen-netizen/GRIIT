@@ -71,3 +71,12 @@ export function freezeSheetNetwork(action: "use" | "refuse" | "close" | "seePro"
   if (action === "seePro") return "seePro";
   return "none";
 }
+
+/** Refuse closes the sheet and acks the morning-after for that date key. No network. */
+export function freezeRefuseAcksDateKey(): boolean {
+  return true;
+}
+
+export function freezeUseCallsMutation(): boolean {
+  return true;
+}

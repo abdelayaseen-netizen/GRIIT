@@ -13,8 +13,10 @@ import {
   freezeNoneShowsSeePro,
   freezeOfferBody,
   freezeRefillDateLabel,
+  freezeRefuseAcksDateKey,
   freezeSheetNetwork,
   freezeSheetVariant,
+  freezeUseCallsMutation,
 } from "./freeze-sheet";
 
 describe("freeze sheet", () => {
@@ -38,13 +40,24 @@ describe("freeze sheet", () => {
     expect(freezeSheetNetwork("close")).toBe("none");
     expect(freezeSheetNetwork("use")).toBe("useFreeze");
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-    expect(home).toContain("onRefuse={() => setShowFreezeSheet(false)}");
+    expect(home).toContain("onRefuse={() => {");
+    expect(home).toContain("setShowFreezeSheet(false)");
     expect(home).not.toContain("StreakFreezeModal");
     expect(home).toContain("for (const queryKey of FREEZE_SUCCESS_INVALIDATES)");
     expect(home).toContain("invalidateQueries({ queryKey: [...queryKey] })");
     expect(home).toContain("timeZone={homeTimeZone}");
     expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
+    expect(home).toContain("useFreeze.mutate()");
+    expect(home).toContain("missAckPayload(yesterdayKey)");
+    expect(home).toContain("setFreezeError(inlineServerError(err))");
+    expect(freezeUseCallsMutation()).toBe(true);
+    expect(freezeRefuseAcksDateKey()).toBe(true);
+    const sheet = readFileSync(resolve(__dirname, "../components/ds/Sheet.tsx"), "utf8");
+    expect(sheet).toContain("zIndex: 1");
+    expect(sheet).toContain("pointerEvents=\"box-none\"");
+    const freezeUi = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
+    expect(freezeUi).toContain("error ? <Text style={styles.error}>{error}</Text>");
   });
 
   it("matches the frame 54 table", () => {

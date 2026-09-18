@@ -28,6 +28,11 @@ export function isMissAcked(ackedDateKey: string | null | undefined, dateKey: st
   return Boolean(ackedDateKey) && ackedDateKey === dateKey;
 }
 
+/** Persist ack for yesterday. Refusal and the X both dismiss the block for this key. */
+export function missAckPayload(dateKey: string): { key: string; value: string } {
+  return { key: MISS_ACK_STORAGE_KEY, value: dateKey };
+}
+
 export function morningAfterVisible(
   variant: MorningAfterVariant | null,
   ackedDateKey: string | null | undefined,

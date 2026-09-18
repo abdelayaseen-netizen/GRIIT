@@ -33,6 +33,7 @@ import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
@@ -44,6 +45,7 @@ import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import {
   MISS_ACK_STORAGE_KEY,
+  missAckPayload,
   morningAfterCost,
   morningAfterCushion,
   morningAfterFreezeCaption,
@@ -93,6 +95,7 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [freezeError, setFreezeError] = React.useState<string | null>(null);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
@@ -253,10 +256,14 @@ export default function HomeScreen() {
       }),
       freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
       onDismiss: () => {
-        setMissAckDateKey(yesterdayKey);
-        void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+        const ack = missAckPayload(yesterdayKey);
+        setMissAckDateKey(ack.value);
+        void AsyncStorage.setItem(ack.key, ack.value);
       },
-      onUseFreeze: variant === "freeze" ? () => setShowFreezeSheet(true) : undefined,
+      onUseFreeze: variant === "freeze" ? () => {
+        setFreezeError(null);
+        setShowFreezeSheet(true);
+      } : undefined,
     };
   }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, yesterdayKey]);
 
@@ -318,14 +325,17 @@ export default function HomeScreen() {
     onSuccess: () => {
       setFreezeSpent(true);
       setShowFreezeSheet(false);
-      setMissAckDateKey(yesterdayKey);
-      void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+      setFreezeError(null);
+      const ack = missAckPayload(yesterdayKey);
+      setMissAckDateKey(ack.value);
+      void AsyncStorage.setItem(ack.key, ack.value);
       for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
         void queryClient.invalidateQueries({ queryKey: [...queryKey] });
       }
     },
     onError: (err) => {
       captureError(err, "useFreeze");
+      setFreezeError(inlineServerError(err));
     },
   });
 
@@ -532,13 +542,27 @@ export default function HomeScreen() {
           timeZone={homeTimeZone}
           subscriptionStatus={(profile as { subscription_status?: string | null } | null)?.subscription_status}
           submitting={useFreeze.isPending}
-          onUseFreeze={() => useFreeze.mutate()}
-          onRefuse={() => setShowFreezeSheet(false)}
+          error={freezeError}
+          onUseFreeze={() => {
+            setFreezeError(null);
+            useFreeze.mutate();
+          }}
+          onRefuse={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+            const ack = missAckPayload(yesterdayKey);
+            setMissAckDateKey(ack.value);
+            void AsyncStorage.setItem(ack.key, ack.value);
+          }}
           onSeePro={() => {
             setShowFreezeSheet(false);
+            setFreezeError(null);
             router.push(ROUTES.PAYWALL as never);
           }}
-          onClose={() => setShowFreezeSheet(false)}
+          onClose={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+          }}
         />
         <JeopardyModal
           visible={showJeopardyModal}
