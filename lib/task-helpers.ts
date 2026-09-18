@@ -51,6 +51,8 @@ export type TaskCompleteConfig = {
   label?: string;
   /** Additive — forwarded from challenge_tasks.config.unit_label when present. */
   unit_label?: string;
+  unit?: string;
+  target_unit?: string;
   /** Counter/water/reading target fields (additive). */
   daily_target?: number;
   goal?: number;

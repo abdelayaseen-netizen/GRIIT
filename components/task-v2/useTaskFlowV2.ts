@@ -8,7 +8,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { firstString, parseConfig } from "@/lib/task-helpers";
-import { counterUnitFromTaskType } from "@/lib/counter-log";
+import { counterDisplayUnit } from "@/lib/counter-log";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { haversineDistance } from "@/lib/geo";
 import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
@@ -118,7 +118,7 @@ export function useTaskFlowV2() {
   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
   const windowState = windowStateFromConfig(config as Record<string, unknown>);
   const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
-  const counterUnit = counterUnitFromTaskType(taskType);
+  const counterUnit = counterDisplayUnit(taskType, config);
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 

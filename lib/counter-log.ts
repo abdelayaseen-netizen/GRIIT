@@ -11,11 +11,21 @@ export function formatCounterSecuredMeta(
   return `${n} of ${t} ${unit}`;
 }
 
-/** Caption unit after a counter goal: "10 / 10 pages". */
-export function counterUnitFromTaskType(taskType: string): "pages" | "oz" | "count" {
+/** Caption unit after a counter goal. Generic counter has no default word. */
+export function counterUnitFromTaskType(taskType: string): "pages" | "oz" | "" {
   if (taskType === "reading") return "pages";
   if (taskType === "water") return "oz";
-  return "count";
+  return "";
+}
+
+export function counterDisplayUnit(
+  taskType: string,
+  config?: { unit?: string; unit_label?: string; target_unit?: string },
+): string {
+  for (const raw of [config?.unit, config?.unit_label, config?.target_unit]) {
+    if (typeof raw === "string" && raw.trim()) return raw.trim();
+  }
+  return counterUnitFromTaskType(taskType);
 }
 
 export function counterGoalCaption(count: number, goal: number, unit: string): string {

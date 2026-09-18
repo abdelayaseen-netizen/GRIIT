@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  counterDisplayUnit,
   counterGoalCaption,
   counterUnitFromTaskType,
   formatCounterSecuredMeta,
@@ -12,10 +13,18 @@ describe("formatCounterSecuredMeta", () => {
 });
 
 describe("counterUnitFromTaskType", () => {
-  it("maps reading to pages, water to oz, everything else to count", () => {
+  it("maps reading to pages, water to oz, and leaves a generic counter blank", () => {
     expect(counterUnitFromTaskType("reading")).toBe("pages");
     expect(counterUnitFromTaskType("water")).toBe("oz");
-    expect(counterUnitFromTaskType("counter")).toBe("count");
+    expect(counterUnitFromTaskType("counter")).toBe("");
+  });
+});
+
+describe("counterDisplayUnit", () => {
+  it("prefers a set unit and leaves a generic counter blank", () => {
+    expect(counterDisplayUnit("counter", {})).toBe("");
+    expect(counterDisplayUnit("counter", { unit: "reps" })).toBe("reps");
+    expect(counterDisplayUnit("reading", {})).toBe("pages");
   });
 });
 

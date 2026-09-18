@@ -13,6 +13,7 @@ import {
   TIMER_PHOTO_AFTER,
   countCtaEnabled,
   countCtaLabel,
+  countOfLine,
   runHonestyLine,
   timerPostEnabled,
   timerStartLabel,
@@ -20,6 +21,13 @@ import {
   workStepHeader,
   workThenCamera,
 } from "@/lib/work-step";
+
+describe("count of line", () => {
+  it("omits the unit word when none is set", () => {
+    expect(countOfLine(0, 10, "")).toEqual({ n: "0", rest: " of 10" });
+    expect(countOfLine(0, 10, "count")).toEqual({ n: "0", rest: " of 10 count" });
+  });
+});
 
 describe("work step CTA labels", () => {
   it("counter logs the pending action, then Post at target", () => {
