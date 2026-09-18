@@ -2,7 +2,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { fmtMmSs, logReady } from "@/lib/task-flow-state";
 import type { DistanceUnit } from "@/lib/distance-unit";
-import { RUN_HONESTY, RUN_NO_MAP } from "@/lib/work-step";
+import { runHonestyLine } from "@/lib/work-step";
+import Button from "@/components/ds/Button";
 import { TaskKeypad } from "../TaskKeypad";
 import { styles } from "../taskFlowStyles";
 
@@ -26,6 +27,7 @@ type Props = {
   onKind: (k: string) => void;
   onUseTimer: () => void;
   onNextPhoto: () => void;
+  fromGps?: boolean;
 };
 
 export function LogStep({
@@ -46,6 +48,7 @@ export function LogStep({
   onKind,
   onUseTimer,
   onNextPhoto,
+  fromGps = false,
 }: Props) {
   const ready = logReady({
     taskType,
@@ -54,6 +57,7 @@ export function LogStep({
     workoutMin,
     minDurationMinutes,
   });
+  const runHonesty = taskType === "run" ? runHonestyLine(fromGps) : null;
   return (
     <View style={styles.body}>
       <Text style={styles.title}>{taskType === "run" ? "Log the run" : "Log the session"}</Text>
@@ -125,21 +129,18 @@ export function LogStep({
           >
             <Text style={styles.dashText}>Use the timer instead</Text>
           </Pressable>
-          <Text style={styles.disclosure}>
-            {taskType === "run" ? RUN_HONESTY : "Duration is self-entered unless the in-app timer ran. The photo is still required."}
-          </Text>
-          {taskType === "run" ? <Text style={styles.disclosure}>{RUN_NO_MAP}</Text> : null}
-          <Pressable
+          {taskType === "run" ? (
+            runHonesty ? <Text style={styles.disclosure}>{runHonesty}</Text> : null
+          ) : (
+            <Text style={styles.disclosure}>
+              Duration is self-entered unless the in-app timer ran. The photo is still required.
+            </Text>
+          )}
+          <Button
+            label={taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
             disabled={taskType === "run" ? false : !ready}
             onPress={taskType === "run" && !ready ? onUseTimer : onNextPhoto}
-            accessibilityRole="button"
-            accessibilityLabel={taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
-            style={styles.orangeBtn}
-          >
-            <Text style={styles.btnText}>
-              {taskType === "run" ? (ready ? "Post" : "Start") : "Next: photo proof"}
-            </Text>
-          </Pressable>
+          />
         </>
       )}
     </View>

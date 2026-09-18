@@ -22,6 +22,18 @@ export function todayIsSecuredInCache(
   return readSecuredDateKeysFromCache(queryClient, userId).includes(getTodayDateKey(timezone));
 }
 
+/** Open Secured only after secureDay returned a streak. Never a pre-response 0. */
+export function canOpenSecuredScreen(input: {
+  daySecured: boolean;
+  newStreakCount?: number;
+}): boolean {
+  return input.daySecured && typeof input.newStreakCount === "number" && input.newStreakCount >= 1;
+}
+
+export function securedNavOnce(): "replace" {
+  return "replace";
+}
+
 export function taskSecuredHref(result: SubmitResult, proofUri?: string, taskName?: string) {
   return {
     pathname: ROUTES.TASK_SECURED,

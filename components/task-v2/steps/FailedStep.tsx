@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { DS_COLORS_V2 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
 
 type Fail = {
@@ -26,14 +27,7 @@ export function FailedStep({ fail, hasPhoto, onPrimary, onKeepLater }: Props) {
       <Text style={styles.title}>{fail.headline}</Text>
       <Text style={styles.bodyText}>{fail.body}</Text>
       {fail.retryNote ? <Text style={styles.disclosure}>{fail.retryNote}</Text> : null}
-      <Pressable
-        onPress={onPrimary}
-        accessibilityRole="button"
-        accessibilityLabel={fail.primaryLabel}
-        style={styles.orangeBtn}
-      >
-        <Text style={styles.btnText}>{fail.primaryLabel}</Text>
-      </Pressable>
+      <Button label={fail.primaryLabel} onPress={onPrimary} />
       {fail.primaryAction === "retry" && hasPhoto ? (
         <Pressable onPress={onKeepLater} accessibilityRole="button" accessibilityLabel="Keep it for later" style={styles.textBtn}>
           <Text style={styles.shareText}>Keep it for later</Text>

@@ -19,6 +19,7 @@ export function reconcileStreakNeeded(input: {
   ready: boolean;
   stats: ReconcileStatsInput | null;
   securedDateKeys: readonly string[] | null;
+  yesterdayKey?: string | null;
 }): boolean {
   if (!input.ready) return false;
 
@@ -31,6 +32,9 @@ export function reconcileStreakNeeded(input: {
   }
 
   const keys = input.securedDateKeys;
+  if (input.yesterdayKey && keys != null && !keys.includes(input.yesterdayKey)) {
+    return true;
+  }
   if (keys != null && keys.length > 0) {
     const latest = keys.reduce((a, b) => (a > b ? a : b));
     const last = input.stats?.lastCompletedDateKey ?? null;

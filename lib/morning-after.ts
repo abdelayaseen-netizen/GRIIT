@@ -20,12 +20,36 @@ export function morningAfterVariant(input: MorningAfterInput): MorningAfterVaria
   if (typeof input.lostStreak === "number" && input.lostStreak > 0 && input.freezeRemaining > 0) {
     return "freeze";
   }
+  if (typeof input.lostStreak === "number" && input.lostStreak > 0) return "reset";
   if (input.reset) return "reset";
   return null;
 }
 
+/** Show while lostStreak > 0 and the date key is not acknowledged, regardless of today. */
+export function morningAfterKeepsLostStreak(
+  lostStreak: number | undefined,
+  ackedDateKey: string | null | undefined,
+  dateKey: string,
+): boolean {
+  return typeof lostStreak === "number" && lostStreak > 0 && !isMissAcked(ackedDateKey, dateKey);
+}
+
 export function isMissAcked(ackedDateKey: string | null | undefined, dateKey: string): boolean {
   return Boolean(ackedDateKey) && ackedDateKey === dateKey;
+}
+
+export function missAckStorageKey(userId: string): string {
+  return `${MISS_ACK_STORAGE_KEY}:${userId}`;
+}
+
+/** Persist ack for yesterday. Refusal and the X both dismiss the block for this key. */
+export function missAckPayload(userId: string, dateKey: string): { key: string; value: string } {
+  return { key: missAckStorageKey(userId), value: dateKey };
+}
+
+/** Legacy unscoped key plus the signed-in user's scoped key. */
+export function missAckKeysToClear(userId?: string | null): string[] {
+  return userId ? [MISS_ACK_STORAGE_KEY, missAckStorageKey(userId)] : [MISS_ACK_STORAGE_KEY];
 }
 
 export function morningAfterVisible(

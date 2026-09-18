@@ -11,7 +11,9 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { consistencyScore } from "@/lib/scoring";
 import { ROUTES } from "@/lib/routes";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
@@ -71,6 +73,7 @@ function LeaderboardBody({
   refreshing: boolean;
   onRefresh: () => Promise<void>;
 }) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const activeList = myActive.data ?? [];
 
@@ -250,7 +253,7 @@ function LeaderboardBody({
       data={showBoard ? rows : []}
       keyExtractor={(item) => item.userId}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scroll}
+      contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
       ListHeaderComponent={header}
       ListFooterComponent={
         showBoard && outOfRange && viewer ? (
@@ -449,9 +452,7 @@ export function LeaderboardTab({ userId }: LeaderboardTabProps) {
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingBottom: DS_V3.space.gutter * 6,
-  },
+  scroll: {},
   week: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.section,

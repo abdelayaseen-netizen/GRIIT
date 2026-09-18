@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { TaskCapture } from "../TaskCapture";
@@ -23,8 +24,9 @@ export function CaptureStep({
   onCancel,
   onCaptured,
 }: Props) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       {workDone ? (
         <View style={styles.doneRow}>
           <Check size={DS_V3.space.gutter} color={DS_V3.color.brandText} />

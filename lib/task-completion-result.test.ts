@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   assembleSubmitResult,
@@ -5,6 +7,7 @@ import {
   pickConfirmationCopy,
   pickConfirmationVariant,
 } from "@/lib/task-completion-result";
+import { canOpenSecuredScreen, securedNavOnce } from "@/lib/task-secured-nav";
 
 describe("pickConfirmationChallengeDay", () => {
   it("uses the pre-secure snapshot, not the incremented secureDay value (Q13)", () => {
@@ -64,6 +67,22 @@ describe("assembleSubmitResult", () => {
     expect(result.streakDays).toBe(14);
   });
 
+  it("Day n is displayDay of the post-secure current_day, matching Home", () => {
+    const firstDay = assembleSubmitResult({
+      verificationKind: "live_photo",
+      requiredRemaining: 0,
+      dayAlreadySecured: false,
+      streakDaysBefore: 0,
+      challengeDayBeforeSecure: 1,
+      challengeLength: 14,
+      challengeName: "Run",
+      secure: { success: true, alreadySecured: false, newStreakCount: 1, secured: true },
+    });
+    expect(firstDay.streakDays).toBe(1);
+    expect(firstDay.challengeDay).toBe(1);
+    expect(firstDay.challengeDay).not.toBe(2);
+  });
+
   it("marks already-secured days as C, not a new secure", () => {
     const result = assembleSubmitResult({
       verificationKind: "live_photo",
@@ -99,5 +118,20 @@ describe("assembleSubmitResult", () => {
     });
     expect(result.daySecured).toBe(false);
     expect(result.streakDays).toBe(4);
+  });
+});
+
+describe("secured navigation", () => {
+  it("replaces once after the server streak; never opens on a pre-response 0", () => {
+    expect(canOpenSecuredScreen({ daySecured: true, newStreakCount: 1 })).toBe(true);
+    expect(canOpenSecuredScreen({ daySecured: true })).toBe(false);
+    expect(canOpenSecuredScreen({ daySecured: true, newStreakCount: 0 })).toBe(false);
+    expect(canOpenSecuredScreen({ daySecured: false, newStreakCount: 1 })).toBe(false);
+    expect(securedNavOnce()).toBe("replace");
+    const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
+    expect(flow).toContain("submitInFlight");
+    expect(flow).toContain("router.replace(taskSecuredHref");
+    expect(flow).not.toContain("router.push(taskSecuredHref");
+    expect(flow).not.toContain('setStep("confirmation")');
   });
 });

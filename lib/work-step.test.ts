@@ -1,21 +1,33 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flow-state";
 import {
   COUNT_HONESTY,
   COUNT_POST,
   COUNT_TYPE,
+  RUN_HONESTY,
   SESSION_HONESTY,
   TIMER_HONESTY,
   TIMER_LEAVING,
   TIMER_PHOTO_AFTER,
   countCtaEnabled,
   countCtaLabel,
+  countOfLine,
+  runHonestyLine,
   timerPostEnabled,
   timerStartLabel,
   workDoneLine,
   workStepHeader,
   workThenCamera,
 } from "@/lib/work-step";
+
+describe("count of line", () => {
+  it("omits the unit word when none is set", () => {
+    expect(countOfLine(0, 10, "")).toEqual({ n: "0", rest: " of 10" });
+    expect(countOfLine(0, 10, "count")).toEqual({ n: "0", rest: " of 10 count" });
+  });
+});
 
 describe("work step CTA labels", () => {
   it("counter logs the pending action, then Post at target", () => {
@@ -69,5 +81,18 @@ describe("camera-after-work copy", () => {
     expect(workDoneLine("10:00")).toBe("10:00 done");
     expect(TIMER_PHOTO_AFTER).toBe("The photo comes after the timer");
     expect(SESSION_HONESTY).toBe("Stopping fills in the duration. The photo is still required.");
+  });
+});
+
+describe("run honesty", () => {
+  it("shows the GPS caption only when values came from GPS", () => {
+    expect(runHonestyLine(true)).toBe(RUN_HONESTY);
+    expect(runHonestyLine(false)).toBeNull();
+  });
+
+  it("does not render the no-map sentence on the manual log step", () => {
+    const src = readFileSync(resolve(__dirname, "../components/task-v2/steps/LogStep.tsx"), "utf8");
+    expect(src).not.toContain("There is no map in the design system");
+    expect(src).toContain("runHonestyLine(fromGps)");
   });
 });

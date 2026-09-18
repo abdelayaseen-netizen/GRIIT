@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
 
 type Props = {
@@ -60,9 +61,7 @@ export function ReviewStep({
           />
           <Text style={styles.counter}>{caption.length} / 120</Text>
         </View>
-        <Pressable onPress={onPost} accessibilityRole="button" accessibilityLabel="Post proof" style={styles.orangeBtn}>
-          <Text style={styles.btnText}>Post proof</Text>
-        </Pressable>
+        <Button label="Post proof" onPress={onPost} />
       </View>
     </View>
   );

@@ -5,7 +5,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -27,12 +27,14 @@ import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
@@ -44,9 +46,12 @@ import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import {
   MISS_ACK_STORAGE_KEY,
+  missAckPayload,
+  missAckStorageKey,
   morningAfterCost,
   morningAfterCushion,
   morningAfterFreezeCaption,
+  morningAfterKeepsLostStreak,
   morningAfterVariant,
   morningAfterVisible,
 } from "@/lib/morning-after";
@@ -87,12 +92,14 @@ function durationMinutesFromTask(t: TaskRow): number | undefined {
 }
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [freezeError, setFreezeError] = React.useState<string | null>(null);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
@@ -115,19 +122,33 @@ export default function HomeScreen() {
     initFeedToggle(followCounts?.following ?? 0);
   }, [followCounts?.following, initFeedToggle]);
 
+  const homeTimeZone = resolveHomeTimeZone(
+    (profile as { timezone?: string | null } | null)?.timezone,
+    getDeviceIanaTimeZone(),
+  );
+  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
     ready: bootstrap.isSuccess,
     userId: user?.id,
     stats: bootstrap.data?.stats ?? stats ?? null,
     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
+    yesterdayKey,
   });
 
   React.useEffect(() => {
-    void AsyncStorage.getItem(MISS_ACK_STORAGE_KEY).then((value) => {
+    if (!user?.id) {
+      setMissAckDateKey(null);
+      return;
+    }
+    const scopedKey = missAckStorageKey(user.id);
+    void (async () => {
+      await AsyncStorage.removeItem(MISS_ACK_STORAGE_KEY);
+      const value = await AsyncStorage.getItem(scopedKey);
       setMissAckDateKey(value);
-    });
-  }, []);
+    })();
+  }, [user?.id]);
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
@@ -216,31 +237,31 @@ export default function HomeScreen() {
   });
   const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
 
-  const homeTimeZone = resolveHomeTimeZone(
-    (profile as { timezone?: string | null } | null)?.timezone,
-    getDeviceIanaTimeZone(),
-  );
-
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
     [securedDateKeys, homeTimeZone]
   );
 
-  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
   const morningAfter = useMemo(() => {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
+    const lostStreak = recon.result.lostStreak;
     const variant = morningAfterVariant({
       lastStandUsed: Boolean(
         recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
       ),
       reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
       freezeRemaining: freezeStatus?.remaining ?? 0,
-      lostStreak: recon.result.lostStreak,
+      lostStreak,
     });
-    if (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null) {
+    const keepLost = morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey);
+    if (
+      !keepLost &&
+      (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null)
+    ) {
       return null;
     }
+    if (variant == null) return null;
     return {
       cost: morningAfterCost(
         recon.result.done ?? 0,
@@ -253,12 +274,17 @@ export default function HomeScreen() {
       }),
       freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
       onDismiss: () => {
-        setMissAckDateKey(yesterdayKey);
-        void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+        if (!user?.id) return;
+        const ack = missAckPayload(user.id, yesterdayKey);
+        setMissAckDateKey(ack.value);
+        void AsyncStorage.setItem(ack.key, ack.value);
       },
-      onUseFreeze: variant === "freeze" ? () => setShowFreezeSheet(true) : undefined,
+      onUseFreeze: variant === "freeze" ? () => {
+        setFreezeError(null);
+        setShowFreezeSheet(true);
+      } : undefined,
     };
-  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, yesterdayKey]);
+  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -318,14 +344,19 @@ export default function HomeScreen() {
     onSuccess: () => {
       setFreezeSpent(true);
       setShowFreezeSheet(false);
-      setMissAckDateKey(yesterdayKey);
-      void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+      setFreezeError(null);
+      if (user?.id) {
+        const ack = missAckPayload(user.id, yesterdayKey);
+        setMissAckDateKey(ack.value);
+        void AsyncStorage.setItem(ack.key, ack.value);
+      }
       for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
         void queryClient.invalidateQueries({ queryKey: [...queryKey] });
       }
     },
     onError: (err) => {
       captureError(err, "useFreeze");
+      setFreezeError(inlineServerError(err));
     },
   });
 
@@ -477,7 +508,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           )}
-          contentContainerStyle={s.guestList}
+          contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
@@ -532,13 +563,28 @@ export default function HomeScreen() {
           timeZone={homeTimeZone}
           subscriptionStatus={(profile as { subscription_status?: string | null } | null)?.subscription_status}
           submitting={useFreeze.isPending}
-          onUseFreeze={() => useFreeze.mutate()}
-          onRefuse={() => setShowFreezeSheet(false)}
+          error={freezeError}
+          onUseFreeze={() => {
+            setFreezeError(null);
+            useFreeze.mutate();
+          }}
+          onRefuse={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+            if (!user?.id) return;
+            const ack = missAckPayload(user.id, yesterdayKey);
+            setMissAckDateKey(ack.value);
+            void AsyncStorage.setItem(ack.key, ack.value);
+          }}
           onSeePro={() => {
             setShowFreezeSheet(false);
+            setFreezeError(null);
             router.push(ROUTES.PAYWALL as never);
           }}
-          onClose={() => setShowFreezeSheet(false)}
+          onClose={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+          }}
         />
         <JeopardyModal
           visible={showJeopardyModal}
@@ -561,7 +607,7 @@ const s = StyleSheet.create({
     paddingTop: DS_V3.space.section,
     gap: DS_V3.space.md,
   },
-  guestList: { paddingBottom: DS_V3.space.xs * 24 },
+  guestList: {},
   guestTitle: {
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,

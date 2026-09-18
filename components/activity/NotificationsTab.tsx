@@ -6,7 +6,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -91,6 +93,7 @@ function NotificationsBody({
   refreshing: boolean;
   onRefresh: () => Promise<void>;
 }) {
+  const insets = useSafeAreaInsets();
   const qc = useQueryClient();
   const router = useRouter();
 
@@ -224,7 +227,7 @@ function NotificationsBody({
         />
       }
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scroll}
+      contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
       stickySectionHeadersEnabled={false}
       maxToRenderPerBatch={10}
       windowSize={5}
@@ -360,7 +363,6 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
-    paddingBottom: DS_V3.space.gutter * 6,
     paddingTop: DS_V3.space.md,
   },
   emptyPad: {

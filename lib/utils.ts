@@ -1,4 +1,5 @@
 import { DS_COLORS } from "@/lib/design-system";
+import { initialsFrom } from "@/lib/avatar-initials";
 
 /** Rotating avatar backgrounds by user id hash (feed spec). */
 const FEED_AVATAR_BY_USER_ID = [
@@ -21,15 +22,7 @@ export function getFeedAvatarBgFromUserId(userId: string): string {
   return FEED_AVATAR_BY_USER_ID[idx] ?? FEED_AVATAR_BY_USER_ID[0];
 }
 
-/** Initials: first letter of first + last name (or first two chars of single token). */
+/** Same letters as `initialsFrom` — empty string when that helper returns null. */
 export function getDisplayInitials(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "";
-  if (parts.length === 1) {
-    const letters = [...(parts[0] ?? "").matchAll(/\p{L}/gu)].map((m) => m[0]);
-    return letters.slice(0, 2).join("").toUpperCase();
-  }
-  const first = (parts[0] ?? "").match(/\p{L}/u)?.[0] ?? "";
-  const last = (parts[parts.length - 1] ?? "").match(/\p{L}/u)?.[0] ?? "";
-  return `${first}${last}`.toUpperCase();
+  return initialsFrom(displayName) ?? "";
 }

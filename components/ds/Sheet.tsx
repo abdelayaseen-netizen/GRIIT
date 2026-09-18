@@ -49,7 +49,7 @@ export default function Sheet({
           onPress={onDismiss}
           style={styles.scrim}
         />
-        <View style={styles.panel}>
+        <View style={styles.panel} pointerEvents="box-none">
           <Text style={styles.heading}>{heading}</Text>
           {children}
           {footer ? <View style={styles.footer}>{footer}</View> : null}
@@ -66,10 +66,13 @@ const styles = StyleSheet.create({
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
     backgroundColor: DS_V3.color.canvas,
     opacity: 0.6,
   },
   panel: {
+    zIndex: 1,
+    elevation: 4,
     backgroundColor: DS_V3.color.surface,
     borderTopLeftRadius: SHEET_RADIUS,
     borderTopRightRadius: SHEET_RADIUS,

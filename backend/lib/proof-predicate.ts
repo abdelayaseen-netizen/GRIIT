@@ -2,8 +2,10 @@
  * Camera-proof predicate for check_ins / completion rows.
  * Mirrors `hasCameraProof` in lib/active-challenge-ui.ts:
  *   verified === true || Boolean(proof_photo_url)
- * Never require_photo. URL pick matches app/challenge/active proofUrl.
+ * Never require_photo. URL pick is proofImageUrlForCheckIn.
  */
+
+import { proofImageUrlForCheckIn } from "../../lib/profile-v2-proof-photo";
 
 export function hasCameraProof(row: {
   verified?: boolean | null;
@@ -12,14 +14,14 @@ export function hasCameraProof(row: {
   return row.verified === true || Boolean(row.proof_photo_url);
 }
 
-/** Same pick as `proofUrl` in app/challenge/active/[activeChallengeId].tsx. */
+/** Same pick as `proofImageUrlForCheckIn` — feed, Secured, and Profile Proofs. */
 export function proofPhotoUrlFromCheckIn(row: {
   photo_url?: string | null;
   proof_url?: string | null;
   completion_image_url?: string | null;
+  proof_photo_url?: string | null;
 }): string | null {
-  const u = row.photo_url || row.proof_url || row.completion_image_url;
-  return typeof u === "string" && u.trim() ? u.trim() : null;
+  return proofImageUrlForCheckIn(row);
 }
 
 export type ProofCheckIn = {

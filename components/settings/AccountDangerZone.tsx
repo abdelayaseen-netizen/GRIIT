@@ -50,8 +50,10 @@ export function AccountDangerZone({
           onPress={async () => {
             if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             await cancelLapsedUserReminders();
+            const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id;
             await supabase.auth.signOut();
-            await runClientSignOutCleanup();
+            await runClientSignOutCleanup(userId);
             const { clearOnboardingStorage } = await import("@/store/onboardingStore");
             await clearOnboardingStorage();
             router.replace(ROUTES.AUTH as never);
@@ -102,8 +104,10 @@ export function AccountDangerZone({
                 try {
                   await trpcMutate(TRPC.profiles.deleteAccount);
                   await cancelLapsedUserReminders();
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const userId = session?.user?.id;
                   await supabase.auth.signOut();
-                  await runClientSignOutCleanup();
+                  await runClientSignOutCleanup(userId);
                   const { clearOnboardingStorage } = await import("@/store/onboardingStore");
                   await clearOnboardingStorage();
                   setShowDeleteModal(false);

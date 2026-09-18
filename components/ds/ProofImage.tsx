@@ -14,6 +14,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
+import { isProofImageUrl } from "@/lib/profile-v2-proof-photo";
 import Stamp, { type StampLabel } from "./Stamp";
 
 export type ProofImageSize = "feed" | "card" | "thumb";
@@ -76,7 +77,7 @@ export default function ProofImage({
   const request = proofRequestSource(resolved, size);
   const missing =
     request == null ||
-    (typeof request === "string" && !/^https:\/\//i.test(request));
+    (typeof request === "string" && !isProofImageUrl(request));
   const inset = missing
     ? DS_V3.space.gutter
     : size === "feed"

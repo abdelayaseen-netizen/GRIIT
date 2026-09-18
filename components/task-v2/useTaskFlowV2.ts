@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
@@ -8,7 +8,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { firstString, parseConfig } from "@/lib/task-helpers";
-import { counterUnitFromTaskType } from "@/lib/counter-log";
+import { counterDisplayUnit } from "@/lib/counter-log";
 import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { haversineDistance } from "@/lib/geo";
 import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
@@ -24,7 +24,7 @@ import {
   type DayOpenModel,
 } from "@/lib/day-open";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
-import { taskSecuredHref } from "@/lib/task-secured-nav";
+import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -74,6 +74,7 @@ import {
   resolveRetryFailedSubmit,
   shouldBlockOnWindow,
   submitWithoutPhotoNext,
+  timerRemainingSec,
   timerResumeStep,
   timerShouldAutoSubmit,
   verificationKindFor,
@@ -117,7 +118,7 @@ export function useTaskFlowV2() {
   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
   const windowState = windowStateFromConfig(config as Record<string, unknown>);
   const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
-  const counterUnit = counterUnitFromTaskType(taskType);
+  const counterUnit = counterDisplayUnit(taskType, config);
   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
   const place = config.location_name || "the saved location";
 
@@ -150,6 +151,7 @@ export function useTaskFlowV2() {
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [windowForbidden, setWindowForbidden] = useState(false);
+  const submitInFlight = useRef(false);
 
   const windowEval = evaluateScheduleWindow({
     start: config.schedule_window_start,
@@ -169,7 +171,11 @@ export function useTaskFlowV2() {
       if (!s) return;
       setStartedAtIso(s.startedAtIso);
       setSoundOn(s.soundOn);
-      const remaining = s.requiredSeconds - (Date.now() - Date.parse(s.startedAtIso)) / 1000;
+      const remaining = timerRemainingSec({
+        nowMs: Date.now(),
+        requiredSeconds: s.requiredSeconds,
+        startedAtIso: s.startedAtIso,
+      });
       setStep(timerResumeStep(remaining));
     });
   }, [userId, taskId, dateKey, taskType]);
@@ -204,12 +210,12 @@ export function useTaskFlowV2() {
     void refreshGps();
   }, [taskType, refreshGps]);
 
-  const remainingSec =
-    pausedRemaining != null
-      ? pausedRemaining
-      : startedAtIso
-        ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
-        : requiredSeconds;
+  const remainingSec = timerRemainingSec({
+    nowMs: nowTick,
+    requiredSeconds,
+    startedAtIso,
+    pausedRemaining,
+  });
 
   const exit = useCallback(() => {
     void endLiveActivity();
@@ -271,11 +277,13 @@ export function useTaskFlowV2() {
   };
 
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
+    if (submitInFlight.current) return;
     if (!flowAllowsSubmit(windowState)) {
       setWindowForbidden(true);
       setStep("window_closed");
       return;
     }
+    submitInFlight.current = true;
     setSaving(true);
     let cancelled = false;
     const takeoverTimer = setTimeout(() => {
@@ -290,6 +298,7 @@ export function useTaskFlowV2() {
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;
         clearTimeout(takeoverTimer);
+        submitInFlight.current = false;
         setSaving(false);
         setFailCode(undefined);
         setFailNote("Couldn't save. Try again.");
@@ -373,6 +382,7 @@ export function useTaskFlowV2() {
           }),
         );
         setStep("day_open");
+        submitInFlight.current = false;
         return;
       }
       const assembled = assembleSubmitResult({
@@ -395,11 +405,24 @@ export function useTaskFlowV2() {
           : null,
       });
       setResult(assembled);
-      // secureDay already awaited invalidate+refetch (useAppChallengeMutations 291–296).
-      router.push(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+      if (
+        !canOpenSecuredScreen({
+          daySecured: assembled.daySecured,
+          newStreakCount: secure?.newStreakCount,
+        })
+      ) {
+        submitInFlight.current = false;
+        setFailNote("Couldn't confirm the streak.");
+        setStep("failed");
+        return;
+      }
+      if (securedNavOnce() === "replace") {
+        router.replace(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+      }
     } catch (err) {
       cancelled = true;
       clearTimeout(takeoverTimer);
+      submitInFlight.current = false;
       setSaving(false);
       const msg = err instanceof Error ? err.message : "";
       if (isWindowClosedError(msg)) {

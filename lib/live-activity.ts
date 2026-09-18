@@ -53,8 +53,6 @@ function buildState(payload: LiveActivityPayload): LiveActivity.LiveActivityStat
       title,
       subtitle,
       progressBar: { date: endMs },
-      imageName: "griit-mark",
-      dynamicIslandImageName: "griit-mark",
     };
   }
 
@@ -64,8 +62,6 @@ function buildState(payload: LiveActivityPayload): LiveActivity.LiveActivityStat
     title,
     subtitle,
     progressBar: { elapsedTimer: { startDate: payload.startedAtMs } },
-    imageName: "griit-mark",
-    dynamicIslandImageName: "griit-mark",
   };
 }
 
@@ -79,10 +75,6 @@ function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityCon
     deepLinkUrl: payload.route,
     timerType: "digital",
     padding: { horizontal: 16, top: 12, bottom: 12 },
-    imagePosition: "right",
-    imageAlign: "center",
-    imageSize: { width: 44, height: 44 },
-    contentFit: "contain",
   };
 }
 

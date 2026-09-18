@@ -6,12 +6,14 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Compass, Flame, Home, Plus, User } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { TAB_BAR_PILL_HEIGHT } from "@/lib/tab-bar-inset";
 
 const PT = DS_V3.space.xs / 4;
 const ICON = DS_V3.space.xs * 6;
-const BAR = DS_V3.space.xs * 16;
+const BAR = TAB_BAR_PILL_HEIGHT;
 const ITEM_W = DS_V3.space.gutter * 3;
 const FAB = DS_V3.size.avatar.md;
 
@@ -31,11 +33,15 @@ const TABS: { id: TabBarTab; label: string; Icon: typeof Home }[] = [
 ];
 
 export default function TabBar({ active, onTab, onFab }: TabBarProps) {
+  const insets = useSafeAreaInsets();
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);
 
   return (
-    <View style={styles.dock} pointerEvents="box-none">
+    <View
+      style={[styles.dock, { paddingBottom: Math.max(insets.bottom, DS_V3.space.md) }]}
+      pointerEvents="box-none"
+    >
       <View style={styles.pill}>
         {left.map((t) => (
           <TabItem key={t.id} tab={t} active={active === t.id} onPress={() => onTab(t.id)} />
@@ -99,7 +105,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingLeft: DS_V3.space.md,
     paddingRight: DS_V3.space.md,
-    paddingBottom: DS_V3.space.md,
   },
   pill: {
     height: BAR,

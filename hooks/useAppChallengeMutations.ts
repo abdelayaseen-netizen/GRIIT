@@ -175,6 +175,7 @@ export function useAppChallengeMutations({
           void fetchActiveChallenge();
           void fetchStats();
           void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+          void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
@@ -280,6 +281,7 @@ export function useAppChallengeMutations({
       };
       // After the server has written the day — not before. Home reads these keys only.
       await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
       await queryClient.refetchQueries({ queryKey: ["home", "bootstrap"] });
       await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });

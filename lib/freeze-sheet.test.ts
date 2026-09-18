@@ -13,9 +13,13 @@ import {
   freezeNoneShowsSeePro,
   freezeOfferBody,
   freezeRefillDateLabel,
+  freezeCloseAcksDateKey,
+  freezeRefuseAcksDateKey,
   freezeSheetNetwork,
   freezeSheetVariant,
+  freezeUseCallsMutation,
 } from "./freeze-sheet";
+import { morningAfterVisible } from "./morning-after";
 
 describe("freeze sheet", () => {
   it("success path invalidates bootstrap, getStats, getFreezeStatus, and getRecord", () => {
@@ -38,13 +42,40 @@ describe("freeze sheet", () => {
     expect(freezeSheetNetwork("close")).toBe("none");
     expect(freezeSheetNetwork("use")).toBe("useFreeze");
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-    expect(home).toContain("onRefuse={() => setShowFreezeSheet(false)}");
+    expect(home).toContain("onRefuse={() => {");
+    expect(home).toContain("setShowFreezeSheet(false)");
     expect(home).not.toContain("StreakFreezeModal");
     expect(home).toContain("for (const queryKey of FREEZE_SUCCESS_INVALIDATES)");
     expect(home).toContain("invalidateQueries({ queryKey: [...queryKey] })");
     expect(home).toContain("timeZone={homeTimeZone}");
     expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
+    expect(home).toContain("useFreeze.mutate()");
+    expect(home).toContain("missAckPayload(user.id, yesterdayKey)");
+    expect(home).toContain("setFreezeError(inlineServerError(err))");
+    expect(freezeUseCallsMutation()).toBe(true);
+    expect(freezeRefuseAcksDateKey()).toBe(true);
+    expect(freezeCloseAcksDateKey()).toBe(false);
+    const freezeUi = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
+    expect(freezeUi).not.toContain("onDismiss={onRefuse}");
+    expect(freezeUi).toContain("onDismiss={onClose}");
+    expect(freezeUi).toContain(`<Button label={NO_LET_IT_RESET} variant="tertiary" onPress={onRefuse} />`);
+    const closeIdx = home.indexOf("onClose={() => {");
+    const refuseIdx = home.indexOf("onRefuse={() => {");
+    expect(closeIdx).toBeGreaterThan(-1);
+    expect(refuseIdx).toBeGreaterThan(-1);
+    const closeBlock = home.slice(closeIdx, closeIdx + 180);
+    const refuseBlock = home.slice(refuseIdx, refuseIdx + 360);
+    expect(closeBlock).not.toContain("missAckPayload");
+    expect(closeBlock).not.toContain("AsyncStorage.setItem");
+    expect(refuseBlock).toContain("missAckPayload");
+    expect(refuseBlock).toContain("AsyncStorage.setItem");
+    const sheet = readFileSync(resolve(__dirname, "../components/ds/Sheet.tsx"), "utf8");
+    expect(sheet).toContain("zIndex: 1");
+    expect(sheet).toContain("pointerEvents=\"box-none\"");
+    expect(freezeUi).toContain("error ? <Text style={styles.error}>{error}</Text>");
+    expect(morningAfterVisible("freeze", null, "2026-09-17")).toBe(true);
+    expect(morningAfterVisible("freeze", "2026-09-17", "2026-09-17")).toBe(false);
   });
 
   it("matches the frame 54 table", () => {

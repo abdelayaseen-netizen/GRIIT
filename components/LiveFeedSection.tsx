@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -27,13 +28,15 @@ import DiscoverCTA from "@/components/home/DiscoverCTA";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import EmptyState from "@/components/ds/EmptyState";
-import { Avatar } from "@/components/Avatar";
+import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Users, Ban } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
-import { countFriendsPostedAway } from "@/lib/home-away-count";
+import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
+import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -106,6 +109,7 @@ function LiveFeedSection({
   activeChallengesCount = 0,
   viewerTargetStreak,
 }: LiveFeedSectionProps) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -146,7 +150,21 @@ function LiveFeedSection({
     staleTime: 60 * 1000,
   });
 
-  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id);
+  const followingQuery = useQuery({
+    queryKey: ["profiles", "getFollowing", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getFollowing, { userId: user!.id }) as Promise<
+        Array<{ user_id: string }>
+      >,
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+  });
+  const followedIds = useMemo(
+    () => new Set((followingQuery.data ?? []).map((row) => row.user_id)),
+    [followingQuery.data],
+  );
+
+  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id, followedIds);
 
   const posts = (feedQuery.data?.posts ?? []).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
@@ -154,20 +172,7 @@ function LiveFeedSection({
     return true;
   });
 
-  const seen = new Set<string>();
-  const dedupedFeed = posts.filter((post) => {
-    const dayKey = new Date(post.createdAt).toDateString();
-    const challengeKey = post.challengeId ?? post.challengeName ?? "unknown";
-    const key = `${post.userId}-${challengeKey}-${dayKey}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  const diverseFeed = dedupedFeed.filter((post, i, arr) => {
-    if (i === 0) return true;
-    return post.userId !== arr[i - 1]?.userId;
-  });
-  const finalFeed = diverseFeed.slice(0, 20);
+  const finalFeed = keepLiveFeedPosts(posts).slice(0, 20);
   const feedViewTracked = useRef(false);
 
   useEffect(() => {
@@ -522,7 +527,7 @@ function LiveFeedSection({
         </View>
       )}
 
-      {hideHeaderToggle || finalFeed.length === 0 ? null : (
+      {hideHeaderToggle || awayCount === 0 ? null : (
         <Pressable
           style={styles.digestCard}
           onPress={scrollToFeed}
@@ -531,15 +536,20 @@ function LiveFeedSection({
         >
           <View style={styles.digestAvatars}>
             {Array.from(new Map(finalFeed.map((p) => [p.userId, p])).values())
+              .filter((p) => p.userId && followedIds.has(p.userId) && p.userId !== user?.id)
               .slice(0, 3)
               .map((p, i) => (
                 <View key={p.userId} style={[styles.digestAvatarWrap, i === 0 && { marginLeft: 0 }]}>
-                  <Avatar url={p.avatarUrl} name={p.displayName || p.username} userId={p.userId} size={28} />
+                  <Avatar
+                    size={32}
+                    uri={p.avatarUrl}
+                    displayName={p.displayName || p.username}
+                  />
                 </View>
               ))}
           </View>
           <Text style={styles.digestText} numberOfLines={2}>
-            Three friends posted while you were away.
+            {friendsPostedAwayLine(awayCount)}
           </Text>
         </Pressable>
       )}
@@ -554,7 +564,10 @@ function LiveFeedSection({
         keyExtractor={(item) => item.id}
         scrollEnabled
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: tabBarContentPad(insets.bottom) },
+        ]}
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
@@ -735,7 +748,6 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
     listContent: {
       paddingHorizontal: 0,
-      paddingBottom: DS_V3.space.xs * 30,
       backgroundColor: DS_V3.color.canvas,
     },
     v3Item: { paddingHorizontal: DS_V3.space.gutter },

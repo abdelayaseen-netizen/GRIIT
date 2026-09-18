@@ -78,6 +78,7 @@ export type ProfileV3Props = {
   onSeeRecord: () => void;
   onDiscover: () => void;
   onOpenRun: (id: string) => void;
+  onOpenProof?: (proof: ProfileV3Proof) => void;
   followLabel?: string;
   onFollow?: () => void;
   followDisabled?: boolean;
@@ -114,6 +115,7 @@ export function ProfileV3({
   onSeeRecord,
   onDiscover,
   onOpenRun,
+  onOpenProof,
   followLabel,
   onFollow,
   followDisabled,
@@ -285,14 +287,20 @@ export function ProfileV3({
           ) : proofsInParent ? null : (
             <View style={styles.proofGrid}>
               {proofs.map((p) => (
-                <View key={p.dateKey} style={styles.proofCell}>
+                <Pressable
+                  key={p.dateKey}
+                  style={styles.proofCell}
+                  onPress={onOpenProof ? () => onOpenProof(p) : undefined}
+                  accessibilityRole={onOpenProof ? "button" : undefined}
+                  accessibilityLabel={`Day ${p.day}`}
+                >
                   <ProofImage
                     uri={p.imageUrl}
                     size="thumb"
                     title={`Day ${p.day}`}
                     recyclingKey={p.dateKey}
                   />
-                </View>
+                </Pressable>
               ))}
             </View>
           )
@@ -312,7 +320,7 @@ export function ProfileV3({
         ) : null}
       </View>
 
-      {tab === "Badges" || (proofsInParent && tab === "Proofs" && proofs.length > 0) ? null : (
+      {tab === "Badges" || tab === "Proofs" ? null : (
         <Text style={styles.foot}>{FOOTNOTE}</Text>
       )}
         </>
