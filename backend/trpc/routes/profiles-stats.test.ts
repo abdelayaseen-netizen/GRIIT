@@ -92,6 +92,7 @@ function createCaller(opts?: {
   lastStandDateKeys?: string[];
   freezeDateKeys?: string[];
   yesterdaySecured?: boolean;
+  securedDateKeys?: string[];
 }) {
   const router = createTRPCRouter(profilesStatsProcedures);
   const profile = {
@@ -118,7 +119,10 @@ function createCaller(opts?: {
         lte: () => inner,
         limit: () => inner,
         update: (payload: Record<string, unknown>) => {
-          if (state.table === "streaks") opts?.onStreakUpdate?.(payload);
+          if (state.table === "streaks") {
+            opts?.onStreakUpdate?.(payload);
+            Object.assign(streak, payload);
+          }
           return {
             eq: () => Promise.resolve({ data: null, error: null }),
           };
@@ -162,6 +166,13 @@ function createCaller(opts?: {
           if (state.table === "active_challenges" && state.status === "completed") {
             return Promise.resolve({
               data: [{ id: "c1" }],
+              error: null,
+              count: null,
+            }).then(onFulfilled, onRejected);
+          }
+          if (state.table === "day_secures") {
+            return Promise.resolve({
+              data: (opts?.securedDateKeys ?? []).map((date_key) => ({ date_key })),
               error: null,
               count: null,
             }).then(onFulfilled, onRejected);
@@ -312,6 +323,7 @@ describe("profiles.reconcileStreak", () => {
     await expect(caller.reconcileStreak()).resolves.toEqual({
       streak_broken: true,
       previous_streak: 5,
+      lostStreak: 0,
       lastStandUsedThisSession: false,
       lastStandsAvailable: 0,
       missedTaskNames: [],
@@ -348,6 +360,41 @@ describe("profiles.reconcileStreak", () => {
       done: 1,
       total: 3,
     });
+  });
+
+  it("returns the same lostStreak cron-first and reconcile-first", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const last = addCalendarDaysToDateKey(yesterday, -1);
+    const securedDateKeys = [
+      addCalendarDaysToDateKey(last, -4),
+      addCalendarDaysToDateKey(last, -3),
+      addCalendarDaysToDateKey(last, -2),
+      addCalendarDaysToDateKey(last, -1),
+      last,
+    ];
+    const fixture = {
+      securedDateKeys,
+      streakOverrides: {
+        last_completed_date_key: last,
+      },
+    };
+    const reconcileFirst = createCaller({
+      ...fixture,
+      streakOverrides: { ...fixture.streakOverrides, active_streak_count: 5 },
+    });
+    const cronFirst = createCaller({
+      ...fixture,
+      streakOverrides: { ...fixture.streakOverrides, active_streak_count: 0 },
+    });
+    const [fromReconcile, fromCron] = await Promise.all([
+      reconcileFirst.reconcileStreak(),
+      cronFirst.reconcileStreak(),
+    ]);
+    expect(fromReconcile.lostStreak).toBe(5);
+    expect(fromCron.lostStreak).toBe(5);
+    expect(fromCron.lostStreak).toBe(fromReconcile.lostStreak);
   });
 
   it("throws when the streaks read fails", async () => {
