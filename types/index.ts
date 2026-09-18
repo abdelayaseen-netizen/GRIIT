@@ -179,6 +179,8 @@ export interface StatsFromApi {
   totalDaysSecured?: number | null;
   preferredSecureTime?: string | null;
   lastStandsAvailable?: number | null;
+  lastStandUsedThisSession?: boolean;
+  streakLostNoLastStand?: boolean;
   lastStandRequiresPremium?: boolean;
   lastCompletedDateKey?: string | null;
   longestStreak?: number;

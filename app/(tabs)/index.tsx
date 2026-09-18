@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -29,7 +29,11 @@ import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
-import { StreakFreezeModal } from "@/components/StreakFreezeModal";
+import { FreezeSheet } from "@/components/home/FreezeSheet";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
+import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { displayDay } from "@/lib/challenge-day";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -38,6 +42,15 @@ import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
 import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
+import {
+  MISS_ACK_STORAGE_KEY,
+  morningAfterCost,
+  morningAfterCushion,
+  morningAfterFreezeCaption,
+  morningAfterVariant,
+  morningAfterVisible,
+} from "@/lib/morning-after";
+import type { StatsFromApi } from "@/types";
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
@@ -79,8 +92,10 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
-  const [showFreezeModal, setShowFreezeModal] = React.useState(false);
+  const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
+  const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
+  const [freezeSpent, setFreezeSpent] = React.useState(false);
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -100,13 +115,19 @@ export default function HomeScreen() {
     initFeedToggle(followCounts?.following ?? 0);
   }, [followCounts?.following, initFeedToggle]);
 
-  useReconcileStreakIfNeeded({
+  const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
     ready: bootstrap.isSuccess,
     userId: user?.id,
     stats: bootstrap.data?.stats ?? stats ?? null,
     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
   });
+
+  React.useEffect(() => {
+    void AsyncStorage.getItem(MISS_ACK_STORAGE_KEY).then((value) => {
+      setMissAckDateKey(value);
+    });
+  }, []);
 
   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
@@ -205,6 +226,40 @@ export default function HomeScreen() {
     [securedDateKeys, homeTimeZone]
   );
 
+  const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+  const morningAfter = useMemo(() => {
+    if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
+    const statsRow = resolvedStats as StatsFromApi | null;
+    const variant = morningAfterVariant({
+      lastStandUsed: Boolean(
+        recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
+      ),
+      reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
+      freezeRemaining: freezeStatus?.remaining ?? 0,
+      lostStreak: recon.result.lostStreak,
+    });
+    if (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null) {
+      return null;
+    }
+    return {
+      cost: morningAfterCost(
+        recon.result.done ?? 0,
+        recon.result.total ?? 0,
+        recon.result.missedTaskNames ?? [],
+      ),
+      cushion: morningAfterCushion(variant, {
+        longest: statsRow?.longestStreak ?? 0,
+        lastStandsLeft: recon.result.lastStandsAvailable ?? statsRow?.lastStandsAvailable ?? 0,
+      }),
+      freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
+      onDismiss: () => {
+        setMissAckDateKey(yesterdayKey);
+        void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+      },
+      onUseFreeze: variant === "freeze" ? () => setShowFreezeSheet(true) : undefined,
+    };
+  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, yesterdayKey]);
+
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
     const tasksDoneToday = heroTasks.filter((t) => t.done).length;
@@ -254,20 +309,25 @@ export default function HomeScreen() {
     return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
   }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
 
-  React.useEffect(() => {
-    if (isGuest || !user?.id) return;
-    if (!profile || streak == null || streak <= 0) return;
-    const keys = [...securedDateKeys].sort();
-    if (keys.length === 0) return;
-    const lastKey = keys[keys.length - 1]!;
-    const today = getTodayDateKey(homeTimeZone);
-    const yesterday = getYesterdayDateKey(homeTimeZone);
-    const missedWindow = lastKey !== today && lastKey !== yesterday;
-    if (missedWindow) {
-      setShowFreezeModal(true);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- profile identity covered via profile?.username
-  }, [isGuest, user?.id, profile?.username, streak, securedDateKeys]);
+  const useFreeze = useMutation({
+    mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
+    mutationFn: () =>
+      trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
+        dateKeyToFreeze: yesterdayKey,
+      }),
+    onSuccess: () => {
+      setFreezeSpent(true);
+      setShowFreezeSheet(false);
+      setMissAckDateKey(yesterdayKey);
+      void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
+      for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
+        void queryClient.invalidateQueries({ queryKey: [...queryKey] });
+      }
+    },
+    onError: (err) => {
+      captureError(err, "useFreeze");
+    },
+  });
 
   // Jeopardy modal — show once per calendar day when streak is at risk.
   React.useEffect(() => {
@@ -366,7 +426,6 @@ export default function HomeScreen() {
 
   const onJeopardyFreeze = useCallback(() => {
     setShowJeopardyModal(false);
-    setShowFreezeModal(true);
   }, []);
 
   const onJeopardyDismiss = useCallback(() => {
@@ -443,7 +502,8 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={homeStreakLine(streak, todaySecured)}
+              streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
+              morningAfter={morningAfter}
               proof={proof}
               weekFilled={weekSecuredByIndex}
               todayIndex={todayWeekIndex}
@@ -464,12 +524,21 @@ export default function HomeScreen() {
             />
           }
         />
-        <StreakFreezeModal
-          visible={showFreezeModal}
-          streakCount={streak ?? 0}
-          freezesRemaining={profile?.streak_freezes_remaining ?? 1}
-          onUseFreeze={() => setShowFreezeModal(false)}
-          onLetReset={() => setShowFreezeModal(false)}
+        <FreezeSheet
+          visible={showFreezeSheet}
+          remaining={freezeStatus?.remaining ?? 0}
+          restoredStreakDays={recon.result?.lostStreak}
+          lastFreezeUsedAt={freezeStatus?.lastFreezeUsedAt ?? null}
+          timeZone={homeTimeZone}
+          subscriptionStatus={(profile as { subscription_status?: string | null } | null)?.subscription_status}
+          submitting={useFreeze.isPending}
+          onUseFreeze={() => useFreeze.mutate()}
+          onRefuse={() => setShowFreezeSheet(false)}
+          onSeePro={() => {
+            setShowFreezeSheet(false);
+            router.push(ROUTES.PAYWALL as never);
+          }}
+          onClose={() => setShowFreezeSheet(false)}
         />
         <JeopardyModal
           visible={showJeopardyModal}

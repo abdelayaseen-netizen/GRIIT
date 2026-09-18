@@ -252,6 +252,7 @@ describe("streaks.getFreezeStatus", () => {
       remaining: 1,
       limit: STREAK_FREEZE_PER_MONTH_FREE,
       isPro: false,
+      lastFreezeUsedAt: "2026-09-10T00:00:00.000Z",
     });
   });
 
@@ -265,6 +266,7 @@ describe("streaks.getFreezeStatus", () => {
       remaining: STREAK_FREEZE_PER_MONTH_PRO,
       limit: STREAK_FREEZE_PER_MONTH_PRO,
       isPro: true,
+      lastFreezeUsedAt: null,
     });
   });
 
@@ -278,6 +280,7 @@ describe("streaks.getFreezeStatus", () => {
       remaining: STREAK_FREEZE_PER_MONTH_PRO,
       limit: STREAK_FREEZE_PER_MONTH_PRO,
       isPro: true,
+      lastFreezeUsedAt: "2026-08-01T00:00:00.000Z",
     });
   });
 

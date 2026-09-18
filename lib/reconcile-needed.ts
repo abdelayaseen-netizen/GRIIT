@@ -12,6 +12,7 @@
 export type ReconcileStatsInput = {
   lastCompletedDateKey?: string | null;
   effectiveMissedDays?: number | null;
+  lastStandUsedThisSession?: boolean | null;
 };
 
 export function reconcileStreakNeeded(input: {
@@ -20,6 +21,10 @@ export function reconcileStreakNeeded(input: {
   securedDateKeys: readonly string[] | null;
 }): boolean {
   if (!input.ready) return false;
+
+  if (input.stats?.lastStandUsedThisSession === true) {
+    return true;
+  }
 
   if ((input.stats?.effectiveMissedDays ?? 0) >= 1) {
     return true;

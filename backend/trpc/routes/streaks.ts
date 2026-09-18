@@ -100,7 +100,13 @@ export const streaksRouter = createTRPCRouter({
         ?.last_freeze_used_at,
       isPro,
     });
-    return { remaining, limit, isPro };
+    return {
+      remaining,
+      limit,
+      isPro,
+      lastFreezeUsedAt:
+        (profile as { last_freeze_used_at?: string | null } | null)?.last_freeze_used_at ?? null,
+    };
   }),
   /**
    * Spend a freeze for yesterday. Inserts freeze_uses, decrements remaining,

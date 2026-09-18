@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Camera, ShieldOff } from "lucide-react-native";
+import { Camera, Shield, ShieldOff } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
@@ -32,10 +32,20 @@ import {
   completionPct,
   daysValue,
   heroDayLine,
+  lastStandSplitLine,
   ofElapsed,
+  recordDayDetail,
+  recordDayLabel,
+  recordDayNumber,
+  type RecordDayRow,
 } from "@/lib/consistency-record";
 
-type RecordPayload = ProfileRecord & { timezone: string; todayKey: string; elapsedMs: number };
+type RecordPayload = ProfileRecord & {
+  timezone: string;
+  todayKey: string;
+  elapsedMs: number;
+  days?: RecordDayRow[];
+};
 
 const ICON = DS_V3.space.lg;
 const BAR = DS_V3.space.xs + DS_V3.space.xs / 2;
@@ -60,6 +70,8 @@ export default function ConsistencyDetailScreen() {
   const primary = rec?.runs[0];
   const months = (rec?.detail.months ?? []).filter((m) => m.pct > 0 || m.value !== "0 of 0");
   const challenges = rec?.detail.byChallenge ?? [];
+  const days = rec?.days ?? [];
+  const lastStandDays = rec?.detail.lastStandDays ?? 0;
 
   return (
     <ErrorBoundary>
@@ -119,6 +131,10 @@ export default function ConsistencyDetailScreen() {
               <Text style={styles.splitLabel}>{SELF_REPORTED_LABEL}</Text>
               <Text style={styles.splitVal}>{daysValue(rec?.detail.selfReportedDays ?? 0)}</Text>
             </View>
+            <View style={styles.splitRow}>
+              <Shield size={16} color={DS_V3.color.textSecondary} strokeWidth={2} />
+              <Text style={styles.splitLabel}>{lastStandSplitLine(lastStandDays)}</Text>
+            </View>
           </Card>
 
           <Text style={[styles.label, styles.section]}>{BY_MONTH_LABEL}</Text>
@@ -134,6 +150,23 @@ export default function ConsistencyDetailScreen() {
               {i < months.length - 1 ? <Divider /> : null}
             </View>
           ))}
+          {days.map((day, i) => {
+            const securedDay = day.state === "secured";
+            return (
+              <View key={day.dateKey}>
+                <View style={styles.dayRow}>
+                  <View style={styles.dayCopy}>
+                    <Text style={securedDay ? styles.dayLabelOn : styles.dayLabelOff}>
+                      {recordDayLabel(day.state)}
+                    </Text>
+                    <Text style={styles.chCap}>{recordDayDetail(day)}</Text>
+                  </View>
+                  <Text style={styles.ratio}>{recordDayNumber(day.dateKey)}</Text>
+                </View>
+                {i < days.length - 1 ? <Divider /> : null}
+              </View>
+            );
+          })}
 
           <Text style={[styles.label, styles.section]}>{BY_CHALLENGE_LABEL}</Text>
           {challenges.map((c, i) => (
@@ -278,6 +311,25 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  dayRow: {
+    minHeight: DS_V3.size.tap,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+  },
+  dayCopy: { flex: 1, gap: PT },
+  dayLabelOn: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  dayLabelOff: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   chRow: {

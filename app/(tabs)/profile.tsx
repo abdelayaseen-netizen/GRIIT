@@ -207,6 +207,7 @@ export default function ProfileScreen() {
             streak={streak}
             best={best}
             todaySecured={todaySecured}
+            totalDaysSecured={record?.detail.totalVerified ?? 0}
             consistency={consistency}
             consistencySub={
               joined

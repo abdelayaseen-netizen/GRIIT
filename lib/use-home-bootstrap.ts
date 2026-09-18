@@ -10,6 +10,7 @@ export type HomeBootstrapFreezeStatus = {
   remaining: number;
   limit: number;
   isPro: boolean;
+  lastFreezeUsedAt?: string | null;
 };
 
 export type HomeBootstrapFollowCounts = {

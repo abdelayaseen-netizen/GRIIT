@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, ChevronRight, Medal, Snowflake } from "lucide-react-native";
+import { Bell, Check, ChevronRight, Medal, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -28,6 +28,7 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
+import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 
 const ICON = DS_V3.space.xs * 6;
 const RING = DS_V3.space.gutter;
@@ -64,10 +65,19 @@ export function greetingTitle(p: {
 
 export type HomeV3Proof = HomeProofCard;
 
+export type HomeV3MorningAfter = {
+  cost: string;
+  cushion: string;
+  freezeCaption?: string | null;
+  onDismiss: () => void;
+  onUseFreeze?: () => void;
+};
+
 export type HomeV3Props = {
   title: string | null;
   streak: number | null;
   streakLine: string;
+  morningAfter?: HomeV3MorningAfter | null;
   proof: HomeV3Proof | null;
   weekFilled: boolean[];
   todayIndex: number;
@@ -90,6 +100,7 @@ export function HomeV3({
   title,
   streak,
   streakLine,
+  morningAfter,
   proof,
   weekFilled,
   todayIndex,
@@ -213,6 +224,36 @@ export function HomeV3({
         <Text style={styles.secondary}>{streakLine}</Text>
       </View>
 
+      {morningAfter ? (
+        <View style={styles.gutter}>
+          <Card>
+            <View style={styles.missHead}>
+              <Text style={styles.missFact}>{YESTERDAY_WASNT_SECURED}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss"
+                onPress={morningAfter.onDismiss}
+                style={styles.missX}
+              >
+                <X size={META} color={DS_V3.color.textSecondary} strokeWidth={2} />
+              </Pressable>
+            </View>
+            <View style={styles.missBody}>
+              <Text style={styles.secondary}>{morningAfter.cost}</Text>
+              <Text style={styles.secondary}>{morningAfter.cushion}</Text>
+              {morningAfter.onUseFreeze ? (
+                <>
+                  <Button label={USE_FREEZE_FOR_YESTERDAY} onPress={morningAfter.onUseFreeze} />
+                  {morningAfter.freezeCaption ? (
+                    <Text style={styles.missCap}>{morningAfter.freezeCaption}</Text>
+                  ) : null}
+                </>
+              ) : null}
+            </View>
+          </Card>
+        </View>
+      ) : null}
+
       {proof ? (
         <View style={styles.gutter}>
           <Card>
@@ -330,6 +371,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: DS_V3.space.md,
+  },
+  missHead: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
+  },
+  missFact: {
+    flex: 1,
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+    paddingTop: DS_V3.space.sm,
+  },
+  missX: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  missBody: {
+    gap: DS_V3.space.sm,
+    marginTop: DS_V3.space.md,
+  },
+  missCap: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
   },
   proofHead: {
     flexDirection: "row",

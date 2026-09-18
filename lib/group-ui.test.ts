@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   afterAcceptActiveId,
@@ -7,7 +9,9 @@ import {
   invitedFooterNetwork,
   memberStreakCaption,
   memberTrailing,
+  groupBrokeYesterdayLine,
   groupInviteShareMessage,
+  rosterTrailing,
   openLinkRoute,
   pendingTrailing,
   pickerRowState,
@@ -19,6 +23,15 @@ describe("MemberRow trailing states", () => {
   it("roster trailing captions", () => {
     expect(memberTrailing("secured")).toEqual({ label: "Secured today", tone: "brand" });
     expect(memberTrailing("not_yet")).toEqual({ label: "Not yet today", tone: "secondary" });
+    expect(memberTrailing("missed")).toEqual({ label: "Missed yesterday", tone: "secondary" });
+    expect(rosterTrailing({ securedToday: true, yesterdayState: "missed" })).toBe("secured");
+    expect(rosterTrailing({ securedToday: false, yesterdayState: "missed" })).toBe("missed");
+    expect(rosterTrailing({ securedToday: false, yesterdayState: "secured" })).toBe("not_yet");
+    expect(groupBrokeYesterdayLine("Ada")).toBe("Broke yesterday, when Ada missed.");
+    const membersSrc = readFileSync(resolve(__dirname, "../app/challenge/[id]/members.tsx"), "utf8");
+    expect(membersSrc).toContain("rosterTrailing(");
+    expect(membersSrc).toContain("groupBrokeYesterdayLine(");
+    expect(membersSrc).not.toContain("color.danger");
     expect(memberTrailing("cancel")).toEqual({ label: "Cancel", tone: "secondary" });
     expect(memberTrailing("invited")).toEqual({ label: "Invited", tone: "secondary" });
   });

@@ -73,4 +73,18 @@ describe("reconcileStreakNeeded", () => {
       })
     ).toBe(true);
   });
+
+  it("Last Stand receipt still reconciles so yesterday's tally is on the return", () => {
+    expect(
+      reconcileStreakNeeded({
+        ready: true,
+        stats: {
+          lastCompletedDateKey: "2026-09-16",
+          effectiveMissedDays: 0,
+          lastStandUsedThisSession: true,
+        },
+        securedDateKeys: ["2026-09-15"],
+      })
+    ).toBe(true);
+  });
 });

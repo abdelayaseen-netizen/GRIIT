@@ -10,6 +10,7 @@ export type MemberTrailing =
   | "in"
   | "secured"
   | "not_yet"
+  | "missed"
   | "cancel";
 
 export type TrailingTone = "brand" | "secondary" | "muted";
@@ -28,6 +29,19 @@ export function membersInGroupLabel(n: number): string {
 
 export function groupSecuredTodayLine(securedToday: number, memberCount: number): string {
   return `${securedToday} of ${memberCount} secured today`;
+}
+
+export function groupBrokeYesterdayLine(name: string): string {
+  return `Broke yesterday, when ${name} missed.`;
+}
+
+export function rosterTrailing(input: {
+  securedToday: boolean;
+  yesterdayState?: "secured" | "missed" | null;
+}): MemberTrailing {
+  if (input.securedToday) return "secured";
+  if (input.yesterdayState === "missed") return "missed";
+  return "not_yet";
 }
 
 export function memberStreakCaption(streak: number): string {
@@ -51,6 +65,8 @@ export function memberTrailing(state: MemberTrailing, full?: boolean): { label: 
       return { label: "Secured today", tone: "brand" };
     case "not_yet":
       return { label: "Not yet today", tone: "secondary" };
+    case "missed":
+      return { label: "Missed yesterday", tone: "secondary" };
     case "cancel":
       return { label: "Cancel", tone: "secondary" };
   }
@@ -137,6 +153,7 @@ export type RosterMember = {
   role: string;
   currentStreak: number;
   securedToday: boolean;
+  yesterdayState?: "secured" | "missed";
   joinedAt: string;
 };
 

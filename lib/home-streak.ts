@@ -31,20 +31,26 @@ export function resolveDisplayedStreak(
   return activeStreak ?? 0;
 }
 
-/** Home hero subline. "Post today to start." is streak 0 only. */
+/** Home hero subline. Two zeros: never posted vs reset after days secured. */
 export function homeStreakLine(
   streak: number | null,
   todaySecured: boolean,
+  totalDaysSecured = 0,
 ): string {
   if (streak == null) return "Updating streak.";
   if (todaySecured) return "Day secured.";
   if (streak >= 1) return "Post today to keep it.";
+  if (totalDaysSecured > 0) return "Streak reset. Post today to start again.";
   return "Post today to start.";
 }
 
 /** ProfileV3 alias — same function as Home. */
-export function streakLineFor(current: number, todaySecured: boolean): string {
-  return homeStreakLine(current, todaySecured);
+export function streakLineFor(
+  current: number,
+  todaySecured: boolean,
+  totalDaysSecured = 0,
+): string {
+  return homeStreakLine(current, todaySecured, totalDaysSecured);
 }
 
 /**
