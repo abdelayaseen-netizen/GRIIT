@@ -40,12 +40,20 @@ const MONTHS = [
 
 export function freezeRefillDateLabel(
   lastUsedIso: string | null | undefined,
+  timeZone: string,
   now = new Date(),
 ): string {
+  const tz = timeZone.trim() || "UTC";
   const base = lastUsedIso ? new Date(lastUsedIso) : now;
   const refill = new Date(base.getTime());
   refill.setUTCDate(refill.getUTCDate() + FREEZE_REFILL_DAYS);
-  return `${refill.getUTCDate()} ${MONTHS[refill.getUTCMonth()]}`;
+  try {
+    const day = new Intl.DateTimeFormat("en-GB", { timeZone: tz, day: "numeric" }).format(refill);
+    const month = new Intl.DateTimeFormat("en-GB", { timeZone: tz, month: "long" }).format(refill);
+    return `${day} ${month}`;
+  } catch {
+    return `${refill.getUTCDate()} ${MONTHS[refill.getUTCMonth()]}`;
+  }
 }
 
 export function freezeSheetNetwork(action: "use" | "refuse" | "close" | "seePro"): FreezeSheetNetwork {

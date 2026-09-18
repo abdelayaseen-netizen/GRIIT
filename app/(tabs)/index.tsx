@@ -527,6 +527,7 @@ export default function HomeScreen() {
           remaining={freezeStatus?.remaining ?? 0}
           restoredStreakDays={recon.result?.lostStreak}
           lastFreezeUsedAt={freezeStatus?.lastFreezeUsedAt ?? null}
+          timeZone={homeTimeZone}
           submitting={useFreeze.isPending}
           onUseFreeze={() => useFreeze.mutate()}
           onRefuse={() => setShowFreezeSheet(false)}

@@ -21,6 +21,7 @@ export type FreezeSheetProps = {
   remaining: number;
   restoredStreakDays?: number;
   lastFreezeUsedAt?: string | null;
+  timeZone: string;
   submitting?: boolean;
   onUseFreeze: () => void;
   onRefuse: () => void;
@@ -33,6 +34,7 @@ export function FreezeSheet({
   remaining,
   restoredStreakDays,
   lastFreezeUsedAt,
+  timeZone,
   submitting,
   onUseFreeze,
   onRefuse,
@@ -53,7 +55,7 @@ export function FreezeSheet({
           </>
         }
       >
-        <Text style={styles.body}>{freezeNoneBody(freezeRefillDateLabel(lastFreezeUsedAt))}</Text>
+        <Text style={styles.body}>{freezeNoneBody(freezeRefillDateLabel(lastFreezeUsedAt, timeZone))}</Text>
       </Sheet>
     );
   }

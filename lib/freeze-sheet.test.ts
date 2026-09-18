@@ -29,7 +29,7 @@ describe("freeze sheet", () => {
     expect(home).toContain("onRefuse={() => setShowFreezeSheet(false)}");
     expect(home).not.toContain("StreakFreezeModal");
     expect(home).toContain("invalidateQueries({ queryKey: [...FREEZE_SUCCESS_INVALIDATES] })");
-    expect(home).toContain("restoredStreakDays={recon.result?.lostStreak}");
+    expect(home).toContain("timeZone={homeTimeZone}");
     expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
   });
@@ -52,6 +52,7 @@ describe("freeze sheet", () => {
     );
     expect(SEE_PRO).toBe("See Pro");
     expect(CLOSE).toBe("Close");
-    expect(freezeRefillDateLabel("2026-09-16T00:00:00.000Z")).toBe("16 October");
+    expect(freezeRefillDateLabel("2026-09-16T00:00:00.000Z", "UTC")).toBe("16 October");
+    expect(freezeRefillDateLabel("2026-09-16T00:00:00.000Z", "America/New_York")).toBe("15 October");
   });
 });
