@@ -17,8 +17,19 @@ import {
 } from "./freeze-sheet";
 
 describe("freeze sheet", () => {
-  it("success path invalidates home bootstrap", () => {
-    expect(FREEZE_SUCCESS_INVALIDATES).toEqual(["home", "bootstrap"]);
+  it("success path invalidates bootstrap, getStats, getFreezeStatus, and getRecord", () => {
+    expect(FREEZE_SUCCESS_INVALIDATES).toEqual([
+      ["home", "bootstrap"],
+      ["profiles", "getStats"],
+      ["streaks", "getFreezeStatus"],
+      ["profiles", "getRecord"],
+    ]);
+    const profile = readFileSync(resolve(__dirname, "../lib/onboarding-v2-profile.ts"), "utf8");
+    expect(profile).toContain('["profiles", "getRecord"]');
+    const tab = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
+    expect(tab).toContain('queryKey: ["profiles", "getRecord", user?.id ?? ""]');
+    const consistency = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
+    expect(consistency).toContain('queryKey: ["profiles", "getRecord", targetId]');
   });
 
   it("refusal makes no call", () => {
@@ -28,7 +39,8 @@ describe("freeze sheet", () => {
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     expect(home).toContain("onRefuse={() => setShowFreezeSheet(false)}");
     expect(home).not.toContain("StreakFreezeModal");
-    expect(home).toContain("invalidateQueries({ queryKey: [...FREEZE_SUCCESS_INVALIDATES] })");
+    expect(home).toContain("for (const queryKey of FREEZE_SUCCESS_INVALIDATES)");
+    expect(home).toContain("invalidateQueries({ queryKey: [...queryKey] })");
     expect(home).toContain("timeZone={homeTimeZone}");
     expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");

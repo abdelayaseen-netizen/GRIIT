@@ -320,7 +320,9 @@ export default function HomeScreen() {
       setShowFreezeSheet(false);
       setMissAckDateKey(yesterdayKey);
       void AsyncStorage.setItem(MISS_ACK_STORAGE_KEY, yesterdayKey);
-      void queryClient.invalidateQueries({ queryKey: [...FREEZE_SUCCESS_INVALIDATES] });
+      for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
+        void queryClient.invalidateQueries({ queryKey: [...queryKey] });
+      }
     },
     onError: (err) => {
       captureError(err, "useFreeze");

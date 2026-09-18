@@ -6,7 +6,12 @@ export const NO_FREEZES_LEFT = "No freezes left";
 export const SEE_PRO = "See Pro";
 export const CLOSE = "Close";
 export const FREEZE_REFILL_DAYS = 30;
-export const FREEZE_SUCCESS_INVALIDATES = ["home", "bootstrap"] as const;
+export const FREEZE_SUCCESS_INVALIDATES = [
+  ["home", "bootstrap"],
+  ["profiles", "getStats"],
+  ["streaks", "getFreezeStatus"],
+  ["profiles", "getRecord"],
+] as const;
 
 export type FreezeSheetVariant = "offer" | "none";
 export type FreezeSheetNetwork = "useFreeze" | "none" | "seePro";
