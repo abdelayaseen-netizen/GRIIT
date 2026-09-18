@@ -10,6 +10,7 @@ import {
   discardPhotoStep,
   finishSubmitOutcome,
   fmtMmSs,
+  timerRemainingSec,
   flowOpensCamera,
   initialStep,
   isHonest,
@@ -88,6 +89,34 @@ describe("fmtMmSs", () => {
     expect(fmtMmSs(600)).toBe("10:00");
     expect(fmtMmSs(-3)).toBe("00:00");
     expect(fmtMmSs(61.9)).toBe("01:01");
+  });
+});
+
+describe("timerRemainingSec", () => {
+  it("never exceeds duration when now is behind the start timestamp", () => {
+    const start = "2026-09-18T19:19:00.000Z";
+    const required = 300;
+    const staleNow = Date.parse(start) - 2000;
+    const remaining = timerRemainingSec({
+      nowMs: staleNow,
+      requiredSeconds: required,
+      startedAtIso: start,
+    });
+    expect(remaining).toBe(300);
+    expect(fmtMmSs(remaining)).toBe("05:00");
+  });
+
+  it("computes remaining from the exact end timestamp", () => {
+    const start = "2026-09-18T19:19:00.000Z";
+    const required = 300;
+    const now = Date.parse(start) + 60_000;
+    expect(
+      timerRemainingSec({
+        nowMs: now,
+        requiredSeconds: required,
+        startedAtIso: start,
+      }),
+    ).toBe(240);
   });
 });
 

@@ -74,6 +74,7 @@ import {
   resolveRetryFailedSubmit,
   shouldBlockOnWindow,
   submitWithoutPhotoNext,
+  timerRemainingSec,
   timerResumeStep,
   timerShouldAutoSubmit,
   verificationKindFor,
@@ -170,7 +171,11 @@ export function useTaskFlowV2() {
       if (!s) return;
       setStartedAtIso(s.startedAtIso);
       setSoundOn(s.soundOn);
-      const remaining = s.requiredSeconds - (Date.now() - Date.parse(s.startedAtIso)) / 1000;
+      const remaining = timerRemainingSec({
+        nowMs: Date.now(),
+        requiredSeconds: s.requiredSeconds,
+        startedAtIso: s.startedAtIso,
+      });
       setStep(timerResumeStep(remaining));
     });
   }, [userId, taskId, dateKey, taskType]);
@@ -205,12 +210,12 @@ export function useTaskFlowV2() {
     void refreshGps();
   }, [taskType, refreshGps]);
 
-  const remainingSec =
-    pausedRemaining != null
-      ? pausedRemaining
-      : startedAtIso
-        ? Math.max(0, requiredSeconds - (nowTick - Date.parse(startedAtIso)) / 1000)
-        : requiredSeconds;
+  const remainingSec = timerRemainingSec({
+    nowMs: nowTick,
+    requiredSeconds,
+    startedAtIso,
+    pausedRemaining,
+  });
 
   const exit = useCallback(() => {
     void endLiveActivity();

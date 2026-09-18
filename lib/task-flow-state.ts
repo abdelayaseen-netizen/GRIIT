@@ -57,6 +57,24 @@ export function fmtMmSs(sec: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** Remaining seconds from the exact end timestamp. Never exceeds duration. */
+export function timerRemainingSec(input: {
+  nowMs: number;
+  requiredSeconds: number;
+  startedAtIso: string | null;
+  pausedRemaining?: number | null;
+}): number {
+  const cap = Math.max(0, input.requiredSeconds);
+  if (input.pausedRemaining != null) {
+    return Math.min(cap, Math.max(0, input.pausedRemaining));
+  }
+  if (!input.startedAtIso) return cap;
+  const start = Date.parse(input.startedAtIso);
+  if (!Number.isFinite(start)) return cap;
+  const endMs = start + cap * 1000;
+  return Math.min(cap, Math.max(0, (endMs - input.nowMs) / 1000));
+}
+
 export function clockLabel(isoOrMs: string | number): string {
   const d = typeof isoOrMs === "number" ? new Date(isoOrMs) : new Date(isoOrMs);
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
