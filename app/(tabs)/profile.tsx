@@ -11,7 +11,7 @@ import {
   Pressable,
   RefreshControl,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -34,6 +34,7 @@ import { captureError } from "@/lib/sentry";
 import { profilePrimaryName } from "@/lib/profile-display";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -57,6 +58,7 @@ function isProfileTab(value: string | undefined): value is ProfileTab {
 }
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const isGuest = useIsGuest();
@@ -207,7 +209,7 @@ export default function ProfileScreen() {
           numColumns={3}
           keyExtractor={(p) => p.dateKey}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           columnWrapperStyle={proofs.length > 0 && v3Tab === "Proofs" ? styles.proofRow : undefined}
           ListHeaderComponent={
           <ProfileV3
@@ -307,7 +309,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
-  scroll: { paddingBottom: DS_V3.space.xs * 30 },
+  scroll: {},
   proofRow: {
     gap: DS_V3.space.md,
     paddingHorizontal: DS_V3.space.gutter,

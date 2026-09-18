@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -35,6 +36,7 @@ import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -107,6 +109,7 @@ function LiveFeedSection({
   activeChallengesCount = 0,
   viewerTargetStreak,
 }: LiveFeedSectionProps) {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -561,7 +564,10 @@ function LiveFeedSection({
         keyExtractor={(item) => item.id}
         scrollEnabled
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: tabBarContentPad(insets.bottom) },
+        ]}
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
@@ -742,7 +748,6 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
     listContent: {
       paddingHorizontal: 0,
-      paddingBottom: DS_V3.space.xs * 30,
       backgroundColor: DS_V3.color.canvas,
     },
     v3Item: { paddingHorizontal: DS_V3.space.gutter },

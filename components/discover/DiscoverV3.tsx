@@ -11,7 +11,9 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import RootHeader from "@/components/ds/RootHeader";
 import Chip from "@/components/ds/Chip";
 import Button from "@/components/ds/Button";
@@ -101,6 +103,7 @@ export function DiscoverV3({
   refreshing,
   onRefresh,
 }: DiscoverV3Props) {
+  const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
   const gridData = challengesLoading ? [] : challenges;
 
@@ -214,7 +217,7 @@ export function DiscoverV3({
           numColumns={2}
           keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           columnWrapperStyle={styles.gridRow}
           ListHeaderComponent={header}
           ListFooterComponent={footer}
@@ -248,9 +251,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
   },
-  scroll: {
-    paddingBottom: DS_V3.space.gutter * 6,
-  },
+  scroll: {},
   errorPad: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.section,

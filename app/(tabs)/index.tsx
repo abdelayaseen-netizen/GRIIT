@@ -5,7 +5,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -27,6 +27,7 @@ import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
@@ -90,6 +91,7 @@ function durationMinutesFromTask(t: TaskRow): number | undefined {
 }
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -495,7 +497,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           )}
-          contentContainerStyle={s.guestList}
+          contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
@@ -593,7 +595,7 @@ const s = StyleSheet.create({
     paddingTop: DS_V3.space.section,
     gap: DS_V3.space.md,
   },
-  guestList: { paddingBottom: DS_V3.space.xs * 24 },
+  guestList: {},
   guestTitle: {
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,
