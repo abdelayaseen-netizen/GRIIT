@@ -10,6 +10,7 @@ import {
   USE_A_FREEZE_FOR_YESTERDAY_Q,
   USE_THE_FREEZE,
   freezeNoneBody,
+  freezeNoneShowsSeePro,
   freezeOfferBody,
   freezeRefillDateLabel,
   freezeSheetNetwork,
@@ -64,6 +65,13 @@ describe("freeze sheet", () => {
     );
     expect(SEE_PRO).toBe("See Pro");
     expect(CLOSE).toBe("Close");
+    expect(freezeNoneShowsSeePro("premium")).toBe(false);
+    expect(freezeNoneShowsSeePro("trial")).toBe(false);
+    expect(freezeNoneShowsSeePro("free")).toBe(true);
+    expect(freezeNoneShowsSeePro(null)).toBe(true);
+    const sheet = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
+    expect(sheet).toContain("variant === \"none\"");
+    expect(sheet).toContain("freezeNoneShowsSeePro(subscriptionStatus)");
     expect(freezeRefillDateLabel("2026-09-16T00:00:00.000Z", "UTC")).toBe("16 October");
     expect(freezeRefillDateLabel("2026-09-16T00:00:00.000Z", "America/New_York")).toBe("15 October");
   });

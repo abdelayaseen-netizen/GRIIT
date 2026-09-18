@@ -11,6 +11,7 @@ import {
   USE_A_FREEZE_FOR_YESTERDAY_Q,
   USE_THE_FREEZE,
   freezeNoneBody,
+  freezeNoneShowsSeePro,
   freezeOfferBody,
   freezeRefillDateLabel,
   freezeSheetVariant,
@@ -22,6 +23,7 @@ export type FreezeSheetProps = {
   restoredStreakDays?: number;
   lastFreezeUsedAt?: string | null;
   timeZone: string;
+  subscriptionStatus?: string | null;
   submitting?: boolean;
   onUseFreeze: () => void;
   onRefuse: () => void;
@@ -35,6 +37,7 @@ export function FreezeSheet({
   restoredStreakDays,
   lastFreezeUsedAt,
   timeZone,
+  subscriptionStatus,
   submitting,
   onUseFreeze,
   onRefuse,
@@ -50,7 +53,9 @@ export function FreezeSheet({
         heading={NO_FREEZES_LEFT}
         footer={
           <>
-            <Button label={SEE_PRO} onPress={onSeePro} />
+            {freezeNoneShowsSeePro(subscriptionStatus) ? (
+              <Button label={SEE_PRO} onPress={onSeePro} />
+            ) : null}
             <Button label={CLOSE} variant="tertiary" onPress={onClose} />
           </>
         }

@@ -20,6 +20,11 @@ export function freezeSheetVariant(remaining: number): FreezeSheetVariant {
   return remaining > 0 ? "offer" : "none";
 }
 
+/** None-left CTA. premium|trial already have the allotment — never "See Pro". */
+export function freezeNoneShowsSeePro(subscriptionStatus: string | null | undefined): boolean {
+  return subscriptionStatus !== "premium" && subscriptionStatus !== "trial";
+}
+
 export function freezeOfferBody(restoredDays: number, remaining: number): string {
   return `Your ${restoredDays}-day streak comes back. ${remaining} left, and it refills 30 days after you use it.`;
 }
