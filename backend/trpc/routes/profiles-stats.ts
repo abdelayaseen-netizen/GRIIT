@@ -48,25 +48,28 @@ export const profilesStatsProcedures = {
           .maybeSingle(),
       ]);
       const securedDateKeys = (securesRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      const lastStandDateKeys = (standRes.data ?? []).map((r: { date_key: string }) => r.date_key);
+      const frozenDateKeys = (freezeRes.data ?? []).map((r: { date_key: string }) => r.date_key);
       const yesterdayMissed = !securedDateKeys.includes(yesterdayKey);
-      const activeAfter = (streakAfter.data as { active_streak_count?: number | null } | null)
-        ?.active_streak_count ?? 0;
+      const yesterdayCovered =
+        lastStandDateKeys.includes(yesterdayKey) || frozenDateKeys.includes(yesterdayKey);
       const lostStreak =
-        yesterdayMissed && activeAfter === 0
+        yesterdayMissed && !yesterdayCovered
           ? restoreStreakCount({
               todayKey,
               lastCompletedDateKey:
                 (streakAfter.data as { last_completed_date_key?: string | null } | null)
                   ?.last_completed_date_key ?? result.lastCompletedDateKey,
               securedDateKeys,
-              lastStandDateKeys: (standRes.data ?? []).map((r: { date_key: string }) => r.date_key),
-              frozenDateKeys: (freezeRes.data ?? []).map((r: { date_key: string }) => r.date_key),
+              lastStandDateKeys,
+              // Same prospective yesterday bridge as useFreeze (streaks.ts:178-181).
+              frozenDateKeys: [...frozenDateKeys, yesterdayKey],
             })
-          : 0;
+          : undefined;
       return {
         streak_broken: result.streak_broken,
         previous_streak: result.previous_streak,
-        lostStreak,
+        ...(lostStreak !== undefined ? { lostStreak } : {}),
         lastStandUsedThisSession: result.lastStandUsedThisSession,
         lastStandsAvailable: result.lastStandsAvailable,
         missedTaskNames: tally.missedTaskNames,

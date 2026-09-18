@@ -397,6 +397,35 @@ describe("profiles.reconcileStreak", () => {
     expect(fromCron.lostStreak).toBe(fromReconcile.lostStreak);
   });
 
+  it("returns lostStreak after miss-then-secure even when active is 1, then absent after freeze", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const today = getTodayDateKey("UTC");
+    const yesterday = getYesterdayDateKey("UTC");
+    const last = addCalendarDaysToDateKey(yesterday, -1);
+    const securedDateKeys = [
+      addCalendarDaysToDateKey(last, -4),
+      addCalendarDaysToDateKey(last, -3),
+      addCalendarDaysToDateKey(last, -2),
+      addCalendarDaysToDateKey(last, -1),
+      last,
+      today,
+    ];
+    const freezeDateKeys: string[] = [];
+    const caller = createCaller({
+      securedDateKeys,
+      freezeDateKeys,
+      streakOverrides: {
+        last_completed_date_key: today,
+        active_streak_count: 1,
+      },
+    });
+    await expect(caller.reconcileStreak()).resolves.toMatchObject({ lostStreak: 6 });
+    freezeDateKeys.push(yesterday);
+    const afterFreeze = await caller.reconcileStreak();
+    expect(afterFreeze).not.toHaveProperty("lostStreak");
+  });
+
   it("throws when the streaks read fails", async () => {
     const caller = createCaller({ failStreak: true });
     await expect(caller.reconcileStreak()).rejects.toMatchObject({
