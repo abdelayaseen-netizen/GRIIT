@@ -9,6 +9,7 @@ import { reconcileStreakNeeded, type ReconcileStatsInput } from "@/lib/reconcile
 export type ReconcileStreakResult = {
   streak_broken: boolean;
   previous_streak: number;
+  lostStreak?: number;
   lastStandUsedThisSession?: boolean;
   lastStandsAvailable?: number;
   missedTaskNames?: string[];

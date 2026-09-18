@@ -19,7 +19,7 @@ import {
 export type FreezeSheetProps = {
   visible: boolean;
   remaining: number;
-  restoredStreakDays: number;
+  restoredStreakDays?: number;
   lastFreezeUsedAt?: string | null;
   submitting?: boolean;
   onUseFreeze: () => void;
@@ -69,7 +69,9 @@ export function FreezeSheet({
         </>
       }
     >
-      <Text style={styles.body}>{freezeOfferBody(restoredStreakDays, remaining)}</Text>
+      <Text style={styles.body}>
+        {typeof restoredStreakDays === "number" ? freezeOfferBody(restoredStreakDays, remaining) : null}
+      </Text>
     </Sheet>
   );
 }

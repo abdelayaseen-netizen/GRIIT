@@ -29,6 +29,9 @@ describe("freeze sheet", () => {
     expect(home).toContain("onRefuse={() => setShowFreezeSheet(false)}");
     expect(home).not.toContain("StreakFreezeModal");
     expect(home).toContain("invalidateQueries({ queryKey: [...FREEZE_SUCCESS_INVALIDATES] })");
+    expect(home).toContain("restoredStreakDays={recon.result?.lostStreak}");
+    expect(home).not.toContain("previous_streak");
+    expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
   });
 
   it("matches the frame 54 table", () => {
@@ -37,6 +40,9 @@ describe("freeze sheet", () => {
     expect(USE_A_FREEZE_FOR_YESTERDAY_Q).toBe("Use a freeze for yesterday?");
     expect(freezeOfferBody(12, 1)).toBe(
       "Your 12-day streak comes back. 1 left, and it refills 30 days after you use it.",
+    );
+    expect(freezeOfferBody(0, 1)).toBe(
+      "Your 0-day streak comes back. 1 left, and it refills 30 days after you use it.",
     );
     expect(USE_THE_FREEZE).toBe("Use the freeze");
     expect(NO_LET_IT_RESET).toBe("No, let it reset");

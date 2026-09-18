@@ -13,13 +13,19 @@ import {
 describe("morningAfterVariant", () => {
   it("selects Last Stand, freeze, or reset", () => {
     expect(
-      morningAfterVariant({ lastStandUsed: true, reset: true, freezeRemaining: 2 }),
+      morningAfterVariant({ lastStandUsed: true, reset: true, freezeRemaining: 2, lostStreak: 9 }),
     ).toBe("last_stand");
     expect(
-      morningAfterVariant({ lastStandUsed: false, reset: true, freezeRemaining: 1 }),
+      morningAfterVariant({ lastStandUsed: false, reset: true, freezeRemaining: 1, lostStreak: 6 }),
     ).toBe("freeze");
     expect(
-      morningAfterVariant({ lastStandUsed: false, reset: true, freezeRemaining: 0 }),
+      morningAfterVariant({ lastStandUsed: false, reset: false, freezeRemaining: 4, lostStreak: 6 }),
+    ).toBe("freeze");
+    expect(
+      morningAfterVariant({ lastStandUsed: false, reset: true, freezeRemaining: 1, lostStreak: 0 }),
+    ).toBe("reset");
+    expect(
+      morningAfterVariant({ lastStandUsed: false, reset: true, freezeRemaining: 0, lostStreak: 6 }),
     ).toBe("reset");
     expect(
       morningAfterVariant({ lastStandUsed: false, reset: false, freezeRemaining: 4 }),

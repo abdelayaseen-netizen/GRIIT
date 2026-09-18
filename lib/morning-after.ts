@@ -12,13 +12,16 @@ export type MorningAfterInput = {
   lastStandUsed: boolean;
   reset: boolean;
   freezeRemaining: number;
+  lostStreak?: number;
 };
 
 export function morningAfterVariant(input: MorningAfterInput): MorningAfterVariant | null {
   if (input.lastStandUsed) return "last_stand";
-  if (!input.reset) return null;
-  if (input.freezeRemaining > 0) return "freeze";
-  return "reset";
+  if (typeof input.lostStreak === "number" && input.lostStreak > 0 && input.freezeRemaining > 0) {
+    return "freeze";
+  }
+  if (input.reset) return "reset";
+  return null;
 }
 
 export function isMissAcked(ackedDateKey: string | null | undefined, dateKey: string): boolean {

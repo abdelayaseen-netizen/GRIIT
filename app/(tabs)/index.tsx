@@ -236,6 +236,7 @@ export default function HomeScreen() {
       ),
       reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
       freezeRemaining: freezeStatus?.remaining ?? 0,
+      lostStreak: recon.result.lostStreak,
     });
     if (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null) {
       return null;
@@ -524,7 +525,7 @@ export default function HomeScreen() {
         <FreezeSheet
           visible={showFreezeSheet}
           remaining={freezeStatus?.remaining ?? 0}
-          restoredStreakDays={Math.max(recon.result?.previous_streak ?? 0, 1)}
+          restoredStreakDays={recon.result?.lostStreak}
           lastFreezeUsedAt={freezeStatus?.lastFreezeUsedAt ?? null}
           submitting={useFreeze.isPending}
           onUseFreeze={() => useFreeze.mutate()}
