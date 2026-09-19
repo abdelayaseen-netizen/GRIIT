@@ -28,9 +28,9 @@ import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
 import { buildProfileRecord, fractionDateKeysForRange, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
-import { proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
+import { cameraProofTiles, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
-import { proofPhotosByDateKey, type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
+import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   mutualFollowAccepted,
   parseVisibility,
@@ -52,7 +52,16 @@ type ChallengeRow = {
   duration_days?: number | null;
 };
 
-type TaskCountRow = { challenge_id: string; id?: string; title?: string | null; config?: ChallengeTaskRowRaw["config"] };
+type TaskCountRow = {
+  challenge_id: string;
+  id?: string;
+  title?: string | null;
+  config?: ChallengeTaskRowRaw["config"];
+  require_photo?: boolean | null;
+  require_location?: boolean | null;
+  gate_time_mode?: string | null;
+  task_type?: string | null;
+};
 
 const EMPTY_CONSISTENCY: ProfileRecord["consistency"] = {
   rate: "",
@@ -282,13 +291,13 @@ export const profilesRecordProcedures = {
           challengeIds.length > 0
             ? db
                 .from("challenge_tasks")
-                .select("id, title, challenge_id, config")
+                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
                 .in("challenge_id", challengeIds)
                 .limit(400)
             : Promise.resolve({ data: [], error: null }),
           db
             .from("check_ins")
-            .select("date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url")
+            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, created_at")
             .eq("user_id", ownerId)
             .limit(800),
         ]);
@@ -343,11 +352,24 @@ export const profilesRecordProcedures = {
         targetStreak: p.target_streak ?? null,
       });
 
-      const photos = proofPhotosByDateKey(checkInRows);
-      const proofs = record.proofs.map((proof) => ({
-        ...proof,
-        imageUrl: photos.get(proof.dateKey) ?? null,
-      }));
+      const { data: proofEvents } = await db
+        .from("activity_events")
+        .select("id, metadata, created_at")
+        .eq("user_id", ownerId)
+        .eq("event_type", "task_completed")
+        .limit(800);
+      const proofs = cameraProofTiles({
+        checkIns: checkInRows,
+        securedDateKeys,
+        enrollments: acRows.map((row) => ({
+          id: row.id,
+          challengeId: row.challenge_id,
+          startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
+        })),
+        challenges,
+        tasks: taskRows,
+        events: (proofEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
+      });
 
       const enrollmentIds = [
         ...record.runs.map((r) => r.id),

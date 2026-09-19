@@ -82,6 +82,14 @@ import {
   type TaskModelRow,
 } from "../../lib/task-model";
 import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
+import { getSupabaseServer } from "../../lib/supabase-server";
+import {
+  canFlipShare,
+  flipSharePatch,
+  securedDaySharedOnInsert,
+  sharedOnInsert,
+} from "../../lib/activity-share";
+import { cameraProofTiles } from "../../lib/proof-predicate";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -127,6 +135,8 @@ export const checkinsRouter = createTRPCRouter({
         /** Workout log facts — stored in verification_gates.workout_log only. */
         workout_kind: z.string().min(1).max(64).optional(),
         floor_min: z.number().nonnegative().nullable().optional(),
+        /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
+        shareChoicePending: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -819,15 +829,19 @@ export const checkinsRouter = createTRPCRouter({
       const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
+      const activityShared = sharedOnInsert(input.shareChoicePending);
       const activityEventPayload = {
         user_id: ctx.userId,
         event_type: "task_completed" as const,
         challenge_id,
+        shared: activityShared,
+        shared_at: activityShared ? new Date().toISOString() : null,
         metadata: {
           task_id: input.taskId,
           task_name: taskTitle,
           task_type: taskType,
           challenge_name: challengeTitleForFeed,
+          date_key: dateKey,
           has_photo: !!proofUrl,
           photo_url: proofUrl ?? null,
           verification_method: verificationMethod,
@@ -845,7 +859,6 @@ export const checkinsRouter = createTRPCRouter({
           { err: taskCompletedEventError },
           "[checkins.complete] task_completed event FAILED via user client — retrying with service role"
         );
-        const { getSupabaseServer } = await import("../../lib/supabase-server");
         const svc = getSupabaseServer();
         if (svc) {
           const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload as never);
@@ -908,6 +921,52 @@ export const checkinsRouter = createTRPCRouter({
               ? "word_count"
               : "self_report";
 
+      const [{ data: dayCheckIns }, { data: dayEnrollments }, { data: dayEvents }] = await Promise.all([
+        ctx.supabase
+          .from("check_ins")
+          .select("id, date_key, task_id, active_challenge_id, photo_url, proof_url, completion_image_url, created_at")
+          .eq("user_id", ctx.userId)
+          .eq("date_key", dateKey)
+          .eq("status", "completed")
+          .limit(100),
+        ctx.supabase
+          .from("active_challenges")
+          .select("id, challenge_id, start_at")
+          .eq("user_id", ctx.userId)
+          .in("status", ["active", "completed"])
+          .limit(50),
+        ctx.supabase
+          .from("activity_events")
+          .select("id, metadata, created_at")
+          .eq("user_id", ctx.userId)
+          .eq("event_type", "task_completed")
+          .limit(80),
+      ]);
+      const enrollRows = (dayEnrollments ?? []) as { id: string; challenge_id: string; start_at: string }[];
+      const enrollChallengeIds = [...new Set(enrollRows.map((r) => r.challenge_id))];
+      const [dayChallenges, dayTasks] = enrollChallengeIds.length
+        ? await Promise.all([
+            ctx.supabase.from("challenges").select("id, title, duration_days").in("id", enrollChallengeIds).limit(50),
+            ctx.supabase
+              .from("challenge_tasks")
+              .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
+              .in("challenge_id", enrollChallengeIds)
+              .limit(400),
+          ])
+        : [{ data: [] }, { data: [] }];
+      const dayProofs = cameraProofTiles({
+        checkIns: (dayCheckIns ?? []) as Parameters<typeof cameraProofTiles>[0]["checkIns"],
+        dateKey,
+        enrollments: enrollRows.map((r) => ({
+          id: r.id,
+          challengeId: r.challenge_id,
+          startDateKey: dateKeyFromIsoInTimeZone(r.start_at, tz),
+        })),
+        challenges: (dayChallenges.data ?? []) as { id: string; title?: string | null; duration_days?: number | null }[],
+        tasks: (dayTasks.data ?? []) as Parameters<typeof cameraProofTiles>[0]["tasks"],
+        events: (dayEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
+      });
+
       return {
         ...(data ?? {}),
         isMinimumDay,
@@ -919,6 +978,7 @@ export const checkinsRouter = createTRPCRouter({
         challengeLength: ch?.duration_days && ch.duration_days > 0 ? ch.duration_days : 1,
         challengeName: challengeTitleForFeed,
         verificationKind,
+        dayProofs,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
@@ -1288,7 +1348,21 @@ export const checkinsRouter = createTRPCRouter({
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
       if (row.secured && !alreadySecured) {
-        await ctx.supabase.from("activity_events").insert({ user_id: ctx.userId, event_type: "secured_day", challenge_id: challengeId ?? null, metadata: { day_number: daySecured, streak_count: row.streak } });
+        const todayKey = getTodayDateKey(tz);
+        const { count: sharedProofs } = await ctx.supabase
+          .from("activity_events")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", ctx.userId)
+          .eq("event_type", "task_completed")
+          .eq("shared", true)
+          .eq("metadata->>date_key", todayKey);
+        await ctx.supabase.from("activity_events").insert({
+          user_id: ctx.userId,
+          event_type: "secured_day",
+          challenge_id: challengeId ?? null,
+          shared: securedDaySharedOnInsert(sharedProofs ?? 0),
+          metadata: { day_number: daySecured, streak_count: row.streak, date_key: todayKey },
+        });
       }
       if (challengeJustCompleted) {
         await ctx.supabase.from("activity_events").insert({
@@ -1375,6 +1449,56 @@ export const checkinsRouter = createTRPCRouter({
       code: "INTERNAL_SERVER_ERROR",
       message: "Could not secure your day right now. Please try again in a moment.",
     });
+  }),
+
+  shareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+    const svc = getSupabaseServer();
+    if (!svc) {
+      logger.error({ eventId: input.eventId }, "[checkins.shareProof] service role missing");
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
+    }
+    const { data: row, error } = await svc
+      .from("activity_events")
+      .select("id, user_id, event_type, shared, shared_at, metadata")
+      .eq("id", input.eventId)
+      .maybeSingle();
+    if (error) {
+      logger.error({ err: error, code: error.code, message: error.message, details: error.details }, "[checkins.shareProof] load");
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
+    }
+    if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Proof not found." });
+    const ev = row as {
+      id: string;
+      user_id: string;
+      event_type: string;
+      shared?: boolean;
+      shared_at?: string | null;
+      metadata?: Record<string, unknown> | null;
+    };
+    if (!canFlipShare(ev.user_id, ctx.userId)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "You can only share your own proof." });
+    }
+    const nowIso = new Date().toISOString();
+    const patch = flipSharePatch(ev.shared === true, nowIso, ev.shared_at ?? null);
+    const { error: upErr } = await svc.from("activity_events").update(patch as never).eq("id", ev.id);
+    if (upErr) {
+      logger.error({ err: upErr, code: upErr.code, message: upErr.message, details: upErr.details }, "[checkins.shareProof] update");
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
+    }
+    const dateKey = typeof ev.metadata?.date_key === "string" ? ev.metadata.date_key : null;
+    if (dateKey) {
+      const { error: dayErr } = await svc
+        .from("activity_events")
+        .update({ shared: true, shared_at: patch.shared_at } as never)
+        .eq("user_id", ev.user_id)
+        .eq("event_type", "secured_day")
+        .eq("metadata->>date_key", dateKey)
+        .eq("shared", false);
+      if (dayErr) {
+        logger.error({ err: dayErr, code: dayErr.code, message: dayErr.message, details: dayErr.details }, "[checkins.shareProof] secured_day");
+      }
+    }
+    return { ok: true as const, shared: true as const, sharedAt: patch.shared_at };
   }),
 
   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {

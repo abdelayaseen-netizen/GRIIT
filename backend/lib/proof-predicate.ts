@@ -6,6 +6,8 @@
  */
 
 import { proofImageUrlForCheckIn } from "../../lib/profile-v2-proof-photo";
+import { addCalendarDaysToDateKey } from "../../lib/date-utils";
+import { gatesFor, type TaskGate, type TaskModelRow } from "./task-model";
 
 export function hasCameraProof(row: {
   verified?: boolean | null;
@@ -25,13 +27,26 @@ export function proofPhotoUrlFromCheckIn(row: {
 }
 
 export type ProofCheckIn = {
+  id?: string;
   date_key: string;
+  task_id?: string | null;
   active_challenge_id?: string | null;
   photo_url?: string | null;
   proof_url?: string | null;
   completion_image_url?: string | null;
   verified?: boolean | null;
   proof_photo_url?: string | null;
+  created_at?: string | null;
+};
+
+export type RecordProofTile = {
+  dateKey: string;
+  day: number;
+  imageUrl: string | null;
+  challengeName: string;
+  gates: TaskGate[];
+  eventId: string | null;
+  durationDays: number;
 };
 
 export function checkInHasCameraProof(row: ProofCheckIn): boolean {
@@ -112,4 +127,62 @@ export function splitSecuredProof(args: {
     selfReportedDays: args.securedDateKeys.length - cameraDays,
     byEnrollment,
   };
+}
+
+function challengeDayOn(startDateKey: string, dateKey: string): number {
+  if (!startDateKey || startDateKey > dateKey) return 1;
+  let n = 1;
+  let cursor = startDateKey;
+  while (cursor < dateKey) {
+    cursor = addCalendarDaysToDateKey(cursor, 1);
+    n += 1;
+    if (n > 4000) break;
+  }
+  return n;
+}
+
+/** Camera proofs for the grid / Secured — self-reported days emit nothing. */
+export function cameraProofTiles(args: {
+  checkIns: ProofCheckIn[];
+  securedDateKeys?: readonly string[];
+  dateKey?: string;
+  enrollments: { id: string; challengeId: string; startDateKey: string }[];
+  challenges: { id: string; title?: string | null; duration_days?: number | null }[];
+  tasks: (TaskModelRow & { id?: string; challenge_id?: string; title?: string | null })[];
+  events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[];
+}): RecordProofTile[] {
+  const secured = args.securedDateKeys ? new Set(args.securedDateKeys) : null;
+  const titleByChallenge = new Map(args.challenges.map((c) => [c.id, c.title ?? "Challenge"]));
+  const durationByChallenge = new Map(args.challenges.map((c) => [c.id, c.duration_days ?? 30]));
+  const enrollmentById = new Map(args.enrollments.map((e) => [e.id, e]));
+  const taskById = new Map(args.tasks.filter((t) => t.id).map((t) => [t.id as string, t]));
+  const tiles: RecordProofTile[] = [];
+  for (const row of args.checkIns) {
+    if (args.dateKey && row.date_key !== args.dateKey) continue;
+    if (secured && !secured.has(row.date_key)) continue;
+    const url = proofPhotoUrlFromCheckIn(row);
+    if (!url) continue;
+    const enrollment = row.active_challenge_id ? enrollmentById.get(row.active_challenge_id) : undefined;
+    const task = row.task_id ? taskById.get(row.task_id) : undefined;
+    const challengeId = enrollment?.challengeId;
+    const event =
+      args.events?.find((ev) => {
+        const md = ev.metadata ?? {};
+        return (
+          (row.task_id && md.task_id === row.task_id && md.date_key === row.date_key) ||
+          (typeof md.photo_url === "string" && md.photo_url === url)
+        );
+      }) ?? null;
+    tiles.push({
+      dateKey: row.date_key,
+      day: enrollment ? challengeDayOn(enrollment.startDateKey, row.date_key) : 1,
+      imageUrl: url,
+      challengeName: challengeId ? (titleByChallenge.get(challengeId) ?? "Challenge") : "Challenge",
+      gates: task ? gatesFor(task) : [],
+      eventId: event?.id ?? null,
+      durationDays: challengeId ? (durationByChallenge.get(challengeId) ?? 30) : 30,
+    });
+  }
+  tiles.sort((a, b) => (a.dateKey < b.dateKey ? 1 : a.dateKey > b.dateKey ? -1 : 0));
+  return tiles;
 }

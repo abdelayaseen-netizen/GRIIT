@@ -25,6 +25,7 @@ export type EvRow = {
   challenge_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+  shared?: boolean;
 };
 
 export function followRowAccepted(row: { status?: string | null }): boolean {
