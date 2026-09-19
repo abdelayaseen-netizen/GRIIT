@@ -1,8 +1,12 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
 import { fmtMmSs } from "@/lib/task-flow-state";
 import { SESSION_HONESTY } from "@/lib/work-step";
 import { styles } from "../taskFlowStyles";
+
+const STOP = "Stop";
+const CANCEL_TYPE = "Cancel, I'll type it";
 
 type Props = {
   taskType: string;
@@ -12,31 +16,16 @@ type Props = {
 };
 
 export function SessionStep({ taskType, sessionUp, onStop, onCancel }: Props) {
+  const stopA11y = taskType === "run" ? "Stop and use duration" : "Stop and use minutes";
   return (
     <View style={styles.body}>
       <Text style={styles.statLabel}>SESSION TIMER</Text>
       <Text style={styles.huge}>{fmtMmSs(sessionUp)}</Text>
       <Text style={styles.disclosure}>{SESSION_HONESTY}</Text>
-      <Pressable
-        onPress={onStop}
-        accessibilityRole="button"
-        accessibilityLabel={taskType === "run" ? "Stop and use duration" : "Stop and use minutes"}
-        style={styles.inkBtn}
-      >
-        <Text style={styles.inkBtnText}>
-          {taskType === "run"
-            ? `Stop and use ${fmtMmSs(sessionUp)}`
-            : `Stop and use ${Math.max(1, Math.round(sessionUp / 60))} min`}
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={onCancel}
-        accessibilityRole="button"
-        accessibilityLabel="Cancel, I'll type it"
-        style={styles.textBtn}
-      >
-        <Text style={styles.shareText}>Cancel, I&apos;ll type it</Text>
-      </Pressable>
+      <ControlPillRow>
+        <ControlPill label={STOP} icon="square" onPress={onStop} accessibilityLabel={stopA11y} />
+        <ControlPill label={CANCEL_TYPE} icon="x" onPress={onCancel} />
+      </ControlPillRow>
     </View>
   );
 }
