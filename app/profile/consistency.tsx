@@ -9,6 +9,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
+import { consistencyDetailHero, consistencyFromRecord } from "@/lib/consistency";
 import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -33,7 +34,6 @@ import {
   daysValue,
   freezeSplitLine,
   lastStandSplitLine,
-  ofElapsed,
   recordDayDetail,
   recordDayLabel,
   recordDayNumber,
@@ -66,7 +66,6 @@ export default function ConsistencyDetailScreen() {
   });
   const rec = q.data;
   const secured = rec?.consistency.verifiedClosed ?? 0;
-  const elapsed = rec?.consistency.closedDueDays ?? 0;
   const months = (rec?.detail.months ?? []).filter((m) => m.pct > 0 || m.value !== "0 of 0");
   const challenges = rec?.detail.byChallenge ?? [];
   const days = rec?.days ?? [];
@@ -84,7 +83,7 @@ export default function ConsistencyDetailScreen() {
           <Text style={styles.label}>{DAYS_SECURED_LABEL}</Text>
           <View style={styles.hero}>
             <DisplayNumber value={secured} size="home" />
-            <Text style={styles.ofElapsed}>{ofElapsed(elapsed)}</Text>
+            <Text style={styles.ofElapsed}>{consistencyDetailHero(consistencyFromRecord(rec?.consistency))}</Text>
           </View>
 
           <Card style={styles.stats}>

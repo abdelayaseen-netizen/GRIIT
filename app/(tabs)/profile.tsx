@@ -19,11 +19,17 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { profileConsistencyFromBootstrap } from "@/lib/profile-consistency";
+import {
+  consistencyContext,
+  consistencyFromRecord,
+  consistencyHeadline,
+  consistencyLine,
+} from "@/lib/consistency";
+import { proofsDateLabel } from "@/lib/proofs-grid";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -175,8 +181,6 @@ export default function ProfileScreen() {
     bootstrapFollows?.following ??
     (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
   const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
-  const activeChallenges = bootstrap.data?.activeChallenges;
-  const joined = Array.isArray(activeChallenges) && activeChallenges.length > 0;
   const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
   const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
@@ -184,11 +188,7 @@ export default function ProfileScreen() {
     Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : [],
     getTodayDateKey(homeTimeZone),
   );
-  const consistency = profileConsistencyFromBootstrap({
-    activeChallenges,
-    securedDateKeys: bootstrap.data?.securedDateKeys,
-    weekDateKeys: getCurrentWeekDateKeys(homeTimeZone),
-  });
+  const consistency = consistencyFromRecord(record?.consistency);
 
   return (
     <ErrorBoundary>
@@ -212,11 +212,9 @@ export default function ProfileScreen() {
             best={best}
             todaySecured={todaySecured}
             totalDaysSecured={record?.detail.totalVerified ?? 0}
-            consistency={consistency}
+            consistency={consistencyHeadline(consistency)}
             consistencySub={
-              joined
-                ? "Post every day. Missed days count."
-                : "Join a challenge and the strip starts filling."
+              consistencyContext(consistency, proofsDateLabel) || consistencyLine(consistency)
             }
             tab={v3Tab}
             onChangeTab={(next) => {

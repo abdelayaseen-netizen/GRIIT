@@ -9,6 +9,6 @@ describe("own profile vs home.bootstrap", () => {
     expect(src).toContain("useHomeBootstrap");
     expect(src).toContain("bootstrap.data?.stats?.activeStreak");
     expect(src).toContain("bootstrap.data?.followCounts");
-    expect(src).toContain("profileConsistencyFromBootstrap");
+    expect(src).toContain("consistencyHeadline");
   });
 });

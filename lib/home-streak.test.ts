@@ -57,7 +57,7 @@ describe("homeStreakLine", () => {
       resolve(__dirname, "../components/profile/ProfileV3.tsx"),
       "utf8",
     );
-    expect(homeSrc).toContain("homeStreakLine(");
+    expect(homeSrc).toContain("consistencyLine(");
     expect(profileSrc).toContain("streakLineFor(streak, todaySecured, totalDaysSecured)");
   });
 });

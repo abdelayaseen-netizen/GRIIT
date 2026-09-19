@@ -9,7 +9,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -25,13 +25,14 @@ import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { weekStripDayStates } from "@/lib/week-strip-days";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
-import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
+import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
-import { trpcMutate } from "@/lib/trpc";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { consistencyFromRecord, consistencyLine } from "@/lib/consistency";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -107,6 +108,20 @@ export default function HomeScreen() {
   const initFeedToggle = useFeedToggle((s) => s.initIfFirstRun);
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
+  const recordQuery = useQuery({
+    queryKey: ["profiles", "getRecord", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getRecord) as Promise<{
+        consistency: {
+          verifiedClosed: number;
+          closedDueDays: number;
+          dueToday: boolean;
+          dueDayKeys: string[];
+        };
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
   const followCounts = bootstrap.data?.followCounts ?? null;
@@ -511,7 +526,7 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
+              streakLine={consistencyLine(consistencyFromRecord(recordQuery.data?.consistency))}
               morningAfter={morningAfter}
               proof={proof}
               weekStates={weekStates}
