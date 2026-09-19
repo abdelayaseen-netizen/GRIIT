@@ -108,11 +108,10 @@ function sectionFromTasks(
   id: string,
   tasks: HomeProofTask[],
   targetStreak: number | null | undefined,
-  securedToday: boolean,
+  _securedToday: boolean,
 ): HomeProofSection {
   const first = tasks[0]!;
   const durationDays = first.durationDays ?? first.currentDay ?? 1;
-  const only = tasks.length === 1 ? tasks[0] : null;
   return {
     id,
     challenge: first.challengeName,
@@ -121,8 +120,7 @@ function sectionFromTasks(
     doneCount: tasks.filter((t) => t.done).length,
     totalCount: tasks.length,
     rows: tasks.map(homeProofRow),
-    showCta:
-      !securedToday && only != null && only.done !== true && only.windowState !== "closed",
+    showCta: false,
   };
 }
 
