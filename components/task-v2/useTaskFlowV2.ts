@@ -26,6 +26,7 @@ import {
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { closingProofEventId } from "@/lib/proof-moment";
+import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -431,7 +432,25 @@ export function useTaskFlowV2() {
         return;
       }
       if (securedNavOnce() === "replace") {
-        router.replace(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+        const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+        setSecuredHandoff({
+          proofs: proofsFromComplete({
+            dayProofs: complete.dayProofs,
+            photoUri: photoUri ?? proofUrl,
+            challengeName: assembled.challengeName,
+            challengeDay: assembled.challengeDay,
+            challengeLength: assembled.challengeLength,
+            eventId,
+          }),
+          shareEventId: eventId,
+          closingHasPhoto: hasCameraProof,
+        });
+        router.replace(
+          taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
+            shareEventId: eventId,
+            closingHasPhoto: hasCameraProof,
+          }) as never,
+        );
       }
     } catch (err) {
       cancelled = true;

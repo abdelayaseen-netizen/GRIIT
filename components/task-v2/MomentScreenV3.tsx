@@ -22,7 +22,6 @@ import {
   SECURED_PILL_CAMERA,
   SECURED_PILL_SELF,
   SECURED_STREAK_LABEL,
-  SECURED_TODAY_PROOF,
 } from "@/lib/simple-log";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
@@ -153,7 +152,7 @@ export default function MomentScreenV3({
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal, camera });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
-  const shareLabel = variant === "complete" ? "Complete" : "Verified";
+  const shareLabel = variant === "complete" ? "Complete" : camera ? "Verified" : undefined;
   const hasPhoto = proofSource != null || Boolean(proofUri);
   const keepCount = formatSecuredKeepCount(moreDaysThisWeek(weekToday));
 
@@ -194,16 +193,18 @@ export default function MomentScreenV3({
         style={styles.offscreen}
         accessibilityElementsHidden
       >
-        <ShareCardV3
-          ref={shotRef}
-          size="story"
-          streak={variant === "complete" ? goal : streak}
-          copy={shareCopy}
-          proofUri={proofUri}
-          proofSource={proofSource}
-          proofs={variant === "complete" ? proofs : undefined}
-          label={shareLabel}
-        />
+        {shareLabel ? (
+          <ShareCardV3
+            ref={shotRef}
+            size="story"
+            streak={variant === "complete" ? goal : streak}
+            copy={shareCopy}
+            proofUri={proofUri}
+            proofSource={proofSource}
+            proofs={variant === "complete" ? proofs : undefined}
+            label={shareLabel}
+          />
+        ) : null}
       </View>
       {counts ? (
         <View style={[styles.block, { paddingTop: insets.top + DS_V3.space.md }]}>
@@ -228,15 +229,14 @@ export default function MomentScreenV3({
             }
           />
           <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
-          {camera ? (
+          {camera && hasPhoto ? (
             <View style={styles.photoFrame}>
               <ProofImage
                 uri={proofImageUrlForCheckIn({ photo_url: proofUri })}
                 source={proofSource}
                 size="feed"
-                title={hasPhoto ? undefined : SECURED_TODAY_PROOF}
-                stamp={stampOn && hasPhoto ? "Verified" : false}
-                scrim={stampOn && hasPhoto}
+                stamp={stampOn ? "Verified" : false}
+                scrim={stampOn}
               />
             </View>
           ) : (

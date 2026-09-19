@@ -34,7 +34,12 @@ export function securedNavOnce(): "replace" {
   return "replace";
 }
 
-export function taskSecuredHref(result: SubmitResult, proofUri?: string, taskName?: string) {
+export function taskSecuredHref(
+  result: SubmitResult,
+  proofUri?: string,
+  taskName?: string,
+  share?: { shareEventId?: string | null; closingHasPhoto?: boolean },
+) {
   return {
     pathname: ROUTES.TASK_SECURED,
     params: {
@@ -49,6 +54,8 @@ export function taskSecuredHref(result: SubmitResult, proofUri?: string, taskNam
       verificationKind: result.verificationKind,
       proofUri: proofUri ?? "",
       taskName: taskName ?? "",
+      shareEventId: share?.shareEventId ?? "",
+      closingPhoto: share?.closingHasPhoto ? "1" : "0",
     },
   } as const;
 }
