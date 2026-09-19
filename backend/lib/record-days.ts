@@ -23,6 +23,7 @@ export type RecordDay = {
   done: number;
   total: number;
   cameraProof: boolean;
+  cameraProofCount: number;
   missedTaskNames: string[];
 };
 
@@ -66,6 +67,23 @@ export function recordDayState(input: {
   if (input.secured) return RECORD_DAY_STATE.SECURED;
   if (input.today) return RECORD_DAY_STATE.OPEN;
   return RECORD_DAY_STATE.NOT_SECURED;
+}
+
+export function cameraProvenTaskCount(
+  dueTasks: readonly TallyTask[],
+  rows: readonly (ProofCheckIn & { task_id?: string | null; status?: string | null })[],
+): number {
+  const due = new Set(
+    dueTasks.filter((t) => t.required !== false).map((t) => t.id).filter(Boolean),
+  );
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (row.status && row.status !== "completed") continue;
+    if (typeof row.task_id !== "string" || !due.has(row.task_id)) continue;
+    if (!checkInHasCameraProof(row)) continue;
+    seen.add(row.task_id);
+  }
+  return seen.size;
 }
 
 export function tallyTasks(input: {
@@ -137,11 +155,13 @@ export function buildRecordDays(input: {
     .filter((dateKey) => firstDue != null && dateKey >= firstDue && dateKey <= input.todayKey)
     .reverse()
     .map((dateKey) => {
+      const dueTasks = tasksDueOnDay(dateKey, input.enrollments);
       const tally = tallyTasks({
-        tasks: tasksDueOnDay(dateKey, input.enrollments),
+        tasks: dueTasks,
         completedIds: completedByDay.get(dateKey) ?? [],
       });
       const rows = rowsByDay.get(dateKey) ?? [];
+      const cameraProofCount = cameraProvenTaskCount(dueTasks, rows);
       return {
         dateKey,
         state: recordDayState({
@@ -152,7 +172,8 @@ export function buildRecordDays(input: {
         }),
         done: tally.done,
         total: tally.total,
-        cameraProof: rows.some(checkInHasCameraProof),
+        cameraProof: cameraProofCount > 0,
+        cameraProofCount,
         missedTaskNames: tally.missedTaskNames,
       };
     });
@@ -190,12 +211,7 @@ export async function loadDayTaskTally(
     start_at: string;
     end_at: string;
   }[];
-  const due = acRows.filter((row) => {
-    const start = dateKeyFromIsoInTimeZone(row.start_at, timezone);
-    const end = dateKeyFromIsoInTimeZone(row.end_at, timezone);
-    return start <= dateKey && end >= dateKey;
-  });
-  const challengeIds = [...new Set(due.map((r) => r.challenge_id))];
+  const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
   if (challengeIds.length === 0) {
     return { done: 0, total: 0, missedTaskNames: [] };
   }
@@ -204,12 +220,17 @@ export async function loadDayTaskTally(
     .select("id, title, challenge_id, config")
     .in("challenge_id", challengeIds)
     .limit(400);
-  const tasks = ((taskRows ?? []) as ChallengeTaskRowRaw[])
-    .filter((t) => isTaskRequired(t))
-    .map((t) => ({ id: t.id, title: (t.title ?? "Task").trim() || "Task" }));
+  const required = ((taskRows ?? []) as ChallengeTaskRowRaw[]).filter((t) => isTaskRequired(t));
+  const enrollments: EnrollmentTasks[] = acRows.map((row) => ({
+    startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
+    endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
+    tasks: required
+      .filter((t) => t.challenge_id === row.challenge_id)
+      .map((t) => ({ id: t.id, title: (t.title ?? "Task").trim() || "Task" })),
+  }));
   const completedIds = ((cinRes.data ?? []) as { task_id?: string; status?: string }[])
     .filter((r) => !r.status || r.status === "completed")
     .map((r) => r.task_id)
     .filter((id): id is string => typeof id === "string");
-  return tallyTasks({ tasks, completedIds });
+  return tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds });
 }

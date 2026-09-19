@@ -9,6 +9,7 @@ import {
   cellWidth,
   isAbandonedEnrollment,
   runStates,
+  fractionDateKeysForRange,
   unionDueDateKeys,
   verdictFor,
   weeklyAverage,
@@ -314,6 +315,21 @@ describe("Profile → Challenges list", () => {
     expect(rec.runs[0]?.length).toBe(1);
     expect(rec.runs[0]?.dayTotal).toBe(75);
     expect(rec.runs[0]?.dayLabel).toBe("Day 1 of 75");
+  });
+});
+
+describe("fractionDateKeysForRange", () => {
+  it("is the closed due set that the challenge fraction uses", () => {
+    expect(
+      fractionDateKeysForRange(
+        {
+          status: "active",
+          startDateKey: "2026-09-16",
+          endDateKey: "2026-10-16",
+        },
+        "2026-09-19",
+      ),
+    ).toEqual(["2026-09-16", "2026-09-17", "2026-09-18"]);
   });
 });
 

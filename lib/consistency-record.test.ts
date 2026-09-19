@@ -35,6 +35,7 @@ describe("consistency copy", () => {
     expect(ofElapsed(12)).toBe("of 12");
     expect(heroDayLine(12, 75)).toBe("Day 12 of 75.");
     expect(daysValue(9)).toBe("9 days");
+    expect(daysValue(1)).toBe("1 day");
     expect(challengeProofCaption(7, 2)).toBe("7 camera proof, 2 self-reported");
     expect(CONSISTENCY_FOOTER).toBe(
       "A day is secured or it is not. A part-done day counts for nothing, and the count is here so the record is not shorter than the truth.",
@@ -52,6 +53,7 @@ describe("record day rows by state", () => {
     done: 4,
     total: 6,
     cameraProof: false,
+    cameraProofCount: 0,
     missedTaskNames: ["Run", "Read"],
     ...extra,
   });
@@ -62,19 +64,23 @@ describe("record day rows by state", () => {
     expect(recordDayLabel("last_stand")).toBe(HELD_BY_LAST_STAND_LABEL);
     expect(recordDayLabel("frozen")).toBe(HELD_BY_FREEZE_LABEL);
     expect(recordDayLabel("open")).toBe(RECORD_DAY_OPEN);
-    expect(recordDayDetail(row("secured", { cameraProof: true, done: 6, missedTaskNames: [] }))).toBe(
-      "6 of 6 · 1 camera proof",
-    );
+    expect(
+      recordDayDetail(
+        row("secured", { cameraProof: true, cameraProofCount: 3, done: 6, missedTaskNames: [] }),
+      ),
+    ).toBe("6 of 6 · 3 camera proof");
     expect(recordDayDetail(row("not_secured"))).toBe("4 of 6 · Run, Read");
     expect(recordDayDetail(row("open"))).toBe("4 of 6 · Run, Read");
     expect(recordDayDetail(row("last_stand"))).toBe("4 of 6 · nothing was checked");
     expect(recordDayDetail(row("frozen"))).toBe("4 of 6 · Run, Read");
     expect(lastStandSplitLine(2)).toBe("Held by a Last Stand — 2 days");
-    expect(freezeSplitLine(1)).toBe("Held by a freeze — 1 days");
+    expect(freezeSplitLine(1)).toBe("Held by a freeze — 1 day");
+    expect(lastStandSplitLine(1)).toBe("Held by a Last Stand — 1 day");
     const src = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
     expect(src).toContain("rec?.detail.lastStandDays ?? 0");
     expect(src).toContain("rec?.detail.freezeDays ?? 0");
     expect(src).toContain("freezeSplitLine");
+    expect(src).not.toContain("heroDayLine");
     expect(src).not.toContain("lastStandDaysCount");
   });
 });

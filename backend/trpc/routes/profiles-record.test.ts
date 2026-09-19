@@ -12,5 +12,7 @@ describe("getRecord lastStandDays", () => {
     expect(src).toContain("freezeDays: lastStandDaysAllTime");
     expect(src).toContain("cameraDays: split.cameraDays");
     expect(src).toContain("selfReportedDays: split.selfReportedDays");
+    expect(src).toContain("proofCountsForDateKeys");
+    expect(src).toContain("fractionDateKeysForRange");
   });
 });

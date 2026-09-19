@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   RECORD_DAY_STATE,
   buildRecordDays,
+  cameraProvenTaskCount,
   firstDueDateKey,
   monthDateKeys,
   recordDayState,
@@ -98,11 +101,36 @@ describe("buildRecordDays", () => {
     expect(byKey.get("2026-09-13")?.state).toBe("not_secured");
   });
 
+  it("counts camera-proven tasks that day, not a boolean any-photo", () => {
+    expect(
+      cameraProvenTaskCount(
+        [
+          { id: "a", title: "Run" },
+          { id: "b", title: "Read" },
+          { id: "c", title: "Write" },
+        ],
+        [
+          { date_key: "2026-09-18", task_id: "a", status: "completed", proof_url: "https://x/a.jpg" },
+          { date_key: "2026-09-18", task_id: "b", status: "completed", proof_url: "https://x/b.jpg" },
+          { date_key: "2026-09-18", task_id: "c", status: "completed" },
+          { date_key: "2026-09-18", task_id: "a", status: "completed", proof_url: "https://x/a2.jpg" },
+        ],
+      ),
+    ).toBe(2);
+  });
+
   it("orders newest first", () => {
     const keys = september("2026-09-19").map((d) => d.dateKey);
     expect(keys[0]).toBe("2026-09-19");
     expect(keys[keys.length - 1]).toBe("2026-09-12");
     expect(keys).toEqual([...keys].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0)));
+  });
+});
+
+describe("loadDayTaskTally", () => {
+  it("uses the same due-task set as the month rows", () => {
+    const src = readFileSync(resolve(__dirname, "./record-days.ts"), "utf8");
+    expect(src).toContain("return tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds });");
   });
 });
 

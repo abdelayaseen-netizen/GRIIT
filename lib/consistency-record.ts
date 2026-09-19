@@ -26,15 +26,16 @@ export type RecordDayRow = {
   done: number;
   total: number;
   cameraProof: boolean;
+  cameraProofCount: number;
   missedTaskNames: readonly string[];
 };
 
 export function lastStandSplitLine(n: number): string {
-  return `Held by a Last Stand — ${n} days`;
+  return `Held by a Last Stand — ${daysValue(n)}`;
 }
 
 export function freezeSplitLine(n: number): string {
-  return `Held by a freeze — ${n} days`;
+  return `Held by a freeze — ${daysValue(n)}`;
 }
 
 export function recordDayLabel(state: string): string {
@@ -47,7 +48,7 @@ export function recordDayLabel(state: string): string {
 
 export function recordDayDetail(day: RecordDayRow): string {
   if (day.state === "secured") {
-    return `${day.total} of ${day.total} · ${day.cameraProof ? 1 : 0} camera proof`;
+    return `${day.done} of ${day.total} · ${day.cameraProofCount} camera proof`;
   }
   if (day.state === "last_stand") {
     return `${day.done} of ${day.total} · ${NOTHING_WAS_CHECKED}`;
@@ -70,7 +71,7 @@ export function heroDayLine(day: number, total: number): string {
 }
 
 export function daysValue(n: number): string {
-  return `${n} days`;
+  return `${n} ${n === 1 ? "day" : "days"}`;
 }
 
 export function challengeProofCaption(camera: number, selfReported: number): string {

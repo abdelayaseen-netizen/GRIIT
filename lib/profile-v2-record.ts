@@ -200,6 +200,24 @@ export function dueKeysForRange(
   return keys;
 }
 
+/** Closed due days that feed a challenge fraction — same set as camera / self-reported. */
+export function fractionDateKeysForRange(
+  range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
+  todayKey: string,
+): string[] {
+  if (range.status === "active") {
+    return dueKeysForRange(range, todayKey).filter((k) => k < todayKey);
+  }
+  const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
+  const keys: string[] = [];
+  let cursor = range.startDateKey;
+  while (cursor <= lastKey && cursor < range.endDateKey) {
+    keys.push(cursor);
+    cursor = addCalendarDaysToDateKey(cursor, 1);
+  }
+  return keys;
+}
+
 export function unionDueDateKeys(ranges: ChallengeRangeInput[], todayKey: string): string[] {
   const set = new Set<string>();
   for (const range of ranges) {

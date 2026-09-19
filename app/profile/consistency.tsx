@@ -32,7 +32,6 @@ import {
   completionPct,
   daysValue,
   freezeSplitLine,
-  heroDayLine,
   lastStandSplitLine,
   ofElapsed,
   recordDayDetail,
@@ -68,7 +67,6 @@ export default function ConsistencyDetailScreen() {
   const rec = q.data;
   const secured = rec?.consistency.verifiedClosed ?? 0;
   const elapsed = rec?.consistency.closedDueDays ?? 0;
-  const primary = rec?.runs[0];
   const months = (rec?.detail.months ?? []).filter((m) => m.pct > 0 || m.value !== "0 of 0");
   const challenges = rec?.detail.byChallenge ?? [];
   const days = rec?.days ?? [];
@@ -88,9 +86,6 @@ export default function ConsistencyDetailScreen() {
             <DisplayNumber value={secured} size="home" />
             <Text style={styles.ofElapsed}>{ofElapsed(elapsed)}</Text>
           </View>
-          {primary ? (
-            <Text style={styles.dayLine}>{heroDayLine(primary.day, primary.dayTotal)}</Text>
-          ) : null}
 
           <Card style={styles.stats}>
             <View style={styles.grid}>
