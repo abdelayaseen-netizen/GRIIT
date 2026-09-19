@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   HOME_PROOF_CTA_TODAY,
@@ -134,10 +136,10 @@ describe("selectHomeProofCard", () => {
     expect(card.totalCount).toBe(3);
     expect(card.sections[0]).toMatchObject({ challenge: "Run", doneCount: 1, totalCount: 1, showCta: false });
     expect(card.sections[1]).toMatchObject({ challenge: "Read", doneCount: 1, totalCount: 1, showCta: false });
-    expect(card.sections[2]).toMatchObject({ challenge: "Write", doneCount: 0, totalCount: 1, showCta: true });
+    expect(card.sections[2]).toMatchObject({ challenge: "Write", doneCount: 0, totalCount: 1, showCta: false });
     expect(card.sections[2]?.rows[0]?.name).toBe("Journal");
     expect(card.posted).toBe(false);
-    expect(card.showCta).toBe(true);
+    expect(card.showCta).toBe(false);
     expect(homeProofCtaLabel(card)).toBe(HOME_PROOF_CTA_TODAY);
     expect(homeProofCtaLabel(card)).toBe("Post your proof");
   });
@@ -221,7 +223,7 @@ describe("selectHomeProofCard", () => {
     });
     expect(card.sections[0]?.rows[0]?.caption).toBe("Self-reported");
     expect(card.sections[0]?.rows[0]?.caption).not.toBe("Photo");
-    expect(card.sections[0]?.showCta).toBe(true);
+    expect(card.sections[0]?.showCta).toBe(false);
   });
 
   it("six tasks: 2 done, 1 closed, 3 pending → no button, captions match", () => {
@@ -308,5 +310,13 @@ describe("homeProofRingState", () => {
     expect(homeProofTitleMuted({ done: true, closed: false })).toBe(true);
     expect(homeProofTitleMuted({ done: false, closed: true })).toBe(true);
     expect(homeProofTitleMuted({ done: false, closed: false })).toBe(false);
+  });
+});
+
+describe("Home Today card", () => {
+  it("has no per-section Post your proof button", () => {
+    const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    expect(src).not.toContain("HOME_PROOF_CTA_TODAY");
+    expect(src).not.toContain("section.showCta");
   });
 });

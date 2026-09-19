@@ -21,7 +21,6 @@ import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
 import {
-  HOME_PROOF_CTA_TODAY,
   HOME_PROOF_HEADING,
   homeProofDayLine,
   homeProofRingState,
@@ -112,7 +111,7 @@ export function HomeV3({
   feedScope,
   onChangeFeedScope,
   onPressBell,
-  onPressProof,
+  onPressProof: _onPressProof,
   onPressTask,
   awayCount = 0,
   freezesLeft,
@@ -287,9 +286,6 @@ export function HomeV3({
                       </View>
                     </View>
                     {section.rows.map(renderRow)}
-                    {section.showCta ? (
-                      <Button label={HOME_PROOF_CTA_TODAY} onPress={onPressProof} />
-                    ) : null}
                   </View>
                 </View>
               ))

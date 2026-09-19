@@ -280,6 +280,21 @@ describe("profiles.getStats", () => {
     });
   });
 
+  it("longestStreak is at least the live active streak", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const caller = createCaller({
+      streakOverrides: {
+        active_streak_count: 3,
+        longest_streak_count: 2,
+      },
+    });
+    await expect(caller.getStats()).resolves.toMatchObject({
+      activeStreak: 3,
+      longestStreak: 3,
+    });
+  });
+
   it("makes lastStandUsedThisSession and streakLostNoLastStand real", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));

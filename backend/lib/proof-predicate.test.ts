@@ -3,6 +3,7 @@ import { hasCameraProof as clientHasCameraProof } from "../../lib/active-challen
 import {
   checkInHasCameraProof,
   hasCameraProof,
+  proofCountsForDateKeys,
   proofPhotoUrlFromCheckIn,
   splitSecuredProof,
 } from "./proof-predicate";
@@ -18,6 +19,22 @@ describe("hasCameraProof", () => {
     for (const c of cases) {
       expect(hasCameraProof(c)).toBe(clientHasCameraProof(c));
     }
+  });
+});
+
+describe("proofCountsForDateKeys", () => {
+  it("uses the same day set as the fraction: camera + self-reported = verified", () => {
+    const part = proofCountsForDateKeys({
+      dateKeys: ["2026-09-16", "2026-09-17", "2026-09-18"],
+      securedDateKeys: ["2026-09-16", "2026-09-18", "2026-09-19"],
+      checkIns: [
+        { date_key: "2026-09-16", proof_url: "https://cdn/a.jpg" },
+        { date_key: "2026-09-18" },
+        { date_key: "2026-09-19", proof_url: "https://cdn/today.jpg" },
+      ],
+    });
+    expect(part).toEqual({ camera: 1, selfReported: 1 });
+    expect(part.camera + part.selfReported).toBe(2);
   });
 });
 

@@ -15,7 +15,15 @@ export function completionLine(input: {
   task: string;
   challenge: string;
 }): string {
-  return `${input.author} completed ${input.task} · ${input.challenge}`;
+  return `${input.author} · ${input.task} · ${input.challenge}`;
+}
+
+export function postDetailPhotoUri(post: {
+  proofPhotoUrl?: string | null;
+  photoUrl?: string | null;
+}): string | null {
+  const uri = (post.proofPhotoUrl || post.photoUrl || "").trim();
+  return uri.length > 0 ? uri : null;
 }
 
 /** Stamp only when the completion returned camera proof — never require_photo. */

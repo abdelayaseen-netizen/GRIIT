@@ -204,7 +204,10 @@ export const profilesStatsProcedures = {
       activeChallenges: activeChallenges.data?.length || 0,
       completedChallenges: completedChallenges.data?.length || 0,
       activeStreak,
-      longestStreak: streakRow?.longest_streak_count || 0,
+      longestStreak: Math.max(
+        streakRow?.longest_streak_count || 0,
+        activeStreak ?? 0,
+      ),
       lastCompletedDateKey: lastCompletedDateKey,
       effectiveMissedDays,
       totalDaysSecured,

@@ -9,7 +9,10 @@ describe("getRecord lastStandDays", () => {
     expect(lastStandDaysAllTime([])).toBe(0);
     const src = readFileSync(resolve(__dirname, "./profiles-record.ts"), "utf8");
     expect(src).toContain("lastStandDays: lastStandDaysAllTime");
+    expect(src).toContain("freezeDays: lastStandDaysAllTime");
     expect(src).toContain("cameraDays: split.cameraDays");
     expect(src).toContain("selfReportedDays: split.selfReportedDays");
+    expect(src).toContain("proofCountsForDateKeys");
+    expect(src).toContain("fractionDateKeysForRange");
   });
 });

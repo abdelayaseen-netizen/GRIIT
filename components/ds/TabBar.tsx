@@ -37,11 +37,13 @@ export default function TabBar({ active, onTab, onFab }: TabBarProps) {
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);
 
+  const below = Math.max(insets.bottom, DS_V3.space.md);
   return (
     <View
-      style={[styles.dock, { paddingBottom: Math.max(insets.bottom, DS_V3.space.md) }]}
+      style={[styles.dock, { paddingBottom: below }]}
       pointerEvents="box-none"
     >
+      <View style={[styles.under, { height: below }]} pointerEvents="none" />
       <View style={styles.pill}>
         {left.map((t) => (
           <TabItem key={t.id} tab={t} active={active === t.id} onPress={() => onTab(t.id)} />
@@ -105,6 +107,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingLeft: DS_V3.space.md,
     paddingRight: DS_V3.space.md,
+  },
+  under: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: DS_V3.color.canvas,
   },
   pill: {
     height: BAR,

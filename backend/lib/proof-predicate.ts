@@ -53,6 +53,24 @@ export type SecuredProofSplit = {
   byEnrollment: EnrollmentProofSplit[];
 };
 
+/** Camera / self-reported counts on one day set — same keys as a challenge fraction. */
+export function proofCountsForDateKeys(input: {
+  dateKeys: readonly string[];
+  securedDateKeys: readonly string[];
+  checkIns: ProofCheckIn[];
+}): { camera: number; selfReported: number } {
+  const secured = new Set(input.securedDateKeys);
+  let camera = 0;
+  let selfReported = 0;
+  for (const key of input.dateKeys) {
+    if (!secured.has(key)) continue;
+    const rows = input.checkIns.filter((r) => r.date_key === key);
+    if (rows.some(checkInHasCameraProof)) camera += 1;
+    else selfReported += 1;
+  }
+  return { camera, selfReported };
+}
+
 /** A secured day is camera if any check-in that day has camera proof. */
 export function splitSecuredProof(args: {
   securedDateKeys: string[];

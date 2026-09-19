@@ -38,6 +38,7 @@ import {
   composerFieldGround,
   completionLine,
   postDetailLoading,
+  postDetailPhotoUri,
   postDetailStamp,
   sendComposerArmed,
 } from "@/lib/post-detail";
@@ -165,11 +166,11 @@ function PostThreadScreenInner() {
     }
     const author = displayPost.displayName || displayPost.username;
     const stamp = postDetailStamp(displayPost);
-    const proofUri = displayPost.proofPhotoUrl || displayPost.photoUrl;
+    const proofUri = postDetailPhotoUri(displayPost);
     return (
       <View>
         <View style={styles.gutter}>
-          <ProofImage uri={proofUri} size="feed" stamp={stamp} />
+          {proofUri ? <ProofImage uri={proofUri} size="feed" stamp={stamp} /> : null}
           <View style={styles.authorRow}>
             <Avatar
               size={DS_V3.size.avatar.sm}

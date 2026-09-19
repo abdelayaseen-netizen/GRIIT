@@ -27,10 +27,10 @@ import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-ta
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
-import { buildProfileRecord, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import { buildProfileRecord, fractionDateKeysForRange, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import { proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { proofPhotosByDateKey, type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
-import { splitSecuredProof } from "../../lib/proof-predicate";
 import {
   mutualFollowAccepted,
   parseVisibility,
@@ -92,6 +92,7 @@ function emptyRecord(): ProfileRecord {
       cameraDays: 0,
       selfReportedDays: 0,
       lastStandDays: 0,
+      freezeDays: 0,
     } as ProfileRecord["detail"],
   };
 }
@@ -216,8 +217,6 @@ export const profilesRecordProcedures = {
       if (!gate.profile) {
         return finish(emptyRecord(), { monthKey, days: [] });
       }
-      const monthStart = `${monthKey}-01`;
-      const monthEnd = `${monthKey}-31`;
 
       const [streakRes, activeRes, completedRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
         db
@@ -291,8 +290,6 @@ export const profilesRecordProcedures = {
             .from("check_ins")
             .select("date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url")
             .eq("user_id", ownerId)
-            .gte("date_key", monthStart)
-            .lte("date_key", monthEnd)
             .limit(800),
         ]);
         if (chRes.error) {
@@ -361,14 +358,23 @@ export const profilesRecordProcedures = {
         checkIns: checkInRows,
         enrollmentIds,
       });
-      const bySplit = new Map(split.byEnrollment.map((row) => [row.id, row]));
+      const rangeById = new Map(ranges.map((r) => [r.id, r]));
+      const securedSet = new Set(securedDateKeys);
       const byChallenge = record.detail.byChallenge.map((row, i) => {
         const id = enrollmentIds[i];
-        const part = id ? bySplit.get(id) : undefined;
+        const range = id ? rangeById.get(id) : undefined;
+        const dateKeys = range ? fractionDateKeysForRange(range, todayKey) : [];
+        const part = proofCountsForDateKeys({
+          dateKeys,
+          securedDateKeys,
+          checkIns: checkInRows,
+        });
+        const verified = dateKeys.filter((k) => securedSet.has(k)).length;
         return {
           ...row,
-          camera: part?.camera ?? 0,
-          selfReported: part?.selfReported ?? 0,
+          value: `${verified} of ${dateKeys.length}`,
+          camera: part.camera,
+          selfReported: part.selfReported,
         };
       });
 
@@ -387,6 +393,7 @@ export const profilesRecordProcedures = {
       const days = gate.activity
         ? buildRecordDays({
             monthKey,
+            todayKey,
             securedDateKeys,
             lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
             frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
@@ -406,6 +413,9 @@ export const profilesRecordProcedures = {
               selfReportedDays: split.selfReportedDays,
               lastStandDays: lastStandDaysAllTime(
                 (standRes.data ?? []) as { date_key: string }[],
+              ),
+              freezeDays: lastStandDaysAllTime(
+                (freezeRes.data ?? []) as { date_key: string }[],
               ),
               byChallenge,
             } as ProfileRecord["detail"])

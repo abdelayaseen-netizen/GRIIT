@@ -170,6 +170,7 @@ export type ProfileRecord = {
     cameraDays: number;
     selfReportedDays: number;
     lastStandDays: number;
+    freezeDays: number;
   };
 };
 
@@ -193,6 +194,24 @@ export function dueKeysForRange(
   }
   let cursor = start;
   while (cursor < end && cursor <= todayKey) {
+    keys.push(cursor);
+    cursor = addCalendarDaysToDateKey(cursor, 1);
+  }
+  return keys;
+}
+
+/** Closed due days that feed a challenge fraction — same set as camera / self-reported. */
+export function fractionDateKeysForRange(
+  range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
+  todayKey: string,
+): string[] {
+  if (range.status === "active") {
+    return dueKeysForRange(range, todayKey).filter((k) => k < todayKey);
+  }
+  const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
+  const keys: string[] = [];
+  let cursor = range.startDateKey;
+  while (cursor <= lastKey && cursor < range.endDateKey) {
     keys.push(cursor);
     cursor = addCalendarDaysToDateKey(cursor, 1);
   }
@@ -447,6 +466,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       cameraDays: 0,
       selfReportedDays: 0,
       lastStandDays: 0,
+      freezeDays: 0,
     },
   };
 }
