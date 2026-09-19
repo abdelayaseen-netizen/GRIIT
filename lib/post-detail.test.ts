@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   COMMENT_PLACEHOLDER,
@@ -7,6 +9,7 @@ import {
   commentsCountLabel,
   commentsSectionKind,
   completionLine,
+  postDetailPhotoUri,
   postDetailLoading,
   postDetailStamp,
   sendComposerArmed,
@@ -76,13 +79,24 @@ describe("composerFieldGround", () => {
 });
 
 describe("completionLine", () => {
-  it("is {name} completed {task} · {challenge}", () => {
+  it("is {name} · {task} · {challenge}", () => {
     expect(
       completionLine({
         author: "Maya",
-        task: "Outdoor workout",
-        challenge: "75 Hard Classic",
+        task: "Read ten pages",
+        challenge: "Iron man",
       }),
-    ).toBe("Maya completed Outdoor workout · 75 Hard Classic");
+    ).toBe("Maya · Read ten pages · Iron man");
+  });
+});
+
+describe("postDetailPhotoUri", () => {
+  it("is null when the post has no photo", () => {
+    expect(postDetailPhotoUri({ proofPhotoUrl: null, photoUrl: null })).toBeNull();
+    expect(postDetailPhotoUri({ proofPhotoUrl: "", photoUrl: "  " })).toBeNull();
+    expect(postDetailPhotoUri({ proofPhotoUrl: "https://cdn/p.jpg" })).toBe("https://cdn/p.jpg");
+    const src = readFileSync(resolve(__dirname, "../app/post/[id].tsx"), "utf8");
+    expect(src).toContain("postDetailPhotoUri");
+    expect(src).toContain("proofUri ? <ProofImage");
   });
 });
