@@ -12,6 +12,7 @@ import {
 import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
 import { withWindowState } from "../../lib/task-time-gate";
 import { getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
@@ -363,17 +364,18 @@ export const challengesRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       try {
         const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-        const { data, error } = await ctx.supabase
-          .from('active_challenges')
-          .select(`
+        const { data, error } = await applyEnrollmentWindow(
+          ctx.supabase
+            .from('active_challenges')
+            .select(`
             *,
             challenges (
               *,
               challenge_tasks (*)
             )
           `)
-          .eq('user_id', ctx.userId)
-          .eq('status', 'active')
+            .eq('user_id', ctx.userId)
+        )
           .order('created_at', { ascending: false })
           .limit(50);
 

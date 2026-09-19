@@ -68,7 +68,7 @@ export async function runHomeBootstrap(ctx: Context & { userId: string }) {
   const settled = await Promise.allSettled([
     profiles.get(),
     profiles.getStats(),
-    challenges.listMyActive(),
+    challenges.listMyActive(), // Today: applyEnrollmentWindow inside listMyActive
     challenges.getActive(),
     checkins.getTodayCheckinsForUser(),
     profiles.getSecuredDateKeys(),

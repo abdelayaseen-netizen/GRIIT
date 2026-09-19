@@ -16,6 +16,7 @@ import {
 } from "../../../lib/free-challenge-limit";
 import { guestUsername } from "../../lib/guest-username";
 import { GROUP_MAX_MEMBERS } from "../../lib/group-challenges";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -245,11 +246,12 @@ export const challengesCreateProcedures = {
         ?.subscription_status ?? "free";
       const isProUser = subscriptionStatus === "premium" || subscriptionStatus === "trial";
       if (!isProUser) {
-        const { count: activeCount } = await ctx.supabase
-          .from("active_challenges")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", ctx.userId)
-          .eq("status", "active");
+        const { count: activeCount } = await applyEnrollmentWindow(
+          ctx.supabase
+            .from("active_challenges")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", ctx.userId)
+        );
         if ((activeCount ?? 0) >= FREE_ACTIVE_CHALLENGES_LIMIT) {
           throw new TRPCError({
             code: "FORBIDDEN",
