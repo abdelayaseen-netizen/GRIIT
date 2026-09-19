@@ -139,6 +139,7 @@ export function TaskFlowV2() {
           currentDay={f.currentDay}
           workDone={f.workDone}
           photoAfter={f.photoAfter}
+          windowLabel={f.windowLabel}
           onCancel={f.goBack}
           onCaptured={f.onCaptured}
         />

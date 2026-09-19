@@ -39,6 +39,7 @@ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/li
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { formatGateTime } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -798,6 +799,7 @@ export function useTaskFlowV2() {
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
+    windowLabel: formatGateTime(gateTime) || undefined,
     workDone: workThenCamera(taskType, gates)
       ? workDoneLine(
           taskType === "timer"

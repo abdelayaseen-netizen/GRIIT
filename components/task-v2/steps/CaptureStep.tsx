@@ -11,6 +11,7 @@ type Props = {
   currentDay: number;
   workDone?: string | null;
   photoAfter?: string | null;
+  windowLabel?: string;
   onCancel: () => void;
   onCaptured: (uri: string, at: string) => void;
 };
@@ -18,9 +19,9 @@ type Props = {
 export function CaptureStep({
   challengeName,
   taskName,
-  currentDay,
   workDone,
   photoAfter,
+  windowLabel,
   onCancel,
   onCaptured,
 }: Props) {
@@ -38,7 +39,8 @@ export function CaptureStep({
       ) : null}
       <TaskCapture
         challenge={challengeName}
-        task={`${taskName}. Day ${currentDay}.`}
+        task={taskName}
+        windowLabel={windowLabel}
         onCancel={onCancel}
         onCaptured={onCaptured}
       />
