@@ -25,6 +25,7 @@ import { captureError } from "@/lib/sentry";
 import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
+import { useProStatus } from "@/hooks/useProStatus";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import EmptyState from "@/components/ds/EmptyState";
@@ -110,6 +111,7 @@ function LiveFeedSection({
   viewerTargetStreak,
 }: LiveFeedSectionProps) {
   const insets = useSafeAreaInsets();
+  const { isPro } = useProStatus();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -572,7 +574,11 @@ function LiveFeedSection({
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={
-          <DiscoverCTA variant="feed" onPress={goToDiscover} />
+          <DiscoverCTA
+            running={activeChallengesCount}
+            isPro={isPro}
+            onPress={goToDiscover}
+          />
         }
         refreshControl={
           <RefreshControl
