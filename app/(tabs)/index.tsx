@@ -56,6 +56,11 @@ import {
   morningAfterVariant,
   morningAfterVisible,
 } from "@/lib/morning-after";
+import {
+  parseTodaySectionChoice,
+  serializeTodaySectionChoice,
+  todaySectionCollapseKey,
+} from "@/lib/today-section-collapse";
 import type { StatsFromApi } from "@/types";
 
 type TaskRow = {
@@ -102,6 +107,7 @@ export default function HomeScreen() {
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
+  const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -140,6 +146,7 @@ export default function HomeScreen() {
     getDeviceIanaTimeZone(),
   );
   const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+  const todayKey = useMemo(() => getTodayDateKey(homeTimeZone), [homeTimeZone]);
 
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
@@ -483,6 +490,48 @@ export default function HomeScreen() {
     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured],
   );
 
+  const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);
+
+  React.useEffect(() => {
+    if (!user?.id) {
+      setSectionChoices({});
+      return;
+    }
+    const ids = sectionIds ? sectionIds.split("|").filter(Boolean) : [];
+    void (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          const raw = await AsyncStorage.getItem(todaySectionCollapseKey(user.id, id, todayKey));
+          return [id, parseTodaySectionChoice(raw)] as const;
+        }),
+      );
+      const next: Record<string, boolean> = {};
+      for (const [id, stored] of entries) {
+        if (stored === true || stored === false) next[id] = stored;
+      }
+      setSectionChoices(next);
+    })();
+  }, [user?.id, todayKey, sectionIds]);
+
+  const onToggleSection = useCallback(
+    (sectionId: string, expanded: boolean) => {
+      setSectionChoices((prev) => ({ ...prev, [sectionId]: expanded }));
+      if (!user?.id) return;
+      void AsyncStorage.setItem(
+        todaySectionCollapseKey(user.id, sectionId, todayKey),
+        serializeTodaySectionChoice(expanded),
+      );
+    },
+    [user?.id, todayKey],
+  );
+
+  const onPressChallenge = useCallback(
+    (challengeId: string) => {
+      router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+    },
+    [router],
+  );
+
   // ────────────── render ──────────────
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
@@ -541,6 +590,9 @@ export default function HomeScreen() {
                 if (!next || next.windowState === "closed") return;
                 onPressTask(next);
               }}
+              onPressChallenge={onPressChallenge}
+              sectionChoices={sectionChoices}
+              onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}

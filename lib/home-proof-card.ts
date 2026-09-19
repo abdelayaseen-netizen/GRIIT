@@ -17,6 +17,7 @@ export type HomeProofTask = {
   id?: string;
   name: string;
   challengeName: string;
+  challengeId?: string;
   activeChallengeId?: string;
   currentDay: number;
   durationDays?: number;
@@ -50,6 +51,7 @@ export function homeProofTitleMuted(row: Pick<HomeProofRow, "done" | "closed">):
 export type HomeProofSection = {
   id: string;
   challenge: string;
+  challengeId: string | null;
   day: number;
   dayTotal: number;
   doneCount: number;
@@ -115,6 +117,7 @@ function sectionFromTasks(
   return {
     id,
     challenge: first.challengeName,
+    challengeId: first.challengeId?.trim() || null,
     day: displayDay(first.currentDay, first.challengeSecuredToday),
     dayTotal: homeDayTotal(durationDays, targetStreak),
     doneCount: tasks.filter((t) => t.done).length,

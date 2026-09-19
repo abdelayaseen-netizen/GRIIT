@@ -30,6 +30,7 @@ describe("selectHomeProofCard", () => {
           id: "i1",
           name: "Outdoor workout",
           challengeName: "Iron man",
+          challengeId: "ch-iron",
           activeChallengeId: "ac-iron",
           durationDays: 14,
         }),
@@ -63,6 +64,7 @@ describe("selectHomeProofCard", () => {
     expect(card.sections).toHaveLength(2);
     expect(card.sections[0]).toMatchObject({
       challenge: "Iron man",
+      challengeId: "ch-iron",
       doneCount: 0,
       totalCount: 2,
     });
@@ -318,5 +320,16 @@ describe("Home Today card", () => {
     const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     expect(src).not.toContain("HOME_PROOF_CTA_TODAY");
     expect(src).not.toContain("section.showCta");
+  });
+
+  it("name tap is separate from the 44pt chevron; the n/n chip is not a press target", () => {
+    const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    expect(src).toContain("onPressChallenge?.(section.challengeId!)");
+    expect(src).toContain("chevronHit");
+    expect(src).toContain("width: DS_V3.size.tap");
+    expect(src).toContain("ChevronDown");
+    expect(src).toContain("ChevronUp");
+    const chipBlock = src.slice(src.indexOf("countChip"), src.indexOf("countTxt"));
+    expect(chipBlock).not.toContain("Pressable");
   });
 });
