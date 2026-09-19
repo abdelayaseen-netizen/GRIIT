@@ -1,21 +1,26 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { Apple, Mail } from "lucide-react-native";
+import { Apple, ChevronLeft, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
-import { OBV2_COLOR, OBV2_RADIUS } from "../theme";
-import { BackButton, DarkButton, GhostButton, PrimaryButton, TextLink } from "../ui";
+import { DS_V3 } from "@/lib/design-system";
+import Button from "@/components/ds/Button";
+import TextField from "@/components/ds/TextField";
+import TextLink from "@/components/ds/TextLink";
+
+const ICON = DS_V3.space.xs * 6;
+const APPLE = DS_V3.space.gutter;
 
 /**
  * Returning-user overlay on welcome. Not a progress step.
@@ -153,8 +158,16 @@ export default function SignInScreen({
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <StatusBar barStyle="light-content" />
       <View style={styles.nav}>
-        <BackButton onPress={onBack} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={onBack}
+          style={({ pressed }) => [styles.back, pressed ? styles.pressed : null]}
+        >
+          <ChevronLeft size={ICON} color={DS_V3.color.textPrimary} />
+        </Pressable>
       </View>
       <ScrollView
         contentContainerStyle={styles.content}
@@ -170,27 +183,28 @@ export default function SignInScreen({
 
         <View style={styles.body}>
           {Platform.OS === "ios" && appleAvailable ? (
-            <DarkButton
+            <Button
+              variant="secondary"
               label="Sign in with Apple"
               onPress={handleApple}
               disabled={loading}
-              icon={<Apple size={19} color={OBV2_COLOR.onDark} fill={OBV2_COLOR.onDark} />}
+              icon={<Apple size={APPLE} color={DS_V3.color.textPrimary} fill={DS_V3.color.textPrimary} />}
             />
           ) : null}
 
           {!emailMode ? (
-            <GhostButton
+            <Button
+              variant="secondary"
               label="Continue with email"
               onPress={() => setEmailMode(true)}
               disabled={loading}
-              icon={<Mail size={18} color={OBV2_COLOR.ink} strokeWidth={2} />}
+              icon={<Mail size={APPLE} color={DS_V3.color.textPrimary} strokeWidth={2} />}
             />
           ) : (
             <View style={styles.emailForm}>
-              <TextInput
-                style={styles.input}
+              <TextField
+                label="Email"
                 placeholder="Email"
-                placeholderTextColor={OBV2_COLOR.ink3}
                 value={email}
                 onChangeText={(t) => {
                   setEmail(t);
@@ -203,10 +217,9 @@ export default function SignInScreen({
                 autoCorrect={false}
                 accessibilityLabel="Email address"
               />
-              <TextInput
-                style={styles.input}
+              <TextField
+                label="Password"
                 placeholder="Password"
-                placeholderTextColor={OBV2_COLOR.ink3}
                 value={password}
                 onChangeText={(t) => {
                   setPassword(t);
@@ -218,14 +231,18 @@ export default function SignInScreen({
               {resetSent ? (
                 <Text style={styles.resetNote}>Check your email for a reset link.</Text>
               ) : (
-                <TextLink label="Forgot password?" onPress={() => void handleForgotPassword()} />
+                <TextLink
+                  tone="secondary"
+                  label="Forgot password?"
+                  onPress={() => void handleForgotPassword()}
+                />
               )}
               {resetHint ? <Text style={styles.resetHint}>{resetHint}</Text> : null}
-              <PrimaryButton
-                label={loading ? "" : "Sign in"}
+              <Button
+                label="Sign in"
                 onPress={handleEmail}
                 disabled={loading}
-                icon={loading ? <ActivityIndicator color={OBV2_COLOR.onDark} /> : undefined}
+                loading={loading}
               />
             </View>
           )}
@@ -239,25 +256,61 @@ export default function SignInScreen({
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  nav: { height: 48, paddingHorizontal: 20, justifyContent: "center" },
-  content: { flexGrow: 1, paddingHorizontal: 28, paddingBottom: 24 },
-  head: { marginTop: 6 },
-  h1: { fontSize: 38, fontWeight: "500", lineHeight: 38, letterSpacing: -1.4, color: OBV2_COLOR.ink },
-  sub: { fontSize: 16, fontWeight: "400", lineHeight: 24, color: OBV2_COLOR.ink2, marginTop: 12 },
-  body: { flexGrow: 1, justifyContent: "center", paddingVertical: 16, gap: 10 },
-  emailForm: { gap: 12 },
-  input: {
-    minHeight: 56,
-    backgroundColor: OBV2_COLOR.card,
-    borderRadius: OBV2_RADIUS.button,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: OBV2_COLOR.ink,
-    borderWidth: 2,
-    borderColor: OBV2_COLOR.borderStrong,
+  flex: { flex: 1, backgroundColor: DS_V3.color.canvas },
+  nav: {
+    height: DS_V3.size.tap,
+    paddingHorizontal: DS_V3.space.sm,
+    justifyContent: "center",
   },
-  error: { fontSize: 13, color: OBV2_COLOR.orangeInk, textAlign: "center" },
-  resetNote: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.ink2, textAlign: "center" },
-  resetHint: { fontSize: 13, fontWeight: "400", color: OBV2_COLOR.orangeInk, textAlign: "center" },
+  back: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pressed: { opacity: 0.8 },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.section,
+  },
+  head: { marginTop: DS_V3.space.xs },
+  h1: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  sub: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
+    marginTop: DS_V3.space.md,
+  },
+  body: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+  },
+  emailForm: { gap: DS_V3.space.md },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.danger,
+    textAlign: "center",
+  },
+  resetNote: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
+  resetHint: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.danger,
+    textAlign: "center",
+  },
 });

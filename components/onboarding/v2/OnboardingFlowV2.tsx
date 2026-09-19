@@ -345,6 +345,7 @@ export default function OnboardingFlowV2() {
   }
 
   const welcome = step === "welcome" && !signInOpen;
+  const signIn = signInOpen;
   const usesChrome =
     !browseOpen &&
     (step === "goals" ||
@@ -356,7 +357,7 @@ export default function OnboardingFlowV2() {
       step === "account" ||
       step === "profile");
   return (
-    <SafeAreaView style={[styles.safeArea, (welcome || usesChrome) && styles.welcome]}>
+    <SafeAreaView style={[styles.safeArea, (welcome || usesChrome || signIn) && styles.welcome]}>
       {step !== "welcome" && !signInOpen && !usesChrome ? (
         <FlowChrome
           step={step}
