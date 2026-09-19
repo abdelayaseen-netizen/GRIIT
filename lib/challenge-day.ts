@@ -22,6 +22,16 @@ export function displayDay(current_day: number, secured_today: boolean): number 
   return secured_today ? challengeDayNumber(n - 1) : n;
 }
 
+/** Feed header day. secured_day already stores displayDay; others match Home. */
+export function feedPostDisplayDay(
+  currentDay: number,
+  eventType: string,
+  securedToday: boolean,
+): number {
+  if (eventType === "secured_day") return challengeDayNumber(currentDay);
+  return displayDay(currentDay, securedToday);
+}
+
 /** @deprecated use displayDay */
 export function challengeDisplayDay(
   currentDay: number | null | undefined,

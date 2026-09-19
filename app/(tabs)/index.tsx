@@ -23,12 +23,12 @@ import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { weekStripDayStates } from "@/lib/week-strip-days";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
-import { useCelebrationStore } from "@/store/celebrationStore";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate } from "@/lib/trpc";
@@ -56,8 +56,6 @@ import {
   morningAfterVisible,
 } from "@/lib/morning-after";
 import type { StatsFromApi } from "@/types";
-
-const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
 type TaskRow = {
   id: string;
@@ -318,8 +316,6 @@ export default function HomeScreen() {
     track({ name: "home_state_viewed", state: homeState, streak });
   }, [homeState, streak]);
 
-  const showCelebration = useCelebrationStore((s) => s.show);
-
   // Week strip — Mon→Sun in profile IANA, else device IANA.
   // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
   const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
@@ -330,10 +326,16 @@ export default function HomeScreen() {
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, homeTimeZone]);
 
-  const weekSecuredByIndex = useMemo(() => {
-    const set = new Set(securedDateKeys);
-    return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
-  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
+  const weekStates = useMemo(() => {
+    const statsRow = resolvedStats as StatsFromApi | null;
+    return weekStripDayStates(weekDateKeys, {
+      securedDateKeys,
+      frozenDateKeys: statsRow?.frozenDateKeys ?? [],
+      lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
+      todayKey: weekDateKeys[todayWeekIndex] ?? "",
+      todaySecured,
+    });
+  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
@@ -383,30 +385,6 @@ export default function HomeScreen() {
       if (isGuest || !user?.id) return;
       void refetchBootstrap();
     }, [isGuest, user?.id, refetchBootstrap]),
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (isGuest || !user?.id) return;
-      let cancelled = false;
-      const run = async () => {
-        const n = streak;
-        if (n == null || !STREAK_MILESTONES.some((m) => m === n)) return;
-        const key = `griit_milestone_${n}`;
-        const shown = await AsyncStorage.getItem(key);
-        if (cancelled || shown) return;
-        await AsyncStorage.setItem(key, "true");
-        showCelebration({
-          title: `${n}-day streak!`,
-          subtitle: "You're building something real.",
-          type: "streak",
-        });
-      };
-      void run();
-      return () => {
-        cancelled = true;
-      };
-    }, [isGuest, user?.id, streak, showCelebration]),
   );
 
   const refresh = useCallback(async () => {
@@ -536,7 +514,7 @@ export default function HomeScreen() {
               streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
               morningAfter={morningAfter}
               proof={proof}
-              weekFilled={weekSecuredByIndex}
+              weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}
               feedScope={feedScope}

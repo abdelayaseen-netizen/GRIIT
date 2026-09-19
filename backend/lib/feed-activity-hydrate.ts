@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
 import { logger } from "./logger";
+import { getTodayDateKey } from "./date-utils";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -159,9 +160,15 @@ export async function hydrateActivityEventsToPosts(
     }
   }
   const streakByUser = new Map<string, number>();
+  const securedTodayByUser = new Set<string>();
   if (userIds.length > 0) {
-    const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds);
+    const todayKey = getTodayDateKey("UTC");
+    const [{ data: streakRows }, { data: secureRows }] = await Promise.all([
+      server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
+      server.from("day_secures").select("user_id").in("user_id", userIds).eq("date_key", todayKey),
+    ]);
     for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number }[]) streakByUser.set(s.user_id, s.active_streak_count ?? 0);
+    for (const row of (secureRows ?? []) as { user_id: string }[]) securedTodayByUser.add(row.user_id);
   }
   return filtered.map((ev) => {
     const md = ev.metadata ?? {};
@@ -190,6 +197,7 @@ export async function hydrateActivityEventsToPosts(
       challengeName,
       taskName: typeof md.task_name === "string" ? md.task_name : null,
       currentDay: Math.max(1, currentDay),
+      securedToday: securedTodayByUser.has(ev.user_id),
       totalDays: Math.max(1, durationDays),
       eventType: ev.event_type,
       isCompleted: isCompletedChallenge,

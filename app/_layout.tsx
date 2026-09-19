@@ -25,7 +25,6 @@ import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DS_COLORS } from "@/lib/design-system";
-import CelebrationOverlay from "@/components/shared/CelebrationOverlay";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { queryClient } from "@/lib/query-client";
 import { queryFocusedFromAppState } from "@/lib/query-focus";
@@ -280,7 +279,6 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
-      <CelebrationOverlay />
       <ProofShareOverlay />
     </View>
   );

@@ -36,6 +36,7 @@ function createCaller(opts?: {
   lastFreezeUsedAt?: string | null;
   lastCompletedDateKey?: string | null;
   activeStreakCount?: number;
+  longestStreakCount?: number;
   failProfile?: boolean;
   failUpdate?: boolean;
   failFreezeInsert?: FreezeWriteErr | null;
@@ -56,6 +57,7 @@ function createCaller(opts?: {
   const streak = {
     last_completed_date_key: opts?.lastCompletedDateKey ?? addCalendarDaysToDateKey(getTodayDateKey("UTC"), -2),
     active_streak_count: opts?.activeStreakCount ?? 0,
+    longest_streak_count: opts?.longestStreakCount ?? 0,
   };
   const freezeKeys = [...(opts?.freezeKeys ?? [])];
 
@@ -343,8 +345,66 @@ describe("streaks.useFreeze", () => {
       remaining: 0,
     });
     expect(inserts).toEqual([{ payload: { user_id: USER, date_key: yesterday }, via: "admin" }]);
-    expect(streakUpdates).toEqual([{ payload: { active_streak_count: 3 }, via: "admin" }]);
+    expect(streakUpdates).toEqual([
+      { payload: { active_streak_count: 3, longest_streak_count: 3 }, via: "admin" },
+    ]);
     expect(profileUpdates.map((u) => u.via)).toEqual(["admin"]);
+  });
+
+  it("writes longest_streak_count when restore 3 exceeds longest 2", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const streakUpdates: { payload: Record<string, unknown>; via: "user" | "admin" }[] = [];
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: lastCompleted,
+      activeStreakCount: 0,
+      longestStreakCount: 2,
+      securedDateKeys: [
+        addCalendarDaysToDateKey(lastCompleted, -2),
+        addCalendarDaysToDateKey(lastCompleted, -1),
+        lastCompleted,
+      ],
+      onStreakUpdate: (payload, via) => streakUpdates.push({ payload, via }),
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).resolves.toEqual({
+      restoredStreak: 3,
+      remaining: 0,
+    });
+    expect(streakUpdates).toEqual([
+      { payload: { active_streak_count: 3, longest_streak_count: 3 }, via: "admin" },
+    ]);
+  });
+
+  it("leaves longest_streak_count when restore 3 is under longest 10", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const streakUpdates: { payload: Record<string, unknown>; via: "user" | "admin" }[] = [];
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: lastCompleted,
+      activeStreakCount: 0,
+      longestStreakCount: 10,
+      securedDateKeys: [
+        addCalendarDaysToDateKey(lastCompleted, -2),
+        addCalendarDaysToDateKey(lastCompleted, -1),
+        lastCompleted,
+      ],
+      onStreakUpdate: (payload, via) => streakUpdates.push({ payload, via }),
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).resolves.toEqual({
+      restoredStreak: 3,
+      remaining: 0,
+    });
+    expect(streakUpdates).toEqual([
+      { payload: { active_streak_count: 3, longest_streak_count: 10 }, via: "admin" },
+    ]);
   });
 
   it("keeps both keys frozen after a second Pro use inside 30 days", async () => {

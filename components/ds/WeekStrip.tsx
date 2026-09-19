@@ -1,7 +1,8 @@
 /**
  * WeekStrip — 01_components.md "WeekStrip" and Motion
  * Laws: 19 (today square fills over 400ms on the same clock as DisplayNumber),
- * 6 (filled days are brand only). Not tappable. Max seven squares.
+ * 6 (secured days are brand only). Frozen / Last Stand use surface + icon.
+ * Not tappable. Max seven squares.
  */
 import React, { useEffect } from "react";
 import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
@@ -11,14 +12,22 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { Shield, Snowflake } from "lucide-react-native";
 import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import {
+  WEEK_STRIP_WEEKDAYS,
+  weekStripAccessibilityLabel,
+  type WeekStripDayState,
+} from "@/lib/week-strip-days";
 
 const DAY_SECURED_MS = DS_V3.motion.count;
 const STROKE = (DS_V3.space.xs * 3) / 8;
+const MARK = DS_V3.space.lg;
 
 export type WeekStripDay = {
   letter: string;
   filled: boolean;
+  state?: WeekStripDayState;
 };
 
 export type WeekStripProps = {
@@ -32,17 +41,22 @@ export type WeekStripProps = {
 function Square({
   letter,
   filled,
+  state,
+  weekday,
   isToday,
   animateFill,
   fillMs,
 }: {
   letter: string;
   filled: boolean;
+  state: WeekStripDayState;
+  weekday: string;
   isToday: boolean;
   animateFill: boolean;
   fillMs: number;
 }) {
   const fillProgress = useSharedValue(filled && !animateFill ? 1 : 0);
+  const label = weekStripAccessibilityLabel(weekday, state, isToday);
 
   useEffect(() => {
     if (!animateFill) {
@@ -62,21 +76,31 @@ function Square({
     ),
   }));
 
+  const letterStyle = [
+    styles.letter,
+    {
+      color: isToday ? DS_V3.color.textPrimary : DS_V3.color.textSecondary,
+      fontWeight: isToday ? DS_V3.type.bodyStrong.fontWeight : DS_V3.type.caption.fontWeight,
+    },
+  ];
+
+  if (state === "frozen" || state === "last_stand") {
+    const Icon = state === "frozen" ? Snowflake : Shield;
+    return (
+      <View style={styles.cell} accessibilityLabel={label}>
+        <Text style={letterStyle}>{letter}</Text>
+        <View style={[styles.square, styles.squareMarked]}>
+          <Icon size={MARK} color={DS_V3.color.textSecondary} />
+        </View>
+      </View>
+    );
+  }
+
   const settled = filled && !animateFill;
 
   return (
-    <View style={styles.cell}>
-      <Text
-        style={[
-          styles.letter,
-          {
-            color: isToday ? DS_V3.color.textPrimary : DS_V3.color.textSecondary,
-            fontWeight: isToday ? DS_V3.type.bodyStrong.fontWeight : DS_V3.type.caption.fontWeight,
-          },
-        ]}
-      >
-        {letter}
-      </Text>
+    <View style={styles.cell} accessibilityLabel={label}>
+      <Text style={letterStyle}>{letter}</Text>
       <Animated.View
         style={[
           styles.square,
@@ -98,16 +122,22 @@ export default function WeekStrip({
   const seven = days.slice(0, 7);
   return (
     <View style={styles.row} accessibilityLabel="Week">
-      {seven.map((d, i) => (
-        <Square
-          key={`${d.letter}-${i}`}
-          letter={d.letter}
-          filled={d.filled || (fillToday === true && i === todayIndex)}
-          isToday={i === todayIndex}
-          animateFill={fillToday === true && i === todayIndex && !d.filled}
-          fillMs={fillMs}
-        />
-      ))}
+      {seven.map((d, i) => {
+        const state = d.state ?? (d.filled ? "secured" : "missed");
+        const brandFilled = state === "secured" || (fillToday === true && i === todayIndex && state === "missed");
+        return (
+          <Square
+            key={`${d.letter}-${i}`}
+            letter={d.letter}
+            filled={brandFilled}
+            state={state}
+            weekday={WEEK_STRIP_WEEKDAYS[i] ?? "Monday"}
+            isToday={i === todayIndex}
+            animateFill={fillToday === true && i === todayIndex && state === "missed"}
+            fillMs={fillMs}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -139,6 +169,13 @@ const styles = StyleSheet.create({
   },
   squareFilled: {
     backgroundColor: DS_COLORS_V2.brand.primary,
+  },
+  squareMarked: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   today: {
     borderWidth: STROKE,

@@ -275,6 +275,8 @@ describe("profiles.getStats", () => {
       lastStandsAvailable: 0,
       lastStandUsedThisSession: false,
       streakLostNoLastStand: false,
+      frozenDateKeys: [],
+      lastStandDateKeys: [],
     });
   });
 

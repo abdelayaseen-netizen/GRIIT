@@ -148,7 +148,7 @@ export const streaksRouter = createTRPCRouter({
       const [streakRes, profileRes, securesRes, standRes, freezeRes] = await Promise.all([
         ctx.supabase
           .from("streaks")
-          .select("last_completed_date_key, active_streak_count")
+          .select("last_completed_date_key, active_streak_count, longest_streak_count")
           .eq("user_id", ctx.userId)
           .single(),
         ctx.supabase
@@ -232,9 +232,10 @@ export const streaksRouter = createTRPCRouter({
         rethrowFreezeWrite(ctx.requestId, "profiles.update", profileErr);
       }
 
+      const longestStreak = Math.max(previous, streak?.longest_streak_count || 0);
       const { error: streakErr } = await admin
         .from("streaks")
-        .update({ active_streak_count: previous })
+        .update({ active_streak_count: previous, longest_streak_count: longestStreak })
         .eq("user_id", ctx.userId);
       if (streakErr) {
         rethrowFreezeWrite(ctx.requestId, "streaks.update", streakErr);
