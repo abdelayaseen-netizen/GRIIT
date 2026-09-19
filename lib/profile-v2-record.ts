@@ -164,6 +164,7 @@ export type ProfileRecord = {
     capturedAt?: string | null;
     taskName?: string;
     gateTime?: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
+    shared?: boolean;
   }[];
   badges: ReturnType<typeof badgeRowsFromProgress>;
   detail: {

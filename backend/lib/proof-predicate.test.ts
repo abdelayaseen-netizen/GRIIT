@@ -130,6 +130,7 @@ describe("splitSecuredProof", () => {
         capturedAt: null,
         taskName: "Task",
         gateTime: { mode: null, start: null, end: null },
+        shared: true,
       },
     ]);
   });

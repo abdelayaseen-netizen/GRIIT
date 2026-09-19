@@ -355,7 +355,7 @@ export const profilesRecordProcedures = {
 
       const { data: proofEvents } = await db
         .from("activity_events")
-        .select("id, metadata, created_at")
+        .select("id, metadata, created_at, shared")
         .eq("user_id", ownerId)
         .eq("event_type", "task_completed")
         .limit(800);
@@ -369,7 +369,12 @@ export const profilesRecordProcedures = {
         })),
         challenges,
         tasks: taskRows,
-        events: (proofEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
+        events: (proofEvents ?? []) as {
+          id: string;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+          shared?: boolean;
+        }[],
       });
 
       const enrollmentIds = [

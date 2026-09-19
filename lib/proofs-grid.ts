@@ -1,5 +1,5 @@
 /**
- * Frame 60 — Profile Proofs. Date sections, challenge on the tile, no self-reported tiles.
+ * Frame 60 — Profile Proofs. Date sections, task on the tile, no self-reported tiles.
  */
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import { gateLine } from "@/lib/task-ui";
@@ -38,6 +38,7 @@ export type ProofsGridItem = {
   gates: TaskGate[];
   gateTime: GateTime | null;
   eventId: string | null;
+  shared: boolean;
 };
 
 export type ProofsSection = {
@@ -75,12 +76,26 @@ export function proofsEmptyBody(selfReportedDays: number): string {
   return `Your ${n} secured day${n === 1 ? " was" : "s were"} all self-reported. A task with the Camera gate puts a photo here.`;
 }
 
-export function proofsCountLine(cameraProofs: number, selfReportedDays: number): string {
+export function proofsCountLine(cameraProofs: number): string {
   const k = Math.max(0, Math.floor(cameraProofs));
-  const n = Math.max(0, Math.floor(selfReportedDays));
-  const camera = `${k} camera proof${k === 1 ? "" : "s"}.`;
-  if (n <= 0) return camera;
-  return `${camera} ${n} more day${n === 1 ? " was" : "s were"} secured self-reported and have no photo.`;
+  return `${k} camera proof${k === 1 ? "" : "s"}.`;
+}
+
+export function proofsSectionShowsChallenge(
+  items: readonly { challengeName: string }[],
+): boolean {
+  return new Set(items.map((i) => i.challengeName)).size > 1;
+}
+
+export function proofsTileLabel(
+  item: { taskName: string; challengeName: string },
+  showChallenge: boolean,
+): string {
+  return showChallenge ? item.challengeName : item.taskName;
+}
+
+export function proofsTileA11y(taskName: string, shared: boolean): string {
+  return `${taskName}, ${shared ? "shared" : "private"}`;
 }
 
 export function proofsGatePill(item: Pick<ProofsGridItem, "gates" | "gateTime">): string {
@@ -108,6 +123,7 @@ export function itemsFromRecordProofs(
     capturedAt?: string | null;
     taskName?: string;
     gateTime?: GateTime | null;
+    shared?: boolean;
   }[],
 ): ProofsGridItem[] {
   const out: ProofsGridItem[] = [];
@@ -128,6 +144,7 @@ export function itemsFromRecordProofs(
       gates,
       gateTime: p.gateTime ?? null,
       eventId: p.eventId ?? null,
+      shared: p.shared !== false,
     });
   });
   return out;

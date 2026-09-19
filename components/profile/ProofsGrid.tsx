@@ -1,20 +1,64 @@
 /**
  * Frame 60 — date-sectioned camera proofs. Self-reported days get no tile.
  */
-import React from "react";
+import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Camera } from "lucide-react-native";
+import { Camera, Lock } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
   PROOFS_EMPTY_HEADING,
   proofsCountLine,
   proofsEmptyBody,
+  proofsSectionShowsChallenge,
   proofsSections,
+  proofsTileA11y,
+  proofsTileLabel,
   type ProofsGridItem,
 } from "@/lib/proofs-grid";
 
 const TILE_GAP = 6;
 const LABEL = 12;
+const LOCK = 12;
+
+function ProofTile({
+  item,
+  showChallenge,
+  onOpen,
+}: {
+  item: ProofsGridItem;
+  showChallenge: boolean;
+  onOpen: (item: ProofsGridItem) => void;
+}) {
+  const [failed, setFailed] = useState(false);
+  const label = proofsTileLabel(item, showChallenge);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={proofsTileA11y(item.taskName, item.shared)}
+      onPress={() => onOpen(item)}
+      style={styles.tile}
+    >
+      {failed ? (
+        <View style={styles.placeholder} />
+      ) : (
+        <Image
+          source={{ uri: item.uri }}
+          style={styles.img}
+          resizeMode="cover"
+          onError={() => setFailed(true)}
+        />
+      )}
+      <Text style={styles.burn} numberOfLines={1}>
+        {label}
+      </Text>
+      {item.shared ? null : (
+        <View style={styles.lock} accessibilityElementsHidden importantForAccessibility="no">
+          <Lock size={LOCK} color={DS_V3.color.textPrimary} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
 
 export default function ProofsGrid({
   items,
@@ -40,28 +84,25 @@ export default function ProofsGrid({
   const sections = proofsSections(items);
   return (
     <View style={styles.wrap}>
-      {sections.map((section) => (
-        <View key={section.dateKey} style={styles.section}>
-          <Text style={styles.header}>{section.label}</Text>
-          <View style={styles.grid}>
-            {section.items.map((item) => (
-              <Pressable
-                key={item.id}
-                accessibilityRole="button"
-                accessibilityLabel={item.challengeName}
-                onPress={() => onOpen(item)}
-                style={styles.tile}
-              >
-                <Image source={{ uri: item.uri }} style={styles.img} resizeMode="cover" />
-                <Text style={styles.burn} numberOfLines={1}>
-                  {item.challengeName}
-                </Text>
-              </Pressable>
-            ))}
+      {sections.map((section) => {
+        const showChallenge = proofsSectionShowsChallenge(section.items);
+        return (
+          <View key={section.dateKey} style={styles.section}>
+            <Text style={styles.header}>{section.label}</Text>
+            <View style={styles.grid}>
+              {section.items.map((item) => (
+                <ProofTile
+                  key={item.id}
+                  item={item}
+                  showChallenge={showChallenge}
+                  onOpen={onOpen}
+                />
+              ))}
+            </View>
           </View>
-        </View>
-      ))}
-      <Text style={styles.count}>{proofsCountLine(items.length, selfReportedDays)}</Text>
+        );
+      })}
+      <Text style={styles.count}>{proofsCountLine(items.length)}</Text>
     </View>
   );
 }
@@ -94,15 +135,20 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: DS_V3.space.xs / 4,
     borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
   },
   img: {
     width: "100%",
     height: "100%",
   },
+  placeholder: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: DS_V3.color.surface,
+  },
   burn: {
     position: "absolute",
     left: DS_V3.space.sm,
-    right: DS_V3.space.sm,
+    right: DS_V3.space.lg,
     bottom: 6,
     fontSize: LABEL,
     lineHeight: 16,
@@ -111,6 +157,11 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  lock: {
+    position: "absolute",
+    right: DS_V3.space.sm,
+    bottom: 6,
   },
   count: {
     fontSize: DS_V3.type.caption.fontSize,

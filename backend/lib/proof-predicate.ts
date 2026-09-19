@@ -50,6 +50,7 @@ export type RecordProofTile = {
   capturedAt: string | null;
   taskName: string;
   gateTime: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
+  shared: boolean;
 };
 
 export function checkInHasCameraProof(row: ProofCheckIn): boolean {
@@ -152,7 +153,7 @@ export function cameraProofTiles(args: {
   enrollments: { id: string; challengeId: string; startDateKey: string }[];
   challenges: { id: string; title?: string | null; duration_days?: number | null }[];
   tasks: (TaskModelRow & { id?: string; challenge_id?: string; title?: string | null })[];
-  events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[];
+  events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string; shared?: boolean }[];
 }): RecordProofTile[] {
   const secured = args.securedDateKeys ? new Set(args.securedDateKeys) : null;
   const titleByChallenge = new Map(args.challenges.map((c) => [c.id, c.title ?? "Challenge"]));
@@ -193,6 +194,7 @@ export function cameraProofTiles(args: {
             end: task.gate_time_end ?? null,
           }
         : null,
+      shared: event?.shared !== false,
     });
   }
   tiles.sort((a, b) => {

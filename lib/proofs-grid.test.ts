@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   PROOFS_EMPTY_HEADING,
-  PROOFS_EMPTY_NEW,
   itemsFromRecordProofs,
   proofsCountLine,
   proofsDateLabel,
@@ -11,7 +10,10 @@ import {
   proofsFullBody,
   proofsGatePill,
   proofsSectionHeader,
+  proofsSectionShowsChallenge,
   proofsSections,
+  proofsTileA11y,
+  proofsTileLabel,
 } from "@/lib/proofs-grid";
 
 describe("proofs grid copy", () => {
@@ -19,14 +21,33 @@ describe("proofs grid copy", () => {
     expect(proofsDateLabel("2026-09-17")).toBe("17 September");
     expect(proofsSectionHeader("2026-09-17", 2)).toBe("17 September · 2 proofs");
     expect(PROOFS_EMPTY_HEADING).toBe("No camera proofs yet");
-    expect(proofsEmptyBody(0)).toBe(PROOFS_EMPTY_NEW);
+    expect(proofsEmptyBody(0)).toBe(
+      "A proof lands here when a task with the Camera gate is done. Nothing can be added from your library.",
+    );
     expect(proofsEmptyBody(4)).toBe(
       "Your 4 secured days were all self-reported. A task with the Camera gate puts a photo here.",
     );
-    expect(proofsCountLine(9, 4)).toBe(
-      "9 camera proofs. 4 more days were secured self-reported and have no photo.",
-    );
-    expect(proofsCountLine(1, 0)).toBe("1 camera proof.");
+    expect(proofsCountLine(9)).toBe("9 camera proofs.");
+    expect(proofsCountLine(1)).toBe("1 camera proof.");
+  });
+
+  it("tile label is the task unless the date group has more than one challenge", () => {
+    expect(proofsTileLabel({ taskName: "Run", challengeName: "Iron man" }, false)).toBe("Run");
+    expect(proofsTileLabel({ taskName: "Run", challengeName: "Iron man" }, true)).toBe("Iron man");
+    expect(
+      proofsSectionShowsChallenge([
+        { challengeName: "Iron man" },
+        { challengeName: "Iron man" },
+      ]),
+    ).toBe(false);
+    expect(
+      proofsSectionShowsChallenge([
+        { challengeName: "Iron man" },
+        { challengeName: "Quick Steps" },
+      ]),
+    ).toBe(true);
+    expect(proofsTileA11y("Run", false)).toBe("Run, private");
+    expect(proofsTileA11y("Run", true)).toBe("Run, shared");
   });
 
   it("sections by date, newest first, challenge on the tile not the day number", () => {
@@ -50,6 +71,7 @@ describe("proofs grid copy", () => {
         gates: ["camera", "time"],
         gateTime: { mode: "by", start: null, end: "07:00" },
         taskName: "Run",
+        shared: false,
       },
     ]);
     const sections = proofsSections(items);
@@ -59,6 +81,9 @@ describe("proofs grid copy", () => {
     expect(proofsGatePill(items[1]!)).toContain("Taken in the app");
     expect(proofsFullBody(items[1]!)).toContain("Iron man · Day 2 of 75");
     expect(items.map((i) => i.challengeName)).toEqual(["Daily Gratitude", "Iron man"]);
+    expect(items[0]?.shared).toBe(true);
+    expect(items[1]?.shared).toBe(false);
+    expect(proofsTileLabel(items[1]!, false)).toBe("Run");
   });
 });
 
@@ -71,7 +96,11 @@ describe("proofs grid wiring", () => {
     expect(profile).toContain("ROUTES.PROOF");
     expect(profile).not.toContain("ROUTES.POST_ID");
     expect(profile).not.toContain("title={`Day ${item.day}`}");
-    expect(grid).toContain("item.challengeName");
+    expect(grid).toContain("proofsTileLabel");
+    expect(grid).toContain("proofsTileA11y");
+    expect(grid).toContain("onError");
+    expect(grid).toContain("DS_V3.color.surface");
+    expect(grid).toContain("Lock");
     expect(grid).not.toContain("Day {");
     expect(full).toContain("TRPC.checkins.shareProof");
     expect(full).toContain("aspectRatio: 4 / 5");
