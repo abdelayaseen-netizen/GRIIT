@@ -10,6 +10,8 @@ export type LiveFeedPost = {
   challengeName: string;
   taskName?: string | null;
   currentDay: number;
+  /** Author secured today — same input Home passes to displayDay. */
+  securedToday?: boolean;
   totalDays: number;
   eventType: string;
   isCompleted: boolean;

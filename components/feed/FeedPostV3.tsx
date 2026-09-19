@@ -15,6 +15,7 @@ import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
+import { feedPostDisplayDay } from "@/lib/challenge-day";
 
 const ICON = DS_V3.space.xs * 6;
 
@@ -109,7 +110,12 @@ export default function FeedPostV3({
         <View style={styles.flex}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.meta}>
-            {when} · Day <DisplayNumber value={post.currentDay} size="inline" /> · {post.challengeName}
+            {when} · Day{" "}
+            <DisplayNumber
+              value={feedPostDisplayDay(post.currentDay, post.eventType, post.securedToday === true)}
+              size="inline"
+            />{" "}
+            · {post.challengeName}
           </Text>
         </View>
       </View>
