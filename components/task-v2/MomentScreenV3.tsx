@@ -10,6 +10,7 @@ import { Camera, ShieldOff } from "lucide-react-native";
 import type ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { buildWeekStripDays } from "@/lib/week-strip-days";
 import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
@@ -57,21 +58,28 @@ export function weekFromToday(): { days: WeekStripDay[]; todayIndex: number } {
   };
 }
 
-/** Mon–Sun strip from server date keys. Today is filled only when the key is present. */
+/** Mon–Sun strip from the same keys Home uses (secured / frozen / last stand). */
 export function weekFromSecuredKeys(
   keys: string[],
-  timezone?: string | null
+  timezone?: string | null,
+  marks?: {
+    frozenDateKeys?: readonly string[];
+    lastStandDateKeys?: readonly string[];
+    todaySecured?: boolean;
+  },
 ): { days: WeekStripDay[]; todayIndex: number } {
-  const letters = ["M", "T", "W", "T", "F", "S", "S"];
   const weekKeys = getCurrentWeekDateKeys(timezone);
   const todayKey = getTodayDateKey(timezone);
   const idx = weekKeys.indexOf(todayKey);
   const fallback = weekFromToday();
   return {
-    days: letters.map((letter, i) => ({
-      letter,
-      filled: keys.includes(weekKeys[i] ?? ""),
-    })),
+    days: buildWeekStripDays(weekKeys, {
+      securedDateKeys: keys,
+      frozenDateKeys: marks?.frozenDateKeys ?? [],
+      lastStandDateKeys: marks?.lastStandDateKeys ?? [],
+      todayKey,
+      todaySecured: marks?.todaySecured === true,
+    }),
     todayIndex: idx >= 0 ? idx : fallback.todayIndex,
   };
 }

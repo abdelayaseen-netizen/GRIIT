@@ -42,7 +42,7 @@ function TaskSecuredInner() {
     closingPhoto?: string;
   }>();
   const { user } = useAuth();
-  const { profile } = useApp();
+  const { profile, stats } = useApp();
   const queryClient = useQueryClient();
   const userId = user?.id ?? "";
   const tz = profile?.timezone ?? undefined;
@@ -58,8 +58,13 @@ function TaskSecuredInner() {
     verificationKind: firstString(params.verificationKind),
   });
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
-  const week = weekFromSecuredKeys(keys, tz);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
+  const statsRow = stats as { frozenDateKeys?: string[]; lastStandDateKeys?: string[] } | null;
+  const week = weekFromSecuredKeys(keys, tz, {
+    frozenDateKeys: statsRow?.frozenDateKeys ?? [],
+    lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
+    todaySecured: fillToday,
+  });
   const proofUri = firstString(params.proofUri) || undefined;
   const paramEventId = firstString(params.shareEventId) || null;
   const closingPhoto = firstString(params.closingPhoto) === "1" || Boolean(proofUri);

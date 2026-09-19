@@ -23,7 +23,7 @@ import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { weekStripDayStates } from "@/lib/week-strip-days";
+import { buildWeekStripDays } from "@/lib/week-strip-days";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -350,13 +350,13 @@ export default function HomeScreen() {
 
   const weekStates = useMemo(() => {
     const statsRow = resolvedStats as StatsFromApi | null;
-    return weekStripDayStates(weekDateKeys, {
+    return buildWeekStripDays(weekDateKeys, {
       securedDateKeys,
       frozenDateKeys: statsRow?.frozenDateKeys ?? [],
       lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
       todayKey: weekDateKeys[todayWeekIndex] ?? "",
       todaySecured,
-    });
+    }).map((d) => d.state);
   }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
   const useFreeze = useMutation({
