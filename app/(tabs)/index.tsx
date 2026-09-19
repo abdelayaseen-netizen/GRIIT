@@ -23,6 +23,7 @@ import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { weekStripDayStates } from "@/lib/week-strip-days";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
 import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -325,10 +326,16 @@ export default function HomeScreen() {
     return idx >= 0 ? idx : 0;
   }, [weekDateKeys, homeTimeZone]);
 
-  const weekSecuredByIndex = useMemo(() => {
-    const set = new Set(securedDateKeys);
-    return weekDateKeys.map((key, i) => set.has(key) || (todaySecured && i === todayWeekIndex));
-  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex]);
+  const weekStates = useMemo(() => {
+    const statsRow = resolvedStats as StatsFromApi | null;
+    return weekStripDayStates(weekDateKeys, {
+      securedDateKeys,
+      frozenDateKeys: statsRow?.frozenDateKeys ?? [],
+      lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
+      todayKey: weekDateKeys[todayWeekIndex] ?? "",
+      todaySecured,
+    });
+  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
@@ -507,7 +514,7 @@ export default function HomeScreen() {
               streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
               morningAfter={morningAfter}
               proof={proof}
-              weekFilled={weekSecuredByIndex}
+              weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}
               feedScope={feedScope}

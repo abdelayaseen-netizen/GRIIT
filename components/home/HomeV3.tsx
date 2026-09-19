@@ -15,6 +15,7 @@ import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
 import Divider from "@/components/ds/Divider";
 import WeekStrip from "@/components/ds/WeekStrip";
+import type { WeekStripDayState } from "@/lib/week-strip-days";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import type { FeedScope } from "@/store/feedToggleStore";
@@ -80,7 +81,8 @@ export type HomeV3Props = {
   streakLine: string;
   morningAfter?: HomeV3MorningAfter | null;
   proof: HomeV3Proof | null;
-  weekFilled: boolean[];
+  weekFilled?: boolean[];
+  weekStates?: WeekStripDayState[];
   todayIndex: number;
   fillToday?: boolean;
   feedScope: FeedScope;
@@ -104,6 +106,7 @@ export function HomeV3({
   morningAfter,
   proof,
   weekFilled,
+  weekStates,
   todayIndex,
   fillToday,
   feedScope,
@@ -123,10 +126,14 @@ export function HomeV3({
   const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
   const secured = homeProofFilled(fillToday === true);
-  const days = LETTERS.map((letter, i) => ({
-    letter,
-    filled: weekFilled[i] === true,
-  }));
+  const days = LETTERS.map((letter, i) => {
+    const state = weekStates?.[i] ?? (weekFilled?.[i] === true ? "secured" : "missed");
+    return {
+      letter,
+      filled: state === "secured",
+      state,
+    };
+  });
 
   if (error) {
     return (

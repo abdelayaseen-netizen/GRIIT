@@ -219,6 +219,8 @@ export const profilesStatsProcedures = {
         !lastStandUsedDateKeys.has(yesterdayKey) &&
         !frozenDateKeys.has(yesterdayKey),
       lastStandRequiresPremium,
+      frozenDateKeys: [...frozenDateKeys],
+      lastStandDateKeys: [...lastStandUsedDateKeys],
     };
   }),
 
