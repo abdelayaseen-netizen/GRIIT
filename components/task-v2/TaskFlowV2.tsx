@@ -236,9 +236,14 @@ export function TaskFlowV2() {
       {f.step === "day_open" && f.dayOpen ? (
         <ChallengeDoneStep
           model={f.dayOpen}
+          proofUri={f.photoUri}
+          shareFailed={f.shareFailed}
+          sharing={f.sharing}
           onOpenTask={f.openDayOpenTask}
           onNext={f.goNextTask}
           onDone={f.exit}
+          onShare={f.onShareProof}
+          onKeep={f.onKeepProof}
         />
       ) : null}
 

@@ -49,6 +49,9 @@ export type DayOpenModel = {
   title: string;
   leftLine: string;
   contextLine: string;
+  challengeName: string;
+  remainingToday: number;
+  challengeDoneToday: boolean;
   rows: HomeProofRow[];
   alsoToday: DayOpenAlso[];
   nextId: string | null;
@@ -102,6 +105,9 @@ export function selectDayOpen(input: {
     title: dayOpenTitle(input.taskName),
     leftLine: dayOpenLeftLine(left),
     contextLine: dayOpenContext(mine?.challenge ?? "", mine?.day ?? 1, mine?.dayTotal ?? 1),
+    challengeName: mine?.challenge ?? "",
+    remainingToday: left,
+    challengeDoneToday: rows.length === 0,
     rows,
     alsoToday,
     nextId,

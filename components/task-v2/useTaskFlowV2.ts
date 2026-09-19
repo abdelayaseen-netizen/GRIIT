@@ -25,6 +25,7 @@ import {
 } from "@/lib/day-open";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
+import { closingProofEventId } from "@/lib/proof-moment";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -151,6 +152,9 @@ export function useTaskFlowV2() {
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [windowForbidden, setWindowForbidden] = useState(false);
+  const [shareEventId, setShareEventId] = useState<string | null>(null);
+  const [shareFailed, setShareFailed] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const submitInFlight = useRef(false);
 
   const windowEval = evaluateScheduleWindow({
@@ -290,10 +294,18 @@ export function useTaskFlowV2() {
       if (!cancelled) setStep("verifying");
     }, VERIFYING_TAKEOVER_MS);
     try {
+      const proofUrl =
+        typeof payload.proofUrl === "string"
+          ? payload.proofUrl
+          : typeof payload.photo_url === "string"
+            ? payload.photo_url
+            : undefined;
+      const hasCameraProof = Boolean(proofUrl);
       const complete = await completeTask({
         activeChallengeId,
         taskId,
         ...payload,
+        ...(hasCameraProof ? { shareChoicePending: true } : {}),
       });
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;
@@ -373,6 +385,8 @@ export function useTaskFlowV2() {
             },
           ];
         }
+        setShareEventId(closingProofEventId(complete.dayProofs, proofUrl));
+        setShareFailed(false);
         setDayOpen(
           selectDayOpen({
             taskName,
@@ -832,6 +846,28 @@ export function useTaskFlowV2() {
     retryFailedSubmit,
     onDiscardPhoto,
     onKeepPhoto: () => setDiscardAsk(false),
+    shareFailed,
+    sharing,
+    onShareProof: () => {
+      if (sharing) return;
+      if (!shareEventId) {
+        setShareFailed(true);
+        return;
+      }
+      setSharing(true);
+      void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
+        .then(() => {
+          setSharing(false);
+          exit();
+        })
+        .catch(() => {
+          setSharing(false);
+          setShareFailed(true);
+        });
+    },
+    onKeepProof: () => {
+      exit();
+    },
     onShare: (uri: string) => {
       if (!result) return;
       void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
