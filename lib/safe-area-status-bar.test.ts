@@ -17,7 +17,7 @@ describe("safe area and status bar", () => {
     expect(root).toContain('barStyle="light-content"');
     expect(root).not.toContain('barStyle="dark-content"');
     const edit = readFileSync(resolve(__dirname, "../app/edit-profile.tsx"), "utf8");
-    expect(edit).toContain('barStyle="dark-content"');
+    expect(edit).toContain('barStyle="light-content"');
     const camera = readFileSync(
       resolve(__dirname, "../components/task-v2/TaskCapture.tsx"),
       "utf8",
