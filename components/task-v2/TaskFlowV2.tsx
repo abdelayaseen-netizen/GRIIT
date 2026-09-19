@@ -150,6 +150,7 @@ export function TaskFlowV2() {
           photoUri={f.photoUri}
           challengeName={f.challengeName}
           currentDay={f.currentDay}
+          taskName={f.taskName}
           gateLabel={f.chromeTitle}
           caption={f.caption}
           onCaption={f.setCaption}

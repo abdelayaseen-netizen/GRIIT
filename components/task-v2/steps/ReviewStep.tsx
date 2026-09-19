@@ -10,6 +10,7 @@ type Props = {
   photoUri: string;
   challengeName: string;
   currentDay: number;
+  taskName: string;
   gateLabel: string;
   caption: string;
   onCaption: (t: string) => void;
@@ -20,8 +21,7 @@ type Props = {
 export function ReviewStep({
   photoUri,
   challengeName,
-  currentDay,
-  gateLabel,
+  taskName,
   caption,
   onCaption,
   onRetake,
@@ -39,7 +39,7 @@ export function ReviewStep({
             {challengeName}
           </Text>
           <Text style={styles.cap92} numberOfLines={1}>
-            Day {currentDay} · {gateLabel}
+            {taskName}
           </Text>
           {caption ? (
             <Text style={styles.cap100} numberOfLines={1}>
