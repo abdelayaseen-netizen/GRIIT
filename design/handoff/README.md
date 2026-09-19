@@ -306,7 +306,8 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 48 Task done day open · 49 Counter Timer Run · 50 Add task second pass · 51 Comments and respect ·
 52 The morning after · 53 Two zeros · 54 The freeze · 55 Partial miss · 56 Roster yesterday ·
 57 The evening before · 58 Proof moment · 59 Secured · 60 Proofs grid · 61 Run manual · 62 Controls ·
-63 Capture · 64 Edit profile · 65 Discover row · 66 One number.
+63 Capture · 64 Edit profile · 65 Discover row · 66 One number · 67 Scales · 68 Home · 69 Feed ·
+70 Profile · 71 Consistency · 72 Counter · 73 Secured · 74 Login.
 
 ## Source
 
@@ -474,7 +475,8 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 `GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33,
 `GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
 39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51,
-`GRIIT The Miss.dc.html` holds 52 to 57, and `GRIIT Proof Moment.dc.html` holds 58 to 66.
+`GRIIT The Miss.dc.html` holds 52 to 57, `GRIIT Proof Moment.dc.html` holds 58 to 66, and
+`GRIIT Density.dc.html` holds 67 to 74.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -643,3 +645,35 @@ back. And **the feed row must be written unshared**: `checkins.complete` current
 `shared` flag that the share buttons flip, "private until you choose" is a claim the server
 contradicts. A day secured with unshared proofs shows nothing in the feed — an unshared proof is not a
 quieter post, it is not a post.
+
+## The density pass
+
+Frames 67 to 74. GRIIT read oversized next to the apps its users live in — body around 17, row titles
+above 20, a phone holding four task rows. Every pair in `GRIIT Density.dc.html` is the same markup
+rendered through two token objects, so the only variable is the scale.
+
+Body goes 17 → 15, secondary 15 → 13, caption 13 → 12, label 12 → 11; heading 20 → 17, title 28 → 22.
+Gutter 20 → 16, section 32 → 24, card padding 20 → 14, card radius 20 → 14. Buttons 52 → 46, avatars
+32/40/56/96 → 28/32/44/80, tab bar 64 → 56. **Touch targets stay at 44 everywhere** — the pattern is to
+shrink the padding and let `minHeight: 44` do the work, so a one-line row is 44 either way and a
+two-line row goes 68 → 54.
+
+**The Barlow Condensed numerals do not move.** They are the signature, and the one place this app
+should be larger than its competition. Bringing everything around them down makes them read bigger at
+no cost — frame 73 shows the identical 140pt streak looking larger on the right.
+
+Measured off the frames: Home goes from six visible task rows to eight and recovers the Discover row
+that v27 clips away; the feed's third post goes from unreachable to 50pt, its avatar and name; the proof grid gains a whole
+third date section that v27 clips; Consistency gives back 121pt, the largest
+single reclaim; Login gives back 72pt. Login still does not clear the keyboard at either scale — that
+is a layout problem the pass does not solve, and it is logged rather than papered over.
+
+Values are in `src/tokens.dense.ts`, held out of `tokens.ts` pending one decision: **body 15 or
+14**. 14 is the reference size exactly and buys about one more row, but at 14/500 a row title sits two
+points from its gate line and the row loses its hierarchy. Recommendation is 15. Tab bar labels stay —
+a compass and a group of people are the same idea to a new user, whatever they mean to us.
+
+Eight breakages with fixes, six contradictions (46 to 51), the grep list and the ship order are in
+`cursor/02_screens.md` and `cursor/05_diff_from_current_app.md`. The one that must not be missed:
+`dynamicType` still maps `body` to Apple's 17pt `body`, so it has to be remapped in the same
+commit as the scale or the app scales wrong for anyone using Dynamic Type.

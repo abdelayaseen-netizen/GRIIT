@@ -38,7 +38,7 @@ change, then the chunk that does it.
 
 ## Chunk Q — the proof moment, the proof grid, the last light screens
 
-Frames 58 to 66, against build 58. Nine changes, one new component, one server change.
+Frames 58 to 66, against build 58. Twelve changes, one new component, one server change.
 
 | # | what the app does today | what to build | files |
 |---|---|---|---|
@@ -62,3 +62,51 @@ self-contained. 9, 10 and 11 are independent of all of it.
 **Deletions.** `lib/profile-consistency.ts` goes entirely; Home reads
 `consistency.verifiedClosed / closedDueDays` from `profiles.getRecord`. The shutter comment at
 `TaskCapture.tsx:3` goes with the fill it justifies.
+
+## Chunk R — the density pass
+
+Frames 67 to 74. A value-only token diff plus eleven component edits. No new components, no colour
+changes, no copy changes.
+
+**Commit 1 — tokens.** Apply `src/tokens.dense.ts` to the DS_V3 export, and remap `dynamicType` in
+the same commit (`body`/`bodyStrong` → `subheadline`, `secondary` → `footnote`, `caption` →
+`caption1`, `label` → `caption2`, `heading` → `headline`, `title` → `title3`, `display` →
+`title1`). Splitting these ships a scale that misbehaves under Dynamic Type.
+
+**Commit 2 — components**, file by file; a component still on the old paddings looks loose, not broken.
+
+| file | edit |
+|---|---|
+| `components/ds/Avatar.tsx` | size union 32/40/56/96 → 28/32/44/80. Type error until done |
+| `components/ds/ListRow.tsx` | paddingVertical 16 → 10, icon 24 → 22, gap 12 → 10, keep minHeight 44 |
+| `components/ds/Card.tsx` | padding 20 → 14 |
+| `components/ds/Chip.tsx` | padding 14 × 8 → 12 × 7 |
+| `components/ds/TabBar.tsx` | height 64 → 56, icon 26 → 22, labels unchanged at 11 |
+| `components/ds/WeekStrip.tsx` | square radius 12 → 8, gap 8 → 6 |
+| `components/feed/FeedPostV3.tsx` | header paddingVertical 14 → 8 |
+| `components/task-v2/taskFlowStyles.ts` | hardcoded 15pt type and 52pt footer height |
+| `components/task-v2/steps/CountStep.tsx` | Add one circle 132 → 116 |
+| `components/ds/ControlPill.tsx` | unchanged — already 44 and at the floor |
+| `app/edit-profile.tsx` | its own scale; chunk Q rewrites this file anyway |
+
+**Two documented exceptions**, written into the components rather than the tokens: the morning-after
+block keeps a 16pt internal gap and a `bodyStrong` fact line, and a window-closed row's gate line uses
+`secondary` 13 rather than `caption` 12. Both are places where less prominence is the wrong answer.
+
+**Acceptance, on a 393 × 852 device.** Measure against v27, not against an absolute. Each of these is
+taken off the frames in `GRIIT Density.dc.html`:
+
+| surface | test | expected |
+|---|---|---|
+| Home | task rows fully visible above the tab bar, with 8 rows of content | 6 → 8 |
+| Feed | height of the third post visible above the tab bar, with 3 posts | 0 → 50pt |
+| Profile | third date section, with 3 sections | clipped → whole |
+| Consistency | bottom of the footer caption | 772 → 651 |
+| Login | bottom of the Sign in with Google button | 648 → 576 |
+
+Within a few points is a pass — line-height rounding and font fallback move these by one or two.
+An unchanged number means the tokens did not reach that component; a much larger drop means something
+lost a line, which is a regression, not a win.
+
+**Not an acceptance criterion:** Login clearing the keyboard. It does not, at either scale — see
+breakage 9 in `cursor/02_screens.md`.

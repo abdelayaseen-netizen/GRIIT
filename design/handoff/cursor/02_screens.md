@@ -3406,3 +3406,194 @@ frame 58's two buttons are a primary and a secondary, not two primaries), 9 and 
 challenge list is one card, and the proofs grid is tiles on the canvas), 13 (the full view keeps 4:5;
 the grid crops to square deliberately and says so), 18 (no Stamp on the proofs grid or the full view; the
 gate pill carries it in words), 21 (the two Proofs empty states are on the canvas, never in a card).
+
+# The density pass
+
+**Chunk** R. Frames 67 to 74, in `GRIIT Density.dc.html`. No new components, no colour changes.
+
+Every pair in that file is **the same markup rendered through two token objects**. The only variable is
+the scale, so what you are judging is the scale and not a redesign.
+
+Values: `src/tokens.dense.ts`. Nothing is renamed, so applying them to `src/tokens.ts` propagates
+through every component that already reads tokens. The manual edits are in
+`cursor/05_diff_from_current_app.md`.
+
+## What does not move
+
+`type.number`, every `numberSize`, `displayFace`. The Barlow Condensed numerals are the signature,
+and they are the one place GRIIT should be **larger** than the apps it is measured against. Bringing
+everything around them down 2pt makes them read bigger at no cost — frame 73 is the proof: the 140pt
+streak is identical in both columns and looks larger on the right.
+
+`hit` stays 44. `buttonHeight.small` stays 44, already on the floor. `shutter` stays 72 — a shutter
+is sized by the thumb, not by the type scale.
+
+## The scale
+
+| token | v27 | v28 |
+|---|---|---|
+| display | 34 / 41 | 28 / 34 |
+| title | 28 / 34 | 22 / 28 |
+| heading | 20 / 25 | 17 / 22 |
+| body | 17 / 22 | **15 / 20** |
+| bodyStrong | 17 / 22 | **15 / 20** |
+| secondary | 15 / 20 | 13 / 18 |
+| caption | 13 / 18 | 12 / 16 |
+| label | 12 / 16 | 11 / 14 |
+| space.md | 12 | 10 |
+| space.lg | 16 | 12 |
+| space.gutter | 20 | 16 |
+| space.section | 32 | 24 |
+| radius.input | 12 | 10 |
+| radius.card | 20 | 14 |
+| buttonHeight.regular | 52 | 46 |
+| avatarSize xs/sm/md/lg | 32/40/56/96 | 28/32/44/80 |
+| tabBarClearance | 96 | 80 |
+| numberSize.inline | 17 | 15 |
+| stamp.fontSize | 12 | 11 |
+
+`space.xs` 4 and `space.sm` 8 do not move: they are the grid, and shrinking them turns gaps into
+touching edges.
+
+## Component sizes tokens cannot reach
+
+| thing | v27 | v28 | note |
+|---|---|---|---|
+| ListRow padding Y | 16 | 10 | `minHeight: 44` still governs, so a one-line row does not shrink below the floor |
+| ListRow icon | 24 | 22 | leading and trailing |
+| status ring (task row) | 20 | 18 | with a 11pt check inside |
+| Card padding | 20 | 14 | the single biggest space win on Home and Consistency |
+| TabBar height | 64 | 56 | icons 26 → 22, labels stay 11 |
+| Feed post header padding Y | 14 | 8 | with avatar 40 → 32 this is the change that reads loudest |
+| Week strip square radius / gap | 12 / 8 | 8 / 6 | squares themselves are `1fr`, so they grow as the gutter comes in |
+| Chip padding | 14 × 8 | 12 × 7 | any chip that is a control keeps `minHeight: 44` |
+| Counter Add one | 132 | 116 | still the largest target on its screen |
+| Progress bar height | 6 | 5 | |
+
+**Every touch target stays 44.** The pattern throughout: shrink the *padding* and let `minHeight: 44`
+do the work. A row with one line of text is 44 either way; a row with a title and a subtitle goes
+68 → 54.
+
+## What each frame gains
+
+Measured off the frames in `GRIIT Density.dc.html`, not estimated. Home, Feed and Profile are clipped
+at the tab bar, and each clip derives its height from that bar rather than from a constant — Home's
+content region starts at y=44 and Feed's and Profile's at y=88, so a shared constant puts the latter
+two 38pt under the bar. Law 26 is the rule these frames are the reference for; the others are full-height screens where the gain is
+reclaimed space rather than a fit-or-not.
+
+| frame | v27 | v28 | gain |
+|---|---|---|---|
+| 68 Home | 6 of 8 task rows, Discover row clipped away | all 8 rows and the Discover row | +2 rows, +1 row of chrome |
+| 69 Feed | third post not reached | third post reaches 50pt | avatar and name become visible |
+| 70 Profile | third date section clipped at ~two thirds | all three sections whole | +1 section, tiles 113 → 116 |
+| 71 Consistency | footer caption ends at 772 | ends at 651 | **121pt back**, the largest in the set |
+| 72 Counter | footer at 737 | footer at 747 | 10pt; step screens were never the problem |
+| 73 Secured | numeral 140 | numeral 140 | unchanged by design |
+| 74 Login | Google button ends 648 | ends 576 | 72pt back |
+
+**Login does not clear the keyboard at either scale.** A 336pt keyboard puts its top edge at 516, and
+the new layout still ends at 576. That is a layout problem, not a density one: fix it by scrolling the
+form or moving the OAuth buttons above the fold, not by shrinking type further. Logged as breakage 9.
+
+## What breaks, and the fix
+
+| # | breaks | fix |
+|---|---|---|
+| 1 | **The morning-after block** (frame 52) is three stacked `secondary` lines. At 13/18 with `space.lg` 12 it goes from a block you read to a block you skim past — it is the one place in the app where less prominence is wrong | keep the fact line at `bodyStrong` (15/500, as now) and hold the block's internal gap at `space.lg` **16**, not 12. One documented exception, written into the component |
+| 2 | **"Window closed · 6:00–9:00 am"** at caption 12 next to a 15pt title is a 3pt gap and reads as noise on a row that is making an important statement | the closed row's gate line goes to `secondary` 13, not `caption` 12. Only that state |
+| 3 | **Challenge names on proof tiles** (frame 60) at label 11 with a text shadow, on a ~115pt tile: "Daily Gratitude" truncates | already ellipsised at `calc(100% - 12px)`. Accept the truncation — the date section header above carries the context, and a two-line tile label would turn the grid into a list |
+| 4 | **"3 of 3. Free accounts hold 3 at a time."** at caption 12 in a ListRow subtitle wraps to two lines at 393pt | shorten to "3 of 3 running. Free holds 3." — same fact, one line |
+| 5 | **Gate lines with all three gates** — "Camera · Time window 6–9am · Location" — wrap at caption 12 in a task row with a 22pt icon and a chevron | the long form only appears on the challenge detail and the add-task preview, both of which are full-width rows with no trailing glyph. On the Home task row the gate line is already the short form. No change, but do not let the long form leak into a Home row |
+| 6 | **The four stat cells** (frame 71) at heading 17 for the value: "First proof / 5 Sep" is fine, but a 4-digit "Total secured" value plus its "days" suffix is tight in a half-column at gutter 16 | values stay `heading`; if a cell overflows, the suffix drops (`9` not `9 days`) before the value shrinks |
+| 7 | **Dynamic Type.** `dynamicType` maps `body` to Apple's `body` (17). At 15 that mapping is a lie and the app will scale wrong for anyone who has touched the accessibility slider | remap: `body`/`bodyStrong` → `subheadline`, `secondary` → `footnote`, `caption` → `caption1`, `label` → `caption2`, `heading` → `headline`, `title` → `title3`, `display` → `title1`. **This is not optional** — it ships in the same commit as the scale |
+| 9 | **Login still sits under the keyboard** at the new scale — the Google button ends at 576 against a keyboard top of 516 | out of scope for this pass. Scroll the form, or move Apple and Google above the divider so the primary path clears. Do not solve it with type size |
+| 8 | **Contrast is unaffected** but worth stating: every pair still passes at the new sizes because no colour changed. `textSecondary` at 12pt on surface is still 6.6:1. The 4.5:1 floor applies at every size, and nothing here is under it |
+
+## Decisions I need
+
+| # | question | recommendation |
+|---|---|---|
+| 1 | **body 15 or 14?** | **15.** 14 is the reference body size exactly and buys about one more row, but it costs the row title its authority: at 14/500 a title sits 2pt from its 12pt gate line and the row loses its hierarchy. It also pushes secondary to 12 and caption to 11, where caption and label collide. If you want 14, take it on `body`/`bodyStrong` **only** and hold `secondary` at 13 — do not shift the whole ladder |
+| 2 | **Tab bar labels: keep or drop?** | **Keep.** Dropping them saves 14pt on a 56pt bar and the bar is already the smallest thing being cut. The reference apps drop labels because their five destinations are universally understood icons; GRIIT's Discover and Feed are not — a compass and a group of people are the same idea to a new user. Revisit after the icons have been in front of people |
+| 3 | Does `display` (34 → 28) still earn its step above `title` (28 → 22)? | **Yes, but check usage.** At v27 they were 34 and 28; at v28 they are 28 and 22. If `display` is only used on one screen, fold it into `title` and delete the token rather than carry two steps that differ by 6pt |
+| 4 | Apply to the marketing/share card sizes? | **No.** `shareProofWidth` and the share card type are composed for export at 720/560, not for a phone screen. Out of scope, and they should stay large |
+
+---
+
+## Contradictions in the repo, for the migration plan
+
+Numbered from 46; chunk Q ended at 45.
+
+**46. `dynamicType` will be wrong the moment the scale lands.** `tokens.ts` maps `body` →
+`'body'` (17pt) and `secondary` → `'subheadline'` (15pt). At body 15 / secondary 13 those mappings
+scale the app to the wrong sizes for any user with Dynamic Type set away from default. Remap in the same
+commit — table above.
+
+**47. Hardcoded font sizes bypass the token file.** `StreakFreezeModal` (18/14/13),
+`WhoRespectedSheet` (16/14/12 via `DS_TYPOGRAPHY`), `DiscoverCTA` (13 bold / 11),
+`edit-profile.tsx` (`PROFILE_V2_COLOR` sizes), and `taskFlowStyles.ts` (15). None of these move
+when tokens move. Grep before shipping — see the migration note.
+
+**48. Two avatar components with independent sizes.** `components/ds/Avatar.tsx` takes
+`32 | 40 | 56 | 96` as a literal union; `components/shared/Avatar` (used by `edit-profile`) has
+its own. Changing `avatarSize` does not change either — the ds one has the sizes in its **type
+signature**, so this is a type error at build, which is the good outcome: it will not compile until
+someone looks at it.
+
+**49. `size.tabBarClearance` is a derived number stated as a constant.** Its comment says
+"bar height 64 + bottom offset 12 + gutter 20" but 64 and 20 live in other places. At the new scale it
+is 56 + 12 + 16 = 84, and 80 is right once the bar's own internal padding is counted. Derive it or
+re-comment it; do not leave a stale arithmetic comment.
+
+**50. `contactSheet` sizing is independent of everything.** `{ cols: 6, rows: 5, gap: 4, radius: 4 }`
+— a 6 × 5 grid of 4pt-radius tiles does not scale with `radius` or `space`. Fine as-is, but note it
+is the one grid that will not move, so it may look loose next to the new proof grid.
+
+**51. `buttonHeight.regular` 52 is hardcoded in at least one place.** The pinned footers in the
+task-v2 steps use `52` directly in `taskFlowStyles.ts` rather than reading the token. Grep `52`
+alongside `height`.
+
+---
+
+## Migration note for Cursor
+
+**One file changes for most of it:** `lib/design-system.ts` (the DS_V3 export) — or
+`src/tokens.ts` in this handoff's naming. Apply the values from `src/tokens.dense.ts`. Nothing is
+renamed, so this is a value-only diff.
+
+**Then the manual edits**, none of which read tokens today:
+
+| file | what |
+|---|---|
+| `components/ds/Avatar.tsx` | the size union `32 \| 40 \| 56 \| 96` → `28 \| 32 \| 44 \| 80`. Will not compile until done |
+| `components/ds/ListRow.tsx` | paddingVertical 16 → 10, icon slot 24 → 22, gap 12 → 10. Keep `minHeight: 44` |
+| `components/ds/Card.tsx` | padding 20 → 14 |
+| `components/ds/Chip.tsx` | padding 14 × 8 → 12 × 7 |
+| `components/ds/TabBar.tsx` | height 64 → 56, icons 26 → 22 |
+| `components/ds/WeekStrip.tsx` | square radius 12 → 8, gap 8 → 6 |
+| `components/feed/FeedPostV3.tsx` | header paddingVertical 14 → 8 |
+| `components/task-v2/taskFlowStyles.ts` | hardcoded 15pt and 52pt |
+| `app/edit-profile.tsx` | its own scale entirely (chunk Q already rewrites this file) |
+| `components/{StreakFreezeModal,feed/WhoRespectedSheet,home/DiscoverCTA}.tsx` | legacy `DS_*` tokens; chunks N, O and Q already replace all three |
+| `src/tokens.ts` `dynamicType` | the remap — contradiction 46 |
+
+**What to grep**, in order:
+
+```
+fontSize:\s*(1[2-9]|2[0-9]|3[0-4])      # every literal font size outside the token file
+DS_TYPOGRAPHY|DS_COLORS|DS_RADIUS|GRIIT_COLORS|PROFILE_V2_COLOR|DS_DAYLIGHT
+WEIGHT_SEMIBOLD|WEIGHT_BOLD             # law 3: nothing above 500
+padding(Vertical|Horizontal)?:\s*(16|20|32)
+height:\s*(52|64|96)                    # buttons, tab bar, clearance
+size=\{?(32|40|56|96)\}?                # avatars
+borderRadius:\s*(12|20)
+```
+
+**How to check it landed.** Three measurable claims, all on a 393 × 852 device:
+Home shows 7 task rows without scrolling; Consistency ends above the fold; Login clears a 336pt
+keyboard with both OAuth buttons visible. If any of the three fails, the pass is not applied.
+
+**Ship order.** The token diff and the `dynamicType` remap are one commit — splitting them ships a
+scale that misbehaves under accessibility settings. The component edits are a second commit and can
+land file by file; a component still on the old paddings looks slightly loose, not broken.
