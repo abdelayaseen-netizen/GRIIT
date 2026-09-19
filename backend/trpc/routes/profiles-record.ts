@@ -26,6 +26,7 @@ import {
 import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-tasks";
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
 import { buildProfileRecord, fractionDateKeysForRange, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import { cameraProofTiles, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
@@ -233,12 +234,12 @@ export const profilesRecordProcedures = {
           .select("active_streak_count, longest_streak_count, last_completed_date_key")
           .eq("user_id", ownerId)
           .maybeSingle(),
-        db
-          .from("active_challenges")
-          .select("id, challenge_id, status, start_at, end_at")
-          .eq("user_id", ownerId)
-          .eq("status", "active")
-          .limit(50),
+        applyEnrollmentWindow(
+          db
+            .from("active_challenges")
+            .select("id, challenge_id, status, start_at, end_at")
+            .eq("user_id", ownerId)
+        ).limit(50),
         db
           .from("active_challenges")
           .select("id, challenge_id, status, start_at, end_at")

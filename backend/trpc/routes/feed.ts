@@ -18,6 +18,7 @@ import {
 } from "../../lib/feed-activity-hydrate";
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
 import { deriveProofType } from "../../lib/task-model";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -323,7 +324,9 @@ export const feedRouter = createTRPCRouter({
     const [completedTasksResult, streakResult, activeChallengesResult] = await Promise.all([
       ctx.supabase.from("activity_events").select("id", { count: "exact", head: true }).eq("user_id", ctx.userId).eq("event_type", "completed_task"),
       ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle(),
-      ctx.supabase.from("active_challenges").select("id", { count: "exact", head: true }).eq("user_id", ctx.userId).eq("status", "active"),
+      applyEnrollmentWindow(
+        ctx.supabase.from("active_challenges").select("id", { count: "exact", head: true }).eq("user_id", ctx.userId)
+      ),
     ]);
     return {
       totalTasksCompleted: completedTasksResult.count ?? 0,

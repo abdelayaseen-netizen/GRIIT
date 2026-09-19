@@ -117,7 +117,7 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[0]?.rows).toHaveLength(4);
     expect(card.sections[1]?.rows.map((r) => r.name)).toEqual(["Write 3 gratitudes"]);
     expect(card.sections[2]?.rows.map((r) => r.name)).toEqual(["Log your steps"]);
-    expect(homeProofDayLine(card.sections[0]!.day, card.sections[0]!.dayTotal)).toBe("Day 1 of 1");
+    expect(homeProofDayLine(card.sections[0]!.day, card.sections[0]!.dayTotal)).toBe("Day 1");
     expect(HOME_PROOF_HEADING).toBe("Today");
   });
 
@@ -162,17 +162,17 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[2]?.day).not.toBe(0);
     expect(card.sections[2]?.day).not.toBe(2);
     expect(card.sections[2]?.challenge).toBe("Write");
-    expect(card.sections[2]?.dayTotal).toBe(1);
+    expect(card.sections[2]?.dayTotal).toBeNull();
   });
 
-  it("dayTotal uses target_streak when longer than duration", () => {
-    const card = selectHomeProofCard({
+  it("dayTotal is duration_days; missing duration is Day n with no of", () => {
+    const withDuration = selectHomeProofCard({
       tasks: [
         task({
           name: "Journal",
           challengeName: "Write",
-          currentDay: 1,
-          durationDays: 30,
+          currentDay: 4,
+          durationDays: 1,
         }),
       ],
       tasksDoneToday: 0,
@@ -181,7 +181,19 @@ describe("selectHomeProofCard", () => {
       targetStreak: 75,
       securedToday: false,
     });
-    expect(card.sections[0]?.dayTotal).toBe(75);
+    expect(withDuration.sections[0]?.dayTotal).toBe(1);
+    expect(homeProofDayLine(4, withDuration.sections[0]?.dayTotal)).toBe("Day 4 of 1");
+
+    const missing = selectHomeProofCard({
+      tasks: [task({ name: "Journal", challengeName: "Write", currentDay: 4 })],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: true,
+      targetStreak: 75,
+      securedToday: false,
+    });
+    expect(missing.sections[0]?.dayTotal).toBeNull();
+    expect(homeProofDayLine(4, missing.sections[0]?.dayTotal)).toBe("Day 4");
   });
 
   it("checkin done but securedDateKeys lacks today → posted is false", () => {

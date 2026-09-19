@@ -172,7 +172,7 @@ export default function ActiveChallengeDetailScreen() {
   const challengeId = challenge?.id ?? activeChallenge?.challenge_id ?? "";
   const enrollmentDuration =
     challenge?.duration_days && challenge.duration_days > 0 ? challenge.duration_days : 1;
-  const durationDays = homeDayTotal(enrollmentDuration, profile?.target_streak ?? null);
+  const durationDays = homeDayTotal(challenge?.duration_days) ?? enrollmentDuration;
   const title = challenge?.title?.trim() || "Challenge";
   const description = challenge?.description?.trim() || undefined;
   const participantsCount =

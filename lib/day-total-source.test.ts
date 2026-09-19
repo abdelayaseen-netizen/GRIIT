@@ -4,9 +4,10 @@ import { feedFinishedCopy } from "./feed-copy";
 import { hasCameraProof } from "./active-challenge-ui";
 
 describe("day total source", () => {
-  it("Home / profile rows: target_streak wins when longer than duration_days", () => {
-    expect(homeOrProfileDayTotal(1, 75)).toBe(75);
-    expect(homeOrProfileDayTotal(30, 14)).toBe(30);
+  it("Home / profile rows: duration_days only", () => {
+    expect(homeOrProfileDayTotal(1)).toBe(1);
+    expect(homeOrProfileDayTotal(30)).toBe(30);
+    expect(homeOrProfileDayTotal(null)).toBeNull();
   });
 
   it("Feed: duration_days, plus own target_streak; never 2 of 1", () => {

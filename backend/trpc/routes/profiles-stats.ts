@@ -13,6 +13,7 @@ import {
 } from "../../lib/date-utils";
 import type { StreakRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { logger } from "../../lib/logger";
 import { reconcileMissForUser } from "../../lib/miss-reconcile";
 import { loadDayTaskTally } from "../../lib/record-days";
@@ -94,12 +95,12 @@ export const profilesStatsProcedures = {
       lastStandUsesResult,
       freezeUsesResult,
     ] = await Promise.all([
-      ctx.supabase
-        .from("active_challenges")
-        .select("id")
-        .eq("user_id", ctx.userId)
-        .eq("status", "active")
-        .limit(200),
+      applyEnrollmentWindow(
+        ctx.supabase
+          .from("active_challenges")
+          .select("id")
+          .eq("user_id", ctx.userId)
+      ).limit(200),
       ctx.supabase
         .from("active_challenges")
         .select("id")

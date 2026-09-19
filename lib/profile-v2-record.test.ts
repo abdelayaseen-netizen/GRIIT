@@ -222,7 +222,7 @@ describe("fixture B — 3 due days", () => {
     expect(rec.consistency.line).toBe("Day 3 of 30. Today's proof is due.");
     expect(
       buildProfileRecord({ ...fixtureThree(), targetStreak: 75 }).consistency.line
-    ).toBe("Day 3 of 75. Today's proof is due.");
+    ).toBe("Day 3 of 30. Today's proof is due.");
     expect(rec.consistency.strip).toEqual([V, V, T]);
     expect(rec.consistency.showWindowControl).toBe(false);
     expect(rec.proofs.map((p) => p.day)).toEqual([2, 1]);
@@ -306,15 +306,15 @@ describe("Profile → Challenges list", () => {
     expect(rec.runs.map((r) => r.name)).toEqual(["Read Something"]);
   });
 
-  it("row Y is homeDayTotal(duration_days, target_streak), not raw length", () => {
+  it("row Y is duration_days, not target_streak", () => {
     const rec = buildProfileRecord({
       ...fixtureNone(),
       targetStreak: 75,
       ranges: [readSomething("2026-09-05", 1)],
     });
     expect(rec.runs[0]?.length).toBe(1);
-    expect(rec.runs[0]?.dayTotal).toBe(75);
-    expect(rec.runs[0]?.dayLabel).toBe("Day 1 of 75");
+    expect(rec.runs[0]?.dayTotal).toBe(1);
+    expect(rec.runs[0]?.dayLabel).toBe("Day 1 of 1");
   });
 });
 
