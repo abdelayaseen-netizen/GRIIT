@@ -27,4 +27,10 @@ describe("tab bar scroll inset", () => {
       expect(src).toContain("tabBarContentPad");
     }
   });
+
+  it("fills canvas under the pill so scroll cards cannot peek through", () => {
+    const src = readFileSync(resolve(__dirname, "../components/ds/TabBar.tsx"), "utf8");
+    expect(src).toContain("styles.under");
+    expect(src).toContain("backgroundColor: DS_V3.color.canvas");
+  });
 });
