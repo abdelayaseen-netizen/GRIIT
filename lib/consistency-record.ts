@@ -12,11 +12,13 @@ export const DAYS_CAPTION = "days";
 export const CONSISTENCY_FOOTER =
   "A day is secured or it is not. A part-done day counts for nothing, and the count is here so the record is not shorter than the truth.";
 export const HELD_BY_LAST_STAND_LABEL = "Held by a Last Stand";
+export const HELD_BY_FREEZE_LABEL = "Held by a freeze";
 export const RECORD_DAY_SECURED = "Secured";
 export const RECORD_DAY_NOT_SECURED = "Not secured";
+export const RECORD_DAY_OPEN = "Open";
 export const NOTHING_WAS_CHECKED = "nothing was checked";
 
-export type RecordDayRowState = "secured" | "not_secured" | "last_stand" | "frozen";
+export type RecordDayRowState = "secured" | "not_secured" | "last_stand" | "frozen" | "open";
 
 export type RecordDayRow = {
   dateKey: string;
@@ -31,10 +33,15 @@ export function lastStandSplitLine(n: number): string {
   return `Held by a Last Stand — ${n} days`;
 }
 
-/** Frozen maps to Not secured — only three labels on the record. */
+export function freezeSplitLine(n: number): string {
+  return `Held by a freeze — ${n} days`;
+}
+
 export function recordDayLabel(state: string): string {
   if (state === "last_stand") return HELD_BY_LAST_STAND_LABEL;
+  if (state === "frozen") return HELD_BY_FREEZE_LABEL;
   if (state === "secured") return RECORD_DAY_SECURED;
+  if (state === "open") return RECORD_DAY_OPEN;
   return RECORD_DAY_NOT_SECURED;
 }
 

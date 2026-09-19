@@ -4,9 +4,12 @@ import { describe, expect, it } from "vitest";
 import {
   CONSISTENCY_FOOTER,
   CONSISTENCY_TITLE,
+  HELD_BY_FREEZE_LABEL,
   HELD_BY_LAST_STAND_LABEL,
   RECORD_DAY_NOT_SECURED,
+  RECORD_DAY_OPEN,
   RECORD_DAY_SECURED,
+  freezeSplitLine,
   challengeProofCaption,
   completionPct,
   daysValue,
@@ -53,20 +56,25 @@ describe("record day rows by state", () => {
     ...extra,
   });
 
-  it("labels and details the three states, mapping frozen to Not secured", () => {
+  it("labels freeze, Last Stand, open, and not secured", () => {
     expect(recordDayLabel("secured")).toBe(RECORD_DAY_SECURED);
     expect(recordDayLabel("not_secured")).toBe(RECORD_DAY_NOT_SECURED);
     expect(recordDayLabel("last_stand")).toBe(HELD_BY_LAST_STAND_LABEL);
-    expect(recordDayLabel("frozen")).toBe(RECORD_DAY_NOT_SECURED);
+    expect(recordDayLabel("frozen")).toBe(HELD_BY_FREEZE_LABEL);
+    expect(recordDayLabel("open")).toBe(RECORD_DAY_OPEN);
     expect(recordDayDetail(row("secured", { cameraProof: true, done: 6, missedTaskNames: [] }))).toBe(
       "6 of 6 · 1 camera proof",
     );
     expect(recordDayDetail(row("not_secured"))).toBe("4 of 6 · Run, Read");
+    expect(recordDayDetail(row("open"))).toBe("4 of 6 · Run, Read");
     expect(recordDayDetail(row("last_stand"))).toBe("4 of 6 · nothing was checked");
     expect(recordDayDetail(row("frozen"))).toBe("4 of 6 · Run, Read");
     expect(lastStandSplitLine(2)).toBe("Held by a Last Stand — 2 days");
+    expect(freezeSplitLine(1)).toBe("Held by a freeze — 1 days");
     const src = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
     expect(src).toContain("rec?.detail.lastStandDays ?? 0");
+    expect(src).toContain("rec?.detail.freezeDays ?? 0");
+    expect(src).toContain("freezeSplitLine");
     expect(src).not.toContain("lastStandDaysCount");
   });
 });

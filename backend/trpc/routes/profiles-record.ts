@@ -92,6 +92,7 @@ function emptyRecord(): ProfileRecord {
       cameraDays: 0,
       selfReportedDays: 0,
       lastStandDays: 0,
+      freezeDays: 0,
     } as ProfileRecord["detail"],
   };
 }
@@ -387,6 +388,7 @@ export const profilesRecordProcedures = {
       const days = gate.activity
         ? buildRecordDays({
             monthKey,
+            todayKey,
             securedDateKeys,
             lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
             frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
@@ -406,6 +408,9 @@ export const profilesRecordProcedures = {
               selfReportedDays: split.selfReportedDays,
               lastStandDays: lastStandDaysAllTime(
                 (standRes.data ?? []) as { date_key: string }[],
+              ),
+              freezeDays: lastStandDaysAllTime(
+                (freezeRes.data ?? []) as { date_key: string }[],
               ),
               byChallenge,
             } as ProfileRecord["detail"])

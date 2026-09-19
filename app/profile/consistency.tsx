@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Camera, Shield, ShieldOff } from "lucide-react-native";
+import { Camera, Shield, ShieldOff, Snowflake } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcQuery } from "@/lib/trpc";
@@ -31,6 +31,7 @@ import {
   challengeProofCaption,
   completionPct,
   daysValue,
+  freezeSplitLine,
   heroDayLine,
   lastStandSplitLine,
   ofElapsed,
@@ -72,6 +73,7 @@ export default function ConsistencyDetailScreen() {
   const challenges = rec?.detail.byChallenge ?? [];
   const days = rec?.days ?? [];
   const lastStandDays = rec?.detail.lastStandDays ?? 0;
+  const freezeDays = rec?.detail.freezeDays ?? 0;
 
   return (
     <ErrorBoundary>
@@ -134,6 +136,10 @@ export default function ConsistencyDetailScreen() {
             <View style={styles.splitRow}>
               <Shield size={16} color={DS_V3.color.textSecondary} strokeWidth={2} />
               <Text style={styles.splitLabel}>{lastStandSplitLine(lastStandDays)}</Text>
+            </View>
+            <View style={styles.splitRow}>
+              <Snowflake size={16} color={DS_V3.color.textSecondary} strokeWidth={2} />
+              <Text style={styles.splitLabel}>{freezeSplitLine(freezeDays)}</Text>
             </View>
           </Card>
 
