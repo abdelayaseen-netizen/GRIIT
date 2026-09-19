@@ -25,9 +25,11 @@ import {
 } from "@/lib/day-open";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
+import { closingProofEventId } from "@/lib/proof-moment";
+import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
-import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
+import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
 import {
   clearLocalTimerSession,
   loadLocalTimerSession,
@@ -37,6 +39,7 @@ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/li
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { formatGateTime } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -136,7 +139,9 @@ export function useTaskFlowV2() {
   const [distance, setDistance] = useState<number | null>(null);
   const [durationSec, setDurationSec] = useState<number | null>(null);
   const [workoutMin, setWorkoutMin] = useState<number | null>(null);
-  const [unit, setUnit] = useState<DistanceUnit>(parseDistanceUnit(profile?.distance_unit));
+  const [unit, setUnit] = useState<DistanceUnit>(() =>
+    runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
+  );
   const [kind, setKind] = useState("Lift");
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -151,6 +156,9 @@ export function useTaskFlowV2() {
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [windowForbidden, setWindowForbidden] = useState(false);
+  const [shareEventId, setShareEventId] = useState<string | null>(null);
+  const [shareFailed, setShareFailed] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const submitInFlight = useRef(false);
 
   const windowEval = evaluateScheduleWindow({
@@ -290,10 +298,18 @@ export function useTaskFlowV2() {
       if (!cancelled) setStep("verifying");
     }, VERIFYING_TAKEOVER_MS);
     try {
+      const proofUrl =
+        typeof payload.proofUrl === "string"
+          ? payload.proofUrl
+          : typeof payload.photo_url === "string"
+            ? payload.photo_url
+            : undefined;
+      const hasCameraProof = Boolean(proofUrl);
       const complete = await completeTask({
         activeChallengeId,
         taskId,
         ...payload,
+        ...(hasCameraProof ? { shareChoicePending: true } : {}),
       });
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;
@@ -373,6 +389,8 @@ export function useTaskFlowV2() {
             },
           ];
         }
+        setShareEventId(closingProofEventId(complete.dayProofs, proofUrl));
+        setShareFailed(false);
         setDayOpen(
           selectDayOpen({
             taskName,
@@ -417,7 +435,25 @@ export function useTaskFlowV2() {
         return;
       }
       if (securedNavOnce() === "replace") {
-        router.replace(taskSecuredHref(assembled, photoUri ?? undefined, taskName) as never);
+        const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+        setSecuredHandoff({
+          proofs: proofsFromComplete({
+            dayProofs: complete.dayProofs,
+            photoUri: photoUri ?? proofUrl,
+            challengeName: assembled.challengeName,
+            challengeDay: assembled.challengeDay,
+            challengeLength: assembled.challengeLength,
+            eventId,
+          }),
+          shareEventId: eventId,
+          closingHasPhoto: hasCameraProof,
+        });
+        router.replace(
+          taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
+            shareEventId: eventId,
+            closingHasPhoto: hasCameraProof,
+          }) as never,
+        );
       }
     } catch (err) {
       cancelled = true;
@@ -765,6 +801,7 @@ export function useTaskFlowV2() {
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
+    windowLabel: formatGateTime(gateTime) || undefined,
     workDone: workThenCamera(taskType, gates)
       ? workDoneLine(
           taskType === "timer"
@@ -832,6 +869,28 @@ export function useTaskFlowV2() {
     retryFailedSubmit,
     onDiscardPhoto,
     onKeepPhoto: () => setDiscardAsk(false),
+    shareFailed,
+    sharing,
+    onShareProof: () => {
+      if (sharing) return;
+      if (!shareEventId) {
+        setShareFailed(true);
+        return;
+      }
+      setSharing(true);
+      void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
+        .then(() => {
+          setSharing(false);
+          exit();
+        })
+        .catch(() => {
+          setSharing(false);
+          setShareFailed(true);
+        });
+    },
+    onKeepProof: () => {
+      exit();
+    },
     onShare: (uri: string) => {
       if (!result) return;
       void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);

@@ -127,6 +127,9 @@ describe("splitSecuredProof", () => {
         gates: ["camera"],
         eventId: "ev-1",
         durationDays: 75,
+        capturedAt: null,
+        taskName: "Task",
+        gateTime: { mode: null, start: null, end: null },
       },
     ]);
   });

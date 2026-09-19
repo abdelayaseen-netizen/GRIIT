@@ -5,6 +5,7 @@ import { resetAnalytics } from "@/lib/analytics";
 import { cancelAllNotifications } from "@/lib/notifications";
 import { clearReconcilePersist } from "@/lib/reconcile-persist";
 import { missAckKeysToClear } from "@/lib/morning-after";
+import { filterTodaySectionCollapseKeys } from "@/lib/today-section-collapse";
 
 /** Run after `supabase.auth.signOut()` (or with session cleared). Clears React Query, Sentry user, PostHog session, and scheduled notifications. */
 export async function runClientSignOutCleanup(userId?: string | null): Promise<void> {
@@ -27,6 +28,12 @@ export async function runClientSignOutCleanup(userId?: string | null): Promise<v
     await Promise.all(missAckKeysToClear(userId).map((key) => AsyncStorage.removeItem(key)));
   } catch (error) {
     captureError(error, "SignOutCleanup:clearMissAck");
+  }
+  try {
+    const collapseKeys = filterTodaySectionCollapseKeys(await AsyncStorage.getAllKeys(), userId);
+    await Promise.all(collapseKeys.map((key) => AsyncStorage.removeItem(key)));
+  } catch (error) {
+    captureError(error, "SignOutCleanup:clearTodaySectionCollapse");
   }
   try {
     clearSentryUser();

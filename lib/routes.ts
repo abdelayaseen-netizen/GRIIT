@@ -45,6 +45,8 @@ export const ROUTES = {
     `/follow-list?userId=${encodeURIComponent(userId)}&mode=${mode}&username=${encodeURIComponent(username)}` as const,
   /** Feed post / comment thread */
   POST_ID: (id: string) => `/post/${id}` as const,
+  /** Own proof full view — Share flips the same activity row. */
+  PROOF: (id: string) => `/proof/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,
   TASK_COMPLETE: "/task/complete",
   /** Secured / self-reported moment. Push only after secureDay refetch. */

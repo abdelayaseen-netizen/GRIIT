@@ -30,6 +30,7 @@ describe("selectHomeProofCard", () => {
           id: "i1",
           name: "Outdoor workout",
           challengeName: "Iron man",
+          challengeId: "ch-iron",
           activeChallengeId: "ac-iron",
           durationDays: 14,
         }),
@@ -63,6 +64,7 @@ describe("selectHomeProofCard", () => {
     expect(card.sections).toHaveLength(2);
     expect(card.sections[0]).toMatchObject({
       challenge: "Iron man",
+      challengeId: "ch-iron",
       doneCount: 0,
       totalCount: 2,
     });
@@ -115,7 +117,7 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[0]?.rows).toHaveLength(4);
     expect(card.sections[1]?.rows.map((r) => r.name)).toEqual(["Write 3 gratitudes"]);
     expect(card.sections[2]?.rows.map((r) => r.name)).toEqual(["Log your steps"]);
-    expect(homeProofDayLine(card.sections[0]!.day, card.sections[0]!.dayTotal)).toBe("Day 1 of 1");
+    expect(homeProofDayLine(card.sections[0]!.day, card.sections[0]!.dayTotal)).toBe("Day 1");
     expect(HOME_PROOF_HEADING).toBe("Today");
   });
 
@@ -160,17 +162,17 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[2]?.day).not.toBe(0);
     expect(card.sections[2]?.day).not.toBe(2);
     expect(card.sections[2]?.challenge).toBe("Write");
-    expect(card.sections[2]?.dayTotal).toBe(1);
+    expect(card.sections[2]?.dayTotal).toBeNull();
   });
 
-  it("dayTotal uses target_streak when longer than duration", () => {
-    const card = selectHomeProofCard({
+  it("dayTotal is duration_days; missing duration is Day n with no of", () => {
+    const withDuration = selectHomeProofCard({
       tasks: [
         task({
           name: "Journal",
           challengeName: "Write",
-          currentDay: 1,
-          durationDays: 30,
+          currentDay: 4,
+          durationDays: 1,
         }),
       ],
       tasksDoneToday: 0,
@@ -179,7 +181,19 @@ describe("selectHomeProofCard", () => {
       targetStreak: 75,
       securedToday: false,
     });
-    expect(card.sections[0]?.dayTotal).toBe(75);
+    expect(withDuration.sections[0]?.dayTotal).toBe(1);
+    expect(homeProofDayLine(4, withDuration.sections[0]?.dayTotal)).toBe("Day 4 of 1");
+
+    const missing = selectHomeProofCard({
+      tasks: [task({ name: "Journal", challengeName: "Write", currentDay: 4 })],
+      tasksDoneToday: 0,
+      totalTasksToday: 1,
+      firstProofEver: true,
+      targetStreak: 75,
+      securedToday: false,
+    });
+    expect(missing.sections[0]?.dayTotal).toBeNull();
+    expect(homeProofDayLine(4, missing.sections[0]?.dayTotal)).toBe("Day 4");
   });
 
   it("checkin done but securedDateKeys lacks today → posted is false", () => {
@@ -318,5 +332,16 @@ describe("Home Today card", () => {
     const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     expect(src).not.toContain("HOME_PROOF_CTA_TODAY");
     expect(src).not.toContain("section.showCta");
+  });
+
+  it("name tap is separate from the 44pt chevron; the n/n chip is not a press target", () => {
+    const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    expect(src).toContain("onPressChallenge?.(section.challengeId!)");
+    expect(src).toContain("chevronHit");
+    expect(src).toContain("width: DS_V3.size.tap");
+    expect(src).toContain("ChevronDown");
+    expect(src).toContain("ChevronUp");
+    const chipBlock = src.slice(src.indexOf("countChip"), src.indexOf("countTxt"));
+    expect(chipBlock).not.toContain("Pressable");
   });
 });

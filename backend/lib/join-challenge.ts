@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
+import { applyEnrollmentWindow } from "./enrollment-window";
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
 
@@ -17,13 +18,13 @@ export async function joinChallengeDirect(
   userId: string,
   challengeId: string
 ): Promise<JoinChallengeResult> {
-  const { data: existing } = await supabase
-    .from("active_challenges")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("challenge_id", challengeId)
-    .eq("status", "active")
-    .maybeSingle();
+  const { data: existing } = await applyEnrollmentWindow(
+    supabase
+      .from("active_challenges")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("challenge_id", challengeId)
+  ).maybeSingle();
 
   if (existing) {
     throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });

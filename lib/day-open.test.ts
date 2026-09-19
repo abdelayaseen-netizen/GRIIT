@@ -62,6 +62,9 @@ describe("selectDayOpen", () => {
     expect(model.rows.map((r) => r.name)).toEqual(["Water"]);
     expect(model.alsoToday).toEqual([]);
     expect(model.nextId).toBe("6");
+    expect(model.remainingToday).toBe(1);
+    expect(model.challengeDoneToday).toBe(false);
+    expect(model.challengeName).toBe("Morning");
     expect(model).not.toHaveProperty("streak");
   });
 
@@ -99,6 +102,8 @@ describe("selectDayOpen", () => {
     ];
     const model = selectDayOpen({ taskName: "Workout", challengeId: "iron", tasks });
     expect(model.leftLine).toBe("2 left to secure today.");
+    expect(model.remainingToday).toBe(2);
+    expect(model.challengeDoneToday).toBe(false);
     expect(model.rows.map((r) => r.name)).toEqual(["Read ten pages"]);
     expect(model.alsoToday).toEqual([
       { id: "grat", line: "Daily Gratitude · 1 left", nextId: "g1" },

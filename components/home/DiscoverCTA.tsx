@@ -1,71 +1,36 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Search, ChevronRight } from "lucide-react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { Search } from "lucide-react-native";
+import { DS_V3 } from "@/lib/design-system";
+import ListRow from "@/components/ds/ListRow";
+import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
+import { DISCOVER_CTA_TITLE, discoverCtaSubtitle } from "@/lib/discover-cta";
+
+const ICON = DS_V3.space.lg + DS_V3.space.sm;
 
 type Props = {
   onPress: () => void;
-  /** `feed` = bottom of home feed (tighter margins, larger icon per feed redesign). */
+  running?: number;
+  isPro?: boolean;
+  /** unused — kept so feed callers do not break */
   variant?: "home" | "feed";
 };
 
-export default function DiscoverCTA({ onPress, variant = "home" }: Props) {
-  const isFeed = variant === "feed";
+export default function DiscoverCTA({
+  onPress,
+  running = 0,
+  isPro = false,
+}: Props) {
   return (
-    <TouchableOpacity
-      style={[s.card, isFeed && s.cardFeed]}
-      activeOpacity={0.86}
+    <ListRow
+      icon={<Search size={ICON} color={DS_V3.color.textSecondary} />}
+      title={DISCOVER_CTA_TITLE}
+      subtitle={discoverCtaSubtitle({
+        running,
+        isPro,
+        limit: FREE_ACTIVE_CHALLENGES_LIMIT,
+      })}
+      divider={false}
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel="Discover your next challenge — open Discover"
-    >
-      <View style={[s.icon, isFeed && s.iconFeed]}>
-        <Search size={isFeed ? 20 : 18} color={DS_COLORS.DISCOVER_CORAL} />
-      </View>
-      <View style={s.mid}>
-        <Text style={[s.title, isFeed && s.titleFeed]}>Ready for more?</Text>
-        <Text style={[s.sub, isFeed && s.subFeed]}>Discover your next challenge</Text>
-      </View>
-      <ChevronRight size={isFeed ? 16 : 14} color={DS_COLORS.FEED_SHARE_CHEVRON} />
-    </TouchableOpacity>
+    />
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    marginTop: 12,
-    marginHorizontal: 24,
-    borderRadius: DS_RADIUS.LG,
-    backgroundColor: DS_COLORS.DISCOVER_HERO_DARK_BG,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  cardFeed: {
-    marginTop: 4,
-    marginHorizontal: 10,
-    marginBottom: 0,
-    borderRadius: DS_RADIUS.XL,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    borderRadius: DS_RADIUS.MD,
-    backgroundColor: DS_COLORS.FEED_CTA_ICON_BG,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconFeed: {
-    width: 42,
-    height: 42,
-    borderRadius: DS_RADIUS.MD,
-  },
-  mid: { flex: 1 },
-  title: { fontSize: 13, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
-  titleFeed: { fontSize: 14, fontWeight: "500", color: DS_COLORS.FEED_TAB_ACTIVE_TEXT },
-  sub: { marginTop: 2, fontSize: 11, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },
-  subFeed: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED },
-});

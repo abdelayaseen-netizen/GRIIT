@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
+import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
 import PushedHeader from "@/components/ds/PushedHeader";
 import TextField from "@/components/ds/TextField";
 import { parseCountInput, sanitizeCountInput } from "@/lib/keypad-masks";
@@ -107,8 +108,10 @@ export function CountStep({
             >
               <Text style={styles.addOneText}>{COUNT_ADD}</Text>
             </Pressable>
-            <Button label={COUNT_REMOVE} variant="tertiary" flush onPress={onRemoveOne} />
-            <Button label={COUNT_TYPE} variant="tertiary" flush onPress={onOpenKeypad} />
+            <ControlPillRow>
+              <ControlPill label={COUNT_REMOVE} icon="minus" onPress={onRemoveOne} />
+              <ControlPill label={COUNT_TYPE} icon="keyboard" onPress={onOpenKeypad} />
+            </ControlPillRow>
           </>
         )}
       </View>

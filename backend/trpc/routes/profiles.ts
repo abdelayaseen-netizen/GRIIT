@@ -20,6 +20,7 @@ import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
 import { ensureProfile } from "../../lib/ensure-profile";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -146,11 +147,12 @@ export const profilesRouter = createTRPCRouter({
       let doneChal: number | null = 0;
       try {
         const [activeRes, doneRes] = await Promise.all([
-          server
-            .from("active_challenges")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", p.user_id)
-            .eq("status", "active"),
+          applyEnrollmentWindow(
+            server
+              .from("active_challenges")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", p.user_id)
+          ),
           server
             .from("active_challenges")
             .select("id", { count: "exact", head: true })

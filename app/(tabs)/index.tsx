@@ -9,7 +9,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -23,15 +23,16 @@ import { selectHomeProofCard } from "@/lib/home-proof-card";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { weekStripDayStates } from "@/lib/week-strip-days";
+import { buildWeekStripDays } from "@/lib/week-strip-days";
 import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
-import { homeStreakLine, resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
+import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
-import { trpcMutate } from "@/lib/trpc";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { consistencyFromRecord, consistencyLine } from "@/lib/consistency";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -55,6 +56,11 @@ import {
   morningAfterVariant,
   morningAfterVisible,
 } from "@/lib/morning-after";
+import {
+  parseTodaySectionChoice,
+  serializeTodaySectionChoice,
+  todaySectionCollapseKey,
+} from "@/lib/today-section-collapse";
 import type { StatsFromApi } from "@/types";
 
 type TaskRow = {
@@ -101,12 +107,27 @@ export default function HomeScreen() {
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
+  const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
   const initFeedToggle = useFeedToggle((s) => s.initIfFirstRun);
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
+  const recordQuery = useQuery({
+    queryKey: ["profiles", "getRecord", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.profiles.getRecord) as Promise<{
+        consistency: {
+          verifiedClosed: number;
+          closedDueDays: number;
+          dueToday: boolean;
+          dueDayKeys: string[];
+        };
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
   const followCounts = bootstrap.data?.followCounts ?? null;
@@ -125,6 +146,7 @@ export default function HomeScreen() {
     getDeviceIanaTimeZone(),
   );
   const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
+  const todayKey = useMemo(() => getTodayDateKey(homeTimeZone), [homeTimeZone]);
 
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
@@ -328,13 +350,13 @@ export default function HomeScreen() {
 
   const weekStates = useMemo(() => {
     const statsRow = resolvedStats as StatsFromApi | null;
-    return weekStripDayStates(weekDateKeys, {
+    return buildWeekStripDays(weekDateKeys, {
       securedDateKeys,
       frozenDateKeys: statsRow?.frozenDateKeys ?? [],
       lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
       todayKey: weekDateKeys[todayWeekIndex] ?? "",
       todaySecured,
-    });
+    }).map((d) => d.state);
   }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
   const useFreeze = useMutation({
@@ -468,6 +490,48 @@ export default function HomeScreen() {
     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured],
   );
 
+  const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);
+
+  React.useEffect(() => {
+    if (!user?.id) {
+      setSectionChoices({});
+      return;
+    }
+    const ids = sectionIds ? sectionIds.split("|").filter(Boolean) : [];
+    void (async () => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          const raw = await AsyncStorage.getItem(todaySectionCollapseKey(user.id, id, todayKey));
+          return [id, parseTodaySectionChoice(raw)] as const;
+        }),
+      );
+      const next: Record<string, boolean> = {};
+      for (const [id, stored] of entries) {
+        if (stored === true || stored === false) next[id] = stored;
+      }
+      setSectionChoices(next);
+    })();
+  }, [user?.id, todayKey, sectionIds]);
+
+  const onToggleSection = useCallback(
+    (sectionId: string, expanded: boolean) => {
+      setSectionChoices((prev) => ({ ...prev, [sectionId]: expanded }));
+      if (!user?.id) return;
+      void AsyncStorage.setItem(
+        todaySectionCollapseKey(user.id, sectionId, todayKey),
+        serializeTodaySectionChoice(expanded),
+      );
+    },
+    [user?.id, todayKey],
+  );
+
+  const onPressChallenge = useCallback(
+    (challengeId: string) => {
+      router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+    },
+    [router],
+  );
+
   // ────────────── render ──────────────
 
   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
@@ -511,7 +575,7 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={homeStreakLine(streak, todaySecured, resolvedStats?.totalDaysSecured ?? 0)}
+              streakLine={consistencyLine(consistencyFromRecord(recordQuery.data?.consistency))}
               morningAfter={morningAfter}
               proof={proof}
               weekStates={weekStates}
@@ -526,6 +590,9 @@ export default function HomeScreen() {
                 if (!next || next.windowState === "closed") return;
                 onPressTask(next);
               }}
+              onPressChallenge={onPressChallenge}
+              sectionChoices={sectionChoices}
+              onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
               badgeName={nextBadge.name}
               badgePct={Math.round(nextBadge.progress * 100)}

@@ -3,14 +3,13 @@ import { feedDisplayTotal } from "@/lib/feed-copy";
 
 /**
  * One source per context:
- * Home + profile rows → homeDayTotal(duration_days, target_streak).
+ * Home + profile rows → duration_days (homeDayTotal).
  * Feed → duration_days (totalDays); own posts also apply target_streak.
  */
 export function homeOrProfileDayTotal(
-  durationDays: number,
-  targetStreak: number | null | undefined,
-): number {
-  return homeDayTotal(durationDays, targetStreak);
+  durationDays: number | null | undefined,
+): number | null {
+  return homeDayTotal(durationDays);
 }
 
 export function feedDayTotal(

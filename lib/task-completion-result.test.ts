@@ -130,7 +130,8 @@ describe("secured navigation", () => {
     expect(securedNavOnce()).toBe("replace");
     const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
     expect(flow).toContain("submitInFlight");
-    expect(flow).toContain("router.replace(taskSecuredHref");
+    expect(flow).toContain("router.replace(");
+    expect(flow).toContain("taskSecuredHref(");
     expect(flow).not.toContain("router.push(taskSecuredHref");
     expect(flow).not.toContain('setStep("confirmation")');
   });

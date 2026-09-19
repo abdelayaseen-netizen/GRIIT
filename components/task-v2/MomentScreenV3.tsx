@@ -10,6 +10,7 @@ import { Camera, ShieldOff } from "lucide-react-native";
 import type ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { buildWeekStripDays } from "@/lib/week-strip-days";
 import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
@@ -22,7 +23,6 @@ import {
   SECURED_PILL_CAMERA,
   SECURED_PILL_SELF,
   SECURED_STREAK_LABEL,
-  SECURED_TODAY_PROOF,
 } from "@/lib/simple-log";
 import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
@@ -58,21 +58,28 @@ export function weekFromToday(): { days: WeekStripDay[]; todayIndex: number } {
   };
 }
 
-/** Mon–Sun strip from server date keys. Today is filled only when the key is present. */
+/** Mon–Sun strip from the same keys Home uses (secured / frozen / last stand). */
 export function weekFromSecuredKeys(
   keys: string[],
-  timezone?: string | null
+  timezone?: string | null,
+  marks?: {
+    frozenDateKeys?: readonly string[];
+    lastStandDateKeys?: readonly string[];
+    todaySecured?: boolean;
+  },
 ): { days: WeekStripDay[]; todayIndex: number } {
-  const letters = ["M", "T", "W", "T", "F", "S", "S"];
   const weekKeys = getCurrentWeekDateKeys(timezone);
   const todayKey = getTodayDateKey(timezone);
   const idx = weekKeys.indexOf(todayKey);
   const fallback = weekFromToday();
   return {
-    days: letters.map((letter, i) => ({
-      letter,
-      filled: keys.includes(weekKeys[i] ?? ""),
-    })),
+    days: buildWeekStripDays(weekKeys, {
+      securedDateKeys: keys,
+      frozenDateKeys: marks?.frozenDateKeys ?? [],
+      lastStandDateKeys: marks?.lastStandDateKeys ?? [],
+      todayKey,
+      todaySecured: marks?.todaySecured === true,
+    }),
     todayIndex: idx >= 0 ? idx : fallback.todayIndex,
   };
 }
@@ -153,7 +160,7 @@ export default function MomentScreenV3({
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal, camera });
   const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
-  const shareLabel = variant === "complete" ? "Complete" : "Verified";
+  const shareLabel = variant === "complete" ? "Complete" : camera ? "Verified" : undefined;
   const hasPhoto = proofSource != null || Boolean(proofUri);
   const keepCount = formatSecuredKeepCount(moreDaysThisWeek(weekToday));
 
@@ -194,16 +201,18 @@ export default function MomentScreenV3({
         style={styles.offscreen}
         accessibilityElementsHidden
       >
-        <ShareCardV3
-          ref={shotRef}
-          size="story"
-          streak={variant === "complete" ? goal : streak}
-          copy={shareCopy}
-          proofUri={proofUri}
-          proofSource={proofSource}
-          proofs={variant === "complete" ? proofs : undefined}
-          label={shareLabel}
-        />
+        {shareLabel ? (
+          <ShareCardV3
+            ref={shotRef}
+            size="story"
+            streak={variant === "complete" ? goal : streak}
+            copy={shareCopy}
+            proofUri={proofUri}
+            proofSource={proofSource}
+            proofs={variant === "complete" ? proofs : undefined}
+            label={shareLabel}
+          />
+        ) : null}
       </View>
       {counts ? (
         <View style={[styles.block, { paddingTop: insets.top + DS_V3.space.md }]}>
@@ -228,15 +237,14 @@ export default function MomentScreenV3({
             }
           />
           <WeekStrip days={weekDays} todayIndex={weekToday} fillToday={fillToday} />
-          {camera ? (
+          {camera && hasPhoto ? (
             <View style={styles.photoFrame}>
               <ProofImage
                 uri={proofImageUrlForCheckIn({ photo_url: proofUri })}
                 source={proofSource}
                 size="feed"
-                title={hasPhoto ? undefined : SECURED_TODAY_PROOF}
-                stamp={stampOn && hasPhoto ? "Verified" : false}
-                scrim={stampOn && hasPhoto}
+                stamp={stampOn ? "Verified" : false}
+                scrim={stampOn}
               />
             </View>
           ) : (

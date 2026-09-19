@@ -1,5 +1,5 @@
 import { displayDay } from "@/lib/challenge-day";
-import { homeDayTotal } from "@/lib/home-day-total";
+import { homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { closedWindowCaption, gateLine } from "@/lib/task-ui";
@@ -9,14 +9,15 @@ export const HOME_PROOF_CTA_FIRST = "Post your first proof";
 export const HOME_PROOF_CTA_DONE = "Posted today";
 export const HOME_PROOF_HEADING = "Today";
 
-export function homeProofDayLine(day: number, dayTotal: number): string {
-  return `Day ${day} of ${dayTotal}`;
+export function homeProofDayLine(day: number, dayTotal: number | null | undefined): string {
+  return homeDayLine(day, dayTotal);
 }
 
 export type HomeProofTask = {
   id?: string;
   name: string;
   challengeName: string;
+  challengeId?: string;
   activeChallengeId?: string;
   currentDay: number;
   durationDays?: number;
@@ -50,8 +51,9 @@ export function homeProofTitleMuted(row: Pick<HomeProofRow, "done" | "closed">):
 export type HomeProofSection = {
   id: string;
   challenge: string;
+  challengeId: string | null;
   day: number;
-  dayTotal: number;
+  dayTotal: number | null;
   doneCount: number;
   totalCount: number;
   rows: HomeProofRow[];
@@ -107,16 +109,15 @@ function sectionKey(task: HomeProofTask): string {
 function sectionFromTasks(
   id: string,
   tasks: HomeProofTask[],
-  targetStreak: number | null | undefined,
   _securedToday: boolean,
 ): HomeProofSection {
   const first = tasks[0]!;
-  const durationDays = first.durationDays ?? first.currentDay ?? 1;
   return {
     id,
     challenge: first.challengeName,
+    challengeId: first.challengeId?.trim() || null,
     day: displayDay(first.currentDay, first.challengeSecuredToday),
-    dayTotal: homeDayTotal(durationDays, targetStreak),
+    dayTotal: homeDayTotal(first.durationDays),
     doneCount: tasks.filter((t) => t.done).length,
     totalCount: tasks.length,
     rows: tasks.map(homeProofRow),
@@ -145,7 +146,7 @@ export function selectHomeProofCard(input: {
     }
   }
   const sections = order.map((id) =>
-    sectionFromTasks(id, groups.get(id)!, input.targetStreak, input.securedToday),
+    sectionFromTasks(id, groups.get(id)!, input.securedToday),
   );
   return {
     posted: input.securedToday,

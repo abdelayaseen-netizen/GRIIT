@@ -276,7 +276,7 @@ export function ProfileV3({
           )
         ) : null}
 
-        {tab === "Proofs" ? (
+        {tab === "Proofs" && !proofsInParent ? (
           proofs.length === 0 ? (
             <EmptyState
               heading="No proofs yet"
@@ -284,7 +284,7 @@ export function ProfileV3({
               actionLabel="Find a challenge"
               onAction={onDiscover}
             />
-          ) : proofsInParent ? null : (
+          ) : (
             <View style={styles.proofGrid}>
               {proofs.map((p) => (
                 <Pressable

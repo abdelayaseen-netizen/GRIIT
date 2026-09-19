@@ -43,7 +43,9 @@ export function feedDisplayTotal(
   currentDay: number,
   targetStreak?: number | null,
 ): number {
-  return Math.max(currentDay, homeDayTotal(Math.max(1, totalDays), targetStreak));
+  const duration = homeDayTotal(totalDays) ?? Math.max(1, totalDays);
+  const y = targetStreak != null && targetStreak > duration ? targetStreak : duration;
+  return Math.max(currentDay, y);
 }
 
 export function feedFinishedCopy(post: {

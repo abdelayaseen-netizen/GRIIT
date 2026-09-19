@@ -22,6 +22,8 @@ export function weekStripDayState(input: {
   return "missed";
 }
 
+const WEEK_STRIP_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
 export function weekStripDayStates(
   weekDateKeys: readonly string[],
   input: {
@@ -42,6 +44,25 @@ export function weekStripDayStates(
       lastStand: stood.has(key),
     }),
   );
+}
+
+/** Home, Secured, and any week strip: one mark list from the same keys. */
+export function buildWeekStripDays(
+  weekDateKeys: readonly string[],
+  input: {
+    securedDateKeys: readonly string[];
+    frozenDateKeys?: readonly string[];
+    lastStandDateKeys?: readonly string[];
+    todayKey: string;
+    todaySecured: boolean;
+  },
+): { letter: string; filled: boolean; state: WeekStripDayState }[] {
+  const states = weekStripDayStates(weekDateKeys, input);
+  return WEEK_STRIP_LETTERS.map((letter, i) => ({
+    letter,
+    filled: states[i] === "secured",
+    state: states[i] ?? "missed",
+  }));
 }
 
 export function weekStripAccessibilityLabel(

@@ -3,8 +3,8 @@
  * No PushedHeader. No display face. No streak number.
  */
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ChevronRight, CircleDashed } from "lucide-react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ArrowUpRight, ChevronRight, CircleDashed } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -18,19 +18,35 @@ import {
   type DayOpenModel,
 } from "@/lib/day-open";
 import { homeProofTitleMuted, type HomeProofRow } from "@/lib/home-proof-card";
+import {
+  PROOF_KEEP,
+  PROOF_SHARE,
+  PROOF_SHARE_FAILED,
+  proofMomentStatus,
+} from "@/lib/proof-moment";
 
 const RING = DS_V3.space.gutter;
 
 export default function ChallengeDoneScreen({
   model,
+  proofUri,
+  shareFailed,
+  sharing,
   onOpenTask,
   onNext,
   onDone,
+  onShare,
+  onKeep,
 }: {
   model: DayOpenModel;
+  proofUri?: string | null;
+  shareFailed?: boolean;
+  sharing?: boolean;
   onOpenTask: (id: string) => void;
   onNext: () => void;
   onDone: () => void;
+  onShare?: () => void;
+  onKeep?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const renderRow = (row: HomeProofRow) => {
@@ -81,6 +97,14 @@ export default function ChallengeDoneScreen({
     </Pressable>
   );
 
+  const hasPhoto = Boolean(proofUri);
+  const status = proofMomentStatus({
+    hasPhoto,
+    remainingToday: model.remainingToday,
+    challengeDoneToday: model.challengeDoneToday,
+    challengeName: model.challengeName,
+  });
+
   return (
     <View style={styles.root}>
       <ScrollView
@@ -89,21 +113,48 @@ export default function ChallengeDoneScreen({
           { paddingTop: insets.top + DS_V3.size.tap, paddingBottom: insets.bottom + DS_V3.space.section * 4 },
         ]}
       >
+        {hasPhoto && proofUri ? (
+          <Image
+            source={{ uri: proofUri }}
+            style={styles.proof}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
+        ) : null}
         <Text style={styles.title}>{model.title}</Text>
-        <Text style={styles.left}>{model.leftLine}</Text>
-        <Text style={styles.label}>{model.contextLine}</Text>
-        {model.rows.map(renderRow)}
-        {model.alsoToday.length > 0 ? (
+        <Text style={styles.left}>{hasPhoto ? status : model.leftLine}</Text>
+        {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
+        {!hasPhoto ? (
           <>
-            <Divider style={styles.alsoDivider} />
-            <Text style={styles.label}>{DAY_OPEN_ALSO}</Text>
-            {model.alsoToday.map(renderAlso)}
+            <Text style={styles.label}>{model.contextLine}</Text>
+            {model.rows.map(renderRow)}
+            {model.alsoToday.length > 0 ? (
+              <>
+                <Divider style={styles.alsoDivider} />
+                <Text style={styles.label}>{DAY_OPEN_ALSO}</Text>
+                {model.alsoToday.map(renderAlso)}
+              </>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
       <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
-        <Button label={DAY_OPEN_NEXT} onPress={onNext} />
-        <Button label={DAY_OPEN_DONE} variant="tertiary" ink onPress={onDone} />
+        {hasPhoto ? (
+          <>
+            <Button
+              label={PROOF_SHARE}
+              submitting={sharing}
+              icon={<ArrowUpRight size={DS_V3.space.gutter} color={DS_V3.color.onBrand} />}
+              onPress={onShare}
+            />
+            <Button label={PROOF_KEEP} variant="secondary" onPress={onKeep} />
+          </>
+        ) : (
+          <>
+            <Button label={DAY_OPEN_NEXT} onPress={onNext} />
+            <Button label={DAY_OPEN_DONE} variant="tertiary" ink onPress={onDone} />
+          </>
+        )}
       </View>
     </View>
   );
@@ -118,11 +169,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     gap: DS_V3.space.sm,
   },
+  proof: {
+    width: "100%",
+    height: 300,
+    borderRadius: DS_V3.radius.card,
+    borderWidth: DS_V3.space.xs / 4,
+    borderColor: DS_V3.color.border,
+  },
   title: {
     fontSize: DS_V3.type.title.fontSize,
     lineHeight: DS_V3.type.title.lineHeight,
     fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  fail: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   left: {
     fontSize: DS_V3.type.secondary.fontSize,

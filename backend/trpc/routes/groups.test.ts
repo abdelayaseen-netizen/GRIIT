@@ -208,6 +208,7 @@ function createMockSupabase(opts: MockOpts = {}) {
       limit: () => chain,
       neq: () => chain,
       gte: () => chain,
+      lte: () => chain,
       maybeSingle: () => Promise.resolve(resolveSingle()),
       single: () => Promise.resolve(resolveSingle()),
       insert: (row: unknown) => {

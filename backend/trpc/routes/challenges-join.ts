@@ -15,6 +15,7 @@ import {
 } from "../../../lib/free-challenge-limit";
 import { ensureProfile } from "../../lib/ensure-profile";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase
@@ -40,11 +41,12 @@ export const challengesJoinProcedures = {
         (profile as { subscription_status?: string } | null)?.subscription_status === "premium" ||
         (profile as { subscription_status?: string } | null)?.subscription_status === "trial";
       if (!isPremium) {
-        const { count: activeCount } = await ctx.supabase
-          .from("active_challenges")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", ctx.userId)
-          .eq("status", "active");
+        const { count: activeCount } = await applyEnrollmentWindow(
+          ctx.supabase
+            .from("active_challenges")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", ctx.userId)
+        );
         if ((activeCount ?? 0) >= FREE_ACTIVE_CHALLENGES_LIMIT) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -52,12 +54,13 @@ export const challengesJoinProcedures = {
           });
         }
       }
-      const { data: existingActive } = await ctx.supabase
-        .from("active_challenges")
-        .select("id")
-        .eq("user_id", ctx.userId)
-        .eq("challenge_id", input.challengeId)
-        .eq("status", "active")
+      const { data: existingActive } = await applyEnrollmentWindow(
+        ctx.supabase
+          .from("active_challenges")
+          .select("id")
+          .eq("user_id", ctx.userId)
+          .eq("challenge_id", input.challengeId)
+      )
         .limit(1)
         .maybeSingle();
 

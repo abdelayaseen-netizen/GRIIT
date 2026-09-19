@@ -47,6 +47,9 @@ export type RecordProofTile = {
   gates: TaskGate[];
   eventId: string | null;
   durationDays: number;
+  capturedAt: string | null;
+  taskName: string;
+  gateTime: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
 };
 
 export function checkInHasCameraProof(row: ProofCheckIn): boolean {
@@ -181,8 +184,20 @@ export function cameraProofTiles(args: {
       gates: task ? gatesFor(task) : [],
       eventId: event?.id ?? null,
       durationDays: challengeId ? (durationByChallenge.get(challengeId) ?? 30) : 30,
+      capturedAt: row.created_at ?? event?.created_at ?? null,
+      taskName: (task?.title ?? "").trim() || "Task",
+      gateTime: task
+        ? {
+            mode: (task.gate_time_mode as "by" | "between" | null) ?? null,
+            start: task.gate_time_start ?? null,
+            end: task.gate_time_end ?? null,
+          }
+        : null,
     });
   }
-  tiles.sort((a, b) => (a.dateKey < b.dateKey ? 1 : a.dateKey > b.dateKey ? -1 : 0));
+  tiles.sort((a, b) => {
+    if (a.dateKey !== b.dateKey) return a.dateKey < b.dateKey ? 1 : -1;
+    return (b.capturedAt ?? "") > (a.capturedAt ?? "") ? 1 : -1;
+  });
   return tiles;
 }

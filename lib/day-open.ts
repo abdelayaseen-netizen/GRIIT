@@ -23,7 +23,7 @@ export function dayOpenLeftLine(n: number): string {
   return `${Math.max(0, Math.floor(n))} left to secure today.`;
 }
 
-export function dayOpenContext(challenge: string, day: number, dayTotal: number): string {
+export function dayOpenContext(challenge: string, day: number, dayTotal: number | null | undefined): string {
   return `${challenge} · ${homeProofDayLine(day, dayTotal)}`;
 }
 
@@ -49,6 +49,9 @@ export type DayOpenModel = {
   title: string;
   leftLine: string;
   contextLine: string;
+  challengeName: string;
+  remainingToday: number;
+  challengeDoneToday: boolean;
   rows: HomeProofRow[];
   alsoToday: DayOpenAlso[];
   nextId: string | null;
@@ -101,7 +104,10 @@ export function selectDayOpen(input: {
   return {
     title: dayOpenTitle(input.taskName),
     leftLine: dayOpenLeftLine(left),
-    contextLine: dayOpenContext(mine?.challenge ?? "", mine?.day ?? 1, mine?.dayTotal ?? 1),
+    contextLine: dayOpenContext(mine?.challenge ?? "", mine?.day ?? 1, mine?.dayTotal),
+    challengeName: mine?.challenge ?? "",
+    remainingToday: left,
+    challengeDoneToday: rows.length === 0,
     rows,
     alsoToday,
     nextId,

@@ -8,7 +8,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Pressable,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,11 +19,17 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
+import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { profileConsistencyFromBootstrap } from "@/lib/profile-consistency";
+import {
+  consistencyContext,
+  consistencyFromRecord,
+  consistencyHeadline,
+  consistencyLine,
+} from "@/lib/consistency";
+import { proofsDateLabel } from "@/lib/proofs-grid";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -39,9 +44,8 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { proofTilePostId } from "@/lib/profile-v2-proof-photo";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import ProofImage from "@/components/ds/ProofImage";
+import ProofsGrid from "@/components/profile/ProofsGrid";
+import { itemsFromRecordProofs, setOpenProof } from "@/lib/proofs-grid";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
@@ -76,16 +80,6 @@ export default function ProfileScreen() {
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
 
-  const postsQuery = useQuery({
-    queryKey: ["feed", "getUserPosts", user?.id ?? ""],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 50 }) as Promise<{
-        posts: LiveFeedPost[];
-      }>,
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
     queryFn: () =>
@@ -106,6 +100,8 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
+  const proofItems = itemsFromRecordProofs(proofs);
+  const selfReportedDays = record?.detail.selfReportedDays ?? 0;
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -185,8 +181,6 @@ export default function ProfileScreen() {
     bootstrapFollows?.following ??
     (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
   const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
-  const activeChallenges = bootstrap.data?.activeChallenges;
-  const joined = Array.isArray(activeChallenges) && activeChallenges.length > 0;
   const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
   const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
@@ -194,24 +188,19 @@ export default function ProfileScreen() {
     Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : [],
     getTodayDateKey(homeTimeZone),
   );
-  const consistency = profileConsistencyFromBootstrap({
-    activeChallenges,
-    securedDateKeys: bootstrap.data?.securedDateKeys,
-    weekDateKeys: getCurrentWeekDateKeys(homeTimeZone),
-  });
+  const consistency = consistencyFromRecord(record?.consistency);
 
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <FlatList
-          data={v3Tab === "Proofs" ? proofs : []}
-          numColumns={3}
-          keyExtractor={(p) => p.dateKey}
+          data={[]}
+          keyExtractor={() => "profile"}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
-          columnWrapperStyle={proofs.length > 0 && v3Tab === "Proofs" ? styles.proofRow : undefined}
           ListHeaderComponent={
+          <>
           <ProfileV3
             title={name}
             handle={handle}
@@ -223,11 +212,9 @@ export default function ProfileScreen() {
             best={best}
             todaySecured={todaySecured}
             totalDaysSecured={record?.detail.totalVerified ?? 0}
-            consistency={consistency}
+            consistency={consistencyHeadline(consistency)}
             consistencySub={
-              joined
-                ? "Post every day. Missed days count."
-                : "Join a challenge and the strip starts filling."
+              consistencyContext(consistency, proofsDateLabel) || consistencyLine(consistency)
             }
             tab={v3Tab}
             onChangeTab={(next) => {
@@ -267,32 +254,21 @@ export default function ProfileScreen() {
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
-            onOpenProof={(p) => {
-              const id = proofTilePostId(postsQuery.data?.posts ?? [], p);
-              if (id) router.push(ROUTES.POST_ID(id) as never);
-            }}
             proofsInParent
           />
-          }
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.proofCell}
-              onPress={() => {
-                const id = proofTilePostId(postsQuery.data?.posts ?? [], item);
-                if (id) router.push(ROUTES.POST_ID(id) as never);
+          {v3Tab === "Proofs" ? (
+            <ProofsGrid
+              items={proofItems}
+              selfReportedDays={selfReportedDays}
+              onOpen={(item) => {
+                setOpenProof(item);
+                router.push(ROUTES.PROOF(item.id) as never);
               }}
-              accessibilityRole="button"
-              accessibilityLabel={`Day ${item.day}`}
-            >
-              <ProofImage
-                uri={item.imageUrl}
-                size="thumb"
-                title={`Day ${item.day}`}
-                recyclingKey={item.dateKey}
-              />
-            </Pressable>
-          )}
-          ListFooterComponent={null}
+            />
+          ) : null}
+          </>
+          }
+          renderItem={() => null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -310,12 +286,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   scroll: {},
-  proofRow: {
-    gap: DS_V3.space.md,
-    paddingHorizontal: DS_V3.space.gutter,
-    marginBottom: DS_V3.space.md,
-  },
-  proofCell: { width: "31%" },
   foot: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
+import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { clockLabel, fmtMmSs } from "@/lib/task-flow-state";
 import {
@@ -61,8 +62,10 @@ export function RunningStep({
         <Text style={styles.label}>{timerEndsLabel(endsAt)}</Text>
         <Text style={styles.figure}>{fmtMmSs(remainingSec)}</Text>
         <Text style={styles.leaving}>{TIMER_LEAVING}</Text>
-        <Button label={TIMER_PAUSE} variant="tertiary" flush onPress={onPause} />
-        <Button label={TIMER_RESET} variant="tertiary" flush onPress={onReset} />
+        <ControlPillRow>
+          <ControlPill label={TIMER_PAUSE} icon="pause" onPress={onPause} />
+          <ControlPill label={TIMER_RESET} icon="rotate-ccw" onPress={onReset} />
+        </ControlPillRow>
       </View>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
         <Button label={WORK_POST} disabled={!ready} onPress={onPost} />

@@ -139,6 +139,7 @@ export function TaskFlowV2() {
           currentDay={f.currentDay}
           workDone={f.workDone}
           photoAfter={f.photoAfter}
+          windowLabel={f.windowLabel}
           onCancel={f.goBack}
           onCaptured={f.onCaptured}
         />
@@ -149,6 +150,7 @@ export function TaskFlowV2() {
           photoUri={f.photoUri}
           challengeName={f.challengeName}
           currentDay={f.currentDay}
+          taskName={f.taskName}
           gateLabel={f.chromeTitle}
           caption={f.caption}
           onCaption={f.setCaption}
@@ -236,9 +238,14 @@ export function TaskFlowV2() {
       {f.step === "day_open" && f.dayOpen ? (
         <ChallengeDoneStep
           model={f.dayOpen}
+          proofUri={f.photoUri}
+          shareFailed={f.shareFailed}
+          sharing={f.sharing}
           onOpenTask={f.openDayOpenTask}
           onNext={f.goNextTask}
           onDone={f.exit}
+          onShare={f.onShareProof}
+          onKeep={f.onKeepProof}
         />
       ) : null}
 

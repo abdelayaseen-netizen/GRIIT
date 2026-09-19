@@ -25,8 +25,9 @@ import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { pickAvatar } from "@/lib/pick-avatar";
 import { normalizeProfileUsername, usernameFieldState, usernameSaveBlocked } from "@/lib/profile-v2-username";
 import { PROFILE_USERNAME_MAX } from "@/lib/profile-update-schema";
-import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
+import ControlPill from "@/components/ds/ControlPill";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -163,7 +164,7 @@ export default function EditProfileScreen() {
 
   return (
     <ErrorBoundary>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.nav}>
           <Pressable onPress={requestClose} accessibilityRole="button" accessibilityLabel="Cancel" style={styles.navBtn}>
@@ -179,7 +180,7 @@ export default function EditProfileScreen() {
             style={styles.navBtn}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={PROFILE_V2_COLOR.orange} />
+              <ActivityIndicator size="small" color={DS_V3.color.brandText} />
             ) : (
               <Text style={[styles.save, blocked && styles.saveOff]}>Save</Text>
             )}
@@ -193,14 +194,12 @@ export default function EditProfileScreen() {
               <Avatar
                 uri={avatarUrl}
                 displayName={displayName || originalUsername}
-                size={96}
+                size={DS_V3.size.avatar.lg}
               />
-              <Pressable onPress={() => void handlePhoto()} accessibilityRole="button" style={styles.photoBtn}>
-                <Text style={styles.photoBtnTxt}>Change photo</Text>
-              </Pressable>
+              <ControlPill label="Change photo" icon="image" onPress={() => void handlePhoto()} />
             </View>
 
-            <Field label="DISPLAY NAME">
+            <Field label="Display name">
               <TextInput
                 value={displayName}
                 onChangeText={(t) => setDisplayName(t.slice(0, NAME_MAX))}
@@ -208,12 +207,12 @@ export default function EditProfileScreen() {
                 autoCapitalize="words"
                 style={styles.input}
                 placeholder="Your name"
-                placeholderTextColor={PROFILE_V2_COLOR.mutedLight}
+                placeholderTextColor={DS_V3.color.textSecondary}
               />
             </Field>
 
             <Field
-              label="USERNAME"
+              label="Username"
               right={
                 fieldState === "tooShort" ? (
                   <Text style={styles.warn}>3 characters min</Text>
@@ -243,12 +242,11 @@ export default function EditProfileScreen() {
                 />
               </View>
               <Text style={styles.helper}>
-                Lowercase letters, numbers and underscores. Changing it breaks old links to your
-                profile.
+                Lowercase letters, numbers and underscores. Changing it breaks old links.
               </Text>
             </Field>
 
-            <Field label="BIO" right={<Text style={[styles.helper, bio.length > 140 && styles.warn]}>{bio.length}/{BIO_MAX}</Text>}>
+            <Field label="Bio" right={<Text style={[styles.helper, bio.length > 140 && styles.warn]}>{bio.length}/{BIO_MAX}</Text>}>
               <TextInput
                 value={bio}
                 onChangeText={(t) => setBio(t.slice(0, BIO_MAX))}
@@ -256,10 +254,10 @@ export default function EditProfileScreen() {
                 autoCapitalize="sentences"
                 multiline
                 style={[styles.input, styles.bio]}
-                placeholder="Shown on your profile to anyone who can see it."
-                placeholderTextColor={PROFILE_V2_COLOR.mutedLight}
+                placeholder="Shown to anyone who can see your profile."
+                placeholderTextColor={DS_V3.color.textSecondary}
               />
-              <Text style={styles.helper}>Shown on your profile to anyone who can see it.</Text>
+              <Text style={styles.helper}>Shown to anyone who can see your profile.</Text>
             </Field>
 
             {formError ? <Text style={styles.warn}>{formError}</Text> : null}
@@ -303,62 +301,95 @@ function Field({
   );
 }
 
+const PT = DS_V3.space.xs / 4;
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: PROFILE_V2_COLOR.canvas },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   nav: {
-    height: 52,
-    paddingHorizontal: 12,
+    height: DS_V3.size.button,
+    paddingHorizontal: DS_V3.space.md,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: PROFILE_V2_COLOR.border,
+    borderBottomWidth: PT,
+    borderBottomColor: DS_V3.color.border,
   },
-  navBtn: { minWidth: 64, height: 44, alignItems: "center", justifyContent: "center" },
-  navTitle: { fontSize: 15, fontWeight: "400", color: PROFILE_V2_COLOR.ink },
-  cancel: { fontSize: 15, color: PROFILE_V2_COLOR.muted },
-  save: { fontSize: 15, color: PROFILE_V2_COLOR.orange },
-  saveOff: { color: PROFILE_V2_COLOR.chevron },
-  body: { paddingHorizontal: 28, paddingBottom: 40, gap: 20 },
-  avatarBlock: { alignItems: "center", marginTop: 20, gap: 10 },
-  photoBtn: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.borderStrong,
-    alignItems: "center",
-    justifyContent: "center",
+  navBtn: { minWidth: 64, height: DS_V3.size.tap, alignItems: "center", justifyContent: "center" },
+  navTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
-  photoBtnTxt: { fontSize: 14, color: PROFILE_V2_COLOR.ink },
-  helper: { fontSize: 12, color: PROFILE_V2_COLOR.mutedLight },
-  field: { gap: 8 },
+  cancel: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  save: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
+  },
+  saveOff: { color: DS_V3.color.textSecondary },
+  body: { paddingHorizontal: DS_V3.space.section, paddingBottom: 40, gap: DS_V3.space.gutter },
+  avatarBlock: { alignItems: "center", marginTop: DS_V3.space.gutter, gap: DS_V3.space.sm },
+  helper: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  field: { gap: DS_V3.space.sm },
   fieldHead: { flexDirection: "row", justifyContent: "space-between" },
-  micro: { fontSize: 11, letterSpacing: 0.8, color: PROFILE_V2_COLOR.mutedLight },
-  input: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.border,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    color: PROFILE_V2_COLOR.ink,
-    backgroundColor: PROFILE_V2_COLOR.surface,
+  micro: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
   },
-  bio: { height: 120, paddingTop: 14, textAlignVertical: "top", fontSize: 15, lineHeight: 22 },
+  input: {
+    height: DS_V3.size.button,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    paddingHorizontal: 14,
+    fontSize: DS_V3.type.body.fontSize,
+    color: DS_V3.color.textPrimary,
+    backgroundColor: DS_V3.color.surface,
+  },
+  bio: {
+    height: 120,
+    paddingTop: 14,
+    textAlignVertical: "top",
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+  },
   userRow: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: PROFILE_V2_COLOR.border,
+    height: DS_V3.size.button,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: PROFILE_V2_COLOR.surface,
+    backgroundColor: DS_V3.color.surface,
   },
-  inputBad: { borderColor: PROFILE_V2_COLOR.danger },
-  at: { fontSize: 16, color: PROFILE_V2_COLOR.mutedLight, marginRight: 4 },
-  userInput: { flex: 1, fontSize: 16, color: PROFILE_V2_COLOR.ink },
-  warn: { fontSize: 12, color: PROFILE_V2_COLOR.danger },
-  ok: { fontSize: 12, color: PROFILE_V2_COLOR.success },
+  inputBad: { borderColor: DS_V3.color.danger },
+  at: { fontSize: DS_V3.type.body.fontSize, color: DS_V3.color.textSecondary, marginRight: 4 },
+  userInput: { flex: 1, fontSize: DS_V3.type.body.fontSize, color: DS_V3.color.textPrimary },
+  warn: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.danger,
+  },
+  ok: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.brandText,
+  },
 });

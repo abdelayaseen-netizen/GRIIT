@@ -87,6 +87,7 @@ export function useAppChallengeMutations({
       entry_mode?: "hand" | "timer";
       workout_kind?: string;
       floor_min?: number | null;
+      shareChoicePending?: boolean;
     }): Promise<{
       firstTaskOfDay?: boolean;
       completionId?: string;
@@ -98,6 +99,7 @@ export function useAppChallengeMutations({
       challengeLength?: number;
       challengeName?: string;
       verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
+      dayProofs?: { eventId: string | null; imageUrl: string | null }[];
     } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -125,9 +127,10 @@ export function useAppChallengeMutations({
         streakDays?: number;
         challengeDay?: number;
         challengeLength?: number;
-        challengeName?: string;
-        verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
-      }>(TRPC.checkins.complete, params)
+            challengeName?: string;
+            verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
+            dayProofs?: { eventId: string | null; imageUrl: string | null }[];
+          }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
           const challengeIdForRetention = (activeChallenge as { challenge_id?: string } | null)?.challenge_id;
@@ -232,6 +235,7 @@ export function useAppChallengeMutations({
             challengeLength: data?.challengeLength,
             challengeName: data?.challengeName,
             verificationKind: data?.verificationKind,
+            dayProofs: data?.dayProofs,
           };
         })
         .catch((err: unknown) => {

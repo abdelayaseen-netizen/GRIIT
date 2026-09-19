@@ -6,6 +6,12 @@ export function parseDistanceUnit(value: unknown): DistanceUnit {
   return value === "km" ? "km" : "mi";
 }
 
+/** Run field suffix: task config.unit from first render, then the profile. */
+export function runDistanceUnit(taskUnit: unknown, profileUnit?: unknown): DistanceUnit {
+  if (taskUnit === "km" || taskUnit === "mi") return taskUnit;
+  return parseDistanceUnit(profileUnit);
+}
+
 export function formatDistance(km: number, unit: DistanceUnit): string {
   if (unit === "mi") {
     const mi = km / 1.609344;

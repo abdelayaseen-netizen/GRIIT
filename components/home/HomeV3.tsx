@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, ChevronRight, Medal, Snowflake, X } from "lucide-react-native";
+import { Bell, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -30,6 +30,7 @@ import {
 } from "@/lib/home-proof-card";
 import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
+import { todaySectionExpanded } from "@/lib/today-section-collapse";
 
 const ICON = DS_V3.space.xs * 6;
 const RING = DS_V3.space.gutter;
@@ -89,6 +90,9 @@ export type HomeV3Props = {
   onPressBell: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
+  onPressChallenge?: (challengeId: string) => void;
+  sectionChoices?: Record<string, boolean | undefined>;
+  onToggleSection?: (sectionId: string, expanded: boolean) => void;
   awayCount?: number;
   freezesLeft: number;
   badgeName: string;
@@ -113,6 +117,9 @@ export function HomeV3({
   onPressBell,
   onPressProof: _onPressProof,
   onPressTask,
+  onPressChallenge,
+  sectionChoices,
+  onToggleSection,
   awayCount = 0,
   freezesLeft,
   badgeName,
@@ -270,13 +277,29 @@ export function HomeV3({
               </View>
             </View>
             {proof.hasChallenge ? (
-              proof.sections.map((section, i) => (
+              proof.sections.map((section, i) => {
+                const expanded = todaySectionExpanded(
+                  sectionChoices?.[section.id],
+                  section.doneCount,
+                  section.totalCount,
+                );
+                return (
                 <View key={section.id}>
                   {i > 0 ? <Divider style={styles.sectionDivider} /> : null}
                   <View style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
                     <View style={styles.proofHead}>
                       <View style={styles.flex}>
-                        <Text style={styles.task}>{section.challenge}</Text>
+                        {section.challengeId ? (
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Open ${section.challenge} challenge`}
+                            onPress={() => onPressChallenge?.(section.challengeId!)}
+                          >
+                            <Text style={styles.task}>{section.challenge}</Text>
+                          </Pressable>
+                        ) : (
+                          <Text style={styles.task}>{section.challenge}</Text>
+                        )}
                         <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
                       </View>
                       <View style={styles.countChip}>
@@ -284,11 +307,24 @@ export function HomeV3({
                           {section.doneCount} / {section.totalCount}
                         </Text>
                       </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={expanded ? "Collapse section" : "Expand section"}
+                        onPress={() => onToggleSection?.(section.id, !expanded)}
+                        style={styles.chevronHit}
+                      >
+                        {expanded ? (
+                          <ChevronUp size={RING} color={DS_V3.color.textSecondary} />
+                        ) : (
+                          <ChevronDown size={RING} color={DS_V3.color.textSecondary} />
+                        )}
+                      </Pressable>
                     </View>
-                    {section.rows.map(renderRow)}
+                    {expanded ? section.rows.map(renderRow) : null}
                   </View>
                 </View>
-              ))
+                );
+              })
             ) : (
               <Text style={[styles.secondary, styles.sectionFirst]}>No active challenge</Text>
             )}
@@ -405,7 +441,7 @@ const styles = StyleSheet.create({
   },
   proofHead: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: DS_V3.space.md,
     marginBottom: DS_V3.space.lg,
@@ -431,6 +467,12 @@ const styles = StyleSheet.create({
     borderRadius: DS_V3.radius.input,
     paddingVertical: DS_V3.space.xs,
     paddingHorizontal: DS_V3.space.md,
+  },
+  chevronHit: {
+    width: DS_V3.size.tap,
+    height: DS_V3.size.tap,
+    alignItems: "center",
+    justifyContent: "center",
   },
   countTxt: {
     fontSize: DS_V3.type.caption.fontSize,
