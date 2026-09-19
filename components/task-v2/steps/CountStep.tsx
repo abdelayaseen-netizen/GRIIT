@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import PushedHeader from "@/components/ds/PushedHeader";
-import { type KeypadMask } from "@/lib/keypad-masks";
-import { TaskKeypad } from "../TaskKeypad";
+import TextField from "@/components/ds/TextField";
+import { parseCountInput, sanitizeCountInput } from "@/lib/keypad-masks";
 import {
   COUNT_ADD,
   COUNT_HONESTY,
@@ -26,9 +26,7 @@ type Props = {
   footerCaption?: string;
   footerBrand?: boolean;
   keypadOpen: boolean;
-  buffer: string;
-  onBuffer: (v: string) => void;
-  onKeypadDone: (v: number | null) => void;
+  onTypeCount: (v: number) => void;
   onAddOne: () => void;
   onOpenKeypad: () => void;
   onRemoveOne: () => void;
@@ -48,9 +46,7 @@ export function CountStep({
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
   keypadOpen,
-  buffer,
-  onBuffer,
-  onKeypadDone,
+  onTypeCount,
   onAddOne,
   onOpenKeypad,
   onRemoveOne,
@@ -76,13 +72,18 @@ export function CountStep({
           <Text style={styles.rest}>{line.rest}</Text>
         </View>
         {keypadOpen ? (
-          <TaskKeypad
-            label="Count"
-            mask={"count" as KeypadMask}
-            buffer={buffer}
-            onBuffer={onBuffer}
-            onDone={onKeypadDone}
-          />
+          <View style={styles.typeField}>
+            <TextField
+              label="Count"
+              value={count === 0 ? "" : String(count)}
+              onChangeText={(t) => {
+                const digits = sanitizeCountInput(t);
+                onTypeCount(Math.min(counterGoal, parseCountInput(digits)));
+              }}
+              keyboardType="number-pad"
+              accessibilityLabel="Count"
+            />
+          </View>
         ) : (
           <>
             <Pressable
@@ -111,17 +112,15 @@ export function CountStep({
           </>
         )}
       </View>
-      {keypadOpen ? null : (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-          <Button
-            label={countCtaLabel(count, counterGoal)}
-            variant="primary"
-            disabled={!enabled}
-            onPress={onSubmit}
-          />
-          <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
-        </View>
-      )}
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+        <Button
+          label={countCtaLabel(count, counterGoal)}
+          variant="primary"
+          disabled={!enabled}
+          onPress={onSubmit}
+        />
+        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+      </View>
     </View>
   );
 }
@@ -170,6 +169,9 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.heading.lineHeight,
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  typeField: {
+    alignSelf: "stretch",
   },
   addOne: {
     width: CIRCLE,

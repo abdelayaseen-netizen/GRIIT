@@ -3,6 +3,7 @@
  * No display face. Header names the gate when there is one.
  */
 import type { TaskGate } from "@/backend/lib/task-model";
+import type { DistanceUnit } from "@/lib/distance-unit";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import { fmtMmSs, type TaskFlowStep } from "@/lib/task-flow-state";
 
@@ -24,12 +25,23 @@ export const TIMER_PHOTO_AFTER = "The photo comes after the timer";
 export const TIMER_PAUSE = "Pause";
 export const TIMER_RESET = "Reset";
 
-export const RUN_HONESTY = "Distance and time come from GPS.";
+export const RUN_HONESTY_TYPED =
+  "You type the distance and time. The photo is what is checked.";
+export const RUN_HONESTY_GPS = "Distance and time from GPS. The photo is still required.";
+export const RUN_HONESTY_TYPED_NO_CAMERA =
+  "You type the distance and time. Nothing is checked.";
+export const RUN_HONESTY = RUN_HONESTY_GPS;
+export const RUN_PHOTO_AFTER = "The photo comes after the numbers";
+export const RUN_TAKE_PHOTO = "Take photo";
 export const RUN_GPS_WAITING = "Waiting for GPS";
 export const RUN_GPS_LOCKED = "GPS locked";
 export const RUN_START = "Start";
 export const RUN_STOP = "Stop";
 export const RUN_POST = "Post";
+export const WORKOUT_HONESTY =
+  "Duration is self-entered unless the in-app timer ran. The photo is still required.";
+export const WORKOUT_NEXT_PHOTO = "Next: photo proof";
+export const WORKOUT_USE_TIMER = "Use the timer instead";
 
 export const SESSION_HONESTY =
   "Stopping fills in the duration. The photo is still required.";
@@ -64,7 +76,7 @@ export function workThenCamera(type: string, gates: readonly TaskGate[]): boolea
 export function workStepOwnsChrome(step: TaskFlowStep, type: string): boolean {
   if (step === "count" || step === "running" || step === "session") return true;
   if (step === "entry" && type === "timer") return true;
-  if (step === "log" && type === "run") return true;
+  if (step === "log") return true;
   return false;
 }
 
@@ -98,7 +110,45 @@ export function workDoneLine(duration: string): string {
   return `${duration} done`;
 }
 
-/** Manual run entry leaves this slot empty. GPS-sourced values get the caption. */
-export function runHonestyLine(fromGps: boolean): string | null {
-  return fromGps ? RUN_HONESTY : null;
+/** Frame 61 — typed + camera / GPS / typed with no Camera gate. */
+export function runHonestyLine(fromGps: boolean, hasCamera = true): string {
+  if (fromGps) return RUN_HONESTY_GPS;
+  if (!hasCamera) return RUN_HONESTY_TYPED_NO_CAMERA;
+  return RUN_HONESTY_TYPED;
+}
+
+export function formatRunPace(durationSec: number, distance: number): string {
+  const per = durationSec / distance;
+  let m = Math.floor(per / 60);
+  let s = Math.round(per % 60);
+  if (s === 60) {
+    m += 1;
+    s = 0;
+  }
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+export function formatShortDistance(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  return String(rounded);
+}
+
+/** "{pace} per {unit}. Target met." / "{pace} per {unit}. {n} {unit} short." */
+export function runPaceLine(
+  distance: number | null,
+  durationSec: number | null,
+  unit: DistanceUnit,
+  target: number | null,
+): string | null {
+  if (distance == null || durationSec == null || distance <= 0 || durationSec <= 0) return null;
+  const head = `${formatRunPace(durationSec, distance)} per ${unit}.`;
+  if (target != null) {
+    const short = Math.round((target - distance) * 100) / 100;
+    if (short > 0) return `${head} ${formatShortDistance(short)} ${unit} short.`;
+  }
+  return `${head} Target met.`;
+}
+
+export function runPrimaryLabel(hasCamera: boolean): string {
+  return hasCamera ? RUN_TAKE_PHOTO : RUN_POST;
 }

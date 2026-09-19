@@ -6,7 +6,11 @@ import {
   COUNT_HONESTY,
   COUNT_POST,
   COUNT_TYPE,
-  RUN_HONESTY,
+  RUN_HONESTY_GPS,
+  RUN_HONESTY_TYPED,
+  RUN_HONESTY_TYPED_NO_CAMERA,
+  RUN_PHOTO_AFTER,
+  RUN_TAKE_PHOTO,
   SESSION_HONESTY,
   TIMER_HONESTY,
   TIMER_LEAVING,
@@ -14,7 +18,10 @@ import {
   countCtaEnabled,
   countCtaLabel,
   countOfLine,
+  formatRunPace,
   runHonestyLine,
+  runPaceLine,
+  runPrimaryLabel,
   timerPostEnabled,
   timerStartLabel,
   workDoneLine,
@@ -85,14 +92,47 @@ describe("camera-after-work copy", () => {
 });
 
 describe("run honesty", () => {
-  it("shows the GPS caption only when values came from GPS", () => {
-    expect(runHonestyLine(true)).toBe(RUN_HONESTY);
-    expect(runHonestyLine(false)).toBeNull();
+  it("picks typed, GPS, or no-camera copy", () => {
+    expect(runHonestyLine(false, true)).toBe(RUN_HONESTY_TYPED);
+    expect(runHonestyLine(true, true)).toBe(RUN_HONESTY_GPS);
+    expect(runHonestyLine(false, false)).toBe(RUN_HONESTY_TYPED_NO_CAMERA);
+    expect(RUN_HONESTY_TYPED).toBe("You type the distance and time. The photo is what is checked.");
+    expect(RUN_HONESTY_GPS).toBe("Distance and time from GPS. The photo is still required.");
+    expect(RUN_HONESTY_TYPED_NO_CAMERA).toBe("You type the distance and time. Nothing is checked.");
   });
 
   it("does not render the no-map sentence on the manual log step", () => {
     const src = readFileSync(resolve(__dirname, "../components/task-v2/steps/LogStep.tsx"), "utf8");
     expect(src).not.toContain("There is no map in the design system");
-    expect(src).toContain("runHonestyLine(fromGps)");
+    expect(src).toContain("runHonestyLine(fromGps, hasCamera)");
+    expect(src).toContain('from "@/components/ds/TextField"');
+    expect(src).not.toContain("TaskKeypad");
+  });
+});
+
+describe("run pace line", () => {
+  it("formats mm:ss per unit and names the shortfall", () => {
+    expect(formatRunPace(26 * 60 + 35, 5)).toBe("5:19");
+    expect(runPaceLine(5, 26 * 60 + 35, "km", 5)).toBe("5:19 per km. Target met.");
+    expect(runPaceLine(4.2, 26 * 60 + 35, "km", 5)).toBe(`${formatRunPace(26 * 60 + 35, 4.2)} per km. 0.8 km short.`);
+    expect(runPaceLine(null, 100, "km", 5)).toBeNull();
+  });
+
+  it("Take photo when Camera applies, Post when it does not", () => {
+    expect(runPrimaryLabel(true)).toBe(RUN_TAKE_PHOTO);
+    expect(runPrimaryLabel(false)).toBe("Post");
+    expect(RUN_PHOTO_AFTER).toBe("The photo comes after the numbers");
+  });
+});
+
+describe("TaskKeypad retired", () => {
+  it("Count Type it and Log steps use ds/TextField", () => {
+    const count = readFileSync(resolve(__dirname, "../components/task-v2/steps/CountStep.tsx"), "utf8");
+    const log = readFileSync(resolve(__dirname, "../components/task-v2/steps/LogStep.tsx"), "utf8");
+    expect(count).toContain('from "@/components/ds/TextField"');
+    expect(count).toContain('keyboardType="number-pad"');
+    expect(count).not.toContain("TaskKeypad");
+    expect(log).toContain('keyboardType="decimal-pad"');
+    expect(log).toContain('keyboardType="number-pad"');
   });
 });

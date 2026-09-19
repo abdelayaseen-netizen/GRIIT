@@ -39,6 +39,7 @@ import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
+  RUN_PHOTO_AFTER,
   TIMER_PHOTO_AFTER,
   workDoneLine,
   workStepHeader,
@@ -131,8 +132,7 @@ export function useTaskFlowV2() {
   const [discardAsk, setDiscardAsk] = useState(false);
   const [text, setText] = useState("");
   const [count, setCount] = useState(0);
-  const [keypad, setKeypad] = useState<{ field: "distance" | "duration" | "minutes" | "count" } | null>(null);
-  const [buffer, setBuffer] = useState("");
+  const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [durationSec, setDurationSec] = useState<number | null>(null);
   const [workoutMin, setWorkoutMin] = useState<number | null>(null);
@@ -642,18 +642,19 @@ export function useTaskFlowV2() {
     accuracyM: gps?.acc,
   });
 
-  const onLogKeypadDone = (v: number | null) => {
-    if (keypad?.field === "distance") setDistance(v);
-    if (keypad?.field === "duration") setDurationSec(v);
-    if (keypad?.field === "minutes") setWorkoutMin(v);
-    setKeypad(null);
-    setBuffer("");
+  const onTypeCount = (v: number) => {
+    setCount(Math.min(counterGoal, Math.max(0, v)));
   };
 
-  const onCountKeypadDone = (v: number | null) => {
-    setCount(Math.min(counterGoal, Math.max(0, v ?? 0)));
-    setKeypad(null);
-    setBuffer("");
+  const onPostRun = () => {
+    void submitWithoutPhoto(
+      {
+        distance_km: distance != null ? toKilometers(distance, unit) : undefined,
+        duration_min: durationSec != null ? durationSec / 60 : undefined,
+        entry_mode: usedSessionTimer ? "timer" : "hand",
+      },
+      "self_report",
+    );
   };
 
   const onUseTimer = () => {
@@ -726,12 +727,13 @@ export function useTaskFlowV2() {
     soundOn,
     setSoundOn,
     keypad,
-    buffer,
-    setBuffer,
     unit,
     distance,
     durationSec,
     workoutMin,
+    setDistance,
+    setDurationSec,
+    setWorkoutMin,
     kind,
     setKind,
     sessionUp,
@@ -753,6 +755,9 @@ export function useTaskFlowV2() {
     taskRequired,
     verifyLine,
     saving,
+    requirePhoto,
+    fromGps: false,
+    targetDistance: typeof config.target_value === "number" ? config.target_value : null,
     chromeTitle: chromeTitle(taskType, gates),
     headerTitle: workStepOwnsChrome(step, taskType)
       ? workStepHeader(currentDay, gates, taskType)
@@ -769,7 +774,13 @@ export function useTaskFlowV2() {
               : String(count),
         )
       : null,
-    photoAfter: workThenCamera(taskType, gates) && taskType === "timer" ? TIMER_PHOTO_AFTER : null,
+    photoAfter: workThenCamera(taskType, gates)
+      ? taskType === "timer"
+        ? TIMER_PHOTO_AFTER
+        : taskType === "run"
+          ? RUN_PHOTO_AFTER
+          : null
+      : null,
     closedAt: closedWindowTime(gateTime),
     windowForbidden,
     windowState,
@@ -778,15 +789,6 @@ export function useTaskFlowV2() {
     refreshGps,
     startTimer,
     persistUnit,
-    onLogKeypadDone,
-    onOpenDistance: () => {
-      setKeypad({ field: "distance" });
-      setBuffer("");
-    },
-    onOpenDuration: () => {
-      setKeypad({ field: taskType === "run" ? "duration" : "minutes" });
-      setBuffer("");
-    },
     onUseTimer,
     onNextPhoto: () => setStep("capture"),
     onSessionStop,
@@ -808,10 +810,10 @@ export function useTaskFlowV2() {
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
     onOpenCountKeypad: () => {
       setKeypad({ field: "count" });
-      setBuffer("");
     },
     onRemoveOne: () => setCount((c) => Math.max(0, c - 1)),
-    onCountKeypadDone,
+    onTypeCount,
+    onPostRun,
     onAttachPhoto: () => setStep("capture"),
     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
     onDidIt: () => void submitWithoutPhoto({}, "self_report"),

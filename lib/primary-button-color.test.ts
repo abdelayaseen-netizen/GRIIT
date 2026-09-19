@@ -16,8 +16,9 @@ describe("primary button labels", () => {
       "utf8",
     );
     expect(log).toContain("from \"@/components/ds/Button\"");
-    expect(log).toContain('ready ? "Post" : "Start"');
+    expect(log).toContain("runPrimaryLabel(hasCamera)");
     expect(log).not.toContain("styles.btnText");
+    expect(log).not.toContain("TaskKeypad");
   });
 
   it("fills the Counter Add one circle with the brand token", () => {

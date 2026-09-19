@@ -98,12 +98,10 @@ export function TaskFlowV2() {
       {f.step === "log" ? (
         <LogStep
           taskType={f.taskType}
-          keypad={f.keypad?.field === "count" ? null : f.keypad}
-          buffer={f.buffer}
-          onBuffer={f.setBuffer}
-          onKeypadDone={f.onLogKeypadDone}
-          onOpenDistance={f.onOpenDistance}
-          onOpenDuration={f.onOpenDuration}
+          taskName={f.taskName}
+          headerTitle={f.headerTitle}
+          footerCaption={f.footerCaption}
+          footerBrand={f.footerBrand}
           onToggleUnit={() => f.persistUnit(f.unit === "km" ? "mi" : "km")}
           unit={f.unit}
           distance={f.distance}
@@ -112,8 +110,16 @@ export function TaskFlowV2() {
           minDurationMinutes={f.config.min_duration_minutes ?? 0}
           kind={f.kind}
           onKind={f.setKind}
+          onDistance={f.setDistance}
+          onDuration={f.setDurationSec}
+          onMinutes={f.setWorkoutMin}
           onUseTimer={f.onUseTimer}
           onNextPhoto={f.onNextPhoto}
+          onPost={f.onPostRun}
+          onBack={f.goBack}
+          fromGps={f.fromGps}
+          hasCamera={f.requirePhoto}
+          targetDistance={f.targetDistance}
         />
       ) : null}
 
@@ -192,9 +198,7 @@ export function TaskFlowV2() {
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
           keypadOpen={f.keypad?.field === "count"}
-          buffer={f.buffer}
-          onBuffer={f.setBuffer}
-          onKeypadDone={f.onCountKeypadDone}
+          onTypeCount={f.onTypeCount}
           onAddOne={f.onAddOne}
           onOpenKeypad={f.onOpenCountKeypad}
           onRemoveOne={f.onRemoveOne}
