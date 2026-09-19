@@ -29,7 +29,7 @@ import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
-import { formatDistance, parseDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
+import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
 import {
   clearLocalTimerSession,
   loadLocalTimerSession,
@@ -139,7 +139,9 @@ export function useTaskFlowV2() {
   const [distance, setDistance] = useState<number | null>(null);
   const [durationSec, setDurationSec] = useState<number | null>(null);
   const [workoutMin, setWorkoutMin] = useState<number | null>(null);
-  const [unit, setUnit] = useState<DistanceUnit>(parseDistanceUnit(profile?.distance_unit));
+  const [unit, setUnit] = useState<DistanceUnit>(() =>
+    runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
+  );
   const [kind, setKind] = useState("Lift");
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
