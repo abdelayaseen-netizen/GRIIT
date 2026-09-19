@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hasCameraProof as clientHasCameraProof } from "../../lib/active-challenge-ui";
 import {
+  cameraProofTiles,
   checkInHasCameraProof,
   hasCameraProof,
   proofCountsForDateKeys,
@@ -98,6 +99,36 @@ describe("splitSecuredProof", () => {
     expect(record).toBe(true);
     expect(home).toBe(feed);
     expect(feed).toBe(record);
+  });
+
+  it("cameraProofTiles skip self-reported days and carry challenge, date, gates", () => {
+    const tiles = cameraProofTiles({
+      checkIns: [
+        {
+          date_key: "2026-09-18",
+          task_id: "t1",
+          active_challenge_id: "ac-a",
+          proof_url: "https://cdn/a.jpg",
+        },
+        { date_key: "2026-09-17", task_id: "t2", active_challenge_id: "ac-a" },
+      ],
+      securedDateKeys: ["2026-09-17", "2026-09-18"],
+      enrollments: [{ id: "ac-a", challengeId: "ch-a", startDateKey: "2026-09-10" }],
+      challenges: [{ id: "ch-a", title: "Iron man", duration_days: 75 }],
+      tasks: [{ id: "t1", challenge_id: "ch-a", require_photo: true, task_type: "photo" }],
+      events: [{ id: "ev-1", metadata: { task_id: "t1", date_key: "2026-09-18" } }],
+    });
+    expect(tiles).toEqual([
+      {
+        dateKey: "2026-09-18",
+        day: 9,
+        imageUrl: "https://cdn/a.jpg",
+        challengeName: "Iron man",
+        gates: ["camera"],
+        eventId: "ev-1",
+        durationDays: 75,
+      },
+    ]);
   });
 
   it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {

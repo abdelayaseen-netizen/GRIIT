@@ -153,7 +153,15 @@ export type ProfileRecord = {
     length: number;
     value: string;
   }[];
-  proofs: { dateKey: string; day: number; imageUrl?: string | null }[];
+  proofs: {
+    dateKey: string;
+    day: number;
+    imageUrl?: string | null;
+    challengeName?: string;
+    gates?: string[];
+    eventId?: string | null;
+    durationDays?: number;
+  }[];
   badges: ReturnType<typeof badgeRowsFromProgress>;
   detail: {
     totalVerified: number;

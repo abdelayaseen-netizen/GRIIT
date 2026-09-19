@@ -47,14 +47,14 @@ export const feedRouter = createTRPCRouter({
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
-    const { data: recentMovers } = await server.from("activity_events").select("user_id").gte("created_at", dayAgo).limit(500);
+    const { data: recentMovers } = await server.from("activity_events").select("user_id").eq("shared", true).gte("created_at", dayAgo).limit(500);
     const movingUserCount = new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id)).size;
     const followingIds = new Set<string>();
     const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
     // Two-way block set: hide blocked authors (both directions) once per request.
     const blockedIds = await getBlockedUserIds(ctx.supabase, viewerId);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(60);
+    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).eq("shared", true).order("created_at", { ascending: false }).limit(60);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
     // Load profile visibility for feed filtering
@@ -121,7 +121,7 @@ export const feedRouter = createTRPCRouter({
     const followingIds = new Set<string>();
     const { data: follows } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
+    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).eq("shared", true).order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
     const posts = await hydrateActivityEventsToPosts(events, viewerId, followingIds, ctx, server);
@@ -131,10 +131,11 @@ export const feedRouter = createTRPCRouter({
   getPost: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).query(async ({ ctx, input }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
-    const { data: raw, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").eq("id", input.eventId).maybeSingle();
+    const { data: raw, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at, shared").eq("id", input.eventId).maybeSingle();
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     if (!raw) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     const ev = raw as EvRow;
+    if (ev.shared === false && ev.user_id !== viewerId) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     if (!LIVE_FEED_TYPES.includes(ev.event_type as (typeof LIVE_FEED_TYPES)[number])) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     if (ev.user_id !== viewerId && (await isBlockRelationship(ctx.supabase, viewerId, ev.user_id))) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
@@ -217,7 +218,7 @@ export const feedRouter = createTRPCRouter({
 
   list: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
     const visibleUserIds = await getVisibleUserIds(ctx.supabase, ctx.userId);
-    let query = ctx.supabase.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("user_id", visibleUserIds).order("created_at", { ascending: false }).limit(input.limit);
+    let query = ctx.supabase.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("user_id", visibleUserIds).eq("shared", true).order("created_at", { ascending: false }).limit(input.limit);
     if (input.cursor) query = query.lt("created_at", input.cursor);
     const { data: events, error } = await query;
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
@@ -801,6 +802,7 @@ export const feedRouter = createTRPCRouter({
       .from("activity_events")
       .select("id, user_id, challenge_id, metadata, created_at")
       .eq("event_type", "task_completed")
+      .eq("shared", true)
       .order("created_at", { ascending: false })
       .limit(45);
     if (error) {
@@ -991,6 +993,7 @@ export const feedRouter = createTRPCRouter({
         .from("activity_events")
         .select("id, user_id, event_type, challenge_id, metadata, created_at")
         .in("event_type", [...LIVE_FEED_TYPES])
+        .eq("shared", true)
         .gte("created_at", sinceIso)
         .order("created_at", { ascending: false })
         .limit(200);
