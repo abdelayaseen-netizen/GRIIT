@@ -161,6 +161,9 @@ export type ProfileRecord = {
     gates?: string[];
     eventId?: string | null;
     durationDays?: number;
+    capturedAt?: string | null;
+    taskName?: string;
+    gateTime?: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
   }[];
   badges: ReturnType<typeof badgeRowsFromProgress>;
   detail: {

@@ -8,7 +8,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Pressable,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -39,9 +38,8 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { proofTilePostId } from "@/lib/profile-v2-proof-photo";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import ProofImage from "@/components/ds/ProofImage";
+import ProofsGrid from "@/components/profile/ProofsGrid";
+import { itemsFromRecordProofs, setOpenProof } from "@/lib/proofs-grid";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
@@ -76,16 +74,6 @@ export default function ProfileScreen() {
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
 
-  const postsQuery = useQuery({
-    queryKey: ["feed", "getUserPosts", user?.id ?? ""],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getUserPosts, { userId: user!.id, limit: 50 }) as Promise<{
-        posts: LiveFeedPost[];
-      }>,
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
     queryFn: () =>
@@ -106,6 +94,8 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
+  const proofItems = itemsFromRecordProofs(proofs);
+  const selfReportedDays = record?.detail.selfReportedDays ?? 0;
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -205,13 +195,12 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <FlatList
-          data={v3Tab === "Proofs" ? proofs : []}
-          numColumns={3}
-          keyExtractor={(p) => p.dateKey}
+          data={[]}
+          keyExtractor={() => "profile"}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
-          columnWrapperStyle={proofs.length > 0 && v3Tab === "Proofs" ? styles.proofRow : undefined}
           ListHeaderComponent={
+          <>
           <ProfileV3
             title={name}
             handle={handle}
@@ -267,32 +256,21 @@ export default function ProfileScreen() {
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
-            onOpenProof={(p) => {
-              const id = proofTilePostId(postsQuery.data?.posts ?? [], p);
-              if (id) router.push(ROUTES.POST_ID(id) as never);
-            }}
             proofsInParent
           />
-          }
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.proofCell}
-              onPress={() => {
-                const id = proofTilePostId(postsQuery.data?.posts ?? [], item);
-                if (id) router.push(ROUTES.POST_ID(id) as never);
+          {v3Tab === "Proofs" ? (
+            <ProofsGrid
+              items={proofItems}
+              selfReportedDays={selfReportedDays}
+              onOpen={(item) => {
+                setOpenProof(item);
+                router.push(ROUTES.PROOF(item.id) as never);
               }}
-              accessibilityRole="button"
-              accessibilityLabel={`Day ${item.day}`}
-            >
-              <ProofImage
-                uri={item.imageUrl}
-                size="thumb"
-                title={`Day ${item.day}`}
-                recyclingKey={item.dateKey}
-              />
-            </Pressable>
-          )}
-          ListFooterComponent={null}
+            />
+          ) : null}
+          </>
+          }
+          renderItem={() => null}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -310,12 +288,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   scroll: {},
-  proofRow: {
-    gap: DS_V3.space.md,
-    paddingHorizontal: DS_V3.space.gutter,
-    marginBottom: DS_V3.space.md,
-  },
-  proofCell: { width: "31%" },
   foot: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
