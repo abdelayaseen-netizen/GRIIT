@@ -114,14 +114,14 @@ describe("morningAfter ack storage", () => {
 });
 
 describe("morningAfter after today is secured", () => {
-  it("keeps the copy-table reset line; no missed-yesterday-secured-today variant exists", () => {
+  // v28.1 (02_screens.md:3608) designs the missed-yesterday-secured-today line; positive assertions land in Chunk T Phase 4.
+  it("keeps the copy-table reset lines", () => {
     const table = readFileSync(
       resolve(__dirname, "../design/handoff/cursor/02_screens.md"),
       "utf8",
     );
     expect(table).toContain("Your streak reset to 0. Your longest was {longest} days.");
     expect(table).toContain("Your streak reset to 0. A freeze can undo that for yesterday.");
-    expect(table).not.toMatch(/missed yesterday, secured today/i);
     expect(morningAfterCushion("reset", { longest: 12, lastStandsLeft: 0 })).toBe(
       "Your streak reset to 0. Your longest was 12 days.",
     );
