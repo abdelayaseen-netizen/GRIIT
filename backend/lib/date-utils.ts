@@ -75,6 +75,8 @@ export function getRollingWeekStartDateKey(timezone?: string | null): string {
 /**
  * Profile IANA timezone for date_key derivation. Falls back to reminder_timezone, then UTC.
  */
+const utcFallbackWarned = new Set<string>();
+
 export async function getProfileTimeZoneForUser(supabase: SupabaseClient, userId: string): Promise<string> {
   const { data } = await supabase
     .from("profiles")
@@ -83,7 +85,14 @@ export async function getProfileTimeZoneForUser(supabase: SupabaseClient, userId
     .maybeSingle();
   const row = data as { timezone?: string | null; reminder_timezone?: string | null } | null;
   const tz = row?.timezone?.trim() || row?.reminder_timezone?.trim();
-  return tz || "UTC";
+  if (!tz) {
+    if (!utcFallbackWarned.has(userId)) {
+      utcFallbackWarned.add(userId);
+      console.warn("[date-utils] profile timezone missing; using UTC", userId);
+    }
+    return "UTC";
+  }
+  return tz;
 }
 
 /** An instant that falls on the given calendar date in `timeZone` (for weekday math). */

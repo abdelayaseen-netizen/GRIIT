@@ -31,9 +31,10 @@ type EventRow = {
   event_type: string;
   challenge_id: string | null;
   metadata: Record<string, unknown> | null;
+  shared?: boolean;
 };
 
-function createDb(seed: { ac: AcRow[]; events: EventRow[] }) {
+function createDb(seed: { ac: AcRow[]; events: EventRow[] }, opts?: { insertError?: { code: string } }) {
   const ac = seed.ac.map((r) => ({ ...r }));
   const events = seed.events.map((r) => ({ ...r }));
   const updates: Record<string, unknown>[] = [];
@@ -86,6 +87,9 @@ function createDb(seed: { ac: AcRow[]; events: EventRow[] }) {
         return chain;
       },
       insert: (row: EventRow) => {
+        if (opts?.insertError) {
+          return Promise.resolve({ data: null, error: opts.insertError });
+        }
         inserts.push(row);
         events.push(row);
         return Promise.resolve({ data: row, error: null });
@@ -211,6 +215,97 @@ describe("applyFinalizeEnded", () => {
     expect(result.eventsEmitted).toBe(0);
     expect(db._inserts).toHaveLength(0);
     expect(shouldEmitCompletedChallenge(db._events, { id: AC, challenge_id: CH })).toBe(false);
+  });
+
+  it("concurrent: two simultaneous calls, one event, neither throws", async () => {
+    const db = createDb({
+      ac: [
+        {
+          id: AC,
+          user_id: USER,
+          challenge_id: CH,
+          status: "active",
+          end_at: "2026-09-19T23:59:59.999Z",
+        },
+      ],
+      events: [],
+    });
+    const [a, b] = await Promise.all([
+      applyFinalizeEnded(db as never, USER, NOW),
+      applyFinalizeEnded(db as never, USER, NOW),
+    ]);
+    expect(a.eventsEmitted + b.eventsEmitted).toBe(1);
+    expect(db._inserts.filter((e) => e.event_type === "completed_challenge")).toHaveLength(1);
+    expect(db._ac[0]?.status).toBe("completed");
+    expect(db._ac[0]?.ended_at).toBe("2026-09-19T23:59:59.999Z");
+  });
+
+  it("23505 on event insert resolves as success", async () => {
+    const db = createDb(
+      {
+        ac: [
+          {
+            id: AC,
+            user_id: USER,
+            challenge_id: CH,
+            status: "active",
+            end_at: "2026-09-19T23:59:59.999Z",
+          },
+        ],
+        events: [],
+      },
+      { insertError: { code: "23505" } },
+    );
+    await expect(applyFinalizeEnded(db as never, USER, NOW)).resolves.toMatchObject({
+      finalized: [AC],
+    });
+    expect(db._ac[0]?.status).toBe("completed");
+    expect(db._ac[0]?.ended_at).toBe("2026-09-19T23:59:59.999Z");
+  });
+
+  it("non-duplicate insert error does not throw and leaves status completed", async () => {
+    const db = createDb(
+      {
+        ac: [
+          {
+            id: AC,
+            user_id: USER,
+            challenge_id: CH,
+            status: "active",
+            end_at: "2026-09-19T23:59:59.999Z",
+          },
+        ],
+        events: [],
+      },
+      { insertError: { code: "40001" } },
+    );
+    await expect(applyFinalizeEnded(db as never, USER, NOW)).resolves.toMatchObject({
+      finalized: [AC],
+      eventsEmitted: 0,
+    });
+    expect(db._ac[0]?.status).toBe("completed");
+    expect(db._inserts).toHaveLength(0);
+  });
+
+  it("loser of the race emits nothing", async () => {
+    const db = createDb({
+      ac: [
+        {
+          id: AC,
+          user_id: USER,
+          challenge_id: CH,
+          status: "active",
+          end_at: "2026-09-19T23:59:59.999Z",
+        },
+      ],
+      events: [],
+    });
+    const winner = await applyFinalizeEnded(db as never, USER, NOW);
+    const loser = await applyFinalizeEnded(db as never, USER, NOW);
+    expect(winner.eventsEmitted).toBe(1);
+    expect(loser.finalized).toEqual([]);
+    expect(loser.eventsEmitted).toBe(0);
+    expect(db._inserts).toHaveLength(1);
   });
 });
 
