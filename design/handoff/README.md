@@ -307,7 +307,9 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 52 The morning after · 53 Two zeros · 54 The freeze · 55 Partial miss · 56 Roster yesterday ·
 57 The evening before · 58 Proof moment · 59 Secured · 60 Proofs grid · 61 Run manual · 62 Controls ·
 63 Capture · 64 Edit profile · 65 Discover row · 66 One number · 67 Scales · 68 Home · 69 Feed ·
-70 Profile · 71 Consistency · 72 Counter · 73 Secured · 74 Login.
+70 Profile · 71 Consistency · 72 Counter · 73 Secured · 74 Login · 75 Morning after ·
+76 Secured footer · 77 End of challenge · 78 Profile finished · 79 Secured footer R3 ·
+80 End of challenge · 81 Two at once · 82 Profile finished.
 
 ## Source
 
@@ -476,7 +478,7 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 `GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
 39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51,
 `GRIIT The Miss.dc.html` holds 52 to 57, `GRIIT Proof Moment.dc.html` holds 58 to 66, and
-`GRIIT Density.dc.html` holds 67 to 74.
+`GRIIT Density.dc.html` holds 67 to 74, `GRIIT Patch v28-1.dc.html` holds 75 to 78, and `GRIIT Chunk T.dc.html` holds 79 to 82.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -677,3 +679,69 @@ Eight breakages with fixes, six contradictions (46 to 51), the grep list and the
 `cursor/02_screens.md` and `cursor/05_diff_from_current_app.md`. The one that must not be missed:
 `dynamicType` still maps `body` to Apple's 17pt `body`, so it has to be remapped in the same
 commit as the scale or the app scales wrong for anyone using Dynamic Type.
+
+## v28.1 — the states nobody designed
+
+A patch, not a chunk. Five gaps the Chunk Q simulator walked into. Frames 75 to 78, no new tokens, no
+new components.
+
+The **morning-after block** said "Your streak reset to 0." under a hero reading 1 day once the user
+secured today. One conditional line fixes it — "Your 12-day streak ended. Today starts the count at 1."
+— which states the loss before the restart so it cannot be read as a reward. The block exits on
+dismissal, on local midnight, or when a freeze resolves the miss; securing today is deliberately not an
+exit.
+
+The **Secured footer** keyed off the closing completion, so a day ending on a self-report offered no
+share choice at all even when it held three unshared camera proofs. It now offers the day's unshared
+photos as one set, posting one row, with a single Done when there is nothing unshared.
+
+**"Day {n} of {N}"** now binds N to `duration_days`, with a clamp so the app can never render "Day 76
+of 75". The empty-title fallback stops being the word "Task" and becomes the task's own type or target,
+with the real fix being validation in the Add task sheet.
+
+**The end of a challenge** did not exist: a run whose last day passed simply left Home. There is now
+one screen for both outcomes — days secured in the display face, then a 75-square contact sheet where a
+run with seven holes shows seven holes — and a Finished section in Profile so the challenge moves
+rather than disappears. Three status words, no fourth: "Day n of N", "{secured} of {N}", "Left on day
+n". Nothing is coloured by outcome and nothing congratulates; the record is the reward.
+
+Needs three columns the schema lacks: `ended_at`, `ended_reason ('completed' | 'left')` and
+`end_seen_at`. Contradictions 52 to 57 in `cursor/02_screens.md`, the last of which is that quitting
+currently deletes the row — a history shorter than the truth.
+
+## v28.2 and Chunk T — the end of a challenge
+
+**Item 2 withdrawn.** R3 stands: the Secured footer offers the closing completion's photo and nothing
+else. Every camera proof is already answered on its own frame 58, so a day-wide offer re-asks a
+question the user answered — and for one they answered "Keep", asks them to reverse a deliberate
+decision. When the closing completion is a self-report the footer is a single Done plus a pointer:
+"Today's other proofs are in Profile, Proofs. Any you kept private can be shared from there." A
+pointer, not a second offer. A whole-day post, if wanted, is specced separately and composes only
+proofs answered "Share".
+
+**Two numbers, two meanings.** "Day {n} of {N}" is calendar position in the user's timezone, clamped
+to N, advancing whether or not the day was secured. "{secured} of {N}" advances only on a secured day.
+Running rows and feed headers take the first, finished rows and the end screen take the second, and
+they are never mixed. A hard-mode reset rewrites `started_at`, so both return to zero together; a
+freeze or Last Stand changes neither, because they protect the streak, which is a third number again.
+
+**Chunk T** is the end of a run. It fires on the end date passing in the user's timezone, with the
+last day running to 23:59:59 local — not on a day counter, which would end the run at the clock time
+they joined. The four statuses `active_challenges` already carries map to four lines: "Day n of N",
+"{secured} of {N}", "Left on day n", "Failed on day n". Failed is blunt on purpose; softening it
+apologises for a rule the user chose.
+
+The contact sheet carries five states on the WeekStrip encoding — brand fill, solid border fill, an
+outline, an outline with a grey plug for frozen, a brand outline with a brand plug for a Last Stand —
+at 12 columns, because 75 days at 10 across leaves no room for the legend and the stats card. **Frozen
+and Last Stand days count as unsecured**: the streak survived them, the day did not, and the sentence
+under the number says which. Two challenges ending the same day get one combined screen with no
+restart button, since it would have to pick one. "Start it again" at the free cap stays enabled with
+the price stated. A one-day challenge holds, with a single centred tile.
+
+Needs `ended_at` and `end_seen_at` on `active_challenges`, with `end_seen_at` backfilled to `ended_at`
+or every historical enrollment fires an end screen. `ended_reason` is not needed — `status` already
+distinguishes the outcomes, and contradiction 57 is withdrawn: leaving writes `abandoned` and keeps
+the row.
+
+Source: `src/components/{ChallengeEnd,ProfileChallenges}.tsx`.

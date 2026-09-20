@@ -3597,3 +3597,471 @@ keyboard with both OAuth buttons visible. If any of the three fails, the pass is
 **Ship order.** The token diff and the `dynamicType` remap are one commit — splitting them ships a
 scale that misbehaves under accessibility settings. The component edits are a second commit and can
 land file by file; a component still on the old paddings looks slightly loose, not broken.
+
+# v28.1 — the states nobody designed
+
+**Patch, not a chunk.** Frames 75 to 78, in `GRIIT Patch v28-1.dc.html`, at the v28 dense scale.
+No new tokens, no new components. Five gaps found by walking the Chunk Q simulator.
+
+---
+
+## 1. Morning-after block: "missed yesterday, secured today"
+
+The block is about **yesterday**, so it survives today being secured. Its last line cannot: at v28 it
+reads "Your streak reset to 0." under a hero showing 1 day, and the two contradict each other on the
+same screen.
+
+**One conditional line, not a second block.**
+
+| condition | third line |
+|---|---|
+| streak still 0 (nothing secured today) | Your streak reset to 0. Your longest was {longest} days. |
+| **streak now ≥ 1 (today secured)** | **Your {previous_streak}-day streak ended. Today starts the count at 1.** |
+| a freeze is available | Your streak reset to 0. A freeze can undo that for yesterday. |
+| a Last Stand covered it | A Last Stand covered it, so the streak continues. {n} left. |
+
+The hero's sub-line changes with it: "Day 1 of the next streak." replaces "Streak reset. Post today to
+start again." once the day is secured.
+
+**Why this wording.** It states the loss first and the restart second, in that order, so the sentence
+cannot be read as a reward for one day. "Today starts the count at 1" is arithmetic — it names what the
+hero already shows. It is not "back on track", not "good start", not "nice work": one secured day after
+breaking twelve is the count beginning again, and the copy says only that.
+
+**Do not** add a second line when today is secured. Do not change "Yesterday wasn't secured." — it is
+still true, and it is the whole point of the block.
+
+**When the block goes away.** Three exits, any of which is enough:
+1. the user dismisses it (the `x`), persisted as `miss_ack_date_key` — chunk P decision 10;
+2. **local midnight.** The block describes yesterday. It never survives into a second morning, whether
+   it was read or not, and there is no "you missed two days ago" state;
+3. a freeze or Last Stand resolves the miss — then the reason for the block is gone and it goes with it.
+
+Securing today is **not** an exit. The user should be able to open the app at 11pm, having fixed today,
+and still see what yesterday cost.
+
+---
+
+## 2. Secured footer: the day, not the closing task
+
+**Decision: (b), the day's unshared photos as a set.** R3 is replaced.
+
+R3 tied the footer to the closing completion. A day that ended on a self-report therefore offered
+nothing, even holding three unshared camera proofs — which sent them to the record with no choice ever
+presented. That is exactly the defect frames 58 and 59 exist to prevent, reappearing through a
+different door.
+
+| state | footer |
+|---|---|
+| ≥1 unshared camera proof in the day | primary "Share {n} proof{s} to the feed", secondary "Keep {them\|it} to the record" |
+| exactly 1 unshared | "Share this proof to the feed" / "Keep it to the record" |
+| 0 unshared (all shared already, or all self-reported) | a single primary "Done" |
+
+(c) was the alternative — offer the most recent unshared photo — and it is wrong for the same reason R3
+was: it makes an arbitrary choice on the user's behalf about which of their photos represents the day,
+and it strands the rest.
+
+**Sharing the set posts one row, not n rows.** The screen the user is answering is a day. This is the
+same behaviour the multi-proof button already had on frame 59C.
+
+**Dismissing is never a decision (R7).** The `x` at the top leaves everything unshared, exactly as
+"Keep them to the record" does, and the photos stay in the record and reachable from the Proofs grid.
+The difference between the two is only that one is an answer and one is a deferral — neither publishes.
+
+| string | style |
+|---|---|
+| Share {n} proofs to the feed | Button primary, arrow-up-right 18 |
+| Share this proof to the feed | Button primary, arrow-up-right 18 |
+| Keep them to the record / Keep it to the record | Button secondary |
+| Done | Button primary, zero-unshared state only |
+| {n} tasks across {m} challenges. All self-reported. | caption textSecondary |
+
+---
+
+## 3. Accessibility labels, and the empty-title fallback
+
+Add to every copy table. These are `accessibilityLabel`, not visible strings.
+
+| element | label | notes |
+|---|---|---|
+| section header, expanded | Collapse section | followed by the section name: "Collapse section, Iron man" |
+| section header, collapsed | Expand section | same |
+| challenge row (Home, roster, Profile) | Open {challenge} challenge | not "Open challenge" — the name is the only thing distinguishing five identical rows |
+| sheet and modal dismiss | Close | on the `x`. Never "Dismiss", never "Cancel" unless it cancels something |
+| proof tile | {challenge}, {date} | the tile's visible label is the challenge; VoiceOver needs the date too, since the section header is a separate element |
+| status ring, done | Done | |
+| status ring, pending | Not done | not "Empty" |
+| status ring, window closed | Window closed | |
+
+**Empty task title.** The current fallback is the literal string "Task", which tells the user nothing
+and appears identically on every untitled row. **Replace it with the task's own type and gate**, which
+is data the row already has:
+
+| case | shown |
+|---|---|
+| title empty, type known | the type name — "Timer", "Counter", "Run", "Check off", "Write" |
+| title empty, type and target known | "45 min timer", "10 pages", "5 km" — the gate line's size half, promoted |
+| title empty, nothing else known | "Untitled task", not "Task" |
+
+Promoting the size half means the gate line drops it and shows only the proof half, so nothing is said
+twice. Better still: **stop the empty title at the source** — the Add task sheet's primary should be
+disabled until the name field is non-empty. A task with no name is a data-entry bug, and the fallback
+is a safety net, not a feature.
+
+---
+
+## 4. "Day {n} of {N}" — N defined
+
+**N is `challenges.duration_days`** for the challenge that owns the row. Not the user's commitment
+target from onboarding (that is a separate number, and it drives the Home hero, not this line), and not
+the number of days the user has been enrolled.
+
+`n` is the challenge's `current_day` for this user: days elapsed since their `started_at`,
+inclusive, in the user's timezone. After a hard-mode reset `n` returns to 1 and `N` is unchanged.
+
+**n can never exceed N in a valid state** — the challenge ends when `n > N` (see item 5). If it does
+anyway, from clock skew, a stale cache, or a timezone change moving the boundary:
+
+> **Clamp to N.** Render "Day {N} of {N}". Never render "Day 76 of 75", and never hide the line.
+
+A clamped row is indistinguishable from a legitimate last day, which is correct: the user is on or past
+the last day either way, and the end-of-challenge screen resolves it on next launch. Log the clamp
+server-side; do not surface it.
+
+---
+
+## 5. The end of a challenge
+
+Today a challenge whose last day passes is simply gone from Home. Seventy-five days of work, removed
+without a sentence.
+
+### The moment — frame 77
+
+On first open after `current_day > duration_days`, one screen, before Home. Same screen for both
+outcomes; only the number and the sheet differ.
+
+1. `DisplayNumber` at 100pt: days secured, with "of {duration_days}" in `type.heading`
+   `textSecondary`. **This is the earned number** — the signature face, correctly used
+2. "{challenge} is over." in `type.bodyStrong`
+3. one `type.caption` line of fact: "75 days, none missed. 52 camera proof, 23 self-reported." or
+   "Seven days went unsecured. 48 camera proof, 20 self-reported."
+4. **the contact sheet**, 10 across at 3pt gaps, one square per day of the run, on the **same encoding
+   as `ds/WeekStrip`**: `color.brand` fill for a camera-proof day, a solid `color.border` fill for
+   a self-reported day, transparent with a 1pt `color.border` outline for a day that went unsecured.
+   A run with seven holes shows seven holes
+
+   **Encode this on value, never on opacity.** `surface` is 1.09:1 against `canvas`, so a
+   surface-filled tile and an empty one are the same square at 33pt, and dimming one to 0.45 makes it
+   worse. Brand measures 4.85:1 against the canvas and 3.56:1 against the self-reported fill, and the
+   third state differs in form as well as value — a solid block against a hairline ring. No glyph: at
+   33pt a 9pt camera icon is doing work the fill should do, and it was the only thing making the first
+   state visible
+5. a three-item legend, `type.caption`
+6. a `Card`: Longest streak, Started, Ended
+7. footer: primary "Done", secondary "Start it again"
+
+**No congratulation, in either outcome.** No trophy, no confetti, no "you did it", and no consolation
+for the run with holes. The record is the thing; a product whose claim is that the number is true does
+not decorate the number. The 75-of-75 screen and the 68-of-75 screen differ only in what they report.
+
+**"Start it again"** enrols the user fresh at Day 1. It is secondary, never primary — the end of a
+seventy-five-day run is not the moment to push another one.
+
+### Where it lives afterwards — frame 78
+
+Profile → Challenges gains two sections, **Running** and **Finished**. A challenge that ends moves
+between them rather than disappearing. Finished is newest-ended first.
+
+**Three status words, and no fourth:**
+
+| status | when | row detail |
+|---|---|---|
+| Day {n} of {N} | running | today's state: "1 of 1 secured today" or "Not yet today" |
+| {secured} of {N} | ran to its last day | "{start} to {end}" |
+| Left on day {n} | the user quit before the last day | "{start} to {end}" |
+
+Quitting is neither hidden nor punished. It is the third true thing that can happen, it is stated in
+the same type and the same colour as the other two, and "Left on day 9" is a fact about a run, not a
+verdict on a person.
+
+**Nothing on this screen is coloured by outcome.** A 75-of-75 row and a 41-of-75 row are the same
+`textSecondary`. Ranking the user's history with colour would be the app having an opinion, which is
+not its job.
+
+| string | style |
+|---|---|
+| {secured} | DisplayNumber, 100pt |
+| of {duration_days} | heading textSecondary |
+| {challenge} is over. | bodyStrong |
+| {n} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary |
+| {m} days went unsecured. {c} camera proof, {s} self-reported. | caption textSecondary |
+| Camera proof · Self-reported · Not secured | caption textSecondary, legend |
+| Longest streak / Started / Ended | secondary textSecondary, values bodyStrong |
+| Done | Button primary |
+| Start it again | Button secondary |
+| Running / Finished | label textSecondary |
+| Day {n} of {N} · {secured} of {N} · Left on day {n} | caption textSecondary |
+
+**Server.** Ending needs a state the schema does not have: `challenge_participants.ended_at` and
+`ended_reason ('completed' | 'left')`, plus an `end_seen_at` so the moment shows once. Without
+`end_seen_at` the screen either never appears or appears every launch. **No new design tokens** — the
+100pt numeral sits between `numberSize.moment` 96 and `numberSize.mid` 160 and should simply use
+`moment` 96 in the build; 100 in the frame is an artefact of fitting the sheet and the card on one
+screen, and 96 fits once the real photos replace the placeholder glyphs.
+
+---
+
+## Contradictions, continued
+
+Numbered from 52; chunk R ended at 51.
+
+**52. The morning-after block contradicts the streak hero.** Its third line is unconditional, so after
+securing a day it reads "Your streak reset to 0." under a hero showing 1. Item 1 above.
+
+**53. R3 strands unshared photos.** The Secured footer keys off the closing completion, so a day ending
+on a self-report offers no share choice for camera proofs taken earlier the same day. Item 2.
+
+**54. "Task" is a user-facing fallback string.** Every untitled task renders identically and
+uninformatively. Item 3. The deeper fix is validation in the Add task sheet.
+
+**55. `N` in "Day {n} of {N}" was never bound in the spec.** Two sections of `02_screens.md` used
+it without defining it; it is `duration_days`, and the overflow case needs clamping. Item 4.
+
+**56. A finished challenge has no end state and no home.** It leaves Home silently when
+`current_day > duration_days`, and Profile → Challenges has no Finished section to receive it. Needs
+`ended_at`, `ended_reason` and `end_seen_at`. Item 5.
+
+**57. Leaving a challenge has no recorded outcome either.** Same columns cover it —
+`ended_reason = 'left'` — but today quitting removes the row entirely, so a user's history silently
+omits every run they abandoned. That is the record being shorter than the truth, which is the one thing
+this system does not permit.
+
+# v28.2 — item 2 reissued
+
+**Item 2 is withdrawn as drawn in v28.1. R3 stands.** The premise was wrong: every camera proof is
+already answered on its own frame 58, with Share and Keep. A day-wide offer on the Secured screen
+re-asks a question the user has already answered, and for a photo they answered "Keep" it asks them to
+reverse a decision they made deliberately. **Re-offering a photo the user kept private is not allowed.**
+
+**The rule, unchanged:** the Secured footer offers the closing completion's photo, and nothing else.
+
+| closing completion | footer |
+|---|---|
+| carried a photo, not yet answered | primary "Share this proof to the feed", secondary "Keep it to the record" |
+| carried a photo, already shared from frame 58 | single primary "Done" |
+| was a self-report | single primary "Done", plus the pointer caption below |
+
+**The zero-photo close.** Rather than a bare Done under an empty space, the screen names the task that
+closed the day and where the rest of the day's proofs are:
+
+> **Drink 64 oz closed the day** / Self-reported, so there is no photo to share here.
+>
+> *(footer)* Done
+> Today's other proofs are in Profile, Proofs. Any you kept private can be shared from there.
+
+That is a **pointer, not an offer**. It states a location; it does not put a photo in front of the user
+again. A proof kept private stays private until the user goes and changes their mind, which the full
+view in frame 60 already supports.
+
+| string | style |
+|---|---|
+| {task} closed the day | bodyStrong |
+| Self-reported, so there is no photo to share here. | secondary textSecondary |
+| The proof that closed the day | caption textSecondary, placeholder label |
+| {task} · {challenge} | caption textSecondary |
+| Share this proof to the feed | Button primary, arrow-up-right 18 |
+| Keep it to the record | Button secondary |
+| Done | Button primary |
+| Today's other proofs are in Profile, Proofs. Any you kept private can be shared from there. | caption textSecondary, centred |
+
+**A whole-day post, if you want one, is a separate feature** and not this footer. Spec: it composes
+only proofs answered "Share", never one answered "Keep" and never one left unanswered; if fewer than
+two qualify it does not appear; and it posts one row carrying the day, not the challenge. It belongs on
+the Proofs grid as a multi-select, where the user is choosing, not on a screen that appears
+unprompted.
+
+---
+
+## Item 4 reissued — two numbers, two meanings
+
+**"Day {n} of {N}" is calendar position.** `n` = days from `started_at` to today inclusive, in the
+user's timezone. `N` = `challenges.duration_days`. It advances every day whether or not the day was
+secured, and it is clamped to `N`.
+
+**"{secured} of {N}" is the secured count.** It advances only on a secured day.
+
+**Never mix them**, and never show one where the other is meant:
+
+| surface | which | why |
+|---|---|---|
+| Home task-card section header | Day {n} of {N} | the user is asking where they are in the run |
+| Feed post header | Day {n} of {N} | the viewer is placing the proof in someone else's run |
+| Active challenge screen | Day {n} of {N} | same |
+| Profile → Running row | Day {n} of {N} | position |
+| Profile → Finished row | {secured} of {N} | the run is over; position is meaningless |
+| End screen hero | {secured} of {N} | the record |
+| Consistency hero | {secured} of {due} | a third thing again — due days across all challenges, not one run |
+
+**A hard-mode reset** restarts the run: `started_at` is rewritten to today, so `n` returns to 1 and
+`secured` returns to 0. Both reset, together, because it is a new run inside the same enrollment.
+`N` never changes.
+
+**A freeze or a Last Stand changes neither.** They protect the personal streak, which is a third number
+again and belongs to the user, not the challenge. `n` advances as it always does, and `secured`
+does not — the day was not secured, and the end screen's sheet shows it as held rather than as done.
+
+---
+
+# Chunk T — the end of a challenge
+
+Frames 79 to 82, in `GRIIT Chunk T.dc.html`. No new tokens, no new components.
+Source: `src/components/ChallengeEnd.tsx`, `src/components/ProfileChallenges.tsx`.
+
+## What ends a challenge, and when
+
+**The end date passing, not the day counter.** `active_challenges` ends when the challenge's end date
+is past in the **user's timezone**, and the last day runs to the end of that local day — 23:59:59 —
+never to the clock time they joined. A user who joined at 4pm on day 1 has the whole of the last day,
+not until 4pm.
+
+The end screen fires on the first launch after that boundary, gated on `end_seen_at`.
+
+## The four statuses
+
+`active_challenges.status` already carries them. One line each, no fourth word invented:
+
+| status | Profile row | when |
+|---|---|---|
+| `active` | Day {n} of {N} | running |
+| `completed` | {secured} of {N} | ran to its end date |
+| `abandoned` | Left on day {n} | the user quit. The row is **not** deleted |
+| `failed` | Failed on day {n} | hard mode's unsecured day, or a team challenge the team lost |
+
+**"Failed" is the blunt word on purpose.** Hard mode's entire contract is that one unsecured day ends
+the run; softening it afterwards would be the app apologising for a rule the user chose when they
+picked hard mode. It is stated in the same type and the same colour as every other status — nothing on
+that screen is coloured by outcome, because ranking a person's history is not the app's job.
+
+## The sheet, five states
+
+Same encoding as `ds/WeekStrip`. **Value and form, never opacity** — `surface` is 1.09:1 against
+`canvas`, so a surface-filled tile and an empty one are the same square at tile scale.
+
+| state | tile |
+|---|---|
+| camera proof | `color.brand` fill |
+| self-reported | solid `color.border` fill |
+| not secured | transparent, 1pt `color.border` outline |
+| frozen | transparent, 1pt `color.border` outline, centred 9pt `color.border` square |
+| Last Stand | transparent, 1.5pt `color.brand` outline, centred 9pt `color.brand` square |
+
+**12 columns**, not 10: 75 days at 10 across is 8 rows and 285pt, which does not leave room for a
+five-item legend and the stats card. At 12 it is 7 rows and 213pt with 27pt tiles, which still carries
+five states.
+
+**How frozen and Last Stand days count.** They are **unsecured**. The day was not secured — the streak
+survived it, which is a different fact about a different number. So:
+
+- the hero `{secured} of {N}` excludes them
+- "{m} days went unsecured" **includes** them
+- and the next sentence says which: "Seven days went unsecured. Two of them were held, by a freeze and
+  a Last Stand."
+
+Counting a held day as secured would be the app claiming work that did not happen, which is the one
+thing this system does not do.
+
+## The screen
+
+1. `DisplayNumber` 96: `{secured}`, with "of {N}" in `type.heading` `textSecondary`
+2. "{challenge} is over." — or "{challenge} ended on day {n}." for `failed`
+3. one `type.caption` line of fact
+4. the sheet, 12 across
+5. the legend, only the states present in this run
+6. a `Card`: Longest streak, Started, Ended
+7. footer: primary "Done", secondary "Start it again"
+
+**No congratulation in any outcome**, and no consolation in the failed one. The 75-of-75 screen and the
+68-of-75 screen differ only in what they report.
+
+**"Start it again" at the free cap.** The button stays and stays enabled, with one caption under it:
+"You are running 3 of 3. Starting this again means leaving one." Tapping opens the enrollment flow,
+which already handles the limit. Hiding or disabling the button would leave the user guessing why a
+thing they just did is no longer offered; the caption tells them the price before they pay it.
+
+**A one-day challenge** holds: a single 27pt tile, centred, a one-item legend, and "One day, secured.
+Camera proof." The hero reads "1 of 1". Nothing about the layout assumes a grid.
+
+## Two or more ending on the same day
+
+**One combined screen**, not one each in sequence. Two full-screen interruptions on a single launch is
+the app taking the user's morning; one screen says the same thing and ends.
+
+- title "Two challenges ended." / "{n} challenges ended."
+- one block per challenge: name, its own `{secured} of {N}` at 34pt, its own sheet at 15 across, one
+  line of fact
+- one legend for the screen
+- footer: a single "Done" and the caption "Both are in Profile, Finished. Start either again from
+  there."
+
+**No "Start it again" here.** With two endings the button has to pick one, and there is no honest basis
+for the pick. Profile is one tap away and lists both.
+
+At four or more the blocks scroll; the title counts them and the shape does not change.
+
+## Existing enrollments
+
+**No retroactive end screens.** Anything already `completed`, `abandoned` or `failed` when this
+ships appears in Finished with its status and its dates, and never triggers the moment. Backfill
+`end_seen_at = ended_at` for every existing non-active row in the same migration — without it, every
+old enrollment fires an end screen on first launch.
+
+One `type.caption` line at the foot of the Finished list says so: "Runs that ended before this version
+shipped are here too, without an end screen."
+
+## Copy
+
+| string | style |
+|---|---|
+| {secured} | DisplayNumber 96 |
+| of {N} | heading textSecondary |
+| {challenge} is over. | bodyStrong |
+| {challenge} ended on day {n}. | bodyStrong, failed |
+| {n} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary |
+| {m} days went unsecured. {h} of them were held, by {list}. | caption textSecondary |
+| Hard mode has no freezes, so one unsecured day ends the run. | caption textSecondary, failed |
+| One day, secured. Camera proof. | caption textSecondary, one-day |
+| Camera proof · Self-reported · Not secured · Frozen · Last Stand | caption textSecondary, legend |
+| Longest streak / Started / Ended | secondary textSecondary, values bodyStrong |
+| Done | Button primary |
+| Start it again | Button secondary |
+| You are running {n} of {limit}. Starting this again means leaving one. | caption textSecondary |
+| {n} challenges ended. | title |
+| Both finished today, {date}. | secondary textSecondary |
+| Both are in Profile, Finished. Start either again from there. | caption textSecondary |
+| Running / Finished | label textSecondary |
+| Day {n} of {N} · {secured} of {N} · Left on day {n} · Failed on day {n} | caption textSecondary |
+| Runs that ended before this version shipped are here too, without an end screen. | caption textSecondary |
+
+## Schema
+
+`active_challenges` has `status`. It needs two columns:
+
+| column | why |
+|---|---|
+| `ended_at timestamptz` | the dates on the Finished row and the stats card |
+| `end_seen_at timestamptz` | without it the moment either never fires or fires every launch. Backfill `= ended_at` for existing rows |
+
+`ended_reason` is **not** needed — `status` already distinguishes completed, abandoned and failed.
+
+## Contradictions
+
+**Contradiction 57 is withdrawn.** Leaving writes `status = 'abandoned'` and the row survives; the
+history is not shortened. The v28.1 claim was wrong.
+
+**58. The end fires on a day counter, not a date.** Any implementation keyed to `current_day >
+duration_days` ends the run at the clock time the user joined rather than at the end of their local
+day, which costs a user who joined at 4pm eight hours of their last day. Key it to the end date in the
+user's timezone, at 23:59:59 local.
+
+**59. `end_seen_at` does not exist, so every historical enrollment would fire an end screen.** Backfill
+it in the same migration that adds it.

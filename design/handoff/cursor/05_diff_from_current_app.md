@@ -110,3 +110,39 @@ lost a line, which is a regression, not a win.
 
 **Not an acceptance criterion:** Login clearing the keyboard. It does not, at either scale — see
 breakage 9 in `cursor/02_screens.md`.
+
+## v28.1 — patch
+
+Five fixes on top of chunk Q. Frames 75 to 78.
+
+| # | today | build | files |
+|---|---|---|---|
+| 1 | morning-after third line is unconditional: "Your streak reset to 0." under a hero reading 1 | branch on current streak: "Your {previous_streak}-day streak ended. Today starts the count at 1." Hero sub-line becomes "Day 1 of the next streak." | the Home morning-after block |
+| 2 | Secured footer keys off the closing completion, stranding unshared photos when the day ends on a self-report | footer offers every unshared proof in the day as one set; single Done when none | `app/task/secured.tsx` |
+| 3 | `accessibilityLabel` missing on section headers, challenge rows and sheet dismiss; empty task title renders "Task" | add the four labels; fallback becomes the task's type or target; disable Add task until the name is non-empty | `components/ds/{ListRow,Sheet}.tsx`, `components/create/NewTaskSheet.tsx` |
+| 4 | `N` in "Day {n} of {N}" unbound | bind to `challenges.duration_days`; clamp `n` to `N` and never render past it | today/Home row builders |
+| 5 | a challenge whose last day passes leaves Home silently; quitting deletes the row | end screen on first open after `current_day > duration_days`; Running and Finished sections in Profile | new end screen, `app/(tabs)/profile.tsx` |
+
+**Schema.** `challenge_participants` needs `ended_at`, `ended_reason ('completed' \| 'left')` and
+`end_seen_at`. Without `end_seen_at` the end screen either never fires or fires every launch.
+Quitting must write `ended_reason = 'left'` rather than deleting the row.
+
+**Order.** 4 first, it is a one-line bind and item 5 depends on it. Then 5, which is the only one
+needing a migration. 1, 2 and 3 are independent.
+
+## Chunk T — the end of a challenge
+
+| # | today | build | files |
+|---|---|---|---|
+| 1 | Secured footer draws from the closing completion (correct); the self-report close shows a bare Done | add the "{task} closed the day" card and the Profile, Proofs pointer caption | `app/task/secured.tsx` |
+| 2 | a challenge past its end date stays until the day counter passes | end on the end date in the user's timezone, at 23:59:59 local | the enrollment reader |
+| 3 | no end screen | `ChallengeEnd`, single and combined | new `components/ChallengeEnd.tsx` |
+| 4 | Profile → Challenges is one flat list | Running and Finished, four status lines | `app/(tabs)/profile.tsx`, new `components/ProfileChallenges.tsx` |
+| 5 | contact sheet encodes three states on surface-vs-canvas | five states on value and form, WeekStrip encoding, 12 columns | `components/ds/ContactSheet.tsx` |
+
+**Migration.** Add `ended_at` and `end_seen_at` to `active_challenges`. **Backfill
+`end_seen_at = ended_at` for every row where `status <> 'active'`** in the same migration, or every
+historical enrollment fires an end screen on first launch. No `ended_reason` column — `status`
+carries it.
+
+**Order.** 2 first (it decides when anything else fires), then 3 and 4 together, then 5, then 1.
