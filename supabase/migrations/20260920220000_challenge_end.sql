@@ -87,7 +87,8 @@ SET end_at = pr.proposed_end_at
 FROM proposed pr
 WHERE pr.id = ac.id
   AND pr.kind = 'day-count'
-  AND ac.end_at IS DISTINCT FROM pr.proposed_end_at;
+  AND ac.end_at IS DISTINCT FROM pr.proposed_end_at
+  AND pr.proposed_end_at IS NOT NULL;
 
 -- E7: finish zombies. ended_at = normalized end_at. end_seen_at = ended_at. No events.
 UPDATE public.active_challenges
@@ -98,11 +99,12 @@ SET
 WHERE status = 'active'
   AND end_at < now();
 
--- Existing non-active: ended_at / end_seen_at = LEAST(COALESCE(ended_at, completed_at, end_at), now()).
+-- Existing non-active: ended_at / end_seen_at = LEAST(COALESCE(ended_at, end_at), now()).
+-- Production has no completed_at column.
 UPDATE public.active_challenges
 SET
-  ended_at = LEAST(COALESCE(ended_at, completed_at, end_at), now()),
-  end_seen_at = LEAST(COALESCE(ended_at, completed_at, end_at), now())
+  ended_at = LEAST(COALESCE(ended_at, end_at), now()),
+  end_seen_at = LEAST(COALESCE(ended_at, end_at), now())
 WHERE status IS DISTINCT FROM 'active'
   AND (ended_at IS NULL OR end_seen_at IS NULL);
 
