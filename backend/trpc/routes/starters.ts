@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import { STARTER_DEFINITIONS } from "../../lib/starter-seed";
 import { getTodayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { enrollmentEndAt } from "../../lib/enrollment-end-at";
 
 const STARTER_IDS = STARTER_DEFINITIONS.map((s) => s.starter_id);
 
@@ -75,13 +76,14 @@ export const startersRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Starter challenge has no tasks." });
       }
 
-      const startAt = new Date().toISOString();
-      const endAt = new Date();
-      if (row.duration_type === "24h") {
-        endAt.setHours(endAt.getHours() + 24);
-      } else {
-        endAt.setDate(endAt.getDate() + (row.duration_days ?? 1));
-      }
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const startAt = new Date();
+      const endAt = enrollmentEndAt({
+        startAt,
+        durationDays: row.duration_days ?? 1,
+        durationType: row.duration_type,
+        timeZone: tz,
+      });
 
       const { data: activeChallenge, error: acError } = await ctx.supabase
         .from("active_challenges")
@@ -89,7 +91,7 @@ export const startersRouter = createTRPCRouter({
           user_id: ctx.userId,
           challenge_id: challengeId,
           status: "active",
-          start_at: startAt,
+          start_at: startAt.toISOString(),
           end_at: endAt.toISOString(),
           current_day: 1,
           progress_percent: 0,
@@ -106,7 +108,6 @@ export const startersRouter = createTRPCRouter({
         });
       }
 
-      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
       const dateKey = getTodayDateKey(tz);
       const checkIns = tasks.map((t) => ({
         user_id: ctx.userId,

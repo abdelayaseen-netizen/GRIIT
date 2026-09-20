@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
 import { applyEnrollmentWindow } from "./enrollment-window";
+import { enrollmentEndAt } from "./enrollment-end-at";
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
 
@@ -81,14 +82,14 @@ export async function joinChallengeDirect(
   const startAt = allWindowsExpired
     ? new Date(now.getTime() + 24 * 60 * 60 * 1000)
     : now;
-  const endAt = new Date(startAt);
   const durationType = (challenge as { duration_type?: string }).duration_type;
   const durationDays = (challenge as { duration_days?: number }).duration_days ?? 1;
-  if (durationType === "24h") {
-    endAt.setTime(startAt.getTime() + 24 * 60 * 60 * 1000);
-  } else {
-    endAt.setDate(endAt.getDate() + durationDays);
-  }
+  const endAt = enrollmentEndAt({
+    startAt,
+    durationDays,
+    durationType,
+    timeZone: userTz,
+  });
 
   // Insert only columns that exist in all environments (some DBs lack current_day, progress_percent)
   const { data: activeChallenge, error: insertErr } = await supabase
