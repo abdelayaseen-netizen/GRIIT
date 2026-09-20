@@ -93,14 +93,17 @@ export async function applyFinalizeEnded(
   let eventsEmitted = 0;
   for (const row of due) {
     const status = endedStatusForFinalize({});
-    const { error: updErr } = await supabase
+    const { data: won, error: updErr } = await supabase
       .from("active_challenges")
       .update({ status, ended_at: row.end_at })
       .eq("id", row.id)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .select("id");
     if (updErr) {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to finalize enrollment." });
     }
+    if (!won || won.length === 0) continue;
     finalized.push(row.id);
     if (!shouldEmitCompletedChallenge(events, row)) continue;
     const ch = titleById.get(row.challenge_id);
@@ -108,6 +111,8 @@ export async function applyFinalizeEnded(
       user_id: userId,
       event_type: "completed_challenge",
       challenge_id: row.challenge_id,
+      // end event has no photo; matches pre-Chunk-T behaviour. Privacy of end events is an open Design question.
+      shared: true,
       metadata: {
         active_challenge_id: row.id,
         challenge_name: ch?.title ?? "Challenge",
@@ -115,7 +120,23 @@ export async function applyFinalizeEnded(
       },
     });
     if (insErr) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to emit end event." });
+      const code = (insErr as { code?: string }).code;
+      if (code === "23505") {
+        events.push({
+          challenge_id: row.challenge_id,
+          metadata: { active_challenge_id: row.id },
+        });
+        eventsEmitted += 1;
+        continue;
+      }
+      console.error("[finalizeEnded] event insert failed", insErr);
+      try {
+        const Sentry = await import("@sentry/node");
+        Sentry.captureException(insErr);
+      } catch {
+        /* Sentry unavailable */
+      }
+      continue;
     }
     events.push({
       challenge_id: row.challenge_id,
