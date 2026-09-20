@@ -56,19 +56,17 @@ SELECT
 FROM proposed
 ORDER BY kind, id;
 
--- 3. Existing non-active: ended_at source; proposed = LEAST(COALESCE(ended_at, completed_at, end_at), now()).
+-- 3. Existing non-active: ended_at source; proposed = LEAST(end_at, now()).
 SELECT
   id,
   status,
-  completed_at,
   end_at,
   CASE
-    WHEN completed_at IS NOT NULL THEN 'completed_at'
     WHEN end_at IS NOT NULL THEN 'end_at'
     ELSE 'none'
   END AS ended_at_source,
-  LEAST(COALESCE(completed_at, end_at), now()) AS proposed_ended_at,
-  LEAST(COALESCE(completed_at, end_at), now()) AS proposed_end_seen_at
+  LEAST(end_at, now()) AS proposed_ended_at,
+  LEAST(end_at, now()) AS proposed_end_seen_at
 FROM public.active_challenges
 WHERE status IS DISTINCT FROM 'active'
 ORDER BY status, id;

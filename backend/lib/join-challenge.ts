@@ -8,7 +8,7 @@ import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "
 import { applyEnrollmentWindow } from "./enrollment-window";
 import { enrollmentEndAt } from "./enrollment-end-at";
 
-export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string; completed_at?: string | null };
+export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string };
 
 /**
  * Join a challenge for the given user: insert active_challenges, seed check_ins for all tasks, upsert streaks.
