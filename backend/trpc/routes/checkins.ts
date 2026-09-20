@@ -1364,14 +1364,6 @@ export const checkinsRouter = createTRPCRouter({
           metadata: { day_number: daySecured, streak_count: row.streak, date_key: todayKey },
         });
       }
-      if (challengeJustCompleted) {
-        await ctx.supabase.from("activity_events").insert({
-          user_id: ctx.userId,
-          event_type: "completed_challenge",
-          challenge_id: challengeId ?? null,
-          metadata: { challenge_name: challengeName, duration_days: durationDays },
-        });
-      }
       if (row.secured) {
         const { newUnlockKeys } = await checkAndUnlockAchievements(
           ctx.supabase,

@@ -67,6 +67,9 @@ export const TRPC = {
     create: 'challenges.create',
     startTeamChallenge: 'challenges.startTeamChallenge',
     getTeamMembers: 'challenges.getTeamMembers',
+    finalizeEnded: 'challenges.finalizeEnded',
+    markEndSeen: 'challenges.markEndSeen',
+    listUnseenEndings: 'challenges.listUnseenEndings',
   },
   groups: {
     invite: 'groups.invite',

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   CREATOR_LEAVE_BLOCKED_MESSAGE,
   SOLO_LEAVE_ACTIVE_STATUS,
@@ -63,5 +65,11 @@ describe("decideLeaveChallenge", () => {
 describe("SOLO_LEAVE_ACTIVE_STATUS", () => {
   it("abandons the enrollment instead of deleting it", () => {
     expect(SOLO_LEAVE_ACTIVE_STATUS).toBe("abandoned");
+  });
+
+  it("leave writes ended_at and end_seen_at", () => {
+    const src = readFileSync(resolve(__dirname, "../trpc/routes/challenges-join.ts"), "utf8");
+    expect(src).toContain("ended_at: leftAt");
+    expect(src).toContain("end_seen_at: leftAt");
   });
 });

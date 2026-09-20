@@ -210,9 +210,14 @@ export const challengesJoinProcedures = {
 
       if (decision.action === "end_solo") {
         if (ac) {
+          const leftAt = new Date().toISOString();
           const { error: updErr } = await ctx.supabase
             .from("active_challenges")
-            .update({ status: SOLO_LEAVE_ACTIVE_STATUS })
+            .update({
+              status: SOLO_LEAVE_ACTIVE_STATUS,
+              ended_at: leftAt,
+              end_seen_at: leftAt,
+            })
             .eq("id", ac.id);
           if (updErr) {
             throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });

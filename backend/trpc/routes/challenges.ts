@@ -14,6 +14,11 @@ import { withWindowState } from "../../lib/task-time-gate";
 import { getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import {
+  applyFinalizeEnded,
+  applyMarkEndSeen,
+  UNSEEN_END_STATUSES,
+} from "../../lib/finalize-ended";
 import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
 import { challengesCreateProcedures } from "./challenges-create";
@@ -495,6 +500,56 @@ export const challengesRouter = createTRPCRouter({
       );
       return rows.map((m) => ({ ...m, profile: profileMap.get(m.user_id) ?? null }));
     }),
+
+  finalizeEnded: protectedProcedure.mutation(async ({ ctx }) => {
+    const svc = getSupabaseServer();
+    if (!svc) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service role unavailable." });
+    }
+    return applyFinalizeEnded(svc, ctx.userId);
+  }),
+
+  markEndSeen: protectedProcedure
+    .input(z.object({ enrollmentIds: z.array(z.string().uuid()).min(1).max(50) }))
+    .mutation(async ({ input, ctx }) => {
+      const svc = getSupabaseServer();
+      if (!svc) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service role unavailable." });
+      }
+      return applyMarkEndSeen(svc, ctx.userId, input.enrollmentIds);
+    }),
+
+  listUnseenEndings: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from("active_challenges")
+      .select(
+        `
+        id,
+        challenge_id,
+        status,
+        start_at,
+        end_at,
+        ended_at,
+        end_seen_at,
+        current_day,
+        challenges (
+          title,
+          duration_days,
+          is_hard_mode,
+          participation_type
+        )
+      `,
+      )
+      .eq("user_id", ctx.userId)
+      .in("status", [...UNSEEN_END_STATUSES])
+      .is("end_seen_at", null)
+      .order("ended_at", { ascending: false })
+      .limit(50);
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load unseen endings." });
+    }
+    return data ?? [];
+  }),
 
   // Premium status read from profiles table (validated server-side only). When enforcing create limits, read subscription_status from DB.
 });
