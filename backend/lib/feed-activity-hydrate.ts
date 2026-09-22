@@ -28,6 +28,27 @@ export type EvRow = {
   shared?: boolean;
 };
 
+const START_PAIR_MS = 60_000;
+
+/** One feed row when create + join for the same user/challenge land within 60s. Keep challenge_created. */
+export function dedupePairedStartEvents(events: EvRow[]): EvRow[] {
+  const created = events.filter((e) => e.event_type === "challenge_created" && e.challenge_id);
+  const dropJoined = new Set<string>();
+  for (const ev of events) {
+    if (ev.event_type !== "joined_challenge" || !ev.challenge_id) continue;
+    const t = Date.parse(ev.created_at);
+    const pair = created.find(
+      (c) =>
+        c.user_id === ev.user_id &&
+        c.challenge_id === ev.challenge_id &&
+        Number.isFinite(t) &&
+        Math.abs(Date.parse(c.created_at) - t) <= START_PAIR_MS,
+    );
+    if (pair) dropJoined.add(ev.id);
+  }
+  return events.filter((e) => !dropJoined.has(e.id));
+}
+
 export function followRowAccepted(row: { status?: string | null }): boolean {
   const s = String(row.status ?? "accepted").toLowerCase();
   return s === "accepted";
@@ -120,7 +141,8 @@ export async function hydrateActivityEventsToPosts(
     if (!passesVisibility(ev, vis)) continue;
     filtered.push(ev);
   }
-  const eventIds = filtered.map((e) => e.id);
+  const visible = dedupePairedStartEvents(filtered);
+  const eventIds = visible.map((e) => e.id);
   const reactionStats = new Map<string, { count: number; reactedByMe: boolean; lastReactorId: string | null }>();
   const commentCounts = new Map<string, number>();
   if (eventIds.length > 0) {
@@ -171,7 +193,7 @@ export async function hydrateActivityEventsToPosts(
     for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number }[]) streakByUser.set(s.user_id, s.active_streak_count ?? 0);
     for (const row of (secureRows ?? []) as { user_id: string }[]) securedTodayByUser.add(row.user_id);
   }
-  return filtered.map((ev) => {
+  return visible.map((ev) => {
     const md = ev.metadata ?? {};
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
     const profile = profileMap.get(ev.user_id);
