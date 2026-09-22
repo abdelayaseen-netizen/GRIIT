@@ -133,7 +133,7 @@ export function formatShortDistance(n: number): string {
   return String(rounded);
 }
 
-/** "{pace} per {unit}. Target met." / "{pace} per {unit}. {n} {unit} short." */
+/** "{pace} per {unit}." / "{pace} per {unit}. Target met." / "{pace} per {unit}. {n} {unit} short." */
 export function runPaceLine(
   distance: number | null,
   durationSec: number | null,
@@ -142,10 +142,9 @@ export function runPaceLine(
 ): string | null {
   if (distance == null || durationSec == null || distance <= 0 || durationSec <= 0) return null;
   const head = `${formatRunPace(durationSec, distance)} per ${unit}.`;
-  if (target != null) {
-    const short = Math.round((target - distance) * 100) / 100;
-    if (short > 0) return `${head} ${formatShortDistance(short)} ${unit} short.`;
-  }
+  if (target == null) return head;
+  const short = Math.round((target - distance) * 100) / 100;
+  if (short > 0) return `${head} ${formatShortDistance(short)} ${unit} short.`;
   return `${head} Target met.`;
 }
 

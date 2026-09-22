@@ -1,5 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  InputAccessoryView,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Camera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -30,6 +40,7 @@ import PushedHeader from "@/components/ds/PushedHeader";
 import TextField from "@/components/ds/TextField";
 
 const CAMERA = DS_V3.space.gutter;
+const LOG_PAD_ACCESSORY = "log-step-pad-done";
 
 type Props = {
   taskType: string;
@@ -100,6 +111,7 @@ export function LogStep({
   );
   const [minutesText, setMinutesText] = useState(workoutMin != null ? String(workoutMin) : "");
   const lastDuration = useRef<number | null>(durationSec);
+  const padAccessory = Platform.OS === "ios" ? LOG_PAD_ACCESSORY : undefined;
 
   useEffect(() => {
     if (durationSec == null || durationSec === lastDuration.current) return;
@@ -113,90 +125,104 @@ export function LogStep({
   }, [workoutMin]);
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior="padding"
+      keyboardVerticalOffset={insets.top}
+    >
       <View style={{ paddingTop: insets.top }}>
         <PushedHeader title={headerTitle} onBack={onBack} />
       </View>
-      <View style={styles.body}>
-        <Text style={styles.title}>{taskName}</Text>
-        <Text style={styles.honesty}>{honesty}</Text>
-        {isRun ? (
-          <>
-            <View style={styles.fields}>
-              <View style={styles.field}>
-                <TextField
-                  label="Distance"
-                  value={distanceText}
-                  onChangeText={(t) => {
-                    const next = sanitizeDistanceInput(t);
-                    setDistanceText(next);
-                    onDistance(parseDistanceInput(next));
-                  }}
-                  keyboardType="decimal-pad"
-                  accessibilityLabel="Distance"
-                  trailing={
-                    <Pressable
-                      onPress={onToggleUnit}
-                      accessibilityRole="button"
-                      accessibilityLabel="Toggle distance unit"
-                      hitSlop={DS_V3.space.sm}
-                    >
-                      <Text style={styles.trail}>{unit}</Text>
-                    </Pressable>
-                  }
-                />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <Pressable onPress={Keyboard.dismiss} style={styles.tapAway}>
+          <Text style={styles.title}>{taskName}</Text>
+          <Text style={styles.honesty}>{honesty}</Text>
+          {isRun ? (
+            <>
+              <View style={styles.fields}>
+                <View style={styles.field}>
+                  <TextField
+                    label="Distance"
+                    value={distanceText}
+                    onChangeText={(t) => {
+                      const next = sanitizeDistanceInput(t);
+                      setDistanceText(next);
+                      onDistance(parseDistanceInput(next));
+                    }}
+                    keyboardType="decimal-pad"
+                    inputAccessoryViewID={padAccessory}
+                    accessibilityLabel="Distance"
+                    trailing={
+                      <Pressable
+                        onPress={onToggleUnit}
+                        accessibilityRole="button"
+                        accessibilityLabel="Toggle distance unit"
+                        hitSlop={DS_V3.space.sm}
+                      >
+                        <Text style={styles.trail}>{unit}</Text>
+                      </Pressable>
+                    }
+                  />
+                </View>
+                <View style={styles.field}>
+                  <TextField
+                    label="Duration"
+                    value={formatDurationInput(durationDigits)}
+                    onChangeText={(t) => {
+                      const digits = applyDurationFieldChange(durationDigits, t);
+                      setDurationDigits(digits);
+                      const sec = parseDurationInput(digits);
+                      lastDuration.current = sec;
+                      onDuration(sec);
+                    }}
+                    keyboardType="number-pad"
+                    inputAccessoryViewID={padAccessory}
+                    accessibilityLabel="Duration"
+                    trailing={<Text style={styles.trail}>mm:ss</Text>}
+                  />
+                </View>
               </View>
-              <View style={styles.field}>
-                <TextField
-                  label="Duration"
-                  value={formatDurationInput(durationDigits)}
-                  onChangeText={(t) => {
-                    const digits = applyDurationFieldChange(durationDigits, t);
-                    setDurationDigits(digits);
-                    const sec = parseDurationInput(digits);
-                    lastDuration.current = sec;
-                    onDuration(sec);
-                  }}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Duration"
-                  trailing={<Text style={styles.trail}>mm:ss</Text>}
-                />
+              {pace ? <Text style={styles.pace}>{pace}</Text> : null}
+              {hasCamera ? <Text style={styles.pace}>{RUN_PHOTO_AFTER}</Text> : null}
+            </>
+          ) : (
+            <>
+              <TextField
+                label="Minutes"
+                value={minutesText}
+                onChangeText={(t) => {
+                  const next = sanitizeMinutesInput(t);
+                  setMinutesText(next);
+                  onMinutes(parseMinutesInput(next));
+                }}
+                keyboardType="number-pad"
+                inputAccessoryViewID={padAccessory}
+                accessibilityLabel="Minutes"
+                trailing={<Text style={styles.trail}>min</Text>}
+              />
+              <View style={styles.chips}>
+                {["Lift", "Push", "Pull", "Conditioning"].map((k) => (
+                  <Pressable
+                    key={k}
+                    onPress={() => onKind(k)}
+                    accessibilityRole="button"
+                    accessibilityLabel={k}
+                    style={[styles.chip, kind === k && styles.chipOn]}
+                  >
+                    <Text style={[styles.chipText, kind === k && styles.chipTextOn]}>{k}</Text>
+                  </Pressable>
+                ))}
               </View>
-            </View>
-            {pace ? <Text style={styles.pace}>{pace}</Text> : null}
-            {hasCamera ? <Text style={styles.pace}>{RUN_PHOTO_AFTER}</Text> : null}
-          </>
-        ) : (
-          <>
-            <TextField
-              label="Minutes"
-              value={minutesText}
-              onChangeText={(t) => {
-                const next = sanitizeMinutesInput(t);
-                setMinutesText(next);
-                onMinutes(parseMinutesInput(next));
-              }}
-              keyboardType="number-pad"
-              accessibilityLabel="Minutes"
-              trailing={<Text style={styles.trail}>min</Text>}
-            />
-            <View style={styles.chips}>
-              {["Lift", "Push", "Pull", "Conditioning"].map((k) => (
-                <Pressable
-                  key={k}
-                  onPress={() => onKind(k)}
-                  accessibilityRole="button"
-                  accessibilityLabel={k}
-                  style={[styles.chip, kind === k && styles.chipOn]}
-                >
-                  <Text style={[styles.chipText, kind === k && styles.chipTextOn]}>{k}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <Button label={WORKOUT_USE_TIMER} variant="tertiary" flush onPress={onUseTimer} />
-          </>
-        )}
-      </View>
+              <Button label={WORKOUT_USE_TIMER} variant="tertiary" flush onPress={onUseTimer} />
+            </>
+          )}
+        </Pressable>
+      </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
         <Button
           label={cta}
@@ -211,7 +237,22 @@ export function LogStep({
         />
         <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
       </View>
-    </View>
+      {Platform.OS === "ios" ? (
+        <InputAccessoryView nativeID={LOG_PAD_ACCESSORY}>
+          <View style={styles.accessory}>
+            <Pressable
+              onPress={Keyboard.dismiss}
+              accessibilityRole="button"
+              accessibilityLabel="Done"
+              hitSlop={DS_V3.space.sm}
+              style={styles.accessoryHit}
+            >
+              <Text style={styles.accessoryDone}>Done</Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -220,10 +261,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
   },
-  body: {
+  scroll: {
     flex: 1,
+  },
+  body: {
+    flexGrow: 1,
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+  },
+  tapAway: {
     gap: DS_V3.space.md,
   },
   title: {
@@ -297,6 +343,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   captionBrand: {
+    color: DS_V3.color.brandText,
+  },
+  accessory: {
+    backgroundColor: DS_V3.color.surface,
+    borderTopWidth: DS_V3.space.xs / 4,
+    borderTopColor: DS_V3.color.border,
+    alignItems: "flex-end",
+    paddingHorizontal: DS_V3.space.gutter,
+  },
+  accessoryHit: {
+    minHeight: DS_V3.size.tap,
+    justifyContent: "center",
+  },
+  accessoryDone: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.brandText,
   },
 });
