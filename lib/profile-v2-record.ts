@@ -152,6 +152,10 @@ export type ProfileRecord = {
     verified: number;
     length: number;
     value: string;
+    status: string;
+    startDateKey: string;
+    endDateKey: string;
+    endedOnDay: number;
   }[];
   proofs: {
     dateKey: string;
@@ -312,7 +316,6 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
   const listed = input.ranges.filter((r) => !isAbandonedEnrollment(r.status));
   const activeRanges = listed.filter((r) => r.status === "active");
-  const completedRanges = listed.filter((r) => r.status === "completed");
   const dueDayKeys = unionDueDateKeys(activeRanges, input.todayKey);
   const closedDueKeys = dueDayKeys.filter((k) => k < input.todayKey);
   const verifiedClosedKeys = closedDueKeys.filter((k) => secured.has(k));
@@ -362,7 +365,8 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       };
     });
 
-  const completed = completedRanges.map((range) => {
+  const finishedRanges = listed.filter((r) => r.status !== "active");
+  const completed = finishedRanges.map((range) => {
     const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
     const keys: string[] = [];
     let cursor = range.startDateKey;
@@ -378,6 +382,10 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       verified,
       length: range.durationDays,
       value: `${verified} of ${range.durationDays}`,
+      status: range.status,
+      startDateKey: range.startDateKey,
+      endDateKey: range.endDateKey,
+      endedOnDay: keys.length || range.durationDays,
     };
   });
 

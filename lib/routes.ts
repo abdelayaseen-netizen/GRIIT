@@ -52,6 +52,7 @@ export const ROUTES = {
   /** Secured / self-reported moment. Push only after secureDay refetch. */
   TASK_SECURED: "/task/secured",
   CHALLENGE_COMPLETE: "/challenge/complete",
+  CHALLENGE_END: "/challenge/end",
   PAYWALL: "/paywall",
   LEGAL_PRIVACY: "/legal/privacy-policy",
   LEGAL_TERMS: "/legal/terms",
