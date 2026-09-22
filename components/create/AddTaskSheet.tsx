@@ -48,6 +48,7 @@ import { typeCaption } from "@/lib/task-ui";
 import type { HomeProofRow } from "@/lib/home-proof-card";
 
 const NAME_MAX = 60;
+export const NAME_THIS_TASK = "Name this task.";
 const ICON = DS_V3.space.gutter;
 const TYPE_ROWS = [ADD_TASK_TYPE_CHIPS.slice(0, 3), ADD_TASK_TYPE_CHIPS.slice(3, 6)] as const;
 
@@ -193,7 +194,7 @@ export default function AddTaskSheet({
       footer={
         <Button
           label={ADD_TASK_CTA}
-          disabled={!draft.name.trim()}
+          disabled={!canSubmitDraft(draft)}
           onPress={save}
         />
       }
@@ -223,6 +224,7 @@ export default function AddTaskSheet({
           accessibilityLabel={ADD_TASK_NAME_LABEL}
           maxLength={NAME_MAX}
         />
+        {!draft.name.trim() ? <Text style={styles.nameHint}>{NAME_THIS_TASK}</Text> : null}
 
         <Text style={styles.section}>{ADD_TASK_WHAT_YOU_DO}</Text>
         <View style={styles.typeGrid}>
@@ -457,6 +459,13 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  nameHint: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    marginTop: -DS_V3.space.sm,
   },
   fieldBlock: {
     gap: DS_V3.space.md,

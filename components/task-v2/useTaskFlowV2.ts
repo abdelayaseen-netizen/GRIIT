@@ -103,7 +103,7 @@ export function useTaskFlowV2() {
   const taskId = firstString(params.taskId);
   const activeChallengeId = firstString(params.activeChallengeId);
   const taskType = (firstString(params.taskType) || "manual").toLowerCase();
-  const taskName = firstString(params.taskName) || "Task";
+  const taskName = firstString(params.taskName) || "Untitled task";
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
   const challengeName = firstString(params.challengeName) || "Challenge";
   const currentDay = Math.max(1, parseInt(firstString(params.currentDay) || "1", 10) || 1);

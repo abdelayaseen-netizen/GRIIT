@@ -100,7 +100,9 @@ function canAdvanceStep1(s: WizardState): boolean {
 }
 
 function canAdvanceStep2(s: WizardState): boolean {
-  if (s.useCustom) return s.customTasks.length > 0;
+  if (s.useCustom) {
+    return s.customTasks.length > 0 && s.customTasks.every((t) => t.name.trim().length > 0);
+  }
   return !!s.pack;
 }
 
@@ -392,6 +394,11 @@ export function CreateWizardV2() {
         </ScrollView>
 
         <WizardFooter>
+          {state.step === 2 &&
+          state.useCustom &&
+          state.customTasks.some((t) => !t.name.trim()) ? (
+            <Text style={styles.secondary}>Name this task.</Text>
+          ) : null}
           <Button
             label={state.step === 3 ? "Review" : "Continue"}
             disabled={primaryDisabled}

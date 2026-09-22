@@ -11,7 +11,7 @@
  * Verdict: display only. Not persisted.
  */
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
-import { homeDayLine, homeDayTotal } from "./home-day-total";
+import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
 import {
   badgeRowsFromProgress,
   formatDayMonthYear,
@@ -152,6 +152,10 @@ export type ProfileRecord = {
     verified: number;
     length: number;
     value: string;
+    status: string;
+    startDateKey: string;
+    endDateKey: string;
+    endedOnDay: number;
   }[];
   proofs: {
     dateKey: string;
@@ -312,7 +316,6 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
   const listed = input.ranges.filter((r) => !isAbandonedEnrollment(r.status));
   const activeRanges = listed.filter((r) => r.status === "active");
-  const completedRanges = listed.filter((r) => r.status === "completed");
   const dueDayKeys = unionDueDateKeys(activeRanges, input.todayKey);
   const closedDueKeys = dueDayKeys.filter((k) => k < input.todayKey);
   const verifiedClosedKeys = closedDueKeys.filter((k) => secured.has(k));
@@ -340,7 +343,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .map((range) => {
       const rangeDue = dueKeysForRange(range, input.todayKey);
       const elapsed = rangeDue.filter((k) => k < input.todayKey).length;
-      const day = rangeDue.length === 0 ? 1 : rangeDue.includes(input.todayKey) ? elapsed + 1 : elapsed;
+      const day = calendarDay(range.startDateKey, input.todayKey, range.durationDays);
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);
@@ -362,7 +365,8 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       };
     });
 
-  const completed = completedRanges.map((range) => {
+  const finishedRanges = listed.filter((r) => r.status !== "active");
+  const completed = finishedRanges.map((range) => {
     const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
     const keys: string[] = [];
     let cursor = range.startDateKey;
@@ -378,6 +382,10 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       verified,
       length: range.durationDays,
       value: `${verified} of ${range.durationDays}`,
+      status: range.status,
+      startDateKey: range.startDateKey,
+      endDateKey: range.endDateKey,
+      endedOnDay: keys.length || range.durationDays,
     };
   });
 

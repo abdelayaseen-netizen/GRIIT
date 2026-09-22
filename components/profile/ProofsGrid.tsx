@@ -34,7 +34,7 @@ function ProofTile({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={proofsTileA11y(item.taskName, item.shared)}
+      accessibilityLabel={proofsTileA11y(item.taskName, item.dateKey, item.shared)}
       onPress={() => onOpen(item)}
       style={styles.tile}
     >

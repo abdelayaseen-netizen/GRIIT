@@ -46,8 +46,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
 import ProofsGrid from "@/components/profile/ProofsGrid";
 import { itemsFromRecordProofs, setOpenProof } from "@/lib/proofs-grid";
-import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
+import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
+import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
+import { rowsFromProfileRecord } from "@/lib/profile-challenges";
 
 type ProfileTab = "challenges" | "proofs" | "badges";
 
@@ -189,6 +191,9 @@ export default function ProfileScreen() {
     getTodayDateKey(homeTimeZone),
   );
   const consistency = consistencyFromRecord(record?.consistency);
+  const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
+    todaySecured,
+  });
 
   return (
     <ErrorBoundary>
@@ -255,7 +260,30 @@ export default function ProfileScreen() {
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
             proofsInParent
+            challengesInParent
           />
+          {v3Tab === "Challenges" ? (
+            challengeRows.length === 0 ? (
+              <EmptyState
+                heading="No active challenge"
+                body="Start one from Discover. Day 1 begins the morning after you join."
+                actionLabel="Find a challenge"
+                onAction={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              />
+            ) : (
+              <ProfileChallenges
+                challenges={challengeRows}
+                formatDate={(key) => formatDayMonthYear(key.slice(0, 10))}
+                onOpen={(row) =>
+                  router.push(
+                    (row.status === "active"
+                      ? ROUTES.CHALLENGE_ACTIVE(row.id)
+                      : ROUTES.CHALLENGE_ID(row.challengeId)) as never,
+                  )
+                }
+              />
+            )
+          ) : null}
           {v3Tab === "Proofs" ? (
             <ProofsGrid
               items={proofItems}

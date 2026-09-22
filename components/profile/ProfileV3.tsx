@@ -86,6 +86,8 @@ export type ProfileV3Props = {
   locked?: { heading: string; body: string } | null;
   /** Parent FlatList owns the proofs grid + footnote when the list can grow. */
   proofsInParent?: boolean;
+  /** Parent owns Running / Finished (Chunk T). */
+  challengesInParent?: boolean;
 };
 
 export function ProfileV3({
@@ -122,6 +124,7 @@ export function ProfileV3({
   showRootHeader = true,
   locked,
   proofsInParent = false,
+  challengesInParent = false,
 }: ProfileV3Props) {
   return (
     <View>
@@ -248,7 +251,7 @@ export function ProfileV3({
       </View>
 
       <View style={styles.tabBody}>
-        {tab === "Challenges" ? (
+        {tab === "Challenges" && !challengesInParent ? (
           runs.length === 0 ? (
             <EmptyState
               heading="No active challenge"
@@ -263,7 +266,7 @@ export function ProfileV3({
                   key={r.id}
                   onPress={() => onOpenRun(r.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={r.name}
+                  accessibilityLabel={`Open ${r.name} challenge`}
                   style={styles.run}
                 >
                   <Text style={styles.heading}>{r.name}</Text>
@@ -320,7 +323,7 @@ export function ProfileV3({
         ) : null}
       </View>
 
-      {tab === "Badges" || tab === "Proofs" ? null : (
+      {tab === "Badges" || tab === "Proofs" || (tab === "Challenges" && challengesInParent) ? null : (
         <Text style={styles.foot}>{FOOTNOTE}</Text>
       )}
         </>

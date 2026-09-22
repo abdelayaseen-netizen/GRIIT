@@ -114,23 +114,35 @@ describe("morningAfter ack storage", () => {
 });
 
 describe("morningAfter after today is secured", () => {
-  // v28.1 (02_screens.md:3608) designs the missed-yesterday-secured-today line; positive assertions land in Chunk T Phase 4.
-  it("keeps the copy-table reset lines", () => {
+  it("keeps the copy-table reset lines and the v28.1 secured-today line", () => {
     const table = readFileSync(
       resolve(__dirname, "../design/handoff/cursor/02_screens.md"),
       "utf8",
     );
     expect(table).toContain("Your streak reset to 0. Your longest was {longest} days.");
     expect(table).toContain("Your streak reset to 0. A freeze can undo that for yesterday.");
+    expect(table).toContain("Your {previous_streak}-day streak ended. Today starts the count at 1.");
     expect(morningAfterCushion("reset", { longest: 12, lastStandsLeft: 0 })).toBe(
       "Your streak reset to 0. Your longest was 12 days.",
     );
     expect(morningAfterCushion("freeze", { longest: 12, lastStandsLeft: 0 })).toContain(
       "Your streak reset to 0.",
     );
+    expect(
+      morningAfterCushion("reset", {
+        longest: 12,
+        lastStandsLeft: 0,
+        todaySecured: true,
+        previousStreak: 12,
+      }),
+    ).toBe("Your 12-day streak ended. Today starts the count at 1.");
+    expect(
+      morningAfterCushion("reset", { longest: 12, lastStandsLeft: 0, todaySecured: true }),
+    ).toBe("Your streak ended. Today starts the count at 1.");
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     expect(home).toContain("cushion: morningAfterCushion(variant,");
-    expect(home).not.toMatch(/cushion:.*todaySecured/);
+    expect(home).toContain("todaySecured");
+    expect(home).toContain("previousStreak");
   });
 
   it("keeps lostStreak across remount and does not hide on todaySecured", () => {

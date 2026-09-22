@@ -45,7 +45,7 @@ export default function Sheet({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss"
+          accessibilityLabel="Close"
           onPress={onDismiss}
           style={styles.scrim}
         />

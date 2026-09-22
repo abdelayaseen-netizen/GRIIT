@@ -1,5 +1,4 @@
-import { displayDay } from "@/lib/challenge-day";
-import { homeDayLine, homeDayTotal } from "@/lib/home-day-total";
+import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { closedWindowCaption, gateLine } from "@/lib/task-ui";
@@ -13,6 +12,74 @@ export function homeProofDayLine(day: number, dayTotal: number | null | undefine
   return homeDayLine(day, dayTotal);
 }
 
+const TYPE_FALLBACK: Record<string, string> = {
+  timer: "Timer",
+  counter: "Counter",
+  count: "Counter",
+  run: "Run",
+  walk: "Run",
+  check_off: "Check off",
+  checkoff: "Check off",
+  manual: "Check off",
+  text: "Write",
+  write: "Write",
+  journal: "Write",
+  photo: "Photo",
+  camera: "Photo",
+};
+
+/** Empty title → type/target. Never the old generic fallback. */
+export function taskDisplayName(input: {
+  title?: string | null;
+  type?: string | null;
+  targetValue?: number | null;
+  targetUnit?: string | null;
+  durationMinutes?: number | null;
+  requirePhoto?: boolean;
+}): string {
+  const title = (input.title ?? "").trim();
+  if (title) return title;
+  const raw = (input.type ?? "").trim().toLowerCase();
+  const typeName =
+    TYPE_FALLBACK[raw] ??
+    (raw.includes("timer")
+      ? "Timer"
+      : raw.includes("run") || raw.includes("walk")
+        ? "Run"
+        : raw.includes("count")
+          ? "Counter"
+          : raw.includes("write") || raw.includes("text") || raw.includes("journal")
+            ? "Write"
+            : raw.includes("photo") || raw.includes("camera")
+              ? "Photo"
+              : raw.includes("check")
+                ? "Check off"
+                : "");
+  const mins =
+    input.durationMinutes != null && Number.isFinite(input.durationMinutes) && input.durationMinutes > 0
+      ? Math.floor(input.durationMinutes)
+      : null;
+  const target =
+    input.targetValue != null && Number.isFinite(input.targetValue) && input.targetValue > 0
+      ? input.targetValue
+      : null;
+  const unit = (input.targetUnit ?? "").trim();
+  if (typeName === "Timer" && mins != null) return `${mins} min timer`;
+  if (typeName === "Run" && target != null) return `Run ${target}${unit ? ` ${unit}` : " km"}`;
+  if (target != null && unit) return `${target} ${unit}`;
+  if (typeName) return typeName;
+  if (input.requirePhoto) return "Photo";
+  return "Untitled task";
+}
+
+export function homeSectionToggleA11y(expanded: boolean, challenge: string): string {
+  return expanded ? `Collapse section, ${challenge}` : `Expand section, ${challenge}`;
+}
+
+export function homeChallengeOpenA11y(challenge: string): string {
+  return `Open ${challenge} challenge`;
+}
+
 export type HomeProofTask = {
   id?: string;
   name: string;
@@ -20,6 +87,7 @@ export type HomeProofTask = {
   challengeId?: string;
   activeChallengeId?: string;
   currentDay: number;
+  startDateKey?: string;
   durationDays?: number;
   done: boolean;
   challengeSecuredToday: boolean;
@@ -85,7 +153,12 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const closed = task.windowState === "closed" && !task.done;
   return {
     id: task.id ?? `${task.name}-${index}`,
-    name: task.name,
+    name: taskDisplayName({
+      title: task.name,
+      type: task.type ?? task.taskType,
+      durationMinutes: task.durationMinutes,
+      requirePhoto: task.requirePhoto,
+    }),
     type: task.type ?? task.taskType ?? "check_off",
     caption: closed ? closedWindowCaption(task.gateTime) : gateLine(rowGates(task), task.gateTime),
     done: task.done,
@@ -102,6 +175,12 @@ export function homeProofRingState(row: Pick<HomeProofRow, "done" | "closed">): 
   return "pending";
 }
 
+export function homeRingA11y(state: HomeProofRing): string {
+  if (state === "done") return "Done";
+  if (state === "closed") return "Window closed";
+  return "Not done";
+}
+
 function sectionKey(task: HomeProofTask): string {
   return task.activeChallengeId || task.challengeName;
 }
@@ -109,14 +188,18 @@ function sectionKey(task: HomeProofTask): string {
 function sectionFromTasks(
   id: string,
   tasks: HomeProofTask[],
-  _securedToday: boolean,
+  todayKey?: string,
 ): HomeProofSection {
   const first = tasks[0]!;
+  const day =
+    first.startDateKey && todayKey
+      ? calendarDay(first.startDateKey, todayKey, first.durationDays)
+      : clampCalendarDay(first.currentDay, first.durationDays);
   return {
     id,
     challenge: first.challengeName,
     challengeId: first.challengeId?.trim() || null,
-    day: displayDay(first.currentDay, first.challengeSecuredToday),
+    day,
     dayTotal: homeDayTotal(first.durationDays),
     doneCount: tasks.filter((t) => t.done).length,
     totalCount: tasks.length,
@@ -133,6 +216,7 @@ export function selectHomeProofCard(input: {
   targetStreak?: number | null;
   /** Server getSecuredDateKeys only. Never task.done / checkins. */
   securedToday: boolean;
+  todayKey?: string;
 }): HomeProofCard {
   const order: string[] = [];
   const groups = new Map<string, HomeProofTask[]>();
@@ -146,7 +230,7 @@ export function selectHomeProofCard(input: {
     }
   }
   const sections = order.map((id) =>
-    sectionFromTasks(id, groups.get(id)!, input.securedToday),
+    sectionFromTasks(id, groups.get(id)!, input.todayKey),
   );
   return {
     posted: input.securedToday,

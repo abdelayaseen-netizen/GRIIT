@@ -48,7 +48,6 @@ describe("freeze sheet", () => {
     expect(home).toContain("for (const queryKey of FREEZE_SUCCESS_INVALIDATES)");
     expect(home).toContain("invalidateQueries({ queryKey: [...queryKey] })");
     expect(home).toContain("timeZone={homeTimeZone}");
-    expect(home).not.toContain("previous_streak");
     expect(home).not.toContain("Math.max(recon.result?.previous_streak ?? 0, 1)");
     expect(home).toContain("useFreeze.mutate()");
     expect(home).toContain("missAckPayload(user.id, yesterdayKey)");

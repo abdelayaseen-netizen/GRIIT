@@ -1,5 +1,5 @@
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import type { HomeProofTask } from "@/lib/home-proof-card";
+import { taskDisplayName, type HomeProofTask } from "@/lib/home-proof-card";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 
@@ -43,7 +43,7 @@ export function dayOpenTasksFromActive(args: {
     for (const t of required) {
       out.push({
         id: t.id,
-        name: t.title ?? t.type ?? "Task",
+        name: taskDisplayName({ title: t.title, type: t.type, requirePhoto: t.require_photo === true }),
         challengeName,
         activeChallengeId: ac.id,
         currentDay,

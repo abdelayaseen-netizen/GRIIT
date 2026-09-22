@@ -28,6 +28,11 @@ import { DS_COLORS } from "@/lib/design-system";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { queryClient } from "@/lib/query-client";
 import { queryFocusedFromAppState } from "@/lib/query-focus";
+import {
+  notifyAppBecameActive,
+  runFinalizeEndedOnForeground,
+  setFinalizeEndedForegroundHandler,
+} from "@/lib/finalize-ended-foreground";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
@@ -62,6 +67,7 @@ if (Platform.OS !== "web") {
   focusManager.setEventListener((handleFocus) => {
     const sub = AppState.addEventListener("change", (state) => {
       handleFocus(queryFocusedFromAppState(state));
+      if (state === "active") notifyAppBecameActive();
     });
     return () => sub.remove();
   });
@@ -277,6 +283,13 @@ function RootLayoutNav() {
           presentation: "modal"
         }} 
       />
+      <Stack.Screen
+        name="challenge/end"
+        options={{
+          headerShown: false,
+          presentation: "fullScreenModal",
+        }}
+      />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
@@ -365,6 +378,7 @@ function RootLayout() {
                   <AppProvider>
                     <ThemeAwareStatusBar />
                     <RootLayoutNav />
+                    <FinalizeEndedGate />
                     <AuthRedirector />
                   </AppProvider>
                 </ApiProvider>
@@ -404,6 +418,33 @@ const layoutStyles = StyleSheet.create({
   },
   sessionExpiredText: { color: DS_COLORS.white, fontSize: 14 },
 });
+
+function FinalizeEndedGate() {
+  const { user } = useAuth();
+  const pathname = usePathname();
+  const nav = useRouter();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+
+  useEffect(() => {
+    if (!user) {
+      setFinalizeEndedForegroundHandler(null);
+      return;
+    }
+    const run = () => {
+      void runFinalizeEndedOnForeground({
+        userId: user.id,
+        pathname: pathnameRef.current,
+        openEnd: () => nav.push(ROUTES.CHALLENGE_END as never),
+      });
+    };
+    setFinalizeEndedForegroundHandler(run);
+    run();
+    return () => setFinalizeEndedForegroundHandler(null);
+  }, [user, nav]);
+
+  return null;
+}
 
 function ThemeAwareStatusBar() {
   return <StatusBar barStyle="light-content" backgroundColor="transparent" />;

@@ -26,7 +26,7 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
-import { displayDay } from '@/lib/challenge-day';
+import { calendarDay, clampCalendarDay } from '@/lib/home-day-total';
 import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
@@ -44,6 +44,7 @@ export type StreakHeroV4Task = {
   challengeId: string;
   challengeName: string;
   currentDay: number;
+  startDateKey?: string;
   /** True when this task's challenge has all required proofs in for today. */
   challengeSecuredToday: boolean;
   durationDays: number;
@@ -70,6 +71,8 @@ export type StreakHeroV4Props = {
   totalTasksToday: number;
   /** True when today's date_key is in securedDateKeys (server day_secures). */
   todaySecured: boolean;
+  /** Local today key — same source HomeV3 uses for calendarDay. */
+  todayKey?: string;
   freezesAvailable: number;
   freezeUsedToday: boolean;
   nextBadgeName: string;
@@ -451,10 +454,14 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
         ? `Secure Day ${(props.streak ?? 0) + 1}`
         : "Post today's proof";
 
+  const firstTask = props.tasks[0];
+  const heroDay = firstTask
+    ? firstTask.startDateKey && props.todayKey
+      ? calendarDay(firstTask.startDateKey, props.todayKey, firstTask.durationDays)
+      : clampCalendarDay(firstTask.currentDay, firstTask.durationDays)
+    : 1;
   const subtitle =
-    props.tasks.length > 0 && props.tasks[0]
-      ? `${props.tasks[0].challengeName} · Day ${displayDay(props.tasks[0].currentDay, props.todaySecured)}`
-      : undefined;
+    firstTask != null ? `${firstTask.challengeName} · Day ${heroDay}` : undefined;
 
   const visibleTasks = props.tasks.slice(0, 4);
 
