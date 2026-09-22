@@ -234,14 +234,18 @@ export const challengesJoinProcedures = {
       }
 
       if (ac) {
-        const { error: delErr } = await ctx.supabase
+        const leftAt = new Date().toISOString();
+        const { error: updErr } = await ctx.supabase
           .from("active_challenges")
-          .delete()
+          .update({
+            status: SOLO_LEAVE_ACTIVE_STATUS,
+            ended_at: leftAt,
+            end_seen_at: leftAt,
+          })
           .eq("id", ac.id);
-        if (delErr) {
+        if (updErr) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
         }
-        // participants_count: sync after leaving (active_challenges row removed)
         await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
         await ctx.supabase
           .from("profiles")

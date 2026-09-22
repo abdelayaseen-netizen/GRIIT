@@ -71,5 +71,6 @@ describe("SOLO_LEAVE_ACTIVE_STATUS", () => {
     const src = readFileSync(resolve(__dirname, "../trpc/routes/challenges-join.ts"), "utf8");
     expect(src).toContain("ended_at: leftAt");
     expect(src).toContain("end_seen_at: leftAt");
+    expect(src).not.toMatch(/from\("active_challenges"\)\s*\.delete\(/);
   });
 });
