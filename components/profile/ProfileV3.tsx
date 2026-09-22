@@ -266,7 +266,7 @@ export function ProfileV3({
                   key={r.id}
                   onPress={() => onOpenRun(r.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={r.name}
+                  accessibilityLabel={`Open ${r.name} challenge`}
                   style={styles.run}
                 >
                   <Text style={styles.heading}>{r.name}</Text>

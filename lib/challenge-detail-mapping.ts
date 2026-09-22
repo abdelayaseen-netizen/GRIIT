@@ -1,4 +1,5 @@
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
+import { taskDisplayName } from "@/lib/home-proof-card";
 
 export type GateKind = "camera" | "time_window" | "location";
 
@@ -174,7 +175,11 @@ export function toDetailTasks(
       (g): g is { kind: "time_window"; label: string } => g.kind === "time_window",
     );
     return {
-      title: (t.title ?? "").trim() || "Task",
+      title: taskDisplayName({
+        title: t.title,
+        type: t.task_type ?? t.type,
+        requirePhoto: t.require_photo === true,
+      }),
       task_type: String(t.task_type ?? t.type ?? ""),
       gates: gates.map((g) => g.kind),
       time_window: windowGate?.label,

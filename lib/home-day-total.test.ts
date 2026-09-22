@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { homeDayLine, homeDayTotal } from "@/lib/home-day-total";
+import { calendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 
 describe("homeDayTotal", () => {
   it("is duration_days only — target_streak is not used", () => {
@@ -17,8 +17,8 @@ describe("homeDayTotal", () => {
 });
 
 describe("homeDayLine", () => {
-  it("is Day n of duration when duration_days is present", () => {
-    expect(homeDayLine(4, 1)).toBe("Day 4 of 1");
+  it("is Day n of duration when duration_days is present, clamped to N", () => {
+    expect(homeDayLine(4, 1)).toBe("Day 1 of 1");
     expect(homeDayLine(4, 75)).toBe("Day 4 of 75");
   });
 
@@ -26,5 +26,13 @@ describe("homeDayLine", () => {
     expect(homeDayLine(4, null)).toBe("Day 4");
     expect(homeDayLine(4, undefined)).toBe("Day 4");
     expect(homeDayLine(4, 0)).toBe("Day 4");
+  });
+});
+
+describe("calendarDay", () => {
+  it("is inclusive local days from start to today, clamped to N", () => {
+    expect(calendarDay("2026-09-20", "2026-09-22", 75)).toBe(3);
+    expect(calendarDay("2026-09-22", "2026-09-22", 75)).toBe(1);
+    expect(calendarDay("2026-09-01", "2026-09-22", 14)).toBe(14);
   });
 });

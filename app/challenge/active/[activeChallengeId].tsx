@@ -34,8 +34,8 @@ import {
   weekSecuredFromKeys,
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
-import { displayDay } from "@/lib/challenge-day";
-import { homeDayTotal } from "@/lib/home-day-total";
+import { calendarDay, dateKeyFromIso, homeDayTotal } from "@/lib/home-day-total";
+import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 
@@ -198,7 +198,10 @@ export default function ActiveChallengeDetailScreen() {
   );
   const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
   const weekSecured = weekSecuredRaw.map((filled, i) => filled || (securedToday && i === todayIndex));
-  const shownDay = displayDay(currentDay, securedToday);
+  const startIso =
+    activeChallenge?.start_at ?? activeChallenge?.started_at ?? activeChallenge?.created_at ?? null;
+  const startKey = startIso ? dateKeyFromIso(String(startIso), profileTz ?? "UTC") : todayKey;
+  const shownDay = calendarDay(startKey, todayKey, durationDays);
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {
@@ -243,7 +246,18 @@ export default function ActiveChallengeDetailScreen() {
       const cfg = row.config;
       return {
         id: row.id,
-        title: (row.title ?? "").trim() || "Task",
+        title: taskDisplayName({
+          title: row.title,
+          type: taskType,
+          targetValue: targets.targetValue,
+          targetUnit: unitForTask(taskType, cfg),
+          durationMinutes: targets.durationMinutes,
+          requirePhoto: requirePhotoAsked({
+            taskType,
+            requirePhoto: row.require_photo,
+            config: cfg,
+          }),
+        }),
         task_type: taskType,
         duration_minutes: targets.durationMinutes ?? undefined,
         target_value: targets.targetValue ?? undefined,

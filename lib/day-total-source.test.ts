@@ -10,9 +10,9 @@ describe("day total source", () => {
     expect(homeOrProfileDayTotal(null)).toBeNull();
   });
 
-  it("Feed: duration_days, plus own target_streak; never 2 of 1", () => {
-    expect(feedDayTotal(1, 2, 75)).toBe(75);
-    expect(feedDayTotal(1, 2, null)).toBe(2);
+  it("Feed N is duration_days; n is clamped, never 2 of 1", () => {
+    expect(feedDayTotal(1, 2, 75)).toBe(1);
+    expect(feedDayTotal(1, 2, null)).toBe(1);
   });
 });
 
@@ -25,7 +25,7 @@ describe("feedFinishedCopy", () => {
         targetStreak: 75,
         hasProof: false,
       }),
-    ).toBe("Finished. 2 of 75 days.");
+    ).toBe("Finished. 1 of 1 day.");
     expect(hasCameraProof({ proof_photo_url: null })).toBe(false);
   });
 

@@ -82,7 +82,7 @@ export function JeopardyModal({
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onDismiss}
-          accessibilityLabel="Dismiss jeopardy alert"
+          accessibilityLabel="Close"
         />
         <View style={styles.sheet}>
           {/* Header */}
@@ -98,7 +98,7 @@ export function JeopardyModal({
               onPress={onDismiss}
               hitSlop={HIT_SLOP}
               accessibilityRole="button"
-              accessibilityLabel="Dismiss"
+              accessibilityLabel="Close"
               style={({ pressed }) => [
                 styles.closeBtn,
                 pressed ? styles.pressed : null,

@@ -68,13 +68,25 @@ export function morningAfterCost(done: number, total: number, missedTaskNames: r
 
 export function morningAfterCushion(
   variant: MorningAfterVariant,
-  input: { longest: number; lastStandsLeft: number },
+  input: {
+    longest: number;
+    lastStandsLeft: number;
+    previousStreak?: number | null;
+    todaySecured?: boolean;
+  },
 ): string {
   if (variant === "last_stand") {
     return `A Last Stand covered it, so the streak continues. ${input.lastStandsLeft} left.`;
   }
   if (variant === "freeze") {
     return "Your streak reset to 0. A freeze can undo that for yesterday.";
+  }
+  if (input.todaySecured) {
+    const prev = input.previousStreak;
+    if (typeof prev === "number" && Number.isFinite(prev) && prev > 0) {
+      return `Your ${Math.floor(prev)}-day streak ended. Today starts the count at 1.`;
+    }
+    return "Your streak ended. Today starts the count at 1.";
   }
   return `Your streak reset to 0. Your longest was ${input.longest} days.`;
 }

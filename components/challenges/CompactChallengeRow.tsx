@@ -44,9 +44,7 @@ export const CompactChallengeRow = React.memo(function CompactChallengeRow({
   const metaLine = `${data.duration_days} ${dayUnit(data.duration_days)} · ${difficultyDescriptive(
     data.difficulty
   )} · ${proofTypeLabel(data.proof_type)}`;
-  const a11y = `${data.name}, ${data.duration_days} ${dayUnit(
-    data.duration_days
-  )}, ${difficultyDescriptive(data.difficulty)}, ${proofTypeLabel(data.proof_type).toLowerCase()}, tap to view`;
+  const a11y = `Open ${data.name} challenge`;
 
   const target = (data.slug ?? data.id).trim() || data.id;
   const handlePress = () => {

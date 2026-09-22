@@ -11,7 +11,7 @@
  * Verdict: display only. Not persisted.
  */
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
-import { homeDayLine, homeDayTotal } from "./home-day-total";
+import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
 import {
   badgeRowsFromProgress,
   formatDayMonthYear,
@@ -343,7 +343,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .map((range) => {
       const rangeDue = dueKeysForRange(range, input.todayKey);
       const elapsed = rangeDue.filter((k) => k < input.todayKey).length;
-      const day = rangeDue.length === 0 ? 1 : rangeDue.includes(input.todayKey) ? elapsed + 1 : elapsed;
+      const day = calendarDay(range.startDateKey, input.todayKey, range.durationDays);
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);

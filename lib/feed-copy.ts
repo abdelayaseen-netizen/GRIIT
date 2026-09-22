@@ -35,17 +35,23 @@ export function feedNoPhotoCopy(post: FeedNoPhotoInput): string {
 }
 
 /**
- * Feed Y: duration_days (post.totalDays). Own posts also apply target_streak.
- * Never render currentDay > Y.
+ * Feed N: duration_days (post.totalDays). Not target_streak.
+ * n is clamped to N — never "Day 76 of 75" / "2 of 1".
  */
 export function feedDisplayTotal(
   totalDays: number,
   currentDay: number,
-  targetStreak?: number | null,
+  _targetStreak?: number | null,
 ): number {
-  const duration = homeDayTotal(totalDays) ?? Math.max(1, totalDays);
-  const y = targetStreak != null && targetStreak > duration ? targetStreak : duration;
-  return Math.max(currentDay, y);
+  void currentDay;
+  void _targetStreak;
+  return homeDayTotal(totalDays) ?? Math.max(1, totalDays);
+}
+
+export function feedDisplayDay(currentDay: number, totalDays: number): number {
+  const y = feedDisplayTotal(totalDays, currentDay);
+  const n = Number.isFinite(currentDay) && currentDay > 0 ? Math.floor(currentDay) : 1;
+  return Math.min(n, y);
 }
 
 export function feedFinishedCopy(post: {
@@ -57,7 +63,8 @@ export function feedFinishedCopy(post: {
   hasProof?: boolean;
 }): string {
   const y = feedDisplayTotal(post.totalDays, post.currentDay, post.targetStreak);
-  const base = `Finished. ${post.currentDay} of ${y} ${dayWord(y)}`;
+  const n = feedDisplayDay(post.currentDay, post.totalDays);
+  const base = `Finished. ${n} of ${y} ${dayWord(y)}`;
   return hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
   })

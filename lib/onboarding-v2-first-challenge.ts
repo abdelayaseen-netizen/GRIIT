@@ -1,4 +1,5 @@
 import { formatTimeWindow, taskGates, type DetailTask } from "@/lib/challenge-detail-mapping";
+import { taskDisplayName } from "@/lib/home-proof-card";
 import { todayCardGateLabel } from "@/lib/today-card";
 import { GOAL_LABELS } from "@/lib/goal-challenge-map";
 import type { OnboardingGoal } from "@/store/onboardingStore";
@@ -33,7 +34,7 @@ export function suggestionTaskLine(task: SuggestionTask): { name: string; gate: 
   const windowGate = gates.find((g) => g.kind === "time_window");
   const time_window = windowGate && windowGate.kind === "time_window" ? windowGate.label : "";
   return {
-    name: (task.title ?? "").trim() || "Task",
+    name: taskDisplayName({ title: task.title, requirePhoto: task.require_photo === true }),
     gate: todayCardGateLabel({ gates: gates.map((g) => g.kind), time_window }),
   };
 }

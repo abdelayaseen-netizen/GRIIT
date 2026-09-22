@@ -22,7 +22,10 @@ import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
 import {
   HOME_PROOF_HEADING,
+  homeChallengeOpenA11y,
   homeProofDayLine,
+  homeRingA11y,
+  homeSectionToggleA11y,
   homeProofRingState,
   homeProofTitleMuted,
   type HomeProofCard,
@@ -44,7 +47,7 @@ export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
   if (state === "done") {
     return (
-      <View style={[styles.ring, styles.ringDone]} accessibilityLabel="Done">
+      <View style={[styles.ring, styles.ringDone]} accessibilityLabel={homeRingA11y("done")}>
         <Check size={RING_CHECK} color={DS_V3.color.canvas} strokeWidth={2.5} />
       </View>
     );
@@ -52,7 +55,7 @@ export function StatusRing({ row }: { row: HomeProofRow }) {
   return (
     <View
       style={[styles.ring, state === "closed" ? styles.ringClosed : styles.ringPending]}
-      accessibilityLabel={state === "closed" ? "Window closed" : "Pending"}
+      accessibilityLabel={homeRingA11y(state)}
     />
   );
 }
@@ -242,7 +245,7 @@ export function HomeV3({
               <Text style={styles.missFact}>{YESTERDAY_WASNT_SECURED}</Text>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Dismiss"
+                accessibilityLabel="Close"
                 onPress={morningAfter.onDismiss}
                 style={styles.missX}
               >
@@ -292,7 +295,7 @@ export function HomeV3({
                         {section.challengeId ? (
                           <Pressable
                             accessibilityRole="button"
-                            accessibilityLabel={`Open ${section.challenge} challenge`}
+                            accessibilityLabel={homeChallengeOpenA11y(section.challenge)}
                             onPress={() => onPressChallenge?.(section.challengeId!)}
                           >
                             <Text style={styles.task}>{section.challenge}</Text>
@@ -309,7 +312,7 @@ export function HomeV3({
                       </View>
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={expanded ? "Collapse section" : "Expand section"}
+                        accessibilityLabel={homeSectionToggleA11y(expanded, section.challenge)}
                         onPress={() => onToggleSection?.(section.id, !expanded)}
                         style={styles.chevronHit}
                       >

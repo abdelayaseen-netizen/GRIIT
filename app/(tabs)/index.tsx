@@ -19,7 +19,8 @@ import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
-import { selectHomeProofCard } from "@/lib/home-proof-card";
+import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
+import { dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
@@ -80,6 +81,9 @@ type ActiveRow = {
   id: string;
   challenge_id: string;
   current_day?: number;
+  start_at?: string | null;
+  started_at?: string | null;
+  created_at?: string | null;
   challenges?: {
     id?: string;
     title?: string;
@@ -211,6 +215,8 @@ export default function HomeScreen() {
       const challengeName = ac.challenges?.title ?? "Challenge";
       const currentDay = ac.current_day ?? 1;
       const durationDays = ac.challenges?.duration_days ?? 14;
+      const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
+      const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
 
@@ -218,7 +224,8 @@ export default function HomeScreen() {
         const tType = String(t.type ?? "manual").toLowerCase();
         flat.push({
           id: t.id,
-          name: t.title ?? t.type ?? "Task",
+          name: taskDisplayName({ title: t.title, type: tType }),
+          startDateKey,
           description: challengeName,
           proofType: tType.includes("photo") ? "photo" : "text",
           done: doneSet.has(t.id),
@@ -246,7 +253,7 @@ export default function HomeScreen() {
       }
     }
     return flat;
-  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser]);
+  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey]);
 
   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
   const statsReady = resolveHomeStatsReady({
@@ -291,6 +298,8 @@ export default function HomeScreen() {
       cushion: morningAfterCushion(variant, {
         longest: statsRow?.longestStreak ?? 0,
         lastStandsLeft: recon.result.lastStandsAvailable ?? statsRow?.lastStandsAvailable ?? 0,
+        previousStreak: recon.result.previous_streak ?? lostStreak,
+        todaySecured,
       }),
       freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
       onDismiss: () => {
@@ -304,7 +313,7 @@ export default function HomeScreen() {
         setShowFreezeSheet(true);
       } : undefined,
     };
-  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey]);
+  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -486,8 +495,9 @@ export default function HomeScreen() {
         firstProofEver,
         targetStreak: profile?.target_streak ?? null,
         securedToday: todaySecured,
+        todayKey,
       }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured],
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey],
   );
 
   const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);

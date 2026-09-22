@@ -4,11 +4,15 @@ import { describe, expect, it } from "vitest";
 import {
   HOME_PROOF_CTA_TODAY,
   HOME_PROOF_HEADING,
+  homeChallengeOpenA11y,
   homeProofCtaLabel,
   homeProofDayLine,
   homeProofRingState,
   homeProofTitleMuted,
+  homeRingA11y,
+  homeSectionToggleA11y,
   selectHomeProofCard,
+  taskDisplayName,
 } from "@/lib/home-proof-card";
 import type { HomeProofTask } from "@/lib/home-proof-card";
 
@@ -182,7 +186,7 @@ describe("selectHomeProofCard", () => {
       securedToday: false,
     });
     expect(withDuration.sections[0]?.dayTotal).toBe(1);
-    expect(homeProofDayLine(4, withDuration.sections[0]?.dayTotal)).toBe("Day 4 of 1");
+    expect(homeProofDayLine(4, withDuration.sections[0]?.dayTotal)).toBe("Day 1 of 1");
 
     const missing = selectHomeProofCard({
       tasks: [task({ name: "Journal", challengeName: "Write", currentDay: 4 })],
@@ -343,5 +347,29 @@ describe("Home Today card", () => {
     expect(src).toContain("ChevronUp");
     const chipBlock = src.slice(src.indexOf("countChip"), src.indexOf("countTxt"));
     expect(chipBlock).not.toContain("Pressable");
+  });
+});
+
+describe("taskDisplayName and a11y helpers", () => {
+  it("uses type and target when the title is empty", () => {
+    expect(taskDisplayName({ title: "  ", type: "run", targetValue: 3, targetUnit: "km" })).toBe(
+      "Run 3 km",
+    );
+    expect(taskDisplayName({ title: "", type: "photo" })).toBe("Photo");
+    expect(taskDisplayName({ title: "", type: "timer", durationMinutes: 45 })).toBe("45 min timer");
+    expect(taskDisplayName({ title: "", type: "counter", targetValue: 10, targetUnit: "pages" })).toBe(
+      "10 pages",
+    );
+    expect(taskDisplayName({ title: "", type: "" })).toBe("Untitled task");
+    expect(taskDisplayName({ title: "Outdoor workout" })).toBe("Outdoor workout");
+  });
+
+  it("names rings, section toggles, and challenge open per v28.2", () => {
+    expect(homeRingA11y("done")).toBe("Done");
+    expect(homeRingA11y("pending")).toBe("Not done");
+    expect(homeRingA11y("closed")).toBe("Window closed");
+    expect(homeSectionToggleA11y(true, "Iron man")).toBe("Collapse section, Iron man");
+    expect(homeSectionToggleA11y(false, "Iron man")).toBe("Expand section, Iron man");
+    expect(homeChallengeOpenA11y("Iron man")).toBe("Open Iron man challenge");
   });
 });

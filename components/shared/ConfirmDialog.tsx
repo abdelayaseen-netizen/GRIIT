@@ -30,7 +30,7 @@ export function ConfirmDialog({
           style={StyleSheet.absoluteFill}
           onPress={onCancel}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss dialog"
+          accessibilityLabel="Close"
         />
         <View style={styles.card} accessibilityRole="alert">
           <Text style={styles.title}>{title}</Text>

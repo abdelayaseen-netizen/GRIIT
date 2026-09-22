@@ -94,8 +94,11 @@ export function proofsTileLabel(
   return showChallenge ? item.challengeName : item.taskName;
 }
 
-export function proofsTileA11y(taskName: string, shared: boolean): string {
-  return `${taskName}, ${shared ? "shared" : "private"}`;
+export function proofsTileA11y(
+  challengeName: string,
+  dateKey: string,
+): string {
+  return `${challengeName}, ${proofsDateLabel(dateKey)}`;
 }
 
 export function proofsGatePill(item: Pick<ProofsGridItem, "gates" | "gateTime">): string {
@@ -139,7 +142,7 @@ export function itemsFromRecordProofs(
       day: p.day,
       durationDays: p.durationDays ?? 30,
       challengeName: p.challengeName ?? "Challenge",
-      taskName: p.taskName ?? "Task",
+      taskName: (p.taskName ?? "").trim() || "Untitled task",
       capturedAt: p.capturedAt ?? null,
       gates,
       gateTime: p.gateTime ?? null,

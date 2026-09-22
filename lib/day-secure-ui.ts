@@ -46,7 +46,7 @@ export function buildIncompleteRequired(opts: {
   const done = opts.requiredTasks.filter((t) => opts.completedTaskIds.has(t.id)).length;
   const remainingTitles = opts.requiredTasks
     .filter((t) => !opts.completedTaskIds.has(t.id))
-    .map((t) => (typeof t.title === "string" && t.title.trim() ? t.title.trim() : "Task"));
+    .map((t) => (typeof t.title === "string" && t.title.trim() ? t.title.trim() : "Untitled task"));
   return { kind: "incomplete_required", done, total, remainingTitles };
 }
 

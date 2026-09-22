@@ -4,7 +4,7 @@ import { feedDisplayTotal } from "@/lib/feed-copy";
 /**
  * One source per context:
  * Home + profile rows → duration_days (homeDayTotal).
- * Feed → duration_days (totalDays); own posts also apply target_streak.
+ * Feed N → duration_days (totalDays). n is clamped in feedDisplayDay.
  */
 export function homeOrProfileDayTotal(
   durationDays: number | null | undefined,
