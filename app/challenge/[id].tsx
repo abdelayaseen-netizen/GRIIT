@@ -42,6 +42,7 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
 import ChallengeDetailV3 from "@/components/challenge/ChallengeDetailV3";
 import {
+  day1StartCopy,
   detailState,
   formatChallengeDate,
   mapParticipationType,
@@ -49,7 +50,7 @@ import {
   type DetailTask,
 } from "@/lib/challenge-detail-mapping";
 
-type JoinResult = { id?: string };
+type JoinResult = { id?: string; start_at?: string };
 
 type ChallengeRow = {
   id: string;
@@ -310,7 +311,11 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
       if (result?.id) {
-        router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
+        Alert.alert(
+          "You're in.",
+          day1StartCopy(result.start_at, timeZone),
+          [{ text: "OK", onPress: () => router.replace(ROUTES.CHALLENGE_ACTIVE(result.id!) as never) }],
+        );
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
@@ -333,7 +338,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setJoining(false);
     }
-  }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall]);
+  }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall, timeZone]);
 
   const resolveInviteId = useCallback(async (): Promise<string | null> => {
     if (inviteIdParam) return inviteIdParam;

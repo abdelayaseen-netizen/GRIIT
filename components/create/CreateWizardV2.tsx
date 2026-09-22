@@ -51,6 +51,10 @@ import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
+import { day1StartCopy } from "@/lib/challenge-detail-mapping";
+import { resolveHomeTimeZone } from "@/lib/home-streak";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { useApp } from "@/contexts/AppContext";
 
 type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
 type CreateChallengeOutput = inferRouterOutputs<AppRouter>["challenges"]["create"];
@@ -136,7 +140,13 @@ export function CreateWizardV2() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [launchBusy, setLaunchBusy] = useState<boolean>(false);
   const [launchError, setLaunchError] = useState<string>("");
-  const [launched, setLaunched] = useState<{ title: string; group: boolean; challengeId: string } | null>(null);
+  const { profile } = useApp();
+  const [launched, setLaunched] = useState<{
+    title: string;
+    group: boolean;
+    challengeId: string;
+    startAt?: string | null;
+  } | null>(null);
 
   const isDirty = useMemo(() => {
     return (
@@ -295,7 +305,16 @@ export function CreateWizardV2() {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
       setConfirmOpen(false);
-      setLaunched({ title: state.title.trim(), group: state.who === "group", challengeId: result.id });
+      const startAt =
+        (result as { start_at?: string | null }).start_at ??
+        (result as { activeChallenge?: { start_at?: string } | null }).activeChallenge?.start_at ??
+        null;
+      setLaunched({
+        title: state.title.trim(),
+        group: state.who === "group",
+        challengeId: result.id,
+        startAt,
+      });
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
       const msg = err instanceof Error ? err.message : "";
@@ -317,7 +336,15 @@ export function CreateWizardV2() {
       <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
         <View style={styles.launchedBody}>
           <Text style={styles.launchedTitle}>You&apos;re in.</Text>
-          <Text style={styles.secondary}>Day 1 begins tomorrow morning.</Text>
+          <Text style={styles.secondary}>
+            {day1StartCopy(
+              launched.startAt,
+              resolveHomeTimeZone(
+                (profile as { timezone?: string | null } | null)?.timezone,
+                getDeviceIanaTimeZone(),
+              ),
+            )}
+          </Text>
           <Text style={styles.bodyStrong}>{launched.title}</Text>
         </View>
         <View style={styles.launchedFooter}>
