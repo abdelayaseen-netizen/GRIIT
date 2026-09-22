@@ -98,6 +98,9 @@ describe("proofs grid wiring", () => {
     expect(profile).not.toContain("title={`Day ${item.day}`}");
     expect(grid).toContain("proofsTileLabel");
     expect(grid).toContain("proofsTileA11y");
+    expect(grid).toContain('from "expo-image"');
+    expect(grid).toContain('contentFit="cover"');
+    expect(grid).toContain('cachePolicy="memory-disk"');
     expect(grid).toContain("onError");
     expect(grid).toContain("DS_V3.color.surface");
     expect(grid).toContain("Lock");

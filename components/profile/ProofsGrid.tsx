@@ -2,7 +2,8 @@
  * Frame 60 — date-sectioned camera proofs. Self-reported days get no tile.
  */
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { Camera, Lock } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
@@ -44,7 +45,8 @@ function ProofTile({
         <Image
           source={{ uri: item.uri }}
           style={styles.img}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
           onError={() => setFailed(true)}
         />
       )}
