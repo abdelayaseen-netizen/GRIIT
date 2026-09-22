@@ -13,6 +13,16 @@ import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
+import { supabase } from "@/lib/supabase";
+import { dateKeyFromIso } from "@/lib/home-day-total";
+import { resolveHomeTimeZone } from "@/lib/home-streak";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import {
+  countSecuredInRange,
+  finishedHeaderLine,
+  pickLatestEndedEnrollment,
+  type EndedEnrollmentRow,
+} from "@/lib/profile-challenges";
 import { FREE_ACTIVE_CHALLENGES_LIMIT, FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
 import { ensureAnonymousSession } from "@/lib/anon-auth";
@@ -87,7 +97,7 @@ export default function ChallengeDetailScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
-  const { activeChallenge, refetchAll } = useApp();
+  const { activeChallenge, refetchAll, profile } = useApp();
   const { isPro } = useProStatus();
   const queryClient = useQueryClient();
   const { error, showError, clearError } = useInlineError();
@@ -116,6 +126,30 @@ export default function ChallengeDetailScreen() {
     myActiveListQuery.isFetched ||
     myActiveListQuery.isError ||
     !!(id && activeChallenge?.challenge_id === id);
+
+  const endedEnrollmentQuery = useQuery({
+    queryKey: ["challenge", "endedEnrollment", user?.id ?? "", id],
+    enabled: !!user && !!id && enrollmentsReady && !activeChallengeId,
+    queryFn: async (): Promise<EndedEnrollmentRow | null> => {
+      const { data, error: qErr } = await supabase
+        .from("active_challenges")
+        .select("id, challenge_id, status, start_at, end_at, ended_at, current_day")
+        .eq("user_id", user!.id)
+        .eq("challenge_id", id!)
+        .in("status", ["completed", "failed"])
+        .order("ended_at", { ascending: false })
+        .limit(1);
+      if (qErr) throw qErr;
+      return pickLatestEndedEnrollment((data ?? []) as EndedEnrollmentRow[]);
+    },
+  });
+
+  const securedKeysQuery = useQuery({
+    queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
+    enabled: !!user && !!endedEnrollmentQuery.data,
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (!activeChallengeId) return;
@@ -199,6 +233,38 @@ export default function ChallengeDetailScreen() {
         }
       : undefined;
   const description = (challenge?.description ?? "").trim();
+  const durationDays = challenge?.duration_days && challenge.duration_days > 0 ? challenge.duration_days : 1;
+  const timeZone = resolveHomeTimeZone(
+    (profile as { timezone?: string | null } | null)?.timezone,
+    getDeviceIanaTimeZone(),
+  );
+  const ended = endedEnrollmentQuery.data ?? null;
+  const endedPending =
+    !!user &&
+    enrollmentsReady &&
+    !activeChallengeId &&
+    endedEnrollmentQuery.isLoading &&
+    endedEnrollmentQuery.data === undefined;
+  const finished = !activeChallengeId && ended != null;
+  const startKey = ended?.start_at ? dateKeyFromIso(ended.start_at, timeZone) : "";
+  const endIso = ended?.ended_at ?? ended?.end_at ?? "";
+  const endKey = endIso ? dateKeyFromIso(endIso, timeZone) : "";
+  const securedDays =
+    startKey && endKey && (securedKeysQuery.data?.length ?? 0) > 0
+      ? countSecuredInRange(securedKeysQuery.data ?? [], startKey, endKey)
+      : Math.min(ended?.current_day ?? 0, durationDays);
+  const endedOnDay = ended?.current_day ?? durationDays;
+  const finishedLine = finished
+    ? finishedHeaderLine({
+        status: ended.status === "failed" ? "failed" : "completed",
+        secured_days: securedDays,
+        duration_days: durationDays,
+        current_day: endedOnDay,
+        ended_on_day: endedOnDay,
+      })
+    : undefined;
+  const catalogLoading =
+    (challengeQuery.isLoading && !challenge) || !enrollmentsReady || !!activeChallengeId || endedPending;
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_HOME as never);
@@ -383,10 +449,6 @@ export default function ChallengeDetailScreen() {
     );
   }
 
-  if (!enrollmentsReady || activeChallengeId) {
-    return null;
-  }
-
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -395,7 +457,7 @@ export default function ChallengeDetailScreen() {
         <ChallengeDetailV3
           title={challenge?.title?.trim() || "Challenge"}
           description={description || undefined}
-          durationDays={challenge?.duration_days && challenge.duration_days > 0 ? challenge.duration_days : 1}
+          durationDays={durationDays}
           participationType={participationType}
           participantsCount={
             typeof challenge?.participants_count === "number" ? challenge.participants_count : 0
@@ -408,12 +470,17 @@ export default function ChallengeDetailScreen() {
           endsOn={formatChallengeDate(challenge?.ends_at)}
           startsOn={formatChallengeDate(challenge?.live_date)}
           joining={joining}
-          loading={challengeQuery.isLoading && !challenge}
-          error={challengeQuery.isError || (!challengeQuery.isLoading && !challenge)}
-          invite={invite}
+          loading={catalogLoading}
+          error={
+            !catalogLoading &&
+            (challengeQuery.isError || (!challengeQuery.isLoading && !challenge))
+          }
+          invite={finished ? undefined : invite}
+          finishedLine={catalogLoading ? undefined : finishedLine}
           onBack={goBack}
-          onMore={footerVariant === "invited" ? onMore : undefined}
-          onJoin={() => void onJoin()}
+          onMore={footerVariant === "invited" && !finished ? onMore : undefined}
+          onJoin={finished ? undefined : () => void onJoin()}
+          onStartAgain={finished ? () => void onJoin() : undefined}
           onAccept={() => void onAccept()}
           onNotNow={onNotNow}
           onUpgrade={goPaywall}

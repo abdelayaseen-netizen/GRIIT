@@ -34,6 +34,50 @@ export function statusLine(c: ChallengeRow): string {
   }
 }
 
+/** Catalog finished header: "{secured} of {N} days" via statusLine. */
+export function finishedHeaderLine(c: Pick<ChallengeRow, "status" | "secured_days" | "duration_days" | "ended_on_day" | "current_day">): string {
+  const line = statusLine({
+    id: "",
+    challengeId: "",
+    title: "",
+    status: c.status,
+    duration_days: c.duration_days,
+    current_day: c.current_day,
+    secured_days: c.secured_days,
+    ended_on_day: c.ended_on_day,
+    started_at: "",
+  });
+  return c.status === "completed" ? `${line} days` : line;
+}
+
+export type EndedEnrollmentRow = {
+  id: string;
+  challenge_id: string;
+  status: string;
+  start_at?: string | null;
+  end_at?: string | null;
+  ended_at?: string | null;
+  current_day?: number | null;
+};
+
+/** Latest completed or failed enrollment by ended_at. */
+export function pickLatestEndedEnrollment(
+  rows: EndedEnrollmentRow[],
+): EndedEnrollmentRow | null {
+  const ended = rows.filter((r) => r.status === "completed" || r.status === "failed");
+  if (ended.length === 0) return null;
+  return [...ended].sort((a, b) => {
+    const ta = Date.parse(a.ended_at ?? "") || 0;
+    const tb = Date.parse(b.ended_at ?? "") || 0;
+    return tb - ta;
+  })[0]!;
+}
+
+export function countSecuredInRange(keys: string[], startKey: string, endKey: string): number {
+  if (!startKey || !endKey) return 0;
+  return keys.filter((k) => k >= startKey && k <= endKey).length;
+}
+
 export function detailLine(c: ChallengeRow, fmt: (iso: string) => string): string {
   if (c.status === "active") {
     return c.secured_today

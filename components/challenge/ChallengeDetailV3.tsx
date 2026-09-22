@@ -92,9 +92,12 @@ export type ChallengeDetailV3Props = {
   loading?: boolean;
   error?: boolean;
   invite?: ChallengeDetailInvite;
+  /** Profile-finished header. When set, Join is never shown. */
+  finishedLine?: string;
   onBack: () => void;
   onMore?: () => void;
   onJoin?: () => void;
+  onStartAgain?: () => void;
   onAccept?: () => void;
   onNotNow?: () => void;
   onUpgrade?: () => void;
@@ -175,6 +178,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         ) : (
           <Text style={styles.title}>{p.title}</Text>
         )}
+        {p.finishedLine && !p.loading ? (
+          <Text style={styles.finishedLine}>{p.finishedLine}</Text>
+        ) : null}
         {description ? <Text style={styles.description}>{description}</Text> : null}
 
         <View style={styles.chips}>
@@ -233,7 +239,17 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           blocked ? styles.footerBlocked : null,
         ]}
       >
-        {closed ? (
+        {p.finishedLine ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Start again"
+            disabled={p.joining}
+            onPress={p.joining ? undefined : p.onStartAgain}
+            style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
+          >
+            <Text style={styles.joinLabel}>Start again</Text>
+          </Pressable>
+        ) : closed ? (
           <Text style={styles.closedLine}>
             {p.state === "ended"
               ? `This challenge ended on ${p.endsOn}.`
@@ -366,6 +382,14 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.title.lineHeight,
     fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  finishedLine: {
+    paddingTop: 6,
+    paddingHorizontal: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   titleSkel: {
     paddingTop: 10,

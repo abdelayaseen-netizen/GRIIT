@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { detailLine, rowsFromProfileRecord, statusLine } from "./profile-challenges";
+import {
+  countSecuredInRange,
+  detailLine,
+  finishedHeaderLine,
+  pickLatestEndedEnrollment,
+  rowsFromProfileRecord,
+  statusLine,
+} from "./profile-challenges";
 import { buildProfileRecord } from "./profile-v2-record";
 
 describe("statusLine", () => {
@@ -56,6 +63,70 @@ describe("statusLine", () => {
         started_at: "2026-09-01",
       }),
     ).toBe("Failed on day 4");
+  });
+});
+
+describe("finished catalog header", () => {
+  it("completed uses statusLine plus days", () => {
+    expect(
+      finishedHeaderLine({
+        status: "completed",
+        secured_days: 12,
+        duration_days: 30,
+        current_day: 30,
+      }),
+    ).toBe("12 of 30 days");
+  });
+
+  it("picks the latest ended_at among completed and failed", () => {
+    const latest = pickLatestEndedEnrollment([
+      {
+        id: "old",
+        challenge_id: "c",
+        status: "completed",
+        ended_at: "2026-08-01T00:00:00.000Z",
+        current_day: 7,
+      },
+      {
+        id: "new",
+        challenge_id: "c",
+        status: "failed",
+        ended_at: "2026-09-20T00:00:00.000Z",
+        current_day: 4,
+      },
+      {
+        id: "active",
+        challenge_id: "c",
+        status: "active",
+        ended_at: "2026-09-21T00:00:00.000Z",
+      },
+    ]);
+    expect(latest?.id).toBe("new");
+    expect(countSecuredInRange(["2026-09-16", "2026-09-17", "2026-09-21"], "2026-09-16", "2026-09-20")).toBe(2);
+  });
+});
+
+describe("challenge catalog screen branches", () => {
+  const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
+  const detail = readFileSync(resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"), "utf8");
+
+  it("renders the screen skeleton while enrollments load, never null", () => {
+    expect(catalog).not.toMatch(/if\s*\(\s*!enrollmentsReady\s*\|\|\s*activeChallengeId\s*\)\s*\{\s*return null/);
+    expect(catalog).toContain("catalogLoading");
+    expect(catalog).toContain("loading={catalogLoading}");
+    expect(catalog).toContain("!enrollmentsReady || !!activeChallengeId || endedPending");
+  });
+
+  it("finished enrollment shows statusLine header and Start again, never Join", () => {
+    expect(catalog).toContain("finishedHeaderLine");
+    expect(catalog).toContain('onJoin={finished ? undefined : () => void onJoin()}');
+    expect(catalog).toContain("onStartAgain={finished ? () => void onJoin() : undefined}");
+    expect(detail).toContain('accessibilityLabel="Start again"');
+    expect(detail).toContain(">Start again<");
+    expect(detail).toMatch(/\{p\.finishedLine \? \(/);
+    const joinAfterFinished = detail.slice(detail.indexOf("{p.finishedLine ? ("));
+    expect(joinAfterFinished).toContain('accessibilityLabel="Join"');
+    expect(joinAfterFinished.indexOf("Start again")).toBeLessThan(joinAfterFinished.indexOf('accessibilityLabel="Join"'));
   });
 });
 
