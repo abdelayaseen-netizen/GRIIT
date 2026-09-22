@@ -39,9 +39,7 @@ describe("proofPhotoFromCheckIn", () => {
       proof_photo_url: null as string | null,
     };
     expect(proofImageUrlForCheckIn(written)).toBe("https://cdn.example/task-proofs/u/p.jpg");
-    expect(proofImageUrlForCheckIn({ proof_photo_url: "https://cdn.example/legacy.jpg" })).toBe(
-      "https://cdn.example/legacy.jpg",
-    );
+    expect(proofImageUrlForCheckIn({ proof_photo_url: "https://cdn.example/legacy.jpg" })).toBeNull();
     expect(proofImageUrlForCheckIn({ photo_url: "file:///var/mobile/proof.jpg" })).toBe(
       "file:///var/mobile/proof.jpg",
     );

@@ -1,8 +1,12 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import {
   JOIN_CAPTION_INVITE,
   JOIN_CAPTION_TODAY,
+  JOIN_CAPTION_TOMORROW,
+  day1StartCopy,
   detailState,
   formatTimeWindow,
   joinCaption,
@@ -159,5 +163,17 @@ describe("joinCaption", () => {
   it("team and solo also use Day 1 is today until invite step exists", () => {
     expect(joinCaption("team")).toBe(JOIN_CAPTION_TODAY);
     expect(joinCaption("solo")).toBe(JOIN_CAPTION_TODAY);
+  });
+
+  it("reads start_at local date for Day 1 copy", () => {
+    const now = new Date("2026-09-22T20:46:00.000Z");
+    expect(day1StartCopy("2026-09-22T11:00:00.000Z", "America/New_York", now)).toBe(JOIN_CAPTION_TODAY);
+    expect(day1StartCopy("2026-09-23T04:00:00.000Z", "America/New_York", now)).toBe(
+      JOIN_CAPTION_TOMORROW,
+    );
+    const wizard = readFileSync(resolve(__dirname, "../components/create/CreateWizardV2.tsx"), "utf8");
+    expect(wizard).toContain("day1StartCopy(");
+    const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
+    expect(catalog).toContain("day1StartCopy(result.start_at, timeZone)");
   });
 });

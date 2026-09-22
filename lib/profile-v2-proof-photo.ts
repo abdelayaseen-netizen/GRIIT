@@ -1,7 +1,8 @@
 /**
  * Proof capture for a secured day lives on `check_ins`.
  * Join `day_secures` → `check_ins` on (user_id, date_key).
- * Prefer photo_url, then proof_url, then completion_image_url, then proof_photo_url.
+ * Prefer photo_url, then proof_url, then completion_image_url.
+ * Production check_ins has no proof_photo_url.
  * Accepts https, http, and file (local camera on Secured).
  */
 
@@ -26,7 +27,7 @@ export function proofImageUrlForCheckIn(row: {
   completion_image_url?: string | null;
   proof_photo_url?: string | null;
 }): string | null {
-  for (const raw of [row.photo_url, row.proof_url, row.completion_image_url, row.proof_photo_url]) {
+  for (const raw of [row.photo_url, row.proof_url, row.completion_image_url]) {
     const s = raw?.trim();
     if (s && isProofImageUrl(s)) return s;
   }

@@ -4,9 +4,64 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
+import { addCalendarDaysToDateKey, dateKeyInTimeZone, getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
 import { applyEnrollmentWindow } from "./enrollment-window";
-import { enrollmentEndAt } from "./enrollment-end-at";
+import { enrollmentEndAt, localMidnightUtc } from "./enrollment-end-at";
+import { currentMinutesInTimeZone } from "./task-time-gate";
+
+export type TaskWindowRow = {
+  time_window_end?: string | null;
+  schedule_window_end?: string | null;
+  gate_time_end?: string | null;
+  gate_time_start?: string | null;
+  gate_time_mode?: string | null;
+  config?: { schedule_window_end?: string | null; time_window_end?: string | null } | null;
+};
+
+/** HH:MM end of a task time window, any mode. */
+export function taskWindowEndHHMM(task: TaskWindowRow): string | null {
+  const mode = task.gate_time_mode?.trim();
+  if (mode === "by" && task.gate_time_start) return task.gate_time_start;
+  if (mode === "between" && task.gate_time_end) return task.gate_time_end;
+  const raw =
+    task.time_window_end ??
+    task.schedule_window_end ??
+    task.gate_time_end ??
+    task.config?.schedule_window_end ??
+    task.config?.time_window_end ??
+    null;
+  return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+}
+
+function parseHHMMMinutes(raw: string): number | null {
+  const [hStr, mStr] = raw.split(":");
+  const h = parseInt(hStr ?? "", 10);
+  const m = parseInt(mStr ?? "0", 10);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+/** True when any task with a time window has already closed today in `timeZone`. */
+export function anyTimeWindowClosedToday(
+  tasks: TaskWindowRow[],
+  now: Date,
+  timeZone: string,
+): boolean {
+  const current = currentMinutesInTimeZone(now, timeZone);
+  return tasks.some((t) => {
+    const end = taskWindowEndHHMM(t);
+    if (!end) return false;
+    const mins = parseHHMMMinutes(end);
+    return mins != null && current >= mins;
+  });
+}
+
+/** Defer to tomorrow local 00:00; otherwise start now. */
+export function enrollmentStartAt(now: Date, timeZone: string, defer: boolean): Date {
+  if (!defer) return now;
+  const tomorrowKey = addCalendarDaysToDateKey(dateKeyInTimeZone(now, timeZone), 1);
+  return localMidnightUtc(tomorrowKey, timeZone);
+}
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string };
 
@@ -41,47 +96,17 @@ export async function joinChallengeDirect(
     throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
   }
 
-  // Fetch tasks to check if all time windows have already passed today
   const { data: tasksForWindowCheck } = await supabase
     .from("challenge_tasks")
-    .select("id, time_window_end, hard_mode")
+    .select("id, time_window_end, schedule_window_end, gate_time_end, gate_time_start, gate_time_mode, config")
     .eq("challenge_id", challengeId);
 
-  const taskWindowList = (tasksForWindowCheck ?? []) as {
-    id: string;
-    time_window_end?: string | null;
-    hard_mode?: boolean;
-  }[];
+  const taskWindowList = (tasksForWindowCheck ?? []) as TaskWindowRow[];
 
   const now = new Date();
   const userTz = await getProfileTimeZoneForUser(supabase, userId);
-  const timedTasks = taskWindowList.filter(
-    (t) => t.hard_mode && t.time_window_end
-  );
-  // Window check uses user's local time (matches checkin-complete-gates.ts).
-  const allWindowsExpired =
-    timedTasks.length > 0 &&
-    timedTasks.every((t) => {
-      const [hStr, mStr] = (t.time_window_end ?? "").split(":");
-      const endH = parseInt(hStr ?? "0", 10);
-      const endM = parseInt(mStr ?? "0", 10);
-      const parts = new Intl.DateTimeFormat("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: userTz,
-      }).formatToParts(now);
-      const curH = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-      const curM = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
-      return curH * 60 + curM >= endH * 60 + endM;
-    });
-
-  // If all windows expired, defer start by ~24h. Exact local-midnight
-  // alignment is not needed: date_key (which drives task scheduling)
-  // is already computed from getTomorrowDateKey(userTz) below.
-  const startAt = allWindowsExpired
-    ? new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    : now;
+  const defer = anyTimeWindowClosedToday(taskWindowList, now, userTz);
+  const startAt = enrollmentStartAt(now, userTz, defer);
   const durationType = (challenge as { duration_type?: string }).duration_type;
   const durationDays = (challenge as { duration_days?: number }).duration_days ?? 1;
   const endAt = enrollmentEndAt({
@@ -124,7 +149,7 @@ export async function joinChallengeDirect(
     const taskList = (tasks ?? []) as { id: string }[];
     if (taskList.length > 0) {
       const tz = await getProfileTimeZoneForUser(supabase, userId);
-      const dateKey = allWindowsExpired ? getTomorrowDateKey(tz) : getTodayDateKey(tz);
+      const dateKey = defer ? getTomorrowDateKey(tz) : getTodayDateKey(tz);
       const checkIns = taskList.map((t) => ({
         user_id: userId,
         active_challenge_id: activeChallenge.id,

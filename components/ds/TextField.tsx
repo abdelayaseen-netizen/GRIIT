@@ -39,6 +39,7 @@ export type TextFieldProps = {
   | "multiline"
   | "maxLength"
   | "numberOfLines"
+  | "inputAccessoryViewID"
 >;
 
 const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(

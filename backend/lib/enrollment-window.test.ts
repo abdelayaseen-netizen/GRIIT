@@ -102,7 +102,7 @@ describe("applyEnrollmentWindow", () => {
     expect(create).toContain("applyEnrollmentWindow");
     expect(direct).toContain("applyEnrollmentWindow");
     expect(home).toContain("challenges.listMyActive()");
-    expect(record).toContain("applyEnrollmentWindow");
+    expect(record).not.toContain("applyEnrollmentWindow");
     expect(stats).toContain("applyEnrollmentWindow");
     expect(profiles).toContain("applyEnrollmentWindow");
     expect(feed).toContain("applyEnrollmentWindow");

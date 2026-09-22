@@ -107,6 +107,10 @@ describe("run honesty", () => {
     expect(src).toContain("runHonestyLine(fromGps, hasCamera)");
     expect(src).toContain('from "@/components/ds/TextField"');
     expect(src).not.toContain("TaskKeypad");
+    expect(src).toContain('behavior="padding"');
+    expect(src).toContain('keyboardShouldPersistTaps="handled"');
+    expect(src).toContain("Keyboard.dismiss");
+    expect(src).toContain("InputAccessoryView");
   });
 });
 
@@ -116,6 +120,9 @@ describe("run pace line", () => {
     expect(runPaceLine(5, 26 * 60 + 35, "km", 5)).toBe("5:19 per km. Target met.");
     expect(runPaceLine(4.2, 26 * 60 + 35, "km", 5)).toBe(`${formatRunPace(26 * 60 + 35, 4.2)} per km. 0.8 km short.`);
     expect(runPaceLine(null, 100, "km", 5)).toBeNull();
+    const noTarget = runPaceLine(5, 26 * 60 + 35, "km", null);
+    expect(noTarget).toBe("5:19 per km.");
+    expect(noTarget).not.toContain("Target");
   });
 
   it("Take photo when Camera applies, Post when it does not", () => {

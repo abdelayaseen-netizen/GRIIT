@@ -28,7 +28,7 @@ export function enrollmentIsPastEnd(endAt: Date, now: Date): boolean {
   return now.getTime() > endAt.getTime();
 }
 
-function localMidnightUtc(dateKey: string, timeZone: string): Date {
+export function localMidnightUtc(dateKey: string, timeZone: string): Date {
   const [y, m, d] = dateKey.split("-").map(Number);
   if (y == null || m == null || d == null) throw new Error(`Invalid date key: ${dateKey}`);
   let utc = Date.UTC(y, m - 1, d, 0, 0, 0, 0);

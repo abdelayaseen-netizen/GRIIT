@@ -139,10 +139,39 @@ export function detailState(
  * Invite step does not exist yet. Restore JOIN_CAPTION_INVITE when it lands.
  */
 export const JOIN_CAPTION_TODAY = "Day 1 is today.";
+export const JOIN_CAPTION_TOMORROW = "Day 1 begins tomorrow morning.";
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
 
-export function joinCaption(_participationType: ParticipationType): string {
+/** start_at local date == today → today copy; else tomorrow morning. */
+export function day1StartCopy(
+  startAtIso: string | null | undefined,
+  timeZone: string,
+  now: Date = new Date(),
+): string {
+  if (!startAtIso) return JOIN_CAPTION_TOMORROW;
+  const tz = timeZone.trim() || "UTC";
+  const startKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(startAtIso));
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return startKey === todayKey ? JOIN_CAPTION_TODAY : JOIN_CAPTION_TOMORROW;
+}
+
+export function joinCaption(
+  _participationType: ParticipationType,
+  startAtIso?: string | null,
+  timeZone?: string,
+): string {
+  if (startAtIso && timeZone) return day1StartCopy(startAtIso, timeZone);
   return JOIN_CAPTION_TODAY;
 }
 

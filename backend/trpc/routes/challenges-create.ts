@@ -459,6 +459,7 @@ export const challengesCreateProcedures = {
 
       return {
         ...challenge,
+        start_at: activeChallenge?.start_at ?? null,
         tasks: mapTaskRowsToApi((tasksRaw ?? []) as ChallengeTaskRowRaw[]),
         activeChallenge,
       };
