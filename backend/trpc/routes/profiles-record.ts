@@ -20,15 +20,15 @@ import {
 } from "../../lib/date-utils";
 import {
   buildRecordDays,
+  historyEndDateKey,
   monthKeyFromDateKey,
   type EnrollmentTasks,
 } from "../../lib/record-days";
 import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-tasks";
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
-import { buildProfileRecord, fractionDateKeysForRange, isAbandonedEnrollment, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import { buildProfileRecord, fractionDateKeysForRange, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import { cameraProofTiles, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
@@ -45,6 +45,7 @@ type ActiveRow = {
   status: string;
   start_at: string;
   end_at: string;
+  ended_at?: string | null;
 };
 
 type ChallengeRow = {
@@ -228,23 +229,17 @@ export const profilesRecordProcedures = {
         return finish(emptyRecord(), { monthKey, days: [] });
       }
 
-      const [streakRes, activeRes, completedRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
+      const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
         db
           .from("streaks")
           .select("active_streak_count, longest_streak_count, last_completed_date_key")
           .eq("user_id", ownerId)
           .maybeSingle(),
-        applyEnrollmentWindow(
-          db
-            .from("active_challenges")
-            .select("id, challenge_id, status, start_at, end_at")
-            .eq("user_id", ownerId)
-        ).limit(50),
         db
           .from("active_challenges")
-          .select("id, challenge_id, status, start_at, end_at")
+          .select("id, challenge_id, status, start_at, end_at, ended_at")
           .eq("user_id", ownerId)
-          .eq("status", "completed")
+          .in("status", ["active", "completed", "abandoned"])
           .limit(50),
         db
           .from("day_secures")
@@ -264,20 +259,14 @@ export const profilesRecordProcedures = {
       if (streakRes.error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: streakRes.error.message });
       }
-      if (activeRes.error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: activeRes.error.message });
-      }
-      if (completedRes.error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: completedRes.error.message });
+      if (historyRes.error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: historyRes.error.message });
       }
       if (securesRes.error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: securesRes.error.message });
       }
 
-      const acRows = [
-        ...((activeRes.data ?? []) as ActiveRow[]),
-        ...((completedRes.data ?? []) as ActiveRow[]),
-      ].filter((r) => !isAbandonedEnrollment(r.status));
+      const acRows = (historyRes.data ?? []) as ActiveRow[];
       const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
       const securedDateKeys = ((securesRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key);
 
@@ -408,7 +397,7 @@ export const profilesRecordProcedures = {
 
       const enrollments: EnrollmentTasks[] = acRows.map((row) => ({
         startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
-        endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
+        endDateKey: historyEndDateKey(row, timezone),
         tasks: taskRows
           .filter((t) => t.challenge_id === row.challenge_id)
           .filter((t) => isTaskRequired(t as ChallengeTaskRowRaw))

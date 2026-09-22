@@ -100,6 +100,17 @@ export function tallyTasks(input: {
   };
 }
 
+/** Abandoned: last due day is the local date of ended_at. Otherwise end_at. */
+export function historyEndDateKey(
+  row: { status: string; end_at: string; ended_at?: string | null },
+  timeZone: string,
+): string {
+  if (row.status === "abandoned" && row.ended_at) {
+    return dateKeyFromIsoInTimeZone(row.ended_at, timeZone);
+  }
+  return dateKeyFromIsoInTimeZone(row.end_at, timeZone);
+}
+
 export function tasksDueOnDay(dateKey: string, enrollments: EnrollmentTasks[]): TallyTask[] {
   const seen = new Set<string>();
   const out: TallyTask[] = [];

@@ -6,6 +6,7 @@ import {
   buildRecordDays,
   cameraProvenTaskCount,
   firstDueDateKey,
+  historyEndDateKey,
   monthDateKeys,
   recordDayState,
   tallyTasks,
@@ -143,5 +144,73 @@ describe("tasksDueOnDay", () => {
         { startDateKey: "2026-09-01", endDateKey: "2026-09-30", tasks: [{ id: "c", title: "Due" }] },
       ]),
     ).toEqual([{ id: "c", title: "Due" }]);
+  });
+
+  it("an enrollment ended yesterday still contributes to yesterday's row", () => {
+    const endedYesterday = {
+      startDateKey: "2026-09-16",
+      endDateKey: "2026-09-21",
+      tasks: [{ id: "dg", title: "Write 3 gratitudes" }],
+    };
+    const days = buildRecordDays({
+      monthKey: "2026-09",
+      todayKey: "2026-09-22",
+      securedDateKeys: [],
+      lastStandDateKeys: [],
+      frozenDateKeys: [],
+      enrollments: [endedYesterday],
+      checkIns: [],
+    });
+    expect(days.find((d) => d.dateKey === "2026-09-21")?.total).toBe(1);
+    expect(days.find((d) => d.dateKey === "2026-09-22")?.total).toBe(0);
+  });
+
+  it("an abandoned enrollment contributes up to ended_at and not after", () => {
+    const endDateKey = historyEndDateKey(
+      {
+        status: "abandoned",
+        end_at: "2026-10-15T23:59:59.999Z",
+        ended_at: "2026-09-22T20:00:00.000Z",
+      },
+      "America/New_York",
+    );
+    expect(endDateKey).toBe("2026-09-22");
+    const en = {
+      startDateKey: "2026-09-16",
+      endDateKey,
+      tasks: [{ id: "dg", title: "Write 3 gratitudes" }],
+    };
+    expect(tasksDueOnDay("2026-09-22", [en])).toEqual([{ id: "dg", title: "Write 3 gratitudes" }]);
+    expect(tasksDueOnDay("2026-09-23", [en])).toEqual([]);
+    expect(tasksDueOnDay("2026-09-16", [en])).toHaveLength(1);
+  });
+
+  it("a future-start enrollment contributes nothing", () => {
+    const future = {
+      startDateKey: "2026-09-23",
+      endDateKey: "2026-10-06",
+      tasks: [{ id: "x", title: "Later" }],
+    };
+    expect(tasksDueOnDay("2026-09-22", [future])).toEqual([]);
+    expect(
+      buildRecordDays({
+        monthKey: "2026-09",
+        todayKey: "2026-09-22",
+        securedDateKeys: [],
+        lastStandDateKeys: [],
+        frozenDateKeys: [],
+        enrollments: [future],
+        checkIns: [],
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("getRecord history query", () => {
+  it("loads active, completed, and abandoned without the live window", () => {
+    const src = readFileSync(resolve(__dirname, "../trpc/routes/profiles-record.ts"), "utf8");
+    expect(src).toContain('.in("status", ["active", "completed", "abandoned"])');
+    expect(src).not.toContain("applyEnrollmentWindow");
+    expect(src).toContain("historyEndDateKey(row, timezone)");
   });
 });
