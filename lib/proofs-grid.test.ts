@@ -46,7 +46,8 @@ describe("proofs grid copy", () => {
         { challengeName: "Quick Steps" },
       ]),
     ).toBe(true);
-    expect(proofsTileA11y("Iron man", "2026-09-22")).toBe("Iron man, 22 September");
+    expect(proofsTileA11y("Run", "2026-09-22", false)).toBe("Run, 22 September, private");
+    expect(proofsTileA11y("Run", "2026-09-22", true)).toBe("Run, 22 September, shared");
   });
 
   it("sections by date, newest first, challenge on the tile not the day number", () => {

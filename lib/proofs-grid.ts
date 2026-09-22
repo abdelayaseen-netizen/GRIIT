@@ -95,10 +95,11 @@ export function proofsTileLabel(
 }
 
 export function proofsTileA11y(
-  challengeName: string,
+  taskName: string,
   dateKey: string,
+  shared: boolean,
 ): string {
-  return `${challengeName}, ${proofsDateLabel(dateKey)}`;
+  return `${taskName}, ${proofsDateLabel(dateKey)}, ${shared ? "shared" : "private"}`;
 }
 
 export function proofsGatePill(item: Pick<ProofsGridItem, "gates" | "gateTime">): string {
