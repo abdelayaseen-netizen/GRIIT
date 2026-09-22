@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
@@ -16,10 +15,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_SPACING, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3 } from "@/lib/design-system";
 import { useAuth } from "@/contexts/AuthContext";
 import { invalidateAfterFollow } from "@/lib/follow-invalidate";
-import { getFeedAvatarBgFromUserId, getDisplayInitials } from "@/lib/utils";
+import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -145,13 +144,11 @@ export default function FollowListScreen() {
             accessibilityLabel={`View ${item.username}'s profile`}
             accessibilityRole="button"
           >
-            {item.avatar_url?.trim() ? (
-              <Image source={{ uri: item.avatar_url.trim() }} style={styles.avatarImg} contentFit="cover" accessible={false} />
-            ) : (
-              <View style={[styles.avatarFallback, { backgroundColor: getFeedAvatarBgFromUserId(item.user_id) }]}>
-                <Text style={styles.avatarLetter}>{getDisplayInitials(primary)}</Text>
-              </View>
-            )}
+            <Avatar
+              size={DS_V3.size.avatar.sm}
+              uri={item.avatar_url?.trim() || undefined}
+              displayName={item.display_name}
+            />
             <View style={styles.rowText}>
               <Text style={styles.name}>{primary}</Text>
               <Text style={styles.handle}>@{item.username}</Text>
@@ -166,7 +163,7 @@ export default function FollowListScreen() {
               accessibilityRole="button"
             >
               {busy ? (
-                <ActivityIndicator size="small" color={item.is_following ? DS_COLORS.TEXT_SECONDARY : DS_COLORS.WHITE} />
+                <ActivityIndicator size="small" color={item.is_following ? DS_V3.color.textSecondary : DS_V3.color.textPrimary} />
               ) : (
                 <Text style={[styles.followBtnTxt, item.is_following && styles.followBtnTxtOutline]}>
                   {item.is_following ? "Following" : "Follow"}
@@ -212,7 +209,7 @@ export default function FollowListScreen() {
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <ChevronLeft size={24} color={DS_COLORS.TEXT_PRIMARY} />
+            <ChevronLeft size={24} color={DS_V3.color.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{headerTitle}</Text>
           <View style={styles.headerSpacer} />
@@ -224,7 +221,7 @@ export default function FollowListScreen() {
           </View>
         ) : listQuery.isPending ? (
           <View style={styles.loading}>
-            <ActivityIndicator size="large" color={DS_COLORS.PRIMARY} />
+            <ActivityIndicator size="large" color={DS_V3.color.primary} />
           </View>
         ) : (
           <FlatList
@@ -259,68 +256,92 @@ export default function FollowListScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.BG_PAGE },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   banner: {
-    marginHorizontal: DS_SPACING.md,
-    marginTop: 8,
+    marginHorizontal: DS_V3.space.md,
+    marginTop: DS_V3.space.sm,
     paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: DS_RADIUS.MD,
-    backgroundColor: DS_COLORS.dangerLight,
+    paddingHorizontal: DS_V3.space.md,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
-    borderColor: DS_COLORS.alertRedBorder,
+    borderColor: DS_V3.color.danger,
   },
-  bannerText: { fontSize: 13, fontWeight: "500", color: DS_COLORS.dangerDark, textAlign: "center" },
+  bannerText: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.danger,
+    textAlign: "center",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: DS_SPACING.md,
-    paddingBottom: 12,
-    gap: 12,
+    paddingHorizontal: DS_V3.space.md,
+    paddingBottom: DS_V3.space.md,
+    gap: DS_V3.space.md,
   },
-  backBtn: { padding: 4 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
+  backBtn: { padding: DS_V3.space.xs },
+  headerTitle: {
+    flex: 1,
+    fontSize: DS_V3.type.heading.fontSize,
+    fontWeight: DS_V3.type.heading.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
   headerSpacer: { width: 28 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  listContent: { paddingHorizontal: DS_SPACING.md, paddingBottom: 24 },
+  listContent: { paddingHorizontal: DS_V3.space.md, paddingBottom: 24 },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    gap: 8,
+    paddingVertical: DS_V3.space.md,
+    gap: DS_V3.space.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: DS_COLORS.BORDER,
+    borderBottomColor: DS_V3.color.border,
   },
-  rowMain: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12, minWidth: 0 },
-  avatarImg: { width: 44, height: 44, borderRadius: DS_RADIUS.iconButton, backgroundColor: DS_COLORS.photoThumbBg },
-  avatarFallback: {
-    width: 44,
-    height: 44,
-    borderRadius: DS_RADIUS.iconButton,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarLetter: { fontSize: 16, fontWeight: "500", color: DS_COLORS.WHITE },
+  rowMain: { flex: 1, flexDirection: "row", alignItems: "center", gap: DS_V3.space.md, minWidth: 0 },
   rowText: { flex: 1, minWidth: 0 },
-  name: { fontSize: 14, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY },
-  handle: { fontSize: 12, fontWeight: "400", color: DS_COLORS.TEXT_MUTED },
+  name: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  handle: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
   followBtn: {
     paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_COLORS.PRIMARY,
+    paddingHorizontal: DS_V3.space.lg,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.primary,
     minWidth: 92,
     alignItems: "center",
     justifyContent: "center",
   },
   followBtnOutline: {
-    backgroundColor: "transparent",
+    backgroundColor: DS_V3.color.canvas,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.BORDER,
+    borderColor: DS_V3.color.border,
   },
-  followBtnTxt: { fontSize: 13, fontWeight: "500", color: DS_COLORS.WHITE },
-  followBtnTxtOutline: { color: DS_COLORS.TEXT_SECONDARY },
+  followBtnTxt: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  followBtnTxtOutline: { color: DS_V3.color.textSecondary },
   emptyWrap: { alignItems: "center", paddingTop: 60, paddingHorizontal: 24 },
-  emptyTitle: { fontSize: 15, fontWeight: "500", color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6, textAlign: "center" },
-  emptySub: { fontSize: 13, fontWeight: "400", color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
+  emptyTitle: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  emptySub: {
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
 });

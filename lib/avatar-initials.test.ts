@@ -25,4 +25,12 @@ describe("initialsFrom", () => {
     const utils = readFileSync(resolve(__dirname, "../lib/utils.ts"), "utf8");
     expect(utils).toContain("initialsFrom(displayName)");
   });
+
+  it("follow-list uses DS_V3 canvas and Avatar, no DS_COLORS", () => {
+    const src = readFileSync(resolve(__dirname, "../app/follow-list.tsx"), "utf8");
+    expect(src).not.toMatch(/\bDS_COLORS\b/);
+    expect(src).toContain("DS_V3.color.canvas");
+    expect(src).toContain('from "@/components/ds/Avatar"');
+    expect(src).toContain("displayName={item.display_name}");
+  });
 });
