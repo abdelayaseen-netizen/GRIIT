@@ -312,7 +312,7 @@ export const feedRouter = createTRPCRouter({
         completedAt: event.created_at,
         hasProof: Boolean((metadata as Record<string, unknown>).has_photo) || Boolean((metadata as Record<string, unknown>).photo_url),
         proofUrl: ((metadata as Record<string, unknown>).photo_url as string | undefined) ?? undefined,
-        milestoneTitle: isMilestone ? `${Math.max(0, streakCount)}-day streak!` : null,
+        milestoneTitle: isMilestone ? `${Math.max(0, streakCount)}-day streak` : null,
         milestoneSubtitle: isMilestone ? "You've been consistent. Keep it up." : null,
       };
     });

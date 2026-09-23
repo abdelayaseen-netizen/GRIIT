@@ -21,6 +21,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { greetingName } from "@/lib/profile-display";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
@@ -114,7 +115,7 @@ function AddAccountabilityPartnerScreenInner() {
       return (
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text style={styles.rowTitle}>{item.display_name || item.username || "User"}</Text>
+            <Text style={styles.rowTitle}>{greetingName({ display_name: item.display_name, username: item.username }) ?? item.username}</Text>
             <Text style={styles.rowSub}>@{item.username}</Text>
           </View>
           <TouchableOpacity

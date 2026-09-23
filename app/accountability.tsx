@@ -24,6 +24,7 @@ import { ErrorRetry } from "@/components/ErrorRetry";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { greetingName } from "@/lib/profile-display";
 
 type ListData = {
   accepted: { id: string; partner_id: string; partner_username: string; partner_display_name: string }[];
@@ -166,7 +167,7 @@ function AccountabilityScreenInner() {
     ({ item: inv }: { item: ListData["incomingPending"][number] }) => (
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+          <Text style={styles.rowTitle}>{greetingName({ display_name: inv.display_name, username: inv.username }) ?? inv.username}</Text>
           <Text style={styles.rowSub}>@{inv.username}</Text>
         </View>
         <View style={styles.actions}>
@@ -204,7 +205,7 @@ function AccountabilityScreenInner() {
     ({ item: inv }: { item: ListData["outgoingPending"][number] }) => (
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowTitle}>{inv.display_name || inv.username || "User"}</Text>
+          <Text style={styles.rowTitle}>{greetingName({ display_name: inv.display_name, username: inv.username }) ?? inv.username}</Text>
           <Text style={styles.rowSub}>@{inv.username} · Pending</Text>
         </View>
         <TouchableOpacity

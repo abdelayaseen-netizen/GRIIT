@@ -181,7 +181,7 @@ export const challengesCreateProcedures = {
           {
             user_id: ctx.userId,
             username,
-            display_name: "User",
+            display_name: username,
             onboarding_completed: false,
           },
           { onConflict: "user_id" }

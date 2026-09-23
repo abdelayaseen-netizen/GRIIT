@@ -282,7 +282,7 @@ function LiveFeedSection({
     try {
       const handle = post.username || post.displayName || "Someone";
       await Share.share({
-        message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT! 💪`,
+        message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT.`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
       try {
