@@ -1512,17 +1512,15 @@ export const checkinsRouter = createTRPCRouter({
 
   getMilestoneShared: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-    const { data } = await ctx.supabase.from("active_challenges").select("milestone_30_shared, milestone_75_shared").eq("id", input.activeChallengeId).single();
-    const row = data as { milestone_30_shared?: boolean; milestone_75_shared?: boolean } | null;
-    return { milestone_30_shared: row?.milestone_30_shared ?? false, milestone_75_shared: row?.milestone_75_shared ?? false };
+    // milestone columns absent in production, see audit 2026-09-23
+    return { milestone_30_shared: false, milestone_75_shared: false };
   }),
 
   setMilestoneShared: protectedProcedure
     .input(z.object({ activeChallengeId: z.string().uuid(), milestoneDay: z.union([z.literal(30), z.literal(75)]) }))
     .mutation(async ({ input, ctx }) => {
       await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-      const col = input.milestoneDay === 30 ? "milestone_30_shared" : "milestone_75_shared";
-      await ctx.supabase.from("active_challenges").update({ [col]: true }).eq("id", input.activeChallengeId);
+      // milestone columns absent in production, see audit 2026-09-23
       return { success: true };
     }),
 });
