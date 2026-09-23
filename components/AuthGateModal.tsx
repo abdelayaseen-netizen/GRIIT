@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 export type GateContext =
@@ -102,7 +102,7 @@ export function AuthGateModal({ visible, onClose, context: _context }: AuthGateM
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_COLORS.MODAL_BACKDROP,
+    backgroundColor: DS_V3.color.canvas,
   },
   centered: {
     flex: 1,
@@ -111,25 +111,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.xl,
   },
   card: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.card,
     padding: DS_SPACING.xxl,
     width: "100%",
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
   },
   title: {
     fontSize: 24,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: "500",
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
@@ -144,13 +144,13 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: DS_COLORS.accent,
+    color: DS_V3.color.brand,
     marginRight: 8,
   },
   bulletText: {
     fontSize: 15,
     fontWeight: "500",
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   primaryBtn: {
     marginBottom: 12,
@@ -159,14 +159,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     borderRadius: DS_RADIUS.card,
     marginBottom: 8,
   },
   secondaryBtnText: {
     fontSize: 15,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   tertiaryBtn: {
     paddingVertical: 12,
@@ -175,6 +175,6 @@ const styles = StyleSheet.create({
   tertiaryBtnText: {
     fontSize: 15,
     fontWeight: "500",
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
   },
 });

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
 import {
   getCategoryStyle,
@@ -70,7 +70,7 @@ export const CompactChallengeRow = React.memo(function CompactChallengeRow({
           {metaLine}
         </Text>
       </View>
-      <ChevronRight size={18} color={DS_COLORS.TEXT_MUTED} strokeWidth={2} />
+      <ChevronRight size={18} color={DS_V3.color.textSecondary} strokeWidth={2} />
     </Pressable>
   );
 });
@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
     gap: DS_SPACING.md,
     paddingHorizontal: DS_SPACING.md,
     paddingVertical: DS_SPACING.md,
-    backgroundColor: DS_COLORS.WHITE,
+    backgroundColor: DS_V3.color.textPrimary,
     borderRadius: DS_RADIUS.LG,
     borderWidth: 0.5,
-    borderColor: DS_COLORS.BORDER,
+    borderColor: DS_V3.color.border,
   },
   iconTile: {
     width: 38,
@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
   },
   meta: {
     fontSize: 12,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     marginTop: 2,
   },
 });

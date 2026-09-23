@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ChevronLeft, UserPlus, UserMinus, Check, X, Users } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -152,9 +152,9 @@ function AccountabilityScreenInner() {
           accessibilityState={{ disabled: actingId === p.partner_id }}
         >
           {actingId === p.partner_id ? (
-            <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
+            <ActivityIndicator size="small" color={DS_V3.color.textSecondary} />
           ) : (
-            <UserMinus size={20} color={DS_COLORS.textSecondary} />
+            <UserMinus size={20} color={DS_V3.color.textSecondary} />
           )}
         </TouchableOpacity>
       </View>
@@ -179,9 +179,9 @@ function AccountabilityScreenInner() {
             accessibilityState={{ disabled: actingId === inv.id }}
           >
             {actingId === inv.id ? (
-              <ActivityIndicator size="small" color={DS_COLORS.white} />
+              <ActivityIndicator size="small" color={DS_V3.color.textPrimary} />
             ) : (
-              <Check size={20} color={DS_COLORS.white} />
+              <Check size={20} color={DS_V3.color.textPrimary} />
             )}
           </TouchableOpacity>
           <TouchableOpacity
@@ -192,7 +192,7 @@ function AccountabilityScreenInner() {
             accessibilityRole="button"
             accessibilityState={{ disabled: actingId === inv.id }}
           >
-            <X size={20} color={DS_COLORS.textPrimary} />
+            <X size={20} color={DS_V3.color.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -313,7 +313,7 @@ function AccountabilityScreenInner() {
           accessibilityLabel="Add partner"
           accessibilityRole="button"
         >
-          <UserPlus size={22} color={DS_COLORS.white} />
+          <UserPlus size={22} color={DS_V3.color.textPrimary} />
           <Text style={styles.addBtnText}>Add Partner</Text>
         </TouchableOpacity>
 
@@ -346,13 +346,13 @@ function AccountabilityScreenInner() {
       <SafeAreaView style={styles.screenContainer} edges={["top"]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
-            <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
+            <ChevronLeft size={24} color={DS_V3.color.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Accountability Circle</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={DS_COLORS.accent} />
+          <ActivityIndicator size="large" color={DS_V3.color.brand} />
         </View>
       </SafeAreaView>
     );
@@ -362,7 +362,7 @@ function AccountabilityScreenInner() {
     <SafeAreaView style={styles.screenContainer} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
-          <ChevronLeft size={24} color={DS_COLORS.textPrimary} />
+          <ChevronLeft size={24} color={DS_V3.color.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Accountability Circle</Text>
         <View style={styles.headerSpacer} />
@@ -405,7 +405,7 @@ export default function AccountabilityScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: DS_COLORS.background },
+  screenContainer: { flex: 1, backgroundColor: DS_V3.color.canvas },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -413,23 +413,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
+  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary },
   headerSpacer: { width: 32 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
   countRow: { marginBottom: 16 },
-  countText: { fontSize: 15, color: DS_COLORS.textSecondary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  countText: { fontSize: 15, color: DS_V3.color.textSecondary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textSecondary, marginBottom: 8, letterSpacing: 0.5 },
   card: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     padding: 12,
   },
   row: {
@@ -438,28 +438,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
-  rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textPrimary },
+  rowSub: { fontSize: 13, color: DS_V3.color.textSecondary, marginTop: 2 },
   removeBtn: { padding: 8 },
   actions: { flexDirection: "row", gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: DS_RADIUS.XL, alignItems: "center", justifyContent: "center" },
-  acceptBtn: { backgroundColor: DS_COLORS.acceptGreen },
-  declineBtn: { backgroundColor: DS_COLORS.border },
-  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: DS_RADIUS.SM, backgroundColor: DS_COLORS.border },
-  cancelBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
+  acceptBtn: { backgroundColor: DS_V3.color.brand },
+  declineBtn: { backgroundColor: DS_V3.color.border },
+  cancelBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: DS_RADIUS.SM, backgroundColor: DS_V3.color.border },
+  cancelBtnText: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textPrimary },
   addBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     paddingVertical: 16,
     borderRadius: DS_RADIUS.MD,
     marginTop: 8,
   },
-  addBtnText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
+  addBtnText: { fontSize: 17, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary },
   bottomSpacer: { height: 32 },
 });

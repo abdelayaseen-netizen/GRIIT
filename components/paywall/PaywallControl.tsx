@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Flame, X } from "lucide-react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
 import type { PaywallBodyProps } from "./types";
 
 const VALUE_PROPS = [
@@ -40,7 +40,7 @@ export default function PaywallControl({
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close paywall">
-        <X size={18} color={DS_COLORS.TEXT_SECONDARY} />
+        <X size={18} color={DS_V3.color.textSecondary} />
       </TouchableOpacity>
 
       <FlatList
@@ -56,7 +56,7 @@ export default function PaywallControl({
           <>
             <View style={styles.heroSection}>
               <View style={styles.iconBadge}>
-                <Flame size={36} color={DS_COLORS.WHITE} />
+                <Flame size={36} color={DS_V3.color.textPrimary} />
               </View>
               <Text style={styles.headline}>Unlock GRIIT Premium</Text>
               <Text style={styles.subheadline}>Build discipline without limits.</Text>
@@ -103,7 +103,7 @@ export default function PaywallControl({
           accessibilityLabel={`Purchase ${selectedTitle}`}
           accessibilityRole="button"
         >
-          {purchasing ? <ActivityIndicator color={DS_COLORS.WHITE} size="small" /> : <Text style={styles.ctaButtonText}>Start {selectedTitle} — {selectedPrice}</Text>}
+          {purchasing ? <ActivityIndicator color={DS_V3.color.textPrimary} size="small" /> : <Text style={styles.ctaButtonText}>Start {selectedTitle} — {selectedPrice}</Text>}
         </TouchableOpacity>
 
         <View style={styles.belowButtonRow}>
@@ -129,7 +129,7 @@ export default function PaywallControl({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS.BG_PRIMARY },
+  container: { flex: 1, backgroundColor: DS_V3.color.canvas },
   closeButton: {
     position: "absolute",
     top: 16,
@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
-    borderColor: DS_COLORS.BORDER_CARD,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
@@ -150,16 +150,16 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
-  headline: { fontSize: DS_TYPOGRAPHY.SIZE_3XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK, color: DS_COLORS.TEXT_PRIMARY },
-  subheadline: { fontSize: DS_TYPOGRAPHY.SIZE_MD, color: DS_COLORS.TEXT_SECONDARY, marginTop: 8 },
-  valueCard: { backgroundColor: DS_COLORS.BG_CARD, borderRadius: DS_RADIUS.LG, padding: DS_SPACING.BASE, marginBottom: 28 },
-  valueLine: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 8 },
-  planSectionLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.TEXT_SECONDARY, marginBottom: 12 },
+  headline: { fontSize: DS_TYPOGRAPHY.SIZE_3XL, fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK, color: DS_V3.color.textPrimary },
+  subheadline: { fontSize: DS_TYPOGRAPHY.SIZE_MD, color: DS_V3.color.textSecondary, marginTop: 8 },
+  valueCard: { backgroundColor: DS_V3.color.surface, borderRadius: DS_RADIUS.LG, padding: DS_SPACING.BASE, marginBottom: 28 },
+  valueLine: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_V3.color.textPrimary, marginBottom: 8 },
+  planSectionLabel: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textSecondary, marginBottom: 12 },
   loadingPlans: { minHeight: 120, alignItems: "center", justifyContent: "center", marginBottom: 20 },
   noPlansText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: GRIIT_COLORS.error, textAlign: "center", marginBottom: 20 },
   stickyBar: {
@@ -167,28 +167,28 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderTopWidth: 1,
-    borderTopColor: DS_COLORS.BORDER_DEFAULT,
+    borderTopColor: DS_V3.color.border,
     paddingHorizontal: DS_SPACING.SCREEN_H,
     paddingTop: 12,
   },
   errorPill: {
-    backgroundColor: DS_COLORS.ERROR_BG,
+    backgroundColor: DS_V3.color.brandTint,
     borderWidth: 1,
-    borderColor: DS_COLORS.ERROR_RED,
+    borderColor: DS_V3.color.danger,
     borderRadius: DS_RADIUS.MD,
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginBottom: 10,
   },
-  errorText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_COLORS.ERROR_RED, textAlign: "center" },
-  ctaButton: { height: 56, borderRadius: DS_RADIUS.PILL, backgroundColor: DS_COLORS.ACCENT_PRIMARY, alignItems: "center", justifyContent: "center" },
+  errorText: { fontSize: DS_TYPOGRAPHY.SIZE_SM, color: DS_V3.color.danger, textAlign: "center" },
+  ctaButton: { height: 56, borderRadius: DS_RADIUS.PILL, backgroundColor: DS_V3.color.primary, alignItems: "center", justifyContent: "center" },
   ctaButtonDisabled: { opacity: 0.7 },
-  ctaButtonText: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.WHITE },
+  ctaButtonText: { fontSize: DS_TYPOGRAPHY.SIZE_MD, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary },
   belowButtonRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 10, gap: 16 },
-  cancelNote: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_TERTIARY },
-  restoreText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, color: DS_COLORS.ACCENT_PRIMARY },
-  legalLine: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_COLORS.TEXT_TERTIARY, textAlign: "center", marginTop: 6 },
+  cancelNote: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_V3.color.textSecondary },
+  restoreText: { fontSize: DS_TYPOGRAPHY.SIZE_XS, fontWeight: DS_TYPOGRAPHY.WEIGHT_MEDIUM, color: DS_V3.color.primary },
+  legalLine: { fontSize: DS_TYPOGRAPHY.SIZE_XS, color: DS_V3.color.textSecondary, textAlign: "center", marginTop: 6 },
   legalLink: { textDecorationLine: "underline" },
 });

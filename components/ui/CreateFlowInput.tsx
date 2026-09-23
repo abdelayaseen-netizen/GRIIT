@@ -1,6 +1,6 @@
 import React from "react";
 import { View, TextInput, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 /** Inlined from lib/theme/tokens.ts `typography.label` — value-preserving migration (Phase 2). */
 const THEME_TYPO_LABEL = {
@@ -28,7 +28,7 @@ export function CreateFlowInput({ value, onChangeText, placeholder, label, multi
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={DS_COLORS.textSecondary}
+        placeholderTextColor={DS_V3.color.textSecondary}
         multiline={multiline}
         accessibilityLabel={accessibilityLabel ?? label}
       />
@@ -42,21 +42,21 @@ const st = StyleSheet.create({
     fontSize: THEME_TYPO_LABEL.fontSize,
     fontWeight: THEME_TYPO_LABEL.fontWeight,
     lineHeight: THEME_TYPO_LABEL.lineHeight,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   input: {
     height: DS_MEASURES.CTA_HEIGHT_COMPACT,
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.input,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     paddingHorizontal: DS_SPACING.lg,
     fontSize: 16,
     fontWeight: "500",
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   inputMultiline: {
     minHeight: DS_MEASURES.CTA_HEIGHT_COMPACT,

@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
 
@@ -55,7 +55,7 @@ export function ReviewStep({
             onChangeText={(t) => onCaption(t.slice(0, 120))}
             placeholder="Add a caption"
             placeholderTextColor={DS_V3.color.textSecondary}
-            selectionColor={DS_COLORS_V2.brand.primary}
+            selectionColor={DS_V3.color.brand}
             style={styles.capInput}
             maxLength={120}
           />

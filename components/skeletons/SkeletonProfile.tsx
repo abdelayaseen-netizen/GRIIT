@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_V3, DS_SPACING } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonProfile = React.memo(function SkeletonProfile() {
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: DS_SPACING.lg,
     paddingTop: 24,
-    backgroundColor: DS_COLORS.BG_PAGE,
+    backgroundColor: DS_V3.color.canvas,
   },
   avatarBlock: {
     alignItems: "center",

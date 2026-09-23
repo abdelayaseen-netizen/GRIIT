@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import ViewShot from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { GRIIT_COLORS, DS_RADIUS, DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_V3, GRIIT_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { captureError } from "@/lib/sentry";
 
 interface ProofShareCardProps {
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: DS_COLORS.overlayDarker,
+    backgroundColor: DS_V3.color.canvas,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
-    backgroundColor: DS_COLORS.black,
+    backgroundColor: DS_V3.color.canvas,
     borderRadius: DS_RADIUS.card,
     padding: 28,
     alignItems: "center",
@@ -168,23 +168,23 @@ const styles = StyleSheet.create({
   dayNumber: {
     fontSize: 52,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
     lineHeight: 56,
   },
   dayOf: {
     fontSize: 18,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
   },
   challengeTitle: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
     textAlign: "center",
     marginBottom: 6,
   },
   userName: {
     fontSize: 13,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
     marginBottom: 12,
   },
   proofThumb: {
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     aspectRatio: 4 / 3,
     borderRadius: DS_RADIUS.MD,
     marginBottom: 16,
-    backgroundColor: DS_COLORS.photoThumbBg,
+    backgroundColor: DS_V3.color.surface,
   },
   streakRow: {
     flexDirection: "row",
@@ -200,12 +200,12 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingTop: 16,
     borderTopWidth: 0.5,
-    borderTopColor: DS_COLORS.borderAlt,
+    borderTopColor: DS_V3.color.border,
     marginBottom: 20,
   },
   streakLabel: {
     fontSize: 13,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
   },
   streakCount: {
     fontSize: 13,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     fontSize: 14,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
   },
   ctaSub: {
     fontSize: 12,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   error: {
-    color: DS_COLORS.errorText,
+    color: DS_V3.color.danger,
     fontSize: 12,
     textAlign: "center",
     marginBottom: 8,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   shareBtnText: {
     fontSize: 15,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
   skipBtn: {
     paddingVertical: 12,
@@ -251,6 +251,6 @@ const styles = StyleSheet.create({
   },
   skipBtnText: {
     fontSize: 14,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
   },
 });

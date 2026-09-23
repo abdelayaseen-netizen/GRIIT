@@ -15,13 +15,7 @@ import { ChevronLeft } from "lucide-react-native";
 
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import {
-  DS_COLORS,
-  DS_RADIUS,
-  DS_SPACING,
-  DS_TYPOGRAPHY,
-  DS_MEASURES,
-} from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_MEASURES } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkeletonBase } from "@/components/skeletons/SkeletonBase";
 import { captureError } from "@/lib/sentry";
@@ -198,7 +192,7 @@ function CategoryScreenInner() {
     () =>
       query.isFetchingNextPage ? (
         <View style={styles.loadMoreRow}>
-          <ActivityIndicator size="small" color={DS_COLORS.ACCENT} />
+          <ActivityIndicator size="small" color={DS_V3.color.brand} />
         </View>
       ) : null,
     [query.isFetchingNextPage]
@@ -215,7 +209,7 @@ function CategoryScreenInner() {
           hitSlop={8}
           style={styles.backBtn}
         >
-          <ChevronLeft size={22} color={DS_COLORS.TEXT_PRIMARY} strokeWidth={2} />
+          <ChevronLeft size={22} color={DS_V3.color.textPrimary} strokeWidth={2} />
         </Pressable>
         <Text style={styles.title}>{title}</Text>
         <View style={styles.backBtn} />
@@ -234,7 +228,7 @@ function CategoryScreenInner() {
           <RefreshControl
             refreshing={query.isRefetching}
             onRefresh={onRefresh}
-            tintColor={DS_COLORS.ACCENT}
+            tintColor={DS_V3.color.brand}
           />
         }
       />
@@ -253,7 +247,7 @@ export default function DiscoverCategoryScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: DS_COLORS.BG_PAGE,
+    backgroundColor: DS_V3.color.canvas,
   },
   header: {
     flexDirection: "row",
@@ -271,7 +265,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
   },
   listContent: {
     paddingTop: DS_SPACING.sm,
@@ -295,7 +289,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
   },
   loadMoreRow: {
     paddingVertical: DS_SPACING.md,

@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { DS_COLORS, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { supabase } from "@/lib/supabase";
@@ -78,15 +78,15 @@ export function AccountDangerZone({
           accessibilityRole="button"
         />
         <View style={modalStyles.deleteModalCenter}>
-          <View style={[modalStyles.card, modalStyles.deleteModalCard, { backgroundColor: DS_COLORS.card, borderColor: DS_COLORS.border }]}>
+          <View style={[modalStyles.card, modalStyles.deleteModalCard, { backgroundColor: DS_V3.color.surface, borderColor: DS_V3.color.border }]}>
             <InlineError message={deleteAccountError} onDismiss={clearDeleteAccountError} />
-            <Text style={[modalStyles.sectionTitle, { color: DS_COLORS.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
+            <Text style={[modalStyles.sectionTitle, { color: DS_V3.color.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
             <TextInput
-              style={[modalStyles.deleteConfirmInput, { color: DS_COLORS.textPrimary, borderColor: DS_COLORS.border }]}
+              style={[modalStyles.deleteConfirmInput, { color: DS_V3.color.textPrimary, borderColor: DS_V3.color.border }]}
               value={deleteConfirmValue}
               onChangeText={setDeleteConfirmValue}
               placeholder="DELETE"
-              placeholderTextColor={DS_COLORS.textMuted}
+              placeholderTextColor={DS_V3.color.textSecondary}
               autoCapitalize="characters"
               autoCorrect={false}
               editable={!deleteAccountLoading}
@@ -96,7 +96,7 @@ export function AccountDangerZone({
             <TouchableOpacity
               style={[
                 modalStyles.deleteConfirmBtn,
-                { backgroundColor: deleteConfirmValue === "DELETE" ? DS_COLORS.dangerDark : DS_COLORS.border },
+                { backgroundColor: deleteConfirmValue === "DELETE" ? DS_V3.color.danger : DS_V3.color.border },
               ]}
               onPress={async () => {
                 if (deleteConfirmValue !== "DELETE" || deleteAccountLoading) return;
@@ -127,13 +127,13 @@ export function AccountDangerZone({
               accessibilityState={{ disabled: deleteConfirmValue !== "DELETE" || deleteAccountLoading }}
             >
               {deleteAccountLoading ? (
-                <ActivityIndicator size="small" color={DS_COLORS.white} />
+                <ActivityIndicator size="small" color={DS_V3.color.textPrimary} />
               ) : (
                 <Text style={modalStyles.deleteConfirmBtnText}>Delete my account</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[modalStyles.deleteCancelBtn, { borderColor: DS_COLORS.border }]}
+              style={[modalStyles.deleteCancelBtn, { borderColor: DS_V3.color.border }]}
               onPress={() => {
                 setShowDeleteModal(false);
                 setDeleteConfirmValue("");
@@ -143,7 +143,7 @@ export function AccountDangerZone({
               accessibilityRole="button"
               accessibilityState={{ disabled: deleteAccountLoading }}
             >
-              <Text style={[modalStyles.toggleTitle, { color: DS_COLORS.textPrimary }]}>Cancel</Text>
+              <Text style={[modalStyles.toggleTitle, { color: DS_V3.color.textPrimary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

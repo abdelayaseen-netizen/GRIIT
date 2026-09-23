@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native';
 import { X, Clock, Snowflake } from 'lucide-react-native';
-import { DS_COLORS_V2, DS_SPACING_V2 } from '@/lib/design-system';
+import { DS_V3, DS_SPACING_V2 } from '@/lib/design-system';
 import { formatDays } from '@/lib/format-days';
 import { trackEvent } from '@/lib/analytics';
 import { FLAGS } from '@/lib/feature-flags';
@@ -90,7 +90,7 @@ export function JeopardyModal({
             <View style={styles.iconWrap}>
               <Clock
                 size={22}
-                color={DS_COLORS_V2.brand.primary}
+                color={DS_V3.color.brand}
                 strokeWidth={2}
               />
             </View>
@@ -106,7 +106,7 @@ export function JeopardyModal({
             >
               <X
                 size={20}
-                color={DS_COLORS_V2.text.tertiary}
+                color={DS_V3.color.textSecondary}
                 strokeWidth={2}
               />
             </Pressable>
@@ -166,8 +166,8 @@ export function JeopardyModal({
                 size={16}
                 color={
                   freezeDisabled || !FLAGS.FREEZE_SERVER_ENFORCED
-                    ? DS_COLORS_V2.text.tertiary
-                    : DS_COLORS_V2.brand.primary
+                    ? DS_V3.color.textSecondary
+                    : DS_V3.color.brand
                 }
                 strokeWidth={2}
               />
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: DS_COLORS_V2.surface.card,
+    backgroundColor: DS_V3.color.surface,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: DS_SPACING_V2.lg,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_V3.color.brandTint,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    backgroundColor: DS_V3.color.surface,
   },
   body: {
     gap: 8,
@@ -235,13 +235,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
     letterSpacing: -0.3,
   },
   sub: {
     fontSize: 15,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.secondary,
+    color: DS_V3.color.textSecondary,
     lineHeight: 22,
   },
   streakRow: {
@@ -253,16 +253,16 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontSize: 15,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
   },
   streakValue: {
     fontSize: 15,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
   },
   divider: {
     height: 1,
-    backgroundColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_V3.color.border,
     marginBottom: 20,
   },
   ctaStack: {
@@ -271,37 +271,37 @@ const styles = StyleSheet.create({
   primaryCta: {
     height: 52,
     borderRadius: 15,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_V3.color.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryCtaText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    color: DS_V3.color.brandText,
   },
   freezeCta: {
     height: 52,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   freezeCtaDisabled: {
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_V3.color.border,
     backgroundColor: 'transparent',
   },
   freezeCtaText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
   },
   freezeCtaTextDisabled: {
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
   },
   pressed: {
     opacity: 0.75,

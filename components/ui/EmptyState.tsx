@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Compass, RefreshCw, ChevronRight } from "lucide-react-native";
@@ -51,7 +51,7 @@ function EmptyStateInner({
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
-        <Icon size={32} color={DS_COLORS.textSecondary} />
+        <Icon size={32} color={DS_V3.color.textSecondary} />
       </View>
       <Text style={styles.title}>{title}</Text>
       {displaySubtitle ? <Text style={styles.subtitle}>{displaySubtitle}</Text> : null}
@@ -64,7 +64,7 @@ function EmptyStateInner({
           accessibilityLabel={primaryLabel}
         >
           <Text style={styles.primaryCtaText}>{primaryLabel}</Text>
-          <ChevronRight size={18} color={DS_COLORS.white} />
+          <ChevronRight size={18} color={DS_V3.color.textPrimary} />
         </TouchableOpacity>
       ) : null}
       {onSecondaryCta ? (
@@ -75,7 +75,7 @@ function EmptyStateInner({
           accessibilityRole="button"
           accessibilityLabel={secondaryCtaLabel}
         >
-          <RefreshCw size={16} color={DS_COLORS.accent} />
+          <RefreshCw size={16} color={DS_V3.color.brand} />
           <Text style={styles.secondaryCtaText}>{secondaryCtaLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: DS_COLORS.chipFill,
+    backgroundColor: DS_V3.color.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: DS_SPACING.lg,
@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
     fontSize: THEME_TYPO_EMPTY_TITLE.fontSize,
     fontWeight: THEME_TYPO_EMPTY_TITLE.fontWeight,
     lineHeight: THEME_TYPO_EMPTY_TITLE.lineHeight,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: THEME_TYPO_EMPTY_SUB.fontSize,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginBottom: DS_SPACING.xl,
   },
@@ -122,14 +122,14 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 54,
     paddingHorizontal: 24,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     borderRadius: DS_RADIUS.card,
     marginBottom: DS_SPACING.md,
   },
   primaryCtaText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
   secondaryCta: {
     flexDirection: "row",
@@ -141,6 +141,6 @@ const styles = StyleSheet.create({
   secondaryCtaText: {
     fontSize: 14,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.accent,
+    color: DS_V3.color.brand,
   },
 });

@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
@@ -22,7 +22,7 @@ export function EnforcementBlock({ title = "Time enforcement", children }: Props
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.card,
     padding: DS_SPACING.screenHorizontal,
     marginBottom: DS_SPACING.lg,
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     fontSize: THEME_TYPO_SECTION_TITLE.fontSize,
     fontWeight: THEME_TYPO_SECTION_TITLE.fontWeight,
     lineHeight: THEME_TYPO_SECTION_TITLE.lineHeight,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: DS_SPACING.lg,
   },
 });

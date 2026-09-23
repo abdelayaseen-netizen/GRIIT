@@ -2,53 +2,53 @@
  * OnboardingFlowV2 token map.
  *
  * Translates the onboarding mockup's visual language to the app design system.
- * Every value resolves to a DS_COLORS_V2 nested path / DS token — NO raw hex
+ * Every value resolves to a DS_V3 token — NO raw hex
  * lives here or in any V2 screen. The mockup's vivid orange maps to
  * `brand.primary` (locked). Use `accentAccessible` only for
  * dense orange-on-white text that needs AA.
  */
-import { DS_COLORS_V2, DS_RADIUS_V2, DS_SPACING_V2, DS_TYPE } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS_V2, DS_SPACING_V2, DS_TYPE } from "@/lib/design-system";
 
 export const OBV2_COLOR = {
   /** Phone screen background (warm near-white). */
-  screen: DS_COLORS_V2.surface.canvas,
-  card: DS_COLORS_V2.surface.card,
+  screen: DS_V3.color.canvas,
+  card: DS_V3.color.surface,
   /** Primary ink. */
-  ink: DS_COLORS_V2.text.primary,
+  ink: DS_V3.color.textPrimary,
   /** Secondary / subtitle ink. */
-  ink2: DS_COLORS_V2.text.secondary,
+  ink2: DS_V3.color.textSecondary,
   /** Tertiary / legal / placeholder ink. */
-  ink3: DS_COLORS_V2.text.tertiary,
+  ink3: DS_V3.color.textSecondary,
   /** Brand orange (fills, CTAs). */
-  orange: DS_COLORS_V2.brand.primary,
+  orange: DS_V3.color.brand,
   /** Orange used as text/icon on light surfaces. */
-  orangeInk: DS_COLORS_V2.brand.primary,
-  orangeHover: DS_COLORS_V2.brand.primaryHover,
+  orangeInk: DS_V3.color.brand,
+  orangeHover: DS_V3.color.brandText,
   /** Peach tint (selected chips, banners, icon wells). */
-  peach: DS_COLORS_V2.brand.primarySoft,
+  peach: DS_V3.color.brandTint,
   /** Hairline dividers / unselected borders. */
-  hair: DS_COLORS_V2.surface.borderWarm,
-  sunken: DS_COLORS_V2.surface.sunken,
-  borderStrong: DS_COLORS_V2.surface.borderStrong,
-  borderDashed: DS_COLORS_V2.surface.borderDashed,
-  mutedWarm: DS_COLORS_V2.text.mutedWarm,
+  hair: DS_V3.color.border,
+  sunken: DS_V3.color.surface,
+  borderStrong: DS_V3.color.border,
+  borderDashed: DS_V3.color.border,
+  mutedWarm: DS_V3.color.textSecondary,
   /** Near-black button (Apple / dark CTA). */
-  blackBtn: DS_COLORS_V2.surface.heroDark,
-  onDark: DS_COLORS_V2.text.onDark,
-  white: DS_COLORS_V2.surface.card,
+  blackBtn: DS_V3.color.surface,
+  onDark: DS_V3.color.textPrimary,
+  white: DS_V3.color.surface,
   /** Neutral chip / segmented track. */
-  track: DS_COLORS_V2.surface.track,
+  track: DS_V3.color.border,
   /** Avatar placeholder neutral. */
-  avatar: DS_COLORS_V2.surface.divider,
+  avatar: DS_V3.color.border,
   /** Progress-bar empty segment. */
-  progressEmpty: DS_COLORS_V2.surface.track,
+  progressEmpty: DS_V3.color.border,
   /** Dark photo placeholder surface (proof / featured cards). */
-  photoDark: DS_COLORS_V2.surface.heroDark,
+  photoDark: DS_V3.color.surface,
   /** Translucent chip backdrop on a photo. */
-  chipOnPhoto: DS_COLORS_V2.overlay.chipOnPhoto55,
+  chipOnPhoto: DS_V3.color.surface,
   /** Text on a photo. */
-  onPhoto: DS_COLORS_V2.overlay.textOnPhoto100,
-  onPhotoDim: DS_COLORS_V2.overlay.textOnPhoto85,
+  onPhoto: DS_V3.color.textPrimary,
+  onPhotoDim: DS_V3.color.textSecondary,
 } as const;
 
 export const OBV2_RADIUS = {

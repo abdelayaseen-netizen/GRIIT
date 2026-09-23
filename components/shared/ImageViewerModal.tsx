@@ -18,7 +18,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { useReduceMotion } from "@/hooks/useReduceMotion";
 
 const { width: VIEWPORT_W, height: VIEWPORT_H } = Dimensions.get("window");
@@ -140,7 +140,7 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
               },
             ]}
           >
-            <X size={24} color={DS_COLORS.WHITE} />
+            <X size={24} color={DS_V3.color.textPrimary} />
           </Pressable>
         </View>
       </GestureHandlerRootView>
@@ -151,7 +151,7 @@ export function ImageViewerModal({ visible, imageUri, onClose }: ImageViewerModa
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: DS_COLORS.BG_DARK,
+    backgroundColor: DS_V3.color.canvas,
   },
   backdropInner: {
     flex: 1,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
-    backgroundColor: DS_COLORS.OVERLAY_WHITE_15,
+    backgroundColor: DS_V3.color.surface,
     zIndex: 10,
   },
 });

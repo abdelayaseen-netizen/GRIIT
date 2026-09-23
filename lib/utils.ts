@@ -1,14 +1,14 @@
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { initialsFrom } from "@/lib/avatar-initials";
 
 /** Rotating avatar backgrounds by user id hash (feed spec). */
 const FEED_AVATAR_BY_USER_ID = [
-  DS_COLORS.DISCOVER_CORAL,
-  DS_COLORS.CATEGORY_MIND,
-  DS_COLORS.GREEN,
-  DS_COLORS.WARNING,
-  DS_COLORS.CELEB_BONUS_PURPLE,
-  DS_COLORS.DISCOVER_BLUE,
+  DS_V3.color.brand,
+  DS_V3.color.brandText,
+  DS_V3.color.brand,
+  DS_V3.color.brand,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandText,
 ] as const;
 
 export function getFeedAvatarBgFromUserId(userId: string): string {

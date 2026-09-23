@@ -5,7 +5,7 @@ import {
   Target,
   type LucideIcon,
 } from "lucide-react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 export type ChallengeCategory = "body" | "mind" | "faith" | "focus";
 export type ChallengeDifficulty = "EASY" | "MED" | "HARD";
@@ -23,27 +23,27 @@ export function getCategoryStyle(category: ChallengeCategory): CategoryStyle {
     case "body":
       return {
         Icon: Dumbbell,
-        tint: DS_COLORS.CATEGORY_BODY_TINT,
-        iconColor: DS_COLORS.CATEGORY_BODY_ICON,
+        tint: DS_V3.color.brandTint,
+        iconColor: DS_V3.color.brandText,
       };
     case "mind":
       return {
         Icon: Brain,
-        tint: DS_COLORS.CATEGORY_MIND_TINT,
-        iconColor: DS_COLORS.CATEGORY_MIND_ICON,
+        tint: DS_V3.color.brandTint,
+        iconColor: DS_V3.color.brandText,
       };
     case "faith":
       return {
         Icon: BookHeart,
-        tint: DS_COLORS.CATEGORY_FAITH_TINT,
-        iconColor: DS_COLORS.CATEGORY_FAITH_ICON,
+        tint: DS_V3.color.brandTint,
+        iconColor: DS_V3.color.brandText,
       };
     case "focus":
     default:
       return {
         Icon: Target,
-        tint: DS_COLORS.CATEGORY_FOCUS_TINT,
-        iconColor: DS_COLORS.CATEGORY_FOCUS_ICON,
+        tint: DS_V3.color.brandTint,
+        iconColor: DS_V3.color.brandText,
       };
   }
 }

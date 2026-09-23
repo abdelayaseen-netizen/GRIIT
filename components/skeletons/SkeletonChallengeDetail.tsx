@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING } from "@/lib/design-system";
+import { DS_V3, DS_SPACING } from "@/lib/design-system";
 import { SkeletonBase } from "./SkeletonBase";
 
 export const SkeletonChallengeDetail = React.memo(function SkeletonChallengeDetail() {
@@ -27,7 +27,7 @@ export const SkeletonChallengeDetail = React.memo(function SkeletonChallengeDeta
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: DS_V3.color.canvas,
   },
   header: {
     paddingHorizontal: DS_SPACING.lg,

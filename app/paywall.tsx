@@ -6,7 +6,7 @@ import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { PurchasesPackage } from "react-native-purchases";
-import { DS_COLORS, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
 import {
   getPaywallVariant,
@@ -238,15 +238,15 @@ export default function PaywallScreen() {
 
 const styles = StyleSheet.create({
   planCard: {
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.BORDER_CARD,
+    borderColor: DS_V3.color.border,
     borderRadius: DS_RADIUS.LG,
     padding: 16,
   },
   planCardSelected: {
     borderWidth: 2,
-    borderColor: DS_COLORS.ACCENT_PRIMARY,
+    borderColor: DS_V3.color.primary,
   },
   planRow: {
     flexDirection: "row",
@@ -257,19 +257,19 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.BORDER_CARD,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
   },
   radioSelected: {
-    backgroundColor: DS_COLORS.ACCENT_PRIMARY,
-    borderColor: DS_COLORS.ACCENT_PRIMARY,
+    backgroundColor: DS_V3.color.primary,
+    borderColor: DS_V3.color.primary,
   },
   radioInner: {
     width: 8,
     height: 8,
     borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.WHITE,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   planMiddle: {
     flex: 1,
@@ -278,16 +278,16 @@ const styles = StyleSheet.create({
   planLabel: {
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
   },
   planBillingNote: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     marginTop: 2,
   },
   planPrice: {
     fontSize: DS_TYPOGRAPHY.SIZE_LG,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BLACK,
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
   },
 });

@@ -19,7 +19,7 @@ import {
 import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
-import { DS_DAYLIGHT } from '@/lib/design-system';
+import { DS_V3 } from '@/lib/design-system';
 import { Avatar } from '@/components/Avatar';
 
 export type RecommendedChallengeDifficulty = 'EASY' | 'MED' | 'HARD';
@@ -88,7 +88,7 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
       <View style={styles.photo}>
         <Icon
           size={30}
-          color={DS_DAYLIGHT.color.iconMuted}
+          color={DS_V3.color.textSecondary}
           strokeWidth={1.75}
         />
       </View>
@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
   photo: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: DS_DAYLIGHT.radius.cardSm,
-    backgroundColor: DS_DAYLIGHT.color.photoPlaceholder,
+    borderRadius: DS_V3.radius.card,
+    backgroundColor: DS_V3.color.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -145,17 +145,17 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontFamily: undefined,
     fontSize: 15.5,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
     letterSpacing: -0.1,
   },
   meta: {
-    fontFamily: DS_DAYLIGHT.fontFamily,
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontFamily: undefined,
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   avatarStack: {
     flexDirection: 'row',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   stackedAvatar: {
     borderWidth: 1.5,
-    borderColor: DS_DAYLIGHT.color.canvas,
+    borderColor: DS_V3.color.canvas,
     borderRadius: 10,
   },
   stackedAvatarOverlap: {

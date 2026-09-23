@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
@@ -58,20 +58,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   left: { minWidth: 64 },
   cancelText: {
     fontSize: 16,
     fontWeight: "500",
-    color: DS_COLORS.accent,
+    color: DS_V3.color.brand,
   },
   title: {
     fontSize: 20,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     flex: 1,
     textAlign: "center",
   },
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: DS_RADIUS.LG,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     minWidth: 60,
     height: 38,
     alignItems: "center",
@@ -92,15 +92,15 @@ const styles = StyleSheet.create({
     height: 40,
   },
   rightBtnSoft: {
-    backgroundColor: DS_COLORS.accentSoft,
+    backgroundColor: DS_V3.color.brandTint,
   },
   rightBtnDisabled: { opacity: 0.5 },
   rightText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
   rightTextSoft: {
-    color: DS_COLORS.accent,
+    color: DS_V3.color.brand,
   },
 });

@@ -1,6 +1,6 @@
 /**
  * Shared OnboardingFlowV2 primitives. Colors come exclusively from the OBV2
- * token map (DS_COLORS_V2 under the hood) — no raw hex.
+ * token map (DS_V3 under the hood) — no raw hex.
  */
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";

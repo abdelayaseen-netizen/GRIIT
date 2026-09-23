@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { WifiOff } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { OFFLINE_BANNER_PAD, topBannerOffset } from "@/lib/session-expired-banner";
 
 function OfflineBannerInner({ insetTop }: { insetTop?: number }) {
@@ -14,7 +14,7 @@ function OfflineBannerInner({ insetTop }: { insetTop?: number }) {
   const top = insetTop ?? insets.top;
   return (
     <View style={[styles.banner, topBannerOffset(top, OFFLINE_BANNER_PAD)]}>
-      <WifiOff size={14} color={DS_COLORS.warning} />
+      <WifiOff size={14} color={DS_V3.color.brand} />
       <Text style={styles.text}>You&apos;re offline. Some features may not work.</Text>
     </View>
   );
@@ -24,7 +24,7 @@ export const OfflineBanner = React.memo(OfflineBannerInner);
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: DS_COLORS.warningSoft,
+    backgroundColor: DS_V3.color.brandTint,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -33,6 +33,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 13,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
   },
 });

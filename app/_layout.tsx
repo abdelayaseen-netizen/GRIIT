@@ -24,7 +24,7 @@ import { AuthGateProvider } from "@/contexts/AuthGateContext";
 import { ApiProvider } from "@/contexts/ApiContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { queryClient } from "@/lib/query-client";
 import { queryFocusedFromAppState } from "@/lib/query-focus";
@@ -107,7 +107,7 @@ const SPLASH_MAX_MS = 1800;
 function AuthRedirectorLoading() {
   return (
     <View style={layoutStyles.authLoadingOverlay}>
-      <ActivityIndicator size="large" color={DS_COLORS.accent} />
+      <ActivityIndicator size="large" color={DS_V3.color.brand} />
     </View>
   );
 }
@@ -407,16 +407,16 @@ const layoutStyles = StyleSheet.create({
     inset: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: DS_COLORS.background,
+    backgroundColor: DS_V3.color.canvas,
     zIndex: 999,
   },
   flex1: { flex: 1 },
   sessionExpiredBanner: {
-    backgroundColor: DS_COLORS.errorText,
+    backgroundColor: DS_V3.color.danger,
     paddingHorizontal: 16,
     alignItems: "center",
   },
-  sessionExpiredText: { color: DS_COLORS.white, fontSize: 14 },
+  sessionExpiredText: { color: DS_V3.color.textPrimary, fontSize: 14 },
 });
 
 function FinalizeEndedGate() {

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Star } from "lucide-react-native";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { FeedCardHeader } from "./FeedCardHeader";
 import { FeedEngagementRow } from "./FeedEngagementRow";
 import { WhoRespectedSheet } from "./WhoRespectedSheet";
@@ -40,7 +40,7 @@ function MilestonePostCardInner({
 
       <View style={styles.banner}>
         <View style={styles.iconBox}>
-          <Star size={24} color={DS_DAYLIGHT.color.accent} fill={DS_DAYLIGHT.color.accent} />
+          <Star size={24} color={DS_V3.color.brand} fill={DS_V3.color.brand} />
         </View>
         <View style={styles.bannerText}>
           <Text style={styles.bannerTitle}>{title}</Text>
@@ -69,43 +69,43 @@ export const MilestonePostCard = React.memo(MilestonePostCardInner);
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: DS_DAYLIGHT.color.canvas,
+    backgroundColor: DS_V3.color.canvas,
     paddingTop: 6,
   },
   banner: {
-    marginHorizontal: DS_DAYLIGHT.space.cardPad,
+    marginHorizontal: DS_V3.space.gutter,
     marginTop: 13,
     padding: 16,
     flexDirection: "row",
     gap: 14,
     alignItems: "center",
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
-    borderRadius: DS_DAYLIGHT.radius.cardMd,
+    backgroundColor: DS_V3.color.brandTint,
+    borderRadius: DS_V3.radius.card,
   },
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: DS_DAYLIGHT.radius.button,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   bannerText: { flex: 1 },
   bannerTitle: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: DS_V3.type.body.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   bannerSub: {
     marginTop: 3,
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   divider: {
     height: 1,
-    backgroundColor: DS_DAYLIGHT.color.dividerStrong,
+    backgroundColor: DS_V3.color.border,
     marginTop: 18,
-    marginHorizontal: DS_DAYLIGHT.space.screenH,
+    marginHorizontal: DS_V3.space.gutter,
   },
 });
