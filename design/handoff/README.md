@@ -309,7 +309,9 @@ today." Never an exclamation mark, never "great job", never "you've got this".
 63 Capture · 64 Edit profile · 65 Discover row · 66 One number · 67 Scales · 68 Home · 69 Feed ·
 70 Profile · 71 Consistency · 72 Counter · 73 Secured · 74 Login · 75 Morning after ·
 76 Secured footer · 77 End of challenge · 78 Profile finished · 79 Secured footer R3 ·
-80 End of challenge · 81 Two at once · 82 Profile finished.
+80 End of challenge · 81 Two at once · 82 Profile finished · 83 Tile states · 84 Groups ·
+85 Empty · 86 One photo · 87 Header tradeoff · 88 Proofs as days · 89 Day viewer ·
+90 Viewer states · 91 Consistency · 92 Badges.
 
 ## Source
 
@@ -478,7 +480,7 @@ Barlow Condensed appears once across the five, on the secured streak number. Per
 `GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
 39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51,
 `GRIIT The Miss.dc.html` holds 52 to 57, `GRIIT Proof Moment.dc.html` holds 58 to 66, and
-`GRIIT Density.dc.html` holds 67 to 74, `GRIIT Patch v28-1.dc.html` holds 75 to 78, and `GRIIT Chunk T.dc.html` holds 79 to 82.
+`GRIIT Density.dc.html` holds 67 to 74, `GRIIT Patch v28-1.dc.html` holds 75 to 78, `GRIIT Chunk T.dc.html` holds 79 to 82, `GRIIT Proofs Grid.dc.html` holds 83 to 86, `GRIIT Chunk U Profile.dc.html` holds 87 to 92, and `GRIIT Chunk U Feed.dc.html` holds 93 to 96.
 
 They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
 synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
@@ -745,3 +747,181 @@ distinguishes the outcomes, and contradiction 57 is withdrawn: leaving writes `a
 the row.
 
 Source: `src/components/{ChallengeEnd,ProfileChallenges}.tsx`.
+
+## Proofs grid revision
+
+Frames 83 to 86, shipping with build 61 alongside the Chunk R density pass. Out of scope and
+untouched: the Consistency card, the segmented control, the proof detail screen, feed cards, the
+VERIFIED pill.
+
+**Decisions carried in as given.** Tile label is the task name; the challenge appears only when a date
+group holds more than one. Private photos get a small lock mark, shared photos get no mark, no eye
+icon and no tile-wide colour. Tap target and destination unchanged: tile → `app/proof/[id]`, where
+Share lives. A photo answered Keep is never re-offered — no Share action on the tile, no long-press
+menu, no whole-day post in this pass.
+
+**Recommendation on C, the date header: keep "19 September · 3 proofs" with no private count.** The
+lock marks sit a few pixels below the header, so a count restates what is already visible and makes
+the reader reconcile two numbers against the tiles — the same arithmetic the footer fix removes. It
+also implies the split is a property of the day; it is a property of a photo.
+
+**Recommendation on the challenge name: a sub-header inside the date group, not a second line on the
+tile.** A second line costs 13pt of a 116pt tile and prints the same word three times across
+a row to say what one line above it says once. It renders only on a day that holds more than one
+challenge, so the common case stays clean.
+
+The label sits on a gradient scrim rather than a caption bar, so it only darkens where the text is,
+and it holds over a bright photo and a near-black one. The lock is a 16pt ink disc at 72% carrying a
+white glyph — a bare glyph disappears on a white photo or a black one, the disc survives both. A
+failed image is surface with a border and an `image-off` glyph, never black, because a black square
+and a photo taken in the dark are the same pixel and one of them is an error. The footer is one line,
+"{n} photos", pending the engineering count fix; nothing in that slot may add or compare day counts.
+
+**No new tokens.** Two literals are stated in `cursor/02_screens.md` rather than tokenised — the tile
+scrim ramp and the lock disc ink — because each is used once and the existing `scrim` token is tuned
+for the 4:5 feed proof, not a 116pt square.
+
+Source: `src/components/{ProofTile,ProofGroupHeader}.tsx`.
+
+## Chunk U, part A — Profile, proofs as days, consistency
+
+Frames 87 to 92, build 62. Parts B (Home and Feed) and C (Create and task screens) follow as separate
+handoffs. Untouched: end-of-challenge, Discover, the Secured screen.
+
+**Decisions.** Proofs is the default tab and leads the profile. The streak and consistency cards merge
+into one 56pt row — the alternative is drawn beside it in frame 87 and costs 76pt, which is the first
+row of proof days moving below the fold. Proofs group by day, not by photo: date, photo count, and the
+day's first photo as cover, with the lock on any day holding a private photo. The visitor view carries
+shared photos only and drops days with none entirely, because a gap where a day should be is itself a
+disclosure. Consistency's headline is "{secured} of {elapsed} days secured" with the denominator
+written under it. Badges become rows — a treatment change only: the five marks, requirements, earned dates and footnote
+are the ones already shipping in `Badges.tsx` and frame 21, the stamp language holds (no icons, no
+circles, no cards), and earned differs from unearned on three channels rather than opacity.
+
+**The one R3 subtlety.** The day viewer offers Share on a private photo — but only to the owner, and
+only on a photo that was never *answered*. R3 forbids re-offering a photo the user answered Keep; a
+photo whose Share/Keep card was dismissed was never answered at all. Distinguishing the two needs the
+server to store three states rather than a boolean, which is contradiction 64.
+
+### A3 research — how consistency should be drawn
+
+**The question.** Three candidates: a GitHub-style contribution heatmap, a weekday-aligned month
+calendar, or a list of days.
+
+**Recommendation: the weekday-aligned month calendar.** Whichever is chosen, the headline, the month
+count and the per-challenge bars must all be reductions over one day array — authoring them separately
+is what produced a September claiming secured days in the future.
+
+**1. GRIIT's day states are categorical, and a heatmap's only channel is intensity.** A contribution
+graph encodes *how much* — it ranks, but it cannot name. A GRIIT day is one of eight named things
+(camera proof, self-reported, freeze, Last Stand, missed, open, not due, before join), and three of
+those must be told apart at a glance because they mean different things about whether the number is
+true. Intensity cannot say "a freeze held this day but it is not secured." A cell with a glyph can.
+
+**2. The actionable read is day-of-week, and only a weekday-aligned grid preserves it.** "I miss
+Sundays" is a conclusion a user can act on. A year heatmap is week-column-aligned and technically
+carries weekday on its vertical axis, but at 7-8pt cells nobody reads down a column. A month grid at
+30pt cells puts all four or five Sundays in one visible column.
+
+**3. A list of days is the most honest and the least usable.** It scales linearly — 68 days is 68 rows
+— and answers "what happened on the 14th" while making "how is this month going" a scroll. The month
+grid answers both at 31 cells.
+
+**What comparable products do.**
+
+- **Streaks** (Apple Design Award, the app that defined the category) uses per-habit heatmaps and
+  weekday circles on the card: <cite index="1-9,1-11">its redesigned habit cards use a vertical layout with weekday circles and streak pills, plus a streak heatmap of habit history on each card</cite>. Two
+  visualisations, because the weekday circles answer a question the heatmap cannot.
+- **Strava and the running apps** record the workout and bury the chain: <cite index="8-14,8-15,8-16,8-17">running apps like Strava, Garmin and Nike Run Club record distance and pace automatically, but most do not show streaks well — you see a weekly summary while the daily chain is buried</cite>. This is the
+  failure GRIIT must not repeat: rich per-session data, no legible answer to "am I consistent".
+- **Heatmap-first habit trackers** (Streakly and similar) go the other way, explicitly modelling
+  themselves on contribution graphs: <cite index="9-8,9-9">inspired by the Seinfeld strategy and contribution graphs, the app visualises progress as a heatmap so a user sees a year of discipline at a glance</cite>. Good for a single binary habit; GRIIT days are not binary.
+- **Apple-Watch-lineage trackers** pair rings with a <cite index="3-5">year-long heatmap showing consistency</cite> — again two views, the second for scale, not for state.
+
+**On how people read consistency data.** The mechanic GRIIT inherits is the chain, and the literature
+on it is about *visibility*, not density: <cite index="8-9">the chain is the point — if you cannot see it, you lose most of the psychological benefit</cite>. The often-cited
+UCL finding gives the horizon a consistency view has to cover: <cite index="7-30">repeating a behaviour in the same context each day builds automaticity, with the average time to form a habit around 66 days</cite>. A month grid with month
+navigation covers 66 days in two screens, both fully legible; a year heatmap covers it in one screen
+that cannot name a single day's state.
+
+**What this rules out.** Colour-only encoding. Every state carries a distinct interior shape — check,
+dot, snowflake, shield, dash, dashed ring, pin-dot, empty — so the grid reads in greyscale and to a
+colour-blind user, which a heatmap by construction does not.
+
+**Sources:** Streaks on the App Store; HabitBox on running streaks and where Strava hides the chain;
+Streakly and Habit Tracker: Daily Streaks on the App Store; the UCL automaticity figure as reported by
+Habi's 2026 streak-tracker review.
+
+Source: `src/components/{ProofDayCard,ConsistencyGrid,BadgeRow}.tsx`. No new tokens; three
+single-use literals are stated in `cursor/02_screens.md`.
+
+## Chunk U, part B — Home and Feed
+
+Frames 93 to 96, build 62, on top of Part A. Part C (Create and task screens) follows.
+
+**One card family.** Every feed event is the same card — avatar, name and time as the header row, the
+challenge as eyebrow, what happened as subject — which is the Part A day-viewer hierarchy. The photo
+post is that card with an image in the middle, so the feed is one list rather than two kinds of row.
+Five event variants ship: task completed, day secured, challenge started, challenge finished, badge
+earned. The Verified stamp appears on the camera-proof variant and nowhere else; a self-reported task
+shows its gate line and no stamp, because nothing checked it. A secured-day card links into that day
+in the poster's Proofs — the day viewer in visitor mode, so shared photos only.
+
+**Comments inline**, two at most, then "View all {n} comments". Composing stays in the sheet: one tap
+target for writing, one place the keyboard appears. Your own comment is marked by colour on your real
+name, not by the word "You" in a different slot.
+
+**Leaderboard: Global removed.** Per the attached research brief, absolute rankings help the top few
+and demotivate the rest (Bai & Hew 2025; Hanus & Fox 2015) — and at the current userbase the board is
+empty besides, so it would ship the demotivation without the competitive payoff. What ships is one
+opt-in board per challenge, scored on secured days since Monday with the rule written on the screen: a
+short top slice, the user's row with one neighbour either side, and nothing below — stated in words,
+naming the lowest rank actually on screen. The score is "{n} secured" in the display face with **no
+denominator at all**: a denominator of seven on a Tuesday asserts a week nobody has lived is already
+assessable, so the elapsed-days line under it carries how much of the week has ended. The board is generated from the same week array the
+strip renders, so no score can exceed the elapsed days and the user's own score matches what their Home
+screen says about the same Monday. Two people is drawn as a comparison rather than a ranking; one person
+gets no board.
+
+**The Friends scope is deferred, not designed.** It is the other defensible scope in the brief, but it
+depends on a follow graph that is not yet dense enough to rank against — with 28 followers of whom a
+handful share a challenge, a Friends board is either the per-challenge board with extra steps or a
+list of two. Revisit when the median user follows enough people who are enrolled in something.
+
+**Week strip** now draws every past day from the same `DayState` union as Consistency, so a missed
+Monday reads as missed rather than as an empty cell (contradiction 66, closed). Only four of the seven
+states can occur inside one week, so the strip legend has four entries.
+
+**B5 and B6 confirmed, not redesigned.** The morning-after block keeps v28.2 copy, with its
+consistency figure now from the same source as Profile; the Home hero sub-line is the Part A
+consistency line verbatim. Reconciling them exposed the streak: Profile read 12 beside a grid drawing
+21 September as missed, so both screens now derive the streak from that same day array and both read 0.
+The standing rule, now stated in the spec, is that every number on screen is a reduction over the day
+array rather than a value authored beside it.
+
+**On the removed statistic.** "Public accountability lifted goal completion from 43% to 76%
+(Matthews, 2015)" does not appear anywhere in this handoff package — grepped across every file, no
+match. Nothing to remove; noting it so the check is on the record. Where a line of that kind is wanted
+in future, it is "People who report progress weekly to one person finish more goals." with no numbers.
+
+**Engagement row** keeps all three affordances — respect, comment, share. Confirmed against
+`components/feed/FeedEngagementRow.tsx` on main, which ships `Heart`, `MessageCircle` and
+`ArrowUpRight`; nothing is cut. That file is also on the daylight palette and hides its counts at
+zero, both logged as contradictions.
+
+**One pinned world.** Every frame across parts A and B renders from a single object — today's date,
+each challenge's start date and task list, and which user secured which day — with the generator
+asserting it rather than restating it. A task card is addressed by challenge and task index, so its
+name, its gate line and its Verified stamp are all read out of that challenge's own task definition: a
+card cannot name a task the challenge does not have, cannot advertise a gate it does not enforce, and
+cannot claim a secured day its poster did not earn. "Day {n} of {N}" is computed from the start date
+(Iron man is day 69 here, not an authored 12), timestamps are unique per poster, and one event carries
+one time in every frame it appears in.
+
+This closed seven instances of one defect across the project. Each fix tightened an assertion in the
+generator rather than correcting a string, because a corrected string leaves the next fixture free to
+repeat the mistake — which is what happened twice. The rule is written at the top of the Part B spec
+section so Part C starts from it.
+
+**Frames:** 93 Card family · 94 Comments · 95 Challenge board · 96 Home. No new tokens; two
+single-use literals stated in `cursor/02_screens.md`. Contradictions 69 to 78 (Part A's run 64 to 68).

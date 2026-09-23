@@ -11,16 +11,27 @@ export type DayState = 'camera' | 'self' | 'missed' | 'frozen' | 'last_stand';
 export type EndedChallenge = {
   id: string;
   title: string;
-  duration_days: number;
+  duration_days: number;         // N. The denominator, always — never days.length
   status: 'completed' | 'abandoned' | 'failed';
   ended_on_day: number;          // for abandoned / failed
   days: DayState[];              // one per elapsed day, in order
+  // Must equal longestStreak(days). A freeze or Last Stand preserves the streak, so it
+  // continues a run; only a miss breaks one. Passing a server value that disagrees with
+  // days[] puts a number on the card that the sheet above it contradicts — assert in dev.
   longest_streak: number;
   started_at: string;
   ended_at: string;
 };
 
 const SECURED: DayState[] = ['camera', 'self'];
+const BREAKS: DayState = 'missed';
+
+/** The streak reading of days[]: held days continue a run, only a miss ends one. */
+export function longestStreak(days: DayState[]) {
+  let run = 0, best = 0;
+  for (const d of days) { if (d === BREAKS) run = 0; else { run++; if (run > best) best = run; } }
+  return best;
+}
 
 // A frozen or Last Stand day is NOT secured. The streak survived it; the day did not.
 // Counting a held day as secured would claim work that never happened.
@@ -37,8 +48,11 @@ function factLine(c: EndedChallenge): string {
   const unsecured = c.days.length - secured;
 
   if (c.status === 'failed') return 'Hard mode has no freezes, so one unsecured day ends the run.';
-  if (c.days.length === 1) return secured ? `One day, secured. ${cam ? 'Camera proof.' : 'Self-reported.'}` : 'One day, not secured.';
-  if (unsecured === 0) return `${c.days.length} days, none missed. ${cam} camera proof, ${self} self-reported.`;
+  if (c.duration_days === 1) return secured ? `One day, secured. ${cam ? 'Camera proof.' : 'Self-reported.'}` : 'One day, not secured.';
+  // "none missed" can only be said of a run that reached its end: a run abandoned on day 9
+  // with 9 secured days missed 66, it did not go clean.
+  if (unsecured === 0 && c.days.length === c.duration_days) return `${c.duration_days} days, none missed. ${cam} camera proof, ${self} self-reported.`;
+  if (unsecured === 0) return `${secured} of ${c.days.length} days secured before it ended. ${cam} camera proof, ${self} self-reported.`;
 
   const held = frozen + stand;
   const base = `${unsecured} day${unsecured === 1 ? '' : 's'} went unsecured.`;
@@ -51,7 +65,12 @@ function factLine(c: EndedChallenge): string {
 // Value and form carry the state, never opacity: surface is 1.09:1 against canvas, so a
 // surface-filled tile and an empty one are the same square at 27pt. Same encoding as
 // ds/WeekStrip.
-function Tile({ state }: { state: DayState }) {
+// size is the rendered edge of the tile, and the plug scales from it. Hardcoding the plug
+// breaks the legend: tiles are border-box, so an 11pt swatch has a 9pt content box (8pt at
+// the Last Stand's 1.5pt border) and a fixed 9pt plug fills it edge to edge — Frozen would
+// render as solid border and Last Stand as solid brand, collapsing them onto Self-reported
+// and Camera proof, in the one key that explains the sheet.
+function Tile({ state, size = 27 }: { state: DayState; size?: number }) {
   const fill = state === 'camera' ? color.brand : state === 'self' ? color.border : 'transparent';
   const stroke = state === 'last_stand' ? color.brand : (state === 'camera' || state === 'self') ? 'transparent' : color.border;
   const plug = state === 'frozen' ? color.border : state === 'last_stand' ? color.brand : null;
@@ -61,7 +80,7 @@ function Tile({ state }: { state: DayState }) {
       border: `${state === 'last_stand' ? 1.5 : 1}px solid ${stroke}`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      {plug ? <div style={{ width: 9, height: 9, borderRadius: 2, background: plug }} /> : null}
+      {plug ? (() => { const d = Math.max(4, Math.round(size * 0.34)); return <div style={{ width: d, height: d, borderRadius: 2, background: plug }} />; })() : null}
     </div>
   );
 }
@@ -71,9 +90,13 @@ const LEGEND: [DayState, string][] = [
   ['frozen', 'Frozen'], ['last_stand', 'Last Stand'],
 ];
 
-// 12 columns, not 10: 75 days at 10 across is 8 rows and 285pt, which leaves no room for a
-// five-item legend and the stats card. At 12 it is 7 rows and 213pt.
+// 12 columns for every sheet on the single screen, whatever the day count: 75 days at 10
+// across is 8 rows and 285pt, which leaves no room for a five-item legend and the stats
+// card; at 12 it is 7 rows and 213pt with 27pt tiles. A shorter run keeps the same column
+// count and simply has fewer rows — widening the tiles for a 28-day run would make two end
+// screens in the same app disagree about how big a day is.
 const COLS = 12;
+const COMBINED_COLS = 15;
 
 function Sheet({ days, cols = COLS }: { days: DayState[]; cols?: number }) {
   // A one-day challenge centres its single tile rather than stretching it across a grid.
@@ -93,7 +116,7 @@ function Legend({ days }: { days: DayState[] }) {
     <div style={{ padding: `${space.sm}px ${space.gutter}px 0`, display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
       {present.map(([s, label]) => (
         <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 11, height: 11, flex: 'none' }}><Tile state={s} /></div>
+          <div style={{ width: 11, height: 11, flex: 'none' }}><Tile state={s} size={11} /></div>
           <div style={{ ...type.caption, color: color.textSecondary }}>{label}</div>
         </div>
       ))}
@@ -101,6 +124,9 @@ function Legend({ days }: { days: DayState[] }) {
   );
 }
 
+// Place held days outside the longest run wherever a fixture is authored, so the sheet's
+// filled-run reading and longestStreak() give the same answer. They diverge otherwise, and
+// the legend sits directly under the sheet inviting the reader to count.
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -153,7 +179,8 @@ function Single(p: ChallengeEndProps) {
         <div style={{ ...type.label, color: color.textSecondary }}>Days secured</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: space.sm }}>
           <div style={{ fontFamily: displayFace, fontSize: numberSize.moment, lineHeight: '88px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{secured}</div>
-          <div style={{ ...type.heading, color: color.textSecondary }}>of {c.days.length}</div>
+          {/* N, not elapsed. A run that failed on day 28 of 75 reads "27 of 75". */}
+          <div style={{ ...type.heading, color: color.textSecondary }}>of {c.duration_days}</div>
         </div>
       </div>
 
@@ -219,10 +246,10 @@ function Combined(p: ChallengeEndProps) {
                 <div style={{ flex: 1, ...type.bodyStrong, color: color.textPrimary }}>{c.title}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
                   <div style={{ fontFamily: displayFace, fontSize: 34, lineHeight: '32px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{securedCount(c.days)}</div>
-                  <div style={{ ...type.secondary, color: color.textSecondary }}>of {c.days.length}</div>
+                  <div style={{ ...type.secondary, color: color.textSecondary }}>of {c.duration_days}</div>
                 </div>
               </div>
-              <Sheet days={c.days} cols={15} />
+              <Sheet days={c.days} cols={COMBINED_COLS} />
               <div style={{ ...type.caption, color: color.textSecondary }}>{factLine(c)}</div>
             </div>
           </React.Fragment>

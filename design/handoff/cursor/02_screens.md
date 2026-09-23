@@ -3758,6 +3758,13 @@ outcomes; only the number and the sheet differ.
    state visible
 5. a three-item legend, `type.caption`
 6. a `Card`: Longest streak, Started, Ended
+
+   **Longest streak counts held days as continuing the run** — a freeze or a Last Stand preserves the
+   streak, so only a miss ends one. It must equal `longestStreak(days)`; a server value that
+   disagrees puts a number on the card that the sheet directly above it contradicts. Where a fixture
+   is authored, place the held days **outside** the longest run, so counting filled squares and
+   counting the streak give the same answer — otherwise the legend under the sheet invites a count
+   that comes out lower than the card.
 7. footer: primary "Done", secondary "Start it again"
 
 **No congratulation, in either outcome.** No trophy, no confetti, no "you did it", and no consolation
@@ -3793,7 +3800,8 @@ not its job.
 | {secured} | DisplayNumber, 100pt |
 | of {duration_days} | heading textSecondary |
 | {challenge} is over. | bodyStrong |
-| {n} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary |
+| {N} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary, completed runs only |
+| {secured} of {elapsed} days secured before it ended. {c} camera proof, {s} self-reported. | caption textSecondary, an abandoned run with no misses |
 | {m} days went unsecured. {c} camera proof, {s} self-reported. | caption textSecondary |
 | Camera proof · Self-reported · Not secured | caption textSecondary, legend |
 | Longest streak / Started / Ended | secondary textSecondary, values bodyStrong |
@@ -3952,12 +3960,21 @@ Same encoding as `ds/WeekStrip`. **Value and form, never opacity** — `surface`
 | camera proof | `color.brand` fill |
 | self-reported | solid `color.border` fill |
 | not secured | transparent, 1pt `color.border` outline |
-| frozen | transparent, 1pt `color.border` outline, centred 9pt `color.border` square |
-| Last Stand | transparent, 1.5pt `color.brand` outline, centred 9pt `color.brand` square |
+| frozen | transparent, 1pt `color.border` outline, centred `color.border` plug |
+| Last Stand | transparent, 1.5pt `color.brand` outline, centred `color.brand` plug |
 
-**12 columns**, not 10: 75 days at 10 across is 8 rows and 285pt, which does not leave room for a
-five-item legend and the stats card. At 12 it is 7 rows and 213pt with 27pt tiles, which still carries
-five states.
+**The plug scales with the tile: `round(size × 0.34)`, floor 4.** 9pt in a 27pt sheet tile, 4pt in an
+11pt legend swatch. Do not hardcode it — tiles are `border-box`, so an 11pt swatch has a 9pt content
+box and a fixed 9pt plug fills it edge to edge, rendering Frozen as solid border and Last Stand as
+solid brand. That collapses them onto Self-reported and Camera proof in the one key that explains the
+sheet. And do not fix it by enlarging the swatch: 11pt matches the caption line it sits on, and 27pt is
+the sheet tile the 12-column rule is built from.
+
+**12 columns on the single screen, whatever the day count**, and 15 on a combined block. 75 days at 10
+across is 8 rows and 285pt, which does not leave room for a five-item legend and the stats card; at 12
+it is 7 rows and 213pt with 27pt tiles, which still carries five states. A 28-day run keeps 12 columns
+and simply has three rows — widening its tiles would make two end screens in the same app disagree
+about how big a day is.
 
 **How frozen and Last Stand days count.** They are **unsecured**. The day was not secured — the streak
 survived it, which is a different fact about a different number. So:
@@ -3972,12 +3989,22 @@ thing this system does not do.
 
 ## The screen
 
-1. `DisplayNumber` 96: `{secured}`, with "of {N}" in `type.heading` `textSecondary`
+1. `DisplayNumber` 96: `{secured}`, with "of {N}" in `type.heading` `textSecondary`.
+   **N is `duration_days`, never the elapsed-day count.** They are equal on a completed run and
+   diverge on every abandoned or failed one, where elapsed reads as "you nearly finished" and hides
+   how long the run actually was: 75 Hard failing on day 28 is "27 of 75", not "27 of 28"
 2. "{challenge} is over." — or "{challenge} ended on day {n}." for `failed`
 3. one `type.caption` line of fact
 4. the sheet, 12 across
 5. the legend, only the states present in this run
 6. a `Card`: Longest streak, Started, Ended
+
+   **Longest streak counts held days as continuing the run** — a freeze or a Last Stand preserves the
+   streak, so only a miss ends one. It must equal `longestStreak(days)`; a server value that
+   disagrees puts a number on the card that the sheet directly above it contradicts. Where a fixture
+   is authored, place the held days **outside** the longest run, so counting filled squares and
+   counting the streak give the same answer — otherwise the legend under the sheet invites a count
+   that comes out lower than the card.
 7. footer: primary "Done", secondary "Start it again"
 
 **No congratulation in any outcome**, and no consolation in the failed one. The 75-of-75 screen and the
@@ -4026,7 +4053,8 @@ shipped are here too, without an end screen."
 | of {N} | heading textSecondary |
 | {challenge} is over. | bodyStrong |
 | {challenge} ended on day {n}. | bodyStrong, failed |
-| {n} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary |
+| {N} days, none missed. {c} camera proof, {s} self-reported. | caption textSecondary, completed runs only |
+| {secured} of {elapsed} days secured before it ended. {c} camera proof, {s} self-reported. | caption textSecondary, an abandoned run with no misses |
 | {m} days went unsecured. {h} of them were held, by {list}. | caption textSecondary |
 | Hard mode has no freezes, so one unsecured day ends the run. | caption textSecondary, failed |
 | One day, secured. Camera proof. | caption textSecondary, one-day |
@@ -4065,3 +4093,632 @@ user's timezone, at 23:59:59 local.
 
 **59. `end_seen_at` does not exist, so every historical enrollment would fire an end screen.** Backfill
 it in the same migration that adds it.
+
+# Proofs grid revision
+
+**Build 61, with the Chunk R density pass.** Frames 83 to 86, in `GRIIT Proofs Grid.dc.html`.
+Source: `src/components/ProofTile.tsx`, `src/components/ProofGroupHeader.tsx`.
+Amends the Chunk Q "Profile → Proofs" entry. Out of scope and untouched: the Consistency card, the
+segmented control, `app/proof/[id]`, feed cards, the VERIFIED pill.
+
+## Tokens
+
+**No new tokens.** Everything below is `tokens.dense.ts`: `color.surface`, `color.border`,
+`color.textPrimary`, `color.textSecondary`, `color.canvas`, `radius.input` 10, `radius.pill`,
+`type.label` 11/14, `type.caption` 12/16, `space.gutter` 16.
+
+Two literals are **not** tokens and are stated here rather than added to the file, because each is a
+one-off compositing value that only makes sense over a photograph:
+
+| literal | where | why not a token |
+|---|---|---|
+| `linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%)` | tile label scrim | the existing `scrim` token is 0→0.6 over 40% height, tuned for the 4:5 feed proof. A 116pt square needs a shorter, darker ramp for an 11pt label |
+| `rgba(15,15,15,0.72)` | lock disc | a single compositing value used once |
+
+If either is wanted as a token, `scrimTile` and `discInk` are the names — but one use each does not
+earn one.
+
+## A. The tile, four states
+
+116pt square at 3 columns, `radius.input` 10, 6pt gaps — `(393 - 2*16 - 2*6) / 3` at the Chunk R
+gutter of 16. **The tile is the tap target** — 116 against a
+44 minimum, so it carries no padding of its own. Destination unchanged: `app/proof/[id]`.
+
+| state | treatment |
+|---|---|
+| shared | photo, `objectFit: cover`, scrim, task label. **No mark.** |
+| private | the same, plus a 16pt lock disc bottom-right; the label right-inset moves 6 → 24 so the two never collide |
+| failed | `color.surface` with a 1pt `color.border`, a centred 20pt `image-off` in `textSecondary`, the task label in `textSecondary`. **Never black** |
+| loading | the same box filled flat with `color.border`. No label, no glyph, no pulse |
+
+**The label is the task name**, `type.label` at 11/14 with letter-spacing and uppercase both off —
+it is a name, not a section label. White on the scrim.
+
+**Why a scrim and not a caption bar.** A solid bar sits on every tile whether the photo needs it or
+not; the gradient only darkens where the text is. It runs 0 at 42% to 0.78 at the base, which holds the
+label over the bright photo and the near-black one in frame 83 without a box.
+
+**Why failed is not black.** A black square and a photo taken in a dark room are the same pixel, and
+one of them is an error the user should be able to recognise. Surface plus a border plus a glyph says
+"nothing loaded" without saying "you failed".
+
+## B. The lock mark
+
+16pt disc, `rgba(15,15,15,0.72)`, `radius.pill`, bottom-right at 5/4, containing a 9pt `lock` in
+`color.textPrimary`.
+
+**It rides its own ground.** A bare white glyph disappears on a white photo; a bare dark one
+disappears on a dark photo. The disc composites to at least 0.72 ink over anything, so the white glyph
+clears 4.5:1 over a white photo and the disc edge stays visible over a black one. Frame 83 shows it
+over bright, mid and near-black.
+
+**Shared photos get no mark at all.** Adding a "public" badge would put a mark on the majority state,
+which is noise, and would make an unmarked tile ambiguous. One mark, one meaning: a lock means private.
+
+**Decorative to VoiceOver** (`aria-hidden`), because the state is already in the tile label.
+
+## C. The date group header — recommendation
+
+**Keep "19 September · 3 proofs". No private count.**
+
+The alternative, "3 proofs · 1 private", was considered and is worse: the lock marks are already in
+view a few pixels below, so the count restates what is visible, and it makes the reader hold two
+numbers and reconcile them against the tiles — the same arithmetic the footer is being fixed to stop.
+It also implies the shared/private split is a property of the day, and it is not: privacy belongs to a
+photo.
+
+A mixed group reads as three tiles, one of which wears a lock. That is the whole answer.
+
+## D. Multi-challenge day — recommendation
+
+**A sub-header inside the group, not a second line on the tile.**
+
+A second line costs 13pt of a 116pt tile, and on a three-tile row from one challenge it
+prints the same word three times to say what one line above the row says once. The sub-header is
+`type.label` at 11/14, letter-spacing and uppercase off, `textSecondary`, 10pt above its row.
+
+**It appears only when the date group holds more than one challenge.** A single-challenge day shows
+the date header and the tiles, nothing else — which is the common case and stays clean.
+
+Ordering inside a mixed group: by challenge, in the order the challenges were joined, tiles newest
+first within each.
+
+## E. The footer
+
+**One line, centred, `type.caption` `textSecondary`, on a 1pt top border above the safe area.**
+
+Placeholder copy: **"{n} photos"** / "1 photo". Nothing else.
+
+The old line — "6 camera proofs. 2 more days were secured self-reported and have no photo." — asked
+the user to add two numbers and then compare the result against a Consistency card a few hundred
+pixels up that counts something different. Final wording is blocked on the engineering count fix.
+Until then this slot holds one number that is trivially checkable by counting tiles, and **no sentence
+in it may add, subtract or compare day counts.**
+
+## F. Empty and one-photo
+
+| state | content |
+|---|---|
+| no photos | 40pt `camera` disc, "No photos yet", "A task with the Camera gate puts its photo here. Nothing can be added from your library." No footer |
+| one photo | the date group with a single tile in the 3-column grid, so it sits at 116pt like every other tile and does not stretch, plus one caption: "Your first proof. Photos stay private until you share one." |
+
+A lone tile in a 3-column grid looks deliberate; a lone tile stretched to full width looks broken. The
+one-photo caption is the only place the private-by-default rule is stated in the grid, and it appears
+once, at the moment it is first true.
+
+## G. Long labels
+
+One line, `whiteSpace: nowrap`, `textOverflow: ellipsis`. No wrapping and no shrinking.
+
+Measured at 116pt: about 17 characters fit on a shared tile ("Workout, outdoors" lands exactly), and
+about 14 on a private tile, where the lock takes 18pt off the right. A 24-character name like "Evening
+mobility routine" truncates, which is correct — the full name is one tap away on the proof screen, and
+a second line would cost more photo than the tail of a name is worth.
+
+## Accessibility
+
+| state | label |
+|---|---|
+| shared | "{task}, {date}, shared" |
+| private | "{task}, {date}, private" |
+| failed | "{task}, {date}, photo unavailable" |
+| loading | no label, `aria-busy` |
+
+The lock is `aria-hidden`. **Tap target confirmed: 116 × 116** (measured in frame 83), against a 44pt minimum.
+
+## Copy
+
+| string | style |
+|---|---|
+| {date} · {n} proofs | label textSecondary |
+| {date} · 1 proof | label textSecondary |
+| {challenge} | label textSecondary, letter-spacing and uppercase off, multi-challenge days only |
+| {task} | 11/14 medium textPrimary on the scrim; textSecondary on a failed tile |
+| {n} photos / 1 photo | caption textSecondary, centred |
+| No photos yet | bodyStrong |
+| A task with the Camera gate puts its photo here. Nothing can be added from your library. | secondary textSecondary |
+| Your first proof. Photos stay private until you share one. | caption textSecondary |
+
+## Contradictions
+
+**60. Every tile showed the challenge name.** In a one- or two-challenge account that is a constant,
+and a constant carries no information. The task name varies within a day, which is the axis the grid
+is read along.
+
+**61. Nothing distinguished a private photo from a shared one.** Chunk Q made privacy the default and
+the promise; the grid then rendered both states identically, so the one screen listing every photo
+could not answer the question the feature exists to answer.
+
+**62. A failed image rendered as a solid black square with a floating label.** Indistinguishable from
+a photo taken in the dark.
+
+**63. The footer asked for arithmetic.** Two numbers to add, then compared against a Consistency card
+counting something else.
+
+# Chunk U, part A — Profile, proofs as days, consistency
+
+**Build 62.** Frames 87 to 92, in `GRIIT Chunk U Profile.dc.html`. Source:
+`src/components/{ProofDayCard,ConsistencyGrid,BadgeRow}.tsx`.
+Untouched, per the brief: end-of-challenge (Chunk T), Discover, the Secured screen.
+
+## Tokens
+
+**No new tokens.** All of `tokens.dense.ts`: `color.{canvas,surface,border,textPrimary,textSecondary,
+primary,brand,brandText,brandTint}`, `radius.{input,pill}` 10/999, `type.{label,caption,secondary,
+body,bodyStrong}`, `space.{gutter,lg}` 16/16.
+
+Three literals, each used once, stated here rather than tokenised: the day-cover scrim
+`rgba(15,15,15,0)→0.8 from 38%` (a 116pt square needs a shorter ramp than the 4:5 feed `scrim`), the
+lock disc `rgba(15,15,15,0.72)` (carried from the Proofs grid revision), and the 6pt day-cell radius
+— smaller than `radius.input` because a 30pt cell at radius 10 reads as a pill.
+
+## A1. Structure — frame 87
+
+**Tab order Proofs | Challenges | Badges, Proofs default.**
+
+**The streak card and the consistency card merge into one row.** Recommended, and drawn beside the
+alternative in frame 87:
+
+| | one row | two cards |
+|---|---|---|
+| height, with gap | 56pt | 132pt |
+| tap targets | 1, to Consistency | 2, both to Consistency |
+| extensible to a third stat | no | yes |
+
+**Recommendation: one row.** Both numbers are the same kind of claim — a count of days — so one row
+reads as one statement, and they share a destination anyway.
+
+**Both halves of the row reduce over the same day array as the grid.** The streak is the run of
+consecutive secured days ending at the last elapsed day; the ratio is secured over elapsed. On
+22 September, with 21 September missed, the streak is 0 — the same number Home reports, from the same
+source. A streak authored separately from the grid is how the row first shipped reading 12 beside a
+grid that draws Monday as missed, which is the row's own claim failing on the row's own frame. The 76pt saved is the difference between
+the first row of proof days landing above the fold and below it, which is the entire point of making
+Proofs primary. The two-card version is the shape a third stat could join, and that is exactly why it
+is the wrong default: it invites a third number onto a screen whose problem was too many.
+
+Header compression: avatar 72 → 56, name `bodyStrong`, and handle + both follow counts collapse to one
+`caption` line ("@yaseen · 34 following · 28 followers") rather than three stacked stat columns.
+
+## A2. Proofs as days — frames 88, 89, 90
+
+**The unit is a day, not a photo.** A 6-photo Friday rendered as six tiles all captioned "19
+September"; the axis a user navigates by is the day.
+
+**Day card** cover = the day's first photo, `objectFit: cover`, 116pt square in the same 3-column
+grid. Date label `caption` medium; photo count `label` below it; the lock bottom-right.
+
+**The day wears the lock when ANY photo in it is private.** That is the owner's at-a-glance answer to
+"which days hold something nobody has seen".
+
+**Visitor view: shared photos only, and a day with none is dropped from the list entirely** — not
+rendered empty, not greyed. A gap where a day should be is itself a disclosure, which R3 forbids. The
+visitor's photo count is the count of *shared* photos, so it never implies a photo they cannot see.
+One caption states the rule once: "Only days Amir shared a photo appear here."
+
+**Day viewer** full screen. Segment bar for position (one full segment on a one-photo day — the
+control must mean the same thing every time), "{i} of {n}" in the header because six segments stop
+being countable, challenge as eyebrow and task as subject (same hierarchy as the feed card), and the
+`Private` pill on an unanswered photo.
+
+**The viewer holds the only second Share offer in the app, and it does not violate R3.** R3 forbids
+re-offering a photo the user answered *Keep*. A photo whose frame-58 card was dismissed was never
+answered, and the owner's own day viewer is where it can still be answered. A photo answered Keep
+shows the pill and **no Share button** — the copy line reads "Only you can see this." with no action.
+This distinction requires the server to store the answer as three-valued (`shared` | `kept` |
+`unanswered`), not a boolean; flagged in the contradictions below.
+
+Swipe past the last photo moves to the previous day with photos, and the footer says so.
+
+## A3. Consistency — frame 91
+
+**Headline: "{secured} of {elapsed} days secured", the secured count in the display face.**
+
+**Derive both numbers, and the grid, from one day array.** Do not author the headline and the month
+separately — that is how frame 91 first shipped a September whose cells claimed eight secured days in
+the future while the headline counted 68 elapsed. Same defect class as Chunk T's `longest_streak`,
+same fix: one array of `DayState` per enrolled day, and every number on the screen is a reduction over
+it. The month header carries its own derived count ("17 of 21 secured") so the grid is checkable
+against a number beside it, and the per-challenge bar for the first enrollment is the headline pair.
+
+**Cells after today are `notdue`, never a secured state.** Today is `today`, positioned at its real
+index in the month — not appended after the last day of the month.
+
+**Denominator, stated on screen in the line beneath it:** every day since the user's first challenge
+start date, in their timezone, **not counting today** — today is still open and cannot be counted
+either way. The failure mode was "3 of 6 days" with no definition anywhere.
+
+Not a percentage. A percentage hides both numbers and invites the comparison against Home that the
+engineering bug already made; "62 of 68" is checkable against the grid directly below it.
+
+**Grid: weekday-aligned month, Monday first. Recommended over a year heatmap and over a list of days.**
+Full reasoning and sources: the research page in `README.md`.
+
+**The eight day states.** Shape carries the state, colour reinforces it — the grid survives greyscale:
+
+| state | cell |
+|---|---|
+| secured, camera proof | `color.brand` fill, `check` glyph in `canvas` |
+| secured, self-reported | `brandTint` fill, 1pt `brand` border, centred 6pt `brandText` dot |
+| held by freeze | `surface` fill, 1pt `border`, `snowflake` glyph |
+| held by Last Stand | `surface` fill, **1.5pt** `brand` border, `shield` glyph in `brandText` |
+| missed | no fill, 1pt `border`, centred 11pt dash |
+| open, today | no fill, 1.5pt **dashed** `brand` border, empty |
+| not due yet | no fill, no border, centred 3pt `border` dot — **`textSecondary` in the legend swatch**, where `border` on canvas is 1.36:1 and the entry becomes the one thing in the legend a reader cannot match |
+| before first join | empty cell |
+
+**A freeze day and a Last Stand day are not secured days** and are not counted in the numerator. The
+definition line says so in words: "A freeze or a Last Stand holds the streak but is not a secured day."
+
+**Definitions inline, two lines, no help screen.** Per-challenge bars below the legend: challenge name,
+"{x} of {y} days", 5pt brand bar.
+
+## A4. Badges — frame 92
+
+**A treatment change only.** The five marks, their labels, their requirements, their earned dates and
+the footnote are exactly the ones already shipping in `src/components/Badges.tsx` and frame 21 — First
+day, One week, Three weeks, Thirty, Seventy five, footnote "Five marks, each earned by verified days
+only. Nothing here can be bought or awarded." **A4 asked for a layout, not a new badge set**, and new
+earning rules are a product decision to raise, not to invent.
+
+**Rows, not a two-column tile grid.** The requirement line is the part that says what the mark costs,
+and in a tile it had nowhere to go. `BadgeRows` in `src/components/BadgeRow.tsx` takes the same
+`Badge` type (`{label, earnedOn, requirement}`) as `Badges`.
+
+**The stamp language holds: no icons, no circles, no cards.** Earned vs unearned differs on three
+channels, not opacity: stamp border (`brandText` vs `border`), stamp letters (`brandText` vs
+`textSecondary`), and the trailing word (`brandText` "Earned" vs **`textSecondary`** "Locked" —
+`border` there is 1.36:1, which makes the third channel invisible and the rationale false). Opacity alone fails WCAG 1.4.1 and reads as *disabled*
+rather than *not yet*. The earned row keeps its date — "Earned 6 Sep 2026", not a bare "Earned".
+
+## Copy
+
+| string | style |
+|---|---|
+| @{handle} · {n} following · {n} followers | caption textSecondary |
+| {n} day streak | display number + caption textSecondary |
+| {secured} of {elapsed} days secured | display number + secondary textSecondary |
+| Every day since you joined on {date}, not counting today. | caption textSecondary |
+| A day is secured when every task in every challenge you joined is done. A freeze or a Last Stand holds the streak but is not a secured day. | caption textSecondary |
+| {n} photos / 1 photo | label textSecondary |
+| {n} days with photos | caption textSecondary, owner footer |
+| {n} days with shared photos | caption textSecondary, visitor footer |
+| Only days {name} shared a photo appear here. | caption textSecondary |
+| No days with photos | bodyStrong |
+| A task with the Camera gate puts its photo here, grouped by the day you took it. | secondary textSecondary |
+| {i} of {n} | label textSecondary, viewer header |
+| Private | label medium textSecondary, in a surface pill |
+| Only you can see this. Share it from here. | caption textSecondary, unanswered only |
+| Only you can see this. | caption textSecondary, answered Keep — no Share button |
+| Shared to the feed on {date}. | caption textSecondary |
+| Share to the feed | Button primary, unanswered photos only |
+| Swipe left at the last photo for {previous day} | caption textSecondary |
+| By challenge | label textSecondary |
+| {x} of {y} days | caption textSecondary |
+| {Two} of five earned. | caption textSecondary |
+| Earned {date} | caption textSecondary, earned rows |
+| {n} verified days | caption textSecondary, unearned rows |
+| Five marks, each earned by verified days only. Nothing here can be bought or awarded. | caption textSecondary |
+| {secured} of {elapsed} secured | caption textSecondary, month header |
+| Earned / Locked | label, brandText / border |
+
+## Accessibility
+
+| element | label |
+|---|---|
+| day card | "{date}, {n} photos" + ", includes private" for the owner |
+| day cell | the grid is `aria-hidden`; the month carries one summary label, "{secured} of {n} days secured in September" |
+| badge row | "{label}, earned {date}" or "{label}, locked. {requirement}" |
+
+Day card 116 × 116, badge row and viewer controls 44pt minimum. Day cells are 30pt and **not**
+interactive in this pass, so the 44pt rule does not apply to them; if a cell ever becomes tappable it
+needs a 44pt hit slop, not a bigger cell.
+
+## Contradictions
+
+**64. Share/Keep is stored as a boolean.** The day viewer needs three states — `shared`, `kept`,
+`unanswered` — to offer Share on a photo whose frame-58 card was dismissed while never re-offering one
+the user declined. With a boolean, "not shared" cannot be told from "declined", and R3 makes the safe
+reading (never offer) the only legal one, which strands every dismissed photo permanently private.
+
+**65. Consistency's denominator is not defined anywhere in the product.** Separate from the arithmetic
+bug: even once the numbers add up, "3 of 6 days" needs the sentence under it. Days elapsed since first
+join, excluding today.
+
+**66. Freeze and Last Stand days have no representation in any day-state set.** `ds/WeekStrip` and the
+Chunk T contact sheet have five states; Consistency needs eight. The `DayState` union in
+`ConsistencyGrid.tsx` is the superset and should become the single source both read from.
+
+**67. Consistency's headline and its grid have no shared source.** The fix is one `DayState[]` that
+both reduce over; anything else re-opens the contradiction the brief flagged. See A3 above.
+
+**68. The visitor profile currently computes photo counts from all photos.** Shipping the day grid
+against that count would print "3 photos" on a day where a visitor can open one.
+
+# Chunk U, part B — Home and Feed
+
+**Build 62.** Frames 93 to 96, in `GRIIT Chunk U Feed.dc.html`. Builds on Part A (v31, frames 87-92).
+
+## Tokens
+
+**No new tokens.** `color.{canvas,surface,border,textPrimary,textSecondary,primary,brand,brandText,
+brandTint}`, `radius.{pill}`, `type.{label,caption,secondary,body,bodyStrong,heading}`,
+`space.gutter` 16. Two literals, both single-use: the feed card radius 14 (between `radius.input` 10
+and `radius.card` 20 — a card that holds a 4:5 image wants a corner between a control and a sheet),
+and the week-strip cell radius 8 at 34pt, the same ratio the 30pt Consistency cell uses at 6.
+
+## The pinned world — read this before authoring any fixture
+
+Every frame in parts A and B renders from **one world object**, not from per-screen fixtures:
+
+```
+TODAY   = 2026-09-22 (Tuesday)
+CH      = { ironman: {start: 2026-07-16, length: 75, tasks: [[name, gate], ...]}, ... }
+SECURED = { Khalid: [2026-09-21], ..., Yaseen: [] }           // per user, per date
+```
+
+**A task card is addressed by `(challengeKey, taskIndex)`, never by free text.** Everything it shows
+is read out of `CH[key].tasks[index]`, so the card cannot name a task the challenge does not have and
+cannot invent a gate. Six things are derived, and the generator throws rather than render a
+contradiction:
+
+| on screen | derived from | throws when |
+|---|---|---|
+| "Day {n} of {N}" | `dayNo(CH[key].start, postDate)` — calendar position, clamped to N | — |
+| task name and gate line | `CH[key].tasks[index]` | `index` is out of range for that challenge |
+| the Verified stamp | the gate contains "Camera" **and** the post has a photo | a photo on a task with no camera gate |
+| a "Day secured" card | `SECURED[poster].includes(date)` | the poster did not secure that date |
+| a completed-task card | the poster must not be a user whose Home shows that task pending | Yaseen posts anything dated today |
+| a post's timestamp | unique per `(poster, time)`, and one event carries one time everywhere | two posts by one user at the same moment |
+
+Two consequences worth knowing before authoring: the **location gate lives on Quick Steps**, so a
+"Camera · Location" card is that challenge's run and not an Iron man task; and **Cold Shower's start
+date sets its finish date**, so its finish card is dated by arithmetic rather than by choice — with a
+30-day run from 23 August it ends on the 21st, and the card reads "yesterday" in every frame it appears
+in.
+
+**Why this is a rule and not a nicety.** Authored fixtures produced, in order: a `longest_streak`
+that disagreed with its own contact sheet (Chunk T), a September grid claiming secured days in the
+future (frame 91), a leaderboard scoring six days into a one-day week (frame 95), a streak of 12 beside
+a grid drawing that Monday as missed (frame 87), a user posting "Day secured" an hour before his own
+Home screen showed nothing done (frame 93), a card naming another challenge as if it were an Iron man
+task (frame 94), and one finish event dated two different ways in two frames. Seven instances of one
+defect, each caught only after the frame was drawn.
+
+**The generator is the check.** Each fix above tightened an assertion rather than correcting a string,
+because correcting the string leaves the next fixture free to make the same mistake — which is exactly
+what happened between the fifth and sixth instances. The generator now asserts the
+world instead of restating it, so the contradiction cannot be written.
+
+**On this date:** Iron man is day 69 of 75 (16 July start), yesterday was day 68. Yaseen missed
+21 September and today is open at 0 of 5, so **nothing he posts may assert a secured day, and nothing
+dated today may assert a completed task**. His own post in frame 94 is yesterday's workout — the last
+thing he actually finished, on a day he still did not secure.
+
+## B1. One card family — frame 93
+
+**Every feed event is the same card.** Header row (avatar 36, name `14/19` medium, relative time
+`label`, overflow), then **eyebrow = challenge** in `type.label` and **subject = what happened** in
+`bodyStrong` — the exact hierarchy the Part A day viewer uses. The photo post is that card with a 4:5
+image between the header and the subject. The engagement row is last: **heart + count, comment + count, and share** — `arrow-up-right`,
+right-aligned. All three ship today in `components/feed/FeedEngagementRow.tsx` and none is cut.
+
+This replaces sentence-shaped rows ("Pure Soul Test completed Drink water · now · Iron man"), which
+buried the subject mid-string and put the challenge at the end.
+
+| variant | eyebrow | subject | meta | trailing |
+|---|---|---|---|---|
+| task completed, camera proof | {challenge} | {task} | {gate line} | **Verified** stamp |
+| task completed, self-reported | {challenge} | {task} | {target} · Self-reported | **nothing** |
+| day secured | {challenge} · Day {n} of {N} | Day secured | All {n} tasks done | up to 3 day covers, 26pt |
+| challenge started | {challenge} | Started the challenge | {N} days · {Standard\|Hard} mode | — |
+| challenge finished | {challenge} | Finished the challenge | {secured} of {N} days secured | — |
+| badge earned | Earned a mark | — | {requirement} | the stamp itself, inline |
+
+**The stamp is camera-only and appears on exactly one variant.** A self-reported task shows its gate
+line and no stamp: the app cannot check it, so the card must not imply it did. This holds until
+location verification ships — at which point the stamp becomes camera-or-location and this table
+changes, not before.
+
+**The secured-day card links into that day in the poster's Proofs** ("See the day", `brandText` +
+chevron), which is the Part A day viewer in visitor mode — so it shows shared photos only, and a
+secured day with no shared photos opens a viewer with none rather than exposing one.
+
+**The Today card lists every required task**, all five, from the same array its badge counts. A badge
+reading 0 / 5 above three rows claims two tasks the card does not show.
+
+**The badge card carries the real stamp component**, not a description of it, so the mark looks the
+same in the feed as on the profile.
+
+## B2. Comments inline — frame 94
+
+Under the engagement row: **at most two comments**, each as `{name} {text}` on one wrapped line — two
+comments cost about 46pt this way rather than a block. Then "View all {n} comments" when `n > 2`.
+
+| state | renders |
+|---|---|
+| 0 | "No comments yet." `caption textSecondary`. No composer, no button |
+| 2 | both comments, no "View all" line |
+| 40 | the first two, then "View all 40 comments" |
+| your own | your name in `brandText` in the same position as any other name |
+
+**Composing stays in the sheet.** No inline field: one tap target for writing, one place the keyboard
+appears. Tapping the comment icon, the count, or "View all" all open the same `ds/Sheet`.
+
+**Your own comment is marked by colour, not by position or a different label.** "You" as a name in a
+different slot breaks the name column; `brandText` on your real name keeps it a column.
+
+## B3. Leaderboard — frame 95
+
+**Global is removed.** Decided, not offered. Two reasons, and the second is the one that makes it
+unarguable at this stage:
+
+1. Absolute rankings help the top few and demotivate everyone else (Bai & Hew 2025; Hanus & Fox 2015,
+   per the attached research brief). A board whose median experience is discouragement is not a
+   retention feature.
+2. **At the current userbase the board is also empty**, so it ships the demotivation without even the
+   competitive payoff.
+
+**What ships: one board per challenge, opt-in.**
+
+- **Scope** everyone in that challenge. No cross-challenge comparison.
+- **Score** secured days since Monday, in the user's timezone. **The rule is on the screen**:
+  "Secured days since Monday. A day counts when every task in this challenge is done."
+- **No "of 7" denominator.** A denominator of seven on a Tuesday asserts that a week nobody has lived
+  is already assessable. The number is the count secured, labelled "secured", and a second line states
+  how much of the week has ended: "{One} day of the week has ended." On Sunday night it reads "Seven
+  days of the week have ended", at which point the count and the week coincide and no denominator is
+  needed then either.
+- **Derive the board from the same week array the strip renders.** No score may exceed the number of
+  elapsed days, and the user's own score must equal what their Home screen says about those days. The
+  fixture in frame 95 is generated from the week and asserts both.
+- **Equal scores share a rank**, ordered alphabetically within a rank. Early in the week most scores
+  tie — on the first Tuesday, every member holds 0 or 1 — so the tie rule is stated on screen rather
+  than left to be inferred from a repeated number.
+- **Shape** a short top slice (3 rows, labelled "Top of the challenge"), then "Around you" — the
+  user's row with one neighbour either side, the user's row on `brandTint` with "· you".
+- **Ranks below the user's neighbourhood are never shown, to anyone.** Stated in words, and the line
+  **names the lowest rank actually on screen**: "Ranks below {lowestShown} are not shown, to you or to
+  anyone." The earlier wording, "Ranks below yours are not shown", was false as drawn — the
+  neighbourhood includes one row below the user, visible two rows above the sentence.
+- **Opt-in, and leaveable from the board itself** (footer: "You are on this board." / "Leave it").
+- The count is `{n}` with the label "secured", in the display face — secured days are earned. **No
+  denominator**, per bullet 3: the elapsed-days line carries how much of the week has ended.
+
+| member count | state |
+|---|---|
+**The board only exists for an active enrollment the user is actually in.** Both are checks the
+fixture must pass: a finished challenge has no live weekly board, and a challenge absent from the
+user's enrollment list cannot rank them. Frame 95's second board was first drawn on Cold Shower, which
+frame 93 shows finishing yesterday and frame 91's bars do not list among Yaseen's enrollments.
+
+| 1 | no board. Card: "No board yet" / "You are the only person in {challenge}. Invite someone and the board starts on the Monday after they join." |
+| 2 | both rows, no top/around split, and one line: "Two people in this challenge. A board of two is a comparison, not a ranking." |
+| 3+ | top slice + around-you |
+| first two days of the week | the same layout, but nearly every score ties. The tie rule and the elapsed-days line carry it; no special state |
+
+**The Friends scope is deferred**, not designed. Rationale in the README.
+
+## B4. Week strip — frame 96
+
+**Every past day of the current week carries a glyph from the Part A `DayState` union.** Closes
+contradiction 66: a missed Monday rendered blank, which was indistinguishable from a day that had not
+happened.
+
+Cells are 34pt at radius 8 (the 30pt/6 Consistency ratio scaled up), and **only four of the seven
+states can occur inside one week** — camera proof, self-reported, missed, open — so the strip carries a
+four-entry legend, not the full seven. Freeze and Last Stand are possible but rare enough that their
+legend entries appear only in the week they occur.
+
+**One source.** `ds/WeekStrip` and `ConsistencyGrid` read the same union and the same glyph table.
+Two glyph tables is how the blank Monday happened.
+
+## B5 and B6 — confirmed, not redesigned
+
+- **Morning-after block:** v28.2 copy verbatim. The only change is that its consistency figure comes
+  from the same `consistencyLine` as Profile.
+- **Home hero sub-line:** "62 of 68 days secured. Every day since you joined on 16 July, not counting
+  today." — the Part A line, same source, same wording. **Confirmed.**
+- **The streak reads from that same source too**, not just the sub-line. Home and Profile must never
+  disagree about it: one day array, one reduction, two screens. On the pinned date both read 0.
+
+## Copy
+
+| string | style |
+|---|---|
+| {name} | 14/19 medium |
+| {relative time} | label textSecondary |
+| {challenge} / {challenge} · Day {n} of {N} | label textSecondary, eyebrow |
+| Day secured | bodyStrong |
+| All {n} tasks done | caption textSecondary |
+| See the day | caption medium brandText + chevron |
+| Started the challenge | bodyStrong |
+| {N} days · {Standard\|Hard} mode | caption textSecondary |
+| Finished the challenge | bodyStrong |
+| {secured} of {N} days secured | caption textSecondary |
+| Earned a mark | label textSecondary, eyebrow |
+| No comments yet. | caption textSecondary |
+| View all {n} comments | caption textSecondary |
+| This week | heading |
+| Secured days since Monday. A day counts when every task in this challenge is done. | caption textSecondary |
+| Top of the challenge / Around you | label textSecondary |
+| {n} secured | display number + label textSecondary |
+| {One} day of the week has ended. | caption textSecondary |
+| · you | caption brandText |
+| Ranks below {lowestShown} are not shown, to you or to anyone. | caption textSecondary |
+| You are on this board. / Leave it | caption textSecondary / caption medium brandText |
+| Two people in this challenge. A board of two is a comparison, not a ranking. | caption textSecondary |
+| No board yet | bodyStrong |
+| You are the only person in {challenge}. Invite someone and the board starts on the Monday after they join. | caption textSecondary |
+
+Every numeric string is a template. No literal 7, 68 or 40.
+
+## Contradictions
+
+**69. Feed events are rendered as interpolated sentences.** "{user} completed {task} · {time} ·
+{challenge}" puts the subject mid-string and the challenge last, and gives text events a different
+shape from photo posts — so the feed is two kinds of row rather than one list.
+
+**70. The Global leaderboard tab exists and must be removed, not hidden.** Removing the tab is the
+change; leaving the scoring code reachable invites it back. The per-challenge board needs an opt-in
+flag per enrollment, which does not exist today.
+
+**71. "3 check ins · 0 days · 300 pts" has no scoring rule anywhere in the product.** Three numbers,
+two units, one invented currency. The per-challenge board scores one thing — secured days this week —
+and writes the rule on the screen.
+
+**72. `ds/WeekStrip` has its own glyph table, distinct from Consistency's.** That is how a missed
+Monday renders blank. One `DayState` union, one glyph table, both screens read it.
+
+**73. Nothing validates a task card's subject against its challenge.** A card can name any string as
+a task, with any gate, under any challenge eyebrow. The task must be addressed by challenge and index,
+and the gate and the stamp read from that task's own definition — otherwise a feed card can advertise a
+gate the challenge does not enforce, which is the honest-cut rule failing at the one place users read
+most.
+
+**74. Feed events carry an authored day number and an authored subject.** "Day 12 of 75" and
+"Day secured" are both assertions about the poster's enrollment and record, and both must be computed:
+the day number from the enrollment start, the secured claim from the secured-days set. As authored,
+frame 93 had a user posting a secured day while his own Home screen showed the day at 0 of 5, and a
+day number 57 days off his real join date.
+
+**75. Streak and consistency are computed in different places.** The merged row needs both from one
+reduction over one day array, and Home needs the same values — otherwise the two screens disagree about
+the product's headline number while agreeing about the ratio beside it. This is one of seven instances of
+the authored-vs-derived class in this project; the standing rule is that any number on screen is a
+reduction over the day array, never a prop authored beside it. The full list is in "The pinned world"
+above.
+
+**76. `FeedEngagementRow` is on the daylight palette.** It imports `DS_DAYLIGHT` for all three
+icons and for `count` — `color.accent`, `color.iconInk`, `color.ink` — inside a dark app. Same
+class as contradiction 18 (`FeedPostCard`), different file. The row's structure, its 23pt heart, its
+`hitSlop={8}` and its respect spring are all correct and stay; only the palette references change.
+
+**77. The respect count is hidden at zero and the comment count at zero** (`respectCount > 0 ?`,
+`commentCount > 0 ?`), so the row changes width as counts cross 1 and the icons shift. Render "0" in
+`textSecondary` instead, so the row is stable and a post with no comments still shows where the count
+will be.
+
+**78. Comment counts drive a route, not a sheet, on some cards.** Chunk O moved comments into
+`ds/Sheet`; the inline block must open the same sheet from all three targets (icon, count, "View
+all") so there is one comment surface.

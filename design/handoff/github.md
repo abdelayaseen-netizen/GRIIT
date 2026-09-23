@@ -3,6 +3,17 @@ branch: main
 
 ## Last sync
 
+date: 2026-09-22T23:12:10Z
+
+### Updated in this project
+
+- Built Chunk U part A (frames 87-92: profile structure, proofs as days, the day viewer, Consistency rebuilt, badges as rows) and part B (frames 93-96: one feed card family, inline comments, the per-challenge board, the week strip).
+- Read `components/feed/FeedEngagementRow.tsx` to confirm the engagement row: it ships Heart, MessageCircle and ArrowUpRight, so share is restored rather than cut.
+- Restored the five real badges from `components/ds/Badges.tsx` and frame 21 after an earlier pass invented a new set; the stamp language (no icons, no circles, no cards) holds.
+- Logged contradictions 64 to 74, including `FeedEngagementRow` on the daylight palette and its counts hidden at zero.
+
+## Sync history
+
 date: 2026-09-18T22:41:47Z
 tree: 9e4f1d5897ae
 
@@ -96,5 +107,7 @@ tree: 9e4f1d5897ae
 | 64 Edit profile | `app/edit-profile.tsx`, `lib/profile-v2-tokens.ts` |
 | 65 Discover row | `components/home/DiscoverCTA.tsx` |
 | 66 One number | `lib/profile-consistency.ts`, `backend/trpc/routes/profiles-record.ts` |
+| 87-92 Profile, proofs, consistency, badges | `app/(tabs)/profile.tsx`, `app/profile/record.tsx`, `components/ds/Badges.tsx` |
+| 93-96 Feed cards, comments, board, week strip | `components/feed/{FeedPostV3,FeedEngagementRow,FeedPostCard}.tsx`, `components/ds/WeekStrip.tsx`, `app/(tabs)/index.tsx` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |

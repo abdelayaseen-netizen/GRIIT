@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT build 62 · Chunk U, part A of three</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Profile, proofs as days, consistency</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;max-width:660px;">Frames 87 to 92. Proofs lead the profile and group by day rather than by photo, the two stat cards merge into one row, Consistency gets a stated denominator and a weekday-aligned month grid, and the badge tiles become rows.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT Proofs Grid.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 83 to 86</a>
+      <a href="#f87" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">87 Header tradeoff</a><a href="#f88" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">88 Proofs as days</a><a href="#f89" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">89 Day viewer</a><a href="#f90" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">90 Viewer states</a><a href="#f91" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">91 Consistency</a><a href="#f92" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">92 Badges</a>
+    </div>
+  </div>
+
+  <div id="f87" data-screen-label="87 Header tradeoff" style="display:flex;flex-direction:column;gap:16px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">87 A1 · the header compression, both options</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">The streak and the consistency ratio merge into one row and both point at Consistency. The alternative keeps them as two cards. The cost is 76pt, and on a 852pt screen that is the difference between the first row of proof days landing above the fold and below it — which is the whole point of making Proofs primary.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;"><div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Recommended · one row, 56pt</div>
+    <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;">0</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">day streak</div></div>
+      <div style="width:1px;height:20px;background:#2E2B27;"></div>
+      <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;">62</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">of 68 days secured</div></div>
+      <div style="flex:1;"></div><i data-lucide="chevron-right" style="width:18px;height:18px;color:#A39E95;flex:none;"></i>
+    </div>
+    <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">One tap target, one destination. Both numbers are the same kind of claim about days, so one row reads as one statement and the whole block costs 56pt including its gap. The streak reads 0 because 21 September went unsecured and today is still open — the same Monday the grid in frame 91 draws as missed, and the same one Home reports.</div>
+  </div><div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Alternative · two cards, 132pt</div>
+    <div style="display:flex;gap:6px;">
+      <div style="flex:1;background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;">0</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">day streak</div></div><div style="flex:1;background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;">62 of 68</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">days secured</div></div>
+    </div>
+    <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Two cards give each number its own weight and its own destination, and they are the shape a third stat could join. They also cost 76pt more, which is one row of proof days pushed below the fold on every visit.</div>
+  </div></div>
+  </div>
+
+  <div id="f88" data-screen-label="88 Proofs as days" style="display:flex;flex-direction:column;gap:16px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">88 A1 and A2 · the profile, owner and visitor</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">Proofs is the default tab and the unit is a day, not a photo: date, photo count, and the day's first photo as cover. A day carries the lock when any photo in it is private, so the owner can see at a glance which days hold something nobody else has seen. The visitor profile contains shared photos only and days with none do not appear at all — so the grid never hints at a private photo by leaving a gap where one would be.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;"><div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · owner</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div></div>
+    <div style="padding:2px 16px 0;display:flex;gap:14px;align-items:center;">
+      <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:19px;line-height:24px;font-weight:500;color:#A39E95;">Y</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen Abdela</div>
+        <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">@yaseen · 34 following · 28 followers</div>
+      </div>
+    </div>
+    <div style="padding:10px 16px 0;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Two workouts, ten pages, a gallon. No days off.</div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;">
+      <div style="flex:1;min-height:36px;border-radius:10px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Edit profile</div>
+      <div style="flex:1;min-height:36px;border-radius:10px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Invite</div>
+    </div>
+    <div style="padding:12px 16px 0;">
+      <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px;">
+        <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums;">0</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">day streak</div></div>
+        <div style="width:1px;height:20px;background:#2E2B27;"></div>
+        <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums;">62</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">of 68 days secured</div></div>
+        <div style="flex:1;"></div><i data-lucide="chevron-right" style="width:18px;height:18px;color:#A39E95;flex:none;"></i>
+      </div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;"><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:12px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">This week</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Today</div>
+      <div style="position:absolute;left:7px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">2 photos</div>
+      <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Yesterday</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">3 photos</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Sat 20 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 photo</div>
+      
+    </div></div></div>
+    <div style="padding:12px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Earlier</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#8A6A3E 0%,#33261A 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fri 19 Sep</div>
+      <div style="position:absolute;left:7px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">6 photos</div>
+      <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Thu 18 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">2 photos</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Wed 17 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">3 photos</div>
+      
+    </div></div></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">41 days with photos</div></div></div></div><div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · visitor</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">amir</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div></div>
+    <div style="padding:2px 16px 0;display:flex;gap:14px;align-items:center;">
+      <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:19px;line-height:24px;font-weight:500;color:#A39E95;">A</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir Hassan</div>
+        <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">@amir · 88 following · 140 followers</div>
+      </div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;">
+      <div style="flex:1;min-height:36px;border-radius:10px;background:#BB471D;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Follow</div>
+      <div style="flex:1;min-height:36px;border-radius:10px;background:#1A1917;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Message</div>
+    </div>
+    <div style="padding:12px 16px 0;">
+      <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:14px;">
+        <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums;">31</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">day streak</div></div>
+        <div style="width:1px;height:20px;background:#2E2B27;"></div>
+        <div style="display:flex;align-items:baseline;gap:5px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:26px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums;">75</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">of 80 days secured</div></div>
+        <div style="flex:1;"></div><i data-lucide="chevron-right" style="width:18px;height:18px;color:#A39E95;flex:none;"></i>
+      </div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;"><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:12px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Shared</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Yesterday</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">2 photos</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#8A6A3E 0%,#33261A 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Sat 20 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 photo</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Wed 17 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">2 photos</div>
+      
+    </div></div></div>
+    <div style="padding:2px 16px 0;margin-top:6px;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Tue 16 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 photo</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Sun 14 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">3 photos</div>
+      
+    </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom, rgba(15,15,15,0) 38%, rgba(15,15,15,0.8) 100%);"></div>
+      <div style="position:absolute;left:7px;right:7px;bottom:20px;font-size:12px;line-height:15px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Fri 12 Sep</div>
+      <div style="position:absolute;left:7px;right:7px;bottom:5px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 photo</div>
+      
+    </div></div></div>
+    <div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Only days Amir shared a photo appear here.</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;background:#0F0F0F;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">22 days with shared photos</div></div></div></div></div>
+  </div>
+
+  <div id="f89" data-screen-label="89 Day viewer" style="display:flex;flex-direction:column;gap:16px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">89 A2 · the day viewer, owner and visitor</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">Horizontal swipe through the day's photos with a segment bar for position, then a further swipe to the previous day. The challenge is the eyebrow and the task is the subject, which is the same hierarchy as the feed card. A private photo carries the pill and the only Share action in the app that is offered a second time — and only to the owner, on a photo they have not answered yet.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · owner, private photo</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;inset:0;background:#0F0F0F;">
+      <div style="height:44px;"></div>
+      <div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Today</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 of 2</div></div>
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      </div>
+      <div style="padding:6px 16px 0;display:flex;gap:4px;"><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#2E2B27;"></div></div>
+      <div style="padding:12px 16px 0;"><div style="aspect-ratio:4/5;border-radius:12px;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div></div>
+      <div style="padding:14px 16px 0;display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Iron man</div>
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Workout, outdoors</div>
+        </div>
+        <div style="flex:none;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;"><i data-lucide="lock" style="width:12px;height:12px;color:#A39E95;flex:none;"></i><div style="font-size:12px;line-height:16px;font-weight:500;color:#A39E95;">Private</div></div>
+      </div>
+      <div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Only you can see this. Share it from here.</div>
+      <div style="padding:12px 16px 0;"><div style="min-height:44px;border-radius:999px;background:#BB471D;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Share to the feed</div></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">Swipe left at the last photo for 19 September</div></div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · visitor, shared only</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;inset:0;background:#0F0F0F;">
+      <div style="height:44px;"></div>
+      <div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Yesterday</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">2 of 2</div></div>
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      </div>
+      <div style="padding:6px 16px 0;display:flex;gap:4px;"><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div></div>
+      <div style="padding:12px 16px 0;"><div style="aspect-ratio:4/5;border-radius:12px;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div></div>
+      <div style="padding:14px 16px 0;display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Iron man</div>
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+        </div>
+        
+      </div>
+      
+      
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">Swipe left at the last photo for the previous shared day</div></div>
+    </div></div></div>
+    </div>
+  </div>
+
+  <div id="f90" data-screen-label="90 Viewer states" style="display:flex;flex-direction:column;gap:16px;width:1290px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">90 A2 · empty, one photo, and a six-photo day</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">A one-photo day shows a single full segment rather than hiding the bar, so the control means the same thing every time. Six segments is the point where they stop being countable at a glance, which is why the count is also written as text in the header.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · no photos yet</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div></div>
+    <div style="padding:2px 16px 0;display:flex;gap:14px;align-items:center;">
+      <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:19px;line-height:24px;font-weight:500;color:#A39E95;">Y</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen Abdela</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">@yaseen · 0 following · 0 followers</div></div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;"><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:64px 16px 0;display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="camera" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;text-align:center;">No days with photos</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;max-width:270px;">A task with the Camera gate puts its photo here, grouped by the day you took it.</div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · one-photo day</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;inset:0;background:#0F0F0F;">
+      <div style="height:44px;"></div>
+      <div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Sat 20 Sep</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">1 of 1</div></div>
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      </div>
+      <div style="padding:6px 16px 0;display:flex;gap:4px;"><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div></div>
+      <div style="padding:12px 16px 0;"><div style="aspect-ratio:4/5;border-radius:12px;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div></div>
+      <div style="padding:14px 16px 0;display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Iron man</div>
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+        </div>
+        
+      </div>
+      <div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Shared to the feed on 21 September.</div>
+      
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">Swipe left at the last photo for 19 September</div></div>
+    </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · six-photo day</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="position:absolute;inset:0;background:#0F0F0F;">
+      <div style="height:44px;"></div>
+      <div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="x" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Fri 19 Sep</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">4 of 6</div></div>
+        <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      </div>
+      <div style="padding:6px 16px 0;display:flex;gap:4px;"><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#DC5401;"></div><div style="flex:1;height:2px;border-radius:2px;background:#2E2B27;"></div><div style="flex:1;height:2px;border-radius:2px;background:#2E2B27;"></div></div>
+      <div style="padding:12px 16px 0;"><div style="aspect-ratio:4/5;border-radius:12px;background:linear-gradient(160deg,#8A6A3E 0%,#33261A 100%);"></div></div>
+      <div style="padding:14px 16px 0;display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+          <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Quick Steps</div>
+          <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Run 5 km</div>
+        </div>
+        <div style="flex:none;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#1A1917;border:1px solid #2E2B27;"><i data-lucide="lock" style="width:12px;height:12px;color:#A39E95;flex:none;"></i><div style="font-size:12px;line-height:16px;font-weight:500;color:#A39E95;">Private</div></div>
+      </div>
+      <div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Only you can see this. Share it from here.</div>
+      <div style="padding:12px 16px 0;"><div style="min-height:44px;border-radius:999px;background:#BB471D;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Share to the feed</div></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:9px 16px 26px;border-top:1px solid #2E2B27;"><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">Swipe left at the last photo for 19 September</div></div>
+    </div></div></div>
+    </div>
+  </div>
+
+  <div id="f91" data-screen-label="91 Consistency" style="display:flex;flex-direction:column;gap:16px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">91 A3 · Consistency, rebuilt</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">One headline with its denominator stated in the line beneath it, a weekday-aligned month grid, seven glyphs where the shape carries the state and colour only reinforces it, definitions inline, and the per-challenge bars below. The month grid is the recommendation over a year heatmap and over a list of days; the reasoning and the sources are the research page in the README.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">62 of 68 days secured</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Consistency</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"></div></div>
+    <div style="padding:16px 16px 0;display:flex;align-items:flex-end;gap:9px;">
+      <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:58px;line-height:52px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;">62</div>
+      <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;padding-bottom:9px;">of 68 days secured</div>
+    </div>
+    <div style="padding:8px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Every day since you joined on 16 July, not counting today.</div>
+    <div style="padding:20px 16px 0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">September 2026</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">17 of 21 secured</div></div>
+      <div style="display:flex;gap:4px;"><i data-lucide="chevron-left" style="width:20px;height:20px;color:#A39E95;flex:none;"></i><i data-lucide="chevron-right" style="width:20px;height:20px;color:#2E2B27;flex:none;"></i></div>
+    </div>
+    <div style="padding:12px 16px 0;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;justify-items:center;">
+      <div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">M</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">T</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">W</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">T</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">F</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">S</div><div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">S</div>
+      <div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"></div>
+      <div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#3A1F10;border:1px solid #DC5401;"><div style="width:6px;height:6px;border-radius:999px;background:#E8600F;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #2E2B27;"><div style="width:11px;height:1.5px;background:#A39E95;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#3A1F10;border:1px solid #DC5401;"><div style="width:6px;height:6px;border-radius:999px;background:#E8600F;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#1A1917;border:1px solid #2E2B27;"><i data-lucide="snowflake" style="width:14px;height:14px;color:#F5F3EE;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#3A1F10;border:1px solid #DC5401;"><div style="width:6px;height:6px;border-radius:999px;background:#E8600F;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#1A1917;border:1.5px solid #DC5401;"><i data-lucide="shield" style="width:14px;height:14px;color:#E8600F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:15px;height:15px;color:#0F0F0F;flex:none;"></i></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#3A1F10;border:1px solid #DC5401;"><div style="width:6px;height:6px;border-radius:999px;background:#E8600F;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #2E2B27;"><div style="width:11px;height:1.5px;background:#A39E95;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;border:1.5px dashed #DC5401;"></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div><div style="width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#2E2B27;"></div></div>
+    </div></div>
+    <div style="padding:16px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;">
+      <div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#DC5401;"><i data-lucide="check" style="width:8px;height:8px;color:#0F0F0F;flex:none;"></i></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Camera proof</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#3A1F10;border:1px solid #DC5401;"><div style="width:3px;height:3px;border-radius:999px;background:#E8600F;"></div></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Self-reported</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#1A1917;border:1px solid #2E2B27;"><i data-lucide="snowflake" style="width:7.2px;height:7.2px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Freeze held it</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;background:#1A1917;border:1.5px solid #DC5401;"><i data-lucide="shield" style="width:7.2px;height:7.2px;color:#E8600F;flex:none;"></i></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Last Stand held it</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid #2E2B27;"><div style="width:6px;height:1.5px;background:#A39E95;"></div></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Missed</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;border:1.5px dashed #DC5401;"></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Open, today</div></div><div style="display:flex;align-items:center;gap:8px;min-height:22px;"><div style="width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;"><div style="width:3px;height:3px;border-radius:999px;background:#A39E95;"></div></div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Not due yet</div></div>
+    </div>
+    <div style="padding:18px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">A day is secured when every task in every challenge you joined is done. A freeze or a Last Stand holds the streak but is not a secured day.</div>
+    <div style="padding:20px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By challenge</div>
+    <div style="padding:6px 16px 0;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:5px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+        <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Iron man</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">62 of 68 days</div>
+      </div>
+      <div style="height:5px;border-radius:3px;background:#2E2B27;overflow:hidden;"><div style="width:91%;height:100%;background:#DC5401;"></div></div>
+    </div><div style="display:flex;flex-direction:column;gap:5px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+        <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Daily Gratitude</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">26 of 30 days</div>
+      </div>
+      <div style="height:5px;border-radius:3px;background:#2E2B27;overflow:hidden;"><div style="width:87%;height:100%;background:#DC5401;"></div></div>
+    </div><div style="display:flex;flex-direction:column;gap:5px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+        <div style="font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;">Quick Steps</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">7 of 7 days</div>
+      </div>
+      <div style="height:5px;border-radius:3px;background:#2E2B27;overflow:hidden;"><div style="width:100%;height:100%;background:#DC5401;"></div></div>
+    </div>
+    </div></div></div>
+  </div>
+
+  <div id="f92" data-screen-label="92 Badges" style="display:flex;flex-direction:column;gap:16px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">92 A4 · badges as rows</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">A4 asked for a treatment change, so the five marks, their requirements, their earned dates and the footnote are exactly the ones already shipping in frame 21. Rows, not a two-column tile grid: the requirement line is the part that says what the mark costs, and in a tile it had nowhere to go. The stamp language holds — no icons, no circles, no cards — so earned and unearned differ on three channels, not opacity: the stamp border and its letters are brandText against border and textSecondary, and the trailing word says which.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Two of five earned</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:flex-end;"><i data-lucide="ellipsis" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div></div>
+    <div style="padding:2px 16px 0;display:flex;gap:14px;align-items:center;">
+      <div style="width:56px;height:56px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:19px;line-height:24px;font-weight:500;color:#A39E95;">Y</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen Abdela</div><div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">@yaseen · 34 following · 28 followers</div></div>
+    </div>
+    <div style="padding:12px 16px 0;display:flex;gap:6px;"><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Badges</div></div>
+<div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Two of five earned.</div>
+    <div style="padding:6px 16px 0;">
+      <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+        <div style="flex:none;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #E8600F;border-radius:10px;padding:7px 11px;font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:15px;line-height:15px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E8600F;">First day</div>
+        <div style="flex:1;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Earned 6 Sep 2026</div>
+        <div style="font-size:11px;line-height:14px;font-weight:500;color:#E8600F;flex:none;">Earned</div>
+      </div><div style="height:1px;background:#2E2B27;"></div><div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+        <div style="flex:none;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #E8600F;border-radius:10px;padding:7px 11px;font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:15px;line-height:15px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E8600F;">One week</div>
+        <div style="flex:1;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Earned 6 Sep 2026</div>
+        <div style="font-size:11px;line-height:14px;font-weight:500;color:#E8600F;flex:none;">Earned</div>
+      </div><div style="height:1px;background:#2E2B27;"></div><div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+        <div style="flex:none;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:10px;padding:7px 11px;font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:15px;line-height:15px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Three weeks</div>
+        <div style="flex:1;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">21 verified days</div>
+        <div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;flex:none;">Locked</div>
+      </div><div style="height:1px;background:#2E2B27;"></div><div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+        <div style="flex:none;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:10px;padding:7px 11px;font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:15px;line-height:15px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Thirty</div>
+        <div style="flex:1;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">30 verified days</div>
+        <div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;flex:none;">Locked</div>
+      </div><div style="height:1px;background:#2E2B27;"></div><div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+        <div style="flex:none;display:inline-flex;align-items:center;justify-content:center;border:1.5px solid #2E2B27;border-radius:10px;padding:7px 11px;font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-size:15px;line-height:15px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#A39E95;">Seventy five</div>
+        <div style="flex:1;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">75 verified days</div>
+        <div style="font-size:11px;line-height:14px;font-weight:400;color:#A39E95;flex:none;">Locked</div>
+      </div>
+    </div>
+    <div style="padding:16px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Five marks, each earned by verified days only. Nothing here can be bought or awarded.</div>
+    </div></div></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){this.icons();}
+  componentDidUpdate(){this.icons();}
+  icons(){try{window.lucide&&window.lucide.createIcons();}catch(e){}}
+  renderVals(){return {};}
+}
+</script>
+</body>
+</html>
