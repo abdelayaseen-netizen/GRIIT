@@ -270,7 +270,7 @@ export const challengesDiscoverProcedures = {
         .select("user_id, metadata, created_at")
         .eq("event_type", "task_completed")
         .eq("challenge_id", pick.id)
-        .eq("shared", true)
+        .eq("share_state", "shared")
         .order("created_at", { ascending: false })
         .limit(15);
       let featuredProof: {

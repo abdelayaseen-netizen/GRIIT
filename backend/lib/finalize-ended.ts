@@ -113,6 +113,7 @@ export async function applyFinalizeEnded(
       challenge_id: row.challenge_id,
       // end event has no photo; matches pre-Chunk-T behaviour. Privacy of end events is an open Design question.
       shared: true,
+      share_state: "shared",
       metadata: {
         active_challenge_id: row.id,
         challenge_name: ch?.title ?? "Challenge",

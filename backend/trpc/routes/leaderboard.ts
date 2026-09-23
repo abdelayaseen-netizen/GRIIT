@@ -272,13 +272,19 @@ export const leaderboardRouter = createTRPCRouter({
 
       const { data: participants, error: pErr } = await server
         .from("active_challenges")
-        .select("user_id")
+        .select("user_id, board_opt_in")
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")
         .limit(500);
       if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
 
-      let userIds = [...new Set((participants ?? []).map((r: { user_id: string }) => r.user_id))];
+      let userIds = [
+        ...new Set(
+          (participants ?? [])
+            .filter((r: { user_id: string; board_opt_in?: boolean }) => r.board_opt_in === true || r.user_id === viewerId)
+            .map((r: { user_id: string }) => r.user_id),
+        ),
+      ];
       if (vis === "private") {
         userIds = userIds.filter((id) => id === viewerId);
         if (!userIds.includes(viewerId)) userIds = [viewerId];
