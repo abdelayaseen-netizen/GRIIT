@@ -43,6 +43,7 @@ import {
   participantsLine,
   pendingGate,
   resetBody,
+  enrollmentTodayProgress,
   statusLine,
   streakCaption,
   taskVerb,
@@ -96,13 +97,9 @@ export type ActiveChallengeV3Props = {
 export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
   const insets = useSafeAreaInsets();
   const shownReset = RESET_NOTICE && Boolean(p.resetNotice);
-  const done = p.tasks.filter((t) => t.completed_today).length;
-  const line = statusLine({
-    securedToday: p.securedToday,
-    done,
-    total: p.tasks.length,
-  });
-  const footer = footerAction({ securedToday: p.securedToday, tasks: p.tasks });
+  const today = enrollmentTodayProgress(p.tasks);
+  const line = statusLine(today);
+  const footer = footerAction({ securedToday: today.securedToday, tasks: p.tasks });
   const weekDays = LETTERS.map((letter, i) => ({
     letter,
     filled: p.weekSecured[i] === true,

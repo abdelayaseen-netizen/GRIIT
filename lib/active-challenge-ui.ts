@@ -2,7 +2,8 @@ import { flowOpensCamera } from "@/lib/task-flow-state";
 
 /**
  * Active challenge (frame 28) binding. Server fields only.
- * secured_today / week_secured come from getSecuredDateKeys, never from task rows.
+ * Header "Day secured" reduces over THIS enrollment's tasks for today.
+ * week_secured still comes from getSecuredDateKeys (account day).
  * Stamp keys off verified / proof_photo_url, never require_photo.
  * reset_notice is always false until the backend exposes a reset event.
  */
@@ -95,6 +96,17 @@ export type StatusLine =
 
 export function taskWord(n: number): string {
   return n === 1 ? "task" : "tasks";
+}
+
+/** This enrollment's tasks due today — not the account-level day_secures set. */
+export function enrollmentTodayProgress(tasks: readonly { completed_today: boolean }[]): {
+  done: number;
+  total: number;
+  securedToday: boolean;
+} {
+  const total = tasks.length;
+  const done = tasks.filter((t) => t.completed_today).length;
+  return { done, total, securedToday: total > 0 && done === total };
 }
 
 export function statusLine(args: {

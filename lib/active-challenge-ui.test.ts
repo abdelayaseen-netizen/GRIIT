@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   RESET_NOTICE,
@@ -8,6 +10,7 @@ import {
   participantsLine,
   pendingGate,
   securedTodayFromKeys,
+  enrollmentTodayProgress,
   statusLine,
   taskVerb,
   taskWord,
@@ -39,13 +42,27 @@ describe("binding law", () => {
     expect(RESET_NOTICE).toBe(false);
   });
 
-  it("secured_today comes from getSecuredDateKeys, never from task rows", () => {
-    const allDone: ActiveChallengeTask[] = [
-      task({ id: "1", title: "A", task_type: "timer", completed_today: true }),
-    ];
-    expect(allDone.every((t) => t.completed_today)).toBe(true);
+  it("week_secured comes from getSecuredDateKeys; header does not", () => {
     expect(securedTodayFromKeys([], TODAY)).toBe(false);
     expect(securedTodayFromKeys([TODAY], TODAY)).toBe(true);
+  });
+
+  it("enrollment with 1 task, 0 completions today, account day secured → header is \"Nothing done today. 1 task left.\" not \"Day secured.\"", () => {
+    const tasks: ActiveChallengeTask[] = [
+      task({ id: "t1", title: "Take photo", task_type: "photo" }),
+    ];
+    const accountSecured = securedTodayFromKeys([TODAY], TODAY);
+    expect(accountSecured).toBe(true);
+    const today = enrollmentTodayProgress(tasks);
+    expect(today).toEqual({ done: 0, total: 1, securedToday: false });
+    expect(statusLine(today)).toEqual({
+      kind: "progress",
+      text: "Nothing done today. 1 task left.",
+    });
+    expect(statusLine(today).kind).not.toBe("secured");
+    const screen = readFileSync(resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"), "utf8");
+    expect(screen).toContain("enrollmentTodayProgress(p.tasks)");
+    expect(screen).not.toContain("statusLine({\n    securedToday: p.securedToday");
   });
 
   it("Stamp keys off verified or proof_photo_url, never require_photo", () => {
