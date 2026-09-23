@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +7,13 @@ import { ChallengeEnd } from "@/components/challenge/ChallengeEnd";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { endedChallengeFromUnseen, formatEndedDate, type UnseenEndingRow } from "@/lib/challenge-end";
+import {
+  endedChallengeFromUnseen,
+  formatEndedDate,
+  MARK_END_SEEN_FAILED,
+  runMarkEndSeenOnDone,
+  type UnseenEndingRow,
+} from "@/lib/challenge-end";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -68,20 +74,26 @@ function ChallengeEndScreenInner() {
   const isPro = sub === "premium" || sub === "trial" || bootstrap.data?.freezeStatus?.isPro === true;
   const challengeLimit = isPro ? null : FREE_ACTIVE_CHALLENGES_LIMIT;
 
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const goHome = useCallback(() => {
     router.replace(ROUTES.HOME as never);
   }, [router]);
 
   const onDone = useCallback(async () => {
-    const ids = challenges.map((c) => c.id);
-    if (ids.length > 0) {
-      try {
-        await trpcMutate(TRPC.challenges.markEndSeen, { enrollmentIds: ids });
-      } catch (e) {
-        captureError(e, "ChallengeEnd.markEndSeen");
-      }
-    }
-    goHome();
+    await runMarkEndSeenOnDone({
+      enrollmentIds: challenges.map((c) => c.id),
+      markSeen: async (ids) => {
+        try {
+          await trpcMutate(TRPC.challenges.markEndSeen, { enrollmentIds: ids });
+        } catch (e) {
+          captureError(e, "ChallengeEnd.markEndSeen");
+          throw e;
+        }
+      },
+      goHome,
+      onFail: (message) => setSaveError(message || MARK_END_SEEN_FAILED),
+    });
   }, [challenges, goHome]);
 
   useEffect(() => {
@@ -114,6 +126,7 @@ function ChallengeEndScreenInner() {
         activeCount={activeCount}
         challengeLimit={challengeLimit}
         formatDate={(iso) => formatEndedDate(iso, timeZone)}
+        saveError={saveError}
         onClose={goHome}
         onDone={() => void onDone()}
         onRestart={(challengeId) => router.replace(ROUTES.CHALLENGE_ID(challengeId) as never)}
