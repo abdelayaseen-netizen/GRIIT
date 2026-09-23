@@ -39,6 +39,7 @@ export type ProofsGridItem = {
   gateTime: GateTime | null;
   eventId: string | null;
   shared: boolean;
+  shareState?: "unanswered" | "shared" | "kept";
 };
 
 export type ProofsSection = {

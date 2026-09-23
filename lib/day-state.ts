@@ -283,7 +283,30 @@ export type ProofDay = {
   photoCount: number;
   sharedCount: number;
   hasPrivate: boolean;
+  coverUri?: string | null;
 };
+
+export function proofDaysFromPhotos(
+  photos: readonly { dateKey: string; uri: string; shared: boolean }[],
+): ProofDay[] {
+  const by = new Map<string, { uris: string[]; shared: number; private: number }>();
+  for (const p of photos) {
+    const cur = by.get(p.dateKey) ?? { uris: [], shared: 0, private: 0 };
+    cur.uris.push(p.uri);
+    if (p.shared) cur.shared += 1;
+    else cur.private += 1;
+    by.set(p.dateKey, cur);
+  }
+  return [...by.entries()]
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([dateKey, v]) => ({
+      dateKey,
+      photoCount: v.uris.length,
+      sharedCount: v.shared,
+      hasPrivate: v.private > 0,
+      coverUri: v.uris[0] ?? null,
+    }));
+}
 
 /** Visitor: shared photos only; a day with none is dropped (R3). */
 export function visibleProofDays(days: readonly ProofDay[], isOwner: boolean): ProofDay[] {
@@ -291,6 +314,26 @@ export function visibleProofDays(days: readonly ProofDay[], isOwner: boolean): P
   return days
     .map((d) => ({ ...d, photoCount: d.sharedCount, hasPrivate: false }))
     .filter((d) => d.photoCount > 0);
+}
+
+export type DaySource = {
+  enrollments: EnrollmentInput[];
+  securedDays: SecuredDayInput[] | string[];
+  frozenDateKeys?: string[];
+  lastStandDateKeys?: string[];
+};
+
+export function daysFromSource(
+  source: DaySource | null | undefined,
+  tz: string,
+  opts: DayArrayOptions = {},
+): DayRecord[] {
+  if (!source?.enrollments.length) return [];
+  return dayArray(source.enrollments, source.securedDays, tz, {
+    ...opts,
+    frozenDateKeys: opts.frozenDateKeys ?? source.frozenDateKeys,
+    lastStandDateKeys: opts.lastStandDateKeys ?? source.lastStandDateKeys,
+  });
 }
 
 export function weekStripLegendStates(days: readonly DayRecord[]): DayState[] {

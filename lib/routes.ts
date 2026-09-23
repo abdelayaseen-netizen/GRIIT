@@ -32,6 +32,7 @@ export const ROUTES = {
   SETTINGS_ACCOUNT: "/settings/account",
   SETTINGS_ABOUT: "/settings/about",
   PROFILE_CONSISTENCY: "/profile/consistency",
+  PROFILE_DAY: "/profile/day",
   ACCOUNTABILITY: "/accountability",
   ACCOUNTABILITY_ADD: "/accountability/add",
   ACCOUNTABILITY_ADD_DAY1: "/accountability/add?from=day1",

@@ -257,6 +257,7 @@ function RootLayoutNav() {
       <Stack.Screen name="team-invite" options={{ title: "Invite teammates", presentation: "modal" }} />
       <Stack.Screen name="join-team" options={{ title: "Join team", presentation: "modal" }} />
       <Stack.Screen name="profile/consistency" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/day" options={{ headerShown: false }} />
       <Stack.Screen name="profile/[username]" options={{ headerShown: false }} />
       <Stack.Screen name="follow-list" options={{ headerShown: false, presentation: "card" }} />
       <Stack.Screen name="post/[id]" options={{ headerShown: false, presentation: "card" }} />

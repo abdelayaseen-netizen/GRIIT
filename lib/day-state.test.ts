@@ -7,6 +7,7 @@ import {
   consistencyFromDays,
   consistencyHeadlineFromDays,
   dayArray,
+  daysFromSource,
   monthGridFromDays,
   streakFromDays,
   visibleProofDays,
@@ -201,5 +202,22 @@ describe("reductions over dayArray", () => {
     expect(rows.find((d) => d.dateKey === "2026-09-21")?.state).toBe("laststand");
     expect(streakFromDays(rows)).toBe(1);
     expect(consistencyFromDays(rows).secured).toBe(1);
+  });
+
+  it("daysFromSource is dayArray over the record payload", () => {
+    const fromSource = daysFromSource(
+      {
+        enrollments: [IRON],
+        securedDays: [{ dateKey: "2026-09-21", camera: true }],
+      },
+      TZ,
+      { todayKey: TODAY, throughDateKey: TODAY },
+    );
+    const direct = dayArray([IRON], [{ dateKey: "2026-09-21", camera: true }], TZ, {
+      todayKey: TODAY,
+      throughDateKey: TODAY,
+    });
+    expect(fromSource.map((d) => d.state)).toEqual(direct.map((d) => d.state));
+    expect(daysFromSource(null, TZ)).toEqual([]);
   });
 });

@@ -77,9 +77,8 @@ describe("record day rows by state", () => {
     expect(freezeSplitLine(1)).toBe("Held by a freeze — 1 day");
     expect(lastStandSplitLine(1)).toBe("Held by a Last Stand — 1 day");
     const src = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
-    expect(src).toContain("rec?.detail.lastStandDays ?? 0");
-    expect(src).toContain("rec?.detail.freezeDays ?? 0");
-    expect(src).toContain("freezeSplitLine");
+    expect(src).toContain("daysFromSource");
+    expect(src).toContain("ConsistencyGrid");
     expect(src).not.toContain("heroDayLine");
     expect(src).not.toContain("lastStandDaysCount");
   });

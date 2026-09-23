@@ -23,13 +23,14 @@ import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
+import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
-  consistencyContext,
-  consistencyFromRecord,
-  consistencyHeadline,
-  consistencyLine,
-} from "@/lib/consistency";
-import { proofsDateLabel } from "@/lib/proofs-grid";
+  consistencyDenominatorLine,
+  consistencyHeadlineFromDays,
+  daysFromSource,
+  streakFromDays,
+  type DaySource,
+} from "@/lib/day-state";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -44,9 +45,9 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import ProofsGrid from "@/components/profile/ProofsGrid";
-import { itemsFromRecordProofs, setOpenProof } from "@/lib/proofs-grid";
-import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
+import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
+import { itemsFromRecordProofs } from "@/lib/proofs-grid";
+import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
 import { rowsFromProfileRecord } from "@/lib/profile-challenges";
@@ -57,6 +58,7 @@ type RecordPayload = ProfileRecord & {
   timezone: string;
   todayKey: string;
   elapsedMs: number;
+  daySource?: DaySource;
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -72,7 +74,7 @@ export default function ProfileScreen() {
   const { profile, profileLoading, profileMissing, isError, refetchAll } = useApp();
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
-  const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "challenges");
+  const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "proofs");
 
   const recordQuery = useQuery({
     queryKey: ["profiles", "getRecord", user?.id ?? ""],
@@ -103,7 +105,6 @@ export default function ProfileScreen() {
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
   const proofItems = itemsFromRecordProofs(proofs);
-  const selfReportedDays = record?.detail.selfReportedDays ?? 0;
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -190,7 +191,17 @@ export default function ProfileScreen() {
     Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : [],
     getTodayDateKey(homeTimeZone),
   );
-  const consistency = consistencyFromRecord(record?.consistency);
+  const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey: record?.todayKey });
+  const streakFromArray = uDays.length ? streakFromDays(uDays) : streak;
+  const consistency = uDays.length
+    ? consistencyHeadlineFromDays(uDays)
+    : `${record?.consistency.verifiedClosed ?? 0} of ${record?.consistency.closedDueDays ?? 0} days secured`;
+  const firstJoin = record?.daySource?.enrollments
+    .map((e) => e.startDateKey)
+    .sort()[0];
+  const consistencySub = firstJoin
+    ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
+    : "";
   const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
     todaySecured,
   });
@@ -213,14 +224,12 @@ export default function ProfileScreen() {
             followers={followers}
             following={following}
             bio={bio}
-            streak={streak}
+            streak={streakFromArray}
             best={best}
             todaySecured={todaySecured}
             totalDaysSecured={record?.detail.totalVerified ?? 0}
-            consistency={consistencyHeadline(consistency)}
-            consistencySub={
-              consistencyContext(consistency, proofsDateLabel) || consistencyLine(consistency)
-            }
+            consistency={consistency}
+            consistencySub={consistencySub}
             tab={v3Tab}
             onChangeTab={(next) => {
               void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -285,13 +294,12 @@ export default function ProfileScreen() {
             )
           ) : null}
           {v3Tab === "Proofs" ? (
-            <ProofsGrid
+            <ProofDaysGrid
               items={proofItems}
-              selfReportedDays={selfReportedDays}
-              onOpen={(item) => {
-                setOpenProof(item);
-                router.push(ROUTES.PROOF(item.id) as never);
-              }}
+              isOwner
+              onOpenDay={(dateKey) =>
+                router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
+              }
             />
           ) : null}
           </>

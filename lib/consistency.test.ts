@@ -34,8 +34,8 @@ describe("consistency builders", () => {
     const profile = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     expect(home).toContain("consistencyLine");
     expect(home).toContain("verifiedClosed");
-    expect(profile).toContain("consistencyHeadline");
-    expect(profile).toContain("consistencyContext");
+    expect(profile).toContain("consistencyHeadlineFromDays");
+    expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
   });
 });
