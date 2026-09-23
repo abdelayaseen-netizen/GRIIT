@@ -933,7 +933,7 @@ export const checkinsRouter = createTRPCRouter({
           .from("active_challenges")
           .select("id, challenge_id, start_at")
           .eq("user_id", ctx.userId)
-          .in("status", ["active", "completed"])
+          .in("status", ["active", "completed", "abandoned"])
           .limit(50),
         ctx.supabase
           .from("activity_events")

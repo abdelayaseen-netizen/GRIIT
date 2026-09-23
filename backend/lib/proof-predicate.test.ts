@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { hasCameraProof as clientHasCameraProof } from "../../lib/active-challenge-ui";
 import {
@@ -133,6 +135,26 @@ describe("splitSecuredProof", () => {
         shared: true,
       },
     ]);
+  });
+
+  it("abandoned enrollment keeps the challenge title on the secured caption", () => {
+    const tiles = cameraProofTiles({
+      checkIns: [
+        {
+          date_key: "2026-09-23",
+          task_id: "t-iron",
+          active_challenge_id: "ac-left",
+          proof_url: "https://cdn/iron.jpg",
+        },
+      ],
+      dateKey: "2026-09-23",
+      enrollments: [{ id: "ac-left", challengeId: "ch-iron", startDateKey: "2026-09-16" }],
+      challenges: [{ id: "ch-iron", title: "Iron man", duration_days: 14 }],
+      tasks: [{ id: "t-iron", challenge_id: "ch-iron", require_photo: true, task_type: "photo" }],
+    });
+    expect(tiles[0]?.challengeName).toBe("Iron man");
+    const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
+    expect(src).toContain('.in("status", ["active", "completed", "abandoned"])');
   });
 
   it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {

@@ -156,7 +156,9 @@ export function cameraProofTiles(args: {
   events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string; shared?: boolean }[];
 }): RecordProofTile[] {
   const secured = args.securedDateKeys ? new Set(args.securedDateKeys) : null;
-  const titleByChallenge = new Map(args.challenges.map((c) => [c.id, c.title ?? "Challenge"]));
+  const titleByChallenge = new Map(
+    args.challenges.map((c) => [c.id, (c.title ?? "").trim() || "Challenge"]),
+  );
   const durationByChallenge = new Map(args.challenges.map((c) => [c.id, c.duration_days ?? 30]));
   const enrollmentById = new Map(args.enrollments.map((e) => [e.id, e]));
   const taskById = new Map(args.tasks.filter((t) => t.id).map((t) => [t.id as string, t]));

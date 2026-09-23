@@ -35,7 +35,7 @@ export function dayOpenTasksFromActive(args: {
         .filter((c) => c.active_challenge_id === ac.id && c.status === "completed")
         .map((c) => c.task_id),
     );
-    const challengeName = ac.challenges?.title ?? "Challenge";
+    const challengeName = (ac.challenges?.title ?? "").trim() || "Challenge";
     const currentDay = ac.current_day ?? 1;
     const durationDays = ac.challenges?.duration_days ?? currentDay;
     const challengeSecuredToday =
