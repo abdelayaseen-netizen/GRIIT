@@ -24,6 +24,22 @@ export function consistencyFromRecord(rec: {
   };
 }
 
+/** Account day array: closed due keys before today, secured ∩ that set. A join today does not change N. */
+export function consistencyFromDayArray(args: {
+  dueDayKeys: readonly string[];
+  securedDateKeys: readonly string[];
+  todayKey: string;
+}): Consistency {
+  const closed = args.dueDayKeys.filter((k) => k < args.todayKey);
+  const secured = new Set(args.securedDateKeys);
+  return {
+    secured: closed.filter((k) => secured.has(k)).length,
+    due: closed.length,
+    dueToday: args.dueDayKeys.includes(args.todayKey),
+    firstDueDate: args.dueDayKeys[0] ?? null,
+  };
+}
+
 export function consistencyHeadline(c: Consistency): string {
   if (c.due === 0) return c.dueToday ? "First day is today." : "No due days yet.";
   return `${c.secured} of ${c.due} days`;

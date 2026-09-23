@@ -4,10 +4,12 @@ import { describe, expect, it } from "vitest";
 import {
   consistencyContext,
   consistencyDetailHero,
+  consistencyFromDayArray,
   consistencyFromRecord,
   consistencyHeadline,
   consistencyLine,
 } from "@/lib/consistency";
+import { buildProfileRecord, type ChallengeRangeInput } from "@/lib/profile-v2-record";
 
 describe("consistency builders", () => {
   it("uses one phrasing and no percentage", () => {
@@ -33,9 +35,73 @@ describe("consistency builders", () => {
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     const profile = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     expect(home).toContain("consistencyLine");
-    expect(home).toContain("verifiedClosed");
+    expect(home).toContain("consistencyFromDayArray");
+    expect(home).toContain("dueDayKeys");
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
+  });
+
+  it("day array with 3 secured of 7 closed days, plus a new enrollment starting today → still \"3 of 7\"", () => {
+    const today = "2026-09-23";
+    const closed = [
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18",
+      "2026-09-19",
+      "2026-09-20",
+      "2026-09-21",
+      "2026-09-22",
+    ];
+    const secured = closed.slice(0, 3);
+    const dueDayKeys = [...closed, today];
+    const line = consistencyLine(
+      consistencyFromDayArray({
+        dueDayKeys,
+        securedDateKeys: secured,
+        todayKey: today,
+      }),
+    );
+    expect(line).toBe("3 of 7 days secured.");
+
+    const week: ChallengeRangeInput = {
+      id: "week",
+      challengeId: "c-week",
+      name: "Week",
+      status: "active",
+      startDateKey: "2026-09-16",
+      endDateKey: "2026-09-30",
+      durationDays: 14,
+      tasksPerDay: 1,
+    };
+    const oneDay: ChallengeRangeInput = {
+      id: "today",
+      challengeId: "c-1",
+      name: "One day",
+      status: "active",
+      startDateKey: today,
+      endDateKey: "2026-09-24",
+      durationDays: 1,
+      tasksPerDay: 1,
+    };
+    const rec = buildProfileRecord({
+      todayKey: today,
+      currentStreak: 3,
+      bestStreak: 3,
+      lastCompletedDateKey: "2026-09-22",
+      ranges: [week, oneDay],
+      securedDateKeys: secured,
+    });
+    expect(rec.consistency.closedDueDays).toBe(7);
+    expect(rec.consistency.verifiedClosed).toBe(3);
+    expect(
+      consistencyLine(
+        consistencyFromDayArray({
+          dueDayKeys: rec.consistency.dueDayKeys,
+          securedDateKeys: secured,
+          todayKey: today,
+        }),
+      ),
+    ).toBe("3 of 7 days secured.");
   });
 });

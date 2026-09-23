@@ -33,7 +33,7 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
-import { consistencyFromRecord, consistencyLine } from "@/lib/consistency";
+import { consistencyFromDayArray, consistencyLine } from "@/lib/consistency";
 import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
@@ -586,7 +586,13 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={consistencyLine(consistencyFromRecord(recordQuery.data?.consistency))}
+              streakLine={consistencyLine(
+                consistencyFromDayArray({
+                  dueDayKeys: recordQuery.data?.consistency.dueDayKeys ?? [],
+                  securedDateKeys,
+                  todayKey,
+                }),
+              )}
               morningAfter={morningAfter}
               proof={proof}
               weekStates={weekStates}
