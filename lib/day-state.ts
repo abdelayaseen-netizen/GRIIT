@@ -336,6 +336,24 @@ export function daysFromSource(
   });
 }
 
+export function weekStripDaysUi(
+  days: readonly DayRecord[],
+): { letter: string; filled: boolean; state: "secured" | "frozen" | "last_stand" | "missed" }[] {
+  const letters = ["M", "T", "W", "T", "F", "S", "S"] as const;
+  return days.slice(0, 7).map((d, i) => ({
+    letter: letters[i] ?? "M",
+    filled: isSecuredState(d.state),
+    state:
+      d.state === "camera" || d.state === "self"
+        ? "secured"
+        : d.state === "freeze"
+          ? "frozen"
+          : d.state === "laststand"
+            ? "last_stand"
+            : "missed",
+  }));
+}
+
 export function weekStripLegendStates(days: readonly DayRecord[]): DayState[] {
   const present = new Set(days.map((d) => d.state));
   return (["camera", "self", "freeze", "laststand", "missed"] as const).filter((s) => present.has(s));

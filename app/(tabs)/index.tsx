@@ -34,6 +34,16 @@ import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { consistencyFromRecord, consistencyLine } from "@/lib/consistency";
+import {
+  consistencyDenominatorLine,
+  consistencyHeadlineFromDays,
+  daysFromSource,
+  streakFromDays,
+  weekStripDaysUi,
+  weekStripFromDays,
+  type DaySource,
+} from "@/lib/day-state";
+import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -128,6 +138,9 @@ export default function HomeScreen() {
           dueToday: boolean;
           dueDayKeys: string[];
         };
+        timezone?: string;
+        todayKey?: string;
+        daySource?: DaySource;
       }>,
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
@@ -262,7 +275,20 @@ export default function HomeScreen() {
     contextStats: statsFailed ? null : stats,
     statsFailed,
   });
-  const streak = resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
+  const uDays = useMemo(
+    () =>
+      daysFromSource(recordQuery.data?.daySource, homeTimeZone, {
+        todayKey: recordQuery.data?.todayKey,
+      }),
+    [recordQuery.data?.daySource, recordQuery.data?.todayKey, homeTimeZone],
+  );
+  const streakFromArray = uDays.length ? streakFromDays(uDays) : null;
+  const streak =
+    streakFromArray ?? resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
+  const firstJoin = recordQuery.data?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
+  const streakLine = uDays.length
+    ? `${consistencyHeadlineFromDays(uDays)}. ${firstJoin ? consistencyDenominatorLine(formatDayMonthYear(firstJoin)) : ""}`.trim()
+    : consistencyLine(consistencyFromRecord(recordQuery.data?.consistency));
 
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
@@ -358,6 +384,11 @@ export default function HomeScreen() {
   }, [weekDateKeys, homeTimeZone]);
 
   const weekStates = useMemo(() => {
+    if (uDays.length) {
+      return weekStripDaysUi(weekStripFromDays(uDays, homeTimeZone, recordQuery.data?.todayKey)).map(
+        (d) => d.state,
+      );
+    }
     const statsRow = resolvedStats as StatsFromApi | null;
     return buildWeekStripDays(weekDateKeys, {
       securedDateKeys,
@@ -366,7 +397,7 @@ export default function HomeScreen() {
       todayKey: weekDateKeys[todayWeekIndex] ?? "",
       todaySecured,
     }).map((d) => d.state);
-  }, [weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
+  }, [uDays, homeTimeZone, recordQuery.data?.todayKey, weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
@@ -585,7 +616,7 @@ export default function HomeScreen() {
             <HomeV3
               title={greetingTitle(profile ?? {})}
               streak={streak}
-              streakLine={consistencyLine(consistencyFromRecord(recordQuery.data?.consistency))}
+              streakLine={streakLine}
               morningAfter={morningAfter}
               proof={proof}
               weekStates={weekStates}

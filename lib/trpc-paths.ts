@@ -108,6 +108,7 @@ export const TRPC = {
     getWeekly: 'leaderboard.getWeekly',
     getFriendsBoard: 'leaderboard.getFriendsBoard',
     getChallengeBoard: 'leaderboard.getChallengeBoard',
+    setBoardOptIn: 'leaderboard.setBoardOptIn',
   },
   respects: {
     give: 'respects.give',

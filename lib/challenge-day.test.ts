@@ -29,6 +29,7 @@ describe("displayDay", () => {
     expect(feedPostDisplayDay(1, "secured_day", true)).toBe(1);
     expect(feedPostDisplayDay(3, "task_completed", false)).toBe(3);
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
-    expect(card).toContain("feedPostDisplayDay");
+    expect(card).toContain("feedCardEyebrow");
+    expect(card).toContain("feedCardVariant");
   });
 });
