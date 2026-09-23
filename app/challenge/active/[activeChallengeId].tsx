@@ -408,7 +408,7 @@ export default function ActiveChallengeDetailScreen() {
         <ConfirmDialog
           visible={leaveConfirmVisible}
           title={`Leave ${title}?`}
-          message="Your progress in this challenge will be lost. You'll need to rejoin to start again."
+          message={`It moves to Finished as left on day ${shownDay}. Your proofs stay on the record.`}
           confirmLabel="Leave"
           destructive
           onCancel={() => setLeaveConfirmVisible(false)}

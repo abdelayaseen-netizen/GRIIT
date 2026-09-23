@@ -86,6 +86,13 @@ describe("applyEnrollmentWindow", () => {
     expect(filterRows([IN_WINDOW, IN_WINDOW, IN_WINDOW]).length).toBe(3);
   });
 
+  it("2 active + 1 abandoned + 1 completed → count is 2, join allowed", () => {
+    const live2 = { ...IN_WINDOW, id: "ac-live-2" };
+    const completed = { ...ENDED, id: "ac-done", status: "completed" };
+    const kept = filterRows([IN_WINDOW, live2, ABANDONED, completed]);
+    expect(kept.map((r) => r.id)).toEqual(["ac-live", "ac-live-2"]);
+  });
+
   it("is the helper listMyActive, the free-tier counts, and the join guard call", () => {
     const list = readFileSync(resolve(__dirname, "../trpc/routes/challenges.ts"), "utf8");
     const join = readFileSync(resolve(__dirname, "../trpc/routes/challenges-join.ts"), "utf8");

@@ -23,7 +23,11 @@ import {
   pickLatestEndedEnrollment,
   type EndedEnrollmentRow,
 } from "@/lib/profile-challenges";
-import { FREE_ACTIVE_CHALLENGES_LIMIT, FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
+import {
+  FREE_ACTIVE_CHALLENGES_LIMIT,
+  FREE_ACTIVE_LIMIT_MESSAGE,
+  countActiveEnrollments,
+} from "@/lib/free-challenge-limit";
 import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
 import { ensureAnonymousSession } from "@/lib/anon-auth";
 import { track, trackEvent } from "@/lib/analytics";
@@ -194,7 +198,9 @@ export default function ChallengeDetailScreen() {
   }, [ref, user?.id, id]);
 
   const challenge = challengeQuery.data ?? null;
-  const myActiveCount = Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data.length : 0;
+  const myActiveCount = countActiveEnrollments(
+    (Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data : []) as { status?: string }[],
+  );
   const tasksRaw = (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[];
   const tasks = toDetailTasks(tasksRaw);
   const participationType = mapParticipationType(challenge?.participation_type);

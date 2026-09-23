@@ -388,7 +388,8 @@ export const challengesRouter = createTRPCRouter({
           logger.error({ err: error }, "[listMyActive] Supabase error");
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load active challenges." });
         }
-        const list = (data ?? []) as { challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[];
+        const list = ((data ?? []) as { status?: string; challenges?: { challenge_tasks?: ChallengeTaskRowRaw[] } }[])
+          .filter((row) => row.status === "active");
         for (const row of list) {
           if (row.challenges?.challenge_tasks) {
             (row.challenges as { challenge_tasks: ChallengeTaskRowRaw[] }).challenge_tasks =

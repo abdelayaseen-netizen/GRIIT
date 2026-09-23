@@ -40,6 +40,23 @@ const IN_WINDOW: Enrollment = {
   challenges: { title: "75 Hard", duration_days: 75, challenge_tasks: [] },
 };
 
+const IN_WINDOW_2: Enrollment = {
+  ...IN_WINDOW,
+  id: "ac-live-2",
+};
+
+const ABANDONED: Enrollment = {
+  ...IN_WINDOW,
+  id: "ac-left",
+  status: "abandoned",
+};
+
+const COMPLETED: Enrollment = {
+  ...ENDED,
+  id: "ac-done",
+  status: "completed",
+};
+
 function applyStoredFilters(rows: Enrollment[], filters: { col: string; op: string; val: string }[]) {
   return rows.filter((row) =>
     filters.every((f) => {
@@ -123,5 +140,20 @@ describe("challenges.listMyActive window", () => {
       supabase.from("active_challenges").select("id", { count: "exact", head: true }).eq("user_id", USER),
     )) as { count: number };
     expect(counted.count).toBe(2);
+  });
+
+  it("2 active + 1 abandoned + 1 completed → count is 2, join allowed", async () => {
+    const rows = [IN_WINDOW, IN_WINDOW_2, ABANDONED, COMPLETED];
+    const caller = createCaller(rows);
+    const list = (await caller.challenges.listMyActive()) as { id: string }[];
+    expect(list.map((r) => r.id).sort()).toEqual(["ac-live", "ac-live-2"]);
+    const supabase = createMockSupabase(rows);
+    const { applyEnrollmentWindow } = await import("../../lib/enrollment-window");
+    const { FREE_ACTIVE_CHALLENGES_LIMIT } = await import("../../../lib/free-challenge-limit");
+    const counted = (await applyEnrollmentWindow(
+      supabase.from("active_challenges").select("id", { count: "exact", head: true }).eq("user_id", USER),
+    )) as { count: number };
+    expect(counted.count).toBe(2);
+    expect(counted.count < FREE_ACTIVE_CHALLENGES_LIMIT).toBe(true);
   });
 });

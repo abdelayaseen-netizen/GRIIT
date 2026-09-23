@@ -34,6 +34,7 @@ import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { consistencyFromRecord, consistencyLine } from "@/lib/consistency";
+import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -575,11 +576,11 @@ export default function HomeScreen() {
           scope={feedScope}
           onScopeChange={setFeedScope}
           hideHeaderToggle
-          activeChallengesCount={
-            Array.isArray(bootstrap.data?.activeChallenges)
-              ? bootstrap.data.activeChallenges.length
-              : 0
-          }
+          activeChallengesCount={countActiveEnrollments(
+            (Array.isArray(bootstrap.data?.activeChallenges)
+              ? bootstrap.data.activeChallenges
+              : []) as { status?: string }[],
+          )}
           viewerTargetStreak={profile?.target_streak ?? null}
           ListHeaderComponent={
             <HomeV3

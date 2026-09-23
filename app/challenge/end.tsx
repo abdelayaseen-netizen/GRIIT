@@ -8,7 +8,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { endedChallengeFromUnseen, formatEndedDate, type UnseenEndingRow } from "@/lib/challenge-end";
-import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
+import { FREE_ACTIVE_CHALLENGES_LIMIT, countActiveEnrollments } from "@/lib/free-challenge-limit";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { ROUTES } from "@/lib/routes";
@@ -61,9 +61,11 @@ function ChallengeEndScreenInner() {
     }),
   );
 
-  const activeCount = Array.isArray(bootstrap.data?.activeChallenges)
-    ? bootstrap.data.activeChallenges.length
-    : 0;
+  const activeCount = countActiveEnrollments(
+    (Array.isArray(bootstrap.data?.activeChallenges) ? bootstrap.data.activeChallenges : []) as {
+      status?: string;
+    }[],
+  );
   const sub = profile?.subscription_status;
   const isPro = sub === "premium" || sub === "trial" || bootstrap.data?.freezeStatus?.isPro === true;
   const challengeLimit = isPro ? null : FREE_ACTIVE_CHALLENGES_LIMIT;
