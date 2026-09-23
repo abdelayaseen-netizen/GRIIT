@@ -9,7 +9,6 @@ import {
   type HomeProofTask,
 } from "@/lib/home-proof-card";
 import { ROUTES } from "@/lib/routes";
-import { displayDay } from "@/lib/challenge-day";
 
 export const DAY_OPEN_ALSO = "Also today";
 export const DAY_OPEN_NEXT = "Next task";
@@ -116,7 +115,7 @@ export function selectDayOpen(input: {
 }
 
 export function dayOpenTaskHref(task: HomeProofTask): string {
-  const day = displayDay(task.currentDay, task.challengeSecuredToday);
+  const day = task.currentDay;
   const duration = task.durationDays ?? task.currentDay ?? 1;
   return `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id ?? "")}&activeChallengeId=${encodeURIComponent(task.activeChallengeId ?? "")}&taskType=${encodeURIComponent(task.taskType ?? task.type ?? "check_off")}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig ?? "")}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(day)}&durationDays=${String(duration)}`;
 }

@@ -6,7 +6,7 @@
  */
 
 import { proofImageUrlForCheckIn } from "../../lib/profile-v2-proof-photo";
-import { addCalendarDaysToDateKey } from "../../lib/date-utils";
+import { calendarDay } from "../../lib/home-day-total";
 import { gatesFor, type TaskGate, type TaskModelRow } from "./task-model";
 
 export function hasCameraProof(row: {
@@ -134,15 +134,7 @@ export function splitSecuredProof(args: {
 }
 
 function challengeDayOn(startDateKey: string, dateKey: string): number {
-  if (!startDateKey || startDateKey > dateKey) return 1;
-  let n = 1;
-  let cursor = startDateKey;
-  while (cursor < dateKey) {
-    cursor = addCalendarDaysToDateKey(cursor, 1);
-    n += 1;
-    if (n > 4000) break;
-  }
-  return n;
+  return calendarDay(startDateKey, dateKey, null);
 }
 
 /** Camera proofs for the grid / Secured — self-reported days emit nothing. */

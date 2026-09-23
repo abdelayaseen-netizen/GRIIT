@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
-import { logger } from "./logger";
 import { getTodayDateKey } from "./date-utils";
+import { calendarDayFromStartAt } from "../../lib/home-day-total";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -54,23 +54,19 @@ export function followRowAccepted(row: { status?: string | null }): boolean {
   return s === "accepted";
 }
 
-/** Frozen event day. secured_day uses metadata.day_number (already displayDay on write). */
-export function feedEventCurrentDay(
-  eventType: string,
-  metadata: Record<string, unknown>,
-  liveCurrentDay: number | undefined,
-): number {
-  if (eventType === "secured_day") {
-    if (typeof metadata.day_number === "number" && Number.isFinite(metadata.day_number)) {
-      return Math.max(1, metadata.day_number);
-    }
-    logger.warn(
-      { liveCurrentDay: liveCurrentDay ?? 1 },
-      "[feed] secured_day missing metadata.day_number; falling back to live current_day",
-    );
-    return Math.max(1, liveCurrentDay ?? 1);
-  }
-  return Math.max(1, liveCurrentDay ?? 1);
+/** Calendar position from start_at — not current_day or metadata.day_number. */
+export function feedEventCurrentDay(input: {
+  startAt?: string | null;
+  timeZone?: string;
+  todayKey: string;
+  durationDays?: number | null;
+}): number {
+  return calendarDayFromStartAt(
+    input.startAt,
+    input.timeZone ?? "UTC",
+    input.todayKey,
+    input.durationDays,
+  );
 }
 
 export async function hydrateActivityEventsToPosts(
@@ -115,19 +111,19 @@ export async function hydrateActivityEventsToPosts(
       ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
       : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
     challengeIds.length
-      ? server.from("active_challenges").select("user_id, challenge_id, current_day, status").in("challenge_id", challengeIds).eq("status", "active")
-      : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; current_day?: number }[] }),
+      ? server.from("active_challenges").select("user_id, challenge_id, start_at, status").in("challenge_id", challengeIds)
+      : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; start_at?: string }[] }),
     userIds.length
-      ? server.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", userIds)
-      : Promise.resolve({ data: [] as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null }[] }),
+      ? server.from("profiles").select("user_id, display_name, username, avatar_url, timezone").in("user_id", userIds)
+      : Promise.resolve({ data: [] as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[] }),
   ]);
   const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
-  const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; current_day?: number }[];
-  const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null }[];
+  const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; start_at?: string }[];
+  const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[];
   const challengeMap = new Map(challenges.map((c) => [c.id, c]));
   const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
-  const activeMap = new Map<string, { current_day: number }>();
-  for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { current_day: row.current_day ?? 1 });
+  const activeMap = new Map<string, { start_at?: string }>();
+  for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { start_at: row.start_at });
   const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
     if (vis === "private" && ev.user_id !== viewerId) return false;
     if (vis === "friends" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
@@ -203,7 +199,14 @@ export async function hydrateActivityEventsToPosts(
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
     const activeKey = ev.challenge_id ? `${ev.user_id}:${ev.challenge_id}` : "";
     const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
-    const currentDay = feedEventCurrentDay(ev.event_type, md, active?.current_day);
+    const tz = profile?.timezone?.trim() || "UTC";
+    const todayKey = getTodayDateKey(tz);
+    const currentDay = feedEventCurrentDay({
+      startAt: active?.start_at,
+      timeZone: tz,
+      todayKey,
+      durationDays,
+    });
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const stat = reactionStats.get(ev.id);

@@ -1,4 +1,5 @@
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { taskDisplayName, type HomeProofTask } from "@/lib/home-proof-card";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
@@ -6,6 +7,9 @@ import type { WindowState } from "@/backend/lib/task-time-gate";
 export type DayOpenEnrollment = {
   id: string;
   current_day?: number;
+  start_at?: string | null;
+  started_at?: string | null;
+  created_at?: string | null;
   challenges?: {
     title?: string;
     duration_days?: number;
@@ -25,6 +29,8 @@ export type DayOpenEnrollment = {
 export function dayOpenTasksFromActive(args: {
   enrollments: DayOpenEnrollment[];
   completed: { active_challenge_id?: string; task_id?: string; status?: string }[];
+  todayKey?: string;
+  timeZone?: string;
 }): HomeProofTask[] {
   const out: HomeProofTask[] = [];
   for (const ac of args.enrollments) {
@@ -36,8 +42,12 @@ export function dayOpenTasksFromActive(args: {
         .map((c) => c.task_id),
     );
     const challengeName = (ac.challenges?.title ?? "").trim() || "Challenge";
-    const currentDay = ac.current_day ?? 1;
-    const durationDays = ac.challenges?.duration_days ?? currentDay;
+    const durationDays = ac.challenges?.duration_days ?? ac.current_day ?? 1;
+    const startAt = ac.start_at ?? ac.started_at ?? ac.created_at;
+    const currentDay =
+      startAt && args.todayKey
+        ? calendarDayFromStartAt(startAt, args.timeZone ?? "UTC", args.todayKey, durationDays)
+        : (ac.current_day ?? 1);
     const challengeSecuredToday =
       required.length > 0 && required.every((t) => doneSet.has(t.id));
     for (const t of required) {

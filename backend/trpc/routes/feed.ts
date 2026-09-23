@@ -147,16 +147,16 @@ export const feedRouter = createTRPCRouter({
     const challengeIds = ev.challenge_id ? [ev.challenge_id] : [];
     const [chRes, acRes, profRes] = await Promise.all([
       challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
-      challengeIds.length ? server.from("active_challenges").select("user_id, challenge_id, current_day, status").in("challenge_id", challengeIds).eq("status", "active").limit(200) : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; current_day?: number }[] }),
-      server.from("profiles").select("user_id, display_name, username, avatar_url").in("user_id", [ev.user_id]).limit(200),
+      challengeIds.length ? server.from("active_challenges").select("user_id, challenge_id, start_at, status").in("challenge_id", challengeIds).limit(200) : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; start_at?: string }[] }),
+      server.from("profiles").select("user_id, display_name, username, avatar_url, timezone").in("user_id", [ev.user_id]).limit(200),
     ]);
     const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
-    const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; current_day?: number }[];
-    const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null }[];
+    const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; start_at?: string }[];
+    const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[];
     const challengeMap = new Map(challenges.map((c) => [c.id, c]));
     const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
-    const activeMap = new Map<string, { current_day: number }>();
-    for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { current_day: row.current_day ?? 1 });
+    const activeMap = new Map<string, { start_at?: string }>();
+    for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { start_at: row.start_at });
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
     if (ev.challenge_id && !ch) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     const vis = normalizeChallengeVisibility(ch?.visibility);
@@ -200,7 +200,13 @@ export const feedRouter = createTRPCRouter({
     const challengeName = typeof md.challenge_name === "string" && md.challenge_name.trim() ? md.challenge_name : ch?.title ?? "Challenge";
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;
     const active = ev.challenge_id ? activeMap.get(`${ev.user_id}:${ev.challenge_id}`) : undefined;
-    const currentDay = feedEventCurrentDay(ev.event_type, md, active?.current_day);
+    const tz = profile?.timezone?.trim() || "UTC";
+    const currentDay = feedEventCurrentDay({
+      startAt: active?.start_at,
+      timeZone: tz,
+      todayKey: getTodayDateKey(tz),
+      durationDays,
+    });
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;

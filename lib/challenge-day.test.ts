@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { displayDay, feedPostDisplayDay } from "./challenge-day";
+import { displayDay } from "./challenge-day";
 import { feedNoPhotoCopy } from "./feed-copy";
 
 describe("displayDay", () => {
@@ -24,11 +24,9 @@ describe("displayDay", () => {
     expect(displayDay(2, false)).toBe(2);
   });
 
-  it("feed photo header uses displayDay like Home after a same-day secure", () => {
-    expect(feedPostDisplayDay(2, "task_completed", true)).toBe(1);
-    expect(feedPostDisplayDay(1, "secured_day", true)).toBe(1);
-    expect(feedPostDisplayDay(3, "task_completed", false)).toBe(3);
+  it("feed photo header no longer remaps current_day via feedPostDisplayDay", () => {
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
-    expect(card).toContain("feedPostDisplayDay");
+    expect(card).toContain("value={post.currentDay}");
+    expect(card).not.toContain("feedPostDisplayDay");
   });
 });

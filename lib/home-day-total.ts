@@ -60,6 +60,17 @@ export function calendarDay(
   return clampCalendarDay(calendarDayCount(startDateKey, todayKey), durationDays);
 }
 
+/** v28.2 / v35: every on-screen Day n is this reduction — never current_day or event index. */
+export function calendarDayFromStartAt(
+  startAt: string | null | undefined,
+  timeZone: string,
+  todayKey: string,
+  durationDays?: number | null,
+): number {
+  const startKey = startAt ? dateKeyFromIso(startAt, timeZone) : todayKey;
+  return calendarDay(startKey, todayKey, durationDays);
+}
+
 export function homeDayLine(day: number, durationDays: number | null | undefined): string {
   const n = clampCalendarDay(day, durationDays);
   const total = homeDayTotal(durationDays);

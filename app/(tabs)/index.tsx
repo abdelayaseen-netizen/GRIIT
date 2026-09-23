@@ -40,7 +40,7 @@ import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
-import { displayDay } from "@/lib/challenge-day";
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
@@ -214,10 +214,10 @@ export default function HomeScreen() {
         ]),
       );
       const challengeName = ac.challenges?.title ?? "Challenge";
-      const currentDay = ac.current_day ?? 1;
       const durationDays = ac.challenges?.duration_days ?? 14;
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
       const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
+      const currentDay = calendarDayFromStartAt(startIso, homeTimeZone, todayKey, durationDays);
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
 
@@ -429,7 +429,7 @@ export default function HomeScreen() {
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(displayDay(task.currentDay, task.challengeSecuredToday))}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}` as never,
       );
     },
     [router],

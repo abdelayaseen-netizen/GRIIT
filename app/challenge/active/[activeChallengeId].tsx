@@ -34,7 +34,7 @@ import {
   weekSecuredFromKeys,
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
-import { calendarDay, dateKeyFromIso, homeDayTotal } from "@/lib/home-day-total";
+import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
@@ -200,8 +200,7 @@ export default function ActiveChallengeDetailScreen() {
   const weekSecured = weekSecuredRaw.map((filled, i) => filled || (securedToday && i === todayIndex));
   const startIso =
     activeChallenge?.start_at ?? activeChallenge?.started_at ?? activeChallenge?.created_at ?? null;
-  const startKey = startIso ? dateKeyFromIso(String(startIso), profileTz ?? "UTC") : todayKey;
-  const shownDay = calendarDay(startKey, todayKey, durationDays);
+  const shownDay = calendarDayFromStartAt(startIso, profileTz ?? "UTC", todayKey, durationDays);
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {

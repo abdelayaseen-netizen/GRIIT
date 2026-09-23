@@ -2,8 +2,15 @@ import { describe, expect, it } from "vitest";
 import { dedupePairedStartEvents, feedEventCurrentDay, type EvRow } from "./feed-activity-hydrate";
 
 describe("feedEventCurrentDay", () => {
-  it("hydrate of a secured_day event with day_number 2 and active.current_day 6 → post.currentDay === 2", () => {
-    expect(feedEventCurrentDay("secured_day", { day_number: 2 }, 6)).toBe(2);
+  it("enrollment start_at Sep 16, today Sep 23 → every site returns 8", () => {
+    expect(
+      feedEventCurrentDay({
+        startAt: "2026-09-16T16:00:00.000Z",
+        timeZone: "UTC",
+        todayKey: "2026-09-23",
+        durationDays: 14,
+      }),
+    ).toBe(8);
   });
 });
 
