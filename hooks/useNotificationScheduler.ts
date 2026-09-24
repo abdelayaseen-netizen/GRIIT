@@ -16,6 +16,7 @@ import {
 } from "@/lib/notifications";
 import { getTodayDateKey, countSecuredLast7Days } from "@/lib/date-utils";
 import type { EveningRemaining } from "@/lib/evening-secure";
+import { tasksDueTodayAcrossEnrollments } from "@/lib/notification-due-count";
 import { deriveUserRank } from "@/lib/derive-user-rank";
 import type { StatsFromApi, ActiveChallengeFromApi } from "@/types";
 
@@ -65,16 +66,56 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       if (cancelled) return;
 
       const ch = activeChallenge?.challenges as Record<string, unknown> | null | undefined;
-      const taskRows = (ch?.challenge_tasks as unknown[] | undefined) ?? [];
-      const taskCount = taskRows.length;
       const currentDay = (activeChallenge as { current_day?: number })?.current_day ?? 1;
       const challengeTitle = typeof ch?.title === "string" ? ch.title : undefined;
+
+      const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
+        id?: string;
+        current_day?: number;
+        challenges?: {
+          duration_days?: number;
+          title?: string;
+          challenge_tasks?: Record<string, unknown>[];
+        };
+      }[];
+      const todayCheckins = (await trpcQuery(TRPC.checkins.getTodayCheckinsForUser).catch(() => [])) as {
+        task_id?: string;
+        status?: string;
+      }[];
+      if (cancelled) return;
+
+      const activeRows = Array.isArray(myActive) ? myActive : [];
+      const dueToday = tasksDueTodayAcrossEnrollments({
+        enrollments: activeRows.map((ac) => ({
+          tasks: (ac.challenges?.challenge_tasks ?? []).map((t) => {
+            const row = t as { id?: string; config?: { required?: boolean } };
+            return { id: row.id, required: row.config?.required ?? true };
+          }),
+        })),
+        completedTaskIds: (Array.isArray(todayCheckins) ? todayCheckins : [])
+          .filter((c) => c.status === "completed" && typeof c.task_id === "string")
+          .map((c) => c.task_id as string),
+      });
+
+      const eveningAll: EveningRemaining = {
+        remaining: dueToday.remaining,
+        total: dueToday.due,
+        challenge: evening?.challenge ?? challengeTitle ?? "GRIIT",
+        cameraRemaining: evening?.cameraRemaining,
+      };
+      if (lastKey === todayKey) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        scheduleNextSecureReminder(preferred, tomorrow, lastStands, streakCount, eveningAll).catch(() => {});
+      } else {
+        scheduleNextSecureReminder(preferred, undefined, lastStands, streakCount, eveningAll).catch(() => {});
+      }
 
       if (settings?.morning_kickoff_enabled !== false) {
         scheduleMorningMotivation({
           morningTime: "07:00",
           streakCount,
-          taskCount,
+          taskCount: dueToday.due,
           currentDay,
           challengeName: challengeTitle,
         }).catch(() => {});
@@ -100,18 +141,7 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
         await cancelWeeklySummary();
       }
 
-      const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
-        id?: string;
-        current_day?: number;
-        challenges?: {
-          duration_days?: number;
-          title?: string;
-          challenge_tasks?: Record<string, unknown>[];
-        };
-      }[];
-      if (cancelled) return;
-
-      const countdownData = (Array.isArray(myActive) ? myActive : [])
+      const countdownData = activeRows
         .filter((ac) => ac.challenges?.duration_days != null && ac.current_day != null)
         .map((ac) => ({
           id: ac.id ?? "",

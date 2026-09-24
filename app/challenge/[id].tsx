@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionSheetIOS, Alert, Platform, StyleSheet } from "react-native";
+import { ActionSheetIOS, Alert, Platform, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, usePathname, useRouter, Stack } from "expo-router";
@@ -44,6 +44,8 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import Button from "@/components/ds/Button";
+import Sheet from "@/components/ds/Sheet";
 import ChallengeDetailV3 from "@/components/challenge/ChallengeDetailV3";
 import {
   day1StartCopy,
@@ -107,6 +109,7 @@ export default function ChallengeDetailScreen() {
   const queryClient = useQueryClient();
   const { error, showError, clearError } = useInlineError();
   const [joining, setJoining] = useState(false);
+  const [joinedSheet, setJoinedSheet] = useState<{ id: string; body: string } | null>(null);
 
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
@@ -317,11 +320,10 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
       if (result?.id) {
-        Alert.alert(
-          "You're in.",
-          day1StartCopy(result.start_at, timeZone),
-          [{ text: "OK", onPress: () => router.replace(ROUTES.CHALLENGE_ACTIVE(result.id!) as never) }],
-        );
+        setJoinedSheet({
+          id: result.id,
+          body: day1StartCopy(result.start_at, timeZone),
+        });
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
@@ -497,6 +499,27 @@ export default function ChallengeDetailScreen() {
           onUpgrade={goPaywall}
           onRetry={() => void challengeQuery.refetch()}
         />
+        <Sheet
+          visible={joinedSheet != null}
+          onDismiss={() => {
+            const next = joinedSheet?.id;
+            setJoinedSheet(null);
+            if (next) router.replace(ROUTES.CHALLENGE_ACTIVE(next) as never);
+          }}
+          heading="You're in."
+          footer={
+            <Button
+              label="OK"
+              onPress={() => {
+                const next = joinedSheet?.id;
+                setJoinedSheet(null);
+                if (next) router.replace(ROUTES.CHALLENGE_ACTIVE(next) as never);
+              }}
+            />
+          }
+        >
+          <Text style={styles.sheetBody}>{joinedSheet?.body}</Text>
+        </Sheet>
       </SafeAreaView>
     </ErrorBoundary>
   );
@@ -506,5 +529,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
+  },
+  sheetBody: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
 });

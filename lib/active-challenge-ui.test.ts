@@ -7,6 +7,7 @@ import {
   footerAction,
   hasCameraProof,
   homeProofGate,
+  mapTaskType,
   participantsLine,
   pendingGate,
   securedTodayFromKeys,
@@ -213,6 +214,18 @@ describe("gates", () => {
     expect(homeProofGate("manual")).toBe("Self-reported");
     expect(homeProofGate("simple")).toBe("Self-reported");
     expect(homeProofGate("manual", undefined, true)).toBe("Photo");
+  });
+
+  it("self-report task → \"Self-reported\", no camera icon, no Take photo", () => {
+    const mapped = mapTaskType("manual");
+    expect(mapped).toBe("simple");
+    const t = task({ id: "bed", title: "Make Your Bed", task_type: mapped, require_photo: false });
+    expect(pendingGate(t)).toBe("Self-reported");
+    expect(taskVerb(t.task_type)).not.toBe("Take photo");
+    const screen = readFileSync(resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"), "utf8");
+    expect(screen).toContain("simple: Circle");
+    expect(screen).not.toMatch(/simple:\s*Camera/);
+    expect(screen).toContain("taskVerb(t.task_type)");
   });
 });
 

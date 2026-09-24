@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   accountNameContinueDecision,
@@ -85,5 +87,16 @@ describe("account name persist helpers", () => {
     expect(
       prefillAccountUsername({ email: "yaseen@example.com", profileUsername: "user_3d42b39e" })
     ).toBe("yaseen");
+  });
+});
+
+describe("AccountScreen Apple errors", () => {
+  it("surfaces signInWithIdToken error.message like SignInScreen", () => {
+    const account = readFileSync(
+      resolve(__dirname, "../components/onboarding/v2/screens/AccountScreen.tsx"),
+      "utf8",
+    );
+    expect(account).toContain("setError(idError.message)");
+    expect(account).not.toContain("if (idError || !data?.user?.id) return;");
   });
 });

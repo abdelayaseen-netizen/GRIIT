@@ -219,7 +219,8 @@ export default function ProfileScreen() {
             totalDaysSecured={record?.detail.totalVerified ?? 0}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
-              consistencyContext(consistency, proofsDateLabel) || consistencyLine(consistency)
+              consistencyContext(consistency, proofsDateLabel, todaySecured) ||
+              consistencyLine(consistency)
             }
             tab={v3Tab}
             onChangeTab={(next) => {
@@ -266,7 +267,7 @@ export default function ProfileScreen() {
             challengeRows.length === 0 ? (
               <EmptyState
                 heading="No active challenge"
-                body="Start one from Discover. Day 1 begins the morning after you join."
+                body="Start one from Discover."
                 actionLabel="Find a challenge"
                 onAction={() => router.push(ROUTES.TABS_DISCOVER as never)}
               />

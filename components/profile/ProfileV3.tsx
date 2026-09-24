@@ -255,7 +255,7 @@ export function ProfileV3({
           runs.length === 0 ? (
             <EmptyState
               heading="No active challenge"
-              body="Start one from Discover. Day 1 begins the morning after you join."
+              body="Start one from Discover."
               actionLabel="Find a challenge"
               onAction={onDiscover}
             />

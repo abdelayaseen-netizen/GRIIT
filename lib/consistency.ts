@@ -50,9 +50,14 @@ export function consistencyLine(c: Consistency): string {
   return `${c.secured} of ${c.due} days secured.`;
 }
 
-export function consistencyContext(c: Consistency, formatDate: (iso: string) => string): string {
+export function consistencyContext(
+  c: Consistency,
+  formatDate: (iso: string) => string,
+  todaySecured = false,
+): string {
   const since = c.firstDueDate ? `Since ${formatDate(c.firstDueDate)}.` : "";
-  return [since, c.dueToday ? "1 due today." : ""].filter(Boolean).join(" ");
+  const todayBit = todaySecured ? "Today secured." : c.dueToday ? "1 due today." : "";
+  return [since, todayBit].filter(Boolean).join(" ");
 }
 
 export function consistencyDetailHero(c: Consistency): string {
