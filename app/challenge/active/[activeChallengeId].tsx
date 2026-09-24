@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +17,8 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import Button from "@/components/ds/Button";
+import Sheet from "@/components/ds/Sheet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -405,15 +406,29 @@ export default function ActiveChallengeDetailScreen() {
           onParticipants={handleParticipants}
           onShare={handleShare}
         />
-        <ConfirmDialog
+        <Sheet
           visible={leaveConfirmVisible}
-          title={`Leave ${title}?`}
-          message={`It moves to Finished as left on day ${shownDay}. Your proofs stay on the record.`}
-          confirmLabel="Leave"
-          destructive
-          onCancel={() => setLeaveConfirmVisible(false)}
-          onConfirm={() => void confirmLeaveChallenge()}
-        />
+          onDismiss={() => setLeaveConfirmVisible(false)}
+          heading={`Leave ${title}?`}
+          footer={
+            <>
+              <Button
+                label="Leave"
+                destructive
+                onPress={() => void confirmLeaveChallenge()}
+              />
+              <Button
+                label="Cancel"
+                variant="tertiary"
+                onPress={() => setLeaveConfirmVisible(false)}
+              />
+            </>
+          }
+        >
+          <Text style={styles.sheetBody}>
+            It moves to Finished as left on day {shownDay}. Your proofs stay on the record.
+          </Text>
+        </Sheet>
       </SafeAreaView>
     </ErrorBoundary>
   );
@@ -423,5 +438,11 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
+  },
+  sheetBody: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
 });

@@ -175,5 +175,14 @@ describe("joinCaption", () => {
     expect(wizard).toContain("day1StartCopy(");
     const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
     expect(catalog).toContain("day1StartCopy(result.start_at, timeZone)");
+    expect(catalog).toContain('heading="You\'re in."');
+    expect(catalog).not.toContain('Alert.alert(\n          "You\'re in."');
+    const active = readFileSync(
+      resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
+      "utf8",
+    );
+    expect(active).toContain("components/ds/Sheet");
+    expect(active).toContain("Leave ${title}?");
+    expect(active).not.toContain("ConfirmDialog");
   });
 });
