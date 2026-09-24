@@ -58,6 +58,7 @@ export default function AccountScreen({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -79,6 +80,7 @@ export default function AccountScreen({
       setState("email_entry");
       return;
     }
+    setError("");
     setLoading(true);
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -87,7 +89,10 @@ export default function AccountScreen({
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-      if (!credential.identityToken) return;
+      if (!credential.identityToken) {
+        setError("Apple Sign-In did not return a token.");
+        return;
+      }
 
       const displayNameFromApple = credential.fullName
         ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(" ").trim()
@@ -120,7 +125,14 @@ export default function AccountScreen({
         provider: "apple",
         token: credential.identityToken,
       });
-      if (idError || !data?.user?.id) return;
+      if (idError) {
+        setError(idError.message);
+        return;
+      }
+      if (!data?.user?.id) {
+        setError("Sign in failed. Please try again.");
+        return;
+      }
       await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
@@ -136,6 +148,7 @@ export default function AccountScreen({
         return;
       }
       captureError(e, "OnboardingV2Apple");
+      setError(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -245,6 +258,7 @@ export default function AccountScreen({
               tone={DS_V3.color.brandText}
               onPress={() => onSignInWithAccount()}
             />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
           </View>
         ) : null}
 
@@ -438,6 +452,12 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.danger,
+  },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.danger,
+    textAlign: "center",
   },
   notice: {
     backgroundColor: DS_V3.color.surface,
