@@ -6,6 +6,7 @@ import { TRPC } from '@/lib/trpc-paths';
 import { HOME_BOOTSTRAP_QUERY_KEY, homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
 import { useHomeBootstrap } from '@/lib/use-home-bootstrap';
 import { getTodayDateKey } from '@/lib/date-utils';
+import { tasksDueTodayAcrossEnrollments } from '@/lib/notification-due-count';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
 import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
@@ -298,27 +299,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [computeProgress]);
 
   const eveningRemaining = useMemo(() => {
-    const requiredTasks =
-      (challenge?.challenge_tasks as
-        | { id: string; type?: string; config?: { required?: boolean; require_photo_proof?: boolean; photo_required?: boolean } }[]
-        | undefined)?.filter((t) => (t.config?.required ?? true) === true) ?? [];
-    const completed = new Set(
-      todayCheckins
-        .filter((c: TodayCheckinForUser) => c.status === "completed")
-        .map((c: TodayCheckinForUser) => c.task_id)
+    const rows = (
+      Array.isArray(bootstrap.data?.activeChallenges)
+        ? bootstrap.data.activeChallenges
+        : activeChallenge
+          ? [activeChallenge]
+          : []
+    ) as {
+      challenges?: {
+        title?: string;
+        challenge_tasks?: { id: string; type?: string; config?: { required?: boolean; require_photo_proof?: boolean; photo_required?: boolean } }[];
+      };
+    }[];
+    const forUser = Array.isArray(bootstrap.data?.todayCheckinsForUser)
+      ? (bootstrap.data.todayCheckinsForUser as TodayCheckinForUser[])
+      : [];
+    const completedTaskIds = [
+      ...new Set(
+        [...forUser, ...todayCheckins]
+          .filter((c) => c.status === "completed" && typeof c.task_id === "string")
+          .map((c) => c.task_id),
+      ),
+    ];
+    const counts = tasksDueTodayAcrossEnrollments({
+      enrollments: rows.map((ac) => ({
+        tasks: (ac.challenges?.challenge_tasks ?? []).map((t) => ({
+          id: t.id,
+          required: t.config?.required ?? true,
+        })),
+      })),
+      completedTaskIds,
+    });
+    const leftoverTasks = rows.flatMap((ac) =>
+      (ac.challenges?.challenge_tasks ?? []).filter(
+        (t) => (t.config?.required ?? true) === true && !completedTaskIds.includes(t.id),
+      ),
     );
-    const leftover = requiredTasks.filter((t) => !completed.has(t.id));
-    const cameraRemaining = leftover.filter((t) => {
+    const cameraRemaining = leftoverTasks.filter((t) => {
       const cfg = t.config ?? {};
       return t.type === "photo" || cfg.require_photo_proof === true || cfg.photo_required === true;
     }).length;
     return {
-      remaining: leftover.length,
-      total: requiredTasks.length,
+      remaining: counts.remaining,
+      total: counts.due,
       challenge: typeof challenge?.title === "string" ? challenge.title : "GRIIT",
       cameraRemaining,
     };
-  }, [challenge, todayCheckins]);
+  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, activeChallenge, challenge, todayCheckins]);
 
   useNotificationScheduler({
     user,
