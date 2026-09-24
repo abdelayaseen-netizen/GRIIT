@@ -19,6 +19,7 @@ import {
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
 import { deriveProofType } from "../../lib/task-model";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { dateKeyFromIso } from "../../../lib/home-day-total";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -204,7 +205,7 @@ export const feedRouter = createTRPCRouter({
     const currentDay = feedEventCurrentDay({
       startAt: active?.start_at,
       timeZone: tz,
-      todayKey: getTodayDateKey(tz),
+      todayKey: dateKeyFromIso(ev.created_at, tz),
       durationDays,
     });
     const isCompletedChallenge = ev.event_type === "completed_challenge";

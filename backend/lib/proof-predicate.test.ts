@@ -137,7 +137,7 @@ describe("splitSecuredProof", () => {
     ]);
   });
 
-  it("abandoned enrollment keeps the challenge title on the secured caption", () => {
+  it("abandoned enrollment with proofs today → secured screen caption shows the real title, not \"Challenge\"", () => {
     const tiles = cameraProofTiles({
       checkIns: [
         {
@@ -153,8 +153,13 @@ describe("splitSecuredProof", () => {
       tasks: [{ id: "t-iron", challenge_id: "ch-iron", require_photo: true, task_type: "photo" }],
     });
     expect(tiles[0]?.challengeName).toBe("Iron man");
+    const names = [...new Set(tiles.map((p) => p.challengeName))].join(", ");
+    expect(names).toBe("Iron man");
+    expect(names).not.toBe("Challenge");
     const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
     expect(src).toContain('.in("status", ["active", "completed", "abandoned"])');
+    const screen = readFileSync(resolve(__dirname, "../../components/task-v2/SecuredDayScreen.tsx"), "utf8");
+    expect(screen).toContain("proofs.map((p) => p.challengeName)");
   });
 
   it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {

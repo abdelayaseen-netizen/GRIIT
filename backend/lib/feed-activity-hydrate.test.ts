@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { dateKeyFromIso } from "../../lib/home-day-total";
 import { dedupePairedStartEvents, feedEventCurrentDay, type EvRow } from "./feed-activity-hydrate";
 
 describe("feedEventCurrentDay", () => {
@@ -11,6 +14,32 @@ describe("feedEventCurrentDay", () => {
         durationDays: 14,
       }),
     ).toBe(8);
+  });
+
+  it("enrollment start_at Sep 16, proof created Sep 18, read on Sep 23 → feed row says Day 3", () => {
+    const tz = "UTC";
+    const startAt = "2026-09-16T16:00:00.000Z";
+    const createdAt = "2026-09-18T09:00:00.000Z";
+    const eventDay = feedEventCurrentDay({
+      startAt,
+      timeZone: tz,
+      todayKey: dateKeyFromIso(createdAt, tz),
+      durationDays: 14,
+    });
+    const readTimeDay = feedEventCurrentDay({
+      startAt,
+      timeZone: tz,
+      todayKey: "2026-09-23",
+      durationDays: 14,
+    });
+    expect(eventDay).toBe(3);
+    expect(readTimeDay).toBe(8);
+    const hydrate = readFileSync(resolve(__dirname, "./feed-activity-hydrate.ts"), "utf8");
+    const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
+    expect(hydrate).toContain("dateKeyFromIso(ev.created_at, tz)");
+    expect(feed).toContain("dateKeyFromIso(ev.created_at, tz)");
+    expect(hydrate).not.toMatch(/todayKey = getTodayDateKey\(tz\)/);
+    expect(feed).not.toMatch(/todayKey: getTodayDateKey\(tz\)/);
   });
 });
 

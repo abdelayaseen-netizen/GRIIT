@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
-import { calendarDayFromStartAt } from "../../lib/home-day-total";
+import { calendarDayFromStartAt, dateKeyFromIso } from "../../lib/home-day-total";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -200,7 +200,7 @@ export async function hydrateActivityEventsToPosts(
     const activeKey = ev.challenge_id ? `${ev.user_id}:${ev.challenge_id}` : "";
     const active = ev.challenge_id ? activeMap.get(activeKey) : undefined;
     const tz = profile?.timezone?.trim() || "UTC";
-    const todayKey = getTodayDateKey(tz);
+    const todayKey = dateKeyFromIso(ev.created_at, tz);
     const currentDay = feedEventCurrentDay({
       startAt: active?.start_at,
       timeZone: tz,
