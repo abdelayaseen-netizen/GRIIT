@@ -15,13 +15,15 @@ export async function runFinalizeEndedOnForeground(input: {
   if (inFlight) return;
   inFlight = true;
   try {
-    await trpcMutate(TRPC.challenges.finalizeEnded);
-    await queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(input.userId) });
+    try {
+      await trpcMutate(TRPC.challenges.finalizeEnded);
+      await queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(input.userId) });
+    } catch (e) {
+      captureError(e, "finalizeEnded.foreground");
+    }
     if (!shouldPresentEndScreen(input.pathname)) return;
     const unseen = await trpcQuery<UnseenEndingRow[]>(TRPC.challenges.listUnseenEndings);
     if (unseen.length > 0) input.openEnd();
-  } catch (e) {
-    captureError(e, "finalizeEnded.foreground");
   } finally {
     inFlight = false;
   }

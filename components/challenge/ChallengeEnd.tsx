@@ -113,6 +113,7 @@ export type ChallengeEndProps = {
   onClose: () => void;
   onDone: () => void;
   onRestart?: (challengeId: string) => void;
+  saveError?: string | null;
 };
 
 export function ChallengeEnd(p: ChallengeEndProps) {
@@ -176,6 +177,7 @@ function Single(p: ChallengeEndProps) {
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: 26 + insets.bottom }]}>
         <Button label="Done" onPress={p.onDone} />
+        {p.saveError ? <Text style={styles.saveError}>{p.saveError}</Text> : null}
         <Button
           label="Start it again"
           variant="secondary"
@@ -235,6 +237,7 @@ function Combined(p: ChallengeEndProps) {
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: 26 + insets.bottom }]}>
         <Button label="Done" onPress={p.onDone} />
+        {p.saveError ? <Text style={styles.saveError}>{p.saveError}</Text> : null}
         <Text style={styles.cap}>{combinedFooter(n)}</Text>
       </View>
     </View>
@@ -331,6 +334,13 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
+  saveError: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textPrimary,
     textAlign: "center",
   },
   combinedHead: {

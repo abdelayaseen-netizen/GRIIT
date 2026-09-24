@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  MARK_END_SEEN_FAILED,
   capCaption,
   combinedFooter,
   combinedTitle,
@@ -9,6 +10,7 @@ import {
   endedChallengeFromUnseen,
   factLine,
   longestSecuredStreak,
+  runMarkEndSeenOnDone,
   securedCount,
   shouldPresentEndScreen,
 } from "./challenge-end";
@@ -127,6 +129,45 @@ describe("shouldPresentEndScreen", () => {
     expect(shouldPresentEndScreen("/onboarding")).toBe(false);
     expect(shouldPresentEndScreen("/auth/login")).toBe(false);
     expect(shouldPresentEndScreen("/challenge/end")).toBe(false);
+  });
+});
+
+describe("runMarkEndSeenOnDone", () => {
+  it("markEndSeen rejects → no navigation, error rendered", async () => {
+    const goHome = vi.fn();
+    const onFail = vi.fn();
+    await runMarkEndSeenOnDone({
+      enrollmentIds: ["ac-1"],
+      markSeen: async () => {
+        throw new Error("denied");
+      },
+      goHome,
+      onFail,
+    });
+    expect(goHome).not.toHaveBeenCalled();
+    expect(onFail).toHaveBeenCalledWith(MARK_END_SEEN_FAILED);
+    expect(MARK_END_SEEN_FAILED).toBe("Couldn't save. Try again.");
+    const ui = readFileSync(resolve(__dirname, "../components/challenge/ChallengeEnd.tsx"), "utf8");
+    const end = readFileSync(resolve(__dirname, "../app/challenge/end.tsx"), "utf8");
+    expect(ui).toContain("p.saveError");
+    expect(ui).toContain("<Button label=\"Done\" onPress={p.onDone} />");
+    expect(ui.indexOf("<Button label=\"Done\"")).toBeLessThan(ui.indexOf("p.saveError"));
+    expect(end).toContain("saveError={saveError}");
+    expect(end).toContain("setSaveError");
+    expect(end).not.toContain("disabled");
+  });
+
+  it("resolves → navigates once", async () => {
+    const goHome = vi.fn();
+    const onFail = vi.fn();
+    await runMarkEndSeenOnDone({
+      enrollmentIds: ["ac-1"],
+      markSeen: async () => undefined,
+      goHome,
+      onFail,
+    });
+    expect(goHome).toHaveBeenCalledTimes(1);
+    expect(onFail).not.toHaveBeenCalled();
   });
 });
 

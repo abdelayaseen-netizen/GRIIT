@@ -203,3 +203,25 @@ export function shouldPresentEndScreen(pathname: string): boolean {
   if (pathname.includes("/challenge/end")) return false;
   return true;
 }
+
+export const MARK_END_SEEN_FAILED = "Couldn't save. Try again.";
+
+/** Done marks seen, then Home. Failure stays on the sheet; Close never marks. */
+export async function runMarkEndSeenOnDone(input: {
+  enrollmentIds: string[];
+  markSeen: (ids: string[]) => Promise<unknown>;
+  goHome: () => void;
+  onFail: (message: string) => void;
+}): Promise<void> {
+  if (input.enrollmentIds.length === 0) {
+    input.goHome();
+    return;
+  }
+  try {
+    await input.markSeen(input.enrollmentIds);
+  } catch {
+    input.onFail(MARK_END_SEEN_FAILED);
+    return;
+  }
+  input.goHome();
+}
