@@ -287,8 +287,10 @@ export function useAppChallengeMutations({
       await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
       await queryClient.refetchQueries({ queryKey: ["home", "bootstrap"] });
       await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
+      await queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] });
       const userDaySecured = result.secured === true;
       if (userDaySecured && Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

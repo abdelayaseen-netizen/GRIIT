@@ -20,6 +20,7 @@ describe("consistency builders", () => {
     expect(consistencyHeadline(c)).toBe("10 of 13 days");
     expect(consistencyLine(c)).toBe("10 of 13 days secured.");
     expect(consistencyContext(c, (k) => k)).toBe("Since 2026-09-01. 1 due today.");
+    expect(consistencyContext(c, (k) => k, true)).toBe("Since 2026-09-01. Today secured.");
     expect(consistencyDetailHero(c)).toBe("10 of 13");
     expect(consistencyHeadline({ secured: 0, due: 0, dueToday: false, firstDueDate: null })).toBe(
       "No due days yet.",
@@ -36,6 +37,10 @@ describe("consistency builders", () => {
     expect(home).toContain("verifiedClosed");
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
+    expect(profile).toContain("consistencyContext(consistency, proofsDateLabel, todaySecured)");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
+    const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
+    expect(mutations).toContain('invalidateQueries({ queryKey: ["profiles", "getRecord"] })');
+    expect(mutations).toContain('refetchQueries({ queryKey: ["profiles", "getRecord"] })');
   });
 });

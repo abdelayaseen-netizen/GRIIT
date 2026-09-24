@@ -219,7 +219,8 @@ export default function ProfileScreen() {
             totalDaysSecured={record?.detail.totalVerified ?? 0}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
-              consistencyContext(consistency, proofsDateLabel) || consistencyLine(consistency)
+              consistencyContext(consistency, proofsDateLabel, todaySecured) ||
+              consistencyLine(consistency)
             }
             tab={v3Tab}
             onChangeTab={(next) => {
