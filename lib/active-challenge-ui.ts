@@ -17,7 +17,8 @@ export type ActiveTaskType =
   | "photo"
   | "checkin"
   | "journal"
-  | "workout";
+  | "workout"
+  | "simple";
 
 export type ActiveChallengeTask = {
   id: string;
@@ -41,6 +42,7 @@ export const TASK_VERB: Record<ActiveTaskType, string> = {
   checkin: "Check in",
   journal: "Write entry",
   workout: "Log workout",
+  simple: "Check off",
 };
 
 const KNOWN_TYPES = new Set<string>(Object.keys(TASK_VERB));
@@ -48,11 +50,11 @@ const KNOWN_TYPES = new Set<string>(Object.keys(TASK_VERB));
 export function mapTaskType(raw: string | null | undefined): ActiveTaskType {
   const t = (raw ?? "").trim().toLowerCase();
   if (KNOWN_TYPES.has(t)) return t as ActiveTaskType;
-  if (t === "manual") return "photo";
+  if (t === "manual" || t === "check_off" || t === "checklist") return "simple";
   if (t === "text") return "journal";
   if (t === "gps" || t === "location") return "checkin";
   if (t === "run") return "workout";
-  return "photo";
+  return "simple";
 }
 
 export function taskVerb(taskType: ActiveTaskType): string {

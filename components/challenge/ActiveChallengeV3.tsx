@@ -9,6 +9,7 @@ import {
   BookOpen,
   Camera,
   Check,
+  Circle,
   Dumbbell,
   Droplet,
   Ellipsis,
@@ -65,6 +66,7 @@ const TASK_ICON: Record<ActiveTaskType, LucideIcon> = {
   checkin: MapPin,
   journal: NotebookPen,
   workout: Dumbbell,
+  simple: Circle,
 };
 
 export type ActiveChallengeV3Props = {
