@@ -222,16 +222,9 @@ export function fractionDateKeysForRange(
   range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
   todayKey: string,
 ): string[] {
-  if (range.status === "active") {
-    return dueKeysForRange(range, todayKey).filter((k) => k < todayKey);
-  }
-  const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
-  const keys: string[] = [];
-  let cursor = range.startDateKey;
-  while (cursor <= lastKey && cursor < range.endDateKey) {
-    keys.push(cursor);
-    cursor = addCalendarDaysToDateKey(cursor, 1);
-  }
+  const windowStatus = RECORD_WINDOW_STATUSES.has(range.status) ? range.status : "completed";
+  const keys = dueKeysForRange({ ...range, status: windowStatus }, todayKey);
+  if (range.status === "active") return keys.filter((k) => k < todayKey);
   return keys;
 }
 

@@ -390,6 +390,41 @@ describe("fractionDateKeysForRange", () => {
       ),
     ).toEqual(["2026-09-16", "2026-09-17", "2026-09-18"]);
   });
+
+  it("completed 1-day secured → \"1 of 1\"", () => {
+    expect(
+      fractionDateKeysForRange(
+        {
+          status: "completed",
+          startDateKey: "2026-09-23",
+          endDateKey: "2026-09-23",
+        },
+        "2026-09-25",
+      ),
+    ).toEqual(["2026-09-23"]);
+    const rec = buildProfileRecord({
+      todayKey: "2026-09-25",
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCompletedDateKey: "2026-09-23",
+      securedDateKeys: ["2026-09-23"],
+      ranges: [
+        {
+          id: "ac-water",
+          challengeId: "ch-water",
+          name: "Drink Water Today",
+          status: "completed",
+          startDateKey: "2026-09-23",
+          endDateKey: "2026-09-23",
+          durationDays: 1,
+          tasksPerDay: 1,
+        },
+      ],
+    });
+    expect(rec.detail.byChallenge).toEqual([
+      { label: "Drink Water Today", value: "1 of 1", camera: 0, selfReported: 0 },
+    ]);
+  });
 });
 
 describe("token map — brand.primary is not retargeted", () => {
