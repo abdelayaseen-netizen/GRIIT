@@ -1,18 +1,20 @@
 /**
  * Frame 60 — date-sectioned camera proofs. Self-reported days get no tile.
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Camera, Lock } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
   PROOFS_EMPTY_HEADING,
+  PROOFS_PHOTO_NOT_SAVED,
   proofsCountLine,
   proofsEmptyBody,
   proofsSectionShowsChallenge,
   proofsSections,
   proofsTileA11y,
+  proofsTileIsMissing,
   proofsTileLabel,
   type ProofsGridItem,
 } from "@/lib/proofs-grid";
@@ -31,16 +33,42 @@ function ProofTile({
   onOpen: (item: ProofsGridItem) => void;
 }) {
   const [failed, setFailed] = useState(false);
+  const [bytes, setBytes] = useState<number | null>(item.bytes ?? null);
+  const missing = proofsTileIsMissing({ failed, bytes });
   const label = proofsTileLabel(item, showChallenge);
+
+  useEffect(() => {
+    if (item.bytes != null || failed) return;
+    let cancelled = false;
+    fetch(item.uri, { method: "HEAD" })
+      .then((res) => {
+        const raw = res.headers.get("content-length");
+        const n = raw ? Number(raw) : NaN;
+        if (!cancelled && Number.isFinite(n)) setBytes(n);
+      })
+      .catch(() => {
+        /* onError still covers a failed body */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item.bytes, item.uri, failed]);
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={proofsTileA11y(item.taskName, item.dateKey, item.shared)}
+      accessibilityLabel={
+        missing
+          ? `${PROOFS_PHOTO_NOT_SAVED}, ${proofsTileA11y(item.taskName, item.dateKey, item.shared)}`
+          : proofsTileA11y(item.taskName, item.dateKey, item.shared)
+      }
       onPress={() => onOpen(item)}
       style={styles.tile}
     >
-      {failed ? (
-        <View style={styles.placeholder} />
+      {missing ? (
+        <View style={styles.missing}>
+          <Text style={styles.missingCaption}>{PROOFS_PHOTO_NOT_SAVED}</Text>
+        </View>
       ) : (
         <Image
           source={{ uri: item.uri }}
@@ -143,9 +171,19 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  placeholder: {
+  missing: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: DS_V3.color.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: DS_V3.space.sm,
+  },
+  missingCaption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
   },
   burn: {
     position: "absolute",

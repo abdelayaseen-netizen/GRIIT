@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { MIN_PROOF_IMAGE_BYTES } from "@/lib/proof-image-bytes";
 import {
   PROOFS_EMPTY_HEADING,
+  PROOFS_PHOTO_NOT_SAVED,
   itemsFromRecordProofs,
   proofsCountLine,
   proofsDateLabel,
@@ -13,6 +15,7 @@ import {
   proofsSectionShowsChallenge,
   proofsSections,
   proofsTileA11y,
+  proofsTileIsMissing,
   proofsTileLabel,
 } from "@/lib/proofs-grid";
 
@@ -84,6 +87,33 @@ describe("proofs grid copy", () => {
     expect(items[0]?.shared).toBe(true);
     expect(items[1]?.shared).toBe(false);
     expect(proofsTileLabel(items[1]!, false)).toBe("Run");
+  });
+});
+
+describe("proofs missing tile", () => {
+  it("a stub row renders Photo not saved", () => {
+    const stub = itemsFromRecordProofs([
+      {
+        dateKey: "2026-09-19",
+        day: 1,
+        imageUrl:
+          "https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/public/task-proofs/10556c76-3c37-4204-8915-fc7fd3b16a59/1789831043561-74pcldt5.jpg",
+        bytes: 1401,
+        challengeName: "Iron man",
+        taskName: "Run",
+        shared: false,
+      },
+    ])[0]!;
+    expect(stub.bytes).toBeLessThan(MIN_PROOF_IMAGE_BYTES);
+    expect(proofsTileIsMissing(stub)).toBe(true);
+    expect(PROOFS_PHOTO_NOT_SAVED).toBe("Photo not saved");
+    expect(proofsTileLabel(stub, false)).toBe("Run");
+    const grid = readFileSync(resolve(__dirname, "../components/profile/ProofsGrid.tsx"), "utf8");
+    expect(grid).toContain("PROOFS_PHOTO_NOT_SAVED");
+    expect(grid).toContain("proofsTileIsMissing");
+    expect(grid).toContain("DS_V3.color.surface");
+    expect(grid).toContain("Lock");
+    expect(grid).not.toMatch(/missing[\s\S]*Retry/);
   });
 });
 

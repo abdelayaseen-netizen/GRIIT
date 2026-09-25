@@ -5,11 +5,13 @@ import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import { gateLine } from "@/lib/task-ui";
 import { clockLabel } from "@/lib/task-flow-state";
 import { securedChallengeLine } from "@/lib/secured-day";
+import { MIN_PROOF_IMAGE_BYTES } from "@/lib/proof-image-bytes";
 
 export const PROOFS_EMPTY_HEADING = "No camera proofs yet";
 export const PROOFS_EMPTY_NEW =
   "A proof lands here when a task with the Camera gate is done. Nothing can be added from your library.";
 export const PROOFS_TAKEN_IN_APP = "Taken in the app";
+export const PROOFS_PHOTO_NOT_SAVED = "Photo not saved";
 
 const MONTHS = [
   "January",
@@ -39,6 +41,8 @@ export type ProofsGridItem = {
   gateTime: GateTime | null;
   eventId: string | null;
   shared: boolean;
+  /** Object size when known. Below `MIN_PROOF_IMAGE_BYTES` is a stub. */
+  bytes?: number | null;
 };
 
 export type ProofsSection = {
@@ -94,6 +98,16 @@ export function proofsTileLabel(
   return showChallenge ? item.challengeName : item.taskName;
 }
 
+/** Failed load or a 19 Sept-style stub (below the persist threshold). */
+export function proofsTileIsMissing(item: {
+  bytes?: number | null;
+  failed?: boolean;
+}): boolean {
+  if (item.failed === true) return true;
+  if (typeof item.bytes === "number" && item.bytes < MIN_PROOF_IMAGE_BYTES) return true;
+  return false;
+}
+
 export function proofsTileA11y(
   taskName: string,
   dateKey: string,
@@ -120,6 +134,7 @@ export function itemsFromRecordProofs(
     dateKey: string;
     day: number;
     imageUrl?: string | null;
+    bytes?: number | null;
     challengeName?: string;
     gates?: string[];
     eventId?: string | null;
@@ -149,6 +164,7 @@ export function itemsFromRecordProofs(
       gateTime: p.gateTime ?? null,
       eventId: p.eventId ?? null,
       shared: p.shared !== false,
+      bytes: typeof p.bytes === "number" ? p.bytes : null,
     });
   });
   return out;
