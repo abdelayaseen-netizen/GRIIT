@@ -351,7 +351,7 @@ describe("badgeRows helper matches fixture A", () => {
 });
 
 describe("Profile → Challenges list", () => {
-  it("omits abandoned enrollments", () => {
+  it("puts abandoned enrollments on Finished, not Running", () => {
     expect(isAbandonedEnrollment("abandoned")).toBe(true);
     expect(isAbandonedEnrollment("active")).toBe(false);
     const rec = buildProfileRecord({
@@ -362,6 +362,7 @@ describe("Profile → Challenges list", () => {
       ],
     });
     expect(rec.runs.map((r) => r.name)).toEqual(["Read Something"]);
+    expect(rec.completed.map((c) => c.name)).toEqual(["Left"]);
   });
 
   it("row Y is duration_days, not target_streak", () => {

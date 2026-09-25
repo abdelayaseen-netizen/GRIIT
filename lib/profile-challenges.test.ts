@@ -177,6 +177,57 @@ describe("rowsFromProfileRecord", () => {
     expect(rows[0]?.status).toBe("completed");
   });
 
+  it("completed 1-day enrollment with 1 secured day → \"1 of 1\"", () => {
+    const rec = buildProfileRecord({
+      todayKey: "2026-09-25",
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCompletedDateKey: null,
+      securedDateKeys: ["2026-09-23"],
+      ranges: [
+        {
+          id: "ac-water",
+          challengeId: "ch-water",
+          name: "Drink Water Today",
+          status: "completed",
+          startDateKey: "2026-09-23",
+          endDateKey: "2026-09-23",
+          durationDays: 1,
+          tasksPerDay: 1,
+        },
+      ],
+    });
+    const rows = rowsFromProfileRecord(rec);
+    expect(statusLine(rows[0]!)).toBe("1 of 1");
+    expect(rows[0]?.secured_days).toBe(1);
+  });
+
+  it("abandoned enrollment ended day 8 → listed, \"Left on day 8\"", () => {
+    const rec = buildProfileRecord({
+      todayKey: "2026-09-25",
+      currentStreak: 0,
+      bestStreak: 0,
+      lastCompletedDateKey: null,
+      securedDateKeys: ["2026-09-16", "2026-09-18", "2026-09-19"],
+      ranges: [
+        {
+          id: "ac-iron",
+          challengeId: "ch-iron",
+          name: "Iron man",
+          status: "abandoned",
+          startDateKey: "2026-09-16",
+          endDateKey: "2026-09-24",
+          durationDays: 14,
+          tasksPerDay: 1,
+        },
+      ],
+    });
+    const rows = rowsFromProfileRecord(rec);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.status).toBe("abandoned");
+    expect(statusLine(rows[0]!)).toBe("Left on day 8");
+  });
+
   it("maps failed into Finished", () => {
     const rec = buildProfileRecord({
       todayKey: "2026-09-22",

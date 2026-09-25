@@ -308,14 +308,14 @@ function streakSince(current: number, lastCompletedDateKey: string | null): stri
   return formatDayMonth(start);
 }
 
-/** Left / solo-leave enrollments never appear on Profile → Challenges. */
+/** Left / solo-leave enrollments belong on Finished with "Left on day n". */
 export function isAbandonedEnrollment(status: string): boolean {
   return status === "abandoned";
 }
 
 export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
-  const listed = input.ranges.filter((r) => !isAbandonedEnrollment(r.status));
+  const listed = input.ranges.filter((r) => r.status !== "paused");
   const activeRanges = listed.filter((r) => r.status === "active");
   const dueDayKeys = unionDueDateKeys(
     input.ranges.filter((r) => RECORD_WINDOW_STATUSES.has(r.status)),
@@ -371,13 +371,9 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
 
   const finishedRanges = listed.filter((r) => r.status !== "active");
   const completed = finishedRanges.map((range) => {
-    const lastKey = addCalendarDaysToDateKey(range.endDateKey, -1);
-    const keys: string[] = [];
-    let cursor = range.startDateKey;
-    while (cursor <= lastKey && cursor < range.endDateKey) {
-      keys.push(cursor);
-      cursor = addCalendarDaysToDateKey(cursor, 1);
-    }
+    const windowStatus = RECORD_WINDOW_STATUSES.has(range.status) ? range.status : "completed";
+    const keys = dueKeysForRange({ ...range, status: windowStatus }, input.todayKey);
+    const lastKey = keys[keys.length - 1] ?? range.startDateKey;
     const verified = keys.filter((k) => secured.has(k)).length;
     return {
       id: range.id,
@@ -389,7 +385,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       status: range.status,
       startDateKey: range.startDateKey,
       endDateKey: range.endDateKey,
-      endedOnDay: keys.length || range.durationDays,
+      endedOnDay: calendarDay(range.startDateKey, lastKey, range.durationDays),
     };
   });
 
