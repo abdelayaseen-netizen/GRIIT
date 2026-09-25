@@ -7,11 +7,14 @@
  */
 
 import { supabase } from "@/lib/supabase";
+import { isPersistedProofImage } from "@/lib/proof-image-bytes";
 
 const BUCKET = "task-proofs";
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const UPLOAD_TIMEOUT_MS = 20000;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export { isPersistedProofImage, MIN_PROOF_IMAGE_BYTES } from "@/lib/proof-image-bytes";
 
 const B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -70,6 +73,9 @@ export async function uploadProofImageFromBase64(
     buffer = base64ToArrayBuffer(base64);
   } catch {
     return { error: "Invalid image data" };
+  }
+  if (!isPersistedProofImage(buffer)) {
+    return { error: "Photo did not save. Try the camera again." };
   }
 
   const controller = new AbortController();

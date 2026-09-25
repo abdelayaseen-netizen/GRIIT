@@ -30,6 +30,20 @@ describe("proofPhotoFromCheckIn", () => {
     expect(proofPhotoFromCheckIn({ photo_url: "not-a-url" })).toBe(null);
   });
 
+  it("resolves a 19 Sept storage-path row to a loadable public URL", async () => {
+    const origin = "https://iazdfbqwudlodozgoyov.supabase.co";
+    // Production 19 Sept object: task-proofs/{userId}/{ts}-{rand}.jpg — no scheme.
+    const stored = "10556c76-3c37-4204-8915-fc7fd3b16a59/1789831043561-74pcldt5.jpg";
+    const url = proofImageUrlForCheckIn({ photo_url: stored }, origin);
+    expect(url).toBe(
+      `${origin}/storage/v1/object/public/task-proofs/${stored}`,
+    );
+    expect(isProofImageUrl(url)).toBe(true);
+    const res = await fetch(url!);
+    expect(res.ok).toBe(true);
+    expect(res.headers.get("content-type")).toMatch(/image\/jpeg/i);
+  });
+
   it("reads a checkins.complete row and accepts file:// for Secured", () => {
     // backend/trpc/routes/checkins.ts:772-774
     const written = {
