@@ -52,9 +52,9 @@ import {
   detailState,
   formatChallengeDate,
   mapParticipationType,
-  toDetailTasks,
   type DetailTask,
 } from "@/lib/challenge-detail-mapping";
+import { catalogFromChallengeRow } from "@/lib/challenge-catalog-screen";
 
 type JoinResult = { id?: string; start_at?: string };
 
@@ -120,14 +120,13 @@ export default function ChallengeDetailScreen() {
   });
 
   const activeChallengeId = useMemo(() => {
-    if (id && activeChallenge?.challenge_id === id) return activeChallenge.id;
     const list = myActiveListQuery.data;
     if (!id || !Array.isArray(list)) return undefined;
     const match = list.find((r) => (r as { challenge_id?: string }).challenge_id === id) as
       | { id?: string }
       | undefined;
     return match?.id;
-  }, [id, activeChallenge?.challenge_id, activeChallenge?.id, myActiveListQuery.data]);
+  }, [id, myActiveListQuery.data]);
 
   const enrollmentsReady =
     !user ||
@@ -201,11 +200,14 @@ export default function ChallengeDetailScreen() {
   }, [ref, user?.id, id]);
 
   const challenge = challengeQuery.data ?? null;
+  const catalog = catalogFromChallengeRow(challenge, {
+    isLoading: challengeQuery.isLoading,
+    isError: challengeQuery.isError,
+  });
   const myActiveCount = countActiveEnrollments(
     (Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data : []) as { status?: string }[],
   );
-  const tasksRaw = (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[];
-  const tasks = toDetailTasks(tasksRaw);
+  const tasks = catalog.tasks;
   const participationType = mapParticipationType(challenge?.participation_type);
   const state = detailState(
     {
@@ -249,12 +251,6 @@ export default function ChallengeDetailScreen() {
     getDeviceIanaTimeZone(),
   );
   const ended = endedEnrollmentQuery.data ?? null;
-  const endedPending =
-    !!user &&
-    enrollmentsReady &&
-    !activeChallengeId &&
-    endedEnrollmentQuery.isLoading &&
-    endedEnrollmentQuery.data === undefined;
   const finished = !activeChallengeId && ended != null;
   const startKey = ended?.start_at ? dateKeyFromIso(ended.start_at, timeZone) : "";
   const endIso = ended?.ended_at ?? ended?.end_at ?? "";
@@ -273,8 +269,7 @@ export default function ChallengeDetailScreen() {
         ended_on_day: endedOnDay,
       })
     : undefined;
-  const catalogLoading =
-    (challengeQuery.isLoading && !challenge) || !enrollmentsReady || !!activeChallengeId || endedPending;
+  const catalogLoading = catalog.loading;
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_HOME as never);
@@ -468,7 +463,7 @@ export default function ChallengeDetailScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         {error ? <InlineError message={error} onDismiss={clearError} /> : null}
         <ChallengeDetailV3
-          title={challenge?.title?.trim() || "Challenge"}
+          title={catalog.title}
           description={description || undefined}
           durationDays={durationDays}
           participationType={participationType}
@@ -484,10 +479,7 @@ export default function ChallengeDetailScreen() {
           startsOn={formatChallengeDate(challenge?.live_date)}
           joining={joining}
           loading={catalogLoading}
-          error={
-            !catalogLoading &&
-            (challengeQuery.isError || (!challengeQuery.isLoading && !challenge))
-          }
+          error={catalog.error}
           invite={finished ? undefined : invite}
           finishedLine={catalogLoading ? undefined : finishedLine}
           onBack={goBack}

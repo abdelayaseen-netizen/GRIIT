@@ -110,11 +110,12 @@ describe("challenge catalog screen branches", () => {
   const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
   const detail = readFileSync(resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"), "utf8");
 
-  it("renders the screen skeleton while enrollments load, never null", () => {
+  it("renders the screen skeleton while the challenges row loads, never null", () => {
     expect(catalog).not.toMatch(/if\s*\(\s*!enrollmentsReady\s*\|\|\s*activeChallengeId\s*\)\s*\{\s*return null/);
     expect(catalog).toContain("catalogLoading");
     expect(catalog).toContain("loading={catalogLoading}");
-    expect(catalog).toContain("!enrollmentsReady || !!activeChallengeId || endedPending");
+    expect(catalog).toContain("catalogFromChallengeRow");
+    expect(catalog).not.toContain("!enrollmentsReady || !!activeChallengeId || endedPending");
   });
 
   it("finished enrollment shows statusLine header and Start again, never Join", () => {
