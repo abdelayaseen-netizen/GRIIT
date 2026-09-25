@@ -111,6 +111,25 @@ export function historyEndDateKey(
   return dateKeyFromIsoInTimeZone(row.end_at, timeZone);
 }
 
+/**
+ * Exclusive end for half-open [start, end) windows.
+ * Abandoned: day after ended_at. Same-day 1-day runs: day after start.
+ */
+export function exclusiveEndDateKey(
+  row: { status: string; end_at: string; ended_at?: string | null },
+  startDateKey: string,
+  timeZone: string,
+): string {
+  const last = historyEndDateKey(row, timeZone);
+  if (row.status === "abandoned") {
+    return addCalendarDaysToDateKey(last, 1);
+  }
+  if (!last || last <= startDateKey) {
+    return addCalendarDaysToDateKey(startDateKey, 1);
+  }
+  return last;
+}
+
 export function tasksDueOnDay(dateKey: string, enrollments: EnrollmentTasks[]): TallyTask[] {
   const seen = new Set<string>();
   const out: TallyTask[] = [];

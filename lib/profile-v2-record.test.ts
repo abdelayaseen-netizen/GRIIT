@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DS_COLORS_V2 } from "@/lib/design-system";
 import { PROFILE_V2_BADGES } from "@/lib/profile-v2-badges";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
+import { consistencyHeadline, consistencyLine } from "@/lib/consistency";
 import {
   DAY_STATE,
   badgeRows,
@@ -140,7 +141,7 @@ describe("runStates / weeklyAverage", () => {
 });
 
 describe("Q7 due days — status active, from join date, paused excluded", () => {
-  it("unions overlapping active ranges and ignores non-active", () => {
+  it("unions overlapping ranges and ignores paused", () => {
     const paused: ChallengeRangeInput = {
       ...readSomething("2026-08-01", 30),
       id: "paused",
@@ -152,10 +153,67 @@ describe("Q7 due days — status active, from join date, paused excluded", () =>
       status: "completed",
     };
     const keys = unionDueDateKeys([fixtureTwelve().ranges[0]!, paused, completed], TODAY);
-    expect(keys[0]).toBe("2026-08-25");
+    expect(keys[0]).toBe("2026-07-01");
     expect(keys[keys.length - 1]).toBe(TODAY);
     expect(keys).not.toContain("2026-08-01");
-    expect(keys).not.toContain("2026-07-01");
+    expect(keys).toContain("2026-07-01");
+  });
+});
+
+describe("account summary includes abandoned windows", () => {
+  it("enrollment A active since Sep 22; enrollment B abandoned Sep 23 with start Sep 16 and secured days 16, 18, 19 → headline 3 of 7, first proof Sep 16, total secured includes those days", () => {
+    const today = "2026-09-23";
+    const rec = buildProfileRecord({
+      todayKey: today,
+      currentStreak: 1,
+      bestStreak: 1,
+      lastCompletedDateKey: today,
+      securedDateKeys: ["2026-09-16", "2026-09-18", "2026-09-19"],
+      ranges: [
+        {
+          id: "a",
+          challengeId: "ch-a",
+          name: "Read 30 min",
+          status: "active",
+          startDateKey: "2026-09-22",
+          endDateKey: "2026-10-22",
+          durationDays: 30,
+          tasksPerDay: 1,
+        },
+        {
+          id: "b",
+          challengeId: "ch-b",
+          name: "Iron man",
+          status: "abandoned",
+          startDateKey: "2026-09-16",
+          endDateKey: "2026-09-24",
+          durationDays: 14,
+          tasksPerDay: 1,
+        },
+      ],
+    });
+    expect(rec.consistency.dueDayKeys[0]).toBe("2026-09-16");
+    expect(rec.consistency.closedDueDays).toBe(7);
+    expect(rec.consistency.verifiedClosed).toBe(3);
+    expect(rec.detail.totalVerified).toBe(3);
+    expect(rec.detail.firstProof).toBe("16 Sep 2026");
+    expect(rec.detail.completion).toBe("3 of 7 due days");
+    expect(
+      consistencyHeadline({
+        secured: rec.consistency.verifiedClosed,
+        due: rec.consistency.closedDueDays,
+        dueToday: rec.consistency.dueToday,
+        firstDueDate: rec.consistency.dueDayKeys[0] ?? null,
+      }),
+    ).toBe("3 of 7 days");
+    expect(
+      consistencyLine({
+        secured: rec.consistency.verifiedClosed,
+        due: rec.consistency.closedDueDays,
+        dueToday: rec.consistency.dueToday,
+        firstDueDate: rec.consistency.dueDayKeys[0] ?? null,
+      }),
+    ).toBe("3 of 7 days secured.");
   });
 });
 

@@ -1,10 +1,9 @@
 /**
  * Profile v2 record — one derived payload from due days + verified days + streaks.
  *
- * Due day (Q7): a calendar day in `profiles.timezone` that sits inside an
- * `active_challenges` row date range (`start_at` → `end_at`, half-open),
- * `status = 'active'`, from the join date (`start_at`). Paused / completed /
- * abandoned excluded. A date in two runs is one due day.
+ * Due day: a calendar day in `profiles.timezone` inside an enrollment window
+ * (`start_at` → exclusive end), status in active / completed / abandoned.
+ * Abandoned last day is `ended_at`. Paused excluded. A date in two runs is one due day.
  *
  * Verified: `day_secures.date_key`.
  * Streak: `streaks.active_streak_count` / `longest_streak_count` — same read as Home.
@@ -83,7 +82,7 @@ export type ChallengeRangeInput = {
   id: string;
   challengeId: string;
   name: string;
-  /** `active_challenges.status` — only `active` generates due days. */
+  /** `active_challenges.status` — active, completed, and abandoned generate due days. */
   status: string;
   /** Join calendar day in the user's timezone (`start_at`). */
   startDateKey: string;
@@ -194,12 +193,14 @@ function compareKeys(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-/** Half-open [startDateKey, endDateKey) clipped to today, from the join date. */
+const RECORD_WINDOW_STATUSES = new Set(["active", "completed", "abandoned"]);
+
+/** Half-open [startDateKey, endDateKey) clipped to today. Abandoned / completed count. */
 export function dueKeysForRange(
   range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
   todayKey: string
 ): string[] {
-  if (range.status !== "active") return [];
+  if (!RECORD_WINDOW_STATUSES.has(range.status)) return [];
   const start = range.startDateKey;
   const end = range.endDateKey;
   if (!start || start > todayKey) return [];
@@ -316,7 +317,10 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
   const listed = input.ranges.filter((r) => !isAbandonedEnrollment(r.status));
   const activeRanges = listed.filter((r) => r.status === "active");
-  const dueDayKeys = unionDueDateKeys(activeRanges, input.todayKey);
+  const dueDayKeys = unionDueDateKeys(
+    input.ranges.filter((r) => RECORD_WINDOW_STATUSES.has(r.status)),
+    input.todayKey,
+  );
   const closedDueKeys = dueDayKeys.filter((k) => k < input.todayKey);
   const verifiedClosedKeys = closedDueKeys.filter((k) => secured.has(k));
   const dueToday = dueDayKeys.includes(input.todayKey);

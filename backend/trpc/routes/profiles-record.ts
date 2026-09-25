@@ -20,6 +20,7 @@ import {
 } from "../../lib/date-utils";
 import {
   buildRecordDays,
+  exclusiveEndDateKey,
   historyEndDateKey,
   monthKeyFromDateKey,
   type EnrollmentTasks,
@@ -306,16 +307,19 @@ export const profilesRecordProcedures = {
         tasksById.set(t.challenge_id, (tasksById.get(t.challenge_id) ?? 0) + 1);
       }
 
-      const ranges: ChallengeRangeInput[] = acRows.map((row) => ({
-        id: row.id,
-        challengeId: row.challenge_id,
-        name: titleById.get(row.challenge_id) ?? "Challenge",
-        status: row.status,
-        startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
-        endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
-        durationDays: durationById.get(row.challenge_id) ?? 30,
-        tasksPerDay: tasksById.get(row.challenge_id) ?? 1,
-      }));
+      const ranges: ChallengeRangeInput[] = acRows.map((row) => {
+        const startDateKey = dateKeyFromIsoInTimeZone(row.start_at, timezone);
+        return {
+          id: row.id,
+          challengeId: row.challenge_id,
+          name: titleById.get(row.challenge_id) ?? "Challenge",
+          status: row.status,
+          startDateKey,
+          endDateKey: exclusiveEndDateKey(row, startDateKey, timezone),
+          durationDays: durationById.get(row.challenge_id) ?? 30,
+          tasksPerDay: tasksById.get(row.challenge_id) ?? 1,
+        };
+      });
 
       const streakRow = streakRes.data as {
         active_streak_count?: number | null;

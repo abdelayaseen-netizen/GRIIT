@@ -5,6 +5,7 @@ import {
   RECORD_DAY_STATE,
   buildRecordDays,
   cameraProvenTaskCount,
+  exclusiveEndDateKey,
   firstDueDateKey,
   historyEndDateKey,
   monthDateKeys,
@@ -183,6 +184,17 @@ describe("tasksDueOnDay", () => {
     expect(tasksDueOnDay("2026-09-22", [en])).toEqual([{ id: "dg", title: "Write 3 gratitudes" }]);
     expect(tasksDueOnDay("2026-09-23", [en])).toEqual([]);
     expect(tasksDueOnDay("2026-09-16", [en])).toHaveLength(1);
+    expect(
+      exclusiveEndDateKey(
+        {
+          status: "abandoned",
+          end_at: "2026-10-15T23:59:59.999Z",
+          ended_at: "2026-09-23T16:00:00.000Z",
+        },
+        "2026-09-16",
+        "UTC",
+      ),
+    ).toBe("2026-09-24");
   });
 
   it("a future-start enrollment contributes nothing", () => {
@@ -212,5 +224,6 @@ describe("getRecord history query", () => {
     expect(src).toContain('.in("status", ["active", "completed", "abandoned"])');
     expect(src).not.toContain("applyEnrollmentWindow");
     expect(src).toContain("historyEndDateKey(row, timezone)");
+    expect(src).toContain("exclusiveEndDateKey(row, startDateKey, timezone)");
   });
 });
