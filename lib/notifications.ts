@@ -30,7 +30,7 @@ import { SchedulableTriggerInputTypes } from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import { captureError } from "@/lib/sentry";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import {
   pickTemplate,
   type NotifVars,
@@ -623,7 +623,7 @@ export async function registerForPushNotificationsAsync(opts?: {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: DS_COLORS.DISCOVER_CORAL,
+      lightColor: DS_V3.color.brand,
     });
 
     return tokenData.data;

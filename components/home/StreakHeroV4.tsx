@@ -25,7 +25,7 @@ import {
   Clock,
   Snowflake,
 } from 'lucide-react-native';
-import { DS_COLORS_V2, DS_RADIUS_V2 } from '@/lib/design-system';
+import { DS_V3, DS_RADIUS_V2 } from '@/lib/design-system';
 import { calendarDay, clampCalendarDay } from '@/lib/home-day-total';
 import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
@@ -136,7 +136,7 @@ function flameStateFor(
 function CountdownBanner({ minutesRemaining }: { minutesRemaining: number }) {
   return (
     <View style={styles.countdownBanner} accessibilityRole="alert">
-      <Clock size={16} color={DS_COLORS_V2.brand.primary} strokeWidth={2} />
+      <Clock size={16} color={DS_V3.color.brand} strokeWidth={2} />
       <Text style={styles.countdownText}>
         Streak ends in {minutesRemaining} minutes
       </Text>
@@ -181,7 +181,7 @@ function TaskRow({
         ]}
       >
         {task.done ? (
-          <Check size={13} color={DS_COLORS_V2.brand.primaryText} strokeWidth={3} />
+          <Check size={13} color={DS_V3.color.brandText} strokeWidth={3} />
         ) : null}
       </View>
       <Text style={styles.taskName} numberOfLines={1}>
@@ -216,28 +216,28 @@ function HeaderBlock({
 
   if (streak == null) {
     label = 'Current streak';
-    labelColor = DS_COLORS_V2.text.tertiary;
+    labelColor = DS_V3.color.textSecondary;
     caption = 'Updating streak.';
   } else {
     switch (state) {
       case 'day0':
         label = 'Current streak';
-        labelColor = DS_COLORS_V2.text.tertiary;
+        labelColor = DS_V3.color.textSecondary;
         caption = 'Post today to reach day 1.';
         break;
       case 'atRisk':
         label = 'Current streak';
-        labelColor = DS_COLORS_V2.brand.primary;
+        labelColor = DS_V3.color.brand;
         caption = "Don't break the chain.";
         break;
       case 'secured':
         label = 'Streak secured';
-        labelColor = DS_COLORS_V2.brand.primary;
+        labelColor = DS_V3.color.brand;
         caption = '+1 day stronger.';
         break;
       default: {
         label = 'Current streak';
-        labelColor = DS_COLORS_V2.text.tertiary;
+        labelColor = DS_V3.color.textSecondary;
         const days = Math.max(0, nextBadgeDaysAway);
         caption = !nextBadgeName
           ? "All five marks earned."
@@ -300,7 +300,7 @@ function PrimaryCTA({
       style={({ pressed }) => [styles.cta, pressed ? styles.rowPressed : null]}
     >
       {withIcon ? (
-        <Camera size={18} color={DS_COLORS_V2.brand.primaryText} strokeWidth={2} />
+        <Camera size={18} color={DS_V3.color.brandText} strokeWidth={2} />
       ) : null}
       <Text style={styles.ctaText}>{label}</Text>
     </Pressable>
@@ -336,7 +336,7 @@ function FreezeButton({
       <Snowflake
         size={16}
         color={
-          disabled ? DS_COLORS_V2.text.tertiary : DS_COLORS_V2.brand.primary
+          disabled ? DS_V3.color.textSecondary : DS_V3.color.brand
         }
         strokeWidth={2}
       />
@@ -552,12 +552,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     borderRadius: DS_RADIUS_V2.xl,
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_V3.color.brandTint,
   },
   countdownText: {
     fontSize: 16,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
     flex: 1,
   },
 
@@ -578,14 +578,14 @@ const styles = StyleSheet.create({
   streakNumber: {
     fontSize: 64,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
     letterSpacing: -1.5,
     lineHeight: 68,
   },
   daysWord: {
     fontSize: 18,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
     marginBottom: 12,
   },
   flameWrap: {
@@ -594,15 +594,15 @@ const styles = StyleSheet.create({
   caption: {
     fontSize: 13,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
     marginTop: 6,
   },
 
   // ── White "Today's proof" card ──
   proofCard: {
-    backgroundColor: DS_COLORS_V2.surface.card,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_V3.color.border,
     borderRadius: 22,
     padding: 20,
   },
@@ -619,17 +619,17 @@ const styles = StyleSheet.create({
   proofTitle: {
     fontSize: 20,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
     letterSpacing: -0.2,
   },
   proofSubtitle: {
     fontSize: 13.5,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
     marginTop: 3,
   },
   countPill: {
-    backgroundColor: DS_COLORS_V2.brand.primarySoft,
+    backgroundColor: DS_V3.color.brandTint,
     borderRadius: 20,
     paddingHorizontal: 13,
     paddingVertical: 7,
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   countPillText: {
     fontSize: 13,
     fontWeight: '500',
-    color: DS_COLORS_V2.brand.primary,
+    color: DS_V3.color.brand,
   },
 
   // ── Task rows ──
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: DS_COLORS_V2.surface.divider,
+    backgroundColor: DS_V3.color.border,
   },
   taskRow: {
     flexDirection: 'row',
@@ -666,26 +666,26 @@ const styles = StyleSheet.create({
   },
   taskCheckPending: {
     borderWidth: 2,
-    borderColor: DS_COLORS_V2.surface.divider,
+    borderColor: DS_V3.color.border,
     backgroundColor: 'transparent',
   },
   taskCheckDone: {
-    backgroundColor: DS_COLORS_V2.text.primary,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   taskName: {
     flex: 1,
     fontSize: 17,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
   },
   taskMeta: {
     fontSize: 13,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
   },
   emptyTasks: {
     fontSize: 13,
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
     marginTop: 12,
     paddingVertical: 6,
   },
@@ -697,13 +697,13 @@ const styles = StyleSheet.create({
   badgeTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: DS_COLORS_V2.surface.cardChipNeutral,
+    backgroundColor: DS_V3.color.surface,
     overflow: 'hidden',
   },
   badgeFill: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_V3.color.brand,
   },
 
   // ── CTAs ──
@@ -720,12 +720,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_V3.color.brand,
   },
   ctaText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_COLORS_V2.brand.primaryText,
+    color: DS_V3.color.brandText,
   },
   freezeBtn: {
     flexDirection: 'row',
@@ -736,8 +736,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    backgroundColor: DS_COLORS_V2.surface.cardSubtle,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
   },
   freezeBtnDisabled: {
     backgroundColor: 'transparent',
@@ -745,25 +745,25 @@ const styles = StyleSheet.create({
   freezeBtnText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
   },
   freezeBtnTextDisabled: {
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
   },
   ghostCta: {
     flex: 1,
     height: 52,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: DS_COLORS_V2.surface.divider,
-    backgroundColor: DS_COLORS_V2.surface.card,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ghostCtaText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_COLORS_V2.text.primary,
+    color: DS_V3.color.textPrimary,
   },
 
   // ── "Come back tomorrow" — inert, no onPress ──
@@ -774,6 +774,6 @@ const styles = StyleSheet.create({
   comeBackText: {
     fontSize: 13,
     fontWeight: '400',
-    color: DS_COLORS_V2.text.tertiary,
+    color: DS_V3.color.textSecondary,
   },
 });

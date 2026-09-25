@@ -1,4 +1,4 @@
-import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 /** Server `getSecuredDateKeys` only. Checkins are not an input. */
 export function homeSecuredToday(keys: string[], todayKey: string): boolean {
@@ -15,7 +15,7 @@ export function homeProofFilled(securedToday: boolean): {
 } {
   return {
     posted: securedToday,
-    circleFill: securedToday ? DS_COLORS_V2.brand.primary : DS_V3.color.border,
+    circleFill: securedToday ? DS_V3.color.brand : DS_V3.color.border,
     todaySquareFilled: securedToday,
   };
 }

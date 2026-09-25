@@ -12,7 +12,7 @@ import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { pickAvatar } from "@/lib/pick-avatar";
 import { isValidAccountUsername } from "@/lib/onboarding-v2-account-name";
 import { normalizeOnboardingUsername, persistThenAdvance } from "@/lib/onboarding-v2-profile";
-import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
 const PHOTO = DS_V3.space.gutter * 4 + DS_V3.space.sm;
@@ -225,7 +225,7 @@ function Field({
         <Text
           style={[
             styles.hint,
-            { color: hintTone === "error" ? DS_V3.color.danger : DS_COLORS_V2.semantic.success },
+            { color: hintTone === "error" ? DS_V3.color.danger : DS_V3.color.brand },
           ]}
         >
           {hint}

@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trackEvent } from "@/lib/analytics";
 import FormInput from "@/components/shared/FormInput";
 import { captureError } from "@/lib/sentry";
@@ -55,8 +55,8 @@ function CreateProfileScreenInner() {
 
   const inputBorder = useCallback(
     (field: string) => {
-      if (field === "username" && usernameError) return DS_COLORS.errorText;
-      return focusedField === field ? DS_COLORS.borderFocus : DS_COLORS.border;
+      if (field === "username" && usernameError) return DS_V3.color.danger;
+      return focusedField === field ? DS_V3.color.brand : DS_V3.color.border;
     },
     [focusedField, usernameError]
   );
@@ -147,16 +147,16 @@ function CreateProfileScreenInner() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={DS_COLORS.accent} />
+          <ActivityIndicator size="large" color={DS_V3.color.brand} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -248,7 +248,7 @@ function CreateProfileScreenInner() {
           accessibilityState={{ disabled: !canContinue }}
         >
           {saving ? (
-            <ActivityIndicator color={DS_COLORS.textPrimary} size="small" />
+            <ActivityIndicator color={DS_V3.color.textPrimary} size="small" />
           ) : (
             <Text style={[styles.ctaText, !canContinue && styles.ctaTextDisabled]}>Continue</Text>
           )}
@@ -275,32 +275,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 1.2,
-    color: DS_COLORS.accent,
+    color: DS_V3.color.brand,
     textTransform: "uppercase",
     marginBottom: 8,
   },
   title: {
     fontSize: 28,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     fontWeight: "400",
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     marginBottom: 0,
   },
   gap24: { height: 24 },
   gap20: { height: 20 },
   input: {
-    backgroundColor: DS_COLORS.card,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
     borderRadius: DS_RADIUS.MD,
     height: 52,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: 12,
   },
   bioInput: {
@@ -310,31 +310,31 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 12,
-    color: DS_COLORS.textMuted,
+    color: DS_V3.color.textSecondary,
     marginTop: -4,
     marginBottom: 8,
   },
   inlineError: {
     fontSize: 13,
-    color: DS_COLORS.errorText,
+    color: DS_V3.color.danger,
     marginBottom: 12,
   },
   cta: {
     height: 56,
     borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
   ctaDisabled: {
-    backgroundColor: DS_COLORS.buttonDisabledBg,
+    backgroundColor: DS_V3.color.border,
   },
   ctaText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   ctaTextDisabled: {
-    color: DS_COLORS.buttonDisabledText,
+    color: DS_V3.color.textSecondary,
   },
 });

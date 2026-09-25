@@ -1,8 +1,8 @@
 import { StyleSheet } from "react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
+import { DS_V3, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS } from "@/lib/design-system";
 
 export const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: DS_COLORS.background },
+  safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -10,21 +10,21 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   backBtn: { padding: 4 },
   backBtnCircle: {
     width: 40,
     height: 40,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.settingsBackCircle,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   headerSpacer: { width: 40 },
   scroll: { flex: 1 },
@@ -45,36 +45,36 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   sectionTitleLarge: {
     fontSize: DS_TYPOGRAPHY.sectionTitle.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: DS_SPACING.sm,
   },
   sectionTitleFriends: {
     fontSize: DS_TYPOGRAPHY.cardTitle.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: DS_SPACING.md,
   },
   privacyDesc: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
     marginBottom: DS_SPACING.md,
     lineHeight: 22,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
   },
   card: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.cardAlt,
     borderWidth: DS_BORDERS.width,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     padding: DS_SPACING.cardPadding,
   },
   deleteModalBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_COLORS.MODAL_BACKDROP,
+    backgroundColor: DS_V3.color.canvas,
   },
   deleteModalCenter: {
     flex: 1,
@@ -98,7 +98,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  deleteConfirmBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.white },
+  deleteConfirmBtnText: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textPrimary },
   deleteCancelBtn: {
     borderWidth: 1,
     borderRadius: DS_RADIUS.button,
@@ -121,7 +121,7 @@ export const styles = StyleSheet.create({
   friendsNum: {
     fontSize: DS_TYPOGRAPHY.statValue.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   friendsLabel: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
@@ -136,7 +136,7 @@ export const styles = StyleSheet.create({
   cardDivider: {
     height: 1,
     marginVertical: DS_SPACING.md,
-    backgroundColor: DS_COLORS.border,
+    backgroundColor: DS_V3.color.border,
   },
   toggleRow: {
     flexDirection: "row",
@@ -147,11 +147,11 @@ export const styles = StyleSheet.create({
   toggleTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: "500",
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   toggleSub: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    color: DS_COLORS.textMuted,
+    color: DS_V3.color.textSecondary,
     marginTop: 2,
   },
   consequenceCard: { gap: DS_SPACING.lg },
@@ -175,7 +175,7 @@ export const styles = StyleSheet.create({
   consequenceTitle: {
     fontSize: DS_TYPOGRAPHY.bodySmall.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   reminderPill: {
     paddingHorizontal: DS_SPACING.lg,
@@ -185,15 +185,15 @@ export const styles = StyleSheet.create({
   reminderPillActive: {},
   reminderPillText: {
     fontSize: DS_TYPOGRAPHY.secondary.fontSize,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
   },
   reminderPillTextActive: {
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },
   consequenceSub: {
     fontSize: DS_TYPOGRAPHY.metadata.fontSize,
-    color: DS_COLORS.textMuted,
+    color: DS_V3.color.textSecondary,
     marginTop: 2,
   },
   bottomSpacer: { height: DS_SPACING.xxxl },

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { DS_COLORS_V2 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 export function TaskChrome({
   title,
@@ -11,7 +11,7 @@ export function TaskChrome({
   dark?: boolean;
   onBack: () => void;
 }) {
-  const color = dark ? "rgba(255,255,255,0.6)" : DS_COLORS_V2.text.mutedWarm;
+  const color = dark ? "rgba(255,255,255,0.6)" : DS_V3.color.textSecondary;
   return (
     <View style={styles.bar}>
       <Pressable
@@ -21,10 +21,10 @@ export function TaskChrome({
         hitSlop={8}
         style={({ pressed }) => [
           styles.back,
-          pressed && { backgroundColor: dark ? "rgba(255,255,255,0.1)" : DS_COLORS_V2.surface.warm },
+          pressed && { backgroundColor: dark ? "rgba(255,255,255,0.1)" : DS_V3.color.surface },
         ]}
       >
-        <View style={[styles.chevron, { borderColor: dark ? DS_COLORS_V2.text.onDark : DS_COLORS_V2.text.primary }]} />
+        <View style={[styles.chevron, { borderColor: dark ? DS_V3.color.textPrimary : DS_V3.color.textPrimary }]} />
       </Pressable>
       <Text style={[styles.title, { color, marginRight: 44 }]} numberOfLines={1}>
         {title}

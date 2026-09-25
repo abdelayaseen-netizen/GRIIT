@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { TaskChrome } from "./TaskChrome";
 import { styles } from "./taskFlowStyles";
@@ -33,7 +33,7 @@ export function TaskFlowV2() {
     <View
       style={[
         styles.root,
-        f.dark && { backgroundColor: DS_COLORS_V2.surface.camera },
+        f.dark && { backgroundColor: DS_V3.color.canvas },
         (f.step === "verifying" || f.step === "ask") && { backgroundColor: DS_V3.color.canvas },
       ]}
     >

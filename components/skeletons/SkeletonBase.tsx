@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated, StyleSheet, View, type ViewStyle } from "react-native";
-import { DS_COLORS } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 interface SkeletonBaseProps {
   width?: number | string;
@@ -89,6 +89,6 @@ export const SkeletonBase = React.memo(function SkeletonBase({
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: DS_COLORS.skeletonBg,
+    backgroundColor: DS_V3.color.surface,
   },
 });

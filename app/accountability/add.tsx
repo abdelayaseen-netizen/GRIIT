@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -21,6 +21,7 @@ import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { greetingName } from "@/lib/profile-display";
 
 type SearchHit = { user_id: string; username: string; display_name: string };
 
@@ -114,7 +115,7 @@ function AddAccountabilityPartnerScreenInner() {
       return (
         <View style={styles.row}>
           <View style={styles.rowText}>
-            <Text style={styles.rowTitle}>{item.display_name || item.username || "User"}</Text>
+            <Text style={styles.rowTitle}>{greetingName({ display_name: item.display_name, username: item.username }) ?? item.username}</Text>
             <Text style={styles.rowSub}>@{item.username}</Text>
           </View>
           <TouchableOpacity
@@ -126,7 +127,7 @@ function AddAccountabilityPartnerScreenInner() {
             accessibilityState={{ disabled: isInviting }}
           >
             {isInviting ? (
-              <ActivityIndicator size="small" color={DS_COLORS.white} />
+              <ActivityIndicator size="small" color={DS_V3.color.textPrimary} />
             ) : (
               <Text style={styles.inviteBtnText}>Invite</Text>
             )}
@@ -158,7 +159,7 @@ function AddAccountabilityPartnerScreenInner() {
           <TextInput
             style={styles.input}
             placeholder="Search by handle..."
-            placeholderTextColor={DS_COLORS.textMuted}
+            placeholderTextColor={DS_V3.color.textSecondary}
             value={query}
             onChangeText={onQueryChange}
             autoCapitalize="none"
@@ -167,7 +168,7 @@ function AddAccountabilityPartnerScreenInner() {
           />
           {searching && (
             <View style={styles.searchingWrap}>
-              <ActivityIndicator size="small" color={DS_COLORS.accent} />
+              <ActivityIndicator size="small" color={DS_V3.color.brand} />
             </View>
           )}
         </View>
@@ -204,7 +205,7 @@ export default function AddAccountabilityPartnerScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: DS_COLORS.background },
+  screenContainer: { flex: 1, backgroundColor: DS_V3.color.canvas },
   flex: { flex: 1 },
   header: {
     flexDirection: "row",
@@ -213,26 +214,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   backBtn: {},
-  backText: { fontSize: 16, color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary },
+  backText: { fontSize: 16, color: DS_V3.color.brand, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  headerTitle: { fontSize: 18, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary },
   headerSpacer: { width: 56 },
   inputWrap: { padding: 16, position: "relative" },
   input: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     borderRadius: DS_RADIUS.MD,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   searchingWrap: { position: "absolute", right: 28, top: 28 },
   empty: { padding: 24, alignItems: "center" },
-  emptyText: { fontSize: 15, color: DS_COLORS.textSecondary },
+  emptyText: { fontSize: 15, color: DS_V3.color.textSecondary },
   listContent: { paddingHorizontal: 16, paddingBottom: 32 },
   row: {
     flexDirection: "row",
@@ -240,18 +241,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: DS_COLORS.border,
+    borderBottomColor: DS_V3.color.border,
   },
   rowText: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.textPrimary },
-  rowSub: { fontSize: 13, color: DS_COLORS.textSecondary, marginTop: 2 },
+  rowTitle: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textPrimary },
+  rowSub: { fontSize: 13, color: DS_V3.color.textSecondary, marginTop: 2 },
   inviteBtn: {
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: DS_RADIUS.MD,
     minWidth: 80,
     alignItems: "center",
   },
-  inviteBtnText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.white },
+  inviteBtnText: { fontSize: 15, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary },
 });

@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Shield, Snowflake } from "lucide-react-native";
-import { DS_COLORS_V2, DS_V3 } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import {
   WEEK_STRIP_WEEKDAYS,
   weekStripAccessibilityLabel,
@@ -72,7 +72,7 @@ function Square({
     backgroundColor: interpolateColor(
       fillProgress.value,
       [0, 1],
-      [DS_V3.color.canvas, DS_COLORS_V2.brand.primary]
+      [DS_V3.color.canvas, DS_V3.color.brand]
     ),
   }));
 
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.canvas,
   },
   squareFilled: {
-    backgroundColor: DS_COLORS_V2.brand.primary,
+    backgroundColor: DS_V3.color.brand,
   },
   squareMarked: {
     backgroundColor: DS_V3.color.surface,
@@ -179,6 +179,6 @@ const styles = StyleSheet.create({
   },
   today: {
     borderWidth: STROKE,
-    borderColor: DS_COLORS_V2.brand.primary,
+    borderColor: DS_V3.color.brand,
   },
 });

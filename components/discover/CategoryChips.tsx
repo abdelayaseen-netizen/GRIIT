@@ -15,7 +15,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react-native";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 /**
  * `all` is kept as an alias for legacy callers; new code should use `for_you`
@@ -72,8 +72,8 @@ export const CategoryChips = React.memo(function CategoryChips({
       {CHIPS.map(({ id, label, Icon }) => {
         const isSelected = selected === id;
         const textColor = isSelected
-          ? DS_DAYLIGHT.color.accent
-          : DS_DAYLIGHT.color.inkSecondary;
+          ? DS_V3.color.brand
+          : DS_V3.color.textSecondary;
         return (
           <Pressable
             key={id}
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
-    paddingHorizontal: DS_DAYLIGHT.space.screenH,
-    paddingVertical: DS_DAYLIGHT.space.rowGapV,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingVertical: DS_V3.space.md,
   },
   chip: {
     flexDirection: "row",
@@ -119,14 +119,14 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 9,
-    borderRadius: DS_DAYLIGHT.radius.pill,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
-    borderColor: DS_DAYLIGHT.color.cardBorder,
+    borderColor: DS_V3.color.border,
   },
   chipSelected: {
-    backgroundColor: DS_DAYLIGHT.color.accentTint,
-    borderColor: DS_DAYLIGHT.color.accentTint,
+    backgroundColor: DS_V3.color.brandTint,
+    borderColor: DS_V3.color.brandTint,
   },
   iconWrap: {
     width: ICON_SIZE,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontFamily: DS_DAYLIGHT.fontFamily,
+    fontFamily: undefined,
     fontSize: 14,
   },
   labelSelected: {
-    fontWeight: DS_DAYLIGHT.weight.semibold,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
   },
   labelUnselected: {
-    fontWeight: DS_DAYLIGHT.weight.regular,
+    fontWeight: DS_V3.type.body.fontWeight,
   },
 });

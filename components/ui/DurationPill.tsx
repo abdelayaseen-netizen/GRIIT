@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -32,19 +32,19 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: DS_SPACING.lg,
     borderRadius: DS_RADIUS.input,
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
   },
   pillSelected: {
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 2,
-    borderColor: DS_COLORS.accent,
+    borderColor: DS_V3.color.brand,
   },
   text: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
-  textSelected: { color: DS_COLORS.accent },
+  textSelected: { color: DS_V3.color.brand },
 });

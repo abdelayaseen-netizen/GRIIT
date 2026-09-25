@@ -41,7 +41,7 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
-      const displayName = (input.displayName ?? "").trim() || "User";
+      const displayName = (input.displayName ?? "").trim() || (input.username ?? "").trim();
       const rawUsername = (input.username ?? "").trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 20);
       const baseUsername = rawUsername.length >= 3 ? rawUsername : displayName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";
       const uniqueUsername = baseUsername.length >= 3 ? `${baseUsername}_${userId.slice(0, 6)}` : `user_${userId.slice(0, 8)}`;

@@ -52,7 +52,7 @@ const TEMPLATES: Record<NotifCategory, { title: string; body: string }[]> = {
     { title: "Week closed", body: "{secured}/{totalDays} days. {streak}-day streak. Every rep counts." },
   ],
   streak_celebration: [
-    { title: "🔥 {streak}-day streak!", body: "You're in the top 10% of GRIIT users. Don't stop now." },
+    { title: "{streak}-day streak", body: "You're in the top 10% of GRIIT users. Don't stop now." },
     { title: "{streak} days of discipline", body: "Most people quit by Day 3. You didn't. Share your proof." },
     { title: "Milestone: {streak} days", body: "That's {streak} days of choosing hard over easy. Respect." },
     { title: "Streak unlocked: {streak}", body: "Your discipline is rare. Only 12% of users make it this far." },

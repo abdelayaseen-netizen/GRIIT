@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { Image } from "expo-image";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_TYPOGRAPHY } from "@/lib/design-system";
 import { getDisplayInitials, getFeedAvatarBgFromUserId } from "@/lib/utils";
 
 type AvatarProps = {
@@ -16,12 +16,12 @@ type AvatarProps = {
 };
 
 /**
- * Circular profile image or initials; tokens only — no raw hex outside DS_COLORS.
+ * Circular profile image or initials; tokens only — no raw hex outside DS_V3.
  */
 export function Avatar({ url, name, size, userId, bgColor, style }: AvatarProps) {
   const initialSource = name.trim() || "?";
   const fallbackBg =
-    bgColor ?? (userId ? getFeedAvatarBgFromUserId(userId) : DS_COLORS.DISCOVER_CORAL);
+    bgColor ?? (userId ? getFeedAvatarBgFromUserId(userId) : DS_V3.color.brand);
   const fontSize = Math.max(10, Math.round(size * 0.36));
 
   const radius = size / 2;
@@ -61,7 +61,7 @@ export function Avatar({ url, name, size, userId, bgColor, style }: AvatarProps)
 
 const styles = StyleSheet.create({
   img: {
-    backgroundColor: DS_COLORS.photoThumbBg,
+    backgroundColor: DS_V3.color.surface,
   },
   fallback: {
     alignItems: "center",
@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   },
   letter: {
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_ON_DARK,
+    color: DS_V3.color.textPrimary,
   },
 });

@@ -1,20 +1,20 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const INITIAL_CIRCLE_COLORS = [
-  DS_COLORS.AVATAR_COLOR_1,
-  DS_COLORS.AVATAR_COLOR_2,
-  DS_COLORS.AVATAR_COLOR_3,
-  DS_COLORS.AVATAR_COLOR_4,
-  DS_COLORS.AVATAR_COLOR_5,
-  DS_COLORS.AVATAR_COLOR_6,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandTint,
+  DS_V3.color.brandTint,
 ] as const;
 
 function getInitialColor(username: string): string {
   const code = (username || "?").charCodeAt(0) ?? 0;
   const idx = code % INITIAL_CIRCLE_COLORS.length;
-  return INITIAL_CIRCLE_COLORS[idx] ?? DS_COLORS.AVATAR_COLOR_1;
+  return INITIAL_CIRCLE_COLORS[idx] ?? DS_V3.color.brandTint;
 }
 
 export function InitialCircle({ username, size = 44 }: { username: string; size?: number }) {
@@ -34,7 +34,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    color: DS_COLORS.WHITE,
+    color: DS_V3.color.textPrimary,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
   },
 });

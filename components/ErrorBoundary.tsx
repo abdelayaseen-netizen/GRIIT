@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { reportClientError } from "@/lib/client-error-reporting";
 import { logger } from "@/lib/logger";
 
@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
             style={[
               styles.message,
               styles.stackTrace,
-              { color: DS_COLORS.TEXT_TERTIARY },
+              { color: DS_V3.color.textSecondary },
             ]}
           >
             {(this.state.error.stack ?? "")
@@ -67,17 +67,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: DS_COLORS.overlayDarker,
+    backgroundColor: DS_V3.color.canvas,
   },
   title: {
     fontSize: 18,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
     marginBottom: 8,
   },
   message: {
     fontSize: 15,
-    color: DS_COLORS.grayMuted,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginBottom: 24,
   },
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   button: {
-    backgroundColor: DS_COLORS.taskIndigo,
+    backgroundColor: DS_V3.color.brand,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: DS_RADIUS.MD,
@@ -98,6 +98,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
 });

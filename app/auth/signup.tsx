@@ -19,7 +19,7 @@ import { track, trackEvent } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
+import { DS_V3, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
 import { GRIITWordmark } from "@/components/ui/GRIITWordmark";
 import { InlineError } from "@/components/InlineError";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -222,13 +222,13 @@ function SignupScreenInner() {
   const usernameInvalid = usernameInvalidLength || usernameInvalidChars;
 
   const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
-    if (touched[field] && !isValid) return DS_COLORS.danger;
-    if (focusedField === field) return DS_COLORS.accent;
-    return DS_COLORS.border;
+    if (touched[field] && !isValid) return DS_V3.color.danger;
+    if (focusedField === field) return DS_V3.color.brand;
+    return DS_V3.color.border;
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_COLORS.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -264,8 +264,8 @@ function SignupScreenInner() {
               error={displayNameError ?? undefined}
               inputStyle={{
                 borderColor: getInputBorderColor("displayName", !displayNameError),
-                backgroundColor: DS_COLORS.surface,
-                color: DS_COLORS.textPrimary,
+                backgroundColor: DS_V3.color.surface,
+                color: DS_V3.color.textPrimary,
               }}
               accessibilityLabel="Display name — what we call you"
             />
@@ -288,15 +288,15 @@ function SignupScreenInner() {
               }}
               inputStyle={{
                 borderColor: getInputBorderColor("username", !usernameInvalid && usernameStatus !== "taken"),
-                backgroundColor: DS_COLORS.surface,
-                color: DS_COLORS.textPrimary,
+                backgroundColor: DS_V3.color.surface,
+                color: DS_V3.color.textPrimary,
               }}
               accessibilityLabel="Username — this is how others will find you"
             />
             {username.length > 0 && (
               <View style={styles.usernameHint}>
                 {usernameStatus === "checking" && (
-                  <ActivityIndicator size="small" color={DS_COLORS.textSecondary} />
+                  <ActivityIndicator size="small" color={DS_V3.color.textSecondary} />
                 )}
                 {usernameStatus === "available" && (
                   <Text style={styles.availableText}>✓ Available</Text>
@@ -332,21 +332,21 @@ function SignupScreenInner() {
               error={emailError ?? undefined}
               inputStyle={{
                 borderColor: getInputBorderColor("email", !emailError),
-                backgroundColor: DS_COLORS.surface,
-                color: DS_COLORS.textPrimary,
+                backgroundColor: DS_V3.color.surface,
+                color: DS_V3.color.textPrimary,
               }}
               accessibilityLabel="Email address"
             />
             <InlineError message={emailError} />
             {touched.email && !emailError ? <InlineError message="Email looks valid." variant="success" /> : null}
 
-            <Text style={[styles.label, { color: DS_COLORS.textPrimary }]}>Password</Text>
-            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordError), backgroundColor: DS_COLORS.surface }]}>
+            <Text style={[styles.label, { color: DS_V3.color.textPrimary }]}>Password</Text>
+            <View style={[styles.passwordRow, { borderColor: getInputBorderColor("password", !passwordError), backgroundColor: DS_V3.color.surface }]}>
               <TextInput
                 ref={passwordRef}
-                style={[styles.passwordInput, { color: DS_COLORS.textPrimary }]}
+                style={[styles.passwordInput, { color: DS_V3.color.textPrimary }]}
                 placeholder="At least 8 characters"
-                placeholderTextColor={DS_COLORS.textSecondary}
+                placeholderTextColor={DS_V3.color.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 onFocus={() => setFocusedField("password")}
@@ -365,9 +365,9 @@ function SignupScreenInner() {
                 accessibilityLabel={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <EyeOff size={22} color={DS_COLORS.textSecondary} />
+                  <EyeOff size={22} color={DS_V3.color.textSecondary} />
                 ) : (
-                  <Eye size={22} color={DS_COLORS.textSecondary} />
+                  <Eye size={22} color={DS_V3.color.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -395,7 +395,7 @@ function SignupScreenInner() {
                     strength !== "strong" && styles.strengthBarInactive,
                   ]}
                 />
-                <Text style={[styles.strengthLabel, { color: DS_COLORS.textSecondary }]}>
+                <Text style={[styles.strengthLabel, { color: DS_V3.color.textSecondary }]}>
                   {strength === "weak" && "Weak"}
                   {strength === "medium" && "Medium"}
                   {strength === "strong" && "Strong"}
@@ -418,7 +418,7 @@ function SignupScreenInner() {
               accessibilityState={{ disabled: !canSubmit }}
             >
               {loading ? (
-                <ActivityIndicator color={DS_COLORS.white} size="small" />
+                <ActivityIndicator color={DS_V3.color.textPrimary} size="small" />
               ) : (
                 <Text style={styles.buttonText}>Create Account</Text>
               )}
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: DS_TYPOGRAPHY.pageTitle.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_EXTRABOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginTop: DS_SPACING.xxxl,
     marginBottom: DS_SPACING.xxl,
   },
@@ -500,12 +500,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.xl,
     paddingVertical: DS_SPACING.lg,
     fontSize: DS_TYPOGRAPHY.body.fontSize,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: DS_SPACING.lg,
   },
   usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -DS_SPACING.sm, marginBottom: DS_SPACING.sm },
-  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.success, fontWeight: "500" },
-  takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_COLORS.danger, fontWeight: "500" },
+  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.brand, fontWeight: "500" },
+  takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.danger, fontWeight: "500" },
   passwordRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -531,19 +531,19 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.SM,
   },
   strengthBarInactive: { opacity: 0.25 },
-  strengthWeak: { backgroundColor: DS_COLORS.danger },
-  strengthMedium: { backgroundColor: DS_COLORS.warning },
-  strengthStrong: { backgroundColor: DS_COLORS.success },
+  strengthWeak: { backgroundColor: DS_V3.color.danger },
+  strengthMedium: { backgroundColor: DS_V3.color.brand },
+  strengthStrong: { backgroundColor: DS_V3.color.brand },
   strengthLabel: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, marginLeft: DS_SPACING.xs },
   inlineError: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    color: DS_COLORS.danger,
+    color: DS_V3.color.danger,
     marginTop: DS_SPACING.xs,
     marginLeft: DS_SPACING.xs,
     marginBottom: DS_SPACING.xs,
   },
   button: {
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     borderRadius: DS_RADIUS.buttonPill,
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: DS_TYPOGRAPHY.button.fontSize,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
   footer: {
     flexDirection: "row",
@@ -562,13 +562,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: DS_SPACING.lg,
   },
-  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_COLORS.textSecondary },
-  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_COLORS.accent },
+  footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_V3.color.textSecondary },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.brand },
   termsText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginTop: DS_SPACING.xxl,
   },
-  termsLink: { color: DS_COLORS.accent, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  termsLink: { color: DS_V3.color.brand, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
 });

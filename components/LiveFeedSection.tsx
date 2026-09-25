@@ -20,7 +20,7 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { useAuth } from "@/contexts/AuthContext";
-import { DS_COLORS, DS_COLORS_V2, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_DAYLIGHT, DS_V3 } from "@/lib/design-system";
+import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
@@ -80,7 +80,7 @@ function FriendsEmptyState({
 
   return (
     <View style={styles.emptyFriends}>
-      <Users size={40} color={DS_COLORS.TEXT_MUTED} strokeWidth={1.75} />
+      <Users size={40} color={DS_V3.color.textSecondary} strokeWidth={1.75} />
       <Text style={styles.emptyFriendsTitle}>Your feed is quiet</Text>
       <Text style={styles.emptyFriendsBody}>
         Follow people in Discover to see their check-ins here, or switch to Everyone to see the
@@ -282,7 +282,7 @@ function LiveFeedSection({
     try {
       const handle = post.username || post.displayName || "Someone";
       await Share.share({
-        message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT! 💪`,
+        message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT.`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
       try {
@@ -584,7 +584,7 @@ function LiveFeedSection({
           <RefreshControl
             refreshing={isPulling}
             onRefresh={handleRefresh}
-            tintColor={DS_COLORS.ACCENT}
+            tintColor={DS_V3.color.brand}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -657,7 +657,7 @@ function LiveFeedSection({
                   accessibilityRole="button"
                   accessibilityLabel={`Block ${androidMenuPost.username}`}
                 >
-                  <Ban size={18} color={DS_COLORS_V2.semantic.danger} strokeWidth={2} />
+                  <Ban size={18} color={DS_V3.color.danger} strokeWidth={2} />
                   <Text style={styles.androidMenuBlock}>{`Block @${androidMenuPost.username}`}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -722,9 +722,9 @@ const styles = StyleSheet.create({
   feedHeaderLeft: { flex: 1 },
   feedTitleRow: { flexDirection: "row", alignItems: "baseline", gap: 8, flexWrap: "wrap" },
   feedTitle: {
-    fontSize: DS_DAYLIGHT.size.greeting,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: DS_V3.type.title.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
     letterSpacing: -0.5,
   },
   liveRow: { flexDirection: "row", alignItems: "center", gap: 5 },
@@ -732,12 +732,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_COLORS.FEED_BADGE_GREEN,
+    backgroundColor: DS_V3.color.brand,
   },
-  liveCountMeta: { fontSize: 11, color: DS_COLORS.FEED_LIVE_LABEL, fontWeight: "500" },
+  liveCountMeta: { fontSize: 11, color: DS_V3.color.textSecondary, fontWeight: "500" },
   feedToggle: {
     flexDirection: "row",
-    backgroundColor: DS_COLORS.FEED_TAB_INACTIVE_BG,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.iconButton,
     padding: 3,
   },
@@ -745,13 +745,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 16,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.TRANSPARENT,
+    backgroundColor: "transparent",
   },
   togglePillActive: {
-    backgroundColor: DS_COLORS.FEED_TAB_ACTIVE_BG,
+    backgroundColor: DS_V3.color.brandTint,
   },
-  toggleText: { fontSize: 12, color: DS_COLORS.FEED_ENGAGEMENT_MUTED, fontWeight: "500" },
-  toggleTextActive: { color: DS_COLORS.FEED_TAB_ACTIVE_TEXT, fontWeight: "500" },
+  toggleText: { fontSize: 12, color: DS_V3.color.textSecondary, fontWeight: "500" },
+  toggleTextActive: { color: DS_V3.color.brandText, fontWeight: "500" },
     listContent: {
       paddingHorizontal: 0,
       backgroundColor: DS_V3.color.canvas,
@@ -760,9 +760,9 @@ const styles = StyleSheet.create({
   feedSkeletonStack: { gap: 10, paddingHorizontal: 4, paddingTop: 4 },
   listItemSeparator: { height: DS_V3.space.md },
   empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },
-  emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.TEXT_PRIMARY, marginBottom: 6 },
-  emptySub: { fontSize: 12, color: DS_COLORS.TEXT_SECONDARY, textAlign: "center" },
-  retry: { fontSize: 13, color: DS_COLORS.DISCOVER_CORAL, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
+  emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary, marginBottom: 6 },
+  emptySub: { fontSize: 12, color: DS_V3.color.textSecondary, textAlign: "center" },
+  retry: { fontSize: 13, color: DS_V3.color.brand, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
   emptyFriends: {
     alignItems: "center",
     paddingVertical: 32,
@@ -772,12 +772,12 @@ const styles = StyleSheet.create({
   emptyFriendsTitle: {
     fontSize: 16,
     fontWeight: "500",
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
     marginTop: 4,
   },
   emptyFriendsBody: {
     fontSize: 13,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     maxWidth: 280,
     lineHeight: 18,
@@ -787,17 +787,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_COLORS.ACCENT,
+    backgroundColor: DS_V3.color.brand,
   },
   emptyFriendsCtaText: {
     fontSize: 13,
     fontWeight: "500",
-    color: DS_COLORS.TEXT_ON_ACCENT,
+    color: DS_V3.color.onBrand,
   },
   feedSnack: {
     textAlign: "center",
     fontSize: 13,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     paddingHorizontal: 20,
     paddingBottom: 8,
   },
@@ -807,10 +807,10 @@ const styles = StyleSheet.create({
   },
   androidMenuBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_COLORS.OVERLAY_BLACK_45,
+    backgroundColor: DS_V3.color.canvas,
   },
   androidMenuSheet: {
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 28,
@@ -826,18 +826,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  androidMenuDefault: { fontSize: 17, color: DS_COLORS.TEXT_PRIMARY, fontWeight: "500" },
-  androidMenuDestructive: { fontSize: 17, color: DS_COLORS.errorText, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  androidMenuBlock: { fontSize: 17, color: DS_COLORS_V2.semantic.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
-  androidMenuCancel: { fontSize: 17, color: DS_COLORS.TEXT_SECONDARY, fontWeight: "500" },
+  androidMenuDefault: { fontSize: 17, color: DS_V3.color.textPrimary, fontWeight: "500" },
+  androidMenuDestructive: { fontSize: 17, color: DS_V3.color.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  androidMenuBlock: { fontSize: 17, color: DS_V3.color.danger, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  androidMenuCancel: { fontSize: 17, color: DS_V3.color.textSecondary, fontWeight: "500" },
   digestCard: {
     marginHorizontal: DS_SPACING.sm,
     marginBottom: DS_SPACING.sm,
     padding: DS_SPACING.md,
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
-    borderColor: DS_COLORS.BORDER,
+    borderColor: DS_V3.color.border,
     flexDirection: "row",
     alignItems: "center",
     gap: DS_SPACING.md,
@@ -846,18 +846,18 @@ const styles = StyleSheet.create({
   digestAvatarWrap: {
     marginLeft: -10,
     borderWidth: 2,
-    borderColor: DS_COLORS.WHITE,
+    borderColor: DS_V3.color.textPrimary,
     borderRadius: DS_RADIUS.LG,
   },
   digestText: {
     flex: 1,
     fontSize: DS_TYPOGRAPHY.SIZE_XS,
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     fontWeight: "500",
     lineHeight: 18,
   },
   thoughtCard: {
-    backgroundColor: DS_COLORS.BG_CARD,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.XL,
     overflow: "hidden",
     paddingBottom: DS_SPACING.sm,
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
   thoughtEyebrow: {
     fontSize: 9,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.TEXT_MUTED,
+    color: DS_V3.color.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     paddingHorizontal: 14,
@@ -877,9 +877,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: DS_COLORS.BG_CARD_TINTED,
+    backgroundColor: DS_V3.color.surface,
     borderLeftWidth: 3,
-    borderLeftColor: DS_COLORS.ACCENT,
+    borderLeftColor: DS_V3.color.brand,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderTopRightRadius: 10,
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   thoughtQuoteText: {
     fontSize: 11,
     fontStyle: "italic",
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
     lineHeight: 17,
   },
 });

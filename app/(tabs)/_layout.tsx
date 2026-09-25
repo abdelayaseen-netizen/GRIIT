@@ -3,7 +3,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { DS_COLORS, DS_DAYLIGHT, DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
+import { DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
 import TabBar, { type TabBarTab } from "@/components/ds/TabBar";
 import { ROUTES } from "@/lib/routes";
 
@@ -56,7 +56,7 @@ export default function TabLayout() {
       tabBar={(props) => <GritTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        sceneStyle: { backgroundColor: DS_DAYLIGHT.color.canvas },
+        sceneStyle: { backgroundColor: DS_V3.color.canvas },
       }}
     >
       <Tabs.Screen
@@ -117,20 +117,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-    backgroundColor: DS_COLORS.BG_PRIMARY,
+    backgroundColor: DS_V3.color.canvas,
   },
   errorBoundaryTitle: {
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 8,
     textAlign: "center",
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
   },
   errorBoundaryMessage: {
     fontSize: 13,
     marginBottom: 20,
     textAlign: "center",
-    color: DS_COLORS.TEXT_SECONDARY,
+    color: DS_V3.color.textSecondary,
   },
   errorBoundaryButton: {
     backgroundColor: GRIIT_COLORS.primary,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.joinCta,
   },
   errorBoundaryButtonText: {
-    color: DS_COLORS.WHITE,
+    color: DS_V3.color.textPrimary,
     fontWeight: "500",
   },
 });

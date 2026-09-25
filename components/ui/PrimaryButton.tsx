@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_MEASURES, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import {
   TouchableOpacity,
@@ -11,7 +11,7 @@ import {
 
 /** Inlined from lib/theme/shadows.ts `shadows.button` — value-preserving migration (Phase 2). */
 const PRIMARY_BUTTON_SHADOW_BUTTON = {
-  shadowColor: DS_COLORS.shadowBlack,
+  shadowColor: DS_V3.color.canvas,
   shadowOffset: { width: 0, height: 6 } as const,
   shadowOpacity: 0.1,
   shadowRadius: 12,
@@ -30,11 +30,11 @@ type Variant = "black" | "accent" | "success" | "ghost" | "outline" | "create" |
 const HEIGHT = 56;
 
 const variantStyles: Record<Exclude<Variant, "create" | "createGreen">, { bg: string; text: string; border?: string }> = {
-  black: { bg: DS_COLORS.black, text: DS_COLORS.white },
-  accent: { bg: DS_COLORS.accent, text: DS_COLORS.white },
-  success: { bg: DS_COLORS.success, text: DS_COLORS.white },
-  ghost: { bg: "transparent", text: DS_COLORS.textPrimary },
-  outline: { bg: "transparent", text: DS_COLORS.textPrimary, border: DS_COLORS.border },
+  black: { bg: DS_V3.color.canvas, text: DS_V3.color.textPrimary },
+  accent: { bg: DS_V3.color.brand, text: DS_V3.color.textPrimary },
+  success: { bg: DS_V3.color.brand, text: DS_V3.color.textPrimary },
+  ghost: { bg: "transparent", text: DS_V3.color.textPrimary },
+  outline: { bg: "transparent", text: DS_V3.color.textPrimary, border: DS_V3.color.border },
 };
 
 type PrimaryButtonProps = {
@@ -85,7 +85,7 @@ function PrimaryButtonInner({
         testID={testID}
       >
         {loading ? (
-          <ActivityIndicator size="small" color={DS_COLORS.white} />
+          <ActivityIndicator size="small" color={DS_V3.color.textPrimary} />
         ) : (
           <Text style={createStyles.text}>{title}</Text>
         )}
@@ -150,13 +150,13 @@ const createStyles = StyleSheet.create({
   button: {
     height: DS_MEASURES.CTA_HEIGHT,
     borderRadius: DS_RADIUS.card,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: DS_SPACING.xxl,
   },
   buttonGreen: {
-    backgroundColor: DS_COLORS.createChallengeGreen,
+    backgroundColor: DS_V3.color.brand,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -167,6 +167,6 @@ const createStyles = StyleSheet.create({
   text: {
     fontSize: 17,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
   },
 });

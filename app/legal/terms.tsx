@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DS_COLORS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_V3, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
@@ -41,12 +41,12 @@ export default function TermsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: DS_COLORS.background },
+  container: { flex: 1, backgroundColor: DS_V3.color.canvas },
   scroll: { flex: 1 },
   content: { padding: DS_SPACING.screenHorizontal, paddingBottom: DS_SPACING.xxxl },
-  title: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary, marginBottom: 4 },
-  updated: { fontSize: 13, color: DS_COLORS.textMuted, marginBottom: DS_SPACING.xl },
+  title: { fontSize: 22, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary, marginBottom: 4 },
+  updated: { fontSize: 13, color: DS_V3.color.textSecondary, marginBottom: DS_SPACING.xl },
   section: { marginBottom: DS_SPACING.xl },
-  heading: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_COLORS.textPrimary, marginBottom: 6 },
-  body: { fontSize: 14, color: DS_COLORS.textSecondary, lineHeight: 22 },
+  heading: { fontSize: 16, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary, marginBottom: 6 },
+  body: { fontSize: 14, color: DS_V3.color.textSecondary, lineHeight: 22 },
 });

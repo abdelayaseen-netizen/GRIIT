@@ -78,7 +78,7 @@ export default function Avatar({
         <User
           size={ICON}
           color={DS_V3.color.textPrimary}
-          accessibilityLabel="User"
+          accessibilityLabel={displayName || undefined}
         />
       )}
     </View>

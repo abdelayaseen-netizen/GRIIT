@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_RADIUS } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS } from "@/lib/design-system";
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
@@ -24,7 +24,7 @@ export function CreateFlowCheckbox({ checked, onPress, label, accessibilityLabel
       accessibilityState={{ checked }}
     >
       <View style={[styles.box, checked && styles.boxChecked]}>
-        {checked && <Check size={14} color={DS_COLORS.white} strokeWidth={2.5} />}
+        {checked && <Check size={14} color={DS_V3.color.textPrimary} strokeWidth={2.5} />}
       </View>
       <Text style={styles.label}>{label}</Text>
     </TouchableOpacity>
@@ -41,21 +41,21 @@ const styles = StyleSheet.create({
     width: BOX_SIZE,
     height: BOX_SIZE,
     borderRadius: DS_RADIUS.featuredBadge,
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1.5,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
   },
   boxChecked: {
-    backgroundColor: DS_COLORS.success,
-    borderColor: DS_COLORS.success,
+    backgroundColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.brand,
   },
   label: {
     fontSize: 16,
     fontWeight: "500",
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     flex: 1,
   },
 });

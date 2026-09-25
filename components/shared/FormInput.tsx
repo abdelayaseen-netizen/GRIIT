@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 type Props = {
   label: string;
@@ -54,7 +54,7 @@ export default function FormInput({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={DS_COLORS.TEXT_MUTED}
+        placeholderTextColor={DS_V3.color.textSecondary}
         style={[s.input, multiline && s.inputMultiline, error && s.inputError, inputStyle]}
         accessibilityLabel={accessibilityLabel ?? label}
         secureTextEntry={secureTextEntry}
@@ -77,19 +77,19 @@ export default function FormInput({
 
 const s = StyleSheet.create({
   wrap: { marginBottom: DS_SPACING.md },
-  label: { marginBottom: DS_SPACING.xs, color: DS_COLORS.TEXT_PRIMARY, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  label: { marginBottom: DS_SPACING.xs, color: DS_V3.color.textPrimary, fontSize: DS_TYPOGRAPHY.SIZE_SM, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
   input: {
     borderWidth: 1,
-    borderColor: DS_COLORS.BORDER,
+    borderColor: DS_V3.color.border,
     borderRadius: DS_RADIUS.input,
-    backgroundColor: DS_COLORS.WHITE,
+    backgroundColor: DS_V3.color.textPrimary,
     paddingHorizontal: DS_SPACING.md,
     paddingVertical: DS_SPACING.md,
-    color: DS_COLORS.TEXT_PRIMARY,
+    color: DS_V3.color.textPrimary,
     fontSize: DS_TYPOGRAPHY.SIZE_BASE,
   },
-  inputError: { borderColor: DS_COLORS.DANGER },
+  inputError: { borderColor: DS_V3.color.danger },
   inputMultiline: { minHeight: 100, paddingTop: DS_SPACING.md },
-  error: { marginTop: DS_SPACING.xs, color: DS_COLORS.DANGER, fontSize: DS_TYPOGRAPHY.SIZE_XS },
+  error: { marginTop: DS_SPACING.xs, color: DS_V3.color.danger, fontSize: DS_TYPOGRAPHY.SIZE_XS },
 });
 

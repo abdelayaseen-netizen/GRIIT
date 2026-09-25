@@ -1,4 +1,4 @@
-import { DS_COLORS, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_MEASURES, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
@@ -58,10 +58,10 @@ export const TaskTypeCard = React.memo(TaskTypeCardInner);
 const styles = StyleSheet.create({
   card: {
     height: 120,
-    backgroundColor: DS_COLORS.surface,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.card,
     borderWidth: 2,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
@@ -77,11 +77,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "500",
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   description: {
     fontSize: 11,
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginTop: 4,
     lineHeight: 14,

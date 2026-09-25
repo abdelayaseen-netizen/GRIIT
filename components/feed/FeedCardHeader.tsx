@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Check, MoreHorizontal } from "lucide-react-native";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 import { Avatar } from "@/components/Avatar";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { ROUTES } from "@/lib/routes";
@@ -73,7 +73,7 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
         {completedToday ? (
           <View style={styles.badgeOuter}>
             <View style={styles.badgeGreen}>
-              <Check size={8} color={DS_DAYLIGHT.color.white} strokeWidth={3} />
+              <Check size={8} color={DS_V3.color.textPrimary} strokeWidth={3} />
             </View>
           </View>
         ) : showStreakBadge ? (
@@ -119,7 +119,7 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Post options"
       >
-        <MoreHorizontal size={20} color={DS_DAYLIGHT.color.iconMuted} />
+        <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
       </Pressable>
     </View>
   );
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 14,
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: DS_V3.space.gutter,
   },
   avatarWrap: { position: "relative" },
   badgeOuter: {
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: DS_DAYLIGHT.color.card,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -158,31 +158,31 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: DS_DAYLIGHT.color.accent,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeStreakText: {
     fontSize: 9,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.white,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   headerMid: { flex: 1, marginLeft: 11, minWidth: 0 },
   username: {
-    fontSize: DS_DAYLIGHT.size.bodyLg,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: DS_V3.type.body.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   usernameTime: {
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   subtitle: {
     marginTop: 2,
-    fontSize: DS_DAYLIGHT.size.meta,
-    fontWeight: DS_DAYLIGHT.weight.regular,
-    color: DS_DAYLIGHT.color.inkMuted2,
+    fontSize: DS_V3.type.caption.fontSize,
+    fontWeight: DS_V3.type.body.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   menuBtn: { padding: 4, alignSelf: "flex-start", marginTop: 2 },
 });

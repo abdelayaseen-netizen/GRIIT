@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Pressable, Animated } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Heart, MessageCircle, ArrowUpRight } from "lucide-react-native";
-import { DS_DAYLIGHT } from "@/lib/design-system";
+import { DS_V3 } from "@/lib/design-system";
 
 type Props = {
   respectCount: number;
@@ -56,8 +56,8 @@ function FeedEngagementRowInner({
           <Animated.View style={{ transform: [{ scale: heartBounce }] }}>
             <Heart
               size={23}
-              color={DS_DAYLIGHT.color.accent}
-              fill={reactedByMe ? DS_DAYLIGHT.color.accent : "none"}
+              color={DS_V3.color.brand}
+              fill={reactedByMe ? DS_V3.color.brand : "none"}
             />
           </Animated.View>
         </Pressable>
@@ -75,12 +75,12 @@ function FeedEngagementRowInner({
       </View>
 
       <Pressable onPress={onComment} style={styles.item} hitSlop={8} accessibilityRole="button" accessibilityLabel="Comments">
-        <MessageCircle size={22} color={DS_DAYLIGHT.color.iconInk} strokeWidth={2} />
+        <MessageCircle size={22} color={DS_V3.color.textPrimary} strokeWidth={2} />
         {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
       </Pressable>
 
       <Pressable onPress={onShare} style={styles.item} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share">
-        <ArrowUpRight size={22} color={DS_DAYLIGHT.color.iconInk} strokeWidth={2} />
+        <ArrowUpRight size={22} color={DS_V3.color.textPrimary} strokeWidth={2} />
       </Pressable>
     </View>
   );
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 13,
-    paddingHorizontal: DS_DAYLIGHT.space.cardPad,
+    paddingHorizontal: DS_V3.space.gutter,
     gap: 22,
   },
   item: {
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   count: {
-    fontSize: DS_DAYLIGHT.size.body,
-    fontWeight: DS_DAYLIGHT.weight.semibold,
-    color: DS_DAYLIGHT.color.ink,
+    fontSize: DS_V3.type.secondary.fontSize,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
 });

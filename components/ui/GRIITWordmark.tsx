@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, StyleSheet, Platform } from "react-native";
-import { DS_COLORS, DS_TYPOGRAPHY, DS_SPACING } from "@/lib/design-system";
+import { DS_V3, DS_TYPOGRAPHY, DS_SPACING } from "@/lib/design-system";
 
 type GRIITWordmarkProps = {
   subtitle?: string;
@@ -17,8 +17,8 @@ export function GRIITWordmark({
   compact = false,
   spaced: _spaced = false,
 }: GRIITWordmarkProps) {
-  const textColor = color || DS_COLORS.TEXT_PRIMARY;
-  const subColor = subtitleColor || DS_COLORS.TEXT_SECONDARY;
+  const textColor = color || DS_V3.color.textPrimary;
+  const subColor = subtitleColor || DS_V3.color.textSecondary;
 
   return (
     <View style={compact ? styles.compactWrap : styles.wrap}>

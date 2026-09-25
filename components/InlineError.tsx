@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Text, StyleSheet, Animated, TouchableOpacity } from "react-native";
 import { AlertCircle, X } from "lucide-react-native";
-import { DS_COLORS, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import { DS_V3, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
 
 interface InlineErrorProps {
   message: string | null;
@@ -12,22 +12,22 @@ interface InlineErrorProps {
 
 const VARIANT_STYLES = {
   error: {
-    bg: DS_COLORS.DANGER_BG,
-    border: DS_COLORS.alertRedBorder,
-    text: DS_COLORS.dangerDarkest,
-    icon: DS_COLORS.DANGER,
+    bg: DS_V3.color.brandTint,
+    border: DS_V3.color.danger,
+    text: DS_V3.color.danger,
+    icon: DS_V3.color.danger,
   },
   warning: {
-    bg: DS_COLORS.amberLightBg,
-    border: DS_COLORS.WARNING,
-    text: DS_COLORS.amberDarkText,
-    icon: DS_COLORS.WARNING,
+    bg: DS_V3.color.brandTint,
+    border: DS_V3.color.brand,
+    text: DS_V3.color.brandText,
+    icon: DS_V3.color.brand,
   },
   success: {
-    bg: DS_COLORS.GREEN_BG,
-    border: DS_COLORS.COMPLETED_BORDER,
-    text: DS_COLORS.emeraldDark,
-    icon: DS_COLORS.GREEN,
+    bg: DS_V3.color.brandTint,
+    border: DS_V3.color.border,
+    text: DS_V3.color.brand,
+    icon: DS_V3.color.brand,
   },
 } as const;
 

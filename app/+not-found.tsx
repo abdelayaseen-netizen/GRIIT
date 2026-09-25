@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Link, Stack } from 'expo-router';
-import { DS_COLORS, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 
 export default function NotFoundScreen() {
   return (
@@ -27,28 +27,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: DS_COLORS.black,
+    backgroundColor: DS_V3.color.canvas,
   },
   title: {
     fontSize: 24,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.white,
+    color: DS_V3.color.textPrimary,
     marginBottom: 12,
   },
   message: {
     fontSize: 16,
-    color: DS_COLORS.inputPlaceholder,
+    color: DS_V3.color.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
   },
   button: {
-    backgroundColor: DS_COLORS.white,
+    backgroundColor: DS_V3.color.textPrimary,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: DS_RADIUS.SM,
   },
   buttonText: {
-    color: DS_COLORS.black,
+    color: DS_V3.color.canvas,
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
   },

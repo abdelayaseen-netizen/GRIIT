@@ -18,7 +18,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
-import { DS_DAYLIGHT } from '@/lib/design-system';
+import { DS_V3 } from '@/lib/design-system';
 
 export type StreakFlameState =
   | 'day0'
@@ -82,48 +82,46 @@ type Palette = {
 };
 
 function paletteFor(state: StreakFlameState): Palette {
-  const c = DS_DAYLIGHT.color;
-  // Daylight uses ONE orange selection language — the flame reads as a calm,
-  // solid accent glyph. day0/frozen drop to neutral ink-muted tones.
+  const c = DS_V3.color;
   switch (state) {
     case 'day0':
       return {
-        outer: c.iconMuted,
-        outerStroke: c.iconMuted,
-        inner: c.pillNeutral,
+        outer: c.textSecondary,
+        outerStroke: c.textSecondary,
+        inner: c.surface,
       };
     case 'building':
       return {
-        outer: c.accent,
-        outerStroke: c.accent,
-        inner: c.accentTint,
+        outer: c.brand,
+        outerStroke: c.brand,
+        inner: c.brandTint,
       };
     case 'locked':
       return {
-        outer: c.accent,
-        outerStroke: c.accent,
-        inner: c.accentTint,
-        hotspot: c.white,
+        outer: c.brand,
+        outerStroke: c.brand,
+        inner: c.brandTint,
+        hotspot: c.textPrimary,
       };
     case 'onFire':
       return {
-        outer: c.accent,
-        outerStroke: c.accent,
-        inner: c.accentTint,
-        hotspot: c.white,
-        center: c.accent,
+        outer: c.brand,
+        outerStroke: c.brand,
+        inner: c.brandTint,
+        hotspot: c.textPrimary,
+        center: c.brand,
       };
     case 'atRisk':
       return {
-        outer: c.accent,
-        outerStroke: c.accent,
-        inner: c.accentTint,
+        outer: c.brand,
+        outerStroke: c.brand,
+        inner: c.brandTint,
       };
     case 'frozen':
       return {
-        outer: c.inkMuted3,
-        outerStroke: c.inkMuted2,
-        inner: c.pillNeutral,
+        outer: c.textSecondary,
+        outerStroke: c.textSecondary,
+        inner: c.surface,
       };
   }
 }
@@ -163,7 +161,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               stroke={p.outerStroke}
               strokeWidth={1.5}
             />
-            <Path d={FLAME_MID_ON_FIRE} fill={DS_DAYLIGHT.color.accent} />
+            <Path d={FLAME_MID_ON_FIRE} fill={DS_V3.color.brand} />
             <Path d={FLAME_INNER_ON_FIRE} fill={p.inner} />
             {p.hotspot ? (
               <Circle cx={24} cy={36} r={4.5} fill={p.hotspot} />
@@ -207,7 +205,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={12}
               x2={24}
               y2={26}
-              stroke={DS_DAYLIGHT.color.inkMuted2}
+              stroke={DS_V3.color.textSecondary}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -216,7 +214,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={19}
               x2={31}
               y2={19}
-              stroke={DS_DAYLIGHT.color.inkMuted2}
+              stroke={DS_V3.color.textSecondary}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -225,7 +223,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={14}
               x2={29}
               y2={24}
-              stroke={DS_DAYLIGHT.color.inkMuted2}
+              stroke={DS_V3.color.textSecondary}
               strokeWidth={1.5}
               strokeLinecap="round"
             />
@@ -234,7 +232,7 @@ export function StreakFlame({ streak, state, size = 52 }: StreakFlameProps) {
               y1={14}
               x2={19}
               y2={24}
-              stroke={DS_DAYLIGHT.color.inkMuted2}
+              stroke={DS_V3.color.textSecondary}
               strokeWidth={1.5}
               strokeLinecap="round"
             />

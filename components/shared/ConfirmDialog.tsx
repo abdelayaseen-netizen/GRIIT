@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Pressable } from "react-native";
-import { DS_COLORS, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
+import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 export type ConfirmDialogProps = {
   visible: boolean;
@@ -64,20 +64,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: DS_SPACING.lg,
-    backgroundColor: DS_COLORS.modalBackdrop,
+    backgroundColor: DS_V3.color.canvas,
   },
   card: {
     zIndex: 1,
-    backgroundColor: DS_COLORS.card,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_RADIUS.LG,
     padding: DS_SPACING.xl,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
   },
   title: {
     fontSize: 17,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
     marginBottom: DS_SPACING.sm,
     textAlign: "center",
   },
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     fontWeight: "400",
-    color: DS_COLORS.textSecondary,
+    color: DS_V3.color.textSecondary,
     marginBottom: DS_SPACING.xl,
     textAlign: "center",
   },
@@ -98,32 +98,32 @@ const styles = StyleSheet.create({
     paddingVertical: DS_SPACING.md,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
-    borderColor: DS_COLORS.border,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
   },
   btnSecondaryText: {
     fontSize: 13,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   btnPrimary: {
     flex: 1,
     paddingVertical: DS_SPACING.md,
     borderRadius: DS_RADIUS.MD,
-    backgroundColor: DS_COLORS.accent,
+    backgroundColor: DS_V3.color.brand,
     alignItems: "center",
   },
   btnPrimaryText: {
     fontSize: 13,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
-    color: DS_COLORS.textPrimary,
+    color: DS_V3.color.textPrimary,
   },
   btnDestructive: {
-    backgroundColor: DS_COLORS.dangerLight,
+    backgroundColor: DS_V3.color.brandTint,
     borderWidth: 1,
-    borderColor: DS_COLORS.alertRedBorder,
+    borderColor: DS_V3.color.danger,
   },
   btnDestructiveText: {
-    color: DS_COLORS.dangerDark,
+    color: DS_V3.color.danger,
   },
 });
