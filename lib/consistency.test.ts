@@ -38,9 +38,12 @@ describe("consistency builders", () => {
     expect(home).toContain("consistencyLine");
     expect(home).toContain("consistencyFromDayArray");
     expect(home).toContain("dueDayKeys");
+    expect(home).toContain("verifiedClosed");
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
     expect(profile).toContain("consistencyContext(consistency, proofsDateLabel, todaySecured)");
+    expect(profile).toContain("consistencyHeadlineFromDays");
+    expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
     expect(mutations).toContain('invalidateQueries({ queryKey: ["profiles", "getRecord"] })');

@@ -7,9 +7,9 @@ import { Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { dayWord, formatDays } from "@/lib/format-days";
 import Avatar from "@/components/ds/Avatar";
-import Badges, { type BadgeItem } from "@/components/ds/Badges";
+import { type BadgeItem } from "@/components/ds/Badges";
+import { BadgeRows } from "@/components/profile/BadgeRows";
 import Button from "@/components/ds/Button";
-import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import EmptyState from "@/components/ds/EmptyState";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -33,7 +33,7 @@ export function badgeItemsFromRows(
 }
 
 const ICON = DS_V3.space.xs * 6;
-const TABS = ["Challenges", "Proofs", "Badges"] as const;
+const TABS = ["Proofs", "Challenges", "Badges"] as const;
 export const PROFILE_V3_FOOTNOTE =
   "Five marks, each earned by verified days only. Nothing here can be bought or awarded.";
 const FOOTNOTE = PROFILE_V3_FOOTNOTE;
@@ -98,9 +98,6 @@ export function ProfileV3({
   following,
   bio,
   streak,
-  best,
-  todaySecured,
-  totalDaysSecured = 0,
   consistency,
   consistencySub,
   tab,
@@ -147,25 +144,27 @@ export function ProfileV3({
       ) : null}
 
       <View style={styles.identity}>
-        <Avatar size={96} uri={avatarUrl} displayName={title} />
+        <Avatar size={56} uri={avatarUrl} displayName={title} />
         <View style={styles.idCol}>
-          <Text style={styles.handle}>@{handle}</Text>
-          <View style={styles.counts}>
-            <Pressable
-              onPress={onFollowers}
-              accessibilityRole="button"
-              accessibilityLabel={`${followers} followers`}
-            >
-              <Text style={styles.caption}>{followers} followers</Text>
-            </Pressable>
-            <Pressable
+          <Text style={styles.name}>{title}</Text>
+          <Text style={styles.handle}>
+            @{handle} ·{" "}
+            <Text
               onPress={onFollowing}
               accessibilityRole="button"
               accessibilityLabel={`${following} following`}
             >
-              <Text style={styles.caption}>{following} following</Text>
-            </Pressable>
-          </View>
+              {following} following
+            </Text>
+            {" · "}
+            <Text
+              onPress={onFollowers}
+              accessibilityRole="button"
+              accessibilityLabel={`${followers} followers`}
+            >
+              {followers} followers
+            </Text>
+          </Text>
         </View>
       </View>
 
@@ -211,40 +210,21 @@ export function ProfileV3({
         </View>
       ) : (
         <>
-      <View style={styles.gutter}>
-        <Card>
-          <View style={styles.streakTop}>
-            <Text style={styles.label}>CURRENT STREAK</Text>
-            <View style={styles.bestRow}>
-              <Text style={styles.caption}>Best </Text>
-              <DisplayNumber value={best} size="inline" />
-              <Text style={styles.caption}> {dayWord(best)}</Text>
-            </View>
-          </View>
-          <View style={styles.numRow} accessibilityLabel={formatDays(streak)}>
-            <DisplayNumber value={streak} size="home" />
-            <Text style={styles.days}>{dayWord(streak)}</Text>
-          </View>
-          <Text style={styles.secondary}>{streakLineFor(streak, todaySecured, totalDaysSecured)}</Text>
-        </Card>
-      </View>
-
-      <View style={styles.consist}>
-        <Card>
-          <Text style={styles.label}>CONSISTENCY</Text>
-          <Text style={styles.title}>{consistency}</Text>
-          <Text style={styles.secondary}>{consistencySub}</Text>
-          <View style={styles.recordBtn}>
-            <Button
-              label="See the full record"
-              variant="tertiary"
-              size="small"
-              flush
-              onPress={onSeeRecord}
-            />
-          </View>
-        </Card>
-      </View>
+      <Pressable
+        onPress={onSeeRecord}
+        accessibilityRole="button"
+        accessibilityLabel={`${formatDays(streak)} streak. ${consistency}`}
+        style={styles.mergeRow}
+      >
+        <View style={styles.mergeHalf}>
+          <DisplayNumber value={streak} size="inline" />
+          <Text style={styles.caption}>{dayWord(streak)} streak</Text>
+        </View>
+        <View style={styles.mergeHalf}>
+          <Text style={styles.mergeConsist}>{consistency}</Text>
+          {consistencySub ? <Text style={styles.caption} numberOfLines={1}>{consistencySub}</Text> : null}
+        </View>
+      </Pressable>
 
       <View style={styles.seg}>
         <SegmentedControl items={[...TABS]} value={tab} onChange={(v) => onChangeTab(v as (typeof TABS)[number])} />
@@ -282,8 +262,8 @@ export function ProfileV3({
         {tab === "Proofs" && !proofsInParent ? (
           proofs.length === 0 ? (
             <EmptyState
-              heading="No proofs yet"
-              body="Join a challenge and every verified day lands here as a photo."
+              heading="No days with photos"
+              body="A task with the Camera gate puts its photo here, grouped by the day you took it."
               actionLabel="Find a challenge"
               onAction={onDiscover}
             />
@@ -295,12 +275,12 @@ export function ProfileV3({
                   style={styles.proofCell}
                   onPress={onOpenProof ? () => onOpenProof(p) : undefined}
                   accessibilityRole={onOpenProof ? "button" : undefined}
-                  accessibilityLabel={`Day ${p.day}`}
+                  accessibilityLabel={`${p.dateKey}`}
                 >
                   <ProofImage
                     uri={p.imageUrl}
                     size="thumb"
-                    title={`Day ${p.day}`}
+                    title={p.dateKey}
                     recyclingKey={p.dateKey}
                   />
                 </Pressable>
@@ -310,7 +290,7 @@ export function ProfileV3({
         ) : null}
 
         {tab === "Badges" ? (
-          <Badges
+          <BadgeRows
             badges={
               badges.length > 0
                 ? badges
@@ -341,14 +321,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: DS_V3.space.lg,
   },
-  idCol: { flex: 1, gap: DS_V3.space.sm },
+  idCol: { flex: 1, gap: 2 },
+  name: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
   handle: {
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
+    ...DS_V3.type.caption,
     color: DS_V3.color.textSecondary,
   },
-  counts: { flexDirection: "row", gap: DS_V3.space.lg },
   caption: {
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
@@ -375,17 +353,16 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   flex: { flex: 1 },
-  gutter: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-  },
-  streakTop: {
+  mergeRow: {
+    marginHorizontal: DS_V3.space.gutter,
+    marginTop: DS_V3.space.gutter,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: DS_V3.space.sm,
+    gap: DS_V3.space.lg,
   },
-  bestRow: { flexDirection: "row", alignItems: "baseline" },
+  mergeHalf: { flex: 1, gap: 2 },
+  mergeConsist: { ...DS_V3.type.secondary, color: DS_V3.color.textPrimary },
   label: {
     fontSize: DS_V3.type.label.fontSize,
     lineHeight: DS_V3.type.label.lineHeight,

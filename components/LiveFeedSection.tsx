@@ -198,16 +198,14 @@ function LiveFeedSection({
           username: string;
           avatar_url: string | null;
         }[];
-        const last = rows[rows.length - 1];
-        if (!last) return null;
-        return {
-          userId: last.user_id,
-          username: last.username,
-          displayName: last.display_name,
-          text: last.text,
-          createdAt: last.created_at,
-          avatarUrl: last.avatar_url ?? null,
-        } satisfies FeedCommentPreview;
+        return rows.slice(0, 2).map((row) => ({
+          userId: row.user_id,
+          username: row.username,
+          displayName: row.display_name,
+          text: row.text,
+          createdAt: row.created_at,
+          avatarUrl: row.avatar_url ?? null,
+        })) satisfies FeedCommentPreview[];
       },
       enabled: !!user?.id && p.commentCount > 0,
       staleTime: 60 * 1000,
@@ -215,10 +213,10 @@ function LiveFeedSection({
   });
 
   const previewByPostId = useMemo(() => {
-    const map = new Map<string, FeedCommentPreview>();
+    const map = new Map<string, FeedCommentPreview[]>();
     postsWithComments.forEach((p, i) => {
       const d = commentPreviewResults[i]?.data;
-      if (d) map.set(p.id, d);
+      if (d && d.length) map.set(p.id, d);
     });
     return map;
   }, [postsWithComments, commentPreviewResults]);
@@ -423,10 +421,20 @@ function LiveFeedSection({
             post={item}
             viewerUserId={user?.id}
             viewerTargetStreak={viewerTargetStreak}
+            comments={previewByPostId.get(item.id) ?? []}
             onLike={() => void onRespect(item)}
             onComment={() => setCommentEventId(item.id)}
             onShare={() => void onShare(item)}
             onProfilePress={() => navigateProfile(item)}
+            onSeeDay={
+              item.eventType === "secured_day" && item.username
+                ? () =>
+                    router.push({
+                      pathname: ROUTES.PROFILE_DAY as never,
+                      params: { dateKey: item.createdAt.slice(0, 10), userId: item.userId },
+                    } as never)
+                : undefined
+            }
           />
         </View>
       );

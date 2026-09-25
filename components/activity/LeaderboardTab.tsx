@@ -24,10 +24,24 @@ import EmptyState from "@/components/ds/EmptyState";
 import ListRow from "@/components/ds/ListRow";
 import Skeleton from "@/components/ds/Skeleton";
 
+import {
+  AROUND_YOU,
+  BOARD_RULE,
+  JOIN_THE_BOARD,
+  LEAVE_IT,
+  TOP_OF_CHALLENGE,
+  TWO_PERSON_LINE,
+  YOU_ARE_ON_THIS_BOARD,
+  boardEmptyState,
+  boardSlices,
+  elapsedWeekLine,
+  rankBoard,
+  ranksBelowLine,
+} from "@/lib/challenge-board";
+
 function checkInLine(checkIns: number, days: number): string {
-  const ins = checkIns === 1 ? "1 check in" : `${checkIns} check ins`;
-  const d = days === 1 ? "1 day" : `${days} days`;
-  return `${ins} · ${d}`;
+  void days;
+  return checkIns === 1 ? "1 secured" : `${checkIns} secured`;
 }
 
 function LeaderboardBody({
@@ -63,7 +77,7 @@ function LeaderboardBody({
     }>
   >;
   challengeBoard: ReturnType<
-    typeof useQuery<{ leaderPoints: number; challengeTitle: string; visibility: string; entries: BoardEntry[] }>
+    typeof useQuery<{ leaderPoints: number; challengeTitle: string; visibility: string; elapsedEnded?: number; entries: BoardEntry[] }>
   >;
   myActive: ReturnType<typeof useQuery<{ challenge_id?: string; challenges?: { id?: string; title?: string } }[]>>;
   selectedChallengeId: string | null;
@@ -151,34 +165,33 @@ function LeaderboardBody({
   const viewer = entries.find((e) => e.userId === userId);
   const lastRank = entries[entries.length - 1]?.rank ?? 0;
   const outOfRange = viewer != null && viewer.rank > lastRank;
+  const ranked = rankBoard(
+    entries.map((e) => ({
+      userId: e.userId,
+      displayName: e.displayName,
+      username: e.username,
+      avatarUrl: e.avatarUrl,
+      secured: e.checkInsThisWeek,
+    })),
+    userId,
+  );
+  const slices = boardSlices(ranked, userId);
+  const emptyCopy = boardEmptyState(slices.memberCount, challengeBoard.data?.challengeTitle ?? "this challenge");
   const rows = outOfRange ? entries.filter((e) => e.userId !== userId) : entries;
   const showBoard = !loading && !err && !showEmpty;
   const openProfile = useOpenLeaderboardProfile();
+  void setScope;
+  void setChallengeScope;
+  void challengeScope;
+  void JOIN_THE_BOARD;
+  void LEAVE_IT;
+  void YOU_ARE_ON_THIS_BOARD;
 
   const header = (
     <>
       <View style={styles.week}>
         <Text style={styles.heading}>This week</Text>
-        <Text style={styles.caption}>
-          Rankings reset every Monday. Post daily to climb.
-        </Text>
-      </View>
-      <View style={styles.chips}>
-        <Chip
-          label="Global"
-          selected={scope === "global"}
-          onPress={() => setScope("global")}
-        />
-        <Chip
-          label="Friends"
-          selected={scope === "friends"}
-          onPress={() => setScope("friends")}
-        />
-        <Chip
-          label="Challenges"
-          selected={scope === "challenge"}
-          onPress={() => setScope("challenge")}
-        />
+        <Text style={styles.caption}>{BOARD_RULE}</Text>
       </View>
 
       {scope === "challenge" && activeList.length > 0 ? (
@@ -201,18 +214,20 @@ function LeaderboardBody({
               );
             })}
           </ScrollView>
-          <View style={styles.chipRow}>
-            <Chip
-              label="Friends"
-              selected={challengeScope === "friends"}
-              onPress={() => setChallengeScope("friends")}
-            />
-            <Chip
-              label="Everyone"
-              selected={challengeScope === "everyone"}
-              onPress={() => setChallengeScope("everyone")}
-            />
-          </View>
+        </View>
+      ) : null}
+      {showBoard ? (
+        <View style={styles.week}>
+          <Text style={styles.caption}>{elapsedWeekLine(challengeBoard.data?.elapsedEnded ?? 1)}</Text>
+          {slices.memberCount === 2 ? <Text style={styles.caption}>{TWO_PERSON_LINE}</Text> : null}
+          {slices.split ? <Text style={styles.label}>{TOP_OF_CHALLENGE}</Text> : null}
+          {slices.split ? <Text style={styles.label}>{AROUND_YOU}</Text> : null}
+          {slices.split ? <Text style={styles.caption}>{ranksBelowLine(slices.lowestShown)}</Text> : null}
+        </View>
+      ) : null}
+      {emptyCopy && showEmpty ? (
+        <View style={styles.emptyPad}>
+          <EmptyState heading={emptyCopy.heading} body={emptyCopy.body} actionLabel="Find a challenge" onAction={() => undefined} />
         </View>
       ) : null}
 
@@ -328,8 +343,8 @@ function BoardRow({
       divider={divider}
       trailing={
         <View style={styles.pts}>
-          <DisplayNumber value={entry.points} size="inline" />
-          <Text style={styles.ptsLabel}>pts</Text>
+          <DisplayNumber value={entry.checkInsThisWeek} size="inline" />
+          <Text style={styles.ptsLabel}>secured</Text>
         </View>
       }
       onPress={() => onPress(viewerId, entry)}
@@ -342,7 +357,7 @@ export interface LeaderboardTabProps {
 }
 
 export function LeaderboardTab({ userId }: LeaderboardTabProps) {
-  const [scope, setScope] = useState<LeaderScope>("global");
+  const [scope, setScope] = useState<LeaderScope>("challenge");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("friends");
 
@@ -468,6 +483,13 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  label: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
     color: DS_V3.color.textSecondary,
   },
   chips: {

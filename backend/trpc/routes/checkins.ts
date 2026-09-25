@@ -87,7 +87,8 @@ import {
   canFlipShare,
   flipSharePatch,
   securedDaySharedOnInsert,
-  sharedOnInsert,
+  shareColumns,
+  shareStateOnInsert,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
 
@@ -829,13 +830,12 @@ export const checkinsRouter = createTRPCRouter({
       const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
-      const activityShared = sharedOnInsert(input.shareChoicePending);
+      const shareCols = shareColumns(shareStateOnInsert(input.shareChoicePending));
       const activityEventPayload = {
         user_id: ctx.userId,
         event_type: "task_completed" as const,
         challenge_id,
-        shared: activityShared,
-        shared_at: activityShared ? new Date().toISOString() : null,
+        ...shareCols,
         metadata: {
           task_id: input.taskId,
           task_name: taskTitle,
@@ -1354,13 +1354,14 @@ export const checkinsRouter = createTRPCRouter({
           .select("id", { count: "exact", head: true })
           .eq("user_id", ctx.userId)
           .eq("event_type", "task_completed")
-          .eq("shared", true)
+          .eq("share_state", "shared")
           .eq("metadata->>date_key", todayKey);
+        const dayShare = shareColumns(securedDaySharedOnInsert(sharedProofs ?? 0) ? "shared" : "kept");
         await ctx.supabase.from("activity_events").insert({
           user_id: ctx.userId,
           event_type: "secured_day",
           challenge_id: challengeId ?? null,
-          shared: securedDaySharedOnInsert(sharedProofs ?? 0),
+          ...dayShare,
           metadata: { day_number: daySecured, streak_count: row.streak, date_key: todayKey },
         });
       }
@@ -1481,11 +1482,11 @@ export const checkinsRouter = createTRPCRouter({
     if (dateKey) {
       const { error: dayErr } = await svc
         .from("activity_events")
-        .update({ shared: true, shared_at: patch.shared_at } as never)
+        .update({ shared: true, share_state: "shared", shared_at: patch.shared_at } as never)
         .eq("user_id", ev.user_id)
         .eq("event_type", "secured_day")
         .eq("metadata->>date_key", dateKey)
-        .eq("shared", false);
+        .eq("share_state", "kept");
       if (dayErr) {
         logger.error({ err: dayErr, code: dayErr.code, message: dayErr.message, details: dayErr.details }, "[checkins.shareProof] secured_day");
       }

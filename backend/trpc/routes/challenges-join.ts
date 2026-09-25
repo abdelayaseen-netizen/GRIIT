@@ -166,6 +166,8 @@ export const challengesJoinProcedures = {
           user_id: ctx.userId,
           event_type: "joined_challenge",
           challenge_id: input.challengeId,
+          shared: true,
+          share_state: "shared",
           metadata: { challenge_name: (ch as { title?: string })?.title ?? "Challenge" },
         });
         // participants_count: sync to active join count after successful join

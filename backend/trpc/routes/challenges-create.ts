@@ -325,6 +325,8 @@ export const challengesCreateProcedures = {
         user_id: ctx.userId,
         event_type: "challenge_created",
         challenge_id: challenge.id,
+        shared: true,
+        share_state: "shared",
         metadata: { title: (challenge as { title?: string }).title ?? input.title },
       });
 

@@ -58,7 +58,8 @@ describe("homeStreakLine", () => {
       "utf8",
     );
     expect(homeSrc).toContain("consistencyLine(");
-    expect(profileSrc).toContain("streakLineFor(streak, todaySecured, totalDaysSecured)");
+    expect(profileSrc).toContain("formatDays(streak)");
+    expect(profileSrc).toContain("onSeeRecord");
   });
 });
 

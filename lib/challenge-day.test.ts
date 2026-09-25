@@ -26,7 +26,9 @@ describe("displayDay", () => {
 
   it("feed photo header no longer remaps current_day via feedPostDisplayDay", () => {
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
-    expect(card).toContain("value={post.currentDay}");
+    expect(card).toContain("feedCardEyebrow");
+    expect(card).toContain("feedCardVariant");
+    expect(card).toContain("post.currentDay");
     expect(card).not.toContain("feedPostDisplayDay");
   });
 });

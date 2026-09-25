@@ -15,6 +15,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import {
+  addCalendarDaysToDateKey,
   dateKeyFromIsoInTimeZone,
   getTodayDateKey,
 } from "../../lib/date-utils";
@@ -30,7 +31,7 @@ import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
 import { buildProfileRecord, fractionDateKeysForRange, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
-import { cameraProofTiles, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
+import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
@@ -226,8 +227,15 @@ export const profilesRecordProcedures = {
 
       const monthKey = input?.monthKey ?? monthKeyFromDateKey(todayKey);
 
+      const emptyDaySource = {
+        enrollments: [] as { challengeId: string; startDateKey: string; endDateKey?: string | null }[],
+        securedDays: [] as { dateKey: string; camera: boolean }[],
+        frozenDateKeys: [] as string[],
+        lastStandDateKeys: [] as string[],
+      };
+
       if (!gate.profile) {
-        return finish(emptyRecord(), { monthKey, days: [] });
+        return finish(emptyRecord(), { monthKey, days: [], daySource: emptyDaySource });
       }
 
       const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
@@ -446,6 +454,32 @@ export const profilesRecordProcedures = {
         badges: relationship === "self" ? record.badges : [],
       };
 
-      return finish(sliced, { monthKey, days });
+      const cameraDays = new Set(
+        checkInRows.filter((row) => checkInHasCameraProof(row)).map((row) => row.date_key),
+      );
+      const daySource = gate.activity
+        ? {
+            enrollments: ranges
+              .map((r) => {
+                const inclusiveEnd =
+                  r.endDateKey && r.endDateKey > r.startDateKey
+                    ? addCalendarDaysToDateKey(r.endDateKey, -1)
+                    : r.endDateKey;
+                return {
+                  challengeId: r.challengeId,
+                  startDateKey: r.startDateKey,
+                  endDateKey: inclusiveEnd || null,
+                };
+              }),
+            securedDays: securedDateKeys.map((dateKey) => ({
+              dateKey,
+              camera: cameraDays.has(dateKey),
+            })),
+            frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+            lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+          }
+        : emptyDaySource;
+
+      return finish(sliced, { monthKey, days, daySource });
     }),
 };

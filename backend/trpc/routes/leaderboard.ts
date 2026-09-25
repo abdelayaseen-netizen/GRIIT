@@ -2,7 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
-import { getTodayDateKey, getRollingWeekStartDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { addCalendarDaysToDateKey, getTodayDateKey, getRollingWeekStartDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
@@ -272,13 +272,19 @@ export const leaderboardRouter = createTRPCRouter({
 
       const { data: participants, error: pErr } = await server
         .from("active_challenges")
-        .select("user_id")
+        .select("user_id, board_opt_in")
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")
         .limit(500);
       if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
 
-      let userIds = [...new Set((participants ?? []).map((r: { user_id: string }) => r.user_id))];
+      let userIds = [
+        ...new Set(
+          (participants ?? [])
+            .filter((r: { user_id: string; board_opt_in?: boolean }) => r.board_opt_in === true || r.user_id === viewerId)
+            .map((r: { user_id: string }) => r.user_id),
+        ),
+      ];
       if (vis === "private") {
         userIds = userIds.filter((id) => id === viewerId);
         if (!userIds.includes(viewerId)) userIds = [viewerId];
@@ -330,17 +336,43 @@ export const leaderboardRouter = createTRPCRouter({
           avatarUrl: p?.avatar_url ?? null,
           checkInsThisWeek: checkIns,
           currentStreak: streak,
-          points: consistencyScore(checkIns, streak),
+          points: checkIns,
         };
       });
-      rows.sort((a, b) => b.points - a.points);
-      const ranked = rows.map((r, i) => ({ ...r, rank: i + 1 }));
+      rows.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        return a.displayName.localeCompare(b.displayName);
+      });
+      let lastScore = Number.NaN;
+      let lastRank = 0;
+      const ranked = rows.map((r, i) => {
+        if (r.points !== lastScore) {
+          lastRank = i + 1;
+          lastScore = r.points;
+        }
+        return { ...r, rank: lastRank };
+      });
       const leaderPts = ranked[0]?.points ?? 1;
+
+      const viewerRow = (participants ?? []).find((r: { user_id: string }) => r.user_id === viewerId) as
+        | { user_id: string; board_opt_in?: boolean }
+        | undefined;
 
       return {
         leaderPoints: leaderPts,
         challengeTitle: (ch as { title?: string }).title ?? "Challenge",
         visibility: vis,
+        viewerOptedIn: viewerRow?.board_opt_in === true,
+        elapsedEnded: (() => {
+          if (!weekStartKey || !todayKey || todayKey < weekStartKey) return 0;
+          let n = 0;
+          let cur = weekStartKey;
+          while (cur < todayKey && n < 7) {
+            n += 1;
+            cur = addCalendarDaysToDateKey(cur, 1);
+          }
+          return n === 6 ? 7 : n;
+        })(),
         entries: ranked.map((r) => ({
           userId: r.userId,
           username: r.username,
@@ -354,5 +386,30 @@ export const leaderboardRouter = createTRPCRouter({
           gapToAbove: r.rank > 1 ? Math.max(0, ranked[r.rank - 2]!.points - r.points) : 0,
         })),
       };
+    }),
+
+  setBoardOptIn: protectedProcedure
+    .input(z.object({ challengeId: z.string().uuid(), optIn: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      const server = getSupabaseServer();
+      if (!server) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service role missing." });
+      }
+      const { data: owned, error: ownErr } = await server
+        .from("active_challenges")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("challenge_id", input.challengeId)
+        .eq("status", "active")
+        .maybeSingle();
+      if (ownErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: ownErr.message });
+      if (!owned) throw new TRPCError({ code: "FORBIDDEN", message: "Not enrolled." });
+      const { error: upErr } = await server
+        .from("active_challenges")
+        .update({ board_opt_in: input.optIn } as never)
+        .eq("id", (owned as { id: string }).id)
+        .eq("user_id", ctx.userId);
+      if (upErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: upErr.message });
+      return { success: true, optIn: input.optIn };
     }),
 });

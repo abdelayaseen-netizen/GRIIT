@@ -14,5 +14,7 @@ describe("getRecord lastStandDays", () => {
     expect(src).toContain("selfReportedDays: split.selfReportedDays");
     expect(src).toContain("proofCountsForDateKeys");
     expect(src).toContain("fractionDateKeysForRange");
+    expect(src).toContain("daySource");
+    expect(src).toContain("checkInHasCameraProof");
   });
 });

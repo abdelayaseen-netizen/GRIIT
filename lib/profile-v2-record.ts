@@ -168,6 +168,8 @@ export type ProfileRecord = {
     taskName?: string;
     gateTime?: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
     shared?: boolean;
+    shareState?: "unanswered" | "shared" | "kept";
+    bytes?: number | null;
   }[];
   badges: ReturnType<typeof badgeRowsFromProgress>;
   detail: {

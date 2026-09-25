@@ -43,6 +43,7 @@ export type ProofsGridItem = {
   shared: boolean;
   /** Object size when known. Below `MIN_PROOF_IMAGE_BYTES` is a stub. */
   bytes?: number | null;
+  shareState?: "unanswered" | "shared" | "kept";
 };
 
 export type ProofsSection = {
@@ -143,6 +144,7 @@ export function itemsFromRecordProofs(
     taskName?: string;
     gateTime?: GateTime | null;
     shared?: boolean;
+    shareState?: "unanswered" | "shared" | "kept";
   }[],
 ): ProofsGridItem[] {
   const out: ProofsGridItem[] = [];
@@ -165,6 +167,7 @@ export function itemsFromRecordProofs(
       eventId: p.eventId ?? null,
       shared: p.shared !== false,
       bytes: typeof p.bytes === "number" ? p.bytes : null,
+      shareState: p.shareState,
     });
   });
   return out;
