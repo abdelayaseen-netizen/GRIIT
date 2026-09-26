@@ -2,9 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
-import { calendarDayFromStartAt, dateKeyFromIso } from "../../lib/home-day-total";
-import { securedElapsed } from "../../lib/consistency";
-import { dueKeysForRange } from "../../lib/profile-v2-record";
+import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
+import { securedElapsed } from "./secured-elapsed";
+import { dueKeysForRange } from "./due-keys";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { securedElapsed as backendSecuredElapsed } from "@/backend/lib/secured-elapsed";
 import {
   consistencyContext,
   consistencyDetailHero,
@@ -168,9 +169,12 @@ describe("consistency builders", () => {
     const grid = readFileSync(resolve(__dirname, "../components/profile/ConsistencyGrid.tsx"), "utf8");
     const record = readFileSync(resolve(__dirname, "./profile-v2-record.ts"), "utf8");
     const dayState = readFileSync(resolve(__dirname, "./day-state.ts"), "utf8");
-    const impl = readFileSync(resolve(__dirname, "./consistency.ts"), "utf8");
+    const impl = readFileSync(resolve(__dirname, "../backend/lib/secured-elapsed.ts"), "utf8");
+    const barrel = readFileSync(resolve(__dirname, "./consistency.ts"), "utf8");
     expect(impl).toContain("k < args.todayKey || (k === args.todayKey && todaySecured)");
     expect(impl).toContain("export function securedElapsed");
+    expect(barrel).toContain('from "../backend/lib/secured-elapsed"');
+    expect(securedElapsed).toBe(backendSecuredElapsed);
     expect(visitor).toContain("consistencyFromDayArray");
     expect(home).toContain("consistencyFromDayArray");
     expect(profile).toContain("consistencyFromDayArray");

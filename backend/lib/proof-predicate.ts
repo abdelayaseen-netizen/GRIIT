@@ -6,7 +6,7 @@
  */
 
 import { proofImageUrlForCheckIn } from "../../lib/profile-v2-proof-photo";
-import { calendarDay } from "../../lib/home-day-total";
+import { calendarDay } from "./calendar-day";
 import { gatesFor, type TaskGate, type TaskModelRow } from "./task-model";
 
 export function hasCameraProof(row: {

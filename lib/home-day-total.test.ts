@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import {
+  calendarDay as backendCalendarDay,
+  calendarDayFromStartAt as backendCalendarDayFromStartAt,
+} from "@/backend/lib/calendar-day";
 import { calendarDay, calendarDayFromStartAt, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import { feedEventCurrentDay } from "@/backend/lib/feed-activity-hydrate";
 
@@ -44,6 +48,8 @@ describe("calendarDay", () => {
     const today = "2026-09-23";
     const n = calendarDayFromStartAt(startAt, "UTC", today, 14);
     expect(n).toBe(8);
+    expect(calendarDayFromStartAt).toBe(backendCalendarDayFromStartAt);
+    expect(calendarDay).toBe(backendCalendarDay);
     expect(calendarDay("2026-09-16", today, 14)).toBe(8);
     expect(feedEventCurrentDay({ startAt, timeZone: "UTC", todayKey: today, durationDays: 14 })).toBe(8);
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
