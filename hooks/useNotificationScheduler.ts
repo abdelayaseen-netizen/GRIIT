@@ -70,7 +70,6 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
 
       const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
         id?: string;
-        current_day?: number;
         start_at?: string | null;
         started_at?: string | null;
         created_at?: string | null;
@@ -166,11 +165,13 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       }
 
       const countdownData = activeRows
-        .filter((ac) => ac.challenges?.duration_days != null && ac.current_day != null)
+        .filter((ac) => ac.id && ac.challenges?.duration_days != null)
         .map((ac) => ({
           id: ac.id ?? "",
           name: ac.challenges?.title ?? "Challenge",
-          currentDay: ac.current_day ?? 1,
+          startAt: ac.start_at ?? ac.started_at ?? ac.created_at ?? null,
+          timeZone: timezone ?? "UTC",
+          todayKey,
           totalDays: ac.challenges?.duration_days ?? 1,
         }))
         .filter((d) => d.id);

@@ -41,6 +41,7 @@ import {
 import { eveningSecureCopy, type EveningRemaining } from "@/lib/evening-secure";
 import { trackNotificationScheduled, type ReminderType } from "@/lib/analytics";
 import { calendarDayFromStartAt } from "@/lib/home-day-total";
+import { challengeCountdownFromStart } from "@/lib/challenge-countdown";
 
 // Foreground: banner/alert + sound (also set in registerForPushNotificationsAsync)
 Notifications.setNotificationHandler({
@@ -550,7 +551,9 @@ export async function scheduleChallengeCountdowns(
   challenges: {
     id: string;
     name: string;
-    currentDay: number;
+    startAt?: string | null;
+    timeZone: string;
+    todayKey: string;
     totalDays: number;
   }[]
 ): Promise<void> {
@@ -564,12 +567,17 @@ export async function scheduleChallengeCountdowns(
 
     const now = new Date();
     for (const ch of challenges) {
-      const daysLeft = ch.totalDays - ch.currentDay;
-      if (daysLeft <= 0 || daysLeft > 5) continue;
+      const countdown = challengeCountdownFromStart({
+        startAt: ch.startAt,
+        timeZone: ch.timeZone,
+        todayKey: ch.todayKey,
+        durationDays: ch.totalDays,
+      });
+      if (!countdown) continue;
 
       const vars: NotifVars = {
-        daysLeft,
-        day: ch.currentDay,
+        daysLeft: countdown.daysLeft,
+        day: countdown.day,
         total: ch.totalDays,
         challenge: ch.name,
       };

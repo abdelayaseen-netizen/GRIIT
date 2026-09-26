@@ -28,21 +28,3 @@ export function uiChallengeDay(
 ): number {
   return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
 }
-
-/** Feed header day. secured_day already stores displayDay; others match Home. */
-export function feedPostDisplayDay(
-  currentDay: number,
-  eventType: string,
-  securedToday: boolean,
-): number {
-  if (eventType === "secured_day") return challengeDayNumber(currentDay);
-  return displayDay(currentDay, securedToday);
-}
-
-/** @deprecated use displayDay */
-export function challengeDisplayDay(
-  currentDay: number | null | undefined,
-  todaySecured: boolean,
-): number {
-  return displayDay(challengeDayNumber(currentDay), todaySecured);
-}
