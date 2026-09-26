@@ -28,6 +28,13 @@ export type TestAppCaller = {
       participation_type: string;
       activeChallenge: { id: string } | null;
     }>;
+    getById: (input: { id: string }) => Promise<{
+      id: string;
+      title?: string | null;
+      visibility?: string | null;
+      tasks?: unknown[];
+    }>;
+    join: (input: { challengeId: string }) => Promise<unknown>;
   };
   groups: {
     invite: (input: { challengeId: string; userId: string }) => Promise<{

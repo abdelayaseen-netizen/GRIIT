@@ -42,7 +42,22 @@ export async function trpcQuery<T = unknown>(
         notifySessionExpired();
       }
     }
-    throw new Error(`tRPC query failed: ${path} (${response.status})`);
+    let errorMessage = `tRPC query failed: ${path} (${response.status})`;
+    let errorData: Record<string, unknown> | undefined;
+    try {
+      const json = await response.clone().json();
+      if (json?.error?.message) errorMessage = json.error.message;
+      else if (json?.error?.json?.message) errorMessage = json.error.json.message;
+      const rawData = json?.error?.data ?? json?.error?.json?.data;
+      if (rawData && typeof rawData === "object") {
+        errorData = rawData as Record<string, unknown>;
+      }
+    } catch {
+      /* non-JSON body */
+    }
+    const err = new Error(errorMessage) as Error & { data?: Record<string, unknown> };
+    if (errorData) err.data = errorData;
+    throw err;
   }
 
   const json = await response.json();

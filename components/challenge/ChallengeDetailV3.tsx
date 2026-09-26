@@ -91,6 +91,7 @@ export type ChallengeDetailV3Props = {
   joining?: boolean;
   loading?: boolean;
   error?: boolean;
+  privateLocked?: boolean;
   invite?: ChallengeDetailInvite;
   /** Profile-finished header. When set, Join is never shown. */
   finishedLine?: string;
@@ -154,6 +155,22 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         : p.participationType === "team"
           ? ofTen(p.participantsCount)
           : peopleLabel(p.participantsCount);
+
+  if (p.privateLocked) {
+    return (
+      <View style={styles.canvas}>
+        <Nav onBack={p.onBack} />
+        <View style={styles.errorWrap}>
+          <EmptyState
+            heading="This challenge is private."
+            body="Ask the creator for an invite."
+            actionLabel="Go back"
+            onAction={p.onBack}
+          />
+        </View>
+      </View>
+    );
+  }
 
   if (p.error) {
     return (

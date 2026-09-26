@@ -15,6 +15,7 @@ import {
   memberYesterdayState,
 } from "../../lib/group-challenges";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
+import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
 
 type ChallengeInviteRow = {
   id: string;
@@ -32,7 +33,13 @@ type ChallengeRow = {
   creator_id: string;
   participation_type?: string | null;
   run_status?: string | null;
+  visibility?: string | null;
+  status?: string | null;
 };
+
+function challengeReader(userClient: SupabaseClient): SupabaseClient {
+  return getSupabaseServer() ?? userClient;
+}
 
 async function loadTeamChallenge(
   supabase: SupabaseClient,
@@ -40,7 +47,7 @@ async function loadTeamChallenge(
 ): Promise<ChallengeRow> {
   const { data, error } = await supabase
     .from("challenges")
-    .select("id, title, creator_id, participation_type, run_status")
+    .select("id, title, creator_id, participation_type, run_status, visibility, status")
     .eq("id", challengeId)
     .maybeSingle();
   if (error || !data) {
@@ -163,7 +170,7 @@ export const groupsRouter = createTRPCRouter({
       if (input.userId === ctx.userId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Use the share link to invite yourself." });
       }
-      const challenge = await loadTeamChallenge(ctx.supabase, input.challengeId);
+      const challenge = await loadTeamChallenge(challengeReader(ctx.supabase), input.challengeId);
       if (challenge.run_status !== "active") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This group is not active." });
       }
@@ -300,7 +307,12 @@ export const groupsRouter = createTRPCRouter({
         return { status: "declined" as const };
       }
 
-      const challenge = await loadTeamChallenge(ctx.supabase, invite.challenge_id);
+      const reader = challengeReader(ctx.supabase);
+      const challenge = await loadTeamChallenge(reader, invite.challenge_id);
+      const mayView = await canViewChallenge(reader, ctx.userId, challenge);
+      if (!mayView) {
+        throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
+      }
       if (challenge.run_status !== "active") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "This group is not active." });
       }
@@ -358,7 +370,7 @@ export const groupsRouter = createTRPCRouter({
   openLink: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const challenge = await loadTeamChallenge(ctx.supabase, input.challengeId);
+      const challenge = await loadTeamChallenge(challengeReader(ctx.supabase), input.challengeId);
       if (challenge.run_status !== "active") {
         return { state: "ended" as const };
       }
@@ -464,7 +476,7 @@ export const groupsRouter = createTRPCRouter({
   members: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      await loadTeamChallenge(ctx.supabase, input.challengeId);
+      await loadTeamChallenge(challengeReader(ctx.supabase), input.challengeId);
       await requireActiveMember(ctx.supabase, input.challengeId, ctx.userId);
 
       const { data: memberRows } = await ctx.supabase

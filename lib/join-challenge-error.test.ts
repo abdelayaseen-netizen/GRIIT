@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
+import { PRIVATE_CHALLENGE_MESSAGE } from "@/backend/lib/can-view-challenge";
 import {
   ALREADY_JOINED_MESSAGE,
   classifyJoinChallengeError,
 } from "@/lib/join-challenge-error";
 
 describe("classifyJoinChallengeError", () => {
+  it("maps private copy to private, not the free-tier paywall", () => {
+    const err = Object.assign(new Error(PRIVATE_CHALLENGE_MESSAGE), {
+      data: { code: "FORBIDDEN" },
+    });
+    expect(classifyJoinChallengeError(err)).toEqual({
+      kind: "private",
+      message: PRIVATE_CHALLENGE_MESSAGE,
+    });
+  });
+
   it("maps FORBIDDEN / free-tier copy to the limit message, not a generic error", () => {
     const err = Object.assign(new Error(FREE_ACTIVE_LIMIT_MESSAGE), {
       data: { code: "FORBIDDEN" },

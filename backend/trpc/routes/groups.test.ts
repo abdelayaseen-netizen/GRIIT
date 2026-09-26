@@ -11,22 +11,41 @@ const AC = "c0000000-0000-4000-8000-000000000003";
 const TASK = "f0000000-0000-4000-8000-000000000006";
 
 const serviceInserts: { table: string; row: unknown }[] = [];
+const serviceChallenge = {
+  id: CH,
+  title: "Morning run club",
+  creator_id: CREATOR,
+  participation_type: "team",
+  run_status: "active",
+  visibility: "FRIENDS",
+  status: "published",
+  duration_type: "multi_day",
+  duration_days: 30,
+};
+const pendingInviteRow = {
+  id: INVITE,
+  challenge_id: CH,
+  invited_by: CREATOR,
+  invited_user_id: INVITEE,
+  status: "pending",
+  created_at: "2026-09-16T00:00:00.000Z",
+  responded_at: null,
+};
 const serviceClient = {
   from: (table: string) => {
+    const eqs: Record<string, unknown> = {};
     const chain: Record<string, unknown> = {};
     chain.select = () => chain;
-    chain.eq = () => chain;
+    chain.eq = (col: string, val: unknown) => {
+      eqs[col] = val;
+      return chain;
+    };
+    chain.limit = () => chain;
     chain.update = () => chain;
     chain.insert = (row: unknown) => {
       serviceInserts.push({ table, row });
       const inserted = {
-        id: INVITE,
-        challenge_id: CH,
-        invited_by: CREATOR,
-        invited_user_id: INVITEE,
-        status: "pending",
-        created_at: "2026-09-16T00:00:00.000Z",
-        responded_at: null,
+        ...pendingInviteRow,
         ...(typeof row === "object" && row ? row : {}),
       };
       return {
@@ -35,19 +54,22 @@ const serviceClient = {
         }),
       };
     };
-    chain.single = () =>
-      Promise.resolve({
-        data: {
-          id: INVITE,
-          challenge_id: CH,
-          invited_by: CREATOR,
-          invited_user_id: INVITEE,
-          status: "pending",
-          created_at: "2026-09-16T00:00:00.000Z",
-          responded_at: null,
-        },
-        error: null,
-      });
+    const resolve = () => {
+      if (table === "challenges") {
+        return { data: serviceChallenge, error: null };
+      }
+      if (table === "challenge_invites") {
+        const uid = eqs.invited_user_id ?? eqs.user_id;
+        const match =
+          (!uid || uid === INVITEE) &&
+          (!eqs.status || eqs.status === "pending") &&
+          (!eqs.challenge_id || eqs.challenge_id === CH);
+        return { data: match ? pendingInviteRow : null, error: null };
+      }
+      return { data: null, error: null };
+    };
+    chain.single = () => Promise.resolve(resolve());
+    chain.maybeSingle = () => Promise.resolve(resolve());
     return chain;
   },
 };

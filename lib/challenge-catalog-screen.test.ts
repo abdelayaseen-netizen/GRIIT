@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { catalogFromChallengeRow } from "@/lib/challenge-catalog-screen";
+import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
+import { PRIVATE_CHALLENGE_MESSAGE } from "@/backend/lib/can-view-challenge";
 
 const DAILY_GRATITUDE = {
   title: "Daily Gratitude",
@@ -11,6 +12,13 @@ const DAILY_GRATITUDE = {
     { title: "Share one with someone", task_type: "manual", require_photo: false },
   ],
 };
+
+describe("catalogScreenPrivate", () => {
+  it("detects the private getById / join message", () => {
+    expect(catalogScreenPrivate(new Error(PRIVATE_CHALLENGE_MESSAGE))).toBe(true);
+    expect(catalogScreenPrivate(new Error("tRPC query failed"))).toBe(false);
+  });
+});
 
 describe("catalogFromChallengeRow", () => {
   it("renders title and tasks when there are no enrollment rows", () => {
@@ -62,5 +70,8 @@ describe("challenge catalog screen", () => {
     expect(catalog).not.toContain("!enrollmentsReady || !!activeChallengeId || endedPending");
     expect(detail).toContain("Challenge did not load");
     expect(detail).toContain("Retry");
+    expect(detail).toContain("This challenge is private.");
+    expect(catalog).toContain("catalogScreenPrivate");
+    expect(catalog).toContain("privateLocked");
   });
 });

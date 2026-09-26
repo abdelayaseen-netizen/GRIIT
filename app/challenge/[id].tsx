@@ -57,7 +57,7 @@ import {
   mapParticipationType,
   type DetailTask,
 } from "@/lib/challenge-detail-mapping";
-import { catalogFromChallengeRow } from "@/lib/challenge-catalog-screen";
+import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
 
 type JoinResult = { id?: string; start_at?: string };
 
@@ -203,9 +203,10 @@ export default function ChallengeDetailScreen() {
   }, [ref, user?.id, id]);
 
   const challenge = challengeQuery.data ?? null;
+  const privateLocked = catalogScreenPrivate(challengeQuery.error);
   const catalog = catalogFromChallengeRow(challenge, {
     isLoading: challengeQuery.isLoading,
-    isError: challengeQuery.isError,
+    isError: challengeQuery.isError && !privateLocked,
   });
   const myActiveCount = countActiveEnrollments(
     (Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data : []) as { status?: string }[],
@@ -360,6 +361,10 @@ export default function ChallengeDetailScreen() {
         showError(classified.message);
         return;
       }
+      if (classified.kind === "private") {
+        showError(classified.message);
+        return;
+      }
       const formatted = formatTRPCError(err);
       showError(
         typeof formatted.message === "string" && formatted.message.trim()
@@ -508,6 +513,7 @@ export default function ChallengeDetailScreen() {
           joining={joining}
           loading={catalogLoading}
           error={catalog.error}
+          privateLocked={privateLocked}
           invite={finished ? undefined : invite}
           finishedLine={catalogLoading ? undefined : finishedLine}
           finishedCtaLabel={isAbandoned ? "Join" : "Start again"}

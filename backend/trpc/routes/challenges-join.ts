@@ -15,6 +15,11 @@ import {
 } from "../../../lib/free-challenge-limit";
 import { ensureProfile } from "../../lib/ensure-profile";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import {
+  canJoinPrivateChallenge,
+  canViewChallenge,
+  PRIVATE_CHALLENGE_MESSAGE,
+} from "../../lib/can-view-challenge";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
@@ -68,9 +73,10 @@ export const challengesJoinProcedures = {
         throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
       }
 
-      const { data: challenge, error: challengeError } = await ctx.supabase
+      const reader = getSupabaseServer() ?? ctx.supabase;
+      const { data: challenge, error: challengeError } = await reader
         .from("challenges")
-        .select("id, participation_type, team_size, run_status")
+        .select("id, participation_type, team_size, run_status, visibility, creator_id")
         .eq("id", input.challengeId)
         .single();
 
@@ -78,7 +84,21 @@ export const challengesJoinProcedures = {
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
       }
 
-      const ch = challenge as { id: string; participation_type?: string; team_size?: number; run_status?: string };
+      const ch = challenge as {
+        id: string;
+        participation_type?: string;
+        team_size?: number;
+        run_status?: string;
+        visibility?: string | null;
+        creator_id?: string | null;
+      };
+      if (!canJoinPrivateChallenge(ctx.userId, ch)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
+      }
+      const mayView = await canViewChallenge(reader, ctx.userId, ch);
+      if (!mayView) {
+        throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
+      }
       const participationType = (ch.participation_type ?? "solo") as "solo" | "duo" | "team" | "shared_goal";
       if (participationType === "team") {
         throw new TRPCError({

@@ -134,10 +134,11 @@ app.get("/api/cron/daily-challenge", async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
   try {
-    const { createDailyChallengeIfMissing } = await import("./lib/daily-challenge-generator");
-    const { getSupabaseAdmin, hasSupabaseAdmin } = await import("./lib/supabase-admin");
-    const supabase = hasSupabaseAdmin() ? getSupabaseAdmin() : (await import("./lib/supabase")).supabase;
-    const result = await createDailyChallengeIfMissing(supabase, new Date());
+    const { runDailyChallengeCron } = await import("./lib/daily-challenge-cron");
+    const result = await runDailyChallengeCron();
+    if (!result.ok) {
+      return c.json({ ok: false, error: result.error }, 503);
+    }
     return c.json({ ok: true, created: result.created, id: result.id });
   } catch (err) {
     const { logger } = await import("./lib/logger");
