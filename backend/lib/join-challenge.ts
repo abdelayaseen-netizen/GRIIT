@@ -86,7 +86,10 @@ export async function joinChallengeDirect(
     throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
   }
 
-  const { data: challenge, error: challengeError } = await supabase
+  const { getSupabaseServer } = await import("./supabase-server");
+  const reader = getSupabaseServer() ?? supabase;
+
+  const { data: challenge, error: challengeError } = await reader
     .from("challenges")
     .select("id, duration_type, duration_days")
     .eq("id", challengeId)
@@ -96,7 +99,7 @@ export async function joinChallengeDirect(
     throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
   }
 
-  const { data: tasksForWindowCheck } = await supabase
+  const { data: tasksForWindowCheck } = await reader
     .from("challenge_tasks")
     .select("id, time_window_end, schedule_window_end, gate_time_end, gate_time_start, gate_time_mode, config")
     .eq("challenge_id", challengeId);
@@ -142,7 +145,7 @@ export async function joinChallengeDirect(
 
   // Best-effort: seed check_ins for each task (don't fail join if table/columns differ)
   try {
-    const { data: tasks } = await supabase
+    const { data: tasks } = await reader
       .from("challenge_tasks")
       .select("id")
       .eq("challenge_id", challengeId);

@@ -26,6 +26,7 @@ import { logger } from "../../lib/logger";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { GROUP_MAX_MEMBERS, shouldEvaluateTeamDay } from "../../lib/group-challenges";
+import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
@@ -142,8 +143,8 @@ export const challengesRouter = createTRPCRouter({
   getById: publicProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const unauthService = ctx.userId ? null : getSupabaseServer();
-      const server = ctx.userId ? ctx.supabase : (unauthService ?? ctx.supabase);
+      const service = getSupabaseServer();
+      const server = service ?? ctx.supabase;
       const { data, error } = await server
         .from("challenges")
         .select(
@@ -169,6 +170,20 @@ export const challengesRouter = createTRPCRouter({
         }
         logger.error({ err: error, challengeId: input.id }, "[challenges.getById] query failed");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load challenge." });
+      }
+
+      if (!data) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      }
+
+      const allowed = await canViewChallenge(server, ctx.userId, {
+        id: (data as { id: string }).id,
+        visibility: (data as { visibility?: string | null }).visibility,
+        status: (data as { status?: string | null }).status,
+        creator_id: (data as { creator_id?: string | null }).creator_id,
+      });
+      if (!allowed) {
+        throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
       }
 
       const participationType = (data as { participation_type?: string }).participation_type;

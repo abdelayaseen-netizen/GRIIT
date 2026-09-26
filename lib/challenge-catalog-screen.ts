@@ -2,7 +2,15 @@
  * Catalog detail (app/challenge/[id].tsx) reads the challenges row.
  * Enrollment / participant history must not gate title or tasks.
  */
+import { PRIVATE_CHALLENGE_MESSAGE } from "@/backend/lib/can-view-challenge";
 import { toDetailTasks, type ChallengeDetailTask, type DetailTask } from "@/lib/challenge-detail-mapping";
+
+export { PRIVATE_CHALLENGE_MESSAGE };
+
+export function catalogScreenPrivate(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : "";
+  return msg.includes(PRIVATE_CHALLENGE_MESSAGE);
+}
 
 export type CatalogChallengeRow = {
   title?: string | null;
