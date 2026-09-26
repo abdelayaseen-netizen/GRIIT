@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,8 +28,13 @@ export default function ProfileDayScreen() {
       trpcQuery(TRPC.profiles.getRecord, userId ? { userId } : undefined) as Promise<RecordPayload>,
   });
   const all = itemsFromRecordProofs(q.data?.proofs ?? []);
-  const visible = (isOwner ? all : all.filter((i) => i.shared)).filter((i) => i.dateKey === dateKey);
+  const visible = isOwner ? all : all.filter((i) => i.shared);
   const [sharedIds, setSharedIds] = useState<string[]>([]);
+  const [viewDateKey, setViewDateKey] = useState(dateKey);
+  const [countLabel, setCountLabel] = useState("1 of 1");
+  useEffect(() => {
+    setViewDateKey(dateKey);
+  }, [dateKey]);
   const items: ProofsGridItem[] = visible.map((i) =>
     sharedIds.includes(i.id) ? { ...i, shared: true } : i,
   );
@@ -46,12 +51,20 @@ export default function ProfileDayScreen() {
           >
             <X size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
           </Pressable>
-          <Text style={styles.header}>{dateKey ? proofsDateLabel(dateKey) : "Day"}</Text>
+          <View style={styles.headerBlock}>
+            <Text style={styles.header}>{viewDateKey ? proofsDateLabel(viewDateKey) : "Day"}</Text>
+            <Text style={styles.count} accessibilityLabel={countLabel}>
+              {countLabel}
+            </Text>
+          </View>
           <View style={styles.side} />
         </View>
         <DayViewer
           items={items}
+          initialDateKey={dateKey}
           isOwner={isOwner}
+          onDateKeyChange={setViewDateKey}
+          onCountLabelChange={setCountLabel}
           onShare={(item) => {
             if (!item.eventId) return;
             void trpcMutate(TRPC.checkins.shareProof, { eventId: item.eventId }).then(() => {
@@ -73,5 +86,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   side: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  header: { flex: 1, textAlign: "center", ...DS_V3.type.label, color: DS_V3.color.textSecondary },
+  headerBlock: { flex: 1, alignItems: "center", gap: 1 },
+  header: { textAlign: "center", ...DS_V3.type.label, color: DS_V3.color.textSecondary },
+  count: { textAlign: "center", ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
 });
