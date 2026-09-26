@@ -12,7 +12,6 @@ import {
   LIVE_FEED_TYPES,
   followRowAccepted,
   normalizeChallengeVisibility,
-  finishedSecuredDays,
   finishedSecureQueryBounds,
   hydrateActivityEventsToPosts,
   feedEventCurrentDay,
@@ -22,6 +21,8 @@ import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-us
 import { deriveProofType } from "../../lib/task-model";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
+import { filterDiscoverCatalog } from "../../lib/discover-catalog";
+import { finishedRunFromEnrollment } from "../../lib/finished-run";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -233,8 +234,8 @@ export const feedRouter = createTRPCRouter({
           .gte("date_key", finishedBounds.fromKey)
           .lt("date_key", finishedBounds.toKeyExclusive)
       : { data: [] as { date_key: string }[] };
-    const securedDays = isCompletedChallenge
-      ? finishedSecuredDays({
+    const finishedRun = isCompletedChallenge
+      ? finishedRunFromEnrollment({
           startAt: enrollment?.start_at,
           endAt: enrollment?.end_at,
           endedAt: enrollment?.ended_at,
@@ -242,12 +243,14 @@ export const feedRouter = createTRPCRouter({
           timeZone: tz,
           todayKey: postTodayKey,
           securedDateKeys: ((secureRows ?? []) as { date_key: string }[]).map((r) => r.date_key),
+          durationDays,
         })
       : undefined;
+    const securedDays = finishedRun?.secured;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
     return {
-      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, totalDays: Math.max(1, durationDays), eventType: ev.event_type,
+      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: typeof md.photo_url === "string" ? md.photo_url : null, proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,
@@ -858,11 +861,12 @@ export const feedRouter = createTRPCRouter({
     const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((x): x is string => !!x))];
     if (challengeIds.length === 0) return [];
 
-    const { data: chRows } = await server.from("challenges").select("id, title, visibility").in("id", challengeIds).limit(200);
+    const { data: chRows } = await server.from("challenges").select("id, title, visibility, creator_id").in("id", challengeIds).limit(200);
     const publicIds = new Set(
-      (chRows ?? [])
-        .filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC")
-        .map((c: { id: string }) => c.id)
+      filterDiscoverCatalog(
+        (chRows ?? []).filter((c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() === "PUBLIC"),
+        ctx.userId,
+      ).map((c: { id: string }) => c.id)
     );
     const chTitle = new Map((chRows ?? []).map((c: { id: string; title?: string | null }) => [c.id, c.title ?? ""]));
 
@@ -1056,7 +1060,7 @@ export const feedRouter = createTRPCRouter({
           ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds).limit(500)
           : Promise.resolve({ data: [] }),
         challengeIds.length > 0
-          ? server.from("challenges").select("id, visibility").in("id", challengeIds).limit(500)
+          ? server.from("challenges").select("id, visibility, creator_id").in("id", challengeIds).limit(500)
           : Promise.resolve({ data: [] }),
       ]);
       const privateUserIds = new Set<string>();
@@ -1065,9 +1069,11 @@ export const feedRouter = createTRPCRouter({
         if (v === "private") privateUserIds.add(r.user_id);
       }
       const publicChallengeIds = new Set(
-        ((chResult.data ?? []) as { id: string; visibility?: string | null }[])
-          .filter((c) => normalizeChallengeVisibility(c.visibility) === "public")
-          .map((c) => c.id)
+        filterDiscoverCatalog(
+          ((chResult.data ?? []) as { id: string; visibility?: string | null; creator_id?: string | null }[])
+            .filter((c) => normalizeChallengeVisibility(c.visibility) === "public"),
+          ctx.userId,
+        ).map((c) => c.id)
       );
 
       const eligible = events.filter((ev) => {

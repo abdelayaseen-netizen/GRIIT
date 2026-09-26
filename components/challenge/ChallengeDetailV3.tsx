@@ -144,12 +144,16 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
   const description = (p.description ?? "").trim();
   const footerPad = blocked ? 24 : 28;
   const footerTop = blocked ? 14 : DS_V3.space.lg;
-  const peopleChip =
-    invited
-      ? ofTen(p.invite!.memberCount)
-      : p.participationType === "team"
-        ? ofTen(p.participantsCount)
-        : peopleLabel(p.participantsCount);
+  const isSolo = p.participationType === "solo";
+  const peopleChip = invited
+    ? ofTen(p.invite!.memberCount)
+    : isSolo
+      ? null
+      : p.participantsCount <= 0
+        ? null
+        : p.participationType === "team"
+          ? ofTen(p.participantsCount)
+          : peopleLabel(p.participantsCount);
 
   if (p.error) {
     return (
@@ -187,7 +191,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         <View style={styles.chips}>
           <FactChip label={formatDays(p.durationDays)} />
           <FactChip label={PARTICIPATION_LABEL[p.participationType]} />
-          <FactChip label={peopleChip} muted={invited || p.participationType === "team"} />
+          {peopleChip ? (
+            <FactChip label={peopleChip} muted={invited || p.participationType === "team"} />
+          ) : null}
         </View>
 
         <Text style={styles.heading}>{"What you'll post"}</Text>

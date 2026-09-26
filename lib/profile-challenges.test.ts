@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   countSecuredInRange,
   detailLine,
+  finishedDateRangeLine,
   finishedHeaderLine,
   leftRecordLine,
   pickLatestEndedEnrollment,
@@ -113,8 +114,8 @@ describe("finished catalog header", () => {
     expect(countSecuredInRange(["2026-09-16", "2026-09-17", "2026-09-21"], "2026-09-16", "2026-09-20")).toBe(2);
   });
 
-  it("left record line is calendar day plus secured of duration", () => {
-    expect(leftRecordLine(8, 5, 14)).toBe("Left on day 8 · 5 of 14 secured");
+  it("left record line is calendar day plus secured of window Y", () => {
+    expect(leftRecordLine(8, 5, 8)).toBe("Left on day 8 · 5 of 8 secured");
   });
 });
 
@@ -139,6 +140,46 @@ describe("challenge catalog screen branches", () => {
     expect(catalog).toContain("onStartAgain={finished ? () => void onJoin() : undefined}");
     expect(detail).toContain("finishedCtaLabel");
     expect(detail).toContain('p.finishedCtaLabel ?? "Start again"');
+    expect(detail).toContain("isSolo");
+    expect(detail).toContain("peopleChip ?");
+    expect(detail).toContain('p.participationType === "solo"');
+  });
+});
+
+describe("finished date range is inclusive last day", () => {
+  const fmt = (key: string) => {
+    const [, m, d] = key.split("-").map(Number);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${d} ${months[(m ?? 1) - 1]}`;
+  };
+
+  it("left on 26 Sep → to 26 Sep", () => {
+    const line = finishedDateRangeLine("2026-09-22", "2026-09-27", fmt);
+    expect(line).toBe("22 Sep to 26 Sep");
+    expect(
+      detailLine(
+        {
+          id: "1",
+          challengeId: "c",
+          title: "Read 30 min",
+          status: "abandoned",
+          duration_days: 30,
+          current_day: 5,
+          secured_days: 4,
+          started_at: "2026-09-22",
+          ended_at: "2026-09-27",
+        },
+        fmt,
+      ),
+    ).toBe("22 Sep to 26 Sep");
+  });
+
+  it("1-day run is a single date", () => {
+    expect(finishedDateRangeLine("2026-09-26", "2026-09-27", fmt)).toBe("26 Sep");
+  });
+
+  it("ended 23 → to 23", () => {
+    expect(finishedDateRangeLine("2026-09-16", "2026-09-24", fmt)).toBe("16 Sep to 23 Sep");
   });
 });
 

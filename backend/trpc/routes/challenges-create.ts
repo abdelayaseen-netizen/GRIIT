@@ -17,6 +17,7 @@ import {
 import { guestUsername } from "../../lib/guest-username";
 import { GROUP_MAX_MEMBERS } from "../../lib/group-challenges";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { soloCreateVisibility } from "../../lib/create-visibility";
 
 /** Auto-join creator after insert; non-fatal on failure. Inserts joined_challenge activity when join succeeds. */
 async function autoJoinCreatorAfterCreate(
@@ -279,7 +280,7 @@ export const challengesCreateProcedures = {
         replay_policy: input.replayPolicy || "allow_replay",
         require_same_rules: input.requireSameRules ?? true,
         show_replay_label: input.showReplayLabel ?? true,
-        visibility: isGroup ? "PRIVATE" : (input.visibility || "FRIENDS").toUpperCase(),
+        visibility: soloCreateVisibility(input.participationType, input.visibility),
         participation_type: input.participationType ?? "solo",
         team_size: isGroup ? GROUP_MAX_MEMBERS : (input.teamSize ?? 1),
         run_status: runStatus,

@@ -113,6 +113,18 @@ function instantOnDateKeyInZone(dateKey: string, timeZone: string): Date {
 /**
  * Monday (ISO week) of the calendar week containing `date`, in the given timezone.
  */
+/** Days of this Monday week that have already ended (today is not counted). */
+export function elapsedWeekEnded(weekStartKey: string, todayKey: string): number {
+  if (!weekStartKey || !todayKey || todayKey < weekStartKey) return 0;
+  let n = 0;
+  let cur = weekStartKey;
+  while (cur < todayKey && n < 7) {
+    n += 1;
+    cur = addCalendarDaysToDateKey(cur, 1);
+  }
+  return n;
+}
+
 export function getWeekStartDateKey(date: Date = new Date(), timeZone?: string | null): string {
   const tz = timeZone?.trim() || "UTC";
   try {

@@ -130,6 +130,14 @@ export function exclusiveEndDateKey(
   return last;
 }
 
+/** Inclusive last day of a half-open [start, exclusiveEnd) window. */
+export function inclusiveLastDateKey(startDateKey: string, exclusiveEndDateKey: string): string {
+  if (exclusiveEndDateKey && exclusiveEndDateKey > startDateKey) {
+    return addCalendarDaysToDateKey(exclusiveEndDateKey, -1);
+  }
+  return exclusiveEndDateKey || startDateKey;
+}
+
 export function tasksDueOnDay(dateKey: string, enrollments: EnrollmentTasks[]): TallyTask[] {
   const seen = new Set<string>();
   const out: TallyTask[] = [];

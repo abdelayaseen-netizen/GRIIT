@@ -2,6 +2,7 @@
  * Profile → Challenges rows. Copy from design/handoff/src/components/ProfileChallenges.tsx.
  */
 import type { ProfileRecord } from "@/lib/profile-v2-record";
+import { inclusiveLastDateKey } from "../backend/lib/record-days";
 
 export type ChallengeStatus = "active" | "completed" | "abandoned" | "failed";
 
@@ -83,13 +84,23 @@ export function countSecuredInRange(keys: string[], startKey: string, endKey: st
   return keys.filter((k) => k >= startKey && k <= endKey).length;
 }
 
+export function finishedDateRangeLine(
+  startKey: string,
+  exclusiveEndKey: string,
+  fmt: (key: string) => string,
+): string {
+  const last = inclusiveLastDateKey(startKey, exclusiveEndKey);
+  if (!last || last === startKey) return fmt(startKey);
+  return `${fmt(startKey)} to ${fmt(last)}`;
+}
+
 export function detailLine(c: ChallengeRow, fmt: (iso: string) => string): string {
   if (c.status === "active") {
     return c.secured_today
       ? `${c.tasks_today} of ${c.tasks_today} secured today`
       : "Not yet today";
   }
-  return `${fmt(c.started_at)} to ${fmt(c.ended_at ?? c.started_at)}`;
+  return finishedDateRangeLine(c.started_at, c.ended_at ?? c.started_at, fmt);
 }
 
 function asStatus(status: string): ChallengeStatus {

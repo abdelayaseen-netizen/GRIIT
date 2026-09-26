@@ -4,6 +4,7 @@
  */
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { formatDayMonthYear } from "@/lib/profile-v2-badges";
+import { finishedRunFromEnrollment } from "../backend/lib/finished-run";
 
 export type DayState = "camera" | "self" | "missed" | "frozen" | "last_stand";
 
@@ -20,6 +21,8 @@ export type EndedChallenge = {
   longest_streak: number;
   started_at: string;
   ended_at: string;
+  secured: number;
+  elapsed: number;
 };
 
 const SECURED: DayState[] = ["camera", "self"];
@@ -163,6 +166,7 @@ export function endedChallengeFromUnseen(
   row: UnseenEndingRow,
   input: {
     timeZone: string;
+    todayKey: string;
     securedDateKeys: readonly string[];
     frozenDateKeys?: readonly string[];
     lastStandDateKeys?: readonly string[];
@@ -173,7 +177,18 @@ export function endedChallengeFromUnseen(
   const startIso = row.start_at ?? row.ended_at ?? new Date().toISOString();
   const endIso = row.ended_at ?? row.end_at ?? startIso;
   const startKey = dateKeyFromIso(startIso, input.timeZone);
-  const keys = enrollmentDateKeys(startKey, ch.duration_days);
+  const status = endedStatusOf(row.status);
+  const score = finishedRunFromEnrollment({
+    startAt: startIso,
+    endAt: row.end_at ?? endIso,
+    endedAt: row.ended_at ?? null,
+    status,
+    timeZone: input.timeZone,
+    todayKey: input.todayKey,
+    securedDateKeys: input.securedDateKeys,
+    durationDays: ch.duration_days,
+  });
+  const keys = score?.dueDayKeys ?? enrollmentDateKeys(startKey, ch.duration_days);
   const sets = {
     secured: new Set(input.securedDateKeys),
     frozen: new Set(input.frozenDateKeys ?? []),
@@ -181,7 +196,6 @@ export function endedChallengeFromUnseen(
     camera: new Set(input.cameraDateKeys ?? []),
   };
   const days = keys.map((k) => dayStateForKey(k, sets));
-  const status = endedStatusOf(row.status);
   return {
     id: row.id,
     challengeId: row.challenge_id,
@@ -193,6 +207,8 @@ export function endedChallengeFromUnseen(
     longest_streak: longestSecuredStreak(days),
     started_at: startIso,
     ended_at: endIso,
+    secured: score?.secured ?? securedCount(days),
+    elapsed: score?.elapsed ?? days.length,
   };
 }
 

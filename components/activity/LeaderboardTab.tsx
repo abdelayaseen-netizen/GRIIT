@@ -218,7 +218,9 @@ function LeaderboardBody({
       ) : null}
       {showBoard ? (
         <View style={styles.week}>
-          <Text style={styles.caption}>{elapsedWeekLine(challengeBoard.data?.elapsedEnded ?? 1)}</Text>
+          {typeof challengeBoard.data?.elapsedEnded === "number" ? (
+            <Text style={styles.caption}>{elapsedWeekLine(challengeBoard.data.elapsedEnded)}</Text>
+          ) : null}
           {slices.memberCount === 2 ? <Text style={styles.caption}>{TWO_PERSON_LINE}</Text> : null}
           {slices.split ? <Text style={styles.label}>{TOP_OF_CHALLENGE}</Text> : null}
           {slices.split ? <Text style={styles.label}>{AROUND_YOU}</Text> : null}

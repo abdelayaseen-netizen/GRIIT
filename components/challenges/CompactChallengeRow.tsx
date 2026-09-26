@@ -11,9 +11,10 @@ import {
   type ChallengeCategory as CompactChallengeCategory,
   type ChallengeDifficulty as CompactChallengeDifficulty,
 } from "./_card-helpers";
+import { discoverProofLabel } from "@/lib/discover-proof-label";
 
 // CompactChallengeCategory and CompactChallengeDifficulty are local re-exports of _card-helpers; unused externally.
-export type CompactChallengeProofType = "photo" | "text" | "location";
+export type CompactChallengeProofType = "photo" | "text" | "location" | "self_reported";
 
 export interface CompactChallengeRowData {
   id: string;
@@ -22,17 +23,12 @@ export interface CompactChallengeRowData {
   duration_days: number;
   difficulty: CompactChallengeDifficulty;
   proof_type: CompactChallengeProofType;
+  task_types?: readonly string[];
   category: CompactChallengeCategory;
 }
 
 export interface CompactChallengeRowProps {
   data: CompactChallengeRowData;
-}
-
-function proofTypeLabel(p: CompactChallengeProofType): string {
-  if (p === "photo") return "Photo proof";
-  if (p === "location") return "Location proof";
-  return "Text proof";
 }
 
 export const CompactChallengeRow = React.memo(function CompactChallengeRow({
@@ -43,7 +39,7 @@ export const CompactChallengeRow = React.memo(function CompactChallengeRow({
   const CatIcon = cat.Icon;
   const metaLine = `${data.duration_days} ${dayUnit(data.duration_days)} · ${difficultyDescriptive(
     data.difficulty
-  )} · ${proofTypeLabel(data.proof_type)}`;
+  )} · ${discoverProofLabel({ proofType: data.proof_type, taskTypes: data.task_types })}`;
   const a11y = `Open ${data.name} challenge`;
 
   const target = (data.slug ?? data.id).trim() || data.id;

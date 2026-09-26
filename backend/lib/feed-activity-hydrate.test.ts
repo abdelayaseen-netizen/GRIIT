@@ -129,9 +129,11 @@ describe("finishedSecuredDays", () => {
     expect(hydrate).toContain("lt(\"date_key\", finishedBounds.toKeyExclusive)");
     expect(hydrate).not.toMatch(/from\("day_secures"\)\.select\("user_id, date_key"\)\.in\("user_id", userIds\)(?!\.)/);
     expect(hydrate).not.toMatch(/from ["']@\//);
-    expect(hydrate).toContain('from "./secured-elapsed"');
+    expect(hydrate).toContain('from "./finished-run"');
     expect(hydrate).toContain('from "./calendar-day"');
-    expect(hydrate).toContain('from "./due-keys"');
+    const reduction = readFileSync(resolve(__dirname, "./finished-run.ts"), "utf8");
+    expect(reduction).toContain('from "./secured-elapsed"');
+    expect(reduction).toContain('from "./due-keys"');
   });
 
   it("returns undefined when start_at is missing — UI omits the line", () => {

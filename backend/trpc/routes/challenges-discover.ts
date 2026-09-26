@@ -12,6 +12,7 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
+import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 
 /** Discover v3 category chips → DB `challenges.category` values. */
 const DISCOVER_CATEGORY_VALUES = ["all", "body", "mind", "faith", "focus"] as const;
@@ -92,8 +93,11 @@ export const challengesDiscoverProcedures = {
 
     const { data: chRowsRaw, error } = await q;
     requireNoError(error, "Failed to load discover challenges.");
-    const chRows = (chRowsRaw ?? []).filter(
-      (c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() !== "PRIVATE"
+    const chRows = filterDiscoverCatalog(
+      (chRowsRaw ?? []).filter(
+        (c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() !== "PRIVATE"
+      ),
+      ctx.userId,
     );
 
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -216,7 +220,7 @@ export const challengesDiscoverProcedures = {
       let baseQuery = server
         .from("challenges")
         .select(
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")
@@ -231,10 +235,14 @@ export const challengesDiscoverProcedures = {
 
       const { data: chRows, error } = await baseQuery;
       requireNoError(error, "Failed to load featured challenge.");
-      const candidates = (chRows ?? []) as (ChallengeWithTasksRow & {
-        difficulty?: string | null;
-        duration_days?: number;
-      })[];
+      const candidates = filterDiscoverCatalog(
+        (chRows ?? []) as (ChallengeWithTasksRow & {
+          difficulty?: string | null;
+          duration_days?: number;
+          creator_id?: string | null;
+        })[],
+        ctx.userId,
+      );
       if (candidates.length === 0) return null;
 
       const dayStart = new Date();
@@ -369,6 +377,9 @@ export const challengesDiscoverProcedures = {
         proof_type: deriveProofType(
           (pick.challenge_tasks ?? null) as ChallengeTaskRowRaw[] | null
         ),
+        task_types: ((pick.challenge_tasks ?? []) as ChallengeTaskRowRaw[]).map(
+          (t) => String(t.task_type ?? ""),
+        ),
         category: toDiscoverCategory(pick.category),
         joinedTodayCount,
         featuredProof,
@@ -396,7 +407,7 @@ export const challengesDiscoverProcedures = {
       let q = server
         .from("challenges")
         .select(
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")
@@ -411,10 +422,14 @@ export const challengesDiscoverProcedures = {
 
       const { data: chRows, error } = await q;
       requireNoError(error, "Failed to load Quick wins challenges.");
-      const candidates = (chRows ?? []) as (ChallengeWithTasksRow & {
-        difficulty?: string | null;
-        duration_days?: number;
-      })[];
+      const candidates = filterDiscoverCatalog(
+        (chRows ?? []) as (ChallengeWithTasksRow & {
+          difficulty?: string | null;
+          duration_days?: number;
+          creator_id?: string | null;
+        })[],
+        ctx.userId,
+      );
       if (candidates.length === 0) return [];
 
       const dayStart = new Date();
@@ -471,7 +486,7 @@ export const challengesDiscoverProcedures = {
       let q = server
         .from("challenges")
         .select(
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)"
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, creator_id, participation_type, team_size, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")
@@ -486,11 +501,15 @@ export const challengesDiscoverProcedures = {
 
       const { data: chRows, error } = await q;
       requireNoError(error, "Failed to load Build a habit challenges.");
-      const all = (chRows ?? []) as (ChallengeWithTasksRow & {
-        difficulty?: string | null;
-        duration_days?: number;
-        team_size?: number | null;
-      })[];
+      const all = filterDiscoverCatalog(
+        (chRows ?? []) as (ChallengeWithTasksRow & {
+          difficulty?: string | null;
+          duration_days?: number;
+          creator_id?: string | null;
+          team_size?: number | null;
+        })[],
+        ctx.userId,
+      );
       if (all.length === 0) return [];
 
       const teamRows = all.filter(isTeamRow);
@@ -590,13 +609,13 @@ export const challengesDiscoverProcedures = {
     // NOTE(v2): Personalize by user goals when goal data is available
     const { data: rows, error } = await server
       .from("challenges")
-      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status")
+      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id")
       .eq("status", "published")
       .eq("visibility", "PUBLIC")
       .limit(60);
     requireNoError(error, "Failed to load recommendations.");
 
-    const sorted = [...(rows ?? [])].sort(
+    const sorted = [...filterDiscoverCatalog(rows ?? [], ctx.userId)].sort(
       (a, b) => (Number(b.participants_count) || 0) - (Number(a.participants_count) || 0)
     );
     const solo = sorted.filter((c: { participation_type?: string | null }) => {
@@ -670,11 +689,12 @@ export const challengesDiscoverProcedures = {
     const server = getSupabaseServer() ?? ctx.supabase;
     const { data, error } = await server
       .from("challenges")
-      .select("category, participation_type")
+      .select("category, participation_type, creator_id")
       .eq("status", "published")
       .eq("visibility", "PUBLIC")
       .limit(5000);
     requireNoError(error, "Failed to load category counts.");
+    const catalogRows = filterDiscoverCatalog(data ?? [], ctx.userId);
     const counts: Record<string, number> = {
       Fitness: 0,
       Mind: 0,
@@ -682,7 +702,7 @@ export const challengesDiscoverProcedures = {
       Faith: 0,
       Team: 0,
     };
-    for (const row of data ?? []) {
+    for (const row of catalogRows) {
       const r = row as { category?: string | null; participation_type?: string | null };
       const cat = String(r.category ?? "").toLowerCase();
       if (cat === "fitness") counts.Fitness = (counts.Fitness ?? 0) + 1;
@@ -746,7 +766,11 @@ export const challengesDiscoverProcedures = {
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load featured challenges.");
-      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => {
+      const catalog = filterDiscoverCatalog(
+        (data ?? []) as (ChallengeWithTasksRow & { creator_id?: string | null })[],
+        ctx.userId,
+      );
+      const items = catalog.map((challenge: ChallengeWithTasksRow) => {
         const meta = (challenge as { metadata?: Record<string, unknown> }).metadata;
         const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
         const normalized = with24hEndsAt(challenge as { duration_type?: string; ends_at?: string | null; live_date?: string | null } & ChallengeWithTasksRow);

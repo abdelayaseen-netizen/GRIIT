@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { builtinModules } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -15,12 +16,37 @@ function resolveSpec(fromFile: string, spec: string): string | null {
   return null;
 }
 
+/** Bare package name for a specifier. node: builtins return null (allowed). */
+export function barePackageName(spec: string): string | null {
+  if (spec.startsWith(".") || spec.startsWith("node:")) return null;
+  if (spec.startsWith("@/") || spec.startsWith("@backend/")) return null;
+  if (spec.startsWith("@")) {
+    const parts = spec.split("/");
+    return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : spec;
+  }
+  return spec.split("/")[0] ?? spec;
+}
+
+const NODE_BUILTINS = new Set([
+  ...builtinModules,
+  ...builtinModules.map((m) => m.startsWith("node:") ? m.slice(5) : m),
+]);
+
+export function isBackendAllowedPackage(spec: string, deps: ReadonlySet<string>): boolean {
+  const name = barePackageName(spec);
+  if (name == null) return true;
+  if (NODE_BUILTINS.has(name)) return true;
+  return deps.has(name);
+}
+
 function walkFrom(entry: string): {
   files: string[];
   aliasHits: { file: string; spec: string }[];
+  bareHits: { file: string; spec: string }[];
 } {
   const seen = new Set<string>();
   const aliasHits: { file: string; spec: string }[] = [];
+  const bareHits: { file: string; spec: string }[] = [];
   const queue = [resolve(entry)];
   while (queue.length > 0) {
     const file = queue.pop()!;
@@ -34,11 +60,15 @@ function walkFrom(entry: string): {
         aliasHits.push({ file: relative(ROOT, file), spec });
         continue;
       }
+      if (!spec.startsWith(".")) {
+        bareHits.push({ file: relative(ROOT, file), spec });
+        continue;
+      }
       const next = resolveSpec(file, spec);
       if (next) queue.push(next);
     }
   }
-  return { files: [...seen].sort(), aliasHits };
+  return { files: [...seen].sort(), aliasHits, bareHits };
 }
 
 describe("backend import graph (Railway tsx)", () => {
@@ -70,6 +100,20 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/task-completion-result.ts",
       "lib/task-progress.ts",
     ]);
+  });
+
+  it("bare specifiers resolve from backend/package.json dependencies", () => {
+    const pkg = JSON.parse(readFileSync(join(BACKEND, "package.json"), "utf8")) as {
+      dependencies?: Record<string, string>;
+    };
+    const deps = new Set(Object.keys(pkg.dependencies ?? {}));
+    expect(isBackendAllowedPackage("expo-haptics", deps)).toBe(false);
+    expect(isBackendAllowedPackage("react-native", deps)).toBe(false);
+    expect(isBackendAllowedPackage("node:fs", deps)).toBe(true);
+    expect(isBackendAllowedPackage("crypto", deps)).toBe(true);
+    expect(isBackendAllowedPackage("zod", deps)).toBe(true);
+    const illegal = graph.bareHits.filter((h) => !isBackendAllowedPackage(h.spec, deps));
+    expect(illegal).toEqual([]);
   });
 
   it("shared counters import nothing server-only", () => {

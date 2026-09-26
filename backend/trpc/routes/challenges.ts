@@ -23,6 +23,7 @@ import { challengesDiscoverProcedures } from "./challenges-discover";
 import { challengesJoinProcedures } from "./challenges-join";
 import { challengesCreateProcedures } from "./challenges-create";
 import { logger } from "../../lib/logger";
+import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { GROUP_MAX_MEMBERS, shouldEvaluateTeamDay } from "../../lib/group-challenges";
 
@@ -117,7 +118,11 @@ export const challengesRouter = createTRPCRouter({
 
       const { data, error, count } = await query;
       requireNoError(error, "Failed to load challenges.");
-      const items = (data ?? []).map((challenge: ChallengeWithTasksRow) => {
+      const catalog = filterDiscoverCatalog(
+        (data ?? []) as (ChallengeWithTasksRow & { creator_id?: string | null })[],
+        ctx.userId,
+      );
+      const items = catalog.map((challenge: ChallengeWithTasksRow) => {
         const meta = (challenge as { metadata?: Record<string, unknown> }).metadata;
         const short_hook = typeof meta?.short_hook === "string" ? meta.short_hook : null;
         return {

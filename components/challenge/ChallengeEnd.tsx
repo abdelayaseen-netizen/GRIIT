@@ -124,7 +124,7 @@ function Single(p: ChallengeEndProps) {
   const insets = useSafeAreaInsets();
   const c = p.challenges[0];
   if (!c) return null;
-  const secured = securedCount(c.days);
+  const secured = c.secured ?? securedCount(c.days);
   const atCap = p.challengeLimit != null && p.activeCount >= p.challengeLimit;
 
   return (
@@ -147,7 +147,7 @@ function Single(p: ChallengeEndProps) {
           <Text style={styles.label}>Days secured</Text>
           <View style={styles.heroRow}>
             <DisplayNumber value={secured} size="moment" />
-            <Text style={styles.ofN}>of {c.days.length}</Text>
+            <Text style={styles.ofN}>of {c.elapsed ?? c.days.length}</Text>
           </View>
         </View>
         <View style={styles.block}>
@@ -223,8 +223,8 @@ function Combined(p: ChallengeEndProps) {
                 <View style={styles.combinedRow}>
                   <Text style={[styles.bodyStrong, styles.flex]}>{c.title}</Text>
                   <View style={styles.heroRow}>
-                    <Text style={styles.combinedNum}>{securedCount(c.days)}</Text>
-                    <Text style={styles.secondary}>of {c.days.length}</Text>
+                    <Text style={styles.combinedNum}>{c.secured ?? securedCount(c.days)}</Text>
+                    <Text style={styles.secondary}>of {c.elapsed ?? c.days.length}</Text>
                   </View>
                 </View>
                 <Sheet days={c.days} cols={COMBINED_COLS} />

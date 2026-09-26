@@ -1,5 +1,20 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { dbTaskType, journalMinWords, taskStrictAndPhoto } from "./challenges";
+import { soloCreateVisibility } from "../../lib/create-visibility";
+
+describe("solo custom visibility", () => {
+  it("never saves PUBLIC for solo, even if the client asks", () => {
+    expect(soloCreateVisibility("solo", "PUBLIC")).toBe("PRIVATE");
+    expect(soloCreateVisibility("solo", "FRIENDS")).toBe("PRIVATE");
+    expect(soloCreateVisibility(undefined, "PUBLIC")).toBe("PRIVATE");
+    expect(soloCreateVisibility("team", "PUBLIC")).toBe("PRIVATE");
+    const wizard = readFileSync(resolve(__dirname, "../../../components/create/CreateWizardV2.tsx"), "utf8");
+    expect(wizard).toContain('visibility: state.who === "group" ? "FRIENDS" : "PRIVATE"');
+    expect(wizard).not.toContain('visibility: state.who === "group" ? "FRIENDS" : "PUBLIC"');
+  });
+});
 
 describe("challenges.create helpers (regression)", () => {
   describe("dbTaskType", () => {
