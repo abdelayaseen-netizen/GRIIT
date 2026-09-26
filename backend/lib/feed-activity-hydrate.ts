@@ -3,8 +3,7 @@ import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
-import { securedElapsed } from "./secured-elapsed";
-import { dueKeysForRange } from "./due-keys";
+import { finishedRunFromEnrollment } from "./finished-run";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -65,21 +64,9 @@ export function finishedSecuredDays(args: {
   timeZone: string;
   todayKey: string;
   securedDateKeys: readonly string[];
+  durationDays?: number;
 }): number | undefined {
-  if (!args.startAt) return undefined;
-  const startDateKey = dateKeyFromIso(args.startAt, args.timeZone);
-  const status = args.status && args.status.length > 0 ? args.status : "completed";
-  const endDateKey = exclusiveEndDateKey(
-    { status, end_at: args.endAt ?? args.startAt, ended_at: args.endedAt ?? null },
-    startDateKey,
-    args.timeZone,
-  );
-  const dueDayKeys = dueKeysForRange({ status, startDateKey, endDateKey }, args.todayKey);
-  return securedElapsed({
-    dueDayKeys,
-    securedDateKeys: args.securedDateKeys,
-    todayKey: args.todayKey,
-  }).secured;
+  return finishedRunFromEnrollment(args)?.secured;
 }
 
 export type FinishedSecureQueryBounds = {
@@ -331,8 +318,8 @@ export async function hydrateActivityEventsToPosts(
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
     const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? active;
-    const securedDays = isCompletedChallenge
-      ? finishedSecuredDays({
+    const finishedRun = isCompletedChallenge
+      ? finishedRunFromEnrollment({
           startAt: enrollment?.start_at,
           endAt: enrollment?.end_at,
           endedAt: enrollment?.ended_at,
@@ -340,8 +327,10 @@ export async function hydrateActivityEventsToPosts(
           timeZone: tz,
           todayKey,
           securedDateKeys: securedKeysByUser.get(ev.user_id) ?? [],
+          durationDays,
         })
       : undefined;
+    const securedDays = finishedRun?.secured;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const stat = reactionStats.get(ev.id);
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
@@ -359,7 +348,7 @@ export async function hydrateActivityEventsToPosts(
       currentDay: Math.max(1, currentDay),
       securedDays,
       securedToday: securedTodayByUser.has(ev.user_id),
-      totalDays: Math.max(1, durationDays),
+      totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays),
       eventType: ev.event_type,
       isCompleted: isCompletedChallenge,
       hasProof: hasProof && !isCompletedChallenge,

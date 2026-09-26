@@ -9,6 +9,7 @@ export interface HeroFeaturedData {
   duration_days: number;
   difficulty: HeroFeaturedDifficulty;
   proof_type: HeroFeaturedProofType;
+  task_types?: string[];
   category: HeroFeaturedCategory;
   joinedTodayCount: number;
   featuredProof: {

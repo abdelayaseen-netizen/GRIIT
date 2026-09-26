@@ -10,6 +10,7 @@
  * Verdict: display only. Not persisted.
  */
 import { dueKeysForRange, RECORD_WINDOW_STATUSES } from "../backend/lib/due-keys";
+import { finishedRunScore } from "../backend/lib/finished-run";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
 import { securedElapsed } from "./consistency";
@@ -357,16 +358,22 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const finishedRanges = listed.filter((r) => r.status !== "active");
   const completed = finishedRanges.map((range) => {
     const windowStatus = RECORD_WINDOW_STATUSES.has(range.status) ? range.status : "completed";
-    const keys = dueKeysForRange({ ...range, status: windowStatus }, input.todayKey);
-    const lastKey = keys[keys.length - 1] ?? range.startDateKey;
-    const verified = keys.filter((k) => secured.has(k)).length;
+    const score = finishedRunScore({
+      startDateKey: range.startDateKey,
+      exclusiveEndDateKey: range.endDateKey,
+      status: windowStatus,
+      todayKey: input.todayKey,
+      securedDateKeys: input.securedDateKeys,
+      durationDays: range.durationDays,
+    });
+    const lastKey = score.dueDayKeys[score.dueDayKeys.length - 1] ?? range.startDateKey;
     return {
       id: range.id,
       challengeId: range.challengeId,
       name: range.name,
-      verified,
+      verified: score.secured,
       length: range.durationDays,
-      value: `${verified} of ${range.durationDays}`,
+      value: `${score.secured} of ${score.elapsed}`,
       status: range.status,
       startDateKey: range.startDateKey,
       endDateKey: range.endDateKey,

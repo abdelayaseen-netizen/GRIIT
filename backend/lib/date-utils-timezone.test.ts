@@ -1,5 +1,28 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { getTodayDateKey, resolveCheckInTimeZone } from "./date-utils";
+import {
+  elapsedWeekEnded,
+  getTodayDateKey,
+  getWeekStartDateKey,
+  resolveCheckInTimeZone,
+} from "./date-utils";
+
+describe("elapsedWeekEnded — Monday week in profile IANA", () => {
+  it("Monday → zero, Saturday → five, Sunday → six", () => {
+    expect(elapsedWeekEnded("2026-09-21", "2026-09-21")).toBe(0);
+    expect(elapsedWeekEnded("2026-09-21", "2026-09-26")).toBe(5);
+    expect(elapsedWeekEnded("2026-09-21", "2026-09-27")).toBe(6);
+    expect(elapsedWeekEnded("2026-09-21", "2026-09-27")).not.toBe(7);
+  });
+
+  it("uses the profile date when UTC is already the next day", () => {
+    const instant = new Date("2026-09-27T02:00:00.000Z");
+    const nyToday = "2026-09-26";
+    const utcToday = "2026-09-27";
+    expect(getWeekStartDateKey(instant, "America/New_York")).toBe("2026-09-21");
+    expect(elapsedWeekEnded(getWeekStartDateKey(instant, "America/New_York"), nyToday)).toBe(5);
+    expect(elapsedWeekEnded(getWeekStartDateKey(instant, "UTC"), utcToday)).toBe(6);
+  });
+});
 
 describe("resolveCheckInTimeZone", () => {
   it("prefers task schedule_timezone over profile", () => {

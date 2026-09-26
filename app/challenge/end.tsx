@@ -16,6 +16,7 @@ import {
 } from "@/lib/challenge-end";
 import { FREE_ACTIVE_CHALLENGES_LIMIT, countActiveEnrollments } from "@/lib/free-challenge-limit";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
+import { getTodayDateKey } from "@/lib/date-utils";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { ROUTES } from "@/lib/routes";
 import { captureError } from "@/lib/sentry";
@@ -58,6 +59,7 @@ function ChallengeEndScreenInner() {
   const challenges = (unseenQuery.data ?? []).map((row) =>
     endedChallengeFromUnseen(row, {
       timeZone,
+      todayKey: getTodayDateKey(timeZone),
       securedDateKeys: Array.isArray(bootstrap.data?.securedDateKeys)
         ? bootstrap.data.securedDateKeys
         : [],

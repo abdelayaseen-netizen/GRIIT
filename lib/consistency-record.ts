@@ -17,6 +17,7 @@ export const RECORD_DAY_SECURED = "Secured";
 export const RECORD_DAY_NOT_SECURED = "Not secured";
 export const RECORD_DAY_OPEN = "Open";
 export const NOTHING_WAS_CHECKED = "nothing was checked";
+export const NO_TASK_RECORD_FOR_DAY = "Secured. No task record for this day.";
 
 export type RecordDayRowState = "secured" | "not_secured" | "last_stand" | "frozen" | "open";
 
@@ -48,6 +49,7 @@ export function recordDayLabel(state: string): string {
 
 export function recordDayDetail(day: RecordDayRow): string {
   if (day.state === "secured") {
+    if (day.total === 0 || day.done === 0) return NO_TASK_RECORD_FOR_DAY;
     return `${day.done} of ${day.total} · ${day.cameraProofCount} camera proof`;
   }
   if (day.state === "last_stand") {

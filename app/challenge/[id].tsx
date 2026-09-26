@@ -19,8 +19,7 @@ import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { exclusiveEndDateKey } from "@/backend/lib/record-days";
-import { dueKeysForRange } from "@/lib/profile-v2-record";
-import { securedElapsed } from "@/lib/consistency";
+import { finishedRunScore } from "@/backend/lib/finished-run";
 import {
   finishedHeaderLine,
   leftRecordLine,
@@ -270,35 +269,30 @@ export default function ChallengeDetailScreen() {
           timeZone,
         )
       : "";
-  const dueDayKeys =
+  const score =
     ended && startKey && exclusiveEnd
-      ? dueKeysForRange(
-          {
-            status: ended.status === "failed" ? "completed" : ended.status,
-            startDateKey: startKey,
-            endDateKey: exclusiveEnd,
-          },
+      ? finishedRunScore({
+          startDateKey: startKey,
+          exclusiveEndDateKey: exclusiveEnd,
+          status: ended.status === "failed" ? "completed" : ended.status,
           todayKey,
-        )
-      : [];
-  const recordWindow = securedElapsed({
-    dueDayKeys,
-    securedDateKeys: securedKeysQuery.data ?? [],
-    todayKey,
-  });
-  const lastDueKey = dueDayKeys[dueDayKeys.length - 1] ?? startKey;
+          securedDateKeys: securedKeysQuery.data ?? [],
+          durationDays,
+        })
+      : null;
+  const lastDueKey = score?.dueDayKeys[score.dueDayKeys.length - 1] ?? startKey;
   const endedOnDay = startKey && lastDueKey
     ? calendarDay(startKey, lastDueKey, durationDays)
     : 1;
   const isAbandoned = ended?.status === "abandoned";
   const finishedLine =
-    finished && (securedKeysQuery.isFetched || securedKeysQuery.isError)
+    finished && score && (securedKeysQuery.isFetched || securedKeysQuery.isError)
       ? isAbandoned
-        ? leftRecordLine(endedOnDay, recordWindow.secured, durationDays)
+        ? leftRecordLine(endedOnDay, score.secured, score.elapsed)
         : finishedHeaderLine({
             status: ended.status === "failed" ? "failed" : "completed",
-            secured_days: recordWindow.secured,
-            duration_days: durationDays,
+            secured_days: score.secured,
+            duration_days: score.elapsed,
             current_day: endedOnDay,
             ended_on_day: endedOnDay,
           })

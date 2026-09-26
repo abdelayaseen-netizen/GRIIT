@@ -15,13 +15,13 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import {
-  addCalendarDaysToDateKey,
   dateKeyFromIsoInTimeZone,
   getTodayDateKey,
 } from "../../lib/date-utils";
 import {
   buildRecordDays,
   exclusiveEndDateKey,
+  inclusiveLastDateKey,
   historyEndDateKey,
   monthKeyFromDateKey,
   type EnrollmentTasks,
@@ -461,10 +461,7 @@ export const profilesRecordProcedures = {
         ? {
             enrollments: ranges
               .map((r) => {
-                const inclusiveEnd =
-                  r.endDateKey && r.endDateKey > r.startDateKey
-                    ? addCalendarDaysToDateKey(r.endDateKey, -1)
-                    : r.endDateKey;
+                const inclusiveEnd = inclusiveLastDateKey(r.startDateKey, r.endDateKey);
                 return {
                   challengeId: r.challengeId,
                   startDateKey: r.startDateKey,

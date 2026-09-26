@@ -8,6 +8,7 @@ import {
   HELD_BY_LAST_STAND_LABEL,
   RECORD_DAY_NOT_SECURED,
   RECORD_DAY_OPEN,
+  NO_TASK_RECORD_FOR_DAY,
   RECORD_DAY_SECURED,
   freezeSplitLine,
   challengeProofCaption,
@@ -69,6 +70,16 @@ describe("record day rows by state", () => {
         row("secured", { cameraProof: true, cameraProofCount: 3, done: 6, missedTaskNames: [] }),
       ),
     ).toBe("6 of 6 · 3 camera proof");
+    expect(
+      recordDayDetail(
+        row("secured", { done: 0, total: 4, cameraProofCount: 0, missedTaskNames: [] }),
+      ),
+    ).toBe(NO_TASK_RECORD_FOR_DAY);
+    expect(
+      recordDayDetail(
+        row("secured", { done: 0, total: 0, cameraProofCount: 0, missedTaskNames: [] }),
+      ),
+    ).toBe("Secured. No task record for this day.");
     expect(recordDayDetail(row("not_secured"))).toBe("4 of 6 · Run, Read");
     expect(recordDayDetail(row("open"))).toBe("4 of 6 · Run, Read");
     expect(recordDayDetail(row("last_stand"))).toBe("4 of 6 · nothing was checked");

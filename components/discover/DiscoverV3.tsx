@@ -24,6 +24,7 @@ import PersonCard from "@/components/discover/PersonCard";
 import type { DiscoverCategory } from "@/components/discover/CategoryChips";
 import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
+import { discoverProofLabel } from "@/lib/discover-proof-label";
 
 export type DiscoverPerson = {
   user_id: string;
@@ -66,12 +67,6 @@ function difficultyLabel(d: RecommendedChallenge["difficulty"]): string {
   if (d === "EASY") return "Easy";
   if (d === "HARD") return "Hard";
   return "Medium";
-}
-
-function proofTypeLabel(p: HeroFeaturedData["proof_type"]): string {
-  if (p === "photo") return "photo proof";
-  if (p === "location") return "location proof";
-  return "text proof";
 }
 
 function circleCaption(n: number): string | null {
@@ -133,7 +128,10 @@ export function DiscoverV3({
             coverUri={featured.featuredProof?.photo_url}
             days={featured.duration_days}
             difficulty={difficultyLabel(featured.difficulty)}
-            proofType={proofTypeLabel(featured.proof_type)}
+            proofType={discoverProofLabel({
+              proofType: featured.proof_type,
+              taskTypes: featured.task_types,
+            })}
             featured
             onStart={onStartFeatured}
             onPress={() => onOpenChallenge(featured.id, featured.slug)}

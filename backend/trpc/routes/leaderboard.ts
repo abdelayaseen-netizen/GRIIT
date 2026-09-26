@@ -2,7 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
-import { addCalendarDaysToDateKey, getTodayDateKey, getRollingWeekStartDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { getTodayDateKey, getRollingWeekStartDateKey, getWeekStartDateKey, elapsedWeekEnded, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
@@ -261,7 +261,7 @@ export const leaderboardRouter = createTRPCRouter({
       const server = getSupabaseServer() ?? ctx.supabase;
       const viewerId = ctx.userId;
       const tz = await getProfileTimeZoneForUser(ctx.supabase, viewerId);
-      const weekStartKey = getRollingWeekStartDateKey(tz);
+      const weekStartKey = getWeekStartDateKey(new Date(), tz);
       const todayKey = getTodayDateKey(tz);
 
       const { data: ch, error: chErr } = await server.from("challenges").select("id, visibility, title").eq("id", input.challengeId).maybeSingle();
@@ -363,16 +363,7 @@ export const leaderboardRouter = createTRPCRouter({
         challengeTitle: (ch as { title?: string }).title ?? "Challenge",
         visibility: vis,
         viewerOptedIn: viewerRow?.board_opt_in === true,
-        elapsedEnded: (() => {
-          if (!weekStartKey || !todayKey || todayKey < weekStartKey) return 0;
-          let n = 0;
-          let cur = weekStartKey;
-          while (cur < todayKey && n < 7) {
-            n += 1;
-            cur = addCalendarDaysToDateKey(cur, 1);
-          }
-          return n === 6 ? 7 : n;
-        })(),
+        elapsedEnded: elapsedWeekEnded(weekStartKey, todayKey),
         entries: ranked.map((r) => ({
           userId: r.userId,
           username: r.username,

@@ -73,6 +73,7 @@ describe("Chunk U challenge board", () => {
     expect(slices.around.some((r) => r.you)).toBe(true);
     expect(ranksBelowLine(slices.lowestShown)).toContain(String(slices.lowestShown));
     expect(elapsedWeekLine(1)).toBe("One day of the week has ended.");
+    expect(elapsedWeekLine(5)).toBe("Five days of the week have ended.");
     expect(elapsedWeekLine(7)).toBe("Seven days of the week have ended.");
   });
 
@@ -83,6 +84,8 @@ describe("Chunk U challenge board", () => {
     expect(board).not.toContain('label="Global"');
     expect(board).toContain("BOARD_RULE");
     expect(board).toContain("secured");
+    expect(board).not.toContain("elapsedEnded ?? 1");
+    expect(board).toContain('typeof challengeBoard.data?.elapsedEnded === "number"');
     expect(feed).toContain("feedCardVariant");
     expect(feed).toContain("InlineComments");
     expect(feed).toContain("ArrowUpRight");

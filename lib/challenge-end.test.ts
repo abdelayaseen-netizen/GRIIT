@@ -106,6 +106,7 @@ describe("endedChallengeFromUnseen", () => {
       },
       {
         timeZone: "UTC",
+        todayKey: "2026-09-20",
         securedDateKeys: ["2026-09-19"],
         cameraDateKeys: ["2026-09-19"],
       },
@@ -114,6 +115,8 @@ describe("endedChallengeFromUnseen", () => {
     expect(c.days).toEqual(["camera"]);
     expect(c.longest_streak).toBe(1);
     expect(securedCount(c.days)).toBe(1);
+    expect(c.secured).toBe(1);
+    expect(c.elapsed).toBe(1);
   });
 });
 

@@ -71,8 +71,9 @@ function deriveProofType(
       cfg.photo_required === true
     )
       return "photo";
+    if (tt === "text") return "text";
   }
-  return "text";
+  return "self_reported";
 }
 
 function toDifficulty(d: string | null | undefined): ChallengeDifficulty {
@@ -150,6 +151,7 @@ function CategoryScreenInner() {
           duration_days: Math.max(1, Number(c.duration_days ?? 7)),
           difficulty: toDifficulty(c.difficulty),
           proof_type: deriveProofType(c.challenge_tasks ?? null),
+          task_types: (c.challenge_tasks ?? []).map((t) => String(t.task_type ?? "")),
           category: toCategory(c.category),
         });
       }
