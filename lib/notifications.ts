@@ -40,6 +40,7 @@ import {
 } from "@/lib/notification-copy";
 import { eveningSecureCopy, type EveningRemaining } from "@/lib/evening-secure";
 import { trackNotificationScheduled, type ReminderType } from "@/lib/analytics";
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 
 // Foreground: banner/alert + sound (also set in registerForPushNotificationsAsync)
 Notifications.setNotificationHandler({
@@ -338,11 +339,25 @@ export async function scheduleMilestoneApproachingIfNeeded(streakCount: number):
  * Schedule a morning motivation notification.
  * Sent at user's preferred morning time (default 7 AM).
  */
+/** Local morning copy only — calendar from start_at. Omit when start_at is missing. */
+export function morningMotivationDay(args: {
+  startAt?: string | null;
+  timeZone: string;
+  todayKey: string;
+  durationDays?: number | null;
+}): number | undefined {
+  if (!args.startAt) return undefined;
+  return calendarDayFromStartAt(args.startAt, args.timeZone, args.todayKey, args.durationDays);
+}
+
 export async function scheduleMorningMotivation(params: {
   morningTime?: string;
   streakCount: number;
   taskCount: number;
-  currentDay?: number;
+  startAt?: string | null;
+  timeZone?: string;
+  todayKey?: string;
+  durationDays?: number | null;
   challengeName?: string;
 }): Promise<void> {
   try {
@@ -350,12 +365,18 @@ export async function scheduleMorningMotivation(params: {
     const tomorrow = nextOccurrence(new Date(), hour, minute);
 
     const tomorrowDateKey = tomorrow.toISOString().slice(0, 10);
+    const day = morningMotivationDay({
+      startAt: params.startAt,
+      timeZone: params.timeZone ?? "UTC",
+      todayKey: params.todayKey ?? tomorrowDateKey,
+      durationDays: params.durationDays,
+    });
     const vars: NotifVars = {
       streak: params.streakCount,
       tasks: params.taskCount,
-      day: params.currentDay,
       challenge: params.challengeName,
     };
+    if (day != null) vars.day = day;
     const { title, body } = pickTemplate("morning_motivation", vars, tomorrowDateKey);
 
     await Notifications.cancelScheduledNotificationAsync(MORNING_MOTIVATION_ID);

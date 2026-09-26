@@ -13,6 +13,7 @@ import {
   followRowAccepted,
   normalizeChallengeVisibility,
   finishedSecuredDays,
+  finishedSecureQueryBounds,
   hydrateActivityEventsToPosts,
   feedEventCurrentDay,
   type EvRow,
@@ -216,7 +217,22 @@ export const feedRouter = createTRPCRouter({
     const isCompletedChallenge = ev.event_type === "completed_challenge";
     const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
     const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? active;
-    const { data: secureRows } = await server.from("day_secures").select("date_key").eq("user_id", ev.user_id);
+    const postTodayKey = dateKeyFromIso(ev.created_at, tz);
+    const finishedBounds = isCompletedChallenge
+      ? finishedSecureQueryBounds({
+          events: [ev],
+          enrollments: enrollment ? [enrollment] : [],
+          timeZoneByUser: new Map([[ev.user_id, tz]]),
+        })
+      : null;
+    const { data: secureRows } = finishedBounds
+      ? await server
+          .from("day_secures")
+          .select("date_key")
+          .eq("user_id", ev.user_id)
+          .gte("date_key", finishedBounds.fromKey)
+          .lt("date_key", finishedBounds.toKeyExclusive)
+      : { data: [] as { date_key: string }[] };
     const securedDays = isCompletedChallenge
       ? finishedSecuredDays({
           startAt: enrollment?.start_at,
@@ -224,7 +240,7 @@ export const feedRouter = createTRPCRouter({
           endedAt: enrollment?.ended_at,
           status: enrollment?.status,
           timeZone: tz,
-          todayKey: dateKeyFromIso(ev.created_at, tz),
+          todayKey: postTodayKey,
           securedDateKeys: ((secureRows ?? []) as { date_key: string }[]).map((r) => r.date_key),
         })
       : undefined;
