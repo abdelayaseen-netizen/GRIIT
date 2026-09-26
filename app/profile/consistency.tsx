@@ -68,6 +68,11 @@ export default function ConsistencyDetailScreen() {
               names={names}
               joinedLabel={joinedLabel}
               monthKey={monthKey}
+              dueDayKeys={rec?.consistency.dueDayKeys ?? []}
+              securedDateKeys={(rec?.daySource?.securedDays ?? []).map((s) =>
+                typeof s === "string" ? s : s.dateKey,
+              )}
+              todayKey={todayKey ?? ""}
             />
           )}
         </ScrollView>

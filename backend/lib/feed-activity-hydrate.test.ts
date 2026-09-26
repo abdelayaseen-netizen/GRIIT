@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { dateKeyFromIso } from "../../lib/home-day-total";
-import { dedupePairedStartEvents, feedEventCurrentDay, type EvRow } from "./feed-activity-hydrate";
+import {
+  dedupePairedStartEvents,
+  feedEventCurrentDay,
+  finishedSecuredDays,
+  type EvRow,
+} from "./feed-activity-hydrate";
 
 describe("feedEventCurrentDay", () => {
   it("enrollment start_at Sep 16, today Sep 23 → every site returns 8", () => {
@@ -40,6 +45,32 @@ describe("feedEventCurrentDay", () => {
     expect(feed).toContain("dateKeyFromIso(ev.created_at, tz)");
     expect(hydrate).not.toMatch(/todayKey = getTodayDateKey\(tz\)/);
     expect(feed).not.toMatch(/todayKey: getTodayDateKey\(tz\)/);
+  });
+});
+
+describe("finishedSecuredDays", () => {
+  it("uses the R1 window over that enrollment", () => {
+    const n = finishedSecuredDays({
+      startAt: "2026-09-16T12:00:00.000Z",
+      endAt: "2026-09-30T12:00:00.000Z",
+      endedAt: "2026-09-23T18:00:00.000Z",
+      status: "completed",
+      timeZone: "UTC",
+      todayKey: "2026-09-26",
+      securedDateKeys: ["2026-09-16", "2026-09-17", "2026-09-20"],
+    });
+    expect(n).toBe(3);
+  });
+
+  it("returns undefined when start_at is missing — UI omits the line", () => {
+    expect(
+      finishedSecuredDays({
+        startAt: null,
+        timeZone: "UTC",
+        todayKey: "2026-09-26",
+        securedDateKeys: ["2026-09-16"],
+      }),
+    ).toBeUndefined();
   });
 });
 

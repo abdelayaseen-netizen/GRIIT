@@ -27,6 +27,7 @@ import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import {
   RESET_NOTICE,
+  activeEnrollmentNeedsRedirect,
   mapDifficulty,
   mapTaskType,
   requirePhotoAsked,
@@ -68,6 +69,7 @@ type ChallengeRow = {
 type ActiveChallengeRow = {
   id: string;
   challenge_id: string;
+  status?: string | null;
   current_day?: number | null;
   start_at?: string | null;
   started_at?: string | null;
@@ -117,7 +119,7 @@ export default function ActiveChallengeDetailScreen() {
         .from("active_challenges")
         .select(
           `
-          id, challenge_id, current_day, start_at, started_at, created_at,
+          id, challenge_id, status, current_day, start_at, started_at, created_at,
           challenges (
             id, title, description, duration_days, difficulty, is_hard_mode, participants_count, participation_type,
             challenge_tasks (
@@ -157,6 +159,13 @@ export default function ActiveChallengeDetailScreen() {
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
   });
+
+  useEffect(() => {
+    if (!id || !activeChallenge) return;
+    if (!activeEnrollmentNeedsRedirect(activeChallenge.status)) return;
+    const cid = activeChallenge.challenge_id;
+    if (cid) router.replace(ROUTES.CHALLENGE_ID(cid) as never);
+  }, [id, activeChallenge, router]);
 
   const { data: securedDateKeys = [] } = useQuery({
     queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
@@ -324,14 +333,29 @@ export default function ActiveChallengeDetailScreen() {
       } catch {
         /* non-fatal */
       }
+      const dropLeft = (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return old.filter((r: { challenge_id?: string; id?: string }) => {
+          if (r.id && id && r.id === id) return false;
+          if (r.challenge_id && r.challenge_id === challengeId) return false;
+          return true;
+        });
+      };
+      queryClient.setQueriesData({ queryKey: ["challenge", "listMyActive"] }, dropLeft);
+      queryClient.setQueriesData({ queryKey: ["discover", "myActive"] }, dropLeft);
       await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
-      router.replace(ROUTES.TABS_HOME as never);
+      await queryClient.invalidateQueries({ queryKey: ["activeChallenge", id] });
+      await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
+      await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
+      await queryClient.invalidateQueries({ queryKey: ["challenge", "endedEnrollment"] });
+      router.replace(ROUTES.CHALLENGE_ID(challengeId) as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
       showLeaveError(inlineServerError(err));
     }
-  }, [challengeId, queryClient, router, showLeaveError, user?.id]);
+  }, [challengeId, id, queryClient, router, showLeaveError, user?.id]);
 
   const handleShare = useCallback(() => {
     if (!challengeId) return;

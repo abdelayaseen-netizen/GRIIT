@@ -171,7 +171,7 @@ describe("reductions over dayArray", () => {
     const c = consistencyFromDays(rows);
     expect(consistencyHeadlineFromDays(rows)).toBe(`${c.secured} of ${c.elapsed} days secured`);
     expect(consistencyDenominatorLine("16 Jul 2026")).toBe(
-      "Every day since you joined on 16 Jul 2026, not counting today.",
+      "Every day since you joined on 16 Jul 2026. Today counts once it's secured.",
     );
 
     const month = monthGridFromDays(rows, "2026-09");

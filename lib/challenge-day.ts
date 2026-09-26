@@ -1,11 +1,9 @@
 /**
- * Single source for user-facing challenge day numbers.
- * From active_challenges.current_day — not streak counts.
- * Format: "Day 1" — lowercase Day, no zero-padding, floor at 1.
- *
- * secure_day increments current_day immediately, so after securing day N
- * the column is N+1. Display and the secured_day feed event use displayDay.
+ * Floor helper for stored current_day (analytics / checkins metadata).
+ * UI Day n is calendarDayFromStartAt / uiChallengeDay — never this remap.
  */
+
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 
 export function challengeDayNumber(currentDay: number | null | undefined): number {
   if (typeof currentDay !== "number" || !Number.isFinite(currentDay)) return 1;
@@ -13,13 +11,22 @@ export function challengeDayNumber(currentDay: number | null | undefined): numbe
 }
 
 /**
- * Day number shown in the UI.
- * secured_today true → current_day − 1 (the day just secured). Else current_day.
- * Floors at 1.
+ * Metadata remap after secure_day increments current_day.
+ * Not a UI label — UI uses uiChallengeDay.
  */
 export function displayDay(current_day: number, secured_today: boolean): number {
   const n = challengeDayNumber(current_day);
   return secured_today ? challengeDayNumber(n - 1) : n;
+}
+
+/** Every on-screen Day n. Calendar from start_at. */
+export function uiChallengeDay(
+  startAt: string | null | undefined,
+  timeZone: string,
+  todayKey: string,
+  durationDays?: number | null,
+): number {
+  return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
 }
 
 /** Feed header day. secured_day already stores displayDay; others match Home. */

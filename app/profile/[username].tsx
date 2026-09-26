@@ -39,8 +39,11 @@ import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
 import { itemsFromRecordProofs } from "@/lib/proofs-grid";
 import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
+  consistencyFromDayArray,
+  consistencyHeadline,
+} from "@/lib/consistency";
+import {
   consistencyDenominatorLine,
-  consistencyHeadlineFromDays,
   daysFromSource,
   streakFromDays,
   type DaySource,
@@ -243,9 +246,16 @@ export default function VisitorProfileScreen() {
   const proofItems = itemsFromRecordProofs(proofs);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
-  const consistency = uDays.length
-    ? consistencyHeadlineFromDays(uDays)
-    : rec?.consistency.rate ?? "No due days yet.";
+  const securedDateKeys = (rec?.daySource?.securedDays ?? []).map((s) =>
+    typeof s === "string" ? s : s.dateKey,
+  );
+  const consistency = consistencyHeadline(
+    consistencyFromDayArray({
+      dueDayKeys: rec?.consistency.dueDayKeys ?? [],
+      securedDateKeys,
+      todayKey: rec?.todayKey ?? "",
+    }),
+  );
   const firstJoin = rec?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
   const consistencySub = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))

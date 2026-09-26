@@ -2,7 +2,6 @@
  * Frame 59 — Secured for a day that can hold several proofs.
  * Day numbers only appear with a challenge name. Zero photos means no image area.
  */
-import { displayDay } from "@/lib/challenge-day";
 import type { HomeProofTask } from "@/lib/home-proof-card";
 
 export const SECURED_TODAY = "Today is secured.";
@@ -10,6 +9,8 @@ export const SECURED_SELF = "Self-reported";
 export const SECURED_TILE_MAX = 3;
 export const SECURED_PHOTO_H = 240;
 export const SECURED_TILE = 112;
+export const SECURED_LOAD_ERROR = "Couldn't load. Try again.";
+export const SECURED_LOAD_RETRY = "Retry";
 
 export type SecuredProof = {
   uri: string;
@@ -41,16 +42,25 @@ export function readSecuredHandoff(): SecuredHandoff | null {
   return handoff;
 }
 
+export function taskProofIsSelfReported(task: {
+  requirePhoto?: boolean;
+  gates?: readonly string[] | null;
+}): boolean {
+  if (task.requirePhoto === true) return false;
+  return !(task.gates ?? []).includes("camera");
+}
+
 export function securedDayCaption(args: {
   taskCount: number;
   challengeCount: number;
   cameraProofs: number;
+  allSelfReported?: boolean;
 }): string {
   const n = Math.max(0, Math.floor(args.taskCount));
   const m = Math.max(0, Math.floor(args.challengeCount));
   const k = Math.max(0, Math.floor(args.cameraProofs));
   const across = m > 1 ? ` across ${m} challenges` : "";
-  if (k === 0) return `${n} tasks${across}, all self-reported. Nothing was checked.`;
+  if (args.allSelfReported === true) return `${n} tasks${across}, all self-reported. Nothing was checked.`;
   return `${n} tasks${across}. ${k} camera proofs.`;
 }
 
@@ -101,17 +111,17 @@ export function selectSecuredDayMeta(args: {
   taskCount: number;
   challengeCount: number;
   selfReported: SecuredSelfRow[];
+  allSelfReported: boolean;
 } {
   const done = args.tasks.filter((t) => t.done);
   const names = [...new Set(done.map((t) => t.challengeName))];
-  const camera = new Set(args.proofs.map((p) => p.challengeName));
   const selfReported = names
-    .filter((name) => !camera.has(name))
+    .filter((name) => done.filter((row) => row.challengeName === name).every(taskProofIsSelfReported))
     .map((name) => {
       const t = done.find((row) => row.challengeName === name)!;
       return {
         name,
-        day: displayDay(t.currentDay, true),
+        day: t.currentDay,
         length: t.durationDays ?? t.currentDay,
       };
     });
@@ -119,5 +129,6 @@ export function selectSecuredDayMeta(args: {
     taskCount: done.length,
     challengeCount: names.length,
     selfReported,
+    allSelfReported: done.length > 0 && done.every(taskProofIsSelfReported),
   };
 }

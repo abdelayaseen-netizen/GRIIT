@@ -23,7 +23,8 @@ export type ChallengeRow = {
 export function statusLine(c: ChallengeRow): string {
   switch (c.status) {
     case "active":
-      return `Day ${Math.min(c.current_day, c.duration_days)} of ${c.duration_days}`;
+      // current_day on the row is calendar Day n (r.day), not the DB column.
+      return `Day ${Math.max(1, c.current_day)} of ${c.duration_days}`;
     case "completed":
       return `${c.secured_days} of ${c.duration_days}`;
     case "abandoned":
@@ -32,6 +33,10 @@ export function statusLine(c: ChallengeRow): string {
     case "failed":
       return `Failed on day ${c.ended_on_day}`;
   }
+}
+
+export function leftRecordLine(day: number, secured: number, duration: number): string {
+  return `Left on day ${Math.max(1, day)} · ${secured} of ${duration} secured`;
 }
 
 /** Catalog finished header: "{secured} of {N} days" via statusLine. */
@@ -64,7 +69,7 @@ export type EndedEnrollmentRow = {
 export function pickLatestEndedEnrollment(
   rows: EndedEnrollmentRow[],
 ): EndedEnrollmentRow | null {
-  const ended = rows.filter((r) => r.status === "completed" || r.status === "failed");
+  const ended = rows.filter((r) => r.status === "completed" || r.status === "failed" || r.status === "abandoned");
   if (ended.length === 0) return null;
   return [...ended].sort((a, b) => {
     const ta = Date.parse(a.ended_at ?? "") || 0;

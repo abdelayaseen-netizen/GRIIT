@@ -14,12 +14,16 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProStatus } from "@/hooks/useProStatus";
 import { supabase } from "@/lib/supabase";
-import { dateKeyFromIso } from "@/lib/home-day-total";
+import { calendarDay, dateKeyFromIso } from "@/lib/home-day-total";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { getTodayDateKey } from "@/lib/date-utils";
+import { exclusiveEndDateKey } from "@/backend/lib/record-days";
+import { dueKeysForRange } from "@/lib/profile-v2-record";
+import { securedElapsed } from "@/lib/consistency";
 import {
-  countSecuredInRange,
   finishedHeaderLine,
+  leftRecordLine,
   pickLatestEndedEnrollment,
   type EndedEnrollmentRow,
 } from "@/lib/profile-challenges";
@@ -143,7 +147,7 @@ export default function ChallengeDetailScreen() {
         .select("id, challenge_id, status, start_at, end_at, ended_at, current_day")
         .eq("user_id", user!.id)
         .eq("challenge_id", id!)
-        .in("status", ["completed", "failed"])
+        .in("status", ["completed", "failed", "abandoned"])
         .order("ended_at", { ascending: false })
         .limit(1);
       if (qErr) throw qErr;
@@ -252,23 +256,53 @@ export default function ChallengeDetailScreen() {
   );
   const ended = endedEnrollmentQuery.data ?? null;
   const finished = !activeChallengeId && ended != null;
+  const todayKey = getTodayDateKey(timeZone);
   const startKey = ended?.start_at ? dateKeyFromIso(ended.start_at, timeZone) : "";
-  const endIso = ended?.ended_at ?? ended?.end_at ?? "";
-  const endKey = endIso ? dateKeyFromIso(endIso, timeZone) : "";
-  const securedDays =
-    startKey && endKey && (securedKeysQuery.data?.length ?? 0) > 0
-      ? countSecuredInRange(securedKeysQuery.data ?? [], startKey, endKey)
-      : Math.min(ended?.current_day ?? 0, durationDays);
-  const endedOnDay = ended?.current_day ?? durationDays;
-  const finishedLine = finished
-    ? finishedHeaderLine({
-        status: ended.status === "failed" ? "failed" : "completed",
-        secured_days: securedDays,
-        duration_days: durationDays,
-        current_day: endedOnDay,
-        ended_on_day: endedOnDay,
-      })
-    : undefined;
+  const exclusiveEnd =
+    ended && startKey
+      ? exclusiveEndDateKey(
+          {
+            status: ended.status,
+            end_at: ended.end_at ?? ended.ended_at ?? ended.start_at ?? "",
+            ended_at: ended.ended_at ?? null,
+          },
+          startKey,
+          timeZone,
+        )
+      : "";
+  const dueDayKeys =
+    ended && startKey && exclusiveEnd
+      ? dueKeysForRange(
+          {
+            status: ended.status === "failed" ? "completed" : ended.status,
+            startDateKey: startKey,
+            endDateKey: exclusiveEnd,
+          },
+          todayKey,
+        )
+      : [];
+  const recordWindow = securedElapsed({
+    dueDayKeys,
+    securedDateKeys: securedKeysQuery.data ?? [],
+    todayKey,
+  });
+  const lastDueKey = dueDayKeys[dueDayKeys.length - 1] ?? startKey;
+  const endedOnDay = startKey && lastDueKey
+    ? calendarDay(startKey, lastDueKey, durationDays)
+    : 1;
+  const isAbandoned = ended?.status === "abandoned";
+  const finishedLine =
+    finished && (securedKeysQuery.isFetched || securedKeysQuery.isError)
+      ? isAbandoned
+        ? leftRecordLine(endedOnDay, recordWindow.secured, durationDays)
+        : finishedHeaderLine({
+            status: ended.status === "failed" ? "failed" : "completed",
+            secured_days: recordWindow.secured,
+            duration_days: durationDays,
+            current_day: endedOnDay,
+            ended_on_day: endedOnDay,
+          })
+      : undefined;
   const catalogLoading = catalog.loading;
   const goBack = useCallback(() => {
     if (router.canGoBack()) router.back();
@@ -482,6 +516,7 @@ export default function ChallengeDetailScreen() {
           error={catalog.error}
           invite={finished ? undefined : invite}
           finishedLine={catalogLoading ? undefined : finishedLine}
+          finishedCtaLabel={isAbandoned ? "Join" : "Start again"}
           onBack={goBack}
           onMore={footerVariant === "invited" && !finished ? onMore : undefined}
           onJoin={finished ? undefined : () => void onJoin()}

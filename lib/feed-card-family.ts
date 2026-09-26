@@ -66,8 +66,8 @@ export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string
   }
   if (variant === "challenge_started") return `${p.totalDays} days · ${p.mode ?? "Standard"} mode`;
   if (variant === "challenge_finished") {
-    const n = p.securedDays ?? 0;
-    return `${n} of ${p.totalDays} days secured`;
+    if (typeof p.securedDays !== "number") return "";
+    return `${p.securedDays} of ${p.totalDays} days secured`;
   }
   return (p.badgeRequirement ?? "").trim();
 }

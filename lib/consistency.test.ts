@@ -8,6 +8,7 @@ import {
   consistencyFromRecord,
   consistencyHeadline,
   consistencyLine,
+  securedElapsed,
 } from "@/lib/consistency";
 import { buildProfileRecord, type ChallengeRangeInput } from "@/lib/profile-v2-record";
 
@@ -42,7 +43,7 @@ describe("consistency builders", () => {
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
     expect(profile).toContain("consistencyContext(consistency, proofsDateLabel, todaySecured)");
-    expect(profile).toContain("consistencyHeadlineFromDays");
+    expect(profile).toContain("consistencyFromDayArray");
     expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
@@ -111,5 +112,71 @@ describe("consistency builders", () => {
         }),
       ),
     ).toBe("3 of 7 days secured.");
+  });
+
+  it("R1: unsecured today is never elapsed", () => {
+    const today = "2026-09-23";
+    const due = ["2026-09-21", "2026-09-22", today];
+    const w = securedElapsed({
+      dueDayKeys: due,
+      securedDateKeys: ["2026-09-21", "2026-09-22"],
+      todayKey: today,
+    });
+    expect(w.elapsed).toBe(2);
+    expect(w.secured).toBe(2);
+    expect(w.todaySecured).toBe(false);
+    expect(w.elapsedKeys).not.toContain(today);
+  });
+
+  it("R1: today counts once secured", () => {
+    const today = "2026-09-23";
+    const due = ["2026-09-21", "2026-09-22", today];
+    const w = securedElapsed({
+      dueDayKeys: due,
+      securedDateKeys: ["2026-09-21", "2026-09-22", today],
+      todayKey: today,
+    });
+    expect(w.elapsed).toBe(3);
+    expect(w.secured).toBe(3);
+    expect(w.todaySecured).toBe(true);
+    expect(w.elapsedKeys).toContain(today);
+  });
+
+  it("R1: joined today, unsecured → 0 elapsed; secured → 1 of 1", () => {
+    const today = "2026-09-26";
+    const open = securedElapsed({
+      dueDayKeys: [today],
+      securedDateKeys: [],
+      todayKey: today,
+    });
+    expect(open.elapsed).toBe(0);
+    expect(open.secured).toBe(0);
+    expect(open.dueToday).toBe(true);
+    const done = securedElapsed({
+      dueDayKeys: [today],
+      securedDateKeys: [today],
+      todayKey: today,
+    });
+    expect(done.elapsed).toBe(1);
+    expect(done.secured).toBe(1);
+  });
+
+  it("R1: visitor profile, Home, Profile, ConsistencyGrid, and record call the one reducer", () => {
+    const visitor = readFileSync(resolve(__dirname, "../app/profile/[username].tsx"), "utf8");
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    const profile = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
+    const grid = readFileSync(resolve(__dirname, "../components/profile/ConsistencyGrid.tsx"), "utf8");
+    const record = readFileSync(resolve(__dirname, "./profile-v2-record.ts"), "utf8");
+    const dayState = readFileSync(resolve(__dirname, "./day-state.ts"), "utf8");
+    const impl = readFileSync(resolve(__dirname, "./consistency.ts"), "utf8");
+    expect(impl).toContain("k < args.todayKey || (k === args.todayKey && todaySecured)");
+    expect(impl).toContain("export function securedElapsed");
+    expect(visitor).toContain("consistencyFromDayArray");
+    expect(home).toContain("consistencyFromDayArray");
+    expect(profile).toContain("consistencyFromDayArray");
+    expect(grid).toContain("securedElapsed");
+    expect(record).toContain("securedElapsed");
+    expect(dayState).toContain("securedElapsed");
+    expect(dayState).not.toMatch(/filter\(\(k\) => k < /);
   });
 });

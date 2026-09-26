@@ -26,13 +26,12 @@ import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyContext,
-  consistencyFromRecord,
+  consistencyFromDayArray,
   consistencyHeadline,
   consistencyLine,
 } from "@/lib/consistency";
 import {
   consistencyDenominatorLine,
-  consistencyHeadlineFromDays,
   daysFromSource,
   streakFromDays,
   type DaySource,
@@ -193,17 +192,21 @@ export default function ProfileScreen() {
   const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
   const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
-  const todaySecured = homeSecuredToday(
-    Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : [],
-    getTodayDateKey(homeTimeZone),
-  );
-  const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey: record?.todayKey });
+  const securedDateKeys = Array.isArray(bootstrap.data?.securedDateKeys)
+    ? bootstrap.data.securedDateKeys
+    : [];
+  const todayKey = record?.todayKey ?? getTodayDateKey(homeTimeZone);
+  const todaySecured = homeSecuredToday(securedDateKeys, todayKey);
+  const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : streak;
-  const consistency = consistencyFromRecord(record?.consistency);
+  const consistency = consistencyFromDayArray({
+    dueDayKeys: record?.consistency.dueDayKeys ?? [],
+    securedDateKeys,
+    todayKey,
+  });
   const firstJoin = record?.daySource?.enrollments
     .map((e) => e.startDateKey)
     .sort()[0];
-  const consistencyFromU = uDays.length ? consistencyHeadlineFromDays(uDays) : "";
   const consistencySubFromU = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
     : "";
@@ -233,7 +236,7 @@ export default function ProfileScreen() {
             best={best}
             todaySecured={todaySecured}
             totalDaysSecured={record?.detail.totalVerified ?? 0}
-            consistency={consistencyHeadline(consistency) || consistencyFromU}
+            consistency={consistencyHeadline(consistency)}
             consistencySub={
               consistencyContext(consistency, proofsDateLabel, todaySecured) ||
               consistencyLine(consistency) ||

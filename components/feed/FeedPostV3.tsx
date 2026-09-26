@@ -75,7 +75,7 @@ export default function FeedPostV3({
     variant,
   );
   const meta = feedCardMeta(
-    { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof, cameraGate: cameraProof, photo: Boolean(photo) },
+    { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof, cameraGate: cameraProof, photo: Boolean(photo), securedDays: post.securedDays },
     variant,
   );
   const stamp = feedCardShowsVerified(variant, cameraProof || variant === "task_camera", Boolean(photo));

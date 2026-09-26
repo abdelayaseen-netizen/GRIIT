@@ -8,6 +8,7 @@ import {
   getTodayDateKey,
   mondayFirstIndexForDateKey,
 } from "@/lib/date-utils";
+import { consistencyFromDayArray, securedElapsed } from "@/lib/consistency";
 
 export type DayState =
   | "camera"
@@ -188,30 +189,53 @@ export function dayArray(
   });
 }
 
-export function consistencyFromDays(days: readonly DayRecord[]): {
+function todayKeyFromDays(days: readonly DayRecord[]): string {
+  const open = days.find((d) => d.state === "today");
+  if (open) return open.dateKey;
+  const notFuture = days.filter((d) => d.state !== "notdue" && d.state !== "beforejoin");
+  return notFuture[notFuture.length - 1]?.dateKey ?? days[days.length - 1]?.dateKey ?? "";
+}
+
+/** Wrap of securedElapsed — no second window. */
+export function consistencyFromDays(
+  days: readonly DayRecord[],
+  todayKey?: string,
+): {
   secured: number;
   elapsed: number;
   firstJoinDate: string | null;
 } {
-  const elapsedDays = days.filter((d) => isElapsedState(d.state));
+  const today = todayKey ?? todayKeyFromDays(days);
+  const dueDayKeys = days
+    .filter((d) => d.state !== "beforejoin" && d.state !== "notdue")
+    .map((d) => d.dateKey);
+  const securedDateKeys = days.filter((d) => isSecuredState(d.state)).map((d) => d.dateKey);
+  const w = securedElapsed({ dueDayKeys, securedDateKeys, todayKey: today });
   return {
-    secured: elapsedDays.filter((d) => isSecuredState(d.state)).length,
-    elapsed: elapsedDays.length,
+    secured: w.secured,
+    elapsed: w.elapsed,
     firstJoinDate: days.find((d) => d.state !== "beforejoin")?.dateKey ?? days[0]?.dateKey ?? null,
   };
 }
 
 /** Spec: "{secured} of {elapsed} days secured" */
-export function consistencyHeadlineFromDays(days: readonly DayRecord[]): string {
-  const { secured, elapsed } = consistencyFromDays(days);
+export function consistencyHeadlineFromDays(days: readonly DayRecord[], todayKey?: string): string {
+  const { secured, elapsed } = consistencyFromDays(days, todayKey);
+  const w = consistencyFromDayArray({
+    dueDayKeys: days
+      .filter((d) => d.state !== "beforejoin" && d.state !== "notdue")
+      .map((d) => d.dateKey),
+    securedDateKeys: days.filter((d) => isSecuredState(d.state)).map((d) => d.dateKey),
+    todayKey: todayKey ?? todayKeyFromDays(days),
+  });
   if (elapsed === 0) {
-    return days.some((d) => d.state === "today") ? "First day is today." : "No due days yet.";
+    return w.dueToday ? "First day is today." : "No due days yet.";
   }
   return `${secured} of ${elapsed} days secured`;
 }
 
 export function consistencyDenominatorLine(joinedLabel: string): string {
-  return `Every day since you joined on ${joinedLabel}, not counting today.`;
+  return `Every day since you joined on ${joinedLabel}. Today counts once it's secured.`;
 }
 
 export const HELD_DAY_LINE =

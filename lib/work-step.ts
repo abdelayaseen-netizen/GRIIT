@@ -4,6 +4,7 @@
  */
 import type { TaskGate } from "@/backend/lib/task-model";
 import type { DistanceUnit } from "@/lib/distance-unit";
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import { fmtMmSs, type TaskFlowStep } from "@/lib/task-flow-state";
 
@@ -53,6 +54,16 @@ export function workTypeLabel(type: string): string {
   if (type === "timer") return "Timer";
   if (type === "run") return "Run";
   return type.charAt(0).toUpperCase() + type.slice(1);
+}
+
+/** Day n for the work/counter chrome — calendar from start_at, never a route param. */
+export function workStepDay(
+  startAt: string | null | undefined,
+  timeZone: string,
+  todayKey: string,
+  durationDays?: number | null,
+): number {
+  return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
 }
 
 /** Gate outranks type. Camera outranks a time-window string. */

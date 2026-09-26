@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { supabase } from "@/lib/supabase";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
 import { useApp } from "@/contexts/AppContext";
@@ -45,6 +47,7 @@ import {
   RUN_PHOTO_AFTER,
   TIMER_PHOTO_AFTER,
   workDoneLine,
+  workStepDay,
   workStepHeader,
   workStepOwnsChrome,
   workThenCamera,
@@ -106,10 +109,27 @@ export function useTaskFlowV2() {
   const taskName = firstString(params.taskName) || "Untitled task";
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
   const challengeName = firstString(params.challengeName) || "Challenge";
-  const currentDay = Math.max(1, parseInt(firstString(params.currentDay) || "1", 10) || 1);
   const durationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
   const userId = user?.id ?? "";
   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
+  const timeZone = profile?.timezone?.trim() || "UTC";
+  const enrollmentQ = useQuery({
+    queryKey: ["activeChallenge", "startAt", activeChallengeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("active_challenges")
+        .select("start_at, started_at, created_at")
+        .eq("id", activeChallengeId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { start_at?: string | null; started_at?: string | null; created_at?: string | null } | null;
+    },
+    enabled: !!activeChallengeId,
+    staleTime: 60 * 1000,
+  });
+  const startAt =
+    enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null;
+  const currentDay = workStepDay(startAt, timeZone, dateKey, durationDays);
   const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
   const minWords = config.min_words ?? 150;
   const counterGoal = resolveConfigCounterTarget(config) || 8;
@@ -363,7 +383,12 @@ export function useTaskFlowV2() {
       clearTimeout(takeoverTimer);
       setSaving(false);
       if (finishSubmitOutcome({ complete, securedToday }) === "day_open") {
-        let tasks = dayOpenTasksFromActive({ enrollments: [], completed: [] });
+        let tasks = dayOpenTasksFromActive({
+          enrollments: [],
+          completed: [],
+          todayKey: dateKey,
+          timeZone,
+        });
         try {
           const [activeList, checkins] = await Promise.all([
             trpcQuery(TRPC.challenges.listMyActive) as Promise<Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]>,
@@ -374,6 +399,8 @@ export function useTaskFlowV2() {
           tasks = dayOpenTasksFromActive({
             enrollments: Array.isArray(activeList) ? activeList : [],
             completed: Array.isArray(checkins) ? checkins : [],
+            todayKey: dateKey,
+            timeZone,
           });
         } catch {
           tasks = [

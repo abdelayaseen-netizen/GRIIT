@@ -142,6 +142,11 @@ export function securedTodayFromKeys(securedDateKeys: string[], todayKey: string
   return securedDateKeys.includes(todayKey);
 }
 
+/** Active screen: any loaded non-active enrollment goes to catalog detail. */
+export function activeEnrollmentNeedsRedirect(status: string | null | undefined): boolean {
+  return typeof status === "string" && status.length > 0 && status !== "active";
+}
+
 export type FooterAction =
   | { kind: "share" }
   | { kind: "next"; task: ActiveChallengeTask }
