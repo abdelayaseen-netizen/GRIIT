@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,8 +28,12 @@ export default function ProfileDayScreen() {
       trpcQuery(TRPC.profiles.getRecord, userId ? { userId } : undefined) as Promise<RecordPayload>,
   });
   const all = itemsFromRecordProofs(q.data?.proofs ?? []);
-  const visible = (isOwner ? all : all.filter((i) => i.shared)).filter((i) => i.dateKey === dateKey);
+  const visible = isOwner ? all : all.filter((i) => i.shared);
   const [sharedIds, setSharedIds] = useState<string[]>([]);
+  const [viewDateKey, setViewDateKey] = useState(dateKey);
+  useEffect(() => {
+    setViewDateKey(dateKey);
+  }, [dateKey]);
   const items: ProofsGridItem[] = visible.map((i) =>
     sharedIds.includes(i.id) ? { ...i, shared: true } : i,
   );
@@ -46,12 +50,14 @@ export default function ProfileDayScreen() {
           >
             <X size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
           </Pressable>
-          <Text style={styles.header}>{dateKey ? proofsDateLabel(dateKey) : "Day"}</Text>
+          <Text style={styles.header}>{viewDateKey ? proofsDateLabel(viewDateKey) : "Day"}</Text>
           <View style={styles.side} />
         </View>
         <DayViewer
           items={items}
+          initialDateKey={dateKey}
           isOwner={isOwner}
+          onDateKeyChange={setViewDateKey}
           onShare={(item) => {
             if (!item.eventId) return;
             void trpcMutate(TRPC.checkins.shareProof, { eventId: item.eventId }).then(() => {
