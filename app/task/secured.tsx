@@ -10,6 +10,7 @@ import { firstString } from "@/lib/task-helpers";
 import { ROUTES } from "@/lib/routes";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { getTodayDateKey } from "@/lib/date-utils";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import {
   proofsFromComplete,
@@ -86,12 +87,18 @@ function TaskSecuredInner() {
     taskCount: number;
     challengeCount: number;
     selfReported: SecuredSelfRow[];
-  }>(() =>
-    selectSecuredDayMeta({
-      tasks: [],
-      proofs,
-    }),
-  );
+    allSelfReported: boolean;
+    ready: boolean;
+    error: boolean;
+  }>({
+    taskCount: 0,
+    challengeCount: 0,
+    selfReported: [],
+    allSelfReported: false,
+    ready: false,
+    error: false,
+  });
+  const [retryTick, setRetryTick] = useState(0);
   const [shareFailed, setShareFailed] = useState(false);
   const [sharing, setSharing] = useState(false);
 
@@ -99,6 +106,9 @@ function TaskSecuredInner() {
     let live = true;
     void (async () => {
       try {
+        await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
+        await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] });
+        await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
         const [activeList, checkins] = await Promise.all([
           trpcQuery(TRPC.challenges.listMyActive) as Promise<
             Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]
@@ -110,41 +120,35 @@ function TaskSecuredInner() {
         const tasks = dayOpenTasksFromActive({
           enrollments: Array.isArray(activeList) ? activeList : [],
           completed: Array.isArray(checkins) ? checkins : [],
+          todayKey: getTodayDateKey(tz),
+          timeZone: tz ?? "UTC",
         });
         if (!live) return;
         const next = selectSecuredDayMeta({ tasks, proofs });
         setMeta({
-          taskCount: next.taskCount || Math.max(1, proofs.length),
-          challengeCount: next.challengeCount || Math.max(1, new Set(proofs.map((p) => p.challengeName)).size),
-          selfReported:
-            next.selfReported.length > 0
-              ? next.selfReported
-              : proofs.length === 0
-                ? [
-                    {
-                      name: result.challengeName,
-                      day: result.challengeDay,
-                      length: result.challengeLength,
-                    },
-                  ]
-                : [],
+          taskCount: next.taskCount,
+          challengeCount: next.challengeCount,
+          selfReported: next.selfReported,
+          allSelfReported: next.allSelfReported,
+          ready: true,
+          error: false,
         });
       } catch {
         if (!live) return;
         setMeta({
-          taskCount: Math.max(1, proofs.length),
-          challengeCount: Math.max(1, new Set(proofs.map((p) => p.challengeName)).size || 1),
-          selfReported:
-            proofs.length === 0
-              ? [{ name: result.challengeName, day: result.challengeDay, length: result.challengeLength }]
-              : [],
+          taskCount: 0,
+          challengeCount: 0,
+          selfReported: [],
+          allSelfReported: false,
+          ready: false,
+          error: true,
         });
       }
     })();
     return () => {
       live = false;
     };
-  }, [proofs, result.challengeDay, result.challengeLength, result.challengeName]);
+  }, [proofs, queryClient, tz, retryTick]);
 
   const done = () => {
     router.replace(ROUTES.HOME as never);
@@ -155,8 +159,14 @@ function TaskSecuredInner() {
       streak={result.streakDays}
       proofs={proofs}
       selfReported={meta.selfReported}
-      taskCount={meta.taskCount}
-      challengeCount={meta.challengeCount}
+      taskCount={meta.ready ? meta.taskCount : undefined}
+      challengeCount={meta.ready ? meta.challengeCount : 0}
+      allSelfReported={meta.ready ? meta.allSelfReported : false}
+      loadError={meta.error}
+      onRetryLoad={() => {
+        setMeta((prev) => ({ ...prev, error: false, ready: false }));
+        setRetryTick((n) => n + 1);
+      }}
       week={week.days}
       todayIndex={week.todayIndex}
       fillToday={fillToday}

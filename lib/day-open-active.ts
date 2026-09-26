@@ -29,8 +29,8 @@ export type DayOpenEnrollment = {
 export function dayOpenTasksFromActive(args: {
   enrollments: DayOpenEnrollment[];
   completed: { active_challenge_id?: string; task_id?: string; status?: string }[];
-  todayKey?: string;
-  timeZone?: string;
+  todayKey: string;
+  timeZone: string;
 }): HomeProofTask[] {
   const out: HomeProofTask[] = [];
   for (const ac of args.enrollments) {
@@ -42,12 +42,9 @@ export function dayOpenTasksFromActive(args: {
         .map((c) => c.task_id),
     );
     const challengeName = (ac.challenges?.title ?? "").trim() || "Challenge";
-    const durationDays = ac.challenges?.duration_days ?? ac.current_day ?? 1;
+    const durationDays = ac.challenges?.duration_days ?? 1;
     const startAt = ac.start_at ?? ac.started_at ?? ac.created_at;
-    const currentDay =
-      startAt && args.todayKey
-        ? calendarDayFromStartAt(startAt, args.timeZone ?? "UTC", args.todayKey, durationDays)
-        : (ac.current_day ?? 1);
+    const currentDay = calendarDayFromStartAt(startAt, args.timeZone, args.todayKey, durationDays);
     const challengeSecuredToday =
       required.length > 0 && required.every((t) => doneSet.has(t.id));
     for (const t of required) {

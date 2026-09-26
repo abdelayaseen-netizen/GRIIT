@@ -6,6 +6,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { supabase } from "@/lib/supabase";
+import { useApp } from "@/contexts/AppContext";
+import {
+  notifAsOfKey,
+  notifEnrollmentId,
+  notifProofDay,
+  notifTitle,
+} from "@/lib/notification-title";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
@@ -27,69 +35,18 @@ import Skeleton from "@/components/ds/Skeleton";
 
 const ICON = DS_V3.space.xs * 6;
 
-function dayFromMeta(n: NotifRow): number | null {
-  const md = n.metadata;
-  if (typeof md.day_number === "number") return md.day_number;
-  if (typeof md.current_day === "number") return md.current_day;
-  if (typeof md.day_label === "string") {
-    const m = md.day_label.match(/(\d+)/);
-    if (m) return Number(m[1]);
-  }
-  return null;
-}
-
-function notifTitle(n: NotifRow): string {
-  const name = n.actorDisplayName ?? n.actorUsername ?? null;
-  const day = dayFromMeta(n);
-  switch (n.type) {
-    case "respect":
-      if (name) {
-        return day != null
-          ? `${name} liked your day ${day} proof`
-          : `${name} liked your proof`;
-      }
-      break;
-    case "comment":
-      if (name) {
-        return day != null
-          ? `${name} commented on your day ${day} proof`
-          : `${name} commented on your proof`;
-      }
-      break;
-    case "follow":
-      if (name) return `${name} started following you`;
-      break;
-    case "follow_request":
-      if (name) return `${name} wants to follow you`;
-      break;
-    case "rank": {
-      const challengeName = String(
-        n.metadata.challenge_title ?? n.metadata.challenge_name ?? "challenge",
-      );
-      const rank = n.metadata.rank;
-      const gap = n.metadata.rankGap;
-      return `You're #${rank} on ${challengeName}. ${gap} pts behind #${Number(rank) - 1}`;
-    }
-    case "challenge_invite":
-      return challengeInviteFromNotification(n);
-    default:
-      if (isChallengeInviteNotification(n)) return challengeInviteFromNotification(n);
-      break;
-  }
-  const t = (n.title ?? "").trim();
-  const b = (n.body ?? "").trim();
-  if (t || b) return [t, b].filter(Boolean).join(" ");
-  return "Notification";
-}
-
 function NotificationsBody({
   query,
   userId,
+  timeZone,
+  startAtById,
   refreshing,
   onRefresh,
 }: {
   query: ReturnType<typeof useQuery<{ unread: NotifRow[]; earlier: NotifRow[] }>>;
   userId: string;
+  timeZone: string;
+  startAtById: Record<string, string>;
   refreshing: boolean;
   onRefresh: () => Promise<void>;
 }) {
@@ -144,6 +101,11 @@ function NotificationsBody({
       return (
         <NotificationRow
           n={item}
+          day={notifProofDay({
+            startAt: startAtById[notifEnrollmentId(item.metadata) ?? ""] ?? null,
+            timeZone,
+            asOfKey: notifAsOfKey(item.metadata, item.createdAt, timeZone),
+          })}
           onFollow={onFollow}
           userId={userId}
           onPress={
@@ -165,7 +127,7 @@ function NotificationsBody({
         />
       );
     },
-    [onFollow, userId, router],
+    [onFollow, userId, router, startAtById, timeZone],
   );
 
   if (query.isPending) {
@@ -238,18 +200,20 @@ function NotificationsBody({
 
 const NotificationRow = React.memo(function NotificationRow({
   n,
+  day,
   onFollow,
   userId,
   onPress,
 }: {
   n: NotifRow;
+  day: number | null;
   onFollow: (id: string) => void;
   userId: string;
   onPress?: () => void;
 }) {
   const qc = useQueryClient();
   const [frDone, setFrDone] = useState<"accepted" | "declined" | null>(null);
-  const title = notifTitle(n);
+  const title = notifTitle(n, day);
   const who = n.actorDisplayName ?? n.actorUsername ?? null;
 
   const onAcceptFr = useCallback(async () => {
@@ -332,6 +296,8 @@ export interface NotificationsTabProps {
 }
 
 export function NotificationsTab({ userId }: NotificationsTabProps) {
+  const { profile } = useApp();
+  const timeZone = (profile as { timezone?: string | null } | null)?.timezone?.trim() || "UTC";
   const notifQuery = useQuery({
     queryKey: ["activity", "notifications", userId],
     queryFn: () =>
@@ -342,6 +308,39 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     enabled: !!userId,
     staleTime: 30 * 1000,
     retry: 2,
+  });
+  const enrollmentIds = useMemo(() => {
+    const rows = [...(notifQuery.data?.unread ?? []), ...(notifQuery.data?.earlier ?? [])];
+    return [
+      ...new Set(
+        rows
+          .map((n) => notifEnrollmentId(n.metadata))
+          .filter((id): id is string => !!id),
+      ),
+    ].sort();
+  }, [notifQuery.data]);
+  const startAtQuery = useQuery({
+    queryKey: ["activeChallenge", "startAt", "notifs", enrollmentIds.join("|")],
+    enabled: enrollmentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("active_challenges")
+        .select("id, start_at, started_at, created_at")
+        .in("id", enrollmentIds);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const r of (data ?? []) as {
+        id?: string;
+        start_at?: string | null;
+        started_at?: string | null;
+        created_at?: string | null;
+      }[]) {
+        const start = r.start_at ?? r.started_at ?? r.created_at;
+        if (r.id && start) map[r.id] = start;
+      }
+      return map;
+    },
+    staleTime: 60 * 1000,
   });
 
   const refreshing = notifQuery.isRefetching;
@@ -354,6 +353,8 @@ export function NotificationsTab({ userId }: NotificationsTabProps) {
     <NotificationsBody
       query={notifQuery}
       userId={userId}
+      timeZone={timeZone}
+      startAtById={startAtQuery.data ?? {}}
       refreshing={refreshing}
       onRefresh={onRefresh}
     />

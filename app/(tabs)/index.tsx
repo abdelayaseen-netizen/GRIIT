@@ -33,18 +33,15 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { useFeedToggle } from "@/store/feedToggleStore";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
-import { consistencyFromDayArray, consistencyFromRecord, consistencyLine } from "@/lib/consistency";
+import { consistencyFromDayArray, consistencyLine } from "@/lib/consistency";
 import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 import {
-  consistencyDenominatorLine,
-  consistencyHeadlineFromDays,
   daysFromSource,
   streakFromDays,
   weekStripDaysUi,
   weekStripFromDays,
   type DaySource,
 } from "@/lib/day-state";
-import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
@@ -286,27 +283,14 @@ export default function HomeScreen() {
   const streakFromArray = uDays.length ? streakFromDays(uDays) : null;
   const streak =
     streakFromArray ?? resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
-  const firstJoin = recordQuery.data?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
-  const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys;
-  const streakLine =
-    dueDayKeys != null
-      ? consistencyLine(
-          consistencyFromDayArray({
-            dueDayKeys,
-            securedDateKeys,
-            todayKey,
-          }),
-        )
-      : uDays.length
-        ? `${consistencyHeadlineFromDays(uDays)}. ${firstJoin ? consistencyDenominatorLine(formatDayMonthYear(firstJoin)) : ""}`.trim()
-        : consistencyLine(
-            consistencyFromRecord({
-              verifiedClosed: recordQuery.data?.consistency.verifiedClosed,
-              closedDueDays: recordQuery.data?.consistency.closedDueDays,
-              dueToday: recordQuery.data?.consistency.dueToday,
-              dueDayKeys: recordQuery.data?.consistency.dueDayKeys,
-            }),
-          );
+  const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys ?? [];
+  const streakLine = consistencyLine(
+    consistencyFromDayArray({
+      dueDayKeys,
+      securedDateKeys,
+      todayKey,
+    }),
+  );
 
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),

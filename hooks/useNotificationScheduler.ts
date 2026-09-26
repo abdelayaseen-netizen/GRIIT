@@ -66,12 +66,13 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       if (cancelled) return;
 
       const ch = activeChallenge?.challenges as Record<string, unknown> | null | undefined;
-      const currentDay = (activeChallenge as { current_day?: number })?.current_day ?? 1;
       const challengeTitle = typeof ch?.title === "string" ? ch.title : undefined;
 
       const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
         id?: string;
-        current_day?: number;
+        start_at?: string | null;
+        started_at?: string | null;
+        created_at?: string | null;
         challenges?: {
           duration_days?: number;
           title?: string;
@@ -112,11 +113,33 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       }
 
       if (settings?.morning_kickoff_enabled !== false) {
+        const ac = activeChallenge as {
+          id?: string;
+          start_at?: string | null;
+          started_at?: string | null;
+          created_at?: string | null;
+        } | null;
+        const matched = activeRows.find((r) => r.id && r.id === ac?.id) ?? activeRows[0];
+        const startAt =
+          ac?.start_at ??
+          ac?.started_at ??
+          ac?.created_at ??
+          matched?.start_at ??
+          matched?.started_at ??
+          matched?.created_at ??
+          null;
+        const durationDays =
+          typeof ch?.duration_days === "number"
+            ? ch.duration_days
+            : matched?.challenges?.duration_days;
         scheduleMorningMotivation({
           morningTime: "07:00",
           streakCount,
           taskCount: dueToday.due,
-          currentDay,
+          startAt,
+          timeZone: timezone ?? "UTC",
+          todayKey,
+          durationDays,
           challengeName: challengeTitle,
         }).catch(() => {});
       } else {
@@ -142,11 +165,13 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       }
 
       const countdownData = activeRows
-        .filter((ac) => ac.challenges?.duration_days != null && ac.current_day != null)
+        .filter((ac) => ac.id && ac.challenges?.duration_days != null)
         .map((ac) => ({
           id: ac.id ?? "",
           name: ac.challenges?.title ?? "Challenge",
-          currentDay: ac.current_day ?? 1,
+          startAt: ac.start_at ?? ac.started_at ?? ac.created_at ?? null,
+          timeZone: timezone ?? "UTC",
+          todayKey,
           totalDays: ac.challenges?.duration_days ?? 1,
         }))
         .filter((d) => d.id);

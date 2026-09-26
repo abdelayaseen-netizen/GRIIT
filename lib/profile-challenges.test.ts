@@ -5,6 +5,7 @@ import {
   countSecuredInRange,
   detailLine,
   finishedHeaderLine,
+  leftRecordLine,
   pickLatestEndedEnrollment,
   rowsFromProfileRecord,
   statusLine,
@@ -78,7 +79,7 @@ describe("finished catalog header", () => {
     ).toBe("12 of 30 days");
   });
 
-  it("picks the latest ended_at among completed and failed", () => {
+  it("picks the latest ended_at among completed, failed, and abandoned", () => {
     const latest = pickLatestEndedEnrollment([
       {
         id: "old",
@@ -86,6 +87,13 @@ describe("finished catalog header", () => {
         status: "completed",
         ended_at: "2026-08-01T00:00:00.000Z",
         current_day: 7,
+      },
+      {
+        id: "left",
+        challenge_id: "c",
+        status: "abandoned",
+        ended_at: "2026-09-22T00:00:00.000Z",
+        current_day: 9,
       },
       {
         id: "new",
@@ -101,8 +109,12 @@ describe("finished catalog header", () => {
         ended_at: "2026-09-21T00:00:00.000Z",
       },
     ]);
-    expect(latest?.id).toBe("new");
+    expect(latest?.id).toBe("left");
     expect(countSecuredInRange(["2026-09-16", "2026-09-17", "2026-09-21"], "2026-09-16", "2026-09-20")).toBe(2);
+  });
+
+  it("left record line is calendar day plus secured of duration", () => {
+    expect(leftRecordLine(8, 5, 14)).toBe("Left on day 8 · 5 of 14 secured");
   });
 });
 
@@ -118,16 +130,15 @@ describe("challenge catalog screen branches", () => {
     expect(catalog).not.toContain("!enrollmentsReady || !!activeChallengeId || endedPending");
   });
 
-  it("finished enrollment shows statusLine header and Start again, never Join", () => {
+  it("finished enrollment shows statusLine header; abandoned shows Join", () => {
     expect(catalog).toContain("finishedHeaderLine");
+    expect(catalog).toContain("leftRecordLine");
+    expect(catalog).toContain('.in("status", ["completed", "failed", "abandoned"])');
+    expect(catalog).toContain('finishedCtaLabel={isAbandoned ? "Join" : "Start again"}');
     expect(catalog).toContain('onJoin={finished ? undefined : () => void onJoin()}');
     expect(catalog).toContain("onStartAgain={finished ? () => void onJoin() : undefined}");
-    expect(detail).toContain('accessibilityLabel="Start again"');
-    expect(detail).toContain(">Start again<");
-    expect(detail).toMatch(/\{p\.finishedLine \? \(/);
-    const joinAfterFinished = detail.slice(detail.indexOf("{p.finishedLine ? ("));
-    expect(joinAfterFinished).toContain('accessibilityLabel="Join"');
-    expect(joinAfterFinished.indexOf("Start again")).toBeLessThan(joinAfterFinished.indexOf('accessibilityLabel="Join"'));
+    expect(detail).toContain("finishedCtaLabel");
+    expect(detail).toContain('p.finishedCtaLabel ?? "Start again"');
   });
 });
 

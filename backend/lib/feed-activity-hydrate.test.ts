@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { dateKeyFromIso } from "../../lib/home-day-total";
-import { dedupePairedStartEvents, feedEventCurrentDay, type EvRow } from "./feed-activity-hydrate";
+import {
+  dedupePairedStartEvents,
+  feedEventCurrentDay,
+  finishedSecuredDays,
+  finishedSecureQueryBounds,
+  type EvRow,
+} from "./feed-activity-hydrate";
 
 describe("feedEventCurrentDay", () => {
   it("enrollment start_at Sep 16, today Sep 23 → every site returns 8", () => {
@@ -40,6 +46,99 @@ describe("feedEventCurrentDay", () => {
     expect(feed).toContain("dateKeyFromIso(ev.created_at, tz)");
     expect(hydrate).not.toMatch(/todayKey = getTodayDateKey\(tz\)/);
     expect(feed).not.toMatch(/todayKey: getTodayDateKey\(tz\)/);
+  });
+});
+
+describe("finishedSecuredDays", () => {
+  it("uses the R1 window over that enrollment", () => {
+    const n = finishedSecuredDays({
+      startAt: "2026-09-16T12:00:00.000Z",
+      endAt: "2026-09-30T12:00:00.000Z",
+      endedAt: "2026-09-23T18:00:00.000Z",
+      status: "completed",
+      timeZone: "UTC",
+      todayKey: "2026-09-26",
+      securedDateKeys: ["2026-09-16", "2026-09-17", "2026-09-20"],
+    });
+    expect(n).toBe(3);
+  });
+
+  it("counts only secured keys inside the enrollment window", () => {
+    const n = finishedSecuredDays({
+      startAt: "2026-09-16T12:00:00.000Z",
+      endAt: "2026-09-30T12:00:00.000Z",
+      status: "completed",
+      timeZone: "UTC",
+      todayKey: "2026-09-26",
+      securedDateKeys: [
+        "2026-09-01",
+        "2026-09-16",
+        "2026-09-17",
+        "2026-09-30",
+        "2026-10-01",
+      ],
+    });
+    expect(n).toBe(2);
+    const bounds = finishedSecureQueryBounds({
+      events: [
+        {
+          id: "fin",
+          user_id: "u1",
+          event_type: "completed_challenge",
+          challenge_id: "c1",
+          metadata: { active_challenge_id: "ac1" },
+          created_at: "2026-09-23T18:00:00.000Z",
+        },
+        {
+          id: "task",
+          user_id: "u2",
+          event_type: "task_completed",
+          challenge_id: "c2",
+          metadata: {},
+          created_at: "2026-09-23T18:00:00.000Z",
+        },
+      ],
+      enrollments: [
+        {
+          id: "ac1",
+          user_id: "u1",
+          challenge_id: "c1",
+          start_at: "2026-09-16T12:00:00.000Z",
+          end_at: "2026-09-30T12:00:00.000Z",
+          status: "completed",
+        },
+        {
+          id: "ac2",
+          user_id: "u2",
+          challenge_id: "c2",
+          start_at: "2026-01-01T00:00:00.000Z",
+          end_at: "2026-12-31T00:00:00.000Z",
+          status: "active",
+        },
+      ],
+      timeZoneByUser: new Map([
+        ["u1", "UTC"],
+        ["u2", "UTC"],
+      ]),
+    });
+    expect(bounds?.userIds).toEqual(["u1"]);
+    expect(bounds?.fromKey).toBe("2026-09-16");
+    expect(bounds?.toKeyExclusive).toBe("2026-09-30");
+    const hydrate = readFileSync(resolve(__dirname, "./feed-activity-hydrate.ts"), "utf8");
+    expect(hydrate).toContain("gte(\"date_key\", finishedBounds.fromKey)");
+    expect(hydrate).toContain("lt(\"date_key\", finishedBounds.toKeyExclusive)");
+    expect(hydrate).not.toMatch(/from\("day_secures"\)\.select\("user_id, date_key"\)\.in\("user_id", userIds\)(?!\.)/);
+  });
+
+  it("returns undefined when start_at is missing — UI omits the line", () => {
+    expect(
+      finishedSecuredDays({
+        startAt: null,
+        timeZone: "UTC",
+        todayKey: "2026-09-26",
+        securedDateKeys: ["2026-09-16"],
+      }),
+    ).toBeUndefined();
   });
 });
 

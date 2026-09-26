@@ -94,6 +94,7 @@ export type ChallengeDetailV3Props = {
   invite?: ChallengeDetailInvite;
   /** Profile-finished header. When set, Join is never shown. */
   finishedLine?: string;
+  finishedCtaLabel?: string;
   onBack: () => void;
   onMore?: () => void;
   onJoin?: () => void;
@@ -242,12 +243,12 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         {p.finishedLine ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Start again"
+            accessibilityLabel={p.finishedCtaLabel ?? "Start again"}
             disabled={p.joining}
             onPress={p.joining ? undefined : p.onStartAgain}
             style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
           >
-            <Text style={styles.joinLabel}>Start again</Text>
+            <Text style={styles.joinLabel}>{p.finishedCtaLabel ?? "Start again"}</Text>
           </Pressable>
         ) : closed ? (
           <Text style={styles.closedLine}>

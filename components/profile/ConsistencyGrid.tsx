@@ -8,13 +8,13 @@ import {
   HELD_DAY_LINE,
   boardRowsFromDays,
   consistencyDenominatorLine,
-  consistencyFromDays,
   monthGridFromDays,
   weekStripLegendStates,
   type DayRecord,
   type DayState,
   type EnrollmentInput,
 } from "@/lib/day-state";
+import { securedElapsed } from "@/lib/consistency";
 
 const CELL = 30;
 const CELL_R = 6;
@@ -110,14 +110,20 @@ export function ConsistencyGrid({
   names,
   joinedLabel,
   monthKey,
+  dueDayKeys,
+  securedDateKeys,
+  todayKey,
 }: {
   days: readonly DayRecord[];
   enrollments: readonly EnrollmentInput[];
   names: Record<string, string>;
   joinedLabel: string;
   monthKey: string;
+  dueDayKeys: readonly string[];
+  securedDateKeys: readonly string[];
+  todayKey: string;
 }) {
-  const { secured, elapsed } = consistencyFromDays(days);
+  const { secured, elapsed } = securedElapsed({ dueDayKeys, securedDateKeys, todayKey });
   const month = monthGridFromDays(days, monthKey);
   const monthName = monthNameFromKey(monthKey);
   const legend = weekStripLegendStates(days);

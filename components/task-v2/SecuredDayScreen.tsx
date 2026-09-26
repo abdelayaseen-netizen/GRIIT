@@ -9,6 +9,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
 import DisplayNumber from "@/components/ds/DisplayNumber";
+import EmptyState from "@/components/ds/EmptyState";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { SECURED_DONE, SECURED_STREAK_LABEL } from "@/lib/simple-log";
 import {
@@ -17,6 +18,8 @@ import {
   PROOF_SHARE_FAILED,
 } from "@/lib/proof-moment";
 import {
+  SECURED_LOAD_ERROR,
+  SECURED_LOAD_RETRY,
   SECURED_PHOTO_H,
   SECURED_SELF,
   SECURED_TILE,
@@ -40,6 +43,9 @@ export default function SecuredDayScreen({
   selfReported,
   taskCount,
   challengeCount,
+  allSelfReported,
+  loadError,
+  onRetryLoad,
   week,
   todayIndex,
   fillToday,
@@ -53,8 +59,11 @@ export default function SecuredDayScreen({
   streak: number;
   proofs: SecuredProof[];
   selfReported: SecuredSelfRow[];
-  taskCount: number;
+  taskCount?: number;
   challengeCount: number;
+  allSelfReported?: boolean;
+  loadError?: boolean;
+  onRetryLoad?: () => void;
   week: WeekStripDay[];
   todayIndex: number;
   fillToday?: boolean;
@@ -68,11 +77,15 @@ export default function SecuredDayScreen({
   const insets = useSafeAreaInsets();
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
-  const caption = securedDayCaption({
-    taskCount,
-    challengeCount,
-    cameraProofs: n,
-  });
+  const caption =
+    taskCount == null
+      ? ""
+      : securedDayCaption({
+          taskCount,
+          challengeCount,
+          cameraProofs: n,
+          allSelfReported,
+        });
   const names = [...new Set(proofs.map((p) => p.challengeName))].join(", ");
 
   return (
@@ -98,7 +111,17 @@ export default function SecuredDayScreen({
         </View>
         <View style={styles.center}>
           <Text style={styles.today}>{SECURED_TODAY}</Text>
-          <Text style={styles.caption}>{caption}</Text>
+          {loadError ? (
+            <EmptyState
+              heading={SECURED_LOAD_ERROR}
+              body="Check your connection and try again."
+              actionLabel={SECURED_LOAD_RETRY}
+              variant="error"
+              onRetry={onRetryLoad}
+            />
+          ) : caption ? (
+            <Text style={styles.caption}>{caption}</Text>
+          ) : null}
         </View>
         <WeekStrip days={week} todayIndex={todayIndex} fillToday={fillToday} />
         {n === 0 && selfReported.length > 0 ? (

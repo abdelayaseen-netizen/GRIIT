@@ -1,10 +1,8 @@
 /**
  * Confirmation variant + challenge-day snapshot for task completion v2.
  * Server-authored fields only — never invent streak or day-secured client-side.
- * Day n is displayDay — the same function Home uses.
+ * Day n is the calendar position passed in — same as Home.
  */
-
-import { displayDay } from "./challenge-day";
 
 export type VerificationKind = "live_photo" | "timer" | "gps" | "word_count" | "self_report";
 
@@ -102,10 +100,7 @@ export function assembleSubmitResult(args: {
     requiredRemaining: args.requiredRemaining,
     streakDays: args.secure?.newStreakCount ?? args.streakDaysBefore,
     streakDaysBefore: args.streakDaysBefore,
-    challengeDay: displayDay(
-      args.challengeDayBeforeSecure + (justSecured ? 1 : 0),
-      daySecured,
-    ),
+    challengeDay: args.challengeDayBeforeSecure,
     challengeLength: args.challengeLength,
     challengeName: args.challengeName,
     verificationKind: args.verificationKind,

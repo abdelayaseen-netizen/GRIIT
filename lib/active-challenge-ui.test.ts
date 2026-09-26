@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   RESET_NOTICE,
+  activeEnrollmentNeedsRedirect,
   doneGate,
   footerAction,
   hasCameraProof,
@@ -37,6 +38,23 @@ function task(partial: Partial<ActiveChallengeTask> & Pick<ActiveChallengeTask, 
     ...partial,
   };
 }
+
+describe("inactive Active screen", () => {
+  it("redirects when the enrollment is no longer active", () => {
+    expect(activeEnrollmentNeedsRedirect("abandoned")).toBe(true);
+    expect(activeEnrollmentNeedsRedirect("completed")).toBe(true);
+    expect(activeEnrollmentNeedsRedirect("failed")).toBe(true);
+    expect(activeEnrollmentNeedsRedirect("active")).toBe(false);
+    expect(activeEnrollmentNeedsRedirect(undefined)).toBe(false);
+    const screen = readFileSync(
+      resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
+      "utf8",
+    );
+    expect(screen).toContain("activeEnrollmentNeedsRedirect");
+    expect(screen).toContain("ROUTES.CHALLENGE_ID");
+    expect(screen).toContain('queryKey: ["challenge", "listMyActive"]');
+  });
+});
 
 describe("binding law", () => {
   it("reset_notice is always false until the backend exposes a reset event", () => {

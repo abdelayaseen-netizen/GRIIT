@@ -12,6 +12,8 @@ import {
   LIVE_FEED_TYPES,
   followRowAccepted,
   normalizeChallengeVisibility,
+  finishedSecuredDays,
+  finishedSecureQueryBounds,
   hydrateActivityEventsToPosts,
   feedEventCurrentDay,
   type EvRow,
@@ -148,16 +150,20 @@ export const feedRouter = createTRPCRouter({
     const challengeIds = ev.challenge_id ? [ev.challenge_id] : [];
     const [chRes, acRes, profRes] = await Promise.all([
       challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
-      challengeIds.length ? server.from("active_challenges").select("user_id, challenge_id, start_at, status").in("challenge_id", challengeIds).limit(200) : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; start_at?: string }[] }),
+      challengeIds.length ? server.from("active_challenges").select("id, user_id, challenge_id, start_at, end_at, ended_at, status").in("challenge_id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id?: string; user_id: string; challenge_id: string; start_at?: string; end_at?: string; ended_at?: string | null; status?: string }[] }),
       server.from("profiles").select("user_id, display_name, username, avatar_url, timezone").in("user_id", [ev.user_id]).limit(200),
     ]);
     const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
-    const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; start_at?: string }[];
+    const activeRows = (acRes as { data: unknown }).data as { id?: string; user_id: string; challenge_id: string; start_at?: string; end_at?: string; ended_at?: string | null; status?: string }[];
     const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[];
     const challengeMap = new Map(challenges.map((c) => [c.id, c]));
     const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
-    const activeMap = new Map<string, { start_at?: string }>();
-    for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { start_at: row.start_at });
+    const activeById = new Map<string, (typeof activeRows)[number]>();
+    const activeMap = new Map<string, (typeof activeRows)[number]>();
+    for (const row of activeRows) {
+      if (row.id) activeById.set(row.id, row);
+      activeMap.set(`${row.user_id}:${row.challenge_id}`, row);
+    }
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
     if (ev.challenge_id && !ch) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     const vis = normalizeChallengeVisibility(ch?.visibility);
@@ -209,10 +215,39 @@ export const feedRouter = createTRPCRouter({
       durationDays,
     });
     const isCompletedChallenge = ev.event_type === "completed_challenge";
+    const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
+    const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? active;
+    const postTodayKey = dateKeyFromIso(ev.created_at, tz);
+    const finishedBounds = isCompletedChallenge
+      ? finishedSecureQueryBounds({
+          events: [ev],
+          enrollments: enrollment ? [enrollment] : [],
+          timeZoneByUser: new Map([[ev.user_id, tz]]),
+        })
+      : null;
+    const { data: secureRows } = finishedBounds
+      ? await server
+          .from("day_secures")
+          .select("date_key")
+          .eq("user_id", ev.user_id)
+          .gte("date_key", finishedBounds.fromKey)
+          .lt("date_key", finishedBounds.toKeyExclusive)
+      : { data: [] as { date_key: string }[] };
+    const securedDays = isCompletedChallenge
+      ? finishedSecuredDays({
+          startAt: enrollment?.start_at,
+          endAt: enrollment?.end_at,
+          endedAt: enrollment?.ended_at,
+          status: enrollment?.status,
+          timeZone: tz,
+          todayKey: postTodayKey,
+          securedDateKeys: ((secureRows ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        })
+      : undefined;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
     return {
-      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), totalDays: Math.max(1, durationDays), eventType: ev.event_type,
+      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, totalDays: Math.max(1, durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: typeof md.photo_url === "string" ? md.photo_url : null, proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,

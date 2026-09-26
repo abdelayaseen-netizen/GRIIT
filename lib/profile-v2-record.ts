@@ -11,6 +11,7 @@
  */
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
+import { securedElapsed } from "./consistency";
 import {
   badgeRowsFromProgress,
   formatDayMonthYear,
@@ -316,11 +317,16 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     input.ranges.filter((r) => RECORD_WINDOW_STATUSES.has(r.status)),
     input.todayKey,
   );
-  const closedDueKeys = dueDayKeys.filter((k) => k < input.todayKey);
+  const accountWindow = securedElapsed({
+    dueDayKeys,
+    securedDateKeys: input.securedDateKeys,
+    todayKey: input.todayKey,
+  });
+  const closedDueKeys = accountWindow.elapsedKeys;
   const verifiedClosedKeys = closedDueKeys.filter((k) => secured.has(k));
-  const dueToday = dueDayKeys.includes(input.todayKey);
-  const closedDueDays = closedDueKeys.length;
-  const verifiedClosed = verifiedClosedKeys.length;
+  const dueToday = accountWindow.dueToday;
+  const closedDueDays = accountWindow.elapsed;
+  const verifiedClosed = accountWindow.secured;
   const rate = closedDueDays === 0 ? 0 : verifiedClosed / closedDueDays;
   const dueCount = dueDayKeys.length;
 
@@ -341,12 +347,17 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .sort((a, b) => compareKeys(a.startDateKey, b.startDateKey))
     .map((range) => {
       const rangeDue = dueKeysForRange(range, input.todayKey);
-      const elapsed = rangeDue.filter((k) => k < input.todayKey).length;
+      const rangeWindow = securedElapsed({
+        dueDayKeys: rangeDue,
+        securedDateKeys: input.securedDateKeys,
+        todayKey: input.todayKey,
+      });
+      const elapsed = rangeWindow.elapsed;
       const day = calendarDay(range.startDateKey, input.todayKey, range.durationDays);
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);
-      const verified = rangeDue.filter((k) => k < input.todayKey && secured.has(k)).length;
+      const verified = rangeWindow.secured;
       const missed = misses.length;
       return {
         id: range.id,
@@ -439,7 +450,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     })),
   ];
 
-  const totalVerified = dueDayKeys.filter((k) => k < input.todayKey && secured.has(k)).length;
+  const totalVerified = accountWindow.secured;
   const since = streakSince(input.currentStreak, input.lastCompletedDateKey);
 
   return {

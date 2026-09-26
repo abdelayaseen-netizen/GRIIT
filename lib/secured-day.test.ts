@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { HomeProofTask } from "@/lib/home-proof-card";
 import {
+  SECURED_LOAD_ERROR,
+  SECURED_LOAD_RETRY,
   SECURED_SELF,
   SECURED_TODAY,
   proofsFromComplete,
@@ -26,6 +28,8 @@ describe("secured day copy", () => {
   it("uses the frame 59 table — no bare Day n", () => {
     expect(SECURED_TODAY).toBe("Today is secured.");
     expect(SECURED_SELF).toBe("Self-reported");
+    expect(SECURED_LOAD_ERROR).toBe("Couldn't load. Try again.");
+    expect(SECURED_LOAD_RETRY).toBe("Retry");
     expect(securedChallengeLine("Iron man", 2, 14)).toBe("Iron man · Day 2 of 14");
     expect(
       securedDayCaption({ taskCount: 4, challengeCount: 2, cameraProofs: 3 }),
@@ -34,11 +38,24 @@ describe("secured day copy", () => {
       securedDayCaption({ taskCount: 2, challengeCount: 1, cameraProofs: 1 }),
     ).toBe("2 tasks. 1 camera proofs.");
     expect(
-      securedDayCaption({ taskCount: 3, challengeCount: 2, cameraProofs: 0 }),
+      securedDayCaption({
+        taskCount: 3,
+        challengeCount: 2,
+        cameraProofs: 0,
+        allSelfReported: true,
+      }),
     ).toBe("3 tasks across 2 challenges, all self-reported. Nothing was checked.");
     expect(
-      securedDayCaption({ taskCount: 2, challengeCount: 1, cameraProofs: 0 }),
+      securedDayCaption({
+        taskCount: 2,
+        challengeCount: 1,
+        cameraProofs: 0,
+        allSelfReported: true,
+      }),
     ).toBe("2 tasks, all self-reported. Nothing was checked.");
+    expect(
+      securedDayCaption({ taskCount: 3, challengeCount: 2, cameraProofs: 0 }),
+    ).toBe("3 tasks across 2 challenges. 0 camera proofs.");
   });
 
   it("three tiles and +n", () => {
@@ -50,6 +67,32 @@ describe("secured day copy", () => {
 });
 
 describe("secured day data", () => {
+  it("all self-reported is every completed task's proof type, not zero photo tiles", () => {
+    const cameraDone = task({
+      name: "Run",
+      challengeName: "Iron man",
+      requirePhoto: true,
+      gates: ["camera"],
+    });
+    const selfDone = task({
+      name: "Write",
+      challengeName: "Daily Gratitude",
+      requirePhoto: false,
+      gates: [],
+    });
+    const mixed = selectSecuredDayMeta({ tasks: [cameraDone, selfDone], proofs: [] });
+    expect(mixed.taskCount).toBe(2);
+    expect(mixed.allSelfReported).toBe(false);
+    const onlySelf = selectSecuredDayMeta({ tasks: [selfDone], proofs: [] });
+    expect(onlySelf.allSelfReported).toBe(true);
+    expect(securedDayCaption({
+      taskCount: onlySelf.taskCount,
+      challengeCount: onlySelf.challengeCount,
+      cameraProofs: 0,
+      allSelfReported: onlySelf.allSelfReported,
+    })).toContain("all self-reported");
+  });
+
   it("lists self-reported challenges and never invents a photo", () => {
     const proofs = proofsFromComplete({
       dayProofs: [{ imageUrl: "https://cdn/a.jpg", challengeName: "Iron man", day: 2, durationDays: 14, eventId: "e1" }],
@@ -62,7 +105,7 @@ describe("secured day data", () => {
     ]);
     const meta = selectSecuredDayMeta({
       tasks: [
-        task({ name: "Run", challengeName: "Iron man", currentDay: 3 }),
+        task({ name: "Run", challengeName: "Iron man", currentDay: 3, requirePhoto: true, gates: ["camera"] }),
         task({ name: "Write", challengeName: "Daily Gratitude", currentDay: 2, durationDays: 30 }),
       ],
       proofs,
@@ -93,5 +136,19 @@ describe("secured screen wiring", () => {
     expect(screen).not.toContain("formatSecuredStateLine");
     expect(moment).toContain('camera ? "Verified"');
     expect(moment).toContain("camera && hasPhoto");
+  });
+
+  it("fetch failure shows Couldn't load. Try again. and Retry, never a blank ready caption", () => {
+    const secured = readFileSync(resolve(__dirname, "../app/task/secured.tsx"), "utf8");
+    const screen = readFileSync(
+      resolve(__dirname, "../components/task-v2/SecuredDayScreen.tsx"),
+      "utf8",
+    );
+    expect(secured).toContain("error: true");
+    expect(secured).toContain("ready: false");
+    expect(secured).toContain("onRetryLoad");
+    expect(screen).toContain("SECURED_LOAD_ERROR");
+    expect(screen).toContain("SECURED_LOAD_RETRY");
+    expect(screen).toContain('variant="error"');
   });
 });

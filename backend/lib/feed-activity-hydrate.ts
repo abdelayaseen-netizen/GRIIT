@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
+import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "../../lib/home-day-total";
+import { securedElapsed } from "../../lib/consistency";
+import { dueKeysForRange } from "../../lib/profile-v2-record";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -54,6 +57,89 @@ export function followRowAccepted(row: { status?: string | null }): boolean {
   return s === "accepted";
 }
 
+export function finishedSecuredDays(args: {
+  startAt?: string | null;
+  endAt?: string | null;
+  endedAt?: string | null;
+  status?: string;
+  timeZone: string;
+  todayKey: string;
+  securedDateKeys: readonly string[];
+}): number | undefined {
+  if (!args.startAt) return undefined;
+  const startDateKey = dateKeyFromIso(args.startAt, args.timeZone);
+  const status = args.status && args.status.length > 0 ? args.status : "completed";
+  const endDateKey = exclusiveEndDateKey(
+    { status, end_at: args.endAt ?? args.startAt, ended_at: args.endedAt ?? null },
+    startDateKey,
+    args.timeZone,
+  );
+  const dueDayKeys = dueKeysForRange({ status, startDateKey, endDateKey }, args.todayKey);
+  return securedElapsed({
+    dueDayKeys,
+    securedDateKeys: args.securedDateKeys,
+    todayKey: args.todayKey,
+  }).secured;
+}
+
+export type FinishedSecureQueryBounds = {
+  userIds: string[];
+  fromKey: string;
+  toKeyExclusive: string;
+};
+
+type EnrollmentForBounds = {
+  id?: string;
+  user_id: string;
+  challenge_id: string;
+  start_at?: string;
+  end_at?: string;
+  ended_at?: string | null;
+  status?: string;
+};
+
+/** Users + date window for finished posts on this page. Never an unbounded day_secures read. */
+export function finishedSecureQueryBounds(args: {
+  events: EvRow[];
+  enrollments: EnrollmentForBounds[];
+  timeZoneByUser: ReadonlyMap<string, string>;
+}): FinishedSecureQueryBounds | null {
+  const byId = new Map<string, EnrollmentForBounds>();
+  const byPair = new Map<string, EnrollmentForBounds>();
+  for (const row of args.enrollments) {
+    if (row.id) byId.set(row.id, row);
+    byPair.set(`${row.user_id}:${row.challenge_id}`, row);
+  }
+  const userIds = new Set<string>();
+  let fromKey: string | null = null;
+  let toKeyExclusive: string | null = null;
+  for (const ev of args.events) {
+    if (ev.event_type !== "completed_challenge") continue;
+    const tz = args.timeZoneByUser.get(ev.user_id)?.trim() || "UTC";
+    const md = ev.metadata ?? {};
+    const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
+    const enrollment =
+      (enrollmentId ? byId.get(enrollmentId) : undefined) ??
+      (ev.challenge_id ? byPair.get(`${ev.user_id}:${ev.challenge_id}`) : undefined);
+    if (!enrollment?.start_at) continue;
+    userIds.add(ev.user_id);
+    const startDateKey = dateKeyFromIso(enrollment.start_at, tz);
+    const exclusive = exclusiveEndDateKey(
+      {
+        status: enrollment.status && enrollment.status.length > 0 ? enrollment.status : "completed",
+        end_at: enrollment.end_at ?? enrollment.start_at,
+        ended_at: enrollment.ended_at ?? null,
+      },
+      startDateKey,
+      tz,
+    );
+    if (!fromKey || startDateKey < fromKey) fromKey = startDateKey;
+    if (!toKeyExclusive || exclusive > toKeyExclusive) toKeyExclusive = exclusive;
+  }
+  if (userIds.size === 0 || !fromKey || !toKeyExclusive) return null;
+  return { userIds: [...userIds], fromKey, toKeyExclusive };
+}
+
 /** Calendar position from start_at — not current_day or metadata.day_number. */
 export function feedEventCurrentDay(input: {
   startAt?: string | null;
@@ -87,6 +173,7 @@ export async function hydrateActivityEventsToPosts(
     challengeName: string;
     taskName?: string | null;
     currentDay: number;
+    securedDays?: number;
     totalDays: number;
     eventType: string;
     isCompleted: boolean;
@@ -111,19 +198,32 @@ export async function hydrateActivityEventsToPosts(
       ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds)
       : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
     challengeIds.length
-      ? server.from("active_challenges").select("user_id, challenge_id, start_at, status").in("challenge_id", challengeIds)
-      : Promise.resolve({ data: [] as { user_id: string; challenge_id: string; start_at?: string }[] }),
+      ? server.from("active_challenges").select("id, user_id, challenge_id, start_at, end_at, ended_at, status").in("challenge_id", challengeIds)
+      : Promise.resolve({ data: [] as { id?: string; user_id: string; challenge_id: string; start_at?: string; end_at?: string; ended_at?: string | null; status?: string }[] }),
     userIds.length
       ? server.from("profiles").select("user_id, display_name, username, avatar_url, timezone").in("user_id", userIds)
       : Promise.resolve({ data: [] as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[] }),
   ]);
   const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
-  const activeRows = (acRes as { data: unknown }).data as { user_id: string; challenge_id: string; start_at?: string }[];
+  const activeRows = (acRes as { data: unknown }).data as {
+    id?: string;
+    user_id: string;
+    challenge_id: string;
+    start_at?: string;
+    end_at?: string;
+    ended_at?: string | null;
+    status?: string;
+  }[];
   const profiles = (profRes as { data: unknown }).data as { user_id: string; display_name?: string; username?: string; avatar_url?: string | null; timezone?: string | null }[];
   const challengeMap = new Map(challenges.map((c) => [c.id, c]));
   const profileMap = new Map(profiles.map((p) => [p.user_id, p]));
-  const activeMap = new Map<string, { start_at?: string }>();
-  for (const row of activeRows) activeMap.set(`${row.user_id}:${row.challenge_id}`, { start_at: row.start_at });
+  type EnrollmentRow = (typeof activeRows)[number];
+  const activeById = new Map<string, EnrollmentRow>();
+  const activeMap = new Map<string, EnrollmentRow>();
+  for (const row of activeRows) {
+    if (row.id) activeById.set(row.id, row);
+    activeMap.set(`${row.user_id}:${row.challenge_id}`, row);
+  }
   const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
     if (vis === "private" && ev.user_id !== viewerId) return false;
     if (vis === "friends" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
@@ -180,14 +280,35 @@ export async function hydrateActivityEventsToPosts(
   }
   const streakByUser = new Map<string, number>();
   const securedTodayByUser = new Set<string>();
+  const securedKeysByUser = new Map<string, string[]>();
+  const finishedBounds = finishedSecureQueryBounds({
+    events: visible,
+    enrollments: activeRows,
+    timeZoneByUser: new Map(
+      profiles.map((p) => [p.user_id, p.timezone?.trim() || "UTC"]),
+    ),
+  });
   if (userIds.length > 0) {
     const todayKey = getTodayDateKey("UTC");
-    const [{ data: streakRows }, { data: secureRows }] = await Promise.all([
+    const [{ data: streakRows }, { data: secureRows }, { data: allSecures }] = await Promise.all([
       server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
       server.from("day_secures").select("user_id").in("user_id", userIds).eq("date_key", todayKey),
+      finishedBounds
+        ? server
+            .from("day_secures")
+            .select("user_id, date_key")
+            .in("user_id", finishedBounds.userIds)
+            .gte("date_key", finishedBounds.fromKey)
+            .lt("date_key", finishedBounds.toKeyExclusive)
+        : Promise.resolve({ data: [] as { user_id: string; date_key: string }[] }),
     ]);
     for (const s of (streakRows ?? []) as { user_id: string; active_streak_count?: number }[]) streakByUser.set(s.user_id, s.active_streak_count ?? 0);
     for (const row of (secureRows ?? []) as { user_id: string }[]) securedTodayByUser.add(row.user_id);
+    for (const row of (allSecures ?? []) as { user_id: string; date_key: string }[]) {
+      const list = securedKeysByUser.get(row.user_id) ?? [];
+      list.push(row.date_key);
+      securedKeysByUser.set(row.user_id, list);
+    }
   }
   return visible.map((ev) => {
     const md = ev.metadata ?? {};
@@ -208,6 +329,19 @@ export async function hydrateActivityEventsToPosts(
       durationDays,
     });
     const isCompletedChallenge = ev.event_type === "completed_challenge";
+    const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
+    const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? active;
+    const securedDays = isCompletedChallenge
+      ? finishedSecuredDays({
+          startAt: enrollment?.start_at,
+          endAt: enrollment?.end_at,
+          endedAt: enrollment?.ended_at,
+          status: enrollment?.status,
+          timeZone: tz,
+          todayKey,
+          securedDateKeys: securedKeysByUser.get(ev.user_id) ?? [],
+        })
+      : undefined;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const stat = reactionStats.get(ev.id);
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
@@ -223,6 +357,7 @@ export async function hydrateActivityEventsToPosts(
       challengeName,
       taskName: typeof md.task_name === "string" ? md.task_name : null,
       currentDay: Math.max(1, currentDay),
+      securedDays,
       securedToday: securedTodayByUser.has(ev.user_id),
       totalDays: Math.max(1, durationDays),
       eventType: ev.event_type,
