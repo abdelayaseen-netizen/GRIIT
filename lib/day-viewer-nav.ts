@@ -1,5 +1,3 @@
-import { proofsDateLabel } from "@/lib/proofs-grid";
-
 export type DayViewerCursor = {
   dateKey: string;
   photoIndex: number;
@@ -69,16 +67,4 @@ export function dayViewerSwipePrev(
 ): number | null {
   if (pages.length === 0 || pageIndex <= 0) return null;
   return pageIndex - 1;
-}
-
-export function dayViewerNextDayHint(args: {
-  pages: readonly { dateKey: string }[];
-  pageIndex: number;
-  isOwner: boolean;
-}): string | null {
-  const cur = args.pages[args.pageIndex];
-  const next = args.pages[args.pageIndex + 1];
-  if (!cur || !next || next.dateKey === cur.dateKey) return null;
-  if (!args.isOwner) return "Swipe left at the last photo for the previous shared day";
-  return `Swipe left at the last photo for ${proofsDateLabel(next.dateKey)}`;
 }

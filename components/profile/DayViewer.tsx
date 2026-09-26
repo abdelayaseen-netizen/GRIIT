@@ -6,12 +6,11 @@ import Button from "@/components/ds/Button";
 import {
   dayViewerCountLabel,
   dayViewerCursorFromPage,
-  dayViewerNextDayHint,
   dayViewerPageFromCursor,
   dayViewerPages,
   dayViewerPhotoCount,
 } from "@/lib/day-viewer-nav";
-import type { ProofsGridItem } from "@/lib/proofs-grid";
+import { PROOFS_PHOTO_NOT_SAVED, proofsTileIsMissing, type ProofsGridItem } from "@/lib/proofs-grid";
 
 export function dayViewerShareCopy(shared: boolean, unanswered: boolean): string {
   if (shared) return "Shared to the feed.";
@@ -25,12 +24,14 @@ export function DayViewer({
   isOwner,
   onShare,
   onDateKeyChange,
+  onCountLabelChange,
 }: {
   items: ProofsGridItem[];
   initialDateKey?: string;
   isOwner: boolean;
   onShare?: (item: ProofsGridItem) => void;
   onDateKeyChange?: (dateKey: string) => void;
+  onCountLabelChange?: (label: string) => void;
 }) {
   const { width } = useWindowDimensions();
   const photoWidth = width - DS_V3.space.gutter * 2;
@@ -56,6 +57,10 @@ export function DayViewer({
   const dayCount = cursor ? dayViewerPhotoCount(pages, cursor.dateKey) : 0;
   const countLabel = cursor ? dayViewerCountLabel(cursor, dayCount) : "1 of 1";
 
+  useEffect(() => {
+    onCountLabelChange?.(countLabel);
+  }, [countLabel, onCountLabelChange]);
+
   if (!item || !cursor) {
     return (
       <View style={styles.empty}>
@@ -66,13 +71,9 @@ export function DayViewer({
 
   const unanswered = isOwner && item.shareState === "unanswered";
   const canShare = unanswered;
-  const hint = dayViewerNextDayHint({ pages, pageIndex, isOwner });
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.header} accessibilityLabel={countLabel}>
-        {countLabel}
-      </Text>
       <View style={styles.segments} accessibilityElementsHidden>
         {Array.from({ length: Math.max(1, dayCount) }, (_, i) => (
           <View key={i} style={[styles.seg, i <= cursor.photoIndex ? styles.segOn : styles.segOff]} />
@@ -87,6 +88,10 @@ export function DayViewer({
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         style={{ height: photoHeight }}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        removeClippedSubviews
         initialScrollIndex={startPage}
         getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
         keyExtractor={(row) => row.id}
@@ -99,18 +104,34 @@ export function DayViewer({
         }}
         renderItem={({ item: row }) => (
           <View style={{ width, height: photoHeight }}>
-            <Image
-              source={{ uri: row.uri }}
-              style={{
-                width: photoWidth,
-                height: photoHeight,
-                marginHorizontal: DS_V3.space.gutter,
-                borderRadius: 14,
-                backgroundColor: DS_V3.color.surface,
-              }}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
+            {proofsTileIsMissing(row) ? (
+              <View
+                style={[
+                  styles.missing,
+                  {
+                    width: photoWidth,
+                    height: photoHeight,
+                    marginHorizontal: DS_V3.space.gutter,
+                  },
+                ]}
+              >
+                <Text style={styles.missingCaption}>{PROOFS_PHOTO_NOT_SAVED}</Text>
+              </View>
+            ) : (
+              <Image
+                source={{ uri: row.uri }}
+                style={{
+                  width: photoWidth,
+                  height: photoHeight,
+                  marginHorizontal: DS_V3.space.gutter,
+                  borderRadius: 14,
+                  backgroundColor: DS_V3.color.surface,
+                }}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                recyclingKey={row.id}
+              />
+            )}
           </View>
         )}
       />
@@ -125,7 +146,6 @@ export function DayViewer({
       {canShare && onShare ? (
         <Button label="Share to the feed" onPress={() => onShare(item)} />
       ) : null}
-      {hint ? <Text style={styles.caption}>{hint}</Text> : null}
     </View>
   );
 }
@@ -133,11 +153,6 @@ export function DayViewer({
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: DS_V3.color.canvas, paddingTop: DS_V3.space.sm, gap: DS_V3.space.sm },
   empty: { padding: DS_V3.space.gutter },
-  header: {
-    ...DS_V3.type.label,
-    color: DS_V3.color.textSecondary,
-    paddingHorizontal: DS_V3.space.gutter,
-  },
   segments: {
     flexDirection: "row",
     gap: 4,
@@ -170,5 +185,17 @@ const styles = StyleSheet.create({
     ...DS_V3.type.caption,
     color: DS_V3.color.textSecondary,
     paddingHorizontal: DS_V3.space.gutter,
+  },
+  missing: {
+    borderRadius: 14,
+    backgroundColor: DS_V3.color.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: DS_V3.space.gutter,
+  },
+  missingCaption: {
+    ...DS_V3.type.caption,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
   },
 });

@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { MIN_PROOF_IMAGE_BYTES } from "@/lib/proof-image-bytes";
+import { proofsTileIsMissing } from "@/lib/proofs-grid";
 import {
   dayViewerCountLabel,
   dayViewerCursorFromPage,
   dayViewerDateKeys,
-  dayViewerNextDayHint,
   dayViewerPageFromCursor,
   dayViewerPages,
   dayViewerPhotoCount,
@@ -34,39 +35,64 @@ describe("day viewer paging", () => {
     expect(across).toBe(2);
     expect(dayViewerCursorFromPage(pages, across!)).toEqual({ dateKey: "2026-09-19", photoIndex: 0 });
     expect(dayViewerCountLabel({ dateKey: "2026-09-19", photoIndex: 0 }, 1)).toBe("1 of 1");
-    expect(dayViewerSwipeNext(pages, 2)).toBeNull();
   });
 
-  it("swipe right goes back a photo, then to the newer day last photo", () => {
+  it("swipe right on the first photo of a day goes to the newer day's last photo", () => {
     const pages = dayViewerPages(items);
-    expect(dayViewerSwipePrev(pages, 2)).toBe(1);
-    expect(dayViewerCursorFromPage(pages, 1)).toEqual({ dateKey: "2026-09-25", photoIndex: 1 });
+    const firstOfOlder = dayViewerPageFromCursor(pages, { dateKey: "2026-09-19", photoIndex: 0 });
+    expect(firstOfOlder).toBe(2);
+    const prev = dayViewerSwipePrev(pages, firstOfOlder);
+    expect(prev).toBe(1);
+    expect(dayViewerCursorFromPage(pages, prev!)).toEqual({ dateKey: "2026-09-25", photoIndex: 1 });
     expect(dayViewerSwipePrev(pages, 0)).toBeNull();
   });
 
-  it("count is per day, not across days", () => {
+  it("oldest day last photo has nothing further", () => {
     const pages = dayViewerPages(items);
-    expect(dayViewerPhotoCount(pages, "2026-09-25")).toBe(2);
-    expect(dayViewerPhotoCount(pages, "2026-09-19")).toBe(1);
-    expect(dayViewerPageFromCursor(pages, { dateKey: "2026-09-19", photoIndex: 0 })).toBe(2);
+    expect(dayViewerSwipeNext(pages, pages.length - 1)).toBeNull();
   });
 
-  it("hint only on the last photo when an older day exists", () => {
-    const pages = dayViewerPages(items);
-    expect(dayViewerNextDayHint({ pages, pageIndex: 0, isOwner: true })).toBeNull();
-    expect(dayViewerNextDayHint({ pages, pageIndex: 1, isOwner: true })).toBe(
-      "Swipe left at the last photo for 19 September",
-    );
-    expect(dayViewerNextDayHint({ pages, pageIndex: 1, isOwner: false })).toBe(
-      "Swipe left at the last photo for the previous shared day",
-    );
-    expect(dayViewerNextDayHint({ pages, pageIndex: 2, isOwner: true })).toBeNull();
+  it("single-photo day is 1 of 1 and does not page", () => {
+    const pages = dayViewerPages([{ id: "only", dateKey: "2026-09-20" }]);
+    expect(dayViewerPhotoCount(pages, "2026-09-20")).toBe(1);
+    expect(dayViewerCountLabel({ dateKey: "2026-09-20", photoIndex: 0 }, 1)).toBe("1 of 1");
+    expect(dayViewerSwipeNext(pages, 0)).toBeNull();
+    expect(dayViewerSwipePrev(pages, 0)).toBeNull();
   });
 
-  it("DayViewer pages with a horizontal paging list", () => {
+  it("Photo not saved stubs stay in the pager and are swipeable", () => {
+    const stub = {
+      id: "stub",
+      dateKey: "2026-09-19",
+      uri: "https://example.test/stub.jpg",
+      bytes: 12,
+    };
+    const live = {
+      id: "live",
+      dateKey: "2026-09-25",
+      uri: "https://example.test/live.jpg",
+      bytes: MIN_PROOF_IMAGE_BYTES + 10,
+    };
+    expect(proofsTileIsMissing(stub)).toBe(true);
+    expect(proofsTileIsMissing(live)).toBe(false);
+    const pages = dayViewerPages([live, stub]);
+    expect(pages.map((p) => p.id)).toEqual(["live", "stub"]);
+    expect(dayViewerSwipeNext(pages, 0)).toBe(1);
+    const src = readFileSync(resolve(__dirname, "../components/profile/DayViewer.tsx"), "utf8");
+    expect(src).toContain("PROOFS_PHOTO_NOT_SAVED");
+    expect(src).toContain("proofsTileIsMissing");
+  });
+
+  it("DayViewer pages with a windowed horizontal list and no swipe caption", () => {
     const src = readFileSync(resolve(__dirname, "../components/profile/DayViewer.tsx"), "utf8");
     expect(src).toContain("pagingEnabled");
     expect(src).toContain("horizontal");
+    expect(src).toContain("initialNumToRender");
+    expect(src).toContain("windowSize");
     expect(src).not.toMatch(/<Modal/);
+    expect(src).not.toContain("Swipe left at the last photo");
+    const screen = readFileSync(resolve(__dirname, "../app/profile/day.tsx"), "utf8");
+    expect(screen).toContain("countLabel");
+    expect(screen).toContain("proofsDateLabel");
   });
 });
