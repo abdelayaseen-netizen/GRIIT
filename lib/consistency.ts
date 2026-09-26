@@ -4,43 +4,16 @@
  * An unsecured today is never elapsed.
  */
 
+import { securedElapsed, type SecuredElapsed } from "../backend/lib/secured-elapsed";
+
+export { securedElapsed, type SecuredElapsed };
+
 export type Consistency = {
   secured: number;
   due: number;
   dueToday: boolean;
   firstDueDate: string | null;
 };
-
-export type SecuredElapsed = {
-  secured: number;
-  elapsed: number;
-  dueToday: boolean;
-  todaySecured: boolean;
-  firstDueDate: string | null;
-  elapsedKeys: string[];
-};
-
-/** Canonical account / enrollment days-secured window. */
-export function securedElapsed(args: {
-  dueDayKeys: readonly string[];
-  securedDateKeys: readonly string[];
-  todayKey: string;
-}): SecuredElapsed {
-  const securedSet = new Set(args.securedDateKeys);
-  const dueToday = args.dueDayKeys.includes(args.todayKey);
-  const todaySecured = dueToday && securedSet.has(args.todayKey);
-  const elapsedKeys = args.dueDayKeys.filter(
-    (k) => k < args.todayKey || (k === args.todayKey && todaySecured),
-  );
-  return {
-    secured: elapsedKeys.filter((k) => securedSet.has(k)).length,
-    elapsed: elapsedKeys.length,
-    dueToday,
-    todaySecured,
-    firstDueDate: args.dueDayKeys[0] ?? null,
-    elapsedKeys,
-  };
-}
 
 export function consistencyFromRecord(rec: {
   verifiedClosed?: number;

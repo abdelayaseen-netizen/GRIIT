@@ -3,7 +3,7 @@
  * UI Day n is calendarDayFromStartAt / uiChallengeDay — never this remap.
  */
 
-import { calendarDayFromStartAt } from "@/lib/home-day-total";
+import { calendarDayFromStartAt } from "../backend/lib/calendar-day";
 
 export function challengeDayNumber(currentDay: number | null | undefined): number {
   if (typeof currentDay !== "number" || !Number.isFinite(currentDay)) return 1;

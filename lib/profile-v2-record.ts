@@ -9,6 +9,7 @@
  * Streak: `streaks.active_streak_count` / `longest_streak_count` — same read as Home.
  * Verdict: display only. Not persisted.
  */
+import { dueKeysForRange, RECORD_WINDOW_STATUSES } from "../backend/lib/due-keys";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
 import { securedElapsed } from "./consistency";
@@ -17,6 +18,8 @@ import {
   formatDayMonthYear,
   type ProfileV2BadgeNeed,
 } from "./profile-v2-badges";
+
+export { dueKeysForRange };
 
 export const DAY_STATE = {
   VERIFIED: "verified",
@@ -194,30 +197,6 @@ export type ProfileRecord = {
 
 function compareKeys(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
-}
-
-const RECORD_WINDOW_STATUSES = new Set(["active", "completed", "abandoned"]);
-
-/** Half-open [startDateKey, endDateKey) clipped to today. Abandoned / completed count. */
-export function dueKeysForRange(
-  range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
-  todayKey: string
-): string[] {
-  if (!RECORD_WINDOW_STATUSES.has(range.status)) return [];
-  const start = range.startDateKey;
-  const end = range.endDateKey;
-  if (!start || start > todayKey) return [];
-  const keys: string[] = [];
-  if (end <= start) {
-    if (start <= todayKey) keys.push(start);
-    return keys;
-  }
-  let cursor = start;
-  while (cursor < end && cursor <= todayKey) {
-    keys.push(cursor);
-    cursor = addCalendarDaysToDateKey(cursor, 1);
-  }
-  return keys;
 }
 
 /** Closed due days that feed a challenge fraction — same set as camera / self-reported. */

@@ -44,5 +44,8 @@ describe("displayDay", () => {
     const dayOpen = readFileSync(resolve(__dirname, "./day-open-active.ts"), "utf8");
     expect(dayOpen).toContain("calendarDayFromStartAt(startAt, args.timeZone, args.todayKey, durationDays)");
     expect(dayOpen).not.toContain("ac.current_day");
+    const src = readFileSync(resolve(__dirname, "./challenge-day.ts"), "utf8");
+    expect(src).not.toMatch(/from ["']@\//);
+    expect(src).toContain('from "../backend/lib/calendar-day"');
   });
 });

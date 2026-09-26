@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { dateKeyFromIso } from "../../lib/home-day-total";
+import { dateKeyFromIso } from "./calendar-day";
 import {
   dedupePairedStartEvents,
   feedEventCurrentDay,
@@ -128,6 +128,10 @@ describe("finishedSecuredDays", () => {
     expect(hydrate).toContain("gte(\"date_key\", finishedBounds.fromKey)");
     expect(hydrate).toContain("lt(\"date_key\", finishedBounds.toKeyExclusive)");
     expect(hydrate).not.toMatch(/from\("day_secures"\)\.select\("user_id, date_key"\)\.in\("user_id", userIds\)(?!\.)/);
+    expect(hydrate).not.toMatch(/from ["']@\//);
+    expect(hydrate).toContain('from "./secured-elapsed"');
+    expect(hydrate).toContain('from "./calendar-day"');
+    expect(hydrate).toContain('from "./due-keys"');
   });
 
   it("returns undefined when start_at is missing — UI omits the line", () => {
