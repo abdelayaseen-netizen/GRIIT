@@ -19,6 +19,7 @@ import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
 import { dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
@@ -120,6 +121,7 @@ export default function HomeScreen() {
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
+  const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
 
   const feedScope = useFeedToggle((s) => s.scope);
   const setFeedScope = useFeedToggle((s) => s.setScope);
@@ -528,9 +530,12 @@ export default function HomeScreen() {
         firstProofEver,
         targetStreak: profile?.target_streak ?? null,
         securedToday: todaySecured,
+        securedDateKeys,
+        profileTimeZone: (profile as { timezone?: string | null } | null)?.timezone,
+        now: new Date(),
         todayKey,
       }),
-    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey],
+    [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey, securedDateKeys, profile],
   );
 
   const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);
@@ -634,6 +639,7 @@ export default function HomeScreen() {
                 onPressTask(next);
               }}
               onPressChallenge={onPressChallenge}
+              onPressShareToday={() => setShareTodayOpen(true)}
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
@@ -642,6 +648,11 @@ export default function HomeScreen() {
               loading={bootstrap.isPending && !bootstrap.data}
             />
           }
+        />
+        <DayStickerSheet
+          visible={shareTodayOpen}
+          onDismiss={() => setShareTodayOpen(false)}
+          challenges={proof.shareTodayChallenges}
         />
         <FreezeSheet
           visible={showFreezeSheet}

@@ -22,9 +22,10 @@ import Sheet from "@/components/ds/Sheet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
 import { inlineServerError } from "@/lib/inline-server-error";
-import { shareChallenge } from "@/lib/share";
 import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
+import DayStickerSheet from "@/components/share/DayStickerSheet";
+import { shareTodayVisible } from "@/lib/day-sticker";
 import {
   RESET_NOTICE,
   activeEnrollmentNeedsRedirect,
@@ -284,6 +285,7 @@ export default function ActiveChallengeDetailScreen() {
   }, [rawTasks, checkinByTask, currentDay, enrollmentDuration]);
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
+  const [shareTodayOpen, setShareTodayOpen] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =
     useInlineError();
 
@@ -358,14 +360,15 @@ export default function ActiveChallengeDetailScreen() {
   }, [challengeId, id, queryClient, router, showLeaveError, user?.id]);
 
   const handleShare = useCallback(() => {
-    if (!challengeId) return;
-    void shareChallenge({
-      name: title,
-      duration: durationDays,
-      id: challengeId,
-      tasksPerDay: tasks.length,
-    });
-  }, [challengeId, title, durationDays, tasks.length]);
+    setShareTodayOpen(true);
+  }, []);
+  const todayProofUri = useMemo(() => {
+    for (const row of checkins) {
+      const url = proofUrl(row);
+      if (url) return url;
+    }
+    return undefined;
+  }, [checkins]);
 
   const handleParticipants = useCallback(() => {
     if (!challengeId) return;
@@ -428,6 +431,26 @@ export default function ActiveChallengeDetailScreen() {
           onTask={openTask}
           onParticipants={handleParticipants}
           onShare={handleShare}
+          showShareToday={shareTodayVisible({
+            serverSecuredDateKeys: Array.isArray(securedDateKeys) ? securedDateKeys : [],
+            profileTimeZone: profileTz,
+            now: new Date(),
+          })}
+        />
+        <DayStickerSheet
+          visible={shareTodayOpen}
+          onDismiss={() => setShareTodayOpen(false)}
+          challenges={[
+            {
+              id: id ?? title,
+              name: title,
+              day: shownDay,
+              dayTotal: durationDays,
+              photoCount: todayProofUri ? 1 : 0,
+            },
+          ]}
+          preselectedId={id ?? title}
+          proofUri={todayProofUri}
         />
         <Sheet
           visible={leaveConfirmVisible}

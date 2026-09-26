@@ -23,6 +23,7 @@ import {
   Timer,
   Users,
   ChevronRight,
+  Share,
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -51,6 +52,7 @@ import {
   type ActiveChallengeTask,
   type ActiveTaskType,
 } from "@/lib/active-challenge-ui";
+import { SHARE_TODAY, TODAY_IS_SECURED, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -94,6 +96,7 @@ export type ActiveChallengeV3Props = {
   onTask?: (task: ActiveChallengeTask) => void;
   onParticipants?: () => void;
   onShare?: () => void;
+  showShareToday?: boolean;
 };
 
 export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
@@ -266,6 +269,24 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 </View>
               );
             })}
+            {p.showShareToday && p.onShare ? (
+              <>
+                <Text style={styles.todaySecured}>{TODAY_IS_SECURED}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={SHARE_TODAY}
+                  onPress={p.onShare}
+                  style={styles.taskRow}
+                >
+                  <Share size={ICON} color={DS_V3.color.brandText} />
+                  <View style={styles.taskCopy}>
+                    <Text style={styles.taskTitle}>{SHARE_TODAY}</Text>
+                    <Text style={styles.caption}>{UNTIL_MIDNIGHT}</Text>
+                  </View>
+                  <ChevronRight size={ICON} color={DS_V3.color.textSecondary} />
+                </Pressable>
+              </>
+            ) : null}
             {p.participationType === "team" || p.participantsCount > 1 ? (
               <>
                 <View style={styles.divider} />
@@ -296,16 +317,12 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         <View style={styles.footerClear} />
       </ScrollView>
 
-      {p.loading ? null : (
+      {p.loading || footer.kind !== "next" ? null : (
         <View style={[styles.footer, { paddingBottom: DS_V3.space.section + insets.bottom }]}>
-          {footer.kind === "share" ? (
-            <Button label="Share today's proof" variant="secondary" onPress={p.onShare} />
-          ) : footer.kind === "next" ? (
-            <Button
-              label={`${taskVerb(footer.task.task_type)} · ${footer.task.title}`}
-              onPress={() => p.onTask?.(footer.task)}
-            />
-          ) : null}
+          <Button
+            label={`${taskVerb(footer.task.task_type)} · ${footer.task.title}`}
+            onPress={() => p.onTask?.(footer.task)}
+          />
         </View>
       )}
     </View>
@@ -384,6 +401,14 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.brandText,
+  },
+  todaySecured: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
+    paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.sm,
   },
   statusSkel: {
     marginTop: DS_V3.space.sm,
