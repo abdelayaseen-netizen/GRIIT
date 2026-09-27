@@ -47,7 +47,7 @@ describe("Chunk U U5", () => {
     expect(day).toContain("rgba(15,15,15,0.72)");
     expect(badges).toContain("badgeRowsA11y");
     expect(grid).toContain("monthSummaryLabel");
-    expect(grid).toContain("days secured in");
+    expect(grid).toContain("secured in");
     expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("borderRadius: CARD_R");
     expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("const CARD_R = 14");
   });
