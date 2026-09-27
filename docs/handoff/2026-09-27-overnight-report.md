@@ -15,7 +15,7 @@
 | `fix/build-65-truth` | `7177473ba3728c8ae4f7c77db6fa3f8190cf6de9` | 1117 |
 | `fix/drift-polish` | `4ba3b49e2ea312ed3111947257ef86360b9a15b1` | 1091 |
 | `feat/time-picker` | `5914a9610e57b75c9f672a0e37a33ab7b2ccae4a` | 1095 |
-| `report/audits` | this commit | n/a (no product tests) |
+| `report/audits` | `8317ab79e09764a8f610e45ad0ab85d26f6ac314` | 1090 (main suite, docs only) |
 
 ### Commits that touch `backend/` (Railway after merge)
 
@@ -422,5 +422,5 @@ main                  45dd729
 fix/build-65-truth    7177473   1117 tests   Railway
 fix/drift-polish      4ba3b49   1091 tests
 feat/time-picker      5914a96   1095 tests   new native build
-report/audits         (this)    report + is_member draft only
+report/audits         8317ab7   report + is_member draft only
 ```
