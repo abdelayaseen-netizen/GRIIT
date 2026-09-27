@@ -117,3 +117,13 @@ describe("applyEnrollmentWindow", () => {
     expect(feed).toContain("applyEnrollmentWindow");
   });
 });
+
+describe("applyQueuedEnrollmentWindow", () => {
+  it("is the helper listMyQueued calls", () => {
+    const win = readFileSync(resolve(__dirname, "./enrollment-window.ts"), "utf8");
+    const list = readFileSync(resolve(__dirname, "../trpc/routes/challenges.ts"), "utf8");
+    expect(win).toContain("applyQueuedEnrollmentWindow");
+    expect(list).toContain("applyQueuedEnrollmentWindow");
+    expect(list).toContain("listMyQueued");
+  });
+});

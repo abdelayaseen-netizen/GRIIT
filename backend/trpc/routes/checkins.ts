@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { assertActiveChallengeOwnership } from "../guards";
 import { requireNoError } from "../errors";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import {
   getTodayDateKey,
   getYesterdayDateKey,
@@ -1234,12 +1235,12 @@ export const checkinsRouter = createTRPCRouter({
   getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
     const dateKey = getTodayDateKey(tz);
-    const { data: acList, error: acErr } = await ctx.supabase
-      .from("active_challenges")
-      .select("id, challenge_id")
-      .eq("user_id", ctx.userId)
-      .eq("status", "active")
-      .limit(50);
+    const { data: acList, error: acErr } = await applyEnrollmentWindow(
+      ctx.supabase
+        .from("active_challenges")
+        .select("id, challenge_id")
+        .eq("user_id", ctx.userId),
+    ).limit(50);
     requireNoError(acErr, "Failed to load active challenges.");
     const acRows = Array.isArray(acList) ? acList : [];
     const acIds = acRows.map((r: { id: string }) => r.id);

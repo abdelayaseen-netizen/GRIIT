@@ -19,8 +19,19 @@ export type TaskWindowRow = {
   gate_time_end?: string | null;
   gate_time_start?: string | null;
   gate_time_mode?: string | null;
-  config?: { schedule_window_end?: string | null; time_window_end?: string | null } | null;
+  required?: boolean | null;
+  config?: {
+    required?: boolean | null;
+    schedule_window_end?: string | null;
+    time_window_end?: string | null;
+  } | null;
 };
+
+function windowTaskRequired(task: TaskWindowRow): boolean {
+  if (task.required === false) return false;
+  if (task.config && typeof task.config === "object" && task.config.required === false) return false;
+  return true;
+}
 
 /** HH:MM end of a task time window, any mode. */
 export function taskWindowEndHHMM(task: TaskWindowRow): string | null {
@@ -45,7 +56,7 @@ function parseHHMMMinutes(raw: string): number | null {
   return h * 60 + m;
 }
 
-/** True when any task with a time window has already closed today in `timeZone`. */
+/** True when any required task's time gate has already closed today in `timeZone`. */
 export function anyTimeWindowClosedToday(
   tasks: TaskWindowRow[],
   now: Date,
@@ -53,6 +64,7 @@ export function anyTimeWindowClosedToday(
 ): boolean {
   const current = currentMinutesInTimeZone(now, timeZone);
   return tasks.some((t) => {
+    if (!windowTaskRequired(t)) return false;
     const end = taskWindowEndHHMM(t);
     if (!end) return false;
     const mins = parseHHMMMinutes(end);

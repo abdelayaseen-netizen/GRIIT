@@ -427,6 +427,31 @@ describe("fractionDateKeysForRange", () => {
   });
 });
 
+describe("queued enrollment", () => {
+  it("a start_at after today is not a running row", () => {
+    const rec = buildProfileRecord({
+      todayKey: "2026-09-27",
+      currentStreak: 1,
+      bestStreak: 1,
+      lastCompletedDateKey: "2026-09-26",
+      securedDateKeys: ["2026-09-26"],
+      ranges: [
+        {
+          id: "ac-5am",
+          challengeId: "ch-5am",
+          name: "5am crew",
+          status: "active",
+          startDateKey: "2026-09-28",
+          endDateKey: "2026-10-27",
+          durationDays: 30,
+          tasksPerDay: 1,
+        },
+      ],
+    });
+    expect(rec.runs).toEqual([]);
+  });
+});
+
 describe("token map — brand.primary is not retargeted", () => {
   it("orange is the locked #DC5401 token", () => {
     expect(DS_COLORS_V2.brand.primary).toBe("#DC5401");

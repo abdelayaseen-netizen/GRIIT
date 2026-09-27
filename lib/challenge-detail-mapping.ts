@@ -188,7 +188,7 @@ export function detailState(
  * Invite step does not exist yet. Restore JOIN_CAPTION_INVITE when it lands.
  */
 export const JOIN_CAPTION_TODAY = "Day 1 is today.";
-export const JOIN_CAPTION_TOMORROW = "Day 1 begins tomorrow morning.";
+export const JOIN_CAPTION_TOMORROW = "Day 1 is tomorrow.";
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
 

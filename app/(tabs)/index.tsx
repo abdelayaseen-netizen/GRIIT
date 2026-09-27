@@ -20,7 +20,8 @@ import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
-import { dateKeyFromIso } from "@/lib/home-day-total";
+import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
+import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
@@ -47,7 +48,6 @@ import { captureError } from "@/lib/sentry";
 import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
-import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
@@ -227,6 +227,7 @@ export default function HomeScreen() {
       const durationDays = ac.challenges?.duration_days ?? 14;
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
       const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
+      if (startDateKey > todayKey) continue;
       const currentDay = calendarDayFromStartAt(startIso, homeTimeZone, todayKey, durationDays);
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
@@ -533,6 +534,16 @@ export default function HomeScreen() {
     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey],
   );
 
+  const startsTomorrow = useMemo(
+    () =>
+      queuedHomeRows(
+        bootstrap.data?.queuedChallenges as
+          | { id?: string; challenge_id?: string; challenges?: { id?: string; title?: string | null } | null }[]
+          | undefined,
+      ),
+    [bootstrap.data?.queuedChallenges],
+  );
+
   const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);
 
   React.useEffect(() => {
@@ -621,6 +632,7 @@ export default function HomeScreen() {
               streakLine={streakLine}
               morningAfter={morningAfter}
               proof={proof}
+              startsTomorrow={startsTomorrow}
               weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}

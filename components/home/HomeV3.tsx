@@ -34,6 +34,7 @@ import {
 import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
+import { HOME_STARTS_TOMORROW, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
 
 const ICON = DS_V3.space.xs * 6;
 const RING = DS_V3.space.gutter;
@@ -84,6 +85,7 @@ export type HomeV3Props = {
   streakLine: string;
   morningAfter?: HomeV3MorningAfter | null;
   proof: HomeV3Proof | null;
+  startsTomorrow?: QueuedHomeRow[];
   weekFilled?: boolean[];
   weekStates?: WeekStripDayState[];
   todayIndex: number;
@@ -111,6 +113,7 @@ export function HomeV3({
   streakLine,
   morningAfter,
   proof,
+  startsTomorrow,
   weekFilled,
   weekStates,
   todayIndex,
@@ -334,6 +337,21 @@ export function HomeV3({
           </Card>
         </View>
       ) : null}
+
+      {startsTomorrow && startsTomorrow.length > 0
+        ? startsTomorrow.map((row) => (
+            <View key={row.id} style={styles.gutter}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${row.name}. ${HOME_STARTS_TOMORROW}`}
+                onPress={() => row.challengeId && onPressChallenge?.(row.challengeId)}
+              >
+                <Text style={styles.task}>{row.name}</Text>
+                <Text style={styles.caption}>{HOME_STARTS_TOMORROW}</Text>
+              </Pressable>
+            </View>
+          ))
+        : null}
 
       <View style={styles.week}>
         <WeekStrip days={days} todayIndex={todayIndex} fillToday={secured.todaySquareFilled} />

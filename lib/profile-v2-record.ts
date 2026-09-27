@@ -292,7 +292,9 @@ export function isAbandonedEnrollment(status: string): boolean {
 export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
   const secured = new Set(input.securedDateKeys);
   const listed = input.ranges.filter((r) => r.status !== "paused");
-  const activeRanges = listed.filter((r) => r.status === "active");
+  const activeRanges = listed.filter(
+    (r) => r.status === "active" && r.startDateKey <= input.todayKey,
+  );
   const dueDayKeys = unionDueDateKeys(
     input.ranges.filter((r) => RECORD_WINDOW_STATUSES.has(r.status)),
     input.todayKey,
