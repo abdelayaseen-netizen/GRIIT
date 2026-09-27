@@ -345,8 +345,9 @@ describe("Home Today card", () => {
     expect(src).toContain("width: DS_V3.size.tap");
     expect(src).toContain("ChevronDown");
     expect(src).toContain("ChevronUp");
-    const chipBlock = src.slice(src.indexOf("countChip"), src.indexOf("countTxt"));
-    expect(chipBlock).not.toContain("Pressable");
+    expect(src).not.toContain("countChip");
+    expect(src).toContain("countTxt");
+    expect(src).toContain("{section.doneCount} / {section.totalCount}");
   });
 });
 
