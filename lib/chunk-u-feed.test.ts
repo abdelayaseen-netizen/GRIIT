@@ -50,6 +50,10 @@ describe("Chunk U feed card family", () => {
     expect(inlineCommentsState(2)).toBe("few");
     expect(inlineCommentsState(40)).toBe("more");
     expect(viewAllComments(40)).toBe("View all 40 comments");
+    const inline = readFileSync(resolve(__dirname, "../components/feed/InlineComments.tsx"), "utf8");
+    expect(inline).not.toContain("NO_COMMENTS_YET");
+    const sheet = readFileSync(resolve(__dirname, "../components/feed/CommentsSheet.tsx"), "utf8");
+    expect(sheet).toContain("COMMENTS_EMPTY");
   });
 });
 
