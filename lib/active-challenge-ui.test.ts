@@ -17,6 +17,7 @@ import {
   taskVerb,
   taskWord,
   weekSecuredFromKeys,
+  weekStripFilledForEnrollment,
   type ActiveChallengeTask,
 } from "./active-challenge-ui";
 
@@ -114,6 +115,42 @@ describe("binding law", () => {
       false,
       false,
     ]);
+  });
+
+  it("enrollment week strip ignores global secures before start_at", () => {
+    const sunday = "2026-09-13";
+    const globalWedSat = ["2026-09-09", "2026-09-12"];
+    expect(weekSecuredFromKeys(globalWedSat, WEEK)).toEqual([
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+    ]);
+    expect(
+      weekStripFilledForEnrollment({
+        securedDateKeys: globalWedSat,
+        weekDateKeys: WEEK,
+        startDateKey: sunday,
+        todayKey: sunday,
+      }),
+    ).toEqual([false, false, false, false, false, false, false]);
+    expect(
+      weekStripFilledForEnrollment({
+        securedDateKeys: [...globalWedSat, sunday],
+        weekDateKeys: WEEK,
+        startDateKey: sunday,
+        todayKey: sunday,
+      }),
+    ).toEqual([false, false, false, false, false, false, true]);
+    const screen = readFileSync(
+      resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
+      "utf8",
+    );
+    expect(screen).toContain("weekStripFilledForEnrollment");
+    expect(screen).not.toContain("weekSecuredFromKeys");
   });
 });
 
