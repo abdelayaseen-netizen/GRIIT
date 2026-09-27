@@ -133,6 +133,6 @@ export const VISITOR = {
   consistency: { rate: '100%', verdict: 'Locked in', line: '29 of 29 due days verified. 1 due today.',
     strip: Array.from({ length: 30 }, (_, i) => (i === 29 ? T : V)),
     weeks: Array.from({ length: 26 }, (_, i) => (i >= 19 ? 1 : i >= 14 ? 0.86 : i >= 8 ? 0.71 : 0.86)) },
-  runs: [{ name: '75 Hard', day: 'Day 47 of 75', meta: '46 verified · 0 missed · 5 tasks daily', days: runStates(75, 46) }],
+  runs: [{ name: 'No Days Off', day: 'Day 47 of 75', meta: '46 verified · 0 missed · 5 tasks daily', days: runStates(75, 46) }],
   proofDays: [46, 45, 44, 43, 42, 41],
 };

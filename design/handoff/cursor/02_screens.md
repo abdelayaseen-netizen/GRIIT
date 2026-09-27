@@ -585,7 +585,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Pick a starter pack or build from scratch. | secondary |
 | Starter packs | segmented |
 | Custom | segmented |
-| 75 Hard Classic | bodyStrong |
+| No Days Off | bodyStrong |
 | 5 strict tasks · original framework | caption |
 | Athlete | bodyStrong |
 | 3 tasks · run, train, check in | caption |
@@ -691,7 +691,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Recommended for your first challenge | caption |
 | Streak freezes on. Miss a day and you do not reset. | secondary |
 | Hard mode | bodyStrong |
-| 75 Hard style. No exceptions. | caption |
+| No exceptions. | caption |
 | No freezes. Miss a day, restart from day 1. | secondary |
 | Public proof on feed | heading |
 | Off | chip |
@@ -3992,7 +3992,7 @@ thing this system does not do.
 1. `DisplayNumber` 96: `{secured}`, with "of {N}" in `type.heading` `textSecondary`.
    **N is `duration_days`, never the elapsed-day count.** They are equal on a completed run and
    diverge on every abandoned or failed one, where elapsed reads as "you nearly finished" and hides
-   how long the run actually was: 75 Hard failing on day 28 is "27 of 75", not "27 of 28"
+   how long the run actually was: No Days Off failing on day 28 is "27 of 75", not "27 of 28"
 2. "{challenge} is over." — or "{challenge} ended on day {n}." for `failed`
 3. one `type.caption` line of fact
 4. the sheet, 12 across

@@ -272,7 +272,7 @@ ORDER BY tablename, cmd;
 
 **What's working:** Share infrastructure is mature (8 content types, Instagram Story export, system share, clipboard, save-to-photos). Deep-link attribution via `?ref=<userId>` works. Backend social primitives all present.  
 **What's broken:** **No invite CTA surfaced anywhere in the user-facing app.** Backend ready, UI missing. Viral coefficient = 0. Feed buried in tab #3. No streak-milestone share auto-prompt. No "X friends doing this challenge" on discover. No follow-accept push.  
-**Industry comparison:** Strava + Duolingo + 75 Hard set the standard. GRIIT has the plumbing of Strava but pushes users into a task-tracker surface, not a social-feed surface. Per founder's stated prior + RevenueCat 2026: distribution moves revenue ~10×.  
+**Industry comparison:** Strava + Duolingo + No Days Off set the standard. GRIIT has the plumbing of Strava but pushes users into a task-tracker surface, not a social-feed surface. Per founder's stated prior + RevenueCat 2026: distribution moves revenue ~10×.  
 **Justification:** An 8 (90-day target) requires invite CTA + share milestone prompt + "X friends" badges + follow-accept push + feed promotion. A 6 (launch target) requires at least invite CTA. Neither ships today. A 4 would mean no share infrastructure — present.  
 **To 9/10 (90-day):** (1) Add invite CTA card on `app/(tabs)/profile.tsx` · (2) Add streak-milestone share auto-prompt at day-7/30 · (3) Add "X friends in this challenge" badge on discover · (4) Add follow-accept push notification · (5) Promote feed to second tab position.
 

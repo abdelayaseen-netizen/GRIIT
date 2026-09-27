@@ -585,7 +585,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Pick a starter pack or build from scratch. | secondary |
 | Starter packs | segmented |
 | Custom | segmented |
-| 75 Hard Classic | bodyStrong |
+| No Days Off | bodyStrong |
 | 5 strict tasks · original framework | caption |
 | Athlete | bodyStrong |
 | 3 tasks · run, train, check in | caption |
@@ -691,7 +691,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Recommended for your first challenge | caption |
 | Streak freezes on. Miss a day and you do not reset. | secondary |
 | Hard mode | bodyStrong |
-| 75 Hard style. No exceptions. | caption |
+| No exceptions. | caption |
 | No freezes. Miss a day, restart from day 1. | secondary |
 | Public proof on feed | heading |
 | Off | chip |

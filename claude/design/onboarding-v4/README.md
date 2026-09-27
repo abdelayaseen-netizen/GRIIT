@@ -192,7 +192,7 @@ Inside the content region:
 **Challenge catalogue (id / name / detail / length / tags):**
 1. `reset` — The 30 Reset — "30 days · 3 tasks · daily" — 30 — [habits, mental]
 2. `mind` — Clear Head — "21 days · 3 tasks · daily" — 21 — [mental, sleep]
-3. `75` — 75 Hard — "75 days · 5 tasks · daily" — 75 — [physical, cold]
+3. `75` — No Days Off — "75 days · 5 tasks · daily" — 75 — [physical, cold]
 4. `plunge` — Cold Plunge Ladder — "14 days · 2 tasks · daily" — 14 — [cold, physical]
 5. `pages` — 10 Pages a Day — "30 days · 2 tasks · daily" — 30 — [reading, habits]
 6. `rest` — Lights Out — "21 days · 2 tasks · nightly" — 21 — [sleep, habits]
@@ -200,7 +200,7 @@ Inside the content region:
 **Task lists (used on Day 1; three shown per challenge):**
 - **The 30 Reset** — "Morning routine before 8am" (PHOTO), "Read 10 pages" (PHOTO), "20 min walk outside" (GPS)
 - **Clear Head** — "10 min meditation" (TIMER), "Journal one page" (PHOTO), "Phone down by 10pm" (TIMER)
-- **75 Hard** — "Two 45 min workouts" (TIMER), "Progress photo" (PHOTO), "Gallon of water" (PHOTO)
+- **No Days Off** — "Two 45 min workouts" (TIMER), "Progress photo" (PHOTO), "Gallon of water" (PHOTO)
 - **Cold Plunge Ladder** — "Cold exposure, building daily" (TIMER), "Breathwork after" (TIMER), "Log how it felt" (PHOTO)
 - **10 Pages a Day** — "Read 10 pages" (PHOTO), "One line of notes" (PHOTO), "Same time each day" (TIMER)
 - **Lights Out** — "In bed by 10:30pm" (TIMER), "No screens after 10pm" (TIMER), "Morning light walk" (GPS)

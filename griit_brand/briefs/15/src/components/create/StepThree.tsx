@@ -5,7 +5,7 @@ import { WizardHeader, WizardFooter } from '../Chrome';
 
 export const MODES = [
   { id: 'standard', title: 'Standard', caption: 'Recommended for your first challenge', line: 'Streak freezes on. Miss a day and you do not reset.' },
-  { id: 'hard', title: 'Hard mode', caption: '75 Hard style. No exceptions.', line: 'No freezes. Miss a day, restart from day 1.' },
+  { id: 'hard', title: 'Hard mode', caption: 'No exceptions.', line: 'No freezes. Miss a day, restart from day 1.' },
 ] as const;
 export const PUBLIC_PROOF = ['Off', 'Optional', 'Required'] as const;
 export const CATEGORIES = ['Fitness', 'Mind', 'Faith', 'Discipline'] as const;
