@@ -38,7 +38,7 @@ export function BadgeRows({
               <View style={[styles.stamp, earned ? styles.stampEarned : styles.stampLocked]}>
                 <Text style={[styles.stampText, earned ? styles.earnedInk : styles.lockedInk]}>{b.label}</Text>
               </View>
-              <Text style={styles.body}>{earned ? `Earned ${b.earnedOn}` : b.requirement}</Text>
+              <Text style={styles.body}>{earned ? (b.earnedOn ? `Earned ${b.earnedOn}` : "Earned") : b.requirement}</Text>
               <Text style={[styles.trail, earned ? styles.earnedInk : styles.lockedInk]}>
                 {earned ? "Earned" : "Locked"}
               </Text>

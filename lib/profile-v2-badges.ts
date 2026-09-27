@@ -96,10 +96,10 @@ export function formatBadgeUnlockDate(isoOrKey: string): string {
   const key = /^\d{4}-\d{2}-\d{2}/.test(isoOrKey) ? isoOrKey.slice(0, 10) : null;
   if (!key) {
     const d = new Date(isoOrKey);
-    if (Number.isNaN(d.getTime())) return "Earned";
-    return `Earned ${formatDayMonthYear(d.toISOString().slice(0, 10))}`;
+    if (Number.isNaN(d.getTime())) return "";
+    return formatDayMonthYear(d.toISOString().slice(0, 10));
   }
-  return `Earned ${formatDayMonthYear(key)}`;
+  return formatDayMonthYear(key);
 }
 
 export function badgeRowsFromProgress(input: {
