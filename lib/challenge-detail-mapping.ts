@@ -1,3 +1,4 @@
+import { isTaskRequired, type ChallengeTaskRowRaw } from "@/backend/lib/challenge-tasks";
 import { gatesFor } from "@/backend/lib/task-model";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import { taskDisplayName } from "@/lib/home-proof-card";
@@ -63,7 +64,16 @@ export type ChallengeDetailTask = {
   task_type: string;
   gates: GateKind[];
   time_window?: string;
+  required: boolean;
 };
+
+export const OPTIONAL_TASK_LABEL = "Optional";
+
+/** Same rule as Home / secure_day / tasksDueOnDay enrollments. */
+export function detailTaskRequired(task: DetailTask): boolean {
+  if (task.required === false) return false;
+  return isTaskRequired({ config: task.config } as ChallengeTaskRowRaw);
+}
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
@@ -249,6 +259,7 @@ export function toDetailTasks(
       task_type: String(t.task_type ?? t.type ?? ""),
       gates: gates.map((g) => g.kind),
       time_window: windowGate?.label,
+      required: detailTaskRequired(t),
     };
   });
 }

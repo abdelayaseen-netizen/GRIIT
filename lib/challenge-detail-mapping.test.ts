@@ -6,11 +6,14 @@ import {
   JOIN_CAPTION_INVITE,
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
+  OPTIONAL_TASK_LABEL,
   day1StartCopy,
   detailState,
+  detailTaskRequired,
   formatTimeWindow,
   joinCaption,
   taskGates,
+  toDetailTasks,
 } from "@/lib/challenge-detail-mapping";
 
 describe("formatTimeWindow", () => {
@@ -68,6 +71,32 @@ describe("taskGates", () => {
         config: { schedule_window_start: "06:00", schedule_window_end: "09:00" },
       }).map((g) => g.kind),
     ).toEqual(["camera", "time_window", "location"]);
+  });
+});
+
+describe("detailTaskRequired", () => {
+  it("Daily Gratitude: Write 3 is required, Share one is optional", () => {
+    expect(detailTaskRequired({ config: { required: true } })).toBe(true);
+    expect(detailTaskRequired({ config: { required: false } })).toBe(false);
+    expect(detailTaskRequired({})).toBe(true);
+    const tasks = toDetailTasks([
+      { title: "Write 3 gratitudes", task_type: "journal", config: { required: true } },
+      { title: "Share one with someone", task_type: "manual", config: { required: false } },
+    ]);
+    expect(tasks[0]).toMatchObject({ title: "Write 3 gratitudes", required: true });
+    expect(tasks[1]).toMatchObject({ title: "Share one with someone", required: false });
+    expect(OPTIONAL_TASK_LABEL).toBe("Optional");
+    const detail = readFileSync(
+      resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"),
+      "utf8",
+    );
+    expect(detail).toContain("Optional");
+    expect(detail).toContain("t.required === false");
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    expect(home).toContain("(cfg?.required ?? true) === true");
+    const record = readFileSync(resolve(__dirname, "../backend/trpc/routes/profiles-record.ts"), "utf8");
+    expect(record).toContain("isTaskRequired");
+    expect(record).toContain("buildRecordDays");
   });
 });
 
