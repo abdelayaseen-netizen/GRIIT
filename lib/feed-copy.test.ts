@@ -4,7 +4,7 @@ import { feedNoPhotoCopy } from "@/lib/feed-copy";
 const base = {
   displayName: "Maya",
   username: "maya",
-  challengeName: "75 Hard Classic",
+  challengeName: "No Days Off",
   taskName: "Outdoor workout",
   currentDay: 12,
 };
@@ -18,13 +18,13 @@ describe("feedNoPhotoCopy", () => {
 
   it("joined_challenge says started challengeName", () => {
     expect(feedNoPhotoCopy({ ...base, eventType: "joined_challenge" })).toBe(
-      "Maya started 75 Hard Classic",
+      "Maya started No Days Off",
     );
   });
 
   it("challenge_created says started challengeName", () => {
     expect(feedNoPhotoCopy({ ...base, eventType: "challenge_created" })).toBe(
-      "Maya started 75 Hard Classic",
+      "Maya started No Days Off",
     );
   });
 
@@ -36,7 +36,7 @@ describe("feedNoPhotoCopy", () => {
 
   it("completed_challenge says finished challengeName", () => {
     expect(feedNoPhotoCopy({ ...base, eventType: "completed_challenge" })).toBe(
-      "Maya finished 75 Hard Classic",
+      "Maya finished No Days Off",
     );
   });
 });

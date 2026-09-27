@@ -60,7 +60,7 @@ export default function ConsistencyDetailScreen() {
         />
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           {days.length === 0 ? (
-            <Text style={styles.empty}>No due days yet.</Text>
+            <Text style={styles.empty}>No days yet.</Text>
           ) : (
             <ConsistencyGrid
               days={days}

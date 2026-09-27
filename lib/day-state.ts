@@ -229,9 +229,9 @@ export function consistencyHeadlineFromDays(days: readonly DayRecord[], todayKey
     todayKey: todayKey ?? todayKeyFromDays(days),
   });
   if (elapsed === 0) {
-    return w.dueToday ? "First day is today." : "No due days yet.";
+    return w.dueToday ? "First day is today." : "No days yet.";
   }
-  return `${secured} of ${elapsed} days secured`;
+  return `${secured} of ${elapsed === 1 ? "1 day" : `${elapsed} days`} secured`;
 }
 
 export function consistencyDenominatorLine(joinedLabel: string): string {

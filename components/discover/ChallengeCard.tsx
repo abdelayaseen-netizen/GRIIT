@@ -5,6 +5,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { formatDays } from "@/lib/format-days";
 import Button from "@/components/ds/Button";
 import ProofImage from "@/components/ds/ProofImage";
 
@@ -21,7 +22,7 @@ export type ChallengeCardProps = {
 };
 
 function dayPhrase(n: number): string {
-  return n === 1 ? "1 day" : `${n} days`;
+  return formatDays(n);
 }
 
 function httpsCover(uri?: string | null): string | null {

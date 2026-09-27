@@ -16,7 +16,7 @@ describe("displayDay", () => {
         eventType: "secured_day",
         displayName: "Maya",
         username: "maya",
-        challengeName: "75 Hard Classic",
+        challengeName: "No Days Off",
         currentDay: shown,
       })
     ).toBe("Maya secured day 1");

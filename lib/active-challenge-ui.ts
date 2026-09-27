@@ -169,7 +169,9 @@ export function footerAction(args: {
 }
 
 export function difficultyLine(difficulty: "standard" | "hard"): string {
-  return difficulty === "hard" ? "Hard mode. No freezes." : "Standard mode";
+  return difficulty === "hard"
+    ? "No freezes. Miss a day, restart from day 1."
+    : "Freezes on. Use one to cover a missed day.";
 }
 
 export function streakCaption(streakDays: number): string {

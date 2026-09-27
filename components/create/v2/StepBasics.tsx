@@ -31,7 +31,6 @@ export type StepBasicsProps = {
 const PRESETS: readonly { days: number; label: string }[] = [
   { days: 7, label: "7 days" },
   { days: 14, label: "14 days" },
-  { days: 21, label: "21 days" },
   { days: 30, label: "30 days" },
   { days: 75, label: "75 days" },
 ] as const;

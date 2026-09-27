@@ -21,15 +21,14 @@ describe("effectivePhotoProof", () => {
 });
 
 describe("reviewPhotoLine", () => {
-  it("reads Photo proof required · Hard mode when difficulty is hard", () => {
+  it("shows feed visibility, never the word Photo", () => {
     expect(reviewPhotoLine("hard", "optional")).toBe(HARD_MODE_REVIEW_PHOTO);
-    expect(reviewPhotoLine("hard", "off")).toBe("Photo proof required · Hard mode");
-  });
-
-  it("keeps off / optional / required on standard", () => {
-    expect(reviewPhotoLine("standard", "off")).toBe("Photo proof off");
-    expect(reviewPhotoLine("standard", "optional")).toBe("Photo proof optional");
-    expect(reviewPhotoLine("standard", "required")).toBe("Photo proof required");
+    expect(reviewPhotoLine("hard", "off")).toBe("Feed · Required");
+    expect(reviewPhotoLine("standard", "off")).toBe("Feed · Off");
+    expect(reviewPhotoLine("standard", "optional")).toBe("Feed · Optional");
+    expect(reviewPhotoLine("standard", "required")).toBe("Feed · Required");
+    expect(reviewPhotoLine("hard", "required")).not.toMatch(/Photo/i);
+    expect(reviewPhotoLine("standard", "optional")).not.toMatch(/Photo/i);
   });
 });
 
