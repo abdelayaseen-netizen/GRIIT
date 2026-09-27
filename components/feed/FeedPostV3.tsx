@@ -22,6 +22,7 @@ import {
   feedCardSubject,
   feedCardVariant,
 } from "@/lib/feed-card-family";
+import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
 const ICON = DS_V3.space.xs * 6;
 const CARD_R = 14;
@@ -35,6 +36,8 @@ export type FeedPostV3Props = {
   onComment: () => void;
   onShare: () => void;
   onProfilePress?: () => void;
+  onChallengePress?: () => void;
+  onCommentAuthorPress?: (comment: FeedCommentPreview) => void;
   onSeeDay?: () => void;
 };
 
@@ -46,6 +49,8 @@ export default function FeedPostV3({
   onComment,
   onShare,
   onProfilePress,
+  onChallengePress,
+  onCommentAuthorPress,
   onSeeDay,
 }: FeedPostV3Props) {
   const photo = liveFeedProofUrl(post);
@@ -83,12 +88,23 @@ export default function FeedPostV3({
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <Pressable onPress={onProfilePress} accessibilityRole="button" accessibilityLabel={name}>
+        <Pressable
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel={`${name} profile`}
+          hitSlop={FEED_TAP_HIT_SLOP}
+        >
           <Avatar size={40} uri={avatarUri} displayName={name} />
         </Pressable>
-        <View style={styles.flex}>
+        <Pressable
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel={`${name} profile`}
+          hitSlop={FEED_TAP_HIT_SLOP}
+          style={styles.flex}
+        >
           <Text style={styles.name}>{name}</Text>
-        </View>
+        </Pressable>
         <Text style={styles.when}>{when}</Text>
       </View>
       {variant === "task_camera" && photo ? (
@@ -102,7 +118,18 @@ export default function FeedPostV3({
           recyclingKey={post.id}
         />
       ) : null}
-      <Text style={styles.eyebrow}>{eyebrow}</Text>
+      {onChallengePress ? (
+        <Pressable
+          onPress={onChallengePress}
+          accessibilityRole="button"
+          accessibilityLabel={`${post.challengeName} challenge`}
+          hitSlop={FEED_TAP_HIT_SLOP}
+        >
+          <Text style={styles.eyebrow}>{eyebrow}</Text>
+        </Pressable>
+      ) : (
+        <Text style={styles.eyebrow}>{eyebrow}</Text>
+      )}
       {subject ? <Text style={styles.subject}>{subject}</Text> : null}
       {meta ? <Text style={styles.meta}>{meta}</Text> : null}
       {variant === "day_secured" && onSeeDay ? (
@@ -124,6 +151,7 @@ export default function FeedPostV3({
         total={post.commentCount}
         viewerUserId={viewerUserId}
         onOpen={onComment}
+        onAuthorPress={onCommentAuthorPress}
       />
     </Card>
   );

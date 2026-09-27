@@ -19,6 +19,7 @@ import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { feedAuthorHref, feedChallengeHref } from "@/lib/feed-tap-targets";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
@@ -312,20 +313,15 @@ function LiveFeedSection({
   );
 
   const navigateProfile = useCallback(
-    (post: LiveFeedPost) => {
+    (post: Pick<LiveFeedPost, "userId" | "username">) => {
       if (!post.userId) return;
-      if (post.userId === user?.id) {
-        router.push(ROUTES.TABS_PROFILE as never);
-        return;
-      }
-      const u = post.username?.trim();
-      const hasRealUsername =
-        u && u !== "?" && u !== "Someone" && u.length >= 2 && !/^user_[0-9a-f]+$/i.test(u);
-      if (hasRealUsername) {
-        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
-      } else {
-        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(post.userId)) as never);
-      }
+      router.push(
+        feedAuthorHref({
+          viewerUserId: user?.id,
+          authorUserId: post.userId,
+          username: post.username,
+        }) as never,
+      );
     },
     [router, user?.id]
   );
@@ -426,6 +422,13 @@ function LiveFeedSection({
             onComment={() => setCommentEventId(item.id)}
             onShare={() => void onShare(item)}
             onProfilePress={() => navigateProfile(item)}
+            onChallengePress={() => {
+              const href = feedChallengeHref(item.challengeId);
+              if (href) router.push(href as never);
+            }}
+            onCommentAuthorPress={(c) =>
+              navigateProfile({ userId: c.userId, username: c.username })
+            }
             onSeeDay={
               item.eventType === "secured_day" && item.username
                 ? () =>
@@ -439,7 +442,7 @@ function LiveFeedSection({
         </View>
       );
     },
-    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, user?.id, viewerTargetStreak]
+    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {
