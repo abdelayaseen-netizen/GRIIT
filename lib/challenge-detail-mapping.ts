@@ -1,3 +1,4 @@
+import { gatesFor } from "@/backend/lib/task-model";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import { taskDisplayName } from "@/lib/home-proof-card";
 
@@ -11,13 +12,26 @@ export type Gate =
 export type DetailState = "default" | "free_limit" | "ended" | "not_live";
 
 export type DetailTask = {
+  task_type?: string | null;
+  type?: string | null;
   require_photo?: boolean | null;
   require_location?: boolean | null;
+  required?: boolean | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
   config?: {
+    required?: boolean | null;
     require_camera_only?: boolean | null;
+    require_photo_proof?: boolean | null;
+    photo_required?: boolean | null;
+    require_photo?: boolean | null;
     schedule_window_start?: string | null;
     schedule_window_end?: string | null;
     require_location?: boolean | null;
+    gate_time_mode?: string | null;
+    gate_time_start?: string | null;
+    gate_time_end?: string | null;
   } | null;
 };
 
@@ -82,20 +96,45 @@ export function formatTimeWindow(start: string, end: string): string | null {
 
 export function taskGates(task: DetailTask): Gate[] {
   const config = task.config ?? {};
+  const model = gatesFor({
+    task_type: task.task_type ?? task.type,
+    require_photo: task.require_photo === true,
+    require_location: task.require_location === true,
+    gate_time_mode: task.gate_time_mode ?? config.gate_time_mode,
+    gate_time_start: task.gate_time_start ?? config.gate_time_start ?? config.schedule_window_start,
+    gate_time_end: task.gate_time_end ?? config.gate_time_end ?? config.schedule_window_end,
+    config: {
+      require_photo_proof:
+        config.require_photo_proof === true || config.require_camera_only === true,
+      photo_required: config.photo_required === true,
+      require_photo: config.require_photo === true,
+      require_location: config.require_location === true,
+    },
+  });
   const gates: Gate[] = [];
 
-  if (task.require_photo === true || config.require_camera_only === true) {
+  if (model.includes("camera")) {
     gates.push({ kind: "camera" });
   }
 
-  const start = typeof config.schedule_window_start === "string" ? config.schedule_window_start.trim() : "";
-  const end = typeof config.schedule_window_end === "string" ? config.schedule_window_end.trim() : "";
-  if (start && end) {
-    const label = formatTimeWindow(start, end);
+  const start = (
+    task.gate_time_start ??
+    config.gate_time_start ??
+    config.schedule_window_start ??
+    ""
+  ).trim();
+  const end = (
+    task.gate_time_end ??
+    config.gate_time_end ??
+    config.schedule_window_end ??
+    ""
+  ).trim();
+  if (model.includes("time") || (start && end)) {
+    const label = start && end ? formatTimeWindow(start, end) : null;
     if (label) gates.push({ kind: "time_window", label });
   }
 
-  if (task.require_location === true || config.require_location === true) {
+  if (model.includes("location")) {
     gates.push({ kind: "location" });
   }
 
@@ -190,13 +229,11 @@ export function formatChallengeDate(raw: string | null | undefined): string | un
 }
 
 export function toDetailTasks(
-  tasks: Array<
-    DetailTask & {
-      title?: string | null;
-      type?: string | null;
-      task_type?: string | null;
-    }
-  >,
+  tasks: (DetailTask & {
+    title?: string | null;
+    type?: string | null;
+    task_type?: string | null;
+  })[],
 ): ChallengeDetailTask[] {
   return tasks.map((t) => {
     const gates = taskGates(t);

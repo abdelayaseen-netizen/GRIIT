@@ -36,6 +36,11 @@ describe("taskGates", () => {
     expect(taskGates({})).toEqual([]);
   });
 
+  it("legacy photo type is Camera, same as gatesFor / feed", () => {
+    expect(taskGates({ task_type: "photo" })).toEqual([{ kind: "camera" }]);
+    expect(taskGates({ type: "photo" })).toEqual([{ kind: "camera" }]);
+  });
+
   it("adds camera when require_photo is true", () => {
     expect(taskGates({ require_photo: true })).toEqual([{ kind: "camera" }]);
   });
