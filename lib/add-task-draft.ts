@@ -4,6 +4,12 @@
 
 import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
 import { gateLine } from "@/lib/task-ui";
+import {
+  DEFAULT_BETWEEN_END_HHMM,
+  DEFAULT_BETWEEN_START_HHMM,
+  DEFAULT_BY_HHMM,
+  betweenEndAfterStart,
+} from "@/lib/time-gate-picker";
 
 export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
@@ -93,9 +99,9 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   time: false,
   location: false,
   timeMode: "by",
-  byTime: "07:00",
-  fromTime: "09:30",
-  toTime: "10:30",
+  byTime: DEFAULT_BY_HHMM,
+  fromTime: DEFAULT_BETWEEN_START_HHMM,
+  toTime: DEFAULT_BETWEEN_END_HHMM,
   placeName: "",
   placeLat: null,
   placeLng: null,
@@ -282,6 +288,9 @@ export function draftFromWizardTask(task: {
 
 export function canSubmitDraft(draft: AddTaskDraft): boolean {
   if (!draft.name.trim()) return false;
+  if (draft.time && draft.timeMode === "between" && !betweenEndAfterStart(draft.fromTime, draft.toTime)) {
+    return false;
+  }
   if (draft.type === "timer") return timerMinutesFromDraft(draft) > 0;
   if (draft.type === "counter") return parseInt(draft.counterTarget, 10) > 0;
   if (draft.type === "text") return parseInt(draft.minWords, 10) > 0;

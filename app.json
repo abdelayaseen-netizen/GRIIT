@@ -79,7 +79,8 @@
         {
           "cameraPermission": "GRIIT needs camera access to take photos as proof of challenge completion."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

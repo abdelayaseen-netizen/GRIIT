@@ -20,6 +20,9 @@ describe("add-task draft", () => {
     expect(ADD_TASK_DEFAULT.camera).toBe(false);
     expect(ADD_TASK_DEFAULT.time).toBe(false);
     expect(ADD_TASK_DEFAULT.location).toBe(false);
+    expect(ADD_TASK_DEFAULT.byTime).toBe("07:00");
+    expect(ADD_TASK_DEFAULT.fromTime).toBe("05:00");
+    expect(ADD_TASK_DEFAULT.toTime).toBe("06:30");
     expect(gatesFromDraft(ADD_TASK_DEFAULT)).toEqual([]);
     expect(canSubmitDraft(ADD_TASK_DEFAULT)).toBe(false);
   });
@@ -98,6 +101,31 @@ describe("add-task draft", () => {
     const pray = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Pray")!);
     expect(pray.type).toBe("check_off");
     expect(pray.name).toBe("Pray");
+  });
+
+  it("rejects a Between window whose end is not after the start", () => {
+    expect(
+      canSubmitDraft(
+        draft({
+          name: "Run",
+          time: true,
+          timeMode: "between",
+          fromTime: "06:30",
+          toTime: "05:00",
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      canSubmitDraft(
+        draft({
+          name: "Run",
+          time: true,
+          timeMode: "between",
+          fromTime: "05:00",
+          toTime: "06:30",
+        }),
+      ),
+    ).toBe(true);
   });
 
   it("preview caption updates with the gate switches", () => {

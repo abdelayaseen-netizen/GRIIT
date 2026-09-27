@@ -2,7 +2,8 @@
  * Add task sheet — frames 42 and 50.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { LocateFixed } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -46,6 +47,13 @@ import {
 } from "@/lib/add-task-draft";
 import { typeCaption } from "@/lib/task-ui";
 import type { HomeProofRow } from "@/lib/home-proof-card";
+import {
+  BETWEEN_END_BEFORE_START,
+  betweenEndAfterStart,
+  dateToHhmm,
+  formatByDisplay,
+  hhmmToDate,
+} from "@/lib/time-gate-picker";
 
 const NAME_MAX = 60;
 export const NAME_THIS_TASK = "Name this task.";
@@ -66,6 +74,7 @@ export default function AddTaskSheet({
   initial,
 }: AddTaskSheetProps) {
   const [draft, setDraft] = useState<AddTaskDraft>(initial ?? ADD_TASK_DEFAULT);
+  const [picking, setPicking] = useState<null | "by" | "from" | "to">(null);
   const [placeOpen, setPlaceOpen] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [recent, setRecent] = useState<{ name: string }[]>([]);
@@ -74,6 +83,7 @@ export default function AddTaskSheet({
     if (visible) {
       setDraft(initial ?? ADD_TASK_DEFAULT);
       setPlaceOpen(false);
+      setPicking(null);
     }
   }, [visible, initial]);
 
@@ -377,26 +387,29 @@ export default function AddTaskSheet({
               }
             />
             {draft.timeMode === "by" ? (
-              <TextField
-                label="By"
-                value={draft.byTime}
-                onChangeText={(byTime) => setDraft((d) => ({ ...d, byTime }))}
-                placeholder="07:00"
+              <ListRow
+                title="By"
+                subtitle={formatByDisplay(draft.byTime)}
+                onPress={() => setPicking("by")}
+                divider={false}
               />
             ) : (
               <>
-                <TextField
-                  label="From"
-                  value={draft.fromTime}
-                  onChangeText={(fromTime) => setDraft((d) => ({ ...d, fromTime }))}
-                  placeholder="09:30"
+                <ListRow
+                  title="From"
+                  subtitle={formatByDisplay(draft.fromTime)}
+                  onPress={() => setPicking("from")}
+                  divider={false}
                 />
-                <TextField
-                  label="To"
-                  value={draft.toTime}
-                  onChangeText={(toTime) => setDraft((d) => ({ ...d, toTime }))}
-                  placeholder="10:30"
+                <ListRow
+                  title="To"
+                  subtitle={formatByDisplay(draft.toTime)}
+                  onPress={() => setPicking("to")}
+                  divider={false}
                 />
+                {!betweenEndAfterStart(draft.fromTime, draft.toTime) ? (
+                  <Text style={styles.timeError}>{BETWEEN_END_BEFORE_START}</Text>
+                ) : null}
               </>
             )}
           </View>
@@ -416,6 +429,29 @@ export default function AddTaskSheet({
           </View>
         ) : null}
       </ScrollView>
+      <Sheet
+        visible={picking != null}
+        onDismiss={() => setPicking(null)}
+        heading={picking === "from" ? "From" : picking === "to" ? "To" : "By"}
+      >
+        <DateTimePicker
+          value={hhmmToDate(
+            picking === "from" ? draft.fromTime : picking === "to" ? draft.toTime : draft.byTime,
+          )}
+          mode="time"
+          display="spinner"
+          locale={Platform.OS === "ios" ? "en_US" : undefined}
+          onChange={(_, next) => {
+            if (!next) return;
+            const hhmm = dateToHhmm(next);
+            setDraft((d) => {
+              if (picking === "from") return { ...d, fromTime: hhmm };
+              if (picking === "to") return { ...d, toTime: hhmm };
+              return { ...d, byTime: hhmm };
+            });
+          }}
+        />
+      </Sheet>
     </Sheet>
   );
 }
@@ -491,6 +527,10 @@ const styles = StyleSheet.create({
   },
   reveal: {
     gap: DS_V3.space.md,
+  },
+  timeError: {
+    ...DS_V3.type.caption,
+    color: DS_V3.color.danger,
   },
   place: {
     marginHorizontal: -DS_V3.space.gutter,
