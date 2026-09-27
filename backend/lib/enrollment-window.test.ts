@@ -107,7 +107,9 @@ describe("applyEnrollmentWindow", () => {
     expect(list).toContain("listMyActive");
     expect(join).toContain("applyEnrollmentWindow");
     expect(create).toContain("applyEnrollmentWindow");
-    expect(direct).toContain("applyEnrollmentWindow");
+    expect(direct).not.toContain("applyEnrollmentWindow");
+    expect(direct).toContain('eq("status", "active")');
+    expect(direct).toContain("enrollmentIsPastEnd");
     expect(home).toContain("challenges.listMyActive()");
     expect(record).not.toContain("applyEnrollmentWindow");
     expect(stats).toContain("applyEnrollmentWindow");
