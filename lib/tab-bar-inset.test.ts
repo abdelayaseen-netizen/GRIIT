@@ -1,17 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { tabBarContentPad, TAB_BAR_PILL_HEIGHT } from "@/lib/tab-bar-inset";
-import { DS_V3 } from "@/lib/design-system";
+import { tabBarContentPad } from "@/lib/tab-bar-inset";
 
 describe("tab bar scroll inset", () => {
   it("clears the pill, dock, and home indicator", () => {
-    expect(tabBarContentPad(34)).toBe(
-      TAB_BAR_PILL_HEIGHT + 34 + DS_V3.space.gutter,
-    );
-    expect(tabBarContentPad(0)).toBe(
-      TAB_BAR_PILL_HEIGHT + DS_V3.space.md + DS_V3.space.gutter,
-    );
+    expect(tabBarContentPad(34)).toBe(96);
+    expect(tabBarContentPad(0)).toBe(96);
+    expect(tabBarContentPad()).toBe(96);
   });
 
   it("is used on Profile, Home, Discover, and Activity", () => {
