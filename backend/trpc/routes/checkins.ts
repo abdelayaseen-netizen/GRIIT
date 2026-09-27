@@ -142,6 +142,7 @@ export const checkinsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const completeStartedAt = Date.now();
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
       const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
 
@@ -968,6 +969,10 @@ export const checkinsRouter = createTRPCRouter({
         events: (dayEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
       });
 
+      logger.info(
+        { ms: Date.now() - completeStartedAt, userId: ctx.userId, taskId: input.taskId },
+        "[checkins.complete] timing",
+      );
       return {
         ...(data ?? {}),
         isMinimumDay,
@@ -1320,7 +1325,12 @@ export const checkinsRouter = createTRPCRouter({
       .maybeSingle();
     const alreadySecured = Boolean(existingSecureRow);
 
+    const secureStartedAt = Date.now();
     const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", { p_active_challenge_id: input.activeChallengeId });
+    logger.info(
+      { ms: Date.now() - secureStartedAt, userId: ctx.userId, code: rpcError?.code ?? null },
+      "[secure_day] rpc timing",
+    );
     if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
       const row = parseSecureDayRpcRow(rpcRows[0]);
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
