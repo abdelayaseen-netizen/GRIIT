@@ -4,6 +4,7 @@ import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
 import { finishedRunFromEnrollment } from "./finished-run";
+import { sharedPathsFromEvents, signProofPaths } from "./proof-image";
 
 export const LIVE_FEED_TYPES = [
   "task_completed",
@@ -297,7 +298,7 @@ export async function hydrateActivityEventsToPosts(
       securedKeysByUser.set(row.user_id, list);
     }
   }
-  return visible.map((ev) => {
+  const posts = visible.map((ev) => {
     const md = ev.metadata ?? {};
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
     const profile = profileMap.get(ev.user_id);
@@ -366,4 +367,14 @@ export async function hydrateActivityEventsToPosts(
       visibility,
     };
   });
+  const sharedPaths = sharedPathsFromEvents(
+    visible.map((ev) => ({ metadata: ev.metadata, shared: ev.shared, share_state: "shared" })),
+  );
+  const stored = posts.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
+  const signed = await signProofPaths(stored, viewerId, { sharedPaths });
+  return posts.map((p, i) => ({
+    ...p,
+    photoUrl: signed[i * 2] ?? null,
+    proofPhotoUrl: signed[i * 2 + 1] ?? null,
+  }));
 }

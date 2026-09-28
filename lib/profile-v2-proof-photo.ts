@@ -39,23 +39,12 @@ export function publicUrlForProofStoragePath(
   return `${origin}/storage/v1/object/public/${PROOF_STORAGE_BUCKET}/${match[1]}`;
 }
 
-/** Signed or object URL missing `/public/` → public object URL. */
+/** Keep the URL the API gave us. Do not rewrite signed → public. */
 export function publicUrlForProofHttp(raw: string, supabaseUrl?: string): string | null {
   const s = raw.trim();
   if (!/^https?:\/\//i.test(s)) return null;
   try {
-    const url = new URL(s);
-    const signed = url.pathname.match(/\/storage\/v1\/object\/sign\/task-proofs\/(.+)$/i);
-    if (signed) {
-      url.pathname = `/storage/v1/object/public/${PROOF_STORAGE_BUCKET}/${signed[1]}`;
-      url.search = "";
-      return url.toString();
-    }
-    const missingPublic = url.pathname.match(/\/storage\/v1\/object\/(?!public\/|sign\/)(?:task-proofs\/)?(.+)$/i);
-    if (missingPublic && !url.pathname.includes("/object/public/")) {
-      url.pathname = `/storage/v1/object/public/${PROOF_STORAGE_BUCKET}/${missingPublic[1]}`;
-      return url.toString();
-    }
+    new URL(s);
     return s;
   } catch {
     return publicUrlForProofStoragePath(s, supabaseUrl);

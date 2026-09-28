@@ -7,6 +7,7 @@ import {
   proofPhotoFromCheckIn,
   proofPhotosByDateKey,
   proofTilePostId,
+  publicUrlForProofHttp,
 } from "@/lib/profile-v2-proof-photo";
 
 describe("proofPhotoFromCheckIn", () => {
@@ -87,6 +88,15 @@ describe("proofPhotoFromCheckIn", () => {
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     expect(own).not.toContain("PROFILE_V3_FOOTNOTE");
     expect(own).toContain("ROUTES.PROFILE_DAY");
+  });
+});
+
+describe("publicUrlForProofHttp", () => {
+  it("does not rewrite a signed URL to public", () => {
+    const signed =
+      "https://x.supabase.co/storage/v1/object/sign/task-proofs/u1/a.jpg?token=abc";
+    expect(publicUrlForProofHttp(signed)).toBe(signed);
+    expect(publicUrlForProofHttp(signed)).not.toContain("/object/public/");
   });
 });
 

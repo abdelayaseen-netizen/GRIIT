@@ -36,6 +36,7 @@ import {
   proofsHeader,
   shareEventsFromActivity,
 } from "../../lib/proofs-days";
+import { signProofPaths, toProofPath } from "../../lib/proof-image";
 import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
@@ -496,6 +497,37 @@ export const profilesRecordProcedures = {
           }
         : emptyDaySource;
 
-      return finish(sliced, { monthKey, days, daySource, header });
+      const signedCovers = await signProofPaths(
+        days.map((d) => d.cover_path),
+        ctx.userId,
+        {
+          sharedPaths: new Set(
+            days.filter((d) => d.shared && d.cover_path).map((d) => d.cover_path as string),
+          ),
+        },
+      );
+      const daysOut = days.map((d, i) => ({
+        date: d.date,
+        state: d.state,
+        cover_url: signedCovers[i] ?? null,
+        shared: d.shared,
+        tasksDone: d.tasksDone,
+        tasksDue: d.tasksDue,
+      }));
+      const signedProofs = await signProofPaths(
+        sliced.proofs.map((p) => p.imageUrl ?? null),
+        ctx.userId,
+        {
+          sharedPaths: new Set(
+            sliced.proofs
+              .filter((p) => p.shared)
+              .map((p) => toProofPath(p.imageUrl))
+              .filter((p): p is string => Boolean(p)),
+          ),
+        },
+      );
+      const proofsOut = sliced.proofs.map((p, i) => ({ ...p, imageUrl: signedProofs[i] ?? null }));
+
+      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header });
     }),
 };

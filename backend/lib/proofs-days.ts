@@ -3,6 +3,7 @@
  * One entry per date key from the first start_at through today. Future days are omitted.
  */
 import { addCalendarDaysToDateKey } from "./date-utils";
+import { toProofPath } from "./proof-image";
 import { proofPhotoUrlFromCheckIn, checkInHasCameraProof, type ProofCheckIn } from "./proof-predicate";
 import { firstDueDateKey, tallyTasks, tasksDueOnDay, type EnrollmentTasks } from "./record-days";
 import { securedElapsed } from "./secured-elapsed";
@@ -48,14 +49,7 @@ export function keysInclusive(start: string, end: string): string[] {
 
 /** Accept a public URL or a bare path; return the storage path when we can. */
 export function coverPathFromStored(stored: string | null | undefined): string | null {
-  const s = stored?.trim();
-  if (!s) return null;
-  const signed = s.match(/\/storage\/v1\/object\/sign\/task-proofs\/([^?]+)/i);
-  if (signed?.[1]) return decodeURIComponent(signed[1]);
-  const pub = s.match(/\/storage\/v1\/object\/public\/task-proofs\/([^?]+)/i);
-  if (pub?.[1]) return decodeURIComponent(pub[1]);
-  if (/^https?:\/\//i.test(s)) return s;
-  return s.replace(/^task-proofs\//i, "");
+  return toProofPath(stored);
 }
 
 export function proofsDayState(input: {

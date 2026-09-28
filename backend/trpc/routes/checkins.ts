@@ -92,6 +92,7 @@ import {
   shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
+import { signProofPaths } from "../../lib/proof-image";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -973,8 +974,25 @@ export const checkinsRouter = createTRPCRouter({
         { ms: Date.now() - completeStartedAt, userId: ctx.userId, taskId: input.taskId },
         "[checkins.complete] timing",
       );
+      const saved = (data ?? {}) as {
+        proof_url?: string | null;
+        photo_url?: string | null;
+        completion_image_url?: string | null;
+      };
+      const signedComplete = await signProofPaths(
+        [
+          saved.proof_url,
+          saved.photo_url,
+          saved.completion_image_url,
+          ...dayProofs.map((t) => t.imageUrl),
+        ],
+        ctx.userId,
+      );
       return {
         ...(data ?? {}),
+        proof_url: signedComplete[0] ?? null,
+        photo_url: signedComplete[1] ?? null,
+        completion_image_url: signedComplete[2] ?? null,
         isMinimumDay,
         verification_gates: (data as { verification_gates?: unknown } | null)?.verification_gates ?? verificationGates,
         requiredRemaining,
@@ -984,7 +1002,7 @@ export const checkinsRouter = createTRPCRouter({
         challengeLength: ch?.duration_days && ch.duration_days > 0 ? ch.duration_days : 1,
         challengeName: challengeTitleForFeed,
         verificationKind,
-        dayProofs,
+        dayProofs: dayProofs.map((t, i) => ({ ...t, imageUrl: signedComplete[3 + i] ?? null })),
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
@@ -1231,9 +1249,25 @@ export const checkinsRouter = createTRPCRouter({
       .in("date_key", [...dateKeys])
       .limit(100);
     requireNoError(error, "Failed to load check-ins.");
-    return (data ?? []).map((row) => {
+    const mapped = (data ?? []).map((row) => {
       const task = taskById.get(String((row as { task_id?: string }).task_id));
       return task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), profileTz) : row;
+    });
+    const signedToday = await signProofPaths(
+      mapped.flatMap((row) => {
+        const r = row as { proof_url?: string | null; completion_image_url?: string | null; photo_url?: string | null };
+        return [r.proof_url, r.completion_image_url, r.photo_url];
+      }),
+      ctx.userId,
+    );
+    return mapped.map((row, i) => {
+      const r = row as Record<string, unknown>;
+      return {
+        ...r,
+        proof_url: signedToday[i * 3] ?? null,
+        completion_image_url: signedToday[i * 3 + 1] ?? null,
+        photo_url: signedToday[i * 3 + 2] ?? null,
+      };
     });
   }),
 
@@ -1284,7 +1318,18 @@ export const checkinsRouter = createTRPCRouter({
         );
       }
     }
-    return merged;
+    const signedUser = await signProofPaths(
+      merged.flatMap((row) => {
+        const r = row as { proof_url?: string | null; completion_image_url?: string | null };
+        return [r.proof_url, r.completion_image_url];
+      }),
+      ctx.userId,
+    );
+    return merged.map((row, i) => ({
+      ...row,
+      proof_url: signedUser[i * 2] ?? null,
+      completion_image_url: signedUser[i * 2 + 1] ?? null,
+    }));
   }),
 
   secureDay: protectedProcedure
