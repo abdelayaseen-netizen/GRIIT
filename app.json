@@ -32,7 +32,8 @@
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": true
+        "NSSupportsLiveActivitiesFrequentUpdates": true,
+        "LSApplicationQueriesSchemes": ["instagram-stories", "instagram"]
       },
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true

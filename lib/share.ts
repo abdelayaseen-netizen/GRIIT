@@ -6,7 +6,8 @@ import {
   inviteDeepLink,
   profileDeepLink,
 } from "@/lib/deep-links";
-import { DEEP_LINK_BASE_URL } from "@/lib/config";
+import { DEEP_LINK_BASE_URL, facebookAppId } from "@/lib/config";
+import { instagramStoriesUrl } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import { groupInviteShareMessage } from "@/lib/group-ui";
 
@@ -117,17 +118,23 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
 }
 
 /**
- * Open Instagram Stories with the image as background (if Instagram is installed).
- * Falls back to regular share sheet otherwise.
+ * Open Instagram Stories with the image as a sticker or background.
+ * App ID comes from config only. Falls back to the system share sheet.
  */
-export async function shareToInstagramStory(imageUri: string): Promise<void> {
+export async function shareToInstagramStory(
+  imageUri: string,
+  opts?: { asSticker?: boolean },
+): Promise<void> {
   if (Platform.OS === "web") {
     return;
   }
+  const url = instagramStoriesUrl({
+    imageUri,
+    asSticker: opts?.asSticker === true,
+    appId: facebookAppId(),
+  });
   try {
-    const encoded = encodeURIComponent(imageUri);
-    const url = `instagram-stories://share?backgroundImage=${encoded}`;
-    const supported = await Linking.canOpenURL(url);
+    const supported = await Linking.canOpenURL("instagram-stories://share");
     if (supported) {
       await Linking.openURL(url);
       try {

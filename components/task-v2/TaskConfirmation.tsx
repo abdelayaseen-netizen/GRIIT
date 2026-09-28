@@ -41,6 +41,7 @@ export function TaskConfirmation({
       day={result.challengeDay}
       remaining={result.requiredRemaining}
       target={result.challengeLength}
+      challengeName={result.challengeName}
       proofUri={proofUri}
       week={week ?? fallback.days}
       todayIndex={todayIndex ?? fallback.todayIndex}

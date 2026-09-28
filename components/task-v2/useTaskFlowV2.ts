@@ -182,6 +182,7 @@ export function useTaskFlowV2() {
   const [dayOpen, setDayOpen] = useState<DayOpenModel | null>(null);
   const [finishSave, setFinishSave] = useState<SaveState>("saving");
   const [finishShare, setFinishShare] = useState<ShareIntent>("none");
+  const [finishFeedPosted, setFinishFeedPosted] = useState(false);
   const [alsoToday, setAlsoToday] = useState<AlsoTodayRow[]>([]);
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
@@ -345,6 +346,7 @@ export function useTaskFlowV2() {
       if (mountedRef.current) {
         setFinishShare("none");
         setShareEventId(eventId);
+        setFinishFeedPosted(true);
       }
     } catch {
       if (mountedRef.current) setShareFailed(true);
@@ -398,6 +400,7 @@ export function useTaskFlowV2() {
     setSaving(true);
     finishShareRef.current = "none";
     setFinishShare("none");
+    setFinishFeedPosted(false);
     setFinishSave("saving");
     setAlsoToday([]);
     setShareFailed(false);
@@ -902,6 +905,7 @@ export function useTaskFlowV2() {
     dayOpen,
     finishSave,
     finishShare,
+    finishFeedPosted,
     alsoToday,
     durationDays,
     finishGateLine: gateLine(gates, gateTime),
@@ -1022,6 +1026,7 @@ export function useTaskFlowV2() {
             if (mountedRef.current) {
               setSharing(false);
               setFinishShare("none");
+              setFinishFeedPosted(true);
             }
           })
           .catch(() => {

@@ -1,13 +1,15 @@
 /**
  * Frame 114 finish moment. Status follows the save. Share lives here until Secured.
  */
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
+import FinishTextCard from "@/components/share/FinishTextCard";
+import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import {
   FINISH_BACK_TODAY,
   FINISH_DONE,
@@ -32,6 +34,7 @@ export type FinishMomentTask = {
   durationDays: number;
   gateLine: string;
   proofUri?: string | null;
+  proofKind?: "camera" | "camera_place" | "self";
 };
 
 export type FinishMomentV3Props = {
@@ -39,6 +42,7 @@ export type FinishMomentV3Props = {
   save: SaveState;
   share: ShareIntent;
   alsoToday: AlsoTodayRow[];
+  photoShared?: boolean;
   onRetry: () => void;
   onShareFeed: () => void;
   onStory?: () => void;
@@ -54,6 +58,7 @@ export default function FinishMomentV3({
   save,
   share,
   alsoToday,
+  photoShared = false,
   onRetry,
   onShareFeed,
   onStory,
@@ -64,12 +69,19 @@ export default function FinishMomentV3({
   onLeave,
 }: FinishMomentV3Props) {
   const insets = useSafeAreaInsets();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const pending = save === "saving" || save === "slow";
   const failed = save === "failed";
   const next = alsoToday[0];
   const shareDisabled = failed;
   const shrinkPhoto = save === "saved" && alsoToday.length > 0;
   const photoH = shrinkPhoto ? 170 : 252;
+  const camera = Boolean(task.proofUri);
+  const openSheet = () => {
+    if (shareDisabled) return;
+    setSheetOpen(true);
+    onStory?.();
+  };
 
   return (
     <View style={styles.root}>
@@ -100,16 +112,14 @@ export default function FinishMomentV3({
               <ProofImage uri={task.proofUri} size="feed" />
             </View>
           ) : (
-            <View style={styles.card}>
-              <Text style={styles.cardEyebrow}>{task.challengeTitle}</Text>
-              <View>
-                <Text style={styles.cardTitle}>{task.title}</Text>
-                <View style={styles.dayRow}>
-                  <Text style={styles.dayN}>Day {task.dayN}</Text>
-                  <Text style={styles.secondary}>of {task.durationDays}</Text>
-                </View>
-              </View>
-              <Text style={styles.caption}>{task.gateLine}</Text>
+            <View style={styles.cardWrap}>
+              <FinishTextCard
+                challengeTitle={task.challengeTitle}
+                title={task.title}
+                dayN={task.dayN}
+                durationDays={task.durationDays}
+                gateLine={task.gateLine}
+              />
             </View>
           )}
         </View>
@@ -124,18 +134,18 @@ export default function FinishMomentV3({
             />
           </View>
           <View style={styles.shareBtn}>
-            <Button label={FINISH_STORY} variant="secondary" disabled={shareDisabled} onPress={shareDisabled ? undefined : onStory} />
+            <Button label={FINISH_STORY} variant="secondary" disabled={shareDisabled} onPress={shareDisabled ? undefined : openSheet} />
           </View>
         </View>
 
         <View style={styles.iconRow}>
-          <Pressable style={styles.iconHit} onPress={onCopy} accessibilityRole="button" accessibilityLabel="Copy">
+          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onCopy?.(); }} accessibilityRole="button" accessibilityLabel="Copy">
             <Text style={styles.iconLabel}>Copy</Text>
           </Pressable>
-          <Pressable style={styles.iconHit} onPress={onSave} accessibilityRole="button" accessibilityLabel="Save">
+          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onSave?.(); }} accessibilityRole="button" accessibilityLabel="Save">
             <Text style={styles.iconLabel}>Save</Text>
           </Pressable>
-          <Pressable style={styles.iconHit} onPress={onMore} accessibilityRole="button" accessibilityLabel="More">
+          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onMore?.(); }} accessibilityRole="button" accessibilityLabel="More">
             <Text style={styles.iconLabel}>More</Text>
           </Pressable>
         </View>
@@ -174,6 +184,34 @@ export default function FinishMomentV3({
           onPress={onLeave}
         />
       </View>
+      <ShareStickerSheet
+        visible={sheetOpen}
+        onDismiss={() => setSheetOpen(false)}
+        variant={camera ? "day" : "text"}
+        day={
+          camera
+            ? {
+                challenge: task.challengeTitle,
+                day: task.dayN,
+                durationDays: task.durationDays,
+                proof: task.proofKind === "camera_place" ? "camera_place" : "camera",
+                photoUri: task.proofUri,
+                photoShared,
+              }
+            : undefined
+        }
+        text={
+          camera
+            ? undefined
+            : {
+                challengeTitle: task.challengeTitle,
+                title: task.title,
+                dayN: task.dayN,
+                durationDays: task.durationDays,
+                gateLine: task.gateLine,
+              }
+        }
+      />
     </View>
   );
 }
@@ -199,27 +237,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_V3.radius.card,
     overflow: "hidden",
   },
-  card: {
-    height: 252,
-    borderRadius: DS_V3.radius.card,
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: DS_V3.color.border,
-    padding: 18,
-    justifyContent: "space-between",
-  },
-  cardEyebrow: { ...DS_V3.type.label, color: DS_V3.color.textSecondary },
-  cardTitle: { ...DS_V3.type.title, color: DS_V3.color.textPrimary },
-  dayRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
-  dayN: {
-    fontFamily: "BarlowCondensed_600SemiBold",
-    fontSize: 32,
-    lineHeight: 34,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-    color: DS_V3.color.textPrimary,
-  },
-  caption: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
+  cardWrap: { width: "100%" },
   shareRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.md },
   shareBtn: { flex: 1 },
   iconRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.sm },

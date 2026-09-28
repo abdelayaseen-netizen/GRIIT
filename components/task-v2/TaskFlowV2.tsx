@@ -228,10 +228,16 @@ export function TaskFlowV2() {
             durationDays: f.durationDays,
             gateLine: f.finishGateLine,
             proofUri: f.photoUri,
+            proofKind: f.photoUri
+              ? f.finishGateLine.includes("Location")
+                ? "camera_place"
+                : "camera"
+              : "self",
           }}
           save={f.finishSave}
           share={f.finishShare}
           alsoToday={f.alsoToday}
+          photoShared={f.finishFeedPosted}
           onRetry={f.onFinishRetry}
           onShareFeed={f.onFinishShare}
           onNextTask={f.openDayOpenTask}
