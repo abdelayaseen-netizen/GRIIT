@@ -41,7 +41,7 @@ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/li
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { formatGateTime } from "@/lib/task-ui";
+import { closedWindowTime, formatGateTime } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -52,7 +52,6 @@ import {
   workStepOwnsChrome,
   workThenCamera,
 } from "@/lib/work-step";
-import { closedWindowTime } from "@/lib/task-ui";
 import {
   flowAllowsSubmit,
   flowFooterBrand,
@@ -330,7 +329,7 @@ export function useTaskFlowV2() {
         activeChallengeId,
         taskId,
         ...payload,
-        ...(hasCameraProof ? { shareChoicePending: true } : {}),
+        shareChoicePending: true,
       });
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         cancelled = true;

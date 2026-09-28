@@ -58,13 +58,14 @@ describe("proof moment copy", () => {
 });
 
 describe("proof moment wiring", () => {
-  it("sends shareChoicePending on a camera complete and flips via shareProof", () => {
+  it("sends shareChoicePending on every complete and flips via shareProof", () => {
     const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
     const screen = readFileSync(
       resolve(__dirname, "../components/task-v2/ChallengeDoneScreen.tsx"),
       "utf8",
     );
     expect(flow).toContain("shareChoicePending: true");
+    expect(flow).not.toContain("hasCameraProof ? { shareChoicePending");
     expect(flow).toContain("TRPC.checkins.shareProof");
     expect(flow).toContain("closingProofEventId");
     expect(screen).toContain("height: 300");
