@@ -82,7 +82,7 @@ export function FirstChallenge({ suggestions, selectedId, goalLabels, onSelect, 
                   ))}
                 </div>
                 <div style={{ ...type.caption, color: color.textSecondary }}>
-                  {s.is_hard_mode ? 'Hard mode. Gates are enforced; a failed gate fails the day.' : 'Standard. A missed day resets your streak. The next day you can spend a freeze to cover it.'}
+                  {s.is_hard_mode ? 'Hard mode. Gates are enforced; a failed gate fails the day.' : 'Standard mode. Gates are recorded, not enforced.'}
                 </div>
               </div>
             );

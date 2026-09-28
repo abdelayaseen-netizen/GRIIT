@@ -9,7 +9,7 @@ the day, build a streak. Target platform is React Native on Expo SDK 54; every v
 ## The 26 laws
 
 1. Canvas is `canvas` on every screen. No light screens.
-2. UI face is SF Pro at 400 and 500. One second family, Barlow Condensed 600, for earned numbers only; it is the only place above 500.
+2. One family: SF Pro. UI text at 400 and 500. Hero numbers only in SF Pro Display Heavy 800, tabular; it is the only weight above 500 (v40).
 3. Eight text styles, nothing off the scale. Each maps to an Apple text style except `number`, which is fixed.
 4. Screen padding 20, card padding 20, stacked cards 12, sections 32, two column gutter 12. Every number is a multiple of 4.
 5. Three radii: 12 inputs and chips, 20 cards, pill for buttons, tab bar and avatars.
@@ -56,7 +56,7 @@ the day, build a streak. Target platform is React Native on Expo SDK 54; every v
 | style | size | line height | weight | family | letter spacing | Apple style |
 |---|---|---|---|---|---|---|
 | display | 34 | 41 | 500 | SF Pro | -0.5pt | largeTitle |
-| number | 64 | 64 | 600 | Barlow Condensed | -0.64pt | none, fixed |
+| number | 64 | 64 | 800 | SF Pro Display Heavy | -1.28pt (−0.02em) | none, fixed; stickers step down by digit count |
 | title | 28 | 34 | 500 | SF Pro | 0 | title1 |
 | heading | 20 | 25 | 500 | SF Pro | 0 | title3 |
 | body | 17 | 22 | 400 | SF Pro | 0 | body |

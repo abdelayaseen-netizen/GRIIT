@@ -287,7 +287,7 @@ exclamation mark.
 **Tree**
 1. View ground canvas
 2. two brand bars, 10 x 32 and 10 x 22, radius 4, gap 8, top left at the gutter
-3. centered block: Text 44pt Barlow "Discipline,\nwitnessed."; Text secondary textSecondary
+3. centered block: Text 44/48 SF Pro 500 (−0.5 tracking) "Discipline,\nwitnessed."; Text secondary textSecondary
 4. footer pinned bottom 20: Button primary "Start"; Button tertiary "Log in" with a textPrimary label
 
 **Vertical rhythm from the status bar down** 8 to the logo, the copy block is vertically centered, footer pinned 20 above the safe area.
@@ -302,8 +302,8 @@ exclamation mark.
 
 | string | style |
 |---|---|
-| Discipline, | 44pt Barlow Condensed 600 |
-| witnessed. | 44pt Barlow Condensed 600 |
+| Discipline, | 44pt SF Pro 500 |
+| witnessed. | 44pt SF Pro 500 |
 | Photo proof. Daily. No way to fake it. | secondary textSecondary |
 | Start | bodyStrong on brand |
 | Log in | bodyStrong textPrimary |
@@ -585,7 +585,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Pick a starter pack or build from scratch. | secondary |
 | Starter packs | segmented |
 | Custom | segmented |
-| No Days Off | bodyStrong |
+| 75 Hard Classic | bodyStrong |
 | 5 strict tasks · original framework | caption |
 | Athlete | bodyStrong |
 | 3 tasks · run, train, check in | caption |
@@ -691,7 +691,7 @@ Replaces the Create step 1 section above. Source: `src/components/create/`.
 | Recommended for your first challenge | caption |
 | Streak freezes on. Miss a day and you do not reset. | secondary |
 | Hard mode | bodyStrong |
-| No exceptions. | caption |
+| 75 Hard style. No exceptions. | caption |
 | No freezes. Miss a day, restart from day 1. | secondary |
 | Public proof on feed | heading |
 | Off | chip |
@@ -989,7 +989,7 @@ lines. Measured clearance above the footer: default 40, free_limit 21, ended 310
 | Location | 12/16 textPrimary |
 | Self-reported | 12/16 textSecondary |
 | Hard mode. Gates are enforced; a failed gate fails the day. | caption textSecondary |
-| Standard. A missed day resets your streak. The next day you can spend a freeze to cover it. | caption textSecondary |
+| Standard mode. Every gate blocks. Freezes cover a missed day. | caption textSecondary |
 | Join | bodyStrong on primary |
 | Day 1 is today. | caption textSecondary |
 | Join opens the invite step. You need a partner before Day 1. | caption textSecondary |
@@ -1134,7 +1134,7 @@ Screen 1, Welcome, is unchanged and does not use the chrome: it has no back targ
 6. Pinned footer: 1pt border-top, 16 top, 20 sides, 28 bottom, column gap 4. One `PrimaryButton`
    (`color.primary`, textPrimary label) and any text links beneath it
 
-**Display face** none, on any of these eight screens. The user has earned nothing yet, so Barlow
+**Display face** none, on any of these eight screens. The user has earned nothing yet, so the display face
 Condensed appears exactly once in the whole flow: the Welcome headline, already built. The streak zero
 on WhyProof, the example "Day 12" on WhyCircle and every count in the flow are SF Pro.
 
@@ -1291,7 +1291,7 @@ share a row instead of stacking. Stacked links cost 48pt and put the third card 
 | {duration_days} days · {participation} | caption textSecondary |
 | {task name} / {gate label} | secondary / caption |
 | Hard mode. Gates are enforced; a failed gate fails the day. | caption textSecondary |
-| Standard. A missed day resets your streak. The next day you can spend a freeze to cover it. | caption textSecondary |
+| Standard mode. Every gate blocks. Freezes cover a missed day. | caption textSecondary |
 | Join | bodyStrong on primary |
 | Day 1 is today. | caption textSecondary, centred |
 | Browse all | secondary medium textSecondary |
@@ -1423,7 +1423,7 @@ No new tokens and no new components: everything below is DS_V3 plus `components/
 Nothing was dropped in the conversion. Every field, link and button that existed on the light screens
 exists here, and the only copy that changed is copy that was wrong.
 
-**Barlow Condensed appears once in this set**: the streak number on the secured screen. It is the one
+**The display face appears once in this set**: the streak number on the secured screen. It is the one
 number in the five screens the user earned. The "60s" resend countdown, "Day 1" in the self-report
 header and the day label are all SF Pro.
 
@@ -3420,7 +3420,7 @@ through every component that already reads tokens. The manual edits are in
 
 ## What does not move
 
-`type.number`, every `numberSize`, `displayFace`. The Barlow Condensed numerals are the signature,
+`type.number`, every `numberSize`, `displayFace`. The display numerals are the signature,
 and they are the one place GRIIT should be **larger** than the apps it is measured against. Bringing
 everything around them down 2pt makes them read bigger at no cost — frame 73 is the proof: the 140pt
 streak is identical in both columns and looks larger on the right.
@@ -3992,7 +3992,7 @@ thing this system does not do.
 1. `DisplayNumber` 96: `{secured}`, with "of {N}" in `type.heading` `textSecondary`.
    **N is `duration_days`, never the elapsed-day count.** They are equal on a completed run and
    diverge on every abandoned or failed one, where elapsed reads as "you nearly finished" and hides
-   how long the run actually was: No Days Off failing on day 28 is "27 of 75", not "27 of 28"
+   how long the run actually was: 75 Hard failing on day 28 is "27 of 75", not "27 of 28"
 2. "{challenge} is over." — or "{challenge} ended on day {n}." for `failed`
 3. one `type.caption` line of fact
 4. the sheet, 12 across
@@ -4722,3 +4722,935 @@ will be.
 **78. Comment counts drive a route, not a sheet, on some cards.** Chunk O moved comments into
 `ds/Sheet`; the inline block must open the same sheet from all three targets (icon, count, "View
 all") so there is one comment surface.
+
+# Chunk U, part A — v36 revision: Consistency comprehension
+
+Frames 87-92 in `GRIIT Chunk U Profile v36.dc.html` (v35 kept beside it). Main at `f3c70b6`; record
+truth is fixed by `fix/record-truth`, so this pass is about comprehension only. Source:
+`src/components/ConsistencyScreen.tsx` (new tree), reusing `ConsistencyGrid`.
+
+## Change notes
+
+| frame | v36 |
+|---|---|
+| 87 | The merged row reads "62 of 68 **due** days secured", so the ratio names its unit in the same line. Streak half unchanged at 0. |
+| 88 | Owner row text as 87. Nothing else changes: day cards carry photo counts, not record numbers. |
+| 89 | Unchanged. The viewer shows photos, not the record. |
+| 90 | Unchanged. |
+| 91 | Rebuilt as one argument in four scroll positions: principle, number + denominator, month, how it was earned, streak, by challenge, each day. States are shapes; words live in the legend once. |
+| 92 | Badge requirement copy "{n} verified days" becomes "{n} secured days" — the record counts secured days, and "verified" is reserved for the camera stamp (contradiction 80). |
+
+## Frame 91 — what each device problem became
+
+| device problem | v36 |
+|---|---|
+| "3 of 7 days", denominator unexplained; "1 due today" reads as one task | "{s} of {c} due days secured" + one definition line: "A due day is any day you were in a challenge, from {joined}. Today is still open and not counted yet." |
+| five status words, "Open" unclear | no status words in rows. The glyph is the state; the eight-entry legend under the grid names each once. Today is "Today" + "Closes at midnight." |
+| "Secured · 0 of 4 · 0 camera proof" looks like a bug | the orphaned day renders the secured glyph and "Secured. No task record for this day." Honest, not alarming. Needs `orphaned` in the payload (88) |
+| unfinished task names inline, rows wrap to three lines | one line per day, `nowrap` + ellipsis. One missed task is named; two or more collapse to "{n} missed" and expand on tap |
+| "3 of 7", "0 of 1" by challenge, no unit | "{s} of {c} due days secured" per challenge; a challenge joined today reads "Joined today. Nothing to count yet." with no bar |
+| eight stat numbers in four units, no hierarchy | one headline. Then a **partition of the same due days** — camera, self-reported, freeze, Last Stand, not secured — introduced by "Of your {c} due days:" so every number shares one denominator and they sum to it. Streak as two sentences with dates. Completion % and Total secured are cut: both restated the headline |
+| the principle was the footer | it is the first thing on the screen |
+
+**The self-reported rule, applied.** A day whose required tasks include a camera gate cannot be secured
+self-reported. Iron man requires two camera tasks a day, so in this record every secured day is a
+camera day and the partition reads "0 self-reported". v35's grid drew four self-reported days that
+could not exist. One caption states the rule where the zero appears.
+
+## Copy
+
+| string | style |
+|---|---|
+| A day is secured or it is not. | bodyStrong |
+| A part-done day counts for nothing. Every day you were due is counted here, so the record is not shorter than the truth. | secondary textSecondary |
+| {s} of {c} due days secured | display + secondary textSecondary |
+| A due day is any day you were in a challenge, from {joined}. Today is still open and not counted yet. | caption textSecondary |
+| {Month} {yyyy} · {s} of {c} due days secured | bodyStrong / caption textSecondary |
+| Secured, camera proof · Secured, self-reported · Held by a freeze · Held by a Last Stand · Not secured · Today, still open · Not due yet · Before you joined | legend, label textSecondary |
+| How it was earned / Streak / By challenge / Each day | label textSecondary |
+| Of your {c} due days: | secondary textSecondary |
+| {n} with a camera proof / self-reported / held by a freeze / held by a Last Stand / not secured | display 20 + secondary textSecondary |
+| {challenge} requires {k} camera tasks a day, so none of your secured days can be self-reported. A freeze or a Last Stand keeps your streak; neither is a secured day. | caption textSecondary, only when self = 0 because of a camera rule |
+| {n} days now. {date} was not secured. | display 26 + secondary |
+| {n} days longest, {from} to {to}. | display 26 + secondary |
+| {s} of {c} due days secured | caption, per challenge |
+| Joined today. Nothing to count yet. | caption, per challenge with no closed due day |
+| Newest first. The shape is the state; the line says what was done. | caption textSecondary |
+| {done} of {req} tasks · {n} camera proofs | caption, secured day |
+| {done} of {req} tasks · {task} missed | caption, one missed |
+| {done} of {req} tasks · {n} missed | caption, two or more missed; expands |
+| {done} of {req} tasks | caption, held day |
+| {done} of {req} tasks so far. Closes at midnight. | caption, today |
+| Secured. No task record for this day. | caption, orphaned secured day |
+
+## Contradictions against `lib/profile-v2-record.ts` @ f3c70b6
+
+**79. `DAY_STATE` has four values** — `verified`, `missed`, `today`, `future`. The screen needs eight.
+Freeze and Last Stand days fall into `verified` or `missed` depending on `day_secures`, camera and
+self-reported are one state, and before-join has no value. `stripState()` and `runStates()` both
+inherit the four.
+
+**80. "Verified" names secured days.** `verifiedClosed`, `totalVerified`, `runs[].verified`, the line
+"{v} of {c} due days verified", `runs[].meta` "{n} verified · {m} missed", and the badge requirement
+"{n} verified days". `day_secures` includes self-reported days, and "verified" is reserved for the
+camera stamp. Rename fields to `secured*` and every rendered string to "secured".
+
+**81. The breakdown is hardcoded to zero.** `detail.cameraDays`, `selfReportedDays`, `lastStandDays`,
+`freezeDays` all return `0`, and every `byChallenge[].camera` / `.selfReported` is `0`. The device
+build showed "Camera proof 2 days, Self-reported 2 days" beside "Total secured 3 days" — 2 + 2 exceeds
+3, so whatever produced those numbers is not a partition of secured days either. v36 requires the five
+counts to sum to `closedDueDays`.
+
+**82. `consistencyLine()` — "1 due today."** reads as one task. And below 7 due days the same slot
+switches to "Day {n} of {N}. Today's proof is due." — a different claim in the same position. v36:
+one line, always "A due day is any day you were in a challenge, from {joined}. Today is still open
+and not counted yet."
+
+**83. `rateLabel()` switches format at 7 due days**, from "{v} of {c}" to "{pct}%", and
+`detail.completion` repeats the same ratio as "{v} of {c} due days". One ratio, one format, no percent.
+
+**84. `verdictFor()` returns "Locked in / Solid / Slipping / Rebuilding".** A judgement word with no
+rule stated on screen, in motivational register. Not rendered in v36; delete it or keep it unrendered.
+
+**85. `streak.note` is "Post today to start." for every zero streak.** After a reset the Chunk P copy
+is "Streak reset. Post today to start again."; `best > 0` answers which to use.
+
+**86. `byChallenge` uses two denominators.** Active runs use `verified + missed` (closed due days);
+finished runs use `c.value` = "{v} of {durationDays}". An abandoned run left on day 5 of 30 reads
+"3 of 30". Use closed due days for both.
+
+**87. `months[].value` is "{v} of {c}" with no unit.** Render "{v} of {c} due days secured".
+
+**88. No per-day detail in the payload.** The day list needs, per due date: `state`, `done`,
+`required`, `cameraProofs`, `missedTaskNames[]`, and `orphaned` (a `day_secures` row with no task
+completions — the Sep 16 case). None exist; `dueDayKeys` is keys only.
+
+**89. Self-reported days are not derivable as defined.** When computed, `selfReportedDays` must be
+"secured with no camera-gated task required that day", not "secured with zero photos" — a day with a
+required camera task cannot be secured without one.
+
+**90. `runs[].days` is index-based** (`runStates(length, elapsed, misses)`), so it cannot carry
+freeze, Last Stand, or camera/self — it knows only which indices missed.
+
+**91. `detail.firstProof` is the first secured day**, which may be self-reported, under a label that
+implies a camera proof. Either compute the first camera-proof date or label it "First secured day".
+v36 does not render it.
+
+Also fixed in Part B while reconciling: frame 96's morning-after line read "4 of 5 tasks"; with Daily
+Gratitude due that day it is "5 of 6 tasks". Same world, one reduction.
+
+## Score
+
+**Design: 9/10.** Every number names its denominator in its own line, every state is a shape, the
+partition sums to the headline, and the screen reads top down as one argument.
+
+**Build: blocked** on 79, 81 and 88 — the record cannot yet express eight states, the partition, or
+per-day task counts. The screen is not buildable from `ProfileRecord` as it stands; it needs the
+`RecordDay[]` shape in `ConsistencyScreen.tsx`, reduced server-side or in `buildProfileRecord`.
+
+
+# v37 chunk 1 — Share, Consistency, verified mark, Badges
+
+Frames in `GRIIT v37 Share.dc.html`: **97** stickers, **98** story placement, **99** share sheet, **91**
+Consistency (revised from v36), **92** Badges (revised), **100** verified mark. Frames 87–90 are
+unchanged. Source: `src/components/share/ShareSticker.tsx`, `VerifiedMark.tsx`, `BadgeStamp.tsx`,
+`ConsistencyScreen.tsx` (v37 helpers added). Pinned world unchanged: 62 of 68 due days since 16 July,
+streak 0 after 21 September, best 21, every secured day camera-proved.
+
+## 97–99. Share system
+
+**Variants.** (a) Day secured — one challenge, "Day {n} of {N}" (calendar position, clamped), proof
+type. (b) Consistency — "{s} of {c} due days secured", the current month in four states, camera share.
+(c) Badge — the earned stamp, its name, "{k} secured days", "Earned {date}".
+
+**Which exist.** (a) only for a secured day; a held day has no day sticker. (b) only when at least one
+day is secured. (c) only for an earned badge. Every value is a reduction over the record — no sticker
+takes a number as an input field (v35 rule).
+
+**Backgrounds.** Clear (transparent PNG), Card (`color.canvas`, 1pt border, radius 20), Photo. Photo
+offers **only photos answered Share**. For (a) whose proof was kept, Photo is disabled with "This photo
+is private, so it can't be used here." — the photo is never offered or named as shareable (R3). A
+self-reported day has no photo, so Photo is absent for it.
+
+**Surviving any backdrop.** Clear stickers carry light type with a three-layer shadow and glyphs with a
+two-layer drop shadow — **new token `stickerShadow`, not in tokens.dense.ts**:
+
+| layer | value |
+|---|---|
+| text | `0 0 2px ink/90%, 0 0 2px ink/90%, 0 1px 3px ink/55%, 0 4px 16px ink/30%` |
+| glyph | `drop-shadow(0 1px 2px ink/60%) drop-shadow(0 4px 12px ink/25%)` |
+
+The two stacked 2px rings are a dense outline — a single 1px ring held the 56pt numerals but not
+11–13pt type on a bright sky. Then a 3px contact shadow and a 16px soft scrim. Held and missed cells,
+neutral in the app, go to full `textPrimary` at 1.5pt on stickers, with the glyph shadow. The
+wordmark takes the same ring at full opacity; it stays small by size, not by fading. Frame 97 shows every variant on a bright sky and a dark
+room stand-in.
+
+**Honesty on the sticker.** Camera proof: brand disc + check + "Camera". Self-reported: the words only,
+no disc, no brand colour. Consistency: the camera line reads "on all {s}", "on {c} of {s}", or "All
+self-reported" — the check never appears when no day was camera-proved.
+
+**Wordmark.** "GRIIT", 10pt 500, 0.18em tracking, textSecondary on the card and 85% textPrimary on
+clear. Never larger than the smallest text on the sticker.
+
+**Export and placement.** Sticker width 300pt, exported at 3× = 900 px wide, transparent PNG. Story is
+1080 × 1920. Working safe band: 250 px from the top, 340 px from the bottom — Meta publishes no exact
+figure. When GRIIT sets the background (Card or Photo), the sticker is placed at 810 px (75% width),
+horizontally centred, at the bottom of the safe band.
+
+**Sheet.** `ds/Sheet`, heading "Share". Preview is the exact PNG, on a checkerboard when Clear. A
+three-way segmented control for background. Four actions: Instagram Story, Copy, Save, More. Empty:
+dashed preview, "Nothing to share yet." / "Secure one day and it can go here.", every action inert.
+
+| string | where |
+|---|---|
+| Share | sheet heading |
+| Clear · Card · Photo | background segments |
+| Clear is a transparent sticker. Lay it over your own photo in Instagram. | caption under segments, Clear |
+| This photo is private, so it can't be used here. | caption, Photo disabled for a kept photo |
+| Instagram Story · Copy · Save · More | actions |
+| Nothing to share yet. | empty, bodyStrong |
+| Secure one day and it can go here. | empty, secondary |
+| {challenge} | sticker (a) eyebrow, label |
+| Day {n} | sticker (a), display |
+| of {N} | sticker (a) |
+| Secured. | sticker (a) |
+| Camera / Camera · Place / Self-reported | proof, via VerifiedMark |
+| Consistency · since {date} | sticker (b) eyebrow |
+| {s} / of {c} due days secured | sticker (b) |
+| on all {s} / on {c} of {s} / All self-reported | sticker (b) camera line |
+| {name} / {k} secured days / Earned {date} | sticker (c) |
+| GRIIT | wordmark |
+
+**Engineering note.** Stories sharing uses the `instagram-stories://share` URL scheme with a
+`stickerImage` (transparent PNG) and either `backgroundImage` or `backgroundTopColor` /
+`backgroundBottomColor`; Meta now requires a Facebook App ID in the pasteboard payload.
+`react-native-share` (`Share.shareSingle({ social: InstagramStories, appId, stickerImage, backgroundImage })`)
+wraps this; render with `react-native-view-shot` to a PNG tmpfile. Add `instagram-stories` to
+`LSApplicationQueriesSchemes`. Confirm current requirements against Meta's docs before build — this
+is not verified here.
+
+## 91. Consistency, v37
+
+**Hero, three metrics.** Each number has its denominator on the line under it.
+
+| number | label | under |
+|---|---|---|
+| {pct}% | DAYS SECURED | {s} of {c} due days |
+| {n} | DAY STREAK | Best {b} |
+| {pct}% | CAMERA PROOF | of {s} secured |
+
+All three in the display face — each is earned. **This reverses contradiction 83's "no percent"**, per
+the brief. Guard: `securedPct` and `cameraPct` are `null` when their denominator is 0, and the cell
+renders "–" with the line "Nothing counted yet"; a percent is never shown over zero.
+
+**Coaching line.** One sentence from `coachingLine()`, first match wins:
+
+| case | line |
+|---|---|
+| no closed day | Nothing is counted until your first day closes. |
+| streak > 0 | {n} days running. Today closes at midnight. |
+| last miss, one task | {date} broke on one task, {task}. Take it first today. |
+| last miss, several | {date} broke on {n} tasks. Start with {first task} today. |
+
+**Info button** opens "How this is counted": the principle, then Due days, Days secured, Camera proof,
+Held — one line each. Zero paragraphs above the data.
+
+**Grid.** Seven fixed columns under M–S headers, 40pt cells, four visible states: **Camera proof**
+(brand fill + check), **Self-reported** (brand ring on tint + dot), **Held** (neutral ring + inner
+square — freeze and Last Stand both), **Not secured** (outline + dash). Today is a 2pt brand underline,
+a position, not a state. Future and before-join cells are empty. Each state differs by shape, not
+colour alone.
+
+**Day sheet.** Tapping a cell opens its detail: state glyph, date, the specific state ("Not secured",
+"Held by a freeze", "Held by a Last Stand", "Secured, camera proof", "Secured, self-reported"), tasks
+"{done} of {req}", what was missed, and what happened to the streak. Tapping an empty cell does nothing.
+
+**Share button** opens the sheet with variant (b).
+
+| string | style |
+|---|---|
+| Days secured / Day streak / Camera proof | label |
+| {s} of {c} due days · Best {b} · of {s} secured | caption textSecondary |
+| {coaching line} | secondary textPrimary |
+| {Month} · {s} of {c} due days secured | bodyStrong / caption |
+| Camera proof · Self-reported · Held · Not secured | legend |
+| By challenge · {name} · {s} of {c} due days · Joined today | as v36 |
+| How this is counted | info sheet heading |
+| Ended at {n} days · Kept · No | day sheet, streak and secured rows |
+
+## 92. Badges, v37
+
+Five stamps, body face only: a 64pt radius-20 square with the count in 500 and "DAYS" in label caps.
+Earned: 2pt brand border, brandWash fill, count textPrimary, "DAYS" brandText, trailing share, "Earned
+{date}". Locked: 1.5pt dashed border, no fill, textSecondary throughout, trailing lock, "{s} of {k}
+secured days" and a neutral progress bar. Tapping earned opens variant (c); locked is inert.
+
+Earned date is the date of the user's {k}th secured day (`earnedOn()`), not the date of any streak.
+
+| string | style |
+|---|---|
+| Four of five earned. Each is a count of secured days. | secondary textSecondary |
+| First day · One week · Three weeks · Thirty · Seventy five | name, 15/20 500 |
+| Earned {date} | caption |
+| {s} of {k} secured days | caption, locked |
+
+## 100. Verified mark
+
+A 14pt brand disc with an ink check, then the proof type in brandText 12/16 500: "Camera", or "Camera ·
+Place" once location verification ships. **The word "Verified" is no longer rendered.** Self-reported:
+"Self-reported" in textSecondary, no disc. Sits in the card's meta line under the photo, never on the
+photo. On stickers it takes `stickerShadow` and renders in textPrimary. a11y: "Proof: Camera",
+"Proof: Camera and Place", "Self-reported".
+
+## Contradictions, continuing from 91
+
+**92. v36 frame 92 locked two badges the record had earned.** 62 secured days earns Three weeks (21)
+and Thirty (30); v36 showed two of five with "Earned 6 Sep" for both earned ones. v37 derives four of
+five, dated 16 Jul, 22 Jul, 6 Aug, 15 Aug from the day array.
+
+**93. Percent is back on Consistency** by brief, reversing 83. Guarded against zero denominators.
+
+**94. Freeze and Last Stand share one grid glyph.** v35/v36 drew them apart; the grid now shows four
+states and the day sheet names which hold it was. `DAY_STATE` still needs all eight (79) — the merge
+is presentational only.
+
+**95. The VERIFIED pill is retired.** Every render of the pill (feed cards, day viewer, proof detail)
+becomes `VerifiedMark`. Search `VERIFIED` and `Verified` in `components/`.
+
+**96. Stories sharing needs a Facebook App ID** and the `instagram-stories` query scheme; neither is
+in `app.json` today (not verified against main — confirm).
+
+**97. Photo backgrounds must filter by share state.** Any picker that lists the user's photos for a
+sticker background must exclude photos answered Keep, with no affordance naming them (R3).
+
+## Tokens
+
+One new token: **`stickerShadow`** (text and glyph layers above). Not in tokens.dense.ts. Everything
+else is existing: canvas, surface, border, textPrimary, textSecondary, brand, brandText, brandWash,
+radius 10/20/pill.
+
+## Score
+
+**9/10.** Every sticker and every hero number is a reduction over the record with its denominator
+stated; camera and self-reported differ on glyph, word and colour everywhere; Keep photos are never
+offered. Held back from 10 by 96: the Stories integration is specified from public API shape, not
+confirmed against Meta's current requirements or the repo's config.
+
+
+# v37.1 — chunk 1 revisions
+
+`GRIIT v37-1 Share.dc.html` supersedes `GRIIT v37 Share.dc.html` for frames 97, 98, 99, 91, 92.
+Frame 100 is approved and copied unchanged. Source updated: `ShareSticker.tsx` (rewritten),
+`BadgeStamp.tsx` (tiers), `ConsistencyScreen.tsx` (counting rule, strings).
+
+| # | change |
+|---|---|
+| 1 | **Counting rule.** Today counts once it is secured. An unsecured today is never a miss. Info sheet (91C) "Days" line and `ConsistencyScreen.tsx` caption say exactly that; `reduce()` carries the rule as a comment — a secured today arrives as `camera`/`self` and is counted, an open one stays `today` and is excluded. |
+| 2 | **"Due days" removed** from every user-facing string: frames 87, 88 and v36's 91, all v37.1 frames, stickers, and the tsx. It is "days". `dueDayKeys` and `closedDueDays` stay as internal names. |
+| 3 | **Story-size type.** Minimums at story size: display 64 pt, secondary 18–20 pt, "Secured." and the proof mark 16 pt, wordmark 15 pt, eyebrow 13 pt, nothing smaller. 1 pt = 2.7 px at 810 px placement; the story shows at 0.364 on a 393 pt phone, so stickers read at 0.98× design size. Proved on a near-white photo (#F3F2EE) in 97 and 98. |
+| 4 | **Wordmark.** A 4 × 15 pt brand bar and "GRIIT" at 15 pt 500, 0.2em, full textPrimary with the ring — no fading. Bottom-right on every sticker, always smaller than the numbers. |
+| 5 | **Signatures.** Day: an 8 pt progress bar filled to day / N (calendar position). Consistency: the last 28 days. Badge: a 132 pt tiered stamp. |
+| 6 | **Consistency sticker.** Two states only, secured or not; held counts as not secured. 4 × 7, always full — no orphan cells, no today marker, no dash. Fewer than 28 closed days: one row of N. Words: eyebrow, "{s} of {c} days secured", "Camera, all {s}" / "Camera, {c} of {s}" / "All self-reported". |
+| 7 | **Consistency grid.** Seven `minmax(0,1fr)` columns, 8 pt `column-gap` and `row-gap`, cells `aspect-ratio: 1`. The orange dash was today's 2 pt underline; today is now a 1.5 pt dashed brand outline. A/B in 91: **A** ring anchor (108 pt, 7 pt stroke, filled to s/c) vs **B** three equal numbers. **Recommend A.** |
+| 8 | **Badges.** Count secured days, any proof type. Rows read "Earned {date} · {n} by camera"; the sticker reads "{name} secured days" / "{s} secured · {c} by camera" / "Earned {date}". Tiers: border 1.5 / 2 / 2.5 / 3 / 3 pt, inner rings 0 / 1 / 1 / 2 / 2, fill none / none / tint / tint / solid brand. Locked shows the same shape dashed. |
+
+**Copy, changed strings only**
+
+| string | where |
+|---|---|
+| {s} of {c} days | hero sub-line |
+| {s} of {c} days secured | month header, sticker (b) |
+| {s} of {c} days | by challenge |
+| Days | info sheet term |
+| Every day you were in a challenge, from the day you joined. Today counts once it is secured. An unsecured today is never a miss. | info sheet definition |
+| Today | legend, dashed outline |
+| Consistency | sticker (b) eyebrow |
+| Camera, all {s} · Camera, {c} of {s} · All self-reported | sticker (b) proof line |
+| {name} secured days | sticker (c) headline |
+| {s} secured · {c} by camera | sticker (c) |
+| Earned {date} · {c} by camera | badge row |
+| Four of five earned. Each counts secured days, any proof. | badges intro |
+
+**Contradiction 98.** `last28` needs a closed-day array of booleans (secured or not) from the record;
+the current payload has no per-day array (see 88). Held days are `false`.
+
+**Contradiction 99.** `cameraAtEarn` — the camera count at the moment the kth secured day landed —
+is not in the payload. Derive from the day array: count camera days among the first k secured days.
+
+Score: **9/10.** Blocker to 10 unchanged: 96 (Stories integration confirmed only against public API
+shape).
+
+
+# v38 chunk 2 — audit, Home, Create, task flow, Feed, Profile, detail, Activity, Discover
+
+Frames 101–110 in `GRIIT v38 Chunk 2.dc.html`. v37.1 confirmed: with the display face loaded at
+64pt, "Day 67 of 75" measures 210 of 258pt available in all 12 sticker renders. It stays on one line,
+and the row is now `nowrap`. Worst case "Day 365 of 365" is about 249pt.
+
+## 101. Device vs system audit, build 64
+
+Evidence: 10 of the 20 `uploads/IMG_99xx 2.PNG` shots (25 Sep, 5:10–5:13). 13 BUILD DRIFT → Cursor;
+5 DESIGN GAP → fixed below.
+
+| problem | tag | note |
+|---|---|---|
+| Orange centred bio prompt | BUILD DRIFT | frame 88 is a quiet row (not in the shots reviewed) |
+| Brown-on-brown count pills | **DESIGN GAP** | frame 44's brandText on brandWash was ~3.1:1. The spec was wrong. Now plain caption text |
+| Cards under the tab bar | BUILD DRIFT | law 26 (9945, 9947, 9950) |
+| Name twice on Profile | BUILD DRIFT | frame 88 (not in the shots reviewed) |
+| "No comments yet." on every card | BUILD DRIFT | Part B 94 (not in the shots reviewed) |
+| Empty grey Discover covers | **DESIGN GAP** | never designed. Now 110 |
+| "1 days" / "All 1 tasks" | BUILD DRIFT | the dayWord helper is bypassed |
+| Display face mid-line: feed "Day 1", "Best 4", "200 pts", badge pills | BUILD DRIFT | law 2 |
+| "0 freezes left · 7 days · 57%" | **DESIGN GAP** | unexplained numbers. Removed |
+| VERIFIED pill on the photo | BUILD DRIFT | frame 100 |
+| Global tab, "Post daily to climb.", points | BUILD DRIFT | B3 |
+| Consistency rows wrap to 3 lines | BUILD DRIFT | v36 91 |
+| "Secured · 0 of 4 · 0 camera proof" | BUILD DRIFT | contradiction 88 |
+| Finished "0 of 1" vs end screen "1 of 1" | BUILD DRIFT | two reductions of one record |
+| Badges 3/7/14/30/100 "verified" | BUILD DRIFT | v37.1 set is 1/7/21/30/75, secured |
+| "1 due today." | BUILD DRIFT | v37.1 |
+| Morning-after repeats the Today list | **DESIGN GAP** | shortened to 2 lines |
+| 44pt greeting competes with the streak | **DESIGN GAP** | 15pt |
+
+## 102. Type — recommendation, applied to 103–110
+
+**SF Pro Display Heavy 800 on each screen's single earned hero only**: the Home streak, the Secured streak,
+the Consistency record, sticker numerals. Everything else is SF Pro, including "Day n of N", counts,
+dates, board scores and badge numbers. Never inside a sentence. Greeting is 15/20 500 under a 13pt
+weekday. Home hero 72/64. Secured hero 96/84.
+
+## 103. Home
+
+Recommend **A: today only**. The feed moves to Activity → Feed.
+
+- Hero: streak, display. Under it, one line: "Best {b}. {s} of {c} days secured." At zero with no best,
+  "No days secured yet."
+- Removed: the freezes row and "{n} days · {pct}%". Freezes are mentioned only in the morning-after
+  block, when a freeze covered, or would have covered, the day.
+- Morning-after: "Yesterday wasn't secured." / "{done} of {req} tasks. Your streak reset to 0." — task
+  names are dropped, because the Today card lists them.
+- Today card: "Today" 17/22 500 and "{done} of {total} done" in caption. **No pills.** Challenge
+  header in label caps, textPrimary, with "Day {n} of {N}" right-aligned in caption. Task row: ring,
+  15/20 400 name, 12/16 gate line, chevron if pending.
+- Week strip under the card, v37.1 glyphs.
+- B: "Feed" 17/22 + "See all" brandText, and two event rows.
+
+## 104–105. Create
+
+- **Step 1 "What is it?"**: Name (placeholder `#6E6961` in a `border`-coloured field; entered text
+  textPrimary in a `textSecondary`-bordered field), Category (Fitness, Faith, Mind, Learning, Health,
+  Discipline — **shared taxonomy with Discover**), How long (7, 14, 30, 60, Custom), Who (Solo, Group).
+  Continue is disabled until named: "Name the challenge to continue."
+- **Task sheet**: What you do — five type cards (Check off "Tap when it is done." · Timer "Run a
+  timer in the app." · Counter "Hit a number, like 8 glasses." · Text "Write a set number of words." ·
+  Run "Log distance and time."). Then Name with suggestion chips. Then **How it's proven, one radio
+  group**: Self-report "You say it is done. Nothing is checked." · Photo "A photo taken in the app." ·
+  Photo + time window "A photo, only inside the hours you set." · Photo + place "Coming when location
+  verification ships." (disabled). Then the live "On Home" preview row, then Advanced, collapsed. The
+  duplicate radio row is removed.
+- **Two proof settings resolved.** The challenge-level "public proof on feed" toggle is **removed**.
+  Per-photo Share or Keep already governs the feed. It is replaced by **Visibility** ("Anyone can find
+  and join" / "Only people you invite"), which says who can find the challenge, not how tasks are
+  proven. Review lists each task's proof line from the task setting only, so it can never say "Photo
+  proof optional".
+- **Step 3 "How strict?"**: Standard "A missed day breaks the streak. The run continues." · Hard "A
+  missed day sends the run back to Day 1. No freezes." Caption: "Everyone in the challenge plays by the
+  same rule." **Matthews 2015 citation removed.**
+- **"75 Hard" removed** everywhere (trademarked program). Starter pack becomes **"No Days Off"**;
+  alternatives "Iron Season", "Seventy Five". Hard mode is described by its rule alone.
+- **Review**: its own screen. Title, "{category} · {n} days · {Solo|Group} · {mode}", Each day (task +
+  proof line), Settings (Visibility, Photos "You choose Share or Keep for each one", Starts). Button
+  "Start the challenge".
+- **You're in.**: "{challenge}. Day 1 of {N} is today." A first-task card, then primary "Next: {first
+  doable task}" and tertiary "Back to Home". If the first task's window has not opened, the card says
+  "Opens at {time}." and the button names the next task that can be done now.
+
+## 106. Task flow
+
+- **Header**: "{challenge} · Day {n} of {N}". **Never the type.** The type is a label above the title.
+- **Counter**: count and Add one centred between the title and the footer.
+- **Task done**: ring + label "TASK DONE" (brandText) / title = the task name verbatim / "{n} left to
+  secure today." / remaining rows / primary "Next: {task}" / tertiary "Back to Home". Reads right for
+  any name.
+- **Secured**: "DAY SECURED" label, streak at 96pt display, "{weekday} {date}. {done} of {req} tasks,
+  {c} by camera." The lower half holds the week strip and a "Share today" card that opens the chunk 1
+  day sticker (97a).
+
+## 107. Feed
+
+System events (started, day secured, finished) are single 44pt rows: 24pt avatar, "{name} {verb}
+{challenge}[ · {n} of {N} days]", time. No card, no tint. Proof cards: header (avatar 32, name, meta
+"{challenge} · Day {n} · {time}" — the challenge appears once), photo, "{task}" + VerifiedMark, actions.
+**Zero shows no count and no "No comments yet."**
+
+## 108. Profile
+
+"@{handle}" in the nav. The display name appears once, beside the avatar. Bio: a pencil + "Add a bio" row
+in textSecondary. Edit profile / Invite as secondary buttons. Stats: three cells, "day streak" / "days
+secured" / "badge(s)", with the value at 17/22 500 in SF Pro and the label nowrap. The row opens
+Consistency. Lost photo: surface tile, `image-off`, "Photo not saved".
+
+## 109. Challenge detail
+
+Cover (generated if no photo), "{category} · {n} days · {Solo|Group} · {mode}". **Each day**: type
+icon, task name, "{type}[ · then a photo]", VerifiedMark if camera, no radio. "A day is secured when
+every task is done." **Who's in it**: stacked avatars + "{n} people". Only real members are shown, and
+"Just you" when the count is 1. Abandoned: "Left on day {n}" / "{s} of {c} days secured before you
+left." + "Join again". Footer caption: "Day 1 is today."
+
+## 110. Activity and Discover
+
+Activity segments: Feed · Board · Notifications. Board: per-challenge picker, "Ranked by days secured this week.
+{Word} days of this week have ended." — computed from the local weekday (Mon = none yet: "This week
+started today."). A solo board shows one row plus "Just you so far." / "A board needs two. Invite
+someone to this challenge." / "Invite a friend".
+
+Discover: category chips (All + the six). **Generated covers**: surface + one pattern per category in
+brand at 16–28% alpha (Health diagonal 135°, Fitness diagonal 45°, Faith arcs, Discipline horizontal
+rules, Learning vertical rules, Mind dot grid), the category label in brandText caps, the title in 22/27
+500. People: display name, then @username, never an ID. **Private solo challenges are excluded
+server-side** from every Discover query.
+
+## Contradictions, continuing from 99
+
+**100.** `feed events` render the display face for "Day 1" inside meta (9945). Meta text is SF Pro 400/500.
+**101.** Home "{n} days · {pct}%" has no source definition. Remove.
+**102.** Finished list count (0 of 1) and end-screen count (1 of 1) come from different reductions.
+**103.** Badge tiers in the build (3/7/14/30/100) and the design (1/7/21/30/75) differ, and the build
+says "verified".
+**104.** `public_proof_on_feed` (challenge setting) duplicates per-photo Share or Keep. Replace with
+`visibility: public | invite_only`.
+**105.** The "75 Hard" string is in the starter pack seed and in the Hard mode description. Replace
+with "No Days Off" and the rule text.
+**106.** Board copy "Seven days of the week have ended" is static. Compute it from the local weekday.
+**107.** Discover can return private solo challenges (not verified. Add a server filter
+`visibility = public`).
+
+Tokens: none new in chunk 2. The placeholder colour `#6E6961` is **not in tokens.dense.ts**. It is
+flagged: it is needed because `textSecondary` placeholders read as entered text on device. Proposed
+token `textPlaceholder`.
+
+
+## v38.1 — approved decisions
+
+1. **Home is option A.** Activity holds three segments in **one** segmented control (law 23): Feed · Leaderboard · Notifications. Feed is first and default. No second control inside any segment.
+2. **Standard mode copy describes the server as it is:** "A freeze covers a missed day if you have one. Without one, the streak resets. The run continues." No rule change. Hard is unchanged: "A missed day sends the run back to Day 1. No freezes."
+3. **Lengths:** 7 days · 14 days · 30 days · 75 days · Custom. 75 is back because onboarding and the starter pack depend on it.
+4. **Categories, identical in Discover and Create, in this order:** Fitness · Faith · Mind · Health · Discipline · Learning. Discover prefixes "All". Discover cover patterns key off the same six.
+5. **Visibility replaces "public proof on feed":** approved as drawn.
+6. **Share today with more than one challenge secured:** the share sheet opens with a "Which day" radio list, one row per challenge secured today ("{challenge}" / "Day {n} of {N} · {k} photo(s)" or "no photo"), most recent secure preselected. One sticker per share; the user picks again to share another. With one challenge secured the list does not render. Only photos answered Share are eligible for the sticker background (R3).
+7. **Counter mock fixed:** the step now reads "Read 20 pages", "3 of 20 pages", "Log 3 of 20" under "Read 30 min · Day 4 of 30".
+8. **Starter renamed "No Days Off"** — a 75-day Hard challenge; no number in the name. Alternatives if you want one: "The Long Run", "Iron Season".
+
+| string | style |
+|---|---|
+| Feed · Leaderboard · Notifications | Segmented, one control |
+| A freeze covers a missed day if you have one. Without one, the streak resets. The run continues. | caption textSecondary |
+| Which day | label textSecondary |
+| {challenge} | bodyStrong |
+| Day {n} of {N} · {k} photo / no photo | caption textSecondary |
+| One sticker per share. Pick again to share the other. | caption textSecondary |
+| Share sticker | Button primary |
+
+## v38.2 — Share today after Secured (frame 111)
+
+After the Secured screen is dismissed, today's sticker stays reachable **until local midnight**.
+
+- **Home, Today card:** once `secured_today` is true, a `ListRow` "Share today" (share 20 brandText, caption "Until midnight · {k} challenges", or "Until midnight" when one) sits last in the card, under "Day secured." and a Divider. It never shows before the day is secured.
+- **Challenge detail:** for a challenge secured today, "Today is secured." (secondary medium brandText) with the same row under it.
+- Both open the frame 106 share sheet. The "Which day" picker shows when more than one challenge is secured today. From challenge detail, that challenge is preselected. From Home, the most recently secured one is.
+- At local midnight both rows unmount. No badge, no push.
+
+| string | style |
+|---|---|
+| Share today | bodyStrong |
+| Until midnight | caption textSecondary |
+| Until midnight · {k} challenges | caption textSecondary |
+| Today is secured. | secondary medium brandText |
+
+## v39 — Profile proof viewer (frame 112, `GRIIT v39 Proof Viewer.dc.html`)
+
+Opens from a day tile in Profile → Proofs. A **vertical list of days, newest first**, starting at the day that was tapped. Each day is a horizontal carousel of that day's photos.
+
+**Tree**
+1. Header: close (x 24, 44pt target) left, "Proofs" centred. No date in the header, since the date belongs to each day and scrolls with it.
+2. Per day: day line ("{Weekday} {d} {Month}" 13 medium, "{k} photos" caption, right-aligned) → photo, full width, 4:5, no radius → if k > 1: a "{i} of {k}" pill on the photo (top right, ink at 72%) and a segmented bar of k 2pt segments under it → task (15 medium, one line with ellipsis) with the owner's state on the right → caption "{challenge} · {proof}".
+3. Proof type uses the frame 100 verified mark: a check plus the proof type in brandText for camera proof. Self-reported gets no check.
+
+**Owner vs visitor**
+| | owner | visitor |
+|---|---|---|
+| photos | all | shared only |
+| state on the right | "Shared" or a lock + "Private" | nothing |
+| day with zero eligible photos | shown | left out |
+| "Photo not saved" day | shown | left out |
+
+**Photo not saved:** a surface block at the same 4:5 size, with image-off 28, "Photo not saved" and "The day was secured. The upload did not finish." It keeps its place in date order. The caption line still shows the challenge and proof type, without the verified check, because there is no photo to verify.
+
+**Gestures:** swipe up or down to move between days (paged per day); swipe left or right to move between photos within a day. The segmented bar follows the finger. There are no page dots, because the bar already does that job.
+
+| string | style |
+|---|---|
+| Proofs | bodyStrong |
+| {Weekday} {d} {Month} | 13 medium textPrimary |
+| {k} photo / {k} photos | caption |
+| {i} of {k} | 12 medium on ink 72% |
+| Shared / Private | caption, lock 12 before Private |
+| {challenge} · {proof} | caption |
+| Photo not saved | bodyStrong, and the day line's right-hand count |
+| The day was secured. The upload did not finish. | caption |
+
+Share today after Secured is frame 111 (v38.2), already delivered.
+
+## v40 — One family (frame 113, `GRIIT v40 Type.dc.html`)
+
+**The condensed display face is removed from the product.** Only SF Pro is used.
+
+- `displayFace` = SF Pro Display. `displayWeight` = 800 (Heavy). `tabular-nums`, tracking −0.02em.
+- It is used only for the hero numbers: the streak hero, "Day {n}", the Consistency headline, sticker numerals and badge stamp numerals. Sizes are unchanged (`numberSize` is untouched).
+- Everything else stays on the current SF Pro 400/500 scale. Law 2 now reads: one family, and weight 800 is allowed only on `number`.
+- **Heavy is wider than a condensed face.** Check any number that sits in a fixed box at the new width: the story sticker "Day 67 of 75" line (nowrap), badge stamps with 3 digits, and the 3-up Consistency row at 320pt.
+- Grep for removal: the old condensed family name, `useFonts(`, and its font asset in `assets/fonts/`. `rg -i condensed` must return only this line.
+
+Frame 112 fixes: the right-hand label on the "Photo not saved" day is now "Photo not saved". The Sunday 20 September mock is now a camera proof: a self-reported task has no photo, so it can't be shown as Shared.
+
+### v40 follow-up: applied to the components, not only the tokens
+
+- The old condensed face is removed from `ConsistencyGrid` (line 78), `ConsistencyScreen` (`DISPLAY`) and `share/ShareSticker` (`DISPLAY`). All three now read `displayFace`.
+- The hardcoded `fontWeight: '600'` is now `displayWeight` in `ActiveChallenge`, `ChallengeEnd`, `SecuredDay`, `ConsistencyScreen`, `ConsistencyGrid`, `ShareSticker`, `Badges`, `BadgeRow` and `Stamp`.
+- **The sticker fits by digit count** with `fitNumeral(n)`: 64 for one digit, 58 for two, 46 for three. Measured on the 260pt line: "Day 67 of 75" at 58 is 241, and "Day 100 of 100" at 46 is 244. The line never wraps, and "of {N}" never detaches.
+
+**Decisions made for you (flagging):**
+- **Badge stamps are Heavy**, because you listed them with the hero numbers. `Stamp` (the camera-proof stamp) follows so the two stamps match. Say if the proof stamp should stay 500.
+- **The Welcome headline, "Discipline, witnessed.", moves to SF Pro 500** (44/48, −0.5 tracking), not Heavy. It is copy, and the rule puts Heavy on numbers only. Say if you want the brand line Heavy as an exception.
+
+# v41 — Finish, time, record (frames 114–123, `GRIIT v41 Finish Time Record.dc.html`)
+
+Source: `src/components/v41/{FinishMoment,TimeGateField,ProofsCalendar,ChallengeRow,JoinErrorSheet}.tsx`.
+**No new tokens.** One new component: `TimeField` (see 115). Everything else composes existing ds/ parts.
+
+**Evidence note.** The build 65 screenshots from Sep 27 did not reach the project. `uploads/` holds the Sep 25 set
+(`IMG_99xx 2`) and an older light-theme set (`IMG_95xx`). v41 is built from the brief's descriptions of build 65.
+See open question 1.
+
+---
+
+## 114 Finish moment
+
+**States** A camera, saving · B self-reported, saving, share held · C saved, day open · D failed, retry ·
+E server slow (more than 3 s) · F day secured (the Secured screen with the share block).
+
+**Flow**
+1. Tap "I did it" and the app navigates **at once** to FinishMoment with `save='saving'`. There is no full-screen wait. The old "Saving your day" screen is deleted.
+2. The completion mutation runs underneath. After 3 s it is still pending, so `save='slow'`.
+3. It resolves:
+   - `secured_today=false`: `save='saved'`, the photo shrinks to 170 and the Also today list appears.
+   - `secured_today=true`: the Secured screen (frame 59) replaces this screen, and the share block goes with it.
+   - error: `save='failed'`.
+4. **The share block is on exactly one screen.** It is here, or on Secured, never both.
+5. **Share to the feed** tapped while pending becomes "Shares when saved", held on the client. `shared` flips only after the save succeeds. On failure the held share is dropped, and the screen says "Nothing was shared." **A proof the server rejected is never posted.**
+6. **Story** opens the v37 sticker set. A camera task gets the photo sticker; every other type gets the text card. On failure it is disabled.
+7. Leaving any way (Keep it to the record, back, swipe) leaves `shared=false`. Dismissal is never a decision.
+
+**Share card for non-camera tasks** Task title, challenge title, "Day {n} of {N}" (n in the display face) and the gate line from `gateLabel(task)`. Size is 252pt, the same as the photo, so the screen doesn't jump between task types.
+
+| string | where |
+|---|---|
+| Saving… | status, textSecondary |
+| Still saving. It keeps going if you leave. | status, slow |
+| Task saved. | status, day open |
+| Day secured. | status on Secured, brandText |
+| Didn't save. Try again. | status, danger |
+| Try again | inline retry |
+| Done | label |
+| {task.title} | title |
+| {challenge} · Day {n} of {N} | secondary |
+| Share to the feed / Shares when saved | secondary button |
+| Story | secondary button |
+| Copy · Save · More | icon row, label 11 |
+| Also today · {n} task / tasks | label |
+| Next task · {title} / Next task | primary; disabled while pending |
+| Keep it to the record | tertiary |
+| Nothing was saved and nothing was shared. The photo stays on this screen until it saves. | failed |
+| Leave it saving | slow, secondary |
+| Back to today | failed, tertiary |
+| Every task in {n} challenge / challenges is done. | Secured sub-line |
+| Last task | Secured, label over the closing proof |
+
+**Binds** `save` comes from the completion mutation state. The branch reads `secured_today` from the mutation response, never a client count. `shared` is flipped only by `proofs.share`. `alsoToday` is the Home Today query minus done rows, across all enrollments.
+
+**ds/** Button, ListRow (TaskRow), Sheet (sticker set), SecuredMoment (59). **New:** none.
+
+**Acceptance**
+- [ ] Tapping I did it shows this screen in under 100 ms, whatever the network.
+- [ ] Airplane mode, then tap Share to the feed: it reads "Shares when saved"; after the failure, nothing appears on the feed.
+- [ ] Throttle to 5 s: the status changes at 3 s.
+- [ ] Complete the last task of the day: Secured shows the share block, and this screen never flashes.
+- [ ] A self-reported task shows the text card, and Story produces a text sticker.
+- [ ] Back-swiping leaves the proof private (`shared=false`).
+
+## 115 Time gate
+
+**States** A By default · B Between default · C picker open · D invalid range.
+
+**Rules**
+- A wheel picker (`@react-native-community/datetimepicker`, `mode="time"`, `display="spinner"`) sits in ds/Sheet.
+- Display is 12-hour: `fmt12`, `fmtWindow`. Storage is `gate_time_start` / `gate_time_end` as `HH:MM` 24-hour. Defaults: By 07:00; Between 05:00–06:30.
+- The end must be strictly after the start, on the same day. An invalid window disables Add task.
+- The preview row updates on every wheel change, not only on Done.
+- Place is live. The row reads "Only counts at this place." and opens the Set place screen (frame 50 B); on save it sets `require_location` with the place and radius.
+
+| string | where |
+|---|---|
+| By / Between | segmented |
+| By / From / To | field labels |
+| 7:00 am | field value |
+| Counts from midnight until {time}, your time. | By helper |
+| Today, {a} to {b}, your time. {h} hour/hours {m} minute/minutes. | Between helper |
+| End has to be after {start}. The window can't cross midnight. | invalid, danger |
+| Camera · By 7:00 am / Camera · 5:00–6:30 am | preview gate line |
+| Camera · Time window not set | preview when invalid |
+| Cancel / To / Done | picker sheet |
+| Window: {a}–{b}. The row above updates as you scroll. | picker caption |
+| Place · Only counts at this place. | live row, opens Set place |
+
+**ds/** Sheet, SegmentedControl, Switch, ListRow. **New: `TimeField`**, a tappable field showing a formatted time. It is new because TextField can't be non-editable without a keyboard flash, and no other field opens a sheet.
+
+**Acceptance**
+- [ ] No keyboard ever appears for a time.
+- [ ] 18:30 stored shows "6:30 pm".
+- [ ] 05:00–04:30 disables Add task and shows the error.
+- [ ] The preview updates mid-scroll.
+
+## 116 Late join
+
+**Rule** At join or launch, for each required task with a time gate: if now is past `gate_time_end` in the member's `profile.timezone`, then `start_at = tomorrow 00:00 local`. Otherwise `start_at = today 00:00 local`, and "Day 1 is today." stands.
+
+**States** A review line · B launched · C Home the same day · D detail before Day 1.
+
+| string | where |
+|---|---|
+| Today's {window} window has passed. Day 1 is tomorrow. | review, above the button |
+| Starts | Tomorrow, {Weekday} {d} {Month} | review row |
+| You're in. Day 1 is tomorrow. | launched title |
+| Tomorrow's first task is {task}, between {a} and {b}. Today still counts for your other challenges. | launched body |
+| Remind me at {window start − 15 min} · 15 minutes before the window opens. | launched switch |
+| Back to today | launched primary |
+| {challenge} · Starts tomorrow. Nothing to do today. | Home row, no ring |
+| Day 1 is tomorrow · {Weekday} {d} {Month}. Today's window had passed when you started. | detail card |
+
+**Home** The pre-start challenge is excluded from the Today "{done} of {total}" count and from `secured_today`. Its row has a `calendar-clock` icon, not a status ring.
+
+**Acceptance**
+- [ ] Launch 5am crew at 1:24 pm: Home "1 of 2 done" doesn't include it, and today can still be secured.
+- [ ] Launch at 4:00 am: "Day 1 is today."
+
+## 117 Proofs calendar
+
+**Decision** The calendar replaces the tile grid, with no toggle (decision 3).
+
+**States** A owner · B visitor · C empty.
+
+**Cells** `DayCell`:
+- camera: cover photo with the date on top, and a lock bottom-right when private (owner only);
+- self-reported: brand fill;
+- freeze: surface with a snowflake;
+- Last Stand: 1.5 brand border with a shield;
+- missed: textSecondary outline;
+- today: 2pt brand ring;
+- future / before: border at 0.45.
+
+**Header** "{secured} of {days} days". Secured = camera + self. Days = every day from the first `start_at` to yesterday, plus today once secured. Freeze and Last Stand are in the denominator, not the numerator.
+
+**Visitor** Private camera days render as plain secured (brand fill). Tapping one opens the viewer, which then skips private photos (v39 rule).
+
+| string | where |
+|---|---|
+| September 2026 | month header |
+| {s} of {d} days / 1 of 1 day | line above grid |
+| Camera photo · Self-reported · Freeze · Last Stand · Missed · Today, open · Private photo | legend (Private owner only) |
+| Join a challenge and secured days fill in here. Today counts once it's secured. | empty |
+| {d}, secured, camera photo[, private] | a11y |
+
+**ds/** SegmentedControl, the DayState union from ConsistencyGrid. **New:** none. `DayCell` extends the Consistency cell with a photo slot.
+
+**Acceptance**
+- [ ] The next-month arrow is disabled on the current month.
+- [ ] On the visitor view, no lock and no private photo appear anywhere.
+- [ ] Tapping a missed day does nothing.
+
+## 118 Challenges list
+
+**States** A populated · B empty.
+
+**Row** `rowText()`. Status maps from `active_challenges.status`:
+
+| status | section | status line | number |
+|---|---|---|---|
+| active, pre-start | Running | Starts tomorrow | Day 1 · of {N} |
+| active, secured today | Running | Secured today (brandText) | Day {n} · of {N} |
+| active, open | Running | {k} task / tasks left | Day {n} · of {N} |
+| completed | Finished | Sep 16–24 | {x} of {y} · days |
+| failed | Finished | Ended on day {n} | {x} of {y} · days |
+| abandoned | Left | Left on day {n} | {x} of {y} · days |
+
+The old note "Runs that ended before this version…" is dropped (decision 5).
+
+| string | where |
+|---|---|
+| Running · {n} / Finished · {n} / Left · {n} | section labels |
+| No challenges yet · Start one from Discover, or make your own. · Go to Discover | empty |
+
+**Acceptance**
+- [ ] A 1-day finished run reads "1 of 1 · day".
+- [ ] No full dates anywhere.
+- [ ] Every row is one line of status.
+
+## 119 Challenge detail deltas on 109
+
+Not joined is covered by frame 109. Pre-start is covered by 116 D.
+
+**States** A joined today · B mid-run · C finished and Start again · D private.
+
+**Deltas**
+1. The meta line is one sentence: "{N} day/days · Solo|Group · {n} person/people". The pills go.
+2. The week strip is **this challenge only**. Days before `start_at` are blank. Its label is "Day {n} of {N}", plus "· {s} secured" after Day 1.
+3. Gate labels come from `gateLabel(task)`, the same function the feed uses. Contradiction 108.
+4. The mode line sits under a "Rules" label and uses the real freeze copy (below).
+5. Joined today, open: the primary is the first pending task. Finished: "{x} of {y}" in the display face, then "Start again" with the caption "A new run. Day 1 is today." (or "…is tomorrow." per 116).
+
+| string | where |
+|---|---|
+| Standard. A missed day resets your streak. The next day you can spend a freeze to cover it. You have {n}. | Rules |
+| No Days Off. A missed day sends the run back to Day 1. No freezes. | Rules, hard |
+| Today is secured. | mid-run, brandText |
+| {x} of {y} · day secured / days secured · Finished {Weekday} {d} {Month}. | finished card |
+| Start again · A new run. Day 1 is today. | finished footer |
+| This challenge is private. · Only the person who made it can see it. · Back | private |
+
+## 120 Join errors
+
+Mapped by `joinErrorCopy()` from the error code. Nothing is joined until the server confirms.
+
+| code | title | body | primary |
+|---|---|---|---|
+| ALREADY_RUNNING | You're already in this one. | {title} is on Day {n} of {N}. Finish or leave that run before starting another. | Open your run |
+| FREE_LIMIT | You have {n} running. | The free plan runs {free} challenge/challenges at a time. Leave one, or go Pro for up to {pro}. | See plans |
+| PRIVATE | This challenge is private. | Only the person who made it can join. It may have been made private after you opened it. | Back to Discover |
+| UNKNOWN | Couldn't join. | Nothing changed on your account. Check the connection and try again. | Try again |
+
+The secondary is "Close" in every case. `free`/`pro` come from `lib/free-challenge-limit.ts`, never hardcoded.
+
+**Acceptance**
+- [ ] No string containing "Server Error" reaches the UI.
+- [ ] FREE_LIMIT numbers match free-challenge-limit.ts.
+
+## 121 Feed tap targets
+
+| # | target | opens |
+|---|---|---|
+| 1 | avatar and name, one target | /profile/[userId] |
+| 2 | challenge label | /challenge/[id] |
+| 3 | photo | v39 viewer at that photo |
+| 4 | See the day | v39 viewer at that day |
+| 5 | heart | respect toggle in place |
+| 6 | comment icon and count | comments ds/Sheet |
+| 7, 8 | comment author name (brandText) | that profile |
+
+**Pressed state**
+- Rows get a surface fill at 100 ms.
+- The photo scales to 0.98.
+- Names and labels drop to opacity 0.6.
+- Every target is at least 44pt tall, using hitSlop.
+
+**Zero comments** No comment line and no "No comments yet."; the icon shows no count.
+
+## 122 Discover covers
+
+**Source** `cover_url` from the catalog row, else the generated cover. **Never a proof photo** from any user, including the creator. Contradiction 109.
+
+**Generator**, deterministic:
+| category | tint | icon | pattern |
+|---|---|---|---|
+| Fitness | #3A1F10 | zap | stripe |
+| Faith | #23302B | sunrise | arc |
+| Mind | #252A38 | brain | dots |
+| Health | #1E3036 | droplet | wave |
+| Discipline | #332820 | target | grid |
+| Learning | #2E2A1E | book-open | lines |
+
+- The pattern colour is brand at 16–28% on the tint.
+- The pattern offset comes from a hash of the challenge id.
+- The title is SF Pro 500 15/19, bottom-left, 2 lines with an ellipsis.
+
+**Fallback** Surface fill, a flag icon and the same title treatment.
+
+The tints are cover art, not UI tokens, and live in `lib/cover.ts`. That is decision 7.
+
+## 123 Create deltas on 104/105
+
+Seven of the nine build-65 items are **covered by frames 104/105**:
+- 21 days
+- the "75 Hard Classic" starter
+- "75 Hard style" in the Hard copy
+- the Matthews citation
+- "Public proof on feed"
+- four categories
+- "Photo proof optional"
+
+They are build drift. **New here:**
+1. The review shows the category as stored, in title case ("Learning").
+2. The Standard copy states the manual freeze:
+
+| string | where |
+|---|---|
+| Standard · Freezes on | mode card |
+| A missed day resets your streak. The next day, you can spend a freeze to cover it. One freeze covers yesterday only. Free accounts get 1 every 30 days, Pro gets 4. | Standard body |
+| No Days Off · No freezes | mode card |
+| A missed day sends the run back to Day 1. Freezes can't be used. | Hard body |
+
+---
+
+## Decisions (v41)
+
+1. **Finish moment and Secured are one handoff, not two screens.** The share block renders on whichever is showing when the server answers. Pending shows the finish moment; secured shows Secured.
+2. **A share tapped before the save lands is held on the client**, and it is dropped on failure. The alternative, disabling Share until the save lands, makes the user wait: the wall again, just smaller.
+3. **The Proofs calendar replaces the tile grid, with no toggle.** A toggle would keep two views of one record, and the v39 viewer already shows every photo.
+4. **A visitor sees a private camera day as a plain secured cell.** The day happened, and hiding it would understate the record; the photo is private, and showing it would break R3.
+5. **The "Runs that ended before this version" note is dropped.** That release has shipped.
+6. **The failed status (hard mode or team) goes under Finished as "Ended on day n"**, not under Left. The user didn't leave.
+7. **Cover tints live in `lib/cover.ts`, not in tokens.** They are generated art, used nowhere else.
+8. **Place is live** in the time-gate sheet (founder override, v41 review). The Location gate ships today: `require_location` and the Set place screen both exist. The three gates read as a set because all three work.
+9. **The pre-start reminder is offered on the launched screen**, defaulting on at the window start minus 15 minutes. It's a reminder, not a gate.
+10. **F10 Home refinements are skipped.** Without the build 65 screenshots there's no evidence to refine against.
+
+## Contradictions (v41)
+
+**108. Gate label has two sources.** Drink Water shows "Self-reported" on the detail screen and "Camera · VERIFIED" on the feed. The feed reads the completion's `proof_photo_url`; the detail screen reads the task's gates. Both must call `gateLabel(task)` for the requirement, and the verified mark (frame 100) must read the completion.
+
+**109. Discover hero uses a proof photo.** The Drink Water Today hero is a private proof. That breaks R3 and the privacy rule. The fix is frame 122's source rule.
+
+**110. Two definitions of Standard. Resolved.** Every gate blocks in both modes: the server enforces time, camera and place regardless of mode. Standard and No Days Off differ only in freezes (Standard: 1 every 30 days free, 4 Pro; No Days Off: none, a missed day goes to Day 1). "Standard mode. Gates are recorded, not enforced." is removed everywhere and replaced with "Standard mode. Every gate blocks. Freezes cover a missed day." The build must drop the old string too: grep `recorded, not enforced`.
+
+**111. R3 against F1.** R3 (v28.2) says a self-reported close has no share footer on Secured, just a caption pointing to Proofs. F1 says every task type gets a share choice, with a text card for non-camera tasks. v41 follows F1, as the newer brief. R3's "never re-offer a Keep" still holds: the text card is offered once, at completion.
+
+**112. Frame 104's Standard copy reads as automatic.** "A freeze covers a missed day if you have one" implies the freeze spends itself. The locked rule is manual. Fixed in 123.
+
+**113. The ConsistencyGrid DayState has no photo slot.** The calendar needs `cover_url` and `shared` on the camera state. DayCell extends the union; Consistency keeps ignoring those fields.
+
+**114. The "Day 1 is today." promise can be false today.** Any time-gated task launched after its window breaks it (the brief's 5am crew case). 116 fixes the rule; the build currently hardcodes the string.
+
+## Open questions (v41)
+
+Answered by the founder, v41 review:
+1. Screenshots: checked against 119 and 123 by the founder. No re-audit. F10 skip stands.
+2. Every gate blocks in both modes. Modes differ only in freezes. See contradiction 110.
+3. Only a closed window moves Day 1. A partly used, still open window does not.
+4. A held share posts after the save lands, even if the user left. They chose Share.
+5. Freezes: 1 every 30 days on free, 4 on Pro.
+Override: the Location gate is live. Decision 8 is reversed; Place works in frame 115.
+
+
+**115. Self-reported completions are shared at write time.** Today only camera completions send `shareChoicePending`; every other task type writes its feed row with `shared = true` the moment it completes. F1 gives every task type a Share / Keep choice, so that write is now a leak: a text-card task would be public before the user answered. **Backend change required before F1 ships:** every completion, of every task type, writes its feed row unshared and flips it only on Share. Unanswered stays private (R7). This extends contradiction 45 (the camera case) to all types.

@@ -6,7 +6,7 @@
 // cursor/05_diff_from_current_app.md are the ones tokens alone cannot reach.
 //
 // WHAT DOES NOT MOVE
-//   type.number, every numberSize, and displayFace. The Barlow Condensed numerals are the
+//   type.number, every numberSize, and displayFace. The display numerals (SF Pro Display Heavy 800) are the
 //   signature. Everything around them coming down 2pt makes them read larger, which is the
 //   point: the streak should be the biggest thing on any screen it appears on.
 //   hit = 44. The floor, and buttonHeight.small is already sitting on it.

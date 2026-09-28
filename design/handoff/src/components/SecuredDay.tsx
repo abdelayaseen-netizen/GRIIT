@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, space, radius, border, displayFace, numberSize } from '../tokens';
+import { color, type, space, radius, border, displayFace, numberSize, displayWeight } from '../tokens';
 import { WeekStrip } from './WeekStrip';
 
 // The Secured screen for a day that can hold several camera proofs across
@@ -48,7 +48,7 @@ export function SecuredDay(p: SecuredDayProps) {
 
       <div style={{ padding: `${space.xs}px ${space.gutter}px 0`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <div style={{ ...type.label, color: color.textSecondary }}>Current streak</div>
-        <div style={{ fontFamily: displayFace, fontSize: numberSize.moment, lineHeight: '130px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{p.streakDays}</div>
+        <div style={{ fontFamily: displayFace, fontSize: numberSize.moment, lineHeight: '130px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{p.streakDays}</div>
         <div style={{ ...type.body, color: color.textSecondary }}>{p.streakDays === 1 ? 'day' : 'days'}</div>
       </div>
 

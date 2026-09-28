@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, radius, space } from '../tokens';
+import { color, type, radius, space, displayFace, displayWeight } from '../tokens';
 
 // Every state a day can be in. The GLYPH carries the state; colour only reinforces it, so
 // the grid survives greyscale and colour-blind readers (WCAG 1.4.1).
@@ -75,7 +75,7 @@ export function ConsistencyHeadline({ secured, elapsed, joinedLabel }: { secured
     <>
       <div style={{ padding: `${space.lg}px ${space.gutter}px 0`, display: 'flex', alignItems: 'flex-end', gap: 9 }}>
         {/* The one earned number on this screen, so the one display-face number. */}
-        <div style={{ fontFamily: "'Barlow Condensed','SF Pro Display',sans-serif", fontSize: 58, lineHeight: '52px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em', color: color.textPrimary }}>{secured}</div>
+        <div style={{ fontFamily: displayFace, fontSize: 58, lineHeight: '52px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em', color: color.textPrimary }}>{secured}</div>
         <div style={{ ...type.secondary, color: color.textSecondary, paddingBottom: 9 }}>of {elapsed} days secured</div>
       </div>
       {/* The denominator is never left implied. "3 of 6 days" with no definition was the bug. */}

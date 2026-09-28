@@ -416,7 +416,7 @@ can enforce, camera, time window and location, in that order, and an ungated tas
 "Self-reported" in secondary ink. The location label never prints the place. Enforcement is the creator's,
 set on the challenge and identical for everyone in it, so it is one textSecondary line under the task
 list and not a picker: hard mode reads "Hard mode. Gates are enforced; a failed gate fails the day.",
-standard reads "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
+standard reads "Standard mode. Every gate blocks. Freezes cover a missed day." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
 upgrade", and ended or not yet live, which drops both Join and the picker and states the date in one
 line. Solo reads "Day 1 is today." under Join; duo and team read "Join opens the invite step. You need
 a partner before Day 1."
@@ -925,3 +925,60 @@ section so Part C starts from it.
 
 **Frames:** 93 Card family · 94 Comments · 95 Challenge board · 96 Home. No new tokens; two
 single-use literals stated in `cursor/02_screens.md`. Contradictions 69 to 78 (Part A's run 64 to 68).
+
+## Chunk U, part A — v36 Consistency revision
+
+`GRIIT Chunk U Profile v36.dc.html`, frames 87-92; v35 kept. The principle now opens the screen; the
+headline is "62 of 68 due days secured" with one line defining a due day; the month grid and eight
+glyphs stay; "How it was earned" is a partition of the same 68 days that sums to it; each challenge
+and each month names its unit; each day is one line whose shape is its state. Completion % and Total
+secured are cut as restatements of the headline.
+
+Deriving the partition exposed that a day with a required camera task cannot be self-reported, so
+this record shows zero self-reported days where v35 drew four.
+
+**Design 9/10. Build blocked** on the record payload — contradictions 79, 81 and 88 against
+`lib/profile-v2-record.ts` @ f3c70b6: four day states instead of eight, the breakdown hardcoded to 0,
+and no per-day task counts. Source: `src/components/ConsistencyScreen.tsx`.
+
+## v37 chunk 1 — Share, Consistency, verified mark, Badges
+
+`GRIIT v37 Share.dc.html`. Transparent Instagram Story stickers in three variants (day secured,
+consistency, badge) and three backgrounds (clear, dark card, your shared photo), with one new token,
+`stickerShadow`, so light type survives any backdrop. A private photo is never offered as a background.
+Consistency is three numbers (due days secured, streak, camera share) with their denominators, one
+coaching sentence from the record, rules behind an info button, and a four-state grid. The VERIFIED pill
+becomes a check disc and the proof type; self-reported has no check. Badges are five body-face stamps;
+the record earns four of them, not the two v36 showed. Home, Add task and the Profile header are chunk 2.
+
+## v38.1
+
+Approved decisions applied: Home option A with Activity holding Feed, Leaderboard and Notifications in one segmented control; Standard mode copy describes today's freeze behaviour with no rule change; lengths 7/14/30/75/Custom; categories Fitness, Faith, Mind, Health, Discipline, Learning in both Discover and Create; Visibility replaces public proof; a "Which day" picker on Share today when more than one challenge secured; counter mock fixed to match its challenge; starter renamed "No Days Off".
+
+## v39
+
+The Profile proof viewer is frame 112, in `GRIIT v39 Proof Viewer.dc.html`. Tapping a day in Profile → Proofs opens a vertical feed of days, newest first, at the day that was tapped. Each day is a carousel with a "{i} of {k}" pill and a segmented bar. The photo is full width at 4:5. The task sits under it, then "{challenge} · {proof}" with the frame 100 verified mark. Owners see Shared, or a lock and Private. Visitors see shared photos only, with no share state, and days with none are left out. "Photo not saved" stays in date order and says what happened. The header is a close button and "Proofs"; each date is on its own day line.
+
+## v40
+
+Frame 113, in `GRIIT v40 Type.dc.html`. The condensed display face is removed from the product, and SF Pro is the only family. Hero numbers (streak, Day n, Consistency headline, sticker numerals, badge stamps) use SF Pro Display Heavy 800, tabular, −0.02em, at unchanged sizes. The sticker numeral steps down by digit count, 64 / 58 / 46 (`fitNumeral`), so "Day {n} of {N}" never wraps. Copy such as the Welcome headline uses SF Pro 500. Tokens: `displayFace` and `displayWeight`. Every component reads them, and `rg -i barlow cursor/ src/` is empty.
+
+## v41
+
+Frames 114–123, in `GRIIT v41 Finish Time Record.dc.html`. Source is in `src/components/v41/`. There are no new tokens and one new component, `TimeField`.
+
+- **114 Finish moment.** No blocking wait. Status follows the server: Saving…, then Task saved. or Day secured., or Didn't save. Try again. Every task type gets a share choice: a camera task shares its photo, and every other type shares a text card. A share tapped before the save lands is held, and it is dropped if the save fails. A secured day hands the share block to Secured, so it is never shown twice.
+- **115 Time gate.** A wheel picker, 12-hour display, 24-hour storage, same-day windows only.
+- **116 Late join.** If a required window has already closed when you join or launch, Day 1 is tomorrow, and today can't be lost to it.
+- **117 Proofs calendar.** Replaces the tile grid. Eight cell states. The header is "{secured} of {days} days".
+- **118 Challenges list.** One status line and one number per row.
+- **119 Detail deltas.** A per-challenge week strip, one gate source, and real freeze copy.
+- **120 Join errors.** Four honest sheets.
+- **121 Feed hit areas.** Annotated targets and pressed states.
+- **122 Covers.** Never from proofs; a generator for all six categories, plus a fallback.
+- **123 Create deltas.** Seven items covered by 104/105; two new.
+
+**Self-score: 8/10.** Below 9:
+- **F6, F9 and F10 are judged without the build 65 screenshots**, which aren't in the project. The deltas rest on your descriptions, not the device. Re-attach them and I'll re-audit.
+- **The two definitions of Standard (open question 2) are unresolved.** The Rules copy assumes freezes-only.
+- **The Secured-with-share frame (114 F) redraws frame 59's layout** rather than referencing its source directly. Check it against the shipped Secured screen.

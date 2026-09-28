@@ -109,7 +109,7 @@ export function ChallengeDetail(p: ChallengeDetailProps) {
       <div style={{ padding: `12px ${space.gutter}px 0`, ...type.caption, color: color.textSecondary }}>
         {p.is_hard_mode
           ? 'Hard mode. Gates are enforced; a failed gate fails the day.'
-          : 'Standard. A missed day resets your streak. The next day you can spend a freeze to cover it.'}
+          : 'Standard mode. Gates are recorded, not enforced.'}
       </div>
 
       <div style={{ height: 176 }} />

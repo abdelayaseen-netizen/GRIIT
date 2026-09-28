@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, displayFace, stamp } from '../tokens';
+import { color, displayFace, stamp, displayWeight } from '../tokens';
 
 // The only decoration in the app. It never appears on self reported content: rendering
 // it is a claim about what the server confirmed.
@@ -14,7 +14,7 @@ export function Stamp({ onInk, label = 'Verified' }: { onInk?: boolean; label?: 
       fontFamily: displayFace,
       fontSize: stamp.fontSize,
       lineHeight: `${stamp.fontSize}px`,
-      fontWeight: '600',
+      fontWeight: displayWeight,
       letterSpacing: stamp.tracking,
       textTransform: 'uppercase',
       color: c,

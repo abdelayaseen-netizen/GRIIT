@@ -12,7 +12,7 @@ export function Welcome({ onStart, onLogIn }: { onStart?: () => void; onLogIn?: 
         <div style={{ width: 10, height: 22, borderRadius: 4, background: color.brand }} />
       </div>
       <div style={{ position: 'absolute', left: space.gutter, right: space.gutter, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: space.lg }}>
-        <div style={{ fontFamily: displayFace, fontSize: 44, lineHeight: '44px', fontWeight: '600', color: color.textPrimary }}>
+        <div style={{ fontSize: 44, lineHeight: '48px', fontWeight: type.title.fontWeight, letterSpacing: -0.5, color: color.textPrimary }}>
           Discipline,<br />witnessed.
         </div>
         <div style={{ ...type.secondary, color: color.textPrimarySecondary }}>Photo proof. Daily. No way to fake it.</div>

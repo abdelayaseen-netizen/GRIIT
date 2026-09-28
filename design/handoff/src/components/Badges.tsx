@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, space, radius, displayFace, stamp } from '../tokens';
+import { color, type, space, radius, displayFace, stamp, displayWeight } from '../tokens';
 
 export type Badge = { label: string; earnedOn?: string; requirement: string };
 
@@ -19,7 +19,7 @@ export function Badges({ badges, footnote }: { badges: Badge[]; footnote: string
                 border: `${stamp.strokeWidth}px solid ${earned ? color.brandText : color.border}`,
                 borderRadius: radius.input, padding: stamp.padding,
                 fontFamily: displayFace, fontSize: stamp.fontSize, lineHeight: `${stamp.fontSize}px`,
-                fontWeight: '600', letterSpacing: stamp.tracking, textTransform: 'uppercase', color: c,
+                fontWeight: displayWeight, letterSpacing: stamp.tracking, textTransform: 'uppercase', color: c,
               }}>{b.label}</div>
               <div style={{ ...type.caption, color: color.textSecondary }}>
                 {earned ? `Earned ${b.earnedOn}` : b.requirement}
