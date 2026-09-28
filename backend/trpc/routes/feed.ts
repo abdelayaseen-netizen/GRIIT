@@ -23,6 +23,7 @@ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
+import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -249,9 +250,15 @@ export const feedRouter = createTRPCRouter({
     const securedDays = finishedRun?.secured;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
+    const signed = await signProofPair(
+      typeof md.photo_url === "string" ? md.photo_url : null,
+      typeof md.proof_photo_url === "string" ? md.proof_photo_url : null,
+      viewerId,
+      { sharedPaths: sharedPathsFromEvents([ev]) },
+    );
     return {
       id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
-      isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: typeof md.photo_url === "string" ? md.photo_url : null, proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
+      isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: signed.photoUrl, proofPhotoUrl: signed.proofPhotoUrl, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,
       respectCount: reactionCount,
@@ -329,7 +336,27 @@ export const feedRouter = createTRPCRouter({
       };
     });
     const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
-    return { items: withReactions, nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null };
+    const stored = withReactions.flatMap((item) => {
+      const md = item.metadata ?? {};
+      return [
+        typeof md.photo_url === "string" ? md.photo_url : null,
+        typeof md.proof_photo_url === "string" ? md.proof_photo_url : null,
+      ];
+    });
+    const signed = await signProofPaths(stored, ctx.userId, {
+      sharedPaths: sharedPathsFromEvents(
+        items.map((e) => ({ user_id: e.user_id, metadata: e.metadata, share_state: "shared" })),
+      ),
+    });
+    const itemsSigned = withReactions.map((item, i) => ({
+      ...item,
+      metadata: {
+        ...item.metadata,
+        photo_url: signed[i * 2] ?? null,
+        proof_photo_url: signed[i * 2 + 1] ?? null,
+      },
+    }));
+    return { items: itemsSigned, nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null };
   }),
 
   listMine: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
@@ -362,7 +389,14 @@ export const feedRouter = createTRPCRouter({
       };
     });
     const lastItem = items.length > 0 ? items[items.length - 1] : undefined;
-    return { items: out, nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null };
+    const signedMine = await signProofPaths(
+      out.map((row) => row.proofUrl ?? null),
+      ctx.userId,
+    );
+    return {
+      items: out.map((row, i) => ({ ...row, proofUrl: signedMine[i] ?? undefined })),
+      nextCursor: items.length === input.limit && lastItem ? lastItem.created_at : null,
+    };
   }),
 
   getMySummary: protectedProcedure.query(async ({ ctx }) => {
@@ -380,7 +414,7 @@ export const feedRouter = createTRPCRouter({
     };
   }),
 
-  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
+  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().max(2000).optional() })).mutation(async ({ input, ctx }) => {
     const server = getSupabaseServer();
     if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
@@ -432,7 +466,10 @@ export const feedRouter = createTRPCRouter({
           const task = taskRow as { title?: string; task_type?: string } | null;
           taskName = task?.title ?? "Task";
           taskType = task?.task_type ?? "manual";
-          photoFromCheckin = cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null;
+          photoFromCheckin = ownedProofWrite(
+            cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null,
+            ctx.userId,
+          );
         } else {
           logger.warn("[shareCompletion] no check_in found for date_key %s or %s — proceeding with defaults", todayKey, yesterdayKey);
         }
@@ -454,7 +491,7 @@ export const feedRouter = createTRPCRouter({
       eventId = ins.id;
       prevMeta = ins.metadata ?? {};
     }
-    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: input.proofPhotoUrl?.trim() || null, feed_shared: true };
+    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: ownedProofWrite(input.proofPhotoUrl, ctx.userId), feed_shared: true };
     const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
     if (uErr) {
       logger.error({ err: uErr }, "[shareCompletion] update failed");

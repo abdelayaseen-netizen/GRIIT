@@ -200,15 +200,18 @@ function compareKeys(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-/** Closed due days that feed a challenge fraction — same set as camera / self-reported. */
-export function fractionDateKeysForRange(
+/** Closed due window for a challenge fraction — same reducer Home uses. */
+export function rangeSecuredElapsed(
   range: Pick<ChallengeRangeInput, "status" | "startDateKey" | "endDateKey">,
+  securedDateKeys: readonly string[],
   todayKey: string,
-): string[] {
+) {
   const windowStatus = RECORD_WINDOW_STATUSES.has(range.status) ? range.status : "completed";
-  const keys = dueKeysForRange({ ...range, status: windowStatus }, todayKey);
-  if (range.status === "active") return keys.filter((k) => k < todayKey);
-  return keys;
+  return securedElapsed({
+    dueDayKeys: dueKeysForRange({ ...range, status: windowStatus }, todayKey),
+    securedDateKeys,
+    todayKey,
+  });
 }
 
 export function unionDueDateKeys(ranges: ChallengeRangeInput[], todayKey: string): string[] {
@@ -424,18 +427,27 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .reverse();
 
   const byChallenge = [
-    ...runs.map((r) => ({
-      label: r.name,
-      value: `${r.verified} of ${r.verified + r.missed}`,
-      camera: 0,
-      selfReported: 0,
-    })),
-    ...completed.map((c) => ({
-      label: c.name,
-      value: c.value,
-      camera: 0,
-      selfReported: 0,
-    })),
+    ...activeRanges
+      .slice()
+      .sort((a, b) => compareKeys(a.startDateKey, b.startDateKey))
+      .map((range) => {
+        const w = rangeSecuredElapsed(range, input.securedDateKeys, input.todayKey);
+        return {
+          label: range.name,
+          value: `${w.secured} of ${w.elapsed}`,
+          camera: 0,
+          selfReported: 0,
+        };
+      }),
+    ...finishedRanges.map((range) => {
+      const w = rangeSecuredElapsed(range, input.securedDateKeys, input.todayKey);
+      return {
+        label: range.name,
+        value: `${w.secured} of ${w.elapsed}`,
+        camera: 0,
+        selfReported: 0,
+      };
+    }),
   ];
 
   const totalVerified = accountWindow.secured;

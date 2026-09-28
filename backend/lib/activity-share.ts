@@ -28,6 +28,11 @@ export function shareColumns(state: ShareState, nowIso?: string): {
   };
 }
 
+/** Contradiction 115: every task type. Task type is ignored. */
+export function shareColumnsForComplete(shareChoicePending?: boolean) {
+  return shareColumns(shareStateOnInsert(shareChoicePending));
+}
+
 export function sharedOnInsert(shareChoicePending?: boolean): boolean {
   return sharedFromShareState(shareStateOnInsert(shareChoicePending));
 }

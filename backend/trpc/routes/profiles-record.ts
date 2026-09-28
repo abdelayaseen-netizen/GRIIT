@@ -19,7 +19,6 @@ import {
   getTodayDateKey,
 } from "../../lib/date-utils";
 import {
-  buildRecordDays,
   exclusiveEndDateKey,
   inclusiveLastDateKey,
   historyEndDateKey,
@@ -30,8 +29,15 @@ import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-ta
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
-import { buildProfileRecord, fractionDateKeysForRange, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
-import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys, splitSecuredProof } from "../../lib/proof-predicate";
+import { buildProfileRecord, rangeSecuredElapsed, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
+import {
+  buildProofsDays,
+  proofsBreakdown,
+  proofsHeader,
+  shareEventsFromActivity,
+} from "../../lib/proofs-days";
+import { signProofPaths, toProofPath } from "../../lib/proof-image";
+import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
@@ -382,26 +388,20 @@ export const profilesRecordProcedures = {
         ...record.runs.map((r) => r.id),
         ...record.completed.map((c) => c.id),
       ];
-      const split = splitSecuredProof({
-        securedDateKeys,
-        checkIns: checkInRows,
-        enrollmentIds,
-      });
       const rangeById = new Map(ranges.map((r) => [r.id, r]));
-      const securedSet = new Set(securedDateKeys);
       const byChallenge = record.detail.byChallenge.map((row, i) => {
         const id = enrollmentIds[i];
         const range = id ? rangeById.get(id) : undefined;
-        const dateKeys = range ? fractionDateKeysForRange(range, todayKey) : [];
+        if (!range) return row;
+        const window = rangeSecuredElapsed(range, securedDateKeys, todayKey);
         const part = proofCountsForDateKeys({
-          dateKeys,
+          dateKeys: window.elapsedKeys,
           securedDateKeys,
           checkIns: checkInRows,
         });
-        const verified = dateKeys.filter((k) => securedSet.has(k)).length;
         return {
           ...row,
-          value: `${verified} of ${dateKeys.length}`,
+          value: `${window.secured} of ${window.elapsed}`,
           camera: part.camera,
           selfReported: part.selfReported,
         };
@@ -419,17 +419,41 @@ export const profilesRecordProcedures = {
           }))
           .filter((t) => t.id),
       }));
+      const ownerDays = buildProofsDays({
+        todayKey,
+        securedDateKeys,
+        lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        enrollments,
+        checkIns: checkInRows as (CheckInProofRow & { task_id?: string; status?: string })[],
+        shareEvents: shareEventsFromActivity(
+          (proofEvents ?? []) as { metadata?: Record<string, unknown> | null; shared?: boolean }[],
+        ),
+        viewer: "owner",
+      });
+      const visitorDays = buildProofsDays({
+        todayKey,
+        securedDateKeys,
+        lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        enrollments,
+        checkIns: checkInRows as (CheckInProofRow & { task_id?: string; status?: string })[],
+        shareEvents: shareEventsFromActivity(
+          (proofEvents ?? []) as { metadata?: Record<string, unknown> | null; shared?: boolean }[],
+        ),
+        viewer: "visitor",
+      });
       const days = gate.activity
-        ? buildRecordDays({
-            monthKey,
-            todayKey,
-            securedDateKeys,
-            lastStandDateKeys: ((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
-            frozenDateKeys: ((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
-            enrollments,
-            checkIns: checkInRows as (CheckInProofRow & { task_id?: string; status?: string })[],
-          })
+        ? relationship === "self" && !previewStranger
+          ? ownerDays
+          : visitorDays
         : [];
+      const splitFromDays = proofsBreakdown(ownerDays);
+      const header = proofsHeader({
+        dueDayKeys: record.consistency.dueDayKeys,
+        securedDateKeys,
+        todayKey,
+      });
 
       const sliced: ProfileRecord = {
         ...record,
@@ -438,14 +462,10 @@ export const profilesRecordProcedures = {
         detail: gate.activity
           ? ({
               ...record.detail,
-              cameraDays: split.cameraDays,
-              selfReportedDays: split.selfReportedDays,
-              lastStandDays: lastStandDaysAllTime(
-                (standRes.data ?? []) as { date_key: string }[],
-              ),
-              freezeDays: lastStandDaysAllTime(
-                (freezeRes.data ?? []) as { date_key: string }[],
-              ),
+              cameraDays: splitFromDays.cameraDays,
+              selfReportedDays: splitFromDays.selfReportedDays,
+              lastStandDays: splitFromDays.lastStandDays,
+              freezeDays: splitFromDays.freezeDays,
               byChallenge,
             } as ProfileRecord["detail"])
           : emptyRecord().detail,
@@ -477,6 +497,37 @@ export const profilesRecordProcedures = {
           }
         : emptyDaySource;
 
-      return finish(sliced, { monthKey, days, daySource });
+      const signedCovers = await signProofPaths(
+        days.map((d) => d.cover_path),
+        ctx.userId,
+        {
+          sharedPaths: new Set(
+            days.filter((d) => d.shared && d.cover_path).map((d) => d.cover_path as string),
+          ),
+        },
+      );
+      const daysOut = days.map((d, i) => ({
+        date: d.date,
+        state: d.state,
+        cover_url: signedCovers[i] ?? null,
+        shared: d.shared,
+        tasksDone: d.tasksDone,
+        tasksDue: d.tasksDue,
+      }));
+      const signedProofs = await signProofPaths(
+        sliced.proofs.map((p) => p.imageUrl ?? null),
+        ctx.userId,
+        {
+          sharedPaths: new Set(
+            sliced.proofs
+              .filter((p) => p.shared)
+              .map((p) => toProofPath(p.imageUrl))
+              .filter((p): p is string => Boolean(p)),
+          ),
+        },
+      );
+      const proofsOut = sliced.proofs.map((p, i) => ({ ...p, imageUrl: signedProofs[i] ?? null }));
+
+      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header });
     }),
 };
