@@ -125,25 +125,55 @@ Commits:
 
 ---
 
-## STOP B2
+## B3 — 252pt text card as a standalone sticker
 
-B3 / B4 / onboarding / v38 / EAS / Railway / RevenueCat are not started.
+`components/share/FinishTextCard.tsx` is the 252pt non-camera card from FinishMoment. Story uses it for every type that is not camera. FinishMoment preview imports the same component. Height `FINISH_TEXT_CARD_H = 252` in `lib/share-sticker.ts`.
 
-Waiting on simulator approval of B2 before B3 (extract 252pt non-camera card if Story needs it standalone) and B4 (port `ShareSticker`, replace `ShareCardV3` after grep is empty, Meta App ID from config only).
+## B4 — ShareSticker Clear / Card / Photo
+
+Port of `design/handoff/src/components/share/ShareSticker.tsx` (Day / Consistency / Badge) plus the frame 99 sheet.
+
+- Reducers and copy — `lib/share-sticker.ts`
+- Stickers — `components/share/ShareSticker.tsx`
+- Sheet — `components/share/ShareStickerSheet.tsx` (`ds/Sheet`, `SegmentedControl`)
+- FinishMoment Story / Copy / Save / More open that sheet. Camera → Day sticker. Self-report → FinishTextCard.
+- Photo background only when the proof was shared to the feed. Kept photos: “This photo is private, so it can't be used here.”
+- `ShareCardV3` deleted. Grep on `*.ts` / `*.tsx` is empty except the test that asserts it is gone.
+- Meta App ID: `facebookAppId()` from `EXPO_PUBLIC_FACEBOOK_APP_ID` only (`lib/config.ts`). Never hardcoded. `shareToInstagramStory` passes it as `source_application`.
+- `LSApplicationQueriesSchemes`: `instagram-stories`, `instagram` in `app.json`.
+
+Native modules vs `package.json`:
+
+| module | in package.json | used |
+|---|---|---|
+| `react-native-view-shot` | yes 4.0.3 | capture PNG |
+| `expo-sharing` | yes | Save / More |
+| `expo-media-library` | no | not added |
+| `react-native-share` | no | not added; Stories uses the URL scheme + App ID from config |
+
+Copy shares the caption via `sharePlainMessage`. Save/More share the PNG via `expo-sharing`.
+
+Tests in `lib/share-sticker.test.ts`: reductions, photo-private, App ID from config, native modules vs package.json, ShareCardV3 gone.
+
+---
+
+## STOP B4
+
+Onboarding / v38 / EAS / Railway / RevenueCat are not started. No new native modules.
 
 ---
 
 ## Blocked
 
-None for B0–B2.
+None for B0–B4.
 
 ## Needs decision
 
-None. Standard copy stays the gate-copy line. Story / Copy / Save / More stay no-ops until B4.
+None. Standard copy stays the gate-copy line. Set `EXPO_PUBLIC_FACEBOOK_APP_ID` before Stories can pass Meta's App ID; empty falls back to the system share sheet.
 
 ## Yaseen to run
 
-Simulator checklist below. Do not merge to main. Do not start B3/B4 until this screen is approved.
+Simulator: B2 items 1–6 still hold. Plus Story on a camera task (Day sticker), Story on a self-report (252pt text card), Photo disabled while the proof is private, Clear / Card / Photo segments.
 
 ## Simulator checklist (B2 can prove)
 
@@ -151,10 +181,8 @@ Simulator checklist below. Do not merge to main. Do not start B3/B4 until this s
 2. Airplane mode, tap Share to the feed — label becomes “Shares when saved”; after the failure, nothing appears on the feed.
 3. Throttle to 5 s — status changes to “Still saving. It keeps going if you leave.” at 3 s.
 4. Complete the last task of the day — one replace to Secured; FinishMoment never flashes “Task saved.”
-5. A self-reported task shows the 252pt text card (title, challenge, Day n of N, gate line). Story sticker waits for B4.
+5. A self-reported task shows the 252pt text card (title, challenge, Day n of N, gate line). Story opens that card as a sticker.
 6. Leave / back-swipe — proof stays private (`shared=false`) unless Share was held **and** the save later succeeded.
-
-Story / Save / Copy / More wait for B4.
 
 ---
 
@@ -162,19 +190,19 @@ Story / Save / Copy / More wait for B4.
 
 1. `7f27139` `fix(proofs): query shared paths in batches of 10`
 
-B1 and B2 are client-only.
+B1–B4 after that are client-only.
 
 ## Native modules
 
-No new native modules. `package.json` already has `expo-sharing` and `react-native-view-shot`. `expo-media-library` is not in `package.json`. B4 will list these against the sticker port.
+No new native modules. Used: `react-native-view-shot`, `expo-sharing`. Not in `package.json` (not added): `expo-media-library`, `react-native-share`.
 
 ## Branch head
 
-`feat/chunk-b-finish` @ `adf551130f9d01dd09db71fa9abc4ab6dfe95460`
+`feat/chunk-b-finish` (see `git log -1`)
 
 ## Test count
 
 - tsc 0
-- **1158** tests, **207** files (verifying-takeover tests deleted; finish-moment source/also-today tests added)
+- **1163** tests, **208** files
 - eslint 0 on the files this chunk changed
 - repo-wide `npm run lint` is already dirty on main (7 expo warnings). Not introduced here.
