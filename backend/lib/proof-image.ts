@@ -21,6 +21,26 @@ export function storedProofValue(raw: string | null | undefined): string | null 
   return toProofPath(trimmed) ?? trimmed;
 }
 
+/** Store only a task-proofs object the writer owns. file:// and anyone else's path → null. */
+export function ownedProofWrite(
+  raw: string | null | undefined,
+  userId: string,
+): string | null {
+  if (raw == null) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^file:/i.test(trimmed)) {
+    logger.warn({ userId }, "[proof-image] drop file:// proof write");
+    return null;
+  }
+  const path = toProofPath(trimmed);
+  if (!path || pathOwnerId(path) !== userId) {
+    logger.warn({ userId, path }, "[proof-image] drop unowned proof write");
+    return null;
+  }
+  return storedProofValue(trimmed);
+}
+
 export function toProofPath(stored: string | null | undefined): string | null {
   const s = stored?.trim();
   if (!s || /^file:/i.test(s)) return null;
@@ -55,6 +75,7 @@ export function canSignProofPath(
 
 export function sharedPathsFromEvents(
   events: readonly {
+    user_id?: string | null;
     metadata?: Record<string, unknown> | null;
     shared?: boolean | null;
     share_state?: string | null;
@@ -64,10 +85,11 @@ export function sharedPathsFromEvents(
   for (const ev of events) {
     const isShared = ev.share_state === "shared" || ev.shared === true;
     if (!isShared) continue;
+    const author = ev.user_id;
     const md = ev.metadata ?? {};
     for (const raw of [md.photo_url, md.proof_photo_url]) {
       const path = toProofPath(typeof raw === "string" ? raw : null);
-      if (path) out.add(path);
+      if (path && author && pathOwnerId(path) === author) out.add(path);
     }
   }
   return out;
@@ -84,7 +106,7 @@ async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>
   if (!svc || candidates.length === 0) return new Set();
   const { data, error } = await svc
     .from("activity_events")
-    .select("metadata")
+    .select("user_id, metadata")
     .eq("share_state", "shared")
     .in("event_type", ["task_completed", "secured_day"])
     .limit(800);
@@ -98,13 +120,14 @@ async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>
   const want = new Set(candidates);
   const found = new Set<string>();
   for (const row of data ?? []) {
+    const author = (row as { user_id?: string }).user_id;
     const md = ((row as { metadata?: Record<string, unknown> | null }).metadata ?? {}) as Record<
       string,
       unknown
     >;
     for (const raw of [md.photo_url, md.proof_photo_url]) {
       const path = toProofPath(typeof raw === "string" ? raw : null);
-      if (path && want.has(path)) found.add(path);
+      if (path && want.has(path) && author && pathOwnerId(path) === author) found.add(path);
     }
   }
   return found;

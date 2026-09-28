@@ -23,7 +23,7 @@ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
-import { sharedPathsFromEvents, signProofPair, signProofPaths, storedProofValue } from "../../lib/proof-image";
+import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -345,7 +345,7 @@ export const feedRouter = createTRPCRouter({
     });
     const signed = await signProofPaths(stored, ctx.userId, {
       sharedPaths: sharedPathsFromEvents(
-        items.map((e) => ({ metadata: e.metadata, share_state: "shared" })),
+        items.map((e) => ({ user_id: e.user_id, metadata: e.metadata, share_state: "shared" })),
       ),
     });
     const itemsSigned = withReactions.map((item, i) => ({
@@ -466,8 +466,9 @@ export const feedRouter = createTRPCRouter({
           const task = taskRow as { title?: string; task_type?: string } | null;
           taskName = task?.title ?? "Task";
           taskType = task?.task_type ?? "manual";
-          photoFromCheckin = storedProofValue(
+          photoFromCheckin = ownedProofWrite(
             cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null,
+            ctx.userId,
           );
         } else {
           logger.warn("[shareCompletion] no check_in found for date_key %s or %s — proceeding with defaults", todayKey, yesterdayKey);
@@ -490,7 +491,7 @@ export const feedRouter = createTRPCRouter({
       eventId = ins.id;
       prevMeta = ins.metadata ?? {};
     }
-    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: storedProofValue(input.proofPhotoUrl), feed_shared: true };
+    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: ownedProofWrite(input.proofPhotoUrl, ctx.userId), feed_shared: true };
     const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
     if (uErr) {
       logger.error({ err: uErr }, "[shareCompletion] update failed");

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   PROOF_SIGN_TTL_SEC,
   canSignProofPath,
+  ownedProofWrite,
   pathOwnerId,
   sharedPathsFromEvents,
   signProofPaths,
@@ -22,6 +23,18 @@ describe("storedProofValue", () => {
     ).toBe(PATH);
     expect(storedProofValue(PATH)).toBe(PATH);
     expect(storedProofValue("file:///var/mobile/p.jpg")).toBe("file:///var/mobile/p.jpg");
+  });
+});
+
+describe("ownedProofWrite", () => {
+  it("user A cannot write B's path; file:// is never stored", () => {
+    const publicA = `https://x.supabase.co/storage/v1/object/public/task-proofs/${PATH}`;
+    const publicB = `https://x.supabase.co/storage/v1/object/public/task-proofs/${OTHER}/secret.jpg`;
+    expect(ownedProofWrite(publicA, OWNER)).toBe(PATH);
+    expect(ownedProofWrite(PATH, OWNER)).toBe(PATH);
+    expect(ownedProofWrite(publicB, OWNER)).toBeNull();
+    expect(ownedProofWrite(`${OTHER}/secret.jpg`, OWNER)).toBeNull();
+    expect(ownedProofWrite("file:///var/mobile/p.jpg", OWNER)).toBeNull();
   });
 });
 
@@ -84,6 +97,7 @@ describe("signProofPaths", () => {
     const out = await signProofPaths([sharedPath], OWNER, {
       sharedPaths: sharedPathsFromEvents([
         {
+          user_id: OTHER,
           share_state: "shared",
           metadata: {
             photo_url: `https://x.supabase.co/storage/v1/object/public/task-proofs/${sharedPath}`,
@@ -93,6 +107,21 @@ describe("signProofPaths", () => {
       createSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
     });
     expect(out[0]).toBe(`signed:${sharedPath}`);
+  });
+
+  it("A's shared post with B's path never signs B's photo", async () => {
+    const bPath = `${OTHER}/secret.jpg`;
+    const out = await signProofPaths([bPath], OWNER, {
+      sharedPaths: sharedPathsFromEvents([
+        {
+          user_id: OWNER,
+          share_state: "shared",
+          metadata: { photo_url: bPath },
+        },
+      ]),
+      createSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
+    });
+    expect(out[0]).toBeNull();
   });
 });
 
@@ -119,8 +148,8 @@ describe("API call sites", () => {
     const checkins = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
     const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
     const upload = readFileSync(resolve(__dirname, "../../lib/uploadProofImage.ts"), "utf8");
-    expect(checkins).toContain("storedProofValue");
-    expect(feed).toContain("storedProofValue");
+    expect(checkins).toContain("ownedProofWrite");
+    expect(feed).toContain("ownedProofWrite");
     expect(feed).toContain("proofPhotoUrl: z.string().max(2000)");
     expect(feed).not.toContain("proofPhotoUrl: z.string().url()");
     expect(upload).toContain("return { url: data.path }");

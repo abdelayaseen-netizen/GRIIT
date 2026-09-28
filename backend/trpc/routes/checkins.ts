@@ -92,7 +92,7 @@ import {
   shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
-import { signProofPaths, storedProofValue } from "../../lib/proof-image";
+import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -249,7 +249,7 @@ export const checkinsRouter = createTRPCRouter({
         totalDur
       );
       const requirePhoto = !isMinimumDay && gatesFor(task).includes("camera");
-      const photoUrl = storedProofValue(input.photo_url ?? input.proofUrl);
+      const photoUrl = ownedProofWrite(input.photo_url ?? input.proofUrl, ctx.userId);
       // DB maps UI "photo" → task_type "manual"; detect photo proof via flags/payload.
       const isPhotoProof =
         requirePhoto ||
@@ -1180,7 +1180,7 @@ export const checkinsRouter = createTRPCRouter({
       };
       if (input.noteText != null) payload.note_text = input.noteText;
       if (input.proofUrl != null) {
-        const stored = storedProofValue(input.proofUrl);
+        const stored = ownedProofWrite(input.proofUrl, ctx.userId);
         payload.proof_url = stored;
         payload.photo_url = stored;
       }

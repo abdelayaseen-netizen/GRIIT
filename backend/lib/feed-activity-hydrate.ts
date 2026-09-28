@@ -368,7 +368,12 @@ export async function hydrateActivityEventsToPosts(
     };
   });
   const sharedPaths = sharedPathsFromEvents(
-    visible.map((ev) => ({ metadata: ev.metadata, shared: ev.shared, share_state: "shared" })),
+    visible.map((ev) => ({
+      user_id: ev.user_id,
+      metadata: ev.metadata,
+      shared: ev.shared,
+      share_state: "shared",
+    })),
   );
   const stored = posts.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
   const signed = await signProofPaths(stored, viewerId, { sharedPaths });
