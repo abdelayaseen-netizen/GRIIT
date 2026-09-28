@@ -231,11 +231,18 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                   <View style={styles.taskCopy}>
                     <Text style={styles.taskTitle}>{t.title}</Text>
                     <View style={styles.gateRow}>
+                      {t.required === false ? (
+                        <View style={[styles.gate, styles.gateMuted]}>
+                          <Text style={styles.gateTextMuted}>Optional</Text>
+                        </View>
+                      ) : null}
                       {shown.length
                         ? shown.map((g) => (
                             <GateLabel key={g} gate={g} window={t.time_window} />
                           ))
-                        : <GateLabel muted />}
+                        : t.required === false
+                          ? null
+                          : <GateLabel muted />}
                     </View>
                   </View>
                 </View>

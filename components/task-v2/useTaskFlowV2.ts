@@ -325,6 +325,7 @@ export function useTaskFlowV2() {
             ? payload.photo_url
             : undefined;
       const hasCameraProof = Boolean(proofUrl);
+      const finishStartedAt = Date.now();
       const complete = await completeTask({
         activeChallengeId,
         taskId,
@@ -349,12 +350,20 @@ export function useTaskFlowV2() {
         challenge_done?: boolean;
         remaining_challenges?: number;
       } | null = null;
+      const completeMs = Date.now() - finishStartedAt;
+      const secureStartedAt = Date.now();
       const after = await attemptSecureDayAfterComplete({
         requiredRemaining: complete.requiredRemaining,
         activeChallengeId,
         challengeTitle: complete.challengeName ?? challengeName,
         secureDay,
       });
+      if (__DEV__) {
+        console.info(
+          "[finishSubmit] timing",
+          { completeMs, secureMs: Date.now() - secureStartedAt, totalMs: Date.now() - finishStartedAt },
+        );
+      }
       if (after.result) {
         const r = after.result as {
           success?: boolean;

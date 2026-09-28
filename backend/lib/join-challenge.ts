@@ -5,8 +5,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
 import { addCalendarDaysToDateKey, dateKeyInTimeZone, getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
-import { applyEnrollmentWindow } from "./enrollment-window";
-import { enrollmentEndAt, localMidnightUtc } from "./enrollment-end-at";
+import { enrollmentEndAt, enrollmentIsPastEnd, localMidnightUtc } from "./enrollment-end-at";
+import {
+  ALREADY_IN_CHALLENGE_MESSAGE,
+  JOIN_FAILED_FALLBACK,
+  joinFailureFromInsert,
+} from "./join-errors";
 import { currentMinutesInTimeZone } from "./task-time-gate";
 
 export type TaskWindowRow = {
@@ -15,8 +19,19 @@ export type TaskWindowRow = {
   gate_time_end?: string | null;
   gate_time_start?: string | null;
   gate_time_mode?: string | null;
-  config?: { schedule_window_end?: string | null; time_window_end?: string | null } | null;
+  required?: boolean | null;
+  config?: {
+    required?: boolean | null;
+    schedule_window_end?: string | null;
+    time_window_end?: string | null;
+  } | null;
 };
+
+function windowTaskRequired(task: TaskWindowRow): boolean {
+  if (task.required === false) return false;
+  if (task.config && typeof task.config === "object" && task.config.required === false) return false;
+  return true;
+}
 
 /** HH:MM end of a task time window, any mode. */
 export function taskWindowEndHHMM(task: TaskWindowRow): string | null {
@@ -41,7 +56,7 @@ function parseHHMMMinutes(raw: string): number | null {
   return h * 60 + m;
 }
 
-/** True when any task with a time window has already closed today in `timeZone`. */
+/** True when any required task's time gate has already closed today in `timeZone`. */
 export function anyTimeWindowClosedToday(
   tasks: TaskWindowRow[],
   now: Date,
@@ -49,6 +64,7 @@ export function anyTimeWindowClosedToday(
 ): boolean {
   const current = currentMinutesInTimeZone(now, timeZone);
   return tasks.some((t) => {
+    if (!windowTaskRequired(t)) return false;
     const end = taskWindowEndHHMM(t);
     if (!end) return false;
     const mins = parseHHMMMinutes(end);
@@ -67,23 +83,41 @@ export type JoinChallengeResult = { id: string; user_id: string; challenge_id: s
 
 /**
  * Join a challenge for the given user: insert active_challenges, seed check_ins for all tasks, upsert streaks.
- * Idempotent: if already joined, throws BAD_REQUEST "You have already joined this challenge."
+ * Idempotent: if already running, throws BAD_REQUEST "You're already in this challenge."
+ * A finished or left row is kept; a new active row is inserted.
  */
 export async function joinChallengeDirect(
   supabase: SupabaseClient,
   userId: string,
   challengeId: string
 ): Promise<JoinChallengeResult> {
-  const { data: existing } = await applyEnrollmentWindow(
-    supabase
-      .from("active_challenges")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("challenge_id", challengeId)
-  ).maybeSingle();
+  const now = new Date();
+  const { data: existingActive } = await supabase
+    .from("active_challenges")
+    .select("id, end_at, status")
+    .eq("user_id", userId)
+    .eq("challenge_id", challengeId)
+    .eq("status", "active")
+    .maybeSingle();
 
-  if (existing) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+  if (existingActive) {
+    const endAt = (existingActive as { end_at?: string }).end_at;
+    const pastEnd = endAt ? enrollmentIsPastEnd(new Date(endAt), now) : false;
+    if (!pastEnd) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: ALREADY_IN_CHALLENGE_MESSAGE });
+    }
+    const { error: closeErr } = await supabase
+      .from("active_challenges")
+      .update({ status: "completed", ended_at: now.toISOString() })
+      .eq("id", (existingActive as { id: string }).id)
+      .eq("user_id", userId)
+      .eq("status", "active");
+    if (closeErr) {
+      const { logger } = await import("./logger");
+      const fields = joinFailureFromInsert(closeErr);
+      logger.error({ err: fields.log, userId, challengeId }, "[JOIN-BACKEND] close past-end enrollment failed");
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: JOIN_FAILED_FALLBACK });
+    }
   }
 
   const { getSupabaseServer } = await import("./supabase-server");
@@ -106,7 +140,6 @@ export async function joinChallengeDirect(
 
   const taskWindowList = (tasksForWindowCheck ?? []) as TaskWindowRow[];
 
-  const now = new Date();
   const userTz = await getProfileTimeZoneForUser(supabase, userId);
   const defer = anyTimeWindowClosedToday(taskWindowList, now, userTz);
   const startAt = enrollmentStartAt(now, userTz, defer);
@@ -136,10 +169,23 @@ export async function joinChallengeDirect(
 
   if (insertErr) {
     const { logger } = await import("./logger");
-    logger.error({ err: insertErr }, "[JOIN-BACKEND] Insert active_challenges error");
+    const mapped = joinFailureFromInsert(insertErr);
+    logger.error(
+      { err: mapped.log, userId, challengeId },
+      "[JOIN-BACKEND] Insert active_challenges error",
+    );
+    try {
+      const Sentry = await import("@sentry/node");
+      Sentry.captureException(new Error(mapped.log.message ?? JOIN_FAILED_FALLBACK), {
+        tags: { path: "joinChallengeDirect.insert", code: mapped.log.code ?? "unknown" },
+        extra: { ...mapped.log, userId, challengeId },
+      });
+    } catch {
+      /* Sentry unavailable */
+    }
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to join challenge.",
+      code: mapped.alreadyIn ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR",
+      message: mapped.message,
     });
   }
 

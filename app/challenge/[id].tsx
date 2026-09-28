@@ -28,7 +28,6 @@ import {
 } from "@/lib/profile-challenges";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
-  FREE_ACTIVE_LIMIT_MESSAGE,
   countActiveEnrollments,
 } from "@/lib/free-challenge-limit";
 import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
@@ -353,7 +352,7 @@ export default function ChallengeDetailScreen() {
       captureError(err, { flow: "challenge_join", challengeId: id });
       const classified = classifyJoinChallengeError(err);
       if (classified.kind === "limit") {
-        showError(FREE_ACTIVE_LIMIT_MESSAGE);
+        showError(classified.message);
         goPaywall();
         return;
       }

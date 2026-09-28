@@ -156,7 +156,11 @@ async function enrollInvitee(
   try {
     await joinChallengeDirect(supabase, userId, challengeId);
   } catch (err) {
-    if (err instanceof TRPCError && err.message === "You have already joined this challenge.") {
+    if (
+      err instanceof TRPCError &&
+      (err.message === "You have already joined this challenge." ||
+        err.message === "You're already in this challenge.")
+    ) {
       return;
     }
     throw err;

@@ -9,11 +9,13 @@ export function InlineComments({
   total,
   viewerUserId,
   onOpen,
+  onAuthorPress,
 }: {
   comments: FeedCommentPreview[];
   total: number;
   viewerUserId?: string | null;
   onOpen: () => void;
+  onAuthorPress?: (comment: FeedCommentPreview) => void;
 }) {
   const state = inlineCommentsState(total);
   if (state === "none") {
@@ -27,7 +29,14 @@ export function InlineComments({
         const mine = viewerUserId && c.userId === viewerUserId;
         return (
           <Text key={`${c.userId}-${c.createdAt}-${i}`} style={styles.line}>
-            <Text style={[styles.name, mine ? styles.mine : null]}>{name}</Text>
+            <Text
+              style={[styles.name, mine ? styles.mine : null]}
+              onPress={onAuthorPress ? () => onAuthorPress(c) : undefined}
+              accessibilityRole={onAuthorPress ? "button" : undefined}
+              accessibilityLabel={onAuthorPress ? `${name} profile` : undefined}
+            >
+              {name}
+            </Text>
             {" "}
             <Text style={styles.text}>{c.text}</Text>
           </Text>
