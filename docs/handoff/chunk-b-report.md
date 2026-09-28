@@ -139,27 +139,66 @@ Port of `design/handoff/src/components/share/ShareSticker.tsx` (Day / Consistenc
 - FinishMoment Story / Copy / Save / More open that sheet. Camera → Day sticker. Self-report → FinishTextCard.
 - Photo background only when the proof was shared to the feed. Kept photos: “This photo is private, so it can't be used here.”
 - `ShareCardV3` deleted. Grep on `*.ts` / `*.tsx` is empty except the test that asserts it is gone.
-- Meta App ID: `facebookAppId()` from `EXPO_PUBLIC_FACEBOOK_APP_ID` only (`lib/config.ts`). Never hardcoded. `shareToInstagramStory` passes it as `source_application`.
-- `LSApplicationQueriesSchemes`: `instagram-stories`, `instagram` in `app.json`.
+- Meta App ID: `facebookAppId()` from `EXPO_PUBLIC_FACEBOOK_APP_ID` only. Never hardcoded. Empty ID **hides** Instagram Story. Copy / Save / More still render.
+- Stories: pasteboard via `react-native-share` `Share.shareSingle({ social: InstagramStories, appId, stickerImage | backgroundImage })`. `instagramStoriesUrl` deleted. Grep callers: 0 (only the negative test assertion).
+- Save: `MediaLibrary.requestPermissionsAsync(true)` then `saveToLibraryAsync`. Success: “Saved to Photos.” Denied: “Allow Photos access in Settings to save.” No crash.
+- More: system sheet via `expo-sharing` `shareProgressImage`.
+- Copy: caption via `sharePlainMessage`.
 
-Native modules vs `package.json`:
+B4 fix commits (after first-pass rejection):
 
-| module | in package.json | used |
+1. `ea3f4c851801a04da0d6de4f8395599162b403f7` `fix(share): send Instagram Stories through the pasteboard`
+2. `03f5235f562420ae17a6ecc6383fecc8d251f29a` `fix(share): hide Instagram Story when the Meta App ID is empty`
+3. `cc657aec2290303d53ff17af1c178a5d42b4e7df` `fix(share): save stickers to Photos with add-only permission`
+
+---
+
+## package.json diff vs main `f6b21a2`
+
+| package | version | why |
 |---|---|---|
-| `react-native-view-shot` | yes 4.0.3 | capture PNG |
-| `expo-sharing` | yes | Save / More |
-| `expo-media-library` | no | not added |
-| `react-native-share` | no | not added; Stories uses the URL scheme + App ID from config |
+| `react-native-share` | `^12.3.1` | Stories pasteboard (`shareSingle` / `Social.InstagramStories`) |
+| `expo-build-properties` | `~1.0.10` | required by the `react-native-share` Expo config plugin |
+| `expo-media-library` | `~18.2.1` | Save PNG to Photos, add-only |
 
-Copy shares the caption via `sharePlainMessage`. Save/More share the PNG via `expo-sharing`.
+Already present, still used: `react-native-view-shot` `4.0.3` (capture), `expo-sharing` `~14.0.8` (More).
 
-Tests in `lib/share-sticker.test.ts`: reductions, photo-private, App ID from config, native modules vs package.json, ShareCardV3 gone.
+Build 66 is a new native build. These three modules must be compiled in.
+
+---
+
+## app.json plugin and Info.plist additions
+
+**Info.plist** (`expo.ios.infoPlist`):
+
+- `NSPhotoLibraryAddUsageDescription`: `"Save your GRIIT stickers to Photos."`
+- `LSApplicationQueriesSchemes`: `["instagram-stories", "instagram"]`
+
+**plugins:**
+
+- `"expo-build-properties"`
+- `["react-native-share", { "ios": ["instagram", "instagram-stories"], "android": ["com.instagram.android"] }]`
+- `["expo-media-library", { "photosPermission": false, "savePhotosPermission": "Save your GRIIT stickers to Photos." }]`
+
+`photosPermission: false` keeps Save add-only. Existing `NSPhotoLibraryUsageDescription` (proof picker) is unchanged.
+
+---
+
+## Tests (B3/B4 names)
+
+- `fits numerals, proof lines, and badge names from the record`
+- `hides Photo with no camera, disables it when the photo was kept`
+- `reads EXPO_PUBLIC_FACEBOOK_APP_ID and never ships a hardcoded id`
+- `uses view-shot, expo-sharing, react-native-share, and expo-media-library`
+- `has no ShareCardV3 callers; FinishMoment Story opens the sticker sheet`
+- `hides Instagram Story when the Meta App ID is empty` (`empty id → no Story action rendered`)
+- `uses add-only permission and keeps More on the system sheet` (`Save writes the PNG to Photos`)
 
 ---
 
 ## STOP B4
 
-Onboarding / v38 / EAS / Railway / RevenueCat are not started. No new native modules.
+Onboarding / v38 / EAS / Railway / RevenueCat are not started.
 
 ---
 
@@ -169,11 +208,11 @@ None for B0–B4.
 
 ## Needs decision
 
-None. Standard copy stays the gate-copy line. Set `EXPO_PUBLIC_FACEBOOK_APP_ID` before Stories can pass Meta's App ID; empty falls back to the system share sheet.
+None. Standard copy stays the gate-copy line. Empty `EXPO_PUBLIC_FACEBOOK_APP_ID` hides Story; it does not open Instagram.
 
 ## Yaseen to run
 
-Simulator: B2 items 1–6 still hold. Plus Story on a camera task (Day sticker), Story on a self-report (252pt text card), Photo disabled while the proof is private, Clear / Card / Photo segments.
+Simulator: B2 items 1–6 still hold. Plus Story on a camera task (Day sticker), Story on a self-report (252pt text card), Photo disabled while the proof is private, Clear / Card / Photo segments. Empty App ID: no Story button; Copy / Save / More still there. Save → Photos (“Saved to Photos.”). Deny Photos → “Allow Photos access in Settings to save.” More → system sheet.
 
 ## Simulator checklist (B2 can prove)
 
@@ -192,17 +231,23 @@ Simulator: B2 items 1–6 still hold. Plus Story on a camera task (Day sticker),
 
 B1–B4 after that are client-only.
 
-## Native modules
+## Native modules (build 66)
 
-No new native modules. Used: `react-native-view-shot`, `expo-sharing`. Not in `package.json` (not added): `expo-media-library`, `react-native-share`.
+New vs main, must ship in the native binary:
+
+- `react-native-share` `^12.3.1`
+- `expo-build-properties` `~1.0.10`
+- `expo-media-library` `~18.2.1`
+
+Already in the binary: `react-native-view-shot`, `expo-sharing`.
 
 ## Branch head
 
-`feat/chunk-b-finish` (see `git log -1`)
+`feat/chunk-b-finish` `cc657aec2290303d53ff17af1c178a5d42b4e7df` (last code). This report is the following commit.
 
 ## Test count
 
 - tsc 0
-- **1163** tests, **208** files
+- **1165** tests, **208** files
 - eslint 0 on the files this chunk changed
 - repo-wide `npm run lint` is already dirty on main (7 expo warnings). Not introduced here.
