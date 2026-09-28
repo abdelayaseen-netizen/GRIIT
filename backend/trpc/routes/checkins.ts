@@ -89,7 +89,7 @@ import {
   flipSharePatch,
   securedDaySharedOnInsert,
   shareColumns,
-  shareStateOnInsert,
+  shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
 
@@ -832,7 +832,7 @@ export const checkinsRouter = createTRPCRouter({
       const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
-      const shareCols = shareColumns(shareStateOnInsert(input.shareChoicePending));
+      const shareCols = shareColumnsForComplete(input.shareChoicePending);
       const activityEventPayload = {
         user_id: ctx.userId,
         event_type: "task_completed" as const,

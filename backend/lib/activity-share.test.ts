@@ -7,6 +7,7 @@ import {
   flipSharePatch,
   keepSharePatch,
   shareColumns,
+  shareColumnsForComplete,
   shareStateOnInsert,
   securedDaySharedOnInsert,
   sharedOnInsert,
@@ -55,16 +56,60 @@ describe("feed vs record", () => {
 });
 
 describe("source: complete, flip, feed, record/roster/grid", () => {
-  it("checkins.complete honours shareChoicePending and shareProof is service-role", () => {
+  it("self-report with the flag is unshared; omit stays shared for old clients", () => {
+    expect(shareColumnsForComplete(true)).toMatchObject({
+      shared: false,
+      share_state: "unanswered",
+    });
+    expect(shareColumnsForComplete(undefined)).toMatchObject({
+      shared: true,
+      share_state: "shared",
+    });
+    expect(shareColumnsForComplete(false)).toMatchObject({
+      shared: true,
+      share_state: "shared",
+    });
+  });
+
+  it("checkins.complete honours shareChoicePending for every task type", () => {
     const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
     expect(src).toContain("shareChoicePending: z.boolean().optional()");
-    expect(src).toContain("shareStateOnInsert(input.shareChoicePending)");
+    expect(src).toContain("shareColumnsForComplete(input.shareChoicePending)");
+    const idx = src.indexOf("shareColumnsForComplete(input.shareChoicePending)");
+    const before = src.slice(Math.max(0, idx - 500), idx);
+    expect(before).not.toContain("if (isPhotoProof)");
+    expect(before).not.toContain('taskType === "photo"');
     expect(src).toContain("...shareCols");
     expect(src).toContain("shareProof:");
     expect(src).toContain("getSupabaseServer()");
     expect(src).toContain("canFlipShare");
     expect(src).toContain("You can only share your own proof.");
     expect(src).toContain("dayProofs");
+  });
+
+  it("shareProof flips a non-photo row the same as a camera row", () => {
+    const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
+    const body = src.slice(src.indexOf("shareProof:"), src.indexOf("markAsShared:"));
+    expect(body).toContain("flipSharePatch");
+    expect(body).not.toContain("has_photo");
+    expect(body).not.toContain("isPhotoProof");
+    expect(body).not.toContain('task_type === "photo"');
+    expect(flipSharePatch(false, "2026-09-27T12:00:00.000Z", null)).toEqual({
+      shared: true,
+      share_state: "shared",
+      shared_at: "2026-09-27T12:00:00.000Z",
+    });
+  });
+
+  it("feed hides an unshared row and listMine still shows it", () => {
+    expect(feedShowsEvent("unanswered")).toBe(false);
+    expect(feedShowsEvent(false)).toBe(false);
+    const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
+    const listMine = feed.slice(feed.indexOf("listMine:"));
+    const listMineBody = listMine.slice(0, listMine.indexOf("getMySummary:"));
+    expect(listMineBody).not.toContain('.eq("shared"');
+    expect(listMineBody).not.toContain('.eq("share_state"');
+    expect(feed).toMatch(/getLiveFeed[\s\S]*eq\("share_state", "shared"\)/);
   });
 
   it("public feed queries filter shared = true; listMine / record / roster / consistency do not", () => {
