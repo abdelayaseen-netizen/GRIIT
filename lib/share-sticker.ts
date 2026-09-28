@@ -22,6 +22,8 @@ export const SHARE_PHOTO_PRIVATE = "This photo is private, so it can't be used h
 export const SHARE_STORY = "Instagram Story";
 export const SHARE_COPY = "Copy";
 export const SHARE_SAVE = "Save";
+export const SHARE_SAVED = "Saved to Photos.";
+export const SHARE_SAVE_DENIED = "Allow Photos access in Settings to save.";
 export const SHARE_MORE = "More";
 export const SHARE_EMPTY = "Nothing to share yet.";
 export const SHARE_EMPTY_HINT = "Secure one day and it can go here.";
@@ -139,7 +141,13 @@ export function showStoryAction(appId: string): boolean {
   return appId.trim().length > 0;
 }
 
-/** Installed vs missing native modules for B4. Do not add packages here. */
+export type SavePhotosResult = "saved" | "denied";
+
+export function savePhotosCopy(result: SavePhotosResult): string {
+  return result === "saved" ? SHARE_SAVED : SHARE_SAVE_DENIED;
+}
+
+/** Installed native modules for B4. */
 export function shareNativeModules(deps: Record<string, string>): {
   viewShot: boolean;
   expoSharing: boolean;

@@ -10,7 +10,7 @@ import SegmentedControl from "@/components/ds/SegmentedControl";
 import Sheet from "@/components/ds/Sheet";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import { BadgeSticker, ConsistencySticker, DaySticker } from "@/components/share/ShareSticker";
-import { sharePlainMessage, shareProgressImage, shareToInstagramStory } from "@/lib/share";
+import { saveStickerToPhotos, sharePlainMessage, shareProgressImage, shareToInstagramStory } from "@/lib/share";
 import {
   SHARE_BG_CLEAR,
   SHARE_BG_ITEMS,
@@ -30,6 +30,7 @@ import {
   defaultStickerBackground,
   facebookAppId,
   photoBackgroundAllowed,
+  savePhotosCopy,
   segmentFromBackground,
   showStoryAction,
   type ProofKind,
@@ -125,10 +126,12 @@ export default function ShareStickerSheet({
   const photo = variant === "text" ? "absent" : photoBackgroundAllowed({ hasPhoto, photoShared });
   const [bg, setBg] = useState<StickerBackground>(() => defaultStickerBackground(photo));
   const [busy, setBusy] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visible) return;
     setBg(defaultStickerBackground(photo));
+    setSaveStatus(null);
   }, [visible, photo]);
 
   const liveBg: StickerBackground = bg === "photo" && photo !== "ok" ? "card" : bg;
@@ -165,6 +168,11 @@ export default function ShareStickerSheet({
         }
         if (kind === "copy") {
           await sharePlainMessage(copyLine, SHARE_COPY);
+          return;
+        }
+        if (kind === "save") {
+          const result = await saveStickerToPhotos(uri);
+          setSaveStatus(savePhotosCopy(result));
           return;
         }
         await shareProgressImage(uri, copyLine);
@@ -260,6 +268,7 @@ export default function ShareStickerSheet({
             }}
           />
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
+          {saveStatus ? <Text style={styles.caption}>{saveStatus}</Text> : null}
           <View style={styles.actions}>
             {showStory ? (
               <Button

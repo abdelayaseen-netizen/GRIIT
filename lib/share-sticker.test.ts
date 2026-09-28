@@ -20,6 +20,7 @@ import {
   instagramStoriesShareInput,
   photoBackgroundAllowed,
   proofLabel,
+  savePhotosCopy,
   shareNativeModules,
   showStoryAction,
   stickerBackgrounds,
@@ -104,7 +105,7 @@ describe("Meta App ID comes from config only", () => {
 });
 
 describe("native share modules vs package.json", () => {
-  it("uses view-shot, expo-sharing, and react-native-share; media-library is still absent", () => {
+  it("uses view-shot, expo-sharing, react-native-share, and expo-media-library", () => {
     const pkg = JSON.parse(
       readFileSync(resolve(__dirname, "../package.json"), "utf8"),
     ) as { dependencies: Record<string, string> };
@@ -112,10 +113,13 @@ describe("native share modules vs package.json", () => {
     expect(mods.viewShot).toBe(true);
     expect(mods.expoSharing).toBe(true);
     expect(mods.reactNativeShare).toBe(true);
-    expect(mods.mediaLibrary).toBe(false);
+    expect(mods.mediaLibrary).toBe(true);
     const ios = readFileSync(resolve(__dirname, "../app.json"), "utf8");
     expect(ios).toContain("react-native-share");
     expect(ios).toContain("instagram-stories");
+    expect(ios).toContain("expo-media-library");
+    expect(ios).toContain("NSPhotoLibraryAddUsageDescription");
+    expect(ios).toContain("Save your GRIIT stickers to Photos.");
   });
 });
 
@@ -155,6 +159,25 @@ describe("empty id → no Story action rendered", () => {
     expect(sheet).toContain("SHARE_STORY");
     expect(sheet).toContain("SHARE_COPY");
     expect(sheet).toContain("SHARE_SAVE");
+    expect(sheet).toContain("SHARE_MORE");
+  });
+});
+
+describe("Save writes the PNG to Photos", () => {
+  it("uses add-only permission and keeps More on the system sheet", () => {
+    expect(savePhotosCopy("saved")).toBe("Saved to Photos.");
+    expect(savePhotosCopy("denied")).toBe("Allow Photos access in Settings to save.");
+    const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      "utf8",
+    );
+    expect(share).toContain("requestPermissionsAsync(true)");
+    expect(share).toContain("saveToLibraryAsync");
+    expect(share).toContain("saveStickerToPhotos");
+    expect(sheet).toContain("saveStickerToPhotos");
+    expect(sheet).toContain('kind === "save"');
+    expect(sheet).toContain("shareProgressImage");
     expect(sheet).toContain("SHARE_MORE");
   });
 });

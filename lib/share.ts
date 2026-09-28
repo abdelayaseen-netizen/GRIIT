@@ -1,5 +1,6 @@
 import { Share, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import RNShare, { Social } from "react-native-share";
 import {
@@ -8,7 +9,7 @@ import {
   profileDeepLink,
 } from "@/lib/deep-links";
 import { DEEP_LINK_BASE_URL, facebookAppId } from "@/lib/config";
-import { instagramStoriesShareInput } from "@/lib/share-sticker";
+import { instagramStoriesShareInput, type SavePhotosResult } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import { groupInviteShareMessage } from "@/lib/group-ui";
 
@@ -115,6 +116,26 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
     }
   } catch {
     await shareOrCopy(message, "GRIIT");
+  }
+}
+
+/**
+ * Save the captured PNG to Photos. Add-only permission.
+ * Denied does not throw — the sheet shows the Settings copy.
+ */
+export async function saveStickerToPhotos(imageUri: string): Promise<SavePhotosResult> {
+  if (Platform.OS === "web") {
+    return "denied";
+  }
+  try {
+    const perm = await MediaLibrary.requestPermissionsAsync(true);
+    if (perm.status !== "granted") {
+      return "denied";
+    }
+    await MediaLibrary.saveToLibraryAsync(imageUri);
+    return "saved";
+  } catch {
+    return "denied";
   }
 }
 
