@@ -33,7 +33,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,
         "NSSupportsLiveActivitiesFrequentUpdates": true,
-        "LSApplicationQueriesSchemes": ["instagram-stories", "instagram"]
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories",
+          "instagram"
+        ]
       },
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true
@@ -79,6 +82,14 @@
         "expo-camera",
         {
           "cameraPermission": "GRIIT needs camera access to take photos as proof of challenge completion."
+        }
+      ],
+      "expo-build-properties",
+      [
+        "react-native-share",
+        {
+          "ios": ["instagram", "instagram-stories"],
+          "android": ["com.instagram.android"]
         }
       ]
     ],

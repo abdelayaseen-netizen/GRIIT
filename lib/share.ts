@@ -1,13 +1,14 @@
-import { Share, Platform, Linking } from "react-native";
+import { Share, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import * as Sharing from "expo-sharing";
+import RNShare, { Social } from "react-native-share";
 import {
   challengeDeepLink,
   inviteDeepLink,
   profileDeepLink,
 } from "@/lib/deep-links";
 import { DEEP_LINK_BASE_URL, facebookAppId } from "@/lib/config";
-import { instagramStoriesUrl } from "@/lib/share-sticker";
+import { instagramStoriesShareInput } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import { groupInviteShareMessage } from "@/lib/group-ui";
 
@@ -118,8 +119,8 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
 }
 
 /**
- * Open Instagram Stories with the image as a sticker or background.
- * App ID comes from config only. Falls back to the system share sheet.
+ * Instagram Stories via pasteboard (stickerImage / backgroundImage).
+ * App ID from config only. Does not put the image in a URL.
  */
 export async function shareToInstagramStory(
   imageUri: string,
@@ -128,27 +129,26 @@ export async function shareToInstagramStory(
   if (Platform.OS === "web") {
     return;
   }
-  const url = instagramStoriesUrl({
+  const input = instagramStoriesShareInput({
     imageUri,
     asSticker: opts?.asSticker === true,
     appId: facebookAppId(),
   });
+  if (!input) return;
   try {
-    const supported = await Linking.canOpenURL("instagram-stories://share");
-    if (supported) {
-      await Linking.openURL(url);
-      try {
-        trackEvent("share_completed", { content_type: "instagram_story" });
-      } catch {
-        /* non-fatal */
-      }
-    } else {
-      const available = await Sharing.isAvailableAsync();
-      if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+    await RNShare.shareSingle({
+      social: Social.InstagramStories,
+      appId: input.appId,
+      stickerImage: input.stickerImage,
+      backgroundImage: input.backgroundImage,
+    });
+    try {
+      trackEvent("share_completed", { content_type: "instagram_story" });
+    } catch {
+      /* non-fatal */
     }
   } catch {
-    const available = await Sharing.isAvailableAsync();
-    if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+    /* Instagram missing or share cancelled — do not URL-pass the image. */
   }
 }
 

@@ -106,7 +106,7 @@ export function dayStickerCaption(args: {
 
 /**
  * Facebook / Meta App ID for Instagram Stories. Env or Expo extra only.
- * An empty string means Stories share falls back to the system sheet.
+ * An empty string means Stories is not offered.
  */
 export function facebookAppId(env: Record<string, string | undefined> = process.env as Record<
   string,
@@ -115,17 +115,23 @@ export function facebookAppId(env: Record<string, string | undefined> = process.
   return (env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? env.FACEBOOK_APP_ID ?? "").trim();
 }
 
-export function instagramStoriesUrl(args: {
+/** Pasteboard payload for react-native-share. Never a URL with the image in the query. */
+export function instagramStoriesShareInput(args: {
   imageUri: string;
-  asSticker?: boolean;
-  appId?: string;
-}): string {
-  const params = new URLSearchParams();
-  if (args.asSticker) params.set("stickerImage", args.imageUri);
-  else params.set("backgroundImage", args.imageUri);
-  const appId = (args.appId ?? "").trim();
-  if (appId) params.set("source_application", appId);
-  return `instagram-stories://share?${params.toString()}`;
+  asSticker: boolean;
+  appId: string;
+}): {
+  social: "instagramstories";
+  appId: string;
+  stickerImage?: string;
+  backgroundImage?: string;
+} | null {
+  const appId = args.appId.trim();
+  if (!appId) return null;
+  if (args.asSticker) {
+    return { social: "instagramstories", appId, stickerImage: args.imageUri };
+  }
+  return { social: "instagramstories", appId, backgroundImage: args.imageUri };
 }
 
 /** Installed vs missing native modules for B4. Do not add packages here. */

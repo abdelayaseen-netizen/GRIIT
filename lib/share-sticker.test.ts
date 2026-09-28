@@ -17,7 +17,7 @@ import {
   defaultStickerBackground,
   facebookAppId,
   fitNumeral,
-  instagramStoriesUrl,
+  instagramStoriesShareInput,
   photoBackgroundAllowed,
   proofLabel,
   shareNativeModules,
@@ -68,33 +68,49 @@ describe("Meta App ID comes from config only", () => {
   it("reads EXPO_PUBLIC_FACEBOOK_APP_ID and never ships a hardcoded id", () => {
     expect(facebookAppId({})).toBe("");
     expect(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: " 123 " })).toBe("123");
-    expect(instagramStoriesUrl({ imageUri: "file://s.png", asSticker: true, appId: "123" })).toBe(
-      "instagram-stories://share?stickerImage=file%3A%2F%2Fs.png&source_application=123",
-    );
-    expect(instagramStoriesUrl({ imageUri: "file://s.png" })).toBe(
-      "instagram-stories://share?backgroundImage=file%3A%2F%2Fs.png",
+    expect(
+      instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: true, appId: "123" }),
+    ).toEqual({
+      social: "instagramstories",
+      appId: "123",
+      stickerImage: "file://s.png",
+    });
+    expect(
+      instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: false, appId: "123" }),
+    ).toEqual({
+      social: "instagramstories",
+      appId: "123",
+      backgroundImage: "file://s.png",
+    });
+    expect(instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: true, appId: "" })).toBe(
+      null,
     );
     const cfg = readFileSync(resolve(__dirname, "./config.ts"), "utf8");
     const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
     const sticker = readFileSync(resolve(__dirname, "./share-sticker.ts"), "utf8");
     expect(cfg).toContain("EXPO_PUBLIC_FACEBOOK_APP_ID");
     expect(share).toContain("facebookAppId");
+    expect(share).toContain("shareSingle");
+    expect(share).toContain("InstagramStories");
+    expect(share).not.toContain("instagramStoriesUrl");
+    expect(sticker).not.toContain("instagramStoriesUrl");
+    expect(share).not.toContain("instagram-stories://share?");
     expect(sticker).not.toMatch(/facebookAppId\([^)]*['"][0-9]{5,}/);
-    expect(share).not.toMatch(/source_application=[0-9]{5,}/);
   });
 });
 
 describe("native share modules vs package.json", () => {
-  it("uses view-shot and expo-sharing; media-library and react-native-share are absent", () => {
+  it("uses view-shot, expo-sharing, and react-native-share; media-library is still absent", () => {
     const pkg = JSON.parse(
       readFileSync(resolve(__dirname, "../package.json"), "utf8"),
     ) as { dependencies: Record<string, string> };
     const mods = shareNativeModules(pkg.dependencies);
     expect(mods.viewShot).toBe(true);
     expect(mods.expoSharing).toBe(true);
+    expect(mods.reactNativeShare).toBe(true);
     expect(mods.mediaLibrary).toBe(false);
-    expect(mods.reactNativeShare).toBe(false);
     const ios = readFileSync(resolve(__dirname, "../app.json"), "utf8");
+    expect(ios).toContain("react-native-share");
     expect(ios).toContain("instagram-stories");
   });
 });
