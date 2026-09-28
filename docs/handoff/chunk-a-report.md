@@ -104,14 +104,14 @@ Commit: `3efc9f0ae6ae6e99d4a3f3606f2969e09f8c2495`
 
 Bucket stays **public**. Phase 3 (flip private) is report-only. Do not apply.
 
-Canonical stored value: `{userId}/{ts}-{rand}.jpg`. APIs mint signed URLs (TTL 300) via service-role `createSignedUrls`. Missing service role → null, not a public URL. Sign only if first folder === viewerId **or** a shared activity row the author owns references the path.
+Canonical stored value: `{userId}/{ts}-{rand}.jpg`. APIs mint signed URLs (TTL 3600) via service-role `createSignedUrls`. Missing service role → null, not a public URL. Sign only if first folder === viewerId **or** a shared activity row the author owns references the path.
 
 ### Phase 1 — resolver + read sites
 
 `backend/lib/proof-image.ts`
 
 - `toProofPath` / `pathOwnerId` / `canSignProofPath` / `sharedPathsFromEvents`
-- `signProofPaths` — one batch, TTL `PROOF_SIGN_TTL_SEC` = 300
+- `signProofPaths` — one batch, TTL `PROOF_SIGN_TTL_SEC` = 3600
 - `signProofPair`
 
 Wired:

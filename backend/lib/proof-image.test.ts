@@ -67,7 +67,7 @@ describe("canSignProofPath", () => {
 });
 
 describe("signProofPaths", () => {
-  it("batches one createSignedUrls call at TTL 300 and nulls unshared others", async () => {
+  it("batches one createSignedUrls call at TTL 3600 and nulls unshared others", async () => {
     const signed = new Map<string, string | null>([
       [PATH, `https://x.supabase.co/storage/v1/object/sign/task-proofs/${PATH}?token=t`],
     ]);

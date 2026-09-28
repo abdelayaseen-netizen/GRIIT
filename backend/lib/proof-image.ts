@@ -1,6 +1,6 @@
 /**
  * Phase 1 signed-URL resolver for task-proofs.
- * Service-role mint only. TTL 300s. One createSignedUrls batch per call.
+ * Service-role mint only. TTL 3600s. One createSignedUrls batch per call.
  * A path is signed only if the viewer owns the first folder or a shared
  * activity row references it. Anything else is null.
  */
@@ -8,7 +8,7 @@ import { logger } from "./logger";
 import { getSupabaseServer } from "./supabase-server";
 
 export const PROOF_BUCKET = "task-proofs";
-export const PROOF_SIGN_TTL_SEC = 300;
+export const PROOF_SIGN_TTL_SEC = 3600;
 
 const UUID_FOLDER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
