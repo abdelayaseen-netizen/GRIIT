@@ -254,7 +254,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         <Text style={styles.mode}>
           {p.isHardMode
             ? "No freezes. Miss a day, restart from day 1."
-            : "Freezes on. Use one to cover a missed day."}
+            : "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it."}
         </Text>
         <View style={invited ? styles.footerClearInvited : styles.footerClear} />
       </ScrollView>

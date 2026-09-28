@@ -5,7 +5,7 @@ import { GOAL_LABELS } from "@/lib/goal-challenge-map";
 import type { OnboardingGoal } from "@/store/onboardingStore";
 
 export const HARD_MODE_LINE = "Hard mode. Gates are enforced; a failed gate fails the day.";
-export const STANDARD_MODE_LINE = "Standard mode. Gates are recorded, not enforced.";
+export const STANDARD_MODE_LINE = "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it.";
 
 export type SuggestionTask = {
   title?: string | null;

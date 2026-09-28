@@ -989,7 +989,7 @@ lines. Measured clearance above the footer: default 40, free_limit 21, ended 310
 | Location | 12/16 textPrimary |
 | Self-reported | 12/16 textSecondary |
 | Hard mode. Gates are enforced; a failed gate fails the day. | caption textSecondary |
-| Standard mode. Gates are recorded, not enforced. | caption textSecondary |
+| Standard. A missed day resets your streak. The next day you can spend a freeze to cover it. | caption textSecondary |
 | Join | bodyStrong on primary |
 | Day 1 is today. | caption textSecondary |
 | Join opens the invite step. You need a partner before Day 1. | caption textSecondary |
