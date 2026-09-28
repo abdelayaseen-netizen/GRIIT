@@ -3,14 +3,9 @@
  * Join `day_secures` → `check_ins` on (user_id, date_key).
  * Prefer photo_url, then proof_url, then completion_image_url.
  * Production check_ins has no proof_photo_url.
- * Accepts https, http, file (local camera on Secured), and a
- * `task-proofs` storage path (`{userId}/{ts}-{rand}.jpg`) from older writes.
+ * Accepts https, http, and file (local camera on Secured).
+ * Storage paths are not rewritten to public URLs — use a signed API URL.
  */
-
-export const PROOF_STORAGE_BUCKET = "task-proofs";
-
-const STORAGE_OBJECT_PATH =
-  /^(?:task-proofs\/)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[^/?#]+\.(?:jpe?g|png|webp))$/i;
 
 export type CheckInProofRow = {
   date_key: string;
@@ -21,45 +16,24 @@ export type CheckInProofRow = {
   proof_photo_url?: string | null;
 };
 
-export function proofSupabaseOrigin(override?: string): string {
-  return (override ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "");
-}
-
-/** `{userId}/{file}.jpg` or `task-proofs/{userId}/{file}.jpg` → public object URL. */
-export function publicUrlForProofStoragePath(
-  raw: string | null | undefined,
-  supabaseUrl?: string,
-): string | null {
-  const s = raw?.trim();
-  if (!s) return null;
-  const match = STORAGE_OBJECT_PATH.exec(s.replace(/^\/+/, ""));
-  if (!match) return null;
-  const origin = proofSupabaseOrigin(supabaseUrl);
-  if (!origin) return null;
-  return `${origin}/storage/v1/object/public/${PROOF_STORAGE_BUCKET}/${match[1]}`;
-}
-
 /** Keep the URL the API gave us. Do not rewrite signed → public. */
-export function publicUrlForProofHttp(raw: string, supabaseUrl?: string): string | null {
+export function publicUrlForProofHttp(raw: string): string | null {
   const s = raw.trim();
   if (!/^https?:\/\//i.test(s)) return null;
   try {
     new URL(s);
     return s;
   } catch {
-    return publicUrlForProofStoragePath(s, supabaseUrl);
+    return null;
   }
 }
 
-export function resolveProofImageUrl(
-  raw: string | null | undefined,
-  supabaseUrl?: string,
-): string | null {
+export function resolveProofImageUrl(raw: string | null | undefined): string | null {
   const s = raw?.trim();
   if (!s) return null;
   if (/^file:\/\//i.test(s)) return s;
-  if (/^https?:\/\//i.test(s)) return publicUrlForProofHttp(s, supabaseUrl);
-  return publicUrlForProofStoragePath(s, supabaseUrl);
+  if (/^https?:\/\//i.test(s)) return publicUrlForProofHttp(s);
+  return null;
 }
 
 export function isProofImageUrl(raw: string | null | undefined): boolean {
@@ -67,17 +41,14 @@ export function isProofImageUrl(raw: string | null | undefined): boolean {
 }
 
 /** One helper for feed, Secured, and Profile Proofs. */
-export function proofImageUrlForCheckIn(
-  row: {
-    photo_url?: string | null;
-    proof_url?: string | null;
-    completion_image_url?: string | null;
-    proof_photo_url?: string | null;
-  },
-  supabaseUrl?: string,
-): string | null {
+export function proofImageUrlForCheckIn(row: {
+  photo_url?: string | null;
+  proof_url?: string | null;
+  completion_image_url?: string | null;
+  proof_photo_url?: string | null;
+}): string | null {
   for (const raw of [row.photo_url, row.proof_url, row.completion_image_url]) {
-    const url = resolveProofImageUrl(raw, supabaseUrl);
+    const url = resolveProofImageUrl(raw);
     if (url) return url;
   }
   return null;

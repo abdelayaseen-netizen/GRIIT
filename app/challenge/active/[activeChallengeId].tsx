@@ -147,16 +147,12 @@ export default function ActiveChallengeDetailScreen() {
   });
 
   const { data: checkins = [] } = useQuery({
-    queryKey: ["check_ins", "today", id, profileTz ?? "UTC"],
+    queryKey: ["checkins", "getTodayCheckins", id],
     queryFn: async () => {
-      const dateKey = getTodayDateKey(profileTz);
-      const { data, error: err } = await supabase
-        .from("check_ins")
-        .select("task_id, status, photo_url, proof_url, completion_image_url")
-        .eq("active_challenge_id", id!)
-        .eq("date_key", dateKey);
-      if (err) throw err;
-      return (data ?? []) as CheckinRow[];
+      const rows = await trpcQuery(TRPC.checkins.getTodayCheckins, {
+        activeChallengeId: id!,
+      });
+      return (Array.isArray(rows) ? rows : []) as CheckinRow[];
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000,

@@ -186,22 +186,21 @@ Keep `"Users can upload own proofs"` INSERT (`20250330000000_task_verification_o
 
 APIs that already sign keep working: feed, getPost, listMine, getRecord covers/proofs, complete return, getTodayCheckins, getTodayCheckinsForUser (`proof_url` / `completion_image_url`).
 
-These still read a stored value (path or leftover public URL) and/or rebuild `/object/public/task-proofs/…`:
+Build 65 (TestFlight) still reads raw `check_ins` on Active and still uses `publicUrlForProofStoragePath` if that helper is in the binary. This branch's A4 client no longer does.
 
-| Surface | Why it 403s / fails to load |
-|---|---|
-| Active today stamps | `app/challenge/active/[activeChallengeId].tsx:153-155` selects `check_ins` with the user JWT. `:90-92` passes the raw stored value into `proof_photo_url`. A path is not an Image URI. A leftover public URL dies when the bucket is private. |
-| Moment / just-captured fallback | `components/task-v2/MomentScreenV3.tsx:243` → `proofImageUrlForCheckIn` → `publicUrlForProofStoragePath` (`lib/profile-v2-proof-photo.ts:29-39`) builds `/object/public/task-proofs/…`. `file://` still works. |
-| Any leftover public URL in DB | Same public path. Migration must land before the flip or those rows stay broken even on signed APIs until `toProofPath` can parse them (it can — signed APIs still work on old public URLs). The client-direct reads do not. |
-| `getTodayCheckinsForUser` `photo_url` | Not signed (`checkins.ts:1307` does not select it; `:1322` signs only `proof_url` / `completion_image_url`). Home today stamps use `hasCameraProof` (boolean), not the image bytes — stamps survive. A later consumer of `photo_url` from this payload would not. |
+`getTodayCheckinsForUser` does not select `photo_url` (`checkins.ts:1307`); it signs `proof_url` / `completion_image_url` only. Home stamps are boolean-only.
 
-Build 66 needs Active (and any other client `check_ins` photo read) to go through a signed API, and `publicUrlForProofStoragePath` must stop minting public URLs.
+### A4 — Active + Moment use signed API URLs (this branch)
+
+- Active today rows come from `checkins.getTodayCheckins` (`app/challenge/active/[activeChallengeId].tsx:149`). No client `check_ins` photo select.
+- Moment renders `proofUri` as-is (`MomentScreenV3.tsx:242`) — local `file://` or the signed URL the API already returned.
+- `publicUrlForProofStoragePath` has no callers and is deleted (`lib/profile-v2-proof-photo.ts`). Grep: only the test that asserts it is gone.
 
 ---
 
-## STOP A3
+## STOP A3 / A4
 
-Chunk B / UI / EAS / Railway / RevenueCat / onboarding / v37–v41 screens are not started. Bucket is still public. Migration is not applied. Waiting.
+Chunk B / EAS / Railway / RevenueCat / onboarding / v37–v41 screens are not started. Bucket is still public. Path-rewrite migration waits for build 66, then flip. Waiting.
 
 ---
 
@@ -222,16 +221,18 @@ Preview only, one statement per block, from `docs/sql-drafts/20260928010000_task
 1. `5040701` `fix(checkins): honour shareChoicePending for every task type`
 2. `3efc9f0` `feat(record): return v41 day states from first start_at to today`
 3. `7431423` `feat(proofs): return signed task-proofs URLs from the API`
-4. `1ff5395` `feat(proofs): store task-proofs paths instead of public URLs`
-5. `c1660a0` `chore(sql): add unapplied task-proofs path rewrite` (SQL only)
+4. `02c2b92` `fix(proofs): drop unowned and file:// proof writes`
+5. `36826d0` `fix(proofs): look up shared proofs by path, not the first 800 rows`
+6. `72948b1` `fix(proofs): store the client proof value as-sent`
+7. `087c5f9` `fix(proofs): mint signed URLs for 3600 seconds`
 
 ## Branch head
 
-`feat/chunk-a-backend`. A3 writes `1ff5395e0211d60a90e47dad92ab7e8f6ec8471f`. Migration `c1660a03be97e6e697918a33c11d518c3a335dd6`. This report is the next commit.
+`feat/chunk-a-backend`. A4 client commit follows.
 
 ## Test count
 
 - tsc 0
-- **1149** tests, 207 files (was 1147 / 207 after A3 phase 1; 1128 / 205 on main `fafdb0c`)
+- **1152** tests, 207 files (was 1149 / 207 at first A3 STOP; 1128 / 205 on main `fafdb0c`)
 - eslint 0 on the files this chunk changed
 - repo-wide `npm run lint` is already dirty on main (7 expo warnings). Not introduced here.

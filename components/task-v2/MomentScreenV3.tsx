@@ -28,7 +28,6 @@ import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
-import { proofImageUrlForCheckIn } from "@/lib/profile-v2-proof-photo";
 import Stamp from "@/components/ds/Stamp";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import ShareCardV3 from "@/components/share/ShareCardV3";
@@ -240,7 +239,7 @@ export default function MomentScreenV3({
           {camera && hasPhoto ? (
             <View style={styles.photoFrame}>
               <ProofImage
-                uri={proofImageUrlForCheckIn({ photo_url: proofUri })}
+                uri={proofUri}
                 source={proofSource}
                 size="feed"
                 stamp={stampOn ? "Verified" : false}
