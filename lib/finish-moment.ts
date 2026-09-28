@@ -2,8 +2,11 @@
  * Frame 114 finish-moment state. Pure — no I/O.
  * save follows the completion mutation. shared flips only after save succeeds.
  */
+import type { GateTime, TaskGate } from "@/backend/lib/task-model";
+import { dateKeyFromIso } from "@/lib/home-day-total";
 import { taskWord } from "@/lib/format-days";
 import { finishSubmitOutcome } from "@/lib/task-flow-state";
+import { gateLine } from "@/lib/task-ui";
 
 export type SaveState = "saving" | "slow" | "saved" | "failed";
 export type ShareIntent = "none" | "feed_held";
@@ -32,6 +35,35 @@ export const FINISH_FAILED_BODY =
   "Nothing was saved and nothing was shared. The photo stays on this screen until it saves.";
 
 export type AlsoTodayRow = { id: string; title: string; gate_line: string };
+
+/** Same skip as Home: enrollments that start after today are not on Today. */
+export function enrollmentDueToday(args: {
+  startAt?: string | null;
+  timeZone: string;
+  todayKey: string;
+}): boolean {
+  if (!args.startAt) return true;
+  return dateKeyFromIso(String(args.startAt), args.timeZone) <= args.todayKey;
+}
+
+export function alsoTodayFromTasks(
+  tasks: readonly {
+    id?: string | null;
+    name: string;
+    done?: boolean;
+    gates?: readonly TaskGate[] | null;
+    gateTime?: GateTime | null;
+  }[],
+  excludeTaskId: string,
+): AlsoTodayRow[] {
+  return tasks
+    .filter((t) => Boolean(t.id) && t.id !== excludeTaskId && t.done !== true)
+    .map((t) => ({
+      id: String(t.id),
+      title: t.name,
+      gate_line: gateLine(t.gates, t.gateTime),
+    }));
+}
 
 export function finishAlsoTodayLabel(n: number): string {
   const count = Math.max(0, Math.floor(n));

@@ -6,6 +6,8 @@ import {
   FINISH_FAILED_BODY,
   FINISH_SLOW_MS,
   FINISH_STATUS,
+  alsoTodayFromTasks,
+  enrollmentDueToday,
   finishAfterMutation,
   finishAlsoTodayLabel,
   finishLetter,
@@ -77,5 +79,43 @@ describe("branch reads secured_today not a client count", () => {
     expect(src).toContain("securedToday");
     expect(src).not.toContain("requiredRemaining");
     expect(src).toContain("finishSubmitOutcome");
+  });
+});
+
+describe("also today skips pre-start enrollments like Home", () => {
+  it("drops startDateKey after today and undone others become rows", () => {
+    expect(
+      enrollmentDueToday({ startAt: "2026-09-28T12:00:00.000Z", timeZone: "UTC", todayKey: "2026-09-27" }),
+    ).toBe(false);
+    expect(
+      enrollmentDueToday({ startAt: "2026-09-27T12:00:00.000Z", timeZone: "UTC", todayKey: "2026-09-27" }),
+    ).toBe(true);
+    expect(
+      alsoTodayFromTasks(
+        [
+          { id: "done", name: "Done", done: true },
+          { id: "current", name: "Current", done: true },
+          { id: "next", name: "Run", done: false, gates: ["camera"] },
+        ],
+        "current",
+      ),
+    ).toEqual([{ id: "next", title: "Run", gate_line: "Camera" }]);
+  });
+});
+
+describe("source: takeover symbols gone", () => {
+  it("has no VERIFYING_TAKEOVER_MS, VerifyingStep, or verifying step", () => {
+    const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
+    const screen = readFileSync(resolve(__dirname, "../components/task-v2/TaskFlowV2.tsx"), "utf8");
+    const state = readFileSync(resolve(__dirname, "./task-flow-state.ts"), "utf8");
+    expect(flow).not.toContain("VERIFYING_TAKEOVER_MS");
+    expect(flow).not.toContain("VerifyingStep");
+    expect(flow).not.toContain('setStep("verifying")');
+    expect(screen).not.toContain("VerifyingStep");
+    expect(screen).not.toContain('step === "verifying"');
+    expect(state).not.toContain('| "verifying"');
+    expect(flow).toContain('setStep("finish")');
+    expect(flow).toContain("shareChoicePending: true");
+    expect(flow).not.toContain("hasCameraProof ? { shareChoicePending");
   });
 });

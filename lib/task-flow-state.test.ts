@@ -167,11 +167,11 @@ describe("verificationKindFor", () => {
 });
 
 describe("chromeFlags", () => {
-  it("dark on capture/review; hide chrome on confirmation/challenge_done/verifying/capture", () => {
+  it("dark on capture/review; hide chrome on confirmation/challenge_done/finish/capture", () => {
     expect(chromeFlags("write")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("capture")).toEqual({ dark: true, hideChrome: true });
     expect(chromeFlags("review")).toEqual({ dark: true, hideChrome: false });
-    expect(chromeFlags("verifying")).toEqual({ dark: false, hideChrome: true });
+    expect(chromeFlags("finish")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("confirmation")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("challenge_done")).toEqual({ dark: false, hideChrome: true });
     expect(chromeFlags("day_open")).toEqual({ dark: false, hideChrome: true });
