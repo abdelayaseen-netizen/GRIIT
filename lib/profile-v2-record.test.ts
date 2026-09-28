@@ -10,7 +10,7 @@ import {
   cellWidth,
   isAbandonedEnrollment,
   runStates,
-  fractionDateKeysForRange,
+  rangeSecuredElapsed,
   unionDueDateKeys,
   verdictFor,
   weeklyAverage,
@@ -377,31 +377,33 @@ describe("Profile → Challenges list", () => {
   });
 });
 
-describe("fractionDateKeysForRange", () => {
-  it("is the closed due set that the challenge fraction uses", () => {
+describe("rangeSecuredElapsed", () => {
+  it("is the closed due window Home uses", () => {
     expect(
-      fractionDateKeysForRange(
+      rangeSecuredElapsed(
         {
           status: "active",
           startDateKey: "2026-09-16",
           endDateKey: "2026-10-16",
         },
+        [],
         "2026-09-19",
       ),
-    ).toEqual(["2026-09-16", "2026-09-17", "2026-09-18"]);
+    ).toMatchObject({ secured: 0, elapsed: 3, elapsedKeys: ["2026-09-16", "2026-09-17", "2026-09-18"] });
   });
 
   it("completed 1-day secured → \"1 of 1\"", () => {
     expect(
-      fractionDateKeysForRange(
+      rangeSecuredElapsed(
         {
           status: "completed",
           startDateKey: "2026-09-23",
           endDateKey: "2026-09-23",
         },
+        ["2026-09-23"],
         "2026-09-25",
       ),
-    ).toEqual(["2026-09-23"]);
+    ).toMatchObject({ secured: 1, elapsed: 1, elapsedKeys: ["2026-09-23"] });
     const rec = buildProfileRecord({
       todayKey: "2026-09-25",
       currentStreak: 0,

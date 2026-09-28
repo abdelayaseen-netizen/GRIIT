@@ -96,7 +96,7 @@ describe("detailTaskRequired", () => {
     expect(home).toContain("(cfg?.required ?? true) === true");
     const record = readFileSync(resolve(__dirname, "../backend/trpc/routes/profiles-record.ts"), "utf8");
     expect(record).toContain("isTaskRequired");
-    expect(record).toContain("buildRecordDays");
+    expect(record).toContain("buildProofsDays");
   });
 });
 
