@@ -28,8 +28,10 @@ import {
   backgroundFromSegment,
   dayStickerCaption,
   defaultStickerBackground,
+  facebookAppId,
   photoBackgroundAllowed,
   segmentFromBackground,
+  showStoryAction,
   type ProofKind,
   type StickerBackground,
   type StickerVariant,
@@ -130,6 +132,7 @@ export default function ShareStickerSheet({
   }, [visible, photo]);
 
   const liveBg: StickerBackground = bg === "photo" && photo !== "ok" ? "card" : bg;
+  const showStory = showStoryAction(facebookAppId());
   const items = photo === "absent" ? [SHARE_BG_CLEAR, "Card"] : [...SHARE_BG_ITEMS];
   const caption =
     liveBg === "clear"
@@ -258,12 +261,14 @@ export default function ShareStickerSheet({
           />
           {caption ? <Text style={styles.caption}>{caption}</Text> : null}
           <View style={styles.actions}>
-            <Button
-              label={SHARE_STORY}
-              submitting={busy}
-              disabled={empty || (bg === "photo" && photo !== "ok")}
-              onPress={() => void run("story")}
-            />
+            {showStory ? (
+              <Button
+                label={SHARE_STORY}
+                submitting={busy}
+                disabled={empty || (bg === "photo" && photo !== "ok")}
+                onPress={() => void run("story")}
+              />
+            ) : null}
             <View style={styles.row}>
               <Pressable
                 style={styles.hit}

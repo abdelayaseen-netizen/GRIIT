@@ -134,6 +134,11 @@ export function instagramStoriesShareInput(args: {
   return { social: "instagramstories", appId, backgroundImage: args.imageUri };
 }
 
+/** Empty Meta App ID: do not offer Instagram Story. Copy / Save / More still work. */
+export function showStoryAction(appId: string): boolean {
+  return appId.trim().length > 0;
+}
+
 /** Installed vs missing native modules for B4. Do not add packages here. */
 export function shareNativeModules(deps: Record<string, string>): {
   viewShot: boolean;

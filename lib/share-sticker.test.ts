@@ -21,6 +21,7 @@ import {
   photoBackgroundAllowed,
   proofLabel,
   shareNativeModules,
+  showStoryAction,
   stickerBackgrounds,
 } from "@/lib/share-sticker";
 
@@ -85,6 +86,9 @@ describe("Meta App ID comes from config only", () => {
     expect(instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: true, appId: "" })).toBe(
       null,
     );
+    expect(showStoryAction("")).toBe(false);
+    expect(showStoryAction("   ")).toBe(false);
+    expect(showStoryAction("123")).toBe(true);
     const cfg = readFileSync(resolve(__dirname, "./config.ts"), "utf8");
     const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
     const sticker = readFileSync(resolve(__dirname, "./share-sticker.ts"), "utf8");
@@ -136,5 +140,21 @@ describe("ShareCardV3 is gone and Story uses the text card or ShareSticker", () 
     expect(daySheet).not.toContain("ShareCardV3");
     expect(moment).not.toContain("ShareCardV3");
     expect(finish).not.toContain("ShareCardV3");
+  });
+});
+
+describe("empty id → no Story action rendered", () => {
+  it("hides Instagram Story when the Meta App ID is empty", () => {
+    expect(showStoryAction("")).toBe(false);
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      "utf8",
+    );
+    expect(sheet).toContain("showStoryAction(facebookAppId())");
+    expect(sheet).toContain("{showStory ? (");
+    expect(sheet).toContain("SHARE_STORY");
+    expect(sheet).toContain("SHARE_COPY");
+    expect(sheet).toContain("SHARE_SAVE");
+    expect(sheet).toContain("SHARE_MORE");
   });
 });
