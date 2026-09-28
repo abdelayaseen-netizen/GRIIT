@@ -9,10 +9,13 @@ import {
 } from "../../lib/leave-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../lib/logger";
+import { FREE_ACTIVE_CHALLENGES_LIMIT } from "../../../lib/free-challenge-limit";
 import {
-  FREE_ACTIVE_CHALLENGES_LIMIT,
-  FREE_ACTIVE_LIMIT_MESSAGE,
-} from "../../../lib/free-challenge-limit";
+  ALREADY_IN_CHALLENGE_MESSAGE,
+  JOIN_FAILED_FALLBACK,
+  JOIN_FREE_LIMIT_MESSAGE,
+  joinFailureFromInsert,
+} from "../../lib/join-errors";
 import { ensureProfile } from "../../lib/ensure-profile";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import {
@@ -55,7 +58,7 @@ export const challengesJoinProcedures = {
         if ((activeCount ?? 0) >= FREE_ACTIVE_CHALLENGES_LIMIT) {
           throw new TRPCError({
             code: "FORBIDDEN",
-            message: FREE_ACTIVE_LIMIT_MESSAGE,
+            message: JOIN_FREE_LIMIT_MESSAGE,
           });
         }
       }
@@ -70,7 +73,7 @@ export const challengesJoinProcedures = {
         .maybeSingle();
 
       if (existingActive) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+        throw new TRPCError({ code: "BAD_REQUEST", message: ALREADY_IN_CHALLENGE_MESSAGE });
       }
 
       const reader = getSupabaseServer() ?? ctx.supabase;
@@ -120,7 +123,7 @@ export const challengesJoinProcedures = {
           .maybeSingle();
 
         if (existingMember) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+          throw new TRPCError({ code: "BAD_REQUEST", message: ALREADY_IN_CHALLENGE_MESSAGE });
         }
 
         const { error: insertErr } = await ctx.supabase.from("challenge_members").insert({
@@ -132,9 +135,11 @@ export const challengesJoinProcedures = {
 
         if (insertErr) {
           if ((insertErr as { code?: string }).code === "23505") {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "You have already joined this challenge." });
+            throw new TRPCError({ code: "BAD_REQUEST", message: ALREADY_IN_CHALLENGE_MESSAGE });
           }
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
+          const mapped = joinFailureFromInsert(insertErr);
+          logger.error({ err: mapped.log, challengeId: input.challengeId }, "[JOIN-BACKEND] challenge_members insert");
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: mapped.message });
         }
 
         const { count: memberCount } = await ctx.supabase
@@ -169,7 +174,9 @@ export const challengesJoinProcedures = {
             status: "active",
           });
           if (insertErr && (insertErr as { code?: string }).code !== "23505") {
-            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to join challenge." });
+            const mapped = joinFailureFromInsert(insertErr);
+            logger.error({ err: mapped.log, challengeId: input.challengeId }, "[JOIN-BACKEND] challenge_members insert");
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: mapped.message });
           }
         }
         // Fall through to joinChallengeDirect below
@@ -197,7 +204,7 @@ export const challengesJoinProcedures = {
       } catch (e) {
         if (e instanceof TRPCError) throw e;
         logger.error({ err: e, userId: ctx.userId }, "[JOIN-BACKEND] Join unexpected error");
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred" });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: JOIN_FAILED_FALLBACK });
       }
     }),
 

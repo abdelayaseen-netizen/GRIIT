@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { assertActiveChallengeOwnership } from "../guards";
 import { requireNoError } from "../errors";
+import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import {
   getTodayDateKey,
   getYesterdayDateKey,
@@ -141,6 +142,7 @@ export const checkinsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const completeStartedAt = Date.now();
       const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
       const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
 
@@ -967,6 +969,10 @@ export const checkinsRouter = createTRPCRouter({
         events: (dayEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
       });
 
+      logger.info(
+        { ms: Date.now() - completeStartedAt, userId: ctx.userId, taskId: input.taskId },
+        "[checkins.complete] timing",
+      );
       return {
         ...(data ?? {}),
         isMinimumDay,
@@ -1234,12 +1240,12 @@ export const checkinsRouter = createTRPCRouter({
   getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
     const dateKey = getTodayDateKey(tz);
-    const { data: acList, error: acErr } = await ctx.supabase
-      .from("active_challenges")
-      .select("id, challenge_id")
-      .eq("user_id", ctx.userId)
-      .eq("status", "active")
-      .limit(50);
+    const { data: acList, error: acErr } = await applyEnrollmentWindow(
+      ctx.supabase
+        .from("active_challenges")
+        .select("id, challenge_id")
+        .eq("user_id", ctx.userId),
+    ).limit(50);
     requireNoError(acErr, "Failed to load active challenges.");
     const acRows = Array.isArray(acList) ? acList : [];
     const acIds = acRows.map((r: { id: string }) => r.id);
@@ -1319,7 +1325,12 @@ export const checkinsRouter = createTRPCRouter({
       .maybeSingle();
     const alreadySecured = Boolean(existingSecureRow);
 
+    const secureStartedAt = Date.now();
     const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", { p_active_challenge_id: input.activeChallengeId });
+    logger.info(
+      { ms: Date.now() - secureStartedAt, userId: ctx.userId, code: rpcError?.code ?? null },
+      "[secure_day] rpc timing",
+    );
     if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
       const row = parseSecureDayRpcRow(rpcRows[0]);
       const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();

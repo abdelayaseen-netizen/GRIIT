@@ -231,11 +231,18 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                   <View style={styles.taskCopy}>
                     <Text style={styles.taskTitle}>{t.title}</Text>
                     <View style={styles.gateRow}>
+                      {t.required === false ? (
+                        <View style={[styles.gate, styles.gateMuted]}>
+                          <Text style={styles.gateTextMuted}>Optional</Text>
+                        </View>
+                      ) : null}
                       {shown.length
                         ? shown.map((g) => (
                             <GateLabel key={g} gate={g} window={t.time_window} />
                           ))
-                        : <GateLabel muted />}
+                        : t.required === false
+                          ? null
+                          : <GateLabel muted />}
                     </View>
                   </View>
                 </View>
@@ -247,7 +254,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         <Text style={styles.mode}>
           {p.isHardMode
             ? "No freezes. Miss a day, restart from day 1."
-            : "Freezes on. Use one to cover a missed day."}
+            : "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it."}
         </Text>
         <View style={invited ? styles.footerClearInvited : styles.footerClear} />
       </ScrollView>

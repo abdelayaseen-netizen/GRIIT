@@ -3,8 +3,9 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { requireNoError } from "../errors";
 import { STARTER_DEFINITIONS } from "../../lib/starter-seed";
-import { getTodayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { enrollmentEndAt } from "../../lib/enrollment-end-at";
+import { anyTimeWindowClosedToday, enrollmentStartAt, type TaskWindowRow } from "../../lib/join-challenge";
 
 const STARTER_IDS = STARTER_DEFINITIONS.map((s) => s.starter_id);
 
@@ -13,7 +14,7 @@ interface ChallengeRowForStarter {
   id: string;
   duration_type?: string | null;
   duration_days?: number | null;
-  challenge_tasks?: { id: string }[] | null;
+  challenge_tasks?: (TaskWindowRow & { id: string })[] | null;
 }
 
 export const startersRouter = createTRPCRouter({
@@ -48,7 +49,7 @@ export const startersRouter = createTRPCRouter({
       const { data: challenge, error: challengeError } = await ctx.supabase
         .from("challenges")
         .select(
-          "id, title, duration_days, duration_type, challenge_tasks (id, title, task_type, order_index, config, required)"
+          "id, title, duration_days, duration_type, challenge_tasks (id, title, task_type, order_index, config, required, gate_time_mode, gate_time_start, gate_time_end)"
         )
         .eq("source_starter_id", input.starterId)
         .single();
@@ -77,7 +78,9 @@ export const startersRouter = createTRPCRouter({
       }
 
       const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-      const startAt = new Date();
+      const now = new Date();
+      const defer = anyTimeWindowClosedToday(tasks, now, tz);
+      const startAt = enrollmentStartAt(now, tz, defer);
       const endAt = enrollmentEndAt({
         startAt,
         durationDays: row.duration_days ?? 1,
@@ -108,7 +111,7 @@ export const startersRouter = createTRPCRouter({
         });
       }
 
-      const dateKey = getTodayDateKey(tz);
+      const dateKey = defer ? getTomorrowDateKey(tz) : getTodayDateKey(tz);
       const checkIns = tasks.map((t) => ({
         user_id: ctx.userId,
         active_challenge_id: activeChallenge.id,

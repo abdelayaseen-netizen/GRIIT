@@ -176,6 +176,7 @@ function createMockSupabase(opts?: { failFollows?: boolean }) {
       or: () => chain,
       gte: () => chain,
       lte: () => chain,
+      gt: () => chain,
       in: () => chain,
       order: () => chain,
       limit: () => chain,
@@ -203,6 +204,7 @@ function createCaller(opts?: { failFollows?: boolean }) {
         };
         challenges: {
           listMyActive: () => Promise<unknown>;
+          listMyQueued: () => Promise<unknown>;
           getActive: () => Promise<unknown>;
         };
         checkins: {
@@ -231,6 +233,7 @@ describe("home.bootstrap", () => {
       profile,
       stats,
       activeChallenges,
+      queuedChallenges,
       activeChallenge,
       todayCheckinsForUser,
       securedDateKeys,
@@ -240,6 +243,7 @@ describe("home.bootstrap", () => {
       caller.profiles.get(),
       caller.profiles.getStats(),
       caller.challenges.listMyActive(),
+      caller.challenges.listMyQueued(),
       caller.challenges.getActive(),
       caller.checkins.getTodayCheckinsForUser(),
       caller.profiles.getSecuredDateKeys(),
@@ -254,6 +258,7 @@ describe("home.bootstrap", () => {
       profile,
       stats,
       activeChallenges,
+      queuedChallenges,
       activeChallenge,
       todayCheckinsForUser,
       todayCheckins,

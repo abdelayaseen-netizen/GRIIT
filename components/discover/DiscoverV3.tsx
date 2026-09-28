@@ -24,6 +24,7 @@ import PersonCard from "@/components/discover/PersonCard";
 import type { DiscoverCategory } from "@/components/discover/CategoryChips";
 import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
+import { catalogCoverUri } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
 
 export type DiscoverPerson = {
@@ -125,7 +126,7 @@ export function DiscoverV3({
         ) : featured ? (
           <ChallengeCard
             title={featured.name}
-            coverUri={featured.featuredProof?.photo_url}
+            coverUri={catalogCoverUri(featured)}
             days={featured.duration_days}
             difficulty={difficultyLabel(featured.difficulty)}
             proofType={discoverProofLabel({

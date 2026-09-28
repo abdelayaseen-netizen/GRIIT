@@ -14,3 +14,16 @@ export function applyEnrollmentWindow<Q>(query: Q, now: Date = new Date()): Q {
   const q = query as unknown as WindowQuery;
   return q.eq("status", "active").lte("start_at", iso).gte("end_at", iso) as Q;
 }
+
+type QueuedQuery = {
+  eq: (column: string, value: string) => QueuedQuery;
+  gt: (column: string, value: string) => QueuedQuery;
+  gte: (column: string, value: string) => QueuedQuery;
+};
+
+/** status = active AND start_at > now() AND end_at >= now() — queued, not due today. */
+export function applyQueuedEnrollmentWindow<Q>(query: Q, now: Date = new Date()): Q {
+  const iso = now.toISOString();
+  const q = query as unknown as QueuedQuery;
+  return q.eq("status", "active").gt("start_at", iso).gte("end_at", iso) as Q;
+}

@@ -20,6 +20,7 @@ export const HOME_BOOTSTRAP_SECTIONS = [
   "profile",
   "stats",
   "activeChallenges",
+  "queuedChallenges",
   "activeChallenge",
   "todayCheckinsForUser",
   "todayCheckins",
@@ -69,6 +70,7 @@ export async function runHomeBootstrap(ctx: Context & { userId: string }) {
     profiles.get(),
     profiles.getStats(),
     challenges.listMyActive(), // Today: applyEnrollmentWindow inside listMyActive
+    challenges.listMyQueued(),
     challenges.getActive(),
     checkins.getTodayCheckinsForUser(),
     profiles.getSecuredDateKeys(),
@@ -80,11 +82,12 @@ export async function runHomeBootstrap(ctx: Context & { userId: string }) {
   const profile = takeSettled(settled[0], "profile", failed, ctx);
   const stats = takeSettled(settled[1], "stats", failed, ctx);
   const activeChallenges = takeSettled(settled[2], "activeChallenges", failed, ctx);
-  const activeChallenge = takeSettled(settled[3], "activeChallenge", failed, ctx);
-  const todayCheckinsForUser = takeSettled(settled[4], "todayCheckinsForUser", failed, ctx);
-  const securedDateKeys = takeSettled(settled[5], "securedDateKeys", failed, ctx);
-  const freezeStatus = takeSettled(settled[6], "freezeStatus", failed, ctx);
-  const followCounts = takeSettled(settled[7], "followCounts", failed, ctx);
+  const queuedChallenges = takeSettled(settled[3], "queuedChallenges", failed, ctx);
+  const activeChallenge = takeSettled(settled[4], "activeChallenge", failed, ctx);
+  const todayCheckinsForUser = takeSettled(settled[5], "todayCheckinsForUser", failed, ctx);
+  const securedDateKeys = takeSettled(settled[6], "securedDateKeys", failed, ctx);
+  const freezeStatus = takeSettled(settled[7], "freezeStatus", failed, ctx);
+  const followCounts = takeSettled(settled[8], "followCounts", failed, ctx);
 
   const activeId =
     activeChallenge && typeof activeChallenge === "object" && "id" in activeChallenge
@@ -103,6 +106,7 @@ export async function runHomeBootstrap(ctx: Context & { userId: string }) {
     profile,
     stats,
     activeChallenges,
+    queuedChallenges,
     activeChallenge,
     todayCheckinsForUser,
     todayCheckins,

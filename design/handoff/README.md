@@ -416,7 +416,7 @@ can enforce, camera, time window and location, in that order, and an ungated tas
 "Self-reported" in secondary ink. The location label never prints the place. Enforcement is the creator's,
 set on the challenge and identical for everyone in it, so it is one textSecondary line under the task
 list and not a picker: hard mode reads "Hard mode. Gates are enforced; a failed gate fails the day.",
-standard reads "Standard mode. Gates are recorded, not enforced." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
+standard reads "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
 upgrade", and ended or not yet live, which drops both Join and the picker and states the date in one
 line. Solo reads "Day 1 is today." under Join; duo and team read "Join opens the invite step. You need
 a partner before Day 1."

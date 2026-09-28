@@ -207,7 +207,7 @@ See Audits below. `supabase/migrations/20260927200000_is_member.sql` is a draft.
 1. Apply the three SQL migrations (unique index, catalog rename, `is_member`) or not.
 2. Make `task-proofs` private (signed URLs) vs leave public bucket.
 3. Whether pack id `75hard` should be renamed (display is already `No Days Off`).
-4. Gate copy: `"Standard mode. Gates are recorded, not enforced."` is false (`backend/trpc/routes/checkins.ts:168` `assertTimeGate`, `:248` camera). Replacement ships on `fix/gate-copy`, including `lib/onboarding-v2-first-challenge.ts:8` (authorized exception).
+4. Gate copy: the old Standard-mode line that claimed gates were recorded only is false (`backend/trpc/routes/checkins.ts:168` `assertTimeGate`, `:248` camera). Replacement ships on `fix/gate-copy`, including `lib/onboarding-v2-first-challenge.ts:8` (authorized exception).
 
 ---
 

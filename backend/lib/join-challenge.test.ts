@@ -70,4 +70,57 @@ describe("join deferral", () => {
       anyTimeWindowClosedToday([{ time_window_end: "08:30", config: {} }], at446pm, TZ),
     ).toBe(true);
   });
+
+  const between = {
+    gate_time_mode: "between",
+    gate_time_start: "05:00",
+    gate_time_end: "06:30",
+    config: { required: true },
+  };
+  const beforeOpen = new Date("2026-09-27T08:30:00.000Z"); // 04:30 EDT
+  const inside = new Date("2026-09-27T09:45:00.000Z"); // 05:45 EDT
+  const afterClose = new Date("2026-09-27T17:24:00.000Z"); // 13:24 EDT
+
+  it("launch before the window opens starts today", () => {
+    expect(anyTimeWindowClosedToday([between], beforeOpen, TZ)).toBe(false);
+    expect(dateKeyInTimeZone(enrollmentStartAt(beforeOpen, TZ, false), TZ)).toBe("2026-09-27");
+  });
+
+  it("launch inside the window starts today", () => {
+    expect(anyTimeWindowClosedToday([between], inside, TZ)).toBe(false);
+  });
+
+  it("launch after the window closes starts tomorrow", () => {
+    expect(anyTimeWindowClosedToday([between], afterClose, TZ)).toBe(true);
+    expect(dateKeyInTimeZone(enrollmentStartAt(afterClose, TZ, true), TZ)).toBe("2026-09-28");
+  });
+
+  it("a by gate that has passed defers to tomorrow", () => {
+    expect(
+      anyTimeWindowClosedToday(
+        [{ gate_time_mode: "by", gate_time_start: "07:00", config: { required: true } }],
+        afterClose,
+        TZ,
+      ),
+    ).toBe(true);
+  });
+
+  it("no time gate starts today", () => {
+    expect(anyTimeWindowClosedToday([{ config: { required: true } }], afterClose, TZ)).toBe(false);
+  });
+
+  it("optional closed window does not defer", () => {
+    expect(
+      anyTimeWindowClosedToday(
+        [{ ...between, config: { required: false } }],
+        afterClose,
+        TZ,
+      ),
+    ).toBe(false);
+  });
+
+  it("timezone edge: same instant is still open in a later zone", () => {
+    expect(anyTimeWindowClosedToday([between], afterClose, "America/Los_Angeles")).toBe(true);
+    expect(anyTimeWindowClosedToday([between], afterClose, "Pacific/Auckland")).toBe(false);
+  });
 });

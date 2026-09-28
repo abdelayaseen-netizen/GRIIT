@@ -97,7 +97,7 @@ describe("proofs missing tile", () => {
         dateKey: "2026-09-19",
         day: 1,
         imageUrl:
-          "https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/public/task-proofs/10556c76-3c37-4204-8915-fc7fd3b16a59/1789831043561-74pcldt5.jpg",
+          "task-proofs/00000000-0000-4000-8000-000000000001/fake-proof.jpg",
         bytes: 1401,
         challengeName: "Iron man",
         taskName: "Run",

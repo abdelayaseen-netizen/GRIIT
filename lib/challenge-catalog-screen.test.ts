@@ -8,8 +8,8 @@ const DAILY_GRATITUDE = {
   title: "Daily Gratitude",
   description: "Gratitude changes everything.",
   challenge_tasks: [
-    { title: "Write 3 gratitudes", task_type: "journal", require_photo: false },
-    { title: "Share one with someone", task_type: "manual", require_photo: false },
+    { title: "Write 3 gratitudes", task_type: "journal", require_photo: false, config: { required: true } },
+    { title: "Share one with someone", task_type: "manual", require_photo: false, config: { required: false } },
   ],
 };
 
@@ -27,6 +27,7 @@ describe("catalogFromChallengeRow", () => {
     expect(view.error).toBe(false);
     expect(view.title).toBe("Daily Gratitude");
     expect(view.tasks.map((t) => t.title)).toEqual(["Write 3 gratitudes", "Share one with someone"]);
+    expect(view.tasks.map((t) => t.required)).toEqual([true, false]);
   });
 
   it("renders title and tasks when there is an orphaned participant row", () => {

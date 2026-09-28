@@ -107,11 +107,23 @@ describe("applyEnrollmentWindow", () => {
     expect(list).toContain("listMyActive");
     expect(join).toContain("applyEnrollmentWindow");
     expect(create).toContain("applyEnrollmentWindow");
-    expect(direct).toContain("applyEnrollmentWindow");
+    expect(direct).not.toContain("applyEnrollmentWindow");
+    expect(direct).toContain('eq("status", "active")');
+    expect(direct).toContain("enrollmentIsPastEnd");
     expect(home).toContain("challenges.listMyActive()");
     expect(record).not.toContain("applyEnrollmentWindow");
     expect(stats).toContain("applyEnrollmentWindow");
     expect(profiles).toContain("applyEnrollmentWindow");
     expect(feed).toContain("applyEnrollmentWindow");
+  });
+});
+
+describe("applyQueuedEnrollmentWindow", () => {
+  it("is the helper listMyQueued calls", () => {
+    const win = readFileSync(resolve(__dirname, "./enrollment-window.ts"), "utf8");
+    const list = readFileSync(resolve(__dirname, "../trpc/routes/challenges.ts"), "utf8");
+    expect(win).toContain("applyQueuedEnrollmentWindow");
+    expect(list).toContain("applyQueuedEnrollmentWindow");
+    expect(list).toContain("listMyQueued");
   });
 });

@@ -34,9 +34,10 @@ import {
   requirePhotoAsked,
   securedTodayFromKeys,
   unitForTask,
-  weekSecuredFromKeys,
+  weekStripFilledForEnrollment,
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
+import { dateKeyFromIso } from "@/lib/challenge-end";
 import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -199,18 +200,21 @@ export default function ActiveChallengeDetailScreen() {
     difficulty: challenge?.difficulty,
   });
   const streakDays = (stats as { activeStreak?: number })?.activeStreak ?? 0;
-  const securedToday = securedTodayFromKeys(
-    Array.isArray(securedDateKeys) ? securedDateKeys : [],
-    todayKey
-  );
-  const weekSecuredRaw = weekSecuredFromKeys(
-    Array.isArray(securedDateKeys) ? securedDateKeys : [],
-    weekKeys
-  );
-  const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
-  const weekSecured = weekSecuredRaw.map((filled, i) => filled || (securedToday && i === todayIndex));
   const startIso =
     activeChallenge?.start_at ?? activeChallenge?.started_at ?? activeChallenge?.created_at ?? null;
+  const startDateKey = startIso
+    ? dateKeyFromIso(String(startIso), profileTz ?? "UTC")
+    : todayKey;
+  const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
+  const securedToday =
+    todayKey >= startDateKey && securedTodayFromKeys(keys, todayKey);
+  const weekSecured = weekStripFilledForEnrollment({
+    securedDateKeys: keys,
+    weekDateKeys: weekKeys,
+    startDateKey,
+    todayKey,
+  });
+  const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
   const shownDay = calendarDayFromStartAt(startIso, profileTz ?? "UTC", todayKey, durationDays);
 
   const taskSkippedTracked = useRef(false);

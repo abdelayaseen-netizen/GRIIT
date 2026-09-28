@@ -22,6 +22,7 @@ export type HomeBootstrap = {
   profile: ProfileFromApi | null;
   stats: StatsFromApi | null;
   activeChallenges: unknown[] | null;
+  queuedChallenges: unknown[] | null;
   activeChallenge: ActiveChallengeFromApi | null;
   todayCheckinsForUser: TodayCheckinForUser[] | null;
   todayCheckins: TodayCheckinForUser[] | null;

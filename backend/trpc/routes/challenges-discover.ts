@@ -206,10 +206,9 @@ export const challengesDiscoverProcedures = {
    * public challenge → fallback to most recently created. Optionally filtered by
    * the Discover category chip.
    *
-   * Includes a `featuredProof` photo (newest task_completed proof on this challenge)
-   * and `friendsStarted` social proof (up to 2 friend display names + others count).
-   * `featuredProof` is null when no usable proof exists; the frontend then renders
-   * a solid gradient instead of attempting an image fetch.
+   * Covers never come from check-ins, activity_events, or participant proofs.
+   * `featuredProof` is always null; the client uses the challenge cover field
+   * or generated fallback art. `friendsStarted` is social proof (names only).
    */
   getDiscoverFeatured: publicProcedure
     .input(z.object({ category: DiscoverCategoryEnum.optional() }).optional())
@@ -273,59 +272,6 @@ export const challengesDiscoverProcedures = {
 
       const joinedTodayCount = todayMap.get(pick.id) ?? 0;
 
-      const { data: proofRows } = await server
-        .from("activity_events")
-        .select("user_id, metadata, created_at")
-        .eq("event_type", "task_completed")
-        .eq("challenge_id", pick.id)
-        .eq("share_state", "shared")
-        .order("created_at", { ascending: false })
-        .limit(15);
-      let featuredProof: {
-        user_display_name: string;
-        day_number: number;
-        photo_url: string;
-      } | null = null;
-      const proofList = (proofRows ?? []) as {
-        user_id: string;
-        metadata?: Record<string, unknown> | null;
-      }[];
-      const usableProof = proofList.find((row) => {
-        const md = row.metadata ?? {};
-        const url =
-          (typeof md.proof_photo_url === "string" && md.proof_photo_url.trim()) ||
-          (typeof md.photo_url === "string" && md.photo_url.trim());
-        return Boolean(url);
-      });
-      if (usableProof) {
-        const md = usableProof.metadata ?? {};
-        const photoUrl =
-          (typeof md.proof_photo_url === "string" && md.proof_photo_url.trim()) ||
-          (typeof md.photo_url === "string" && md.photo_url.trim()) ||
-          "";
-        const dayNumber =
-          typeof md.day_number === "number"
-            ? md.day_number
-            : typeof md.current_day === "number"
-              ? md.current_day
-              : 1;
-        const { data: prof } = await server
-          .from("profiles")
-          .select("display_name, username")
-          .eq("user_id", usableProof.user_id)
-          .maybeSingle();
-        const profile = prof as { display_name?: string | null; username?: string | null } | null;
-        const displayName =
-          (profile?.display_name?.trim() || profile?.username?.trim() || "Someone") as string;
-        if (photoUrl) {
-          featuredProof = {
-            user_display_name: displayName,
-            day_number: Math.max(1, dayNumber),
-            photo_url: photoUrl,
-          };
-        }
-      }
-
       let friendNames: string[] = [];
       let othersCount = joinedTodayCount;
       if (ctx.userId) {
@@ -382,7 +328,7 @@ export const challengesDiscoverProcedures = {
         ),
         category: toDiscoverCategory(pick.category),
         joinedTodayCount,
-        featuredProof,
+        featuredProof: null,
         friendsStarted: {
           friend_names: friendNames,
           others_count: othersCount,

@@ -1,9 +1,10 @@
+import { securedElapsed } from "@/lib/consistency";
 import { flowOpensCamera } from "@/lib/task-flow-state";
 
 /**
  * Active challenge (frame 28) binding. Server fields only.
  * Header "Day secured" reduces over THIS enrollment's tasks for today.
- * week_secured still comes from getSecuredDateKeys (account day).
+ * Week strip uses getSecuredDateKeys through securedElapsed, gated at start_at.
  * Stamp keys off verified / proof_photo_url, never require_photo.
  * reset_notice is always false until the backend exposes a reset event.
  */
@@ -135,6 +136,25 @@ export function statusLine(args: {
 export function weekSecuredFromKeys(securedDateKeys: string[], weekDateKeys: string[]): boolean[] {
   const set = new Set(securedDateKeys);
   return weekDateKeys.map((k) => set.has(k));
+}
+
+/** Per-enrollment strip: #94 securedElapsed, days before start_at never filled. */
+export function weekStripFilledForEnrollment(args: {
+  securedDateKeys: readonly string[];
+  weekDateKeys: readonly string[];
+  startDateKey: string;
+  todayKey: string;
+}): boolean[] {
+  const due = args.weekDateKeys.filter((k) => k >= args.startDateKey);
+  const window = securedElapsed({
+    dueDayKeys: due,
+    securedDateKeys: args.securedDateKeys,
+    todayKey: args.todayKey,
+  });
+  const filled = new Set(
+    window.elapsedKeys.filter((k) => args.securedDateKeys.includes(k)),
+  );
+  return args.weekDateKeys.map((k) => filled.has(k));
 }
 
 /** Server set only. Never tasks.every(completed_today). */

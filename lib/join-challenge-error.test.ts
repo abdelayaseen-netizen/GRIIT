@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { PRIVATE_CHALLENGE_MESSAGE } from "@/backend/lib/can-view-challenge";
+import { JOIN_FREE_LIMIT_MESSAGE } from "@/backend/lib/join-errors";
 import {
   ALREADY_JOINED_MESSAGE,
   classifyJoinChallengeError,
@@ -23,7 +24,7 @@ describe("classifyJoinChallengeError", () => {
     });
     expect(classifyJoinChallengeError(err)).toEqual({
       kind: "limit",
-      message: FREE_ACTIVE_LIMIT_MESSAGE,
+      message: JOIN_FREE_LIMIT_MESSAGE,
     });
   });
 

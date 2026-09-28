@@ -78,7 +78,8 @@ describe("source: complete, flip, feed, record/roster/grid", () => {
     expect(feed).toMatch(/list:[\s\S]*eq\("share_state", "shared"\)/);
     expect(feed).toMatch(/getRecentCompletions[\s\S]*eq\("share_state", "shared"\)/);
     expect(feed).toMatch(/getTrending[\s\S]*eq\("share_state", "shared"\)/);
-    expect(discover).toContain('.eq("share_state", "shared")');
+    expect(discover).not.toContain('.from("activity_events")');
+    expect(discover).not.toContain('.eq("share_state", "shared")');
     expect(record).not.toContain('.eq("shared"');
     expect(record).toContain('.from("check_ins")');
     expect(record).toContain('.from("day_secures")');

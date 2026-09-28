@@ -12,7 +12,7 @@ import {
 import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
 import { withWindowState } from "../../lib/task-time-gate";
 import { getProfileTimeZoneForUser } from "../../lib/date-utils";
-import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { applyEnrollmentWindow, applyQueuedEnrollmentWindow } from "../../lib/enrollment-window";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import {
   applyFinalizeEnded,
@@ -423,6 +423,29 @@ export const challengesRouter = createTRPCRouter({
         logger.error({ err }, "[listMyActive] caught");
         throw err;
       }
+    }),
+
+  /** Active enrollments whose start_at is still in the future. Home "Starts tomorrow". */
+  listMyQueued: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await applyQueuedEnrollmentWindow(
+        ctx.supabase
+          .from("active_challenges")
+          .select(
+            `
+            id, challenge_id, start_at, status,
+            challenges ( id, title, duration_days )
+          `,
+          )
+          .eq("user_id", ctx.userId),
+      )
+        .order("start_at", { ascending: true })
+        .limit(50);
+      if (error) {
+        logger.error({ err: error }, "[listMyQueued] Supabase error");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load upcoming challenges." });
+      }
+      return ((data ?? []) as { status?: string }[]).filter((row) => row.status === "active");
     }),
 
   /** Another user's active challenges (privacy: public profile or accepted follow). */
