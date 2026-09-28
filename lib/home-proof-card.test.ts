@@ -332,6 +332,72 @@ describe("homeProofRingState", () => {
 });
 
 describe("Home Today card", () => {
+  it("one Share today row on the card after the server secures today", () => {
+    const now = new Date("2026-09-26T15:00:00.000Z");
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Outdoor workout",
+          challengeName: "Iron man",
+          challengeId: "ch-iron",
+          activeChallengeId: "ac-iron",
+          startDateKey: "2026-09-15",
+          durationDays: 30,
+          done: true,
+          challengeSecuredToday: true,
+          hasCameraProof: true,
+        }),
+        task({
+          name: "Read",
+          challengeName: "Read 30 min",
+          activeChallengeId: "ac-read",
+          startDateKey: "2026-09-22",
+          durationDays: 30,
+          done: true,
+          challengeSecuredToday: true,
+        }),
+      ],
+      tasksDoneToday: 2,
+      totalTasksToday: 2,
+      firstProofEver: false,
+      securedToday: true,
+      securedDateKeys: ["2026-09-26"],
+      profileTimeZone: "UTC",
+      now,
+      todayKey: "2026-09-26",
+    });
+    expect(card.showShareToday).toBe(true);
+    expect(card.shareTodayCaption).toBe("Until midnight · 2 challenges");
+    expect(card.shareTodayChallenges.map((c) => c.name)).toEqual(["Iron man", "Read 30 min"]);
+    expect(card.sections[0]?.securedToday).toBe(true);
+    expect(card.sections).toHaveLength(2);
+  });
+
+  it("Share today is hidden when the server has not secured today", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Outdoor workout",
+          challengeName: "Iron man",
+          activeChallengeId: "ac-iron",
+          startDateKey: "2026-09-15",
+          durationDays: 30,
+          done: true,
+          challengeSecuredToday: true,
+        }),
+      ],
+      tasksDoneToday: 1,
+      totalTasksToday: 1,
+      firstProofEver: false,
+      securedToday: false,
+      securedDateKeys: [],
+      profileTimeZone: "UTC",
+      now: new Date("2026-09-26T15:00:00.000Z"),
+      todayKey: "2026-09-26",
+    });
+    expect(card.showShareToday).toBe(false);
+  });
+
   it("has no per-section Post your proof button", () => {
     const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     expect(src).not.toContain("HOME_PROOF_CTA_TODAY");

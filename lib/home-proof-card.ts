@@ -2,6 +2,12 @@ import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { closedWindowCaption, gateLine } from "@/lib/task-ui";
+import {
+  shareTodayCaption,
+  shareTodayChallenges,
+  shareTodayVisible,
+  type ShareTodayChallenge,
+} from "@/lib/day-sticker";
 
 export const HOME_PROOF_CTA_TODAY = "Post your proof";
 export const HOME_PROOF_CTA_FIRST = "Post your first proof";
@@ -126,6 +132,9 @@ export type HomeProofSection = {
   totalCount: number;
   rows: HomeProofRow[];
   showCta: boolean;
+  securedToday: boolean;
+  startDateKey: string | null;
+  photoCount: number;
 };
 
 export type HomeProofCard = {
@@ -136,6 +145,9 @@ export type HomeProofCard = {
   totalCount: number;
   sections: HomeProofSection[];
   showCta: boolean;
+  showShareToday: boolean;
+  shareTodayCaption: string;
+  shareTodayChallenges: ShareTodayChallenge[];
 };
 
 export function homeProofCtaLabel(proof: Pick<HomeProofCard, "posted" | "firstProofEver" | "showCta">): string {
@@ -195,6 +207,7 @@ function sectionFromTasks(
     first.startDateKey && todayKey
       ? calendarDay(first.startDateKey, todayKey, first.durationDays)
       : clampCalendarDay(first.currentDay, first.durationDays);
+  const rows = tasks.map(homeProofRow);
   return {
     id,
     challenge: first.challengeName,
@@ -203,8 +216,11 @@ function sectionFromTasks(
     dayTotal: homeDayTotal(first.durationDays),
     doneCount: tasks.filter((t) => t.done).length,
     totalCount: tasks.length,
-    rows: tasks.map(homeProofRow),
+    rows,
     showCta: false,
+    securedToday: first.challengeSecuredToday === true,
+    startDateKey: first.startDateKey ?? null,
+    photoCount: rows.filter((r) => r.hasCameraProof).length,
   };
 }
 
@@ -216,6 +232,9 @@ export function selectHomeProofCard(input: {
   targetStreak?: number | null;
   /** Server getSecuredDateKeys only. Never task.done / checkins. */
   securedToday: boolean;
+  securedDateKeys?: readonly string[];
+  profileTimeZone?: string | null;
+  now?: Date;
   todayKey?: string;
 }): HomeProofCard {
   const order: string[] = [];
@@ -232,6 +251,15 @@ export function selectHomeProofCard(input: {
   const sections = order.map((id) =>
     sectionFromTasks(id, groups.get(id)!, input.todayKey),
   );
+  const challenges = shareTodayChallenges(sections);
+  const showShareToday =
+    input.securedDateKeys && input.now
+      ? shareTodayVisible({
+          serverSecuredDateKeys: input.securedDateKeys,
+          profileTimeZone: input.profileTimeZone,
+          now: input.now,
+        })
+      : input.securedToday === true && Boolean(input.todayKey);
   return {
     posted: input.securedToday,
     hasChallenge: input.tasks.length > 0,
@@ -240,5 +268,8 @@ export function selectHomeProofCard(input: {
     totalCount: sections.reduce((n, s) => n + s.totalCount, 0),
     sections,
     showCta: sections.some((s) => s.showCta),
+    showShareToday,
+    shareTodayCaption: shareTodayCaption(challenges.length),
+    shareTodayChallenges: challenges,
   };
 }

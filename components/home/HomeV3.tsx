@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Snowflake, X } from "lucide-react-native";
+import { Bell, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Share, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -31,6 +31,7 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
+import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
 import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
@@ -94,6 +95,7 @@ export type HomeV3Props = {
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
   onPressChallenge?: (challengeId: string) => void;
+  onPressShareToday?: () => void;
   sectionChoices?: Record<string, boolean | undefined>;
   onToggleSection?: (sectionId: string, expanded: boolean) => void;
   awayCount?: number;
@@ -121,6 +123,7 @@ export function HomeV3({
   onPressProof: _onPressProof,
   onPressTask,
   onPressChallenge,
+  onPressShareToday,
   sectionChoices,
   onToggleSection,
   awayCount = 0,
@@ -331,6 +334,25 @@ export function HomeV3({
             ) : (
               <Text style={[styles.secondary, styles.sectionFirst]}>No active challenge</Text>
             )}
+            {proof.showShareToday ? (
+              <View style={styles.shareTodayBlock}>
+                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
+                <Divider />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={SHARE_TODAY}
+                  onPress={onPressShareToday}
+                  style={styles.shareTodayRow}
+                >
+                  <Share size={RING} color={DS_V3.color.brandText} />
+                  <View style={styles.taskCopy}>
+                    <Text style={styles.task}>{SHARE_TODAY}</Text>
+                    <Text style={styles.caption}>{proof.shareTodayCaption}</Text>
+                  </View>
+                  <ChevronRight size={RING} color={DS_V3.color.textSecondary} />
+                </Pressable>
+              </View>
+            ) : null}
           </Card>
         </View>
       ) : null}
@@ -583,6 +605,22 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  shareTodayBlock: {
+    marginTop: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+  },
+  daySecured: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.brandText,
+  },
+  shareTodayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
   },
   gap20: { height: DS_V3.space.gutter },
 });
