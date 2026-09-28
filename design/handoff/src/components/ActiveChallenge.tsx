@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, space, radius, border, buttonHeight, hit, displayFace, numberSize } from '../tokens';
+import { color, type, space, radius, border, buttonHeight, hit, displayFace, numberSize, displayWeight } from '../tokens';
 import { Stamp } from './Stamp';
 import { Divider } from './Primitives';
 
@@ -92,7 +92,7 @@ export function ActiveChallenge(p: ActiveChallengeProps) {
       {/* position. The day is the only display number here. Format is always "Day n of n". */}
       <div style={{ padding: `${space.lg + 8}px ${space.gutter}px 0`, display: 'flex', alignItems: 'flex-end', gap: 10 }}>
         <div style={{ ...type.secondary, color: color.textSecondary, paddingBottom: 11 }}>Day</div>
-        <div style={{ fontFamily: displayFace, fontSize: numberSize.home, lineHeight: '56px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em', color: color.textPrimary }}>{p.current_day}</div>
+        <div style={{ fontFamily: displayFace, fontSize: numberSize.home, lineHeight: '56px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em', color: color.textPrimary }}>{p.current_day}</div>
         <div style={{ ...type.body, color: color.textSecondary, paddingBottom: 9 }}>of {p.duration_days}</div>
       </div>
 
@@ -146,7 +146,7 @@ export function ActiveChallenge(p: ActiveChallengeProps) {
           <Icon name="flame" size={16} />
           {p.streak_days > 0 ? (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-              <div style={{ fontFamily: displayFace, fontSize: numberSize.inline, lineHeight: '18px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{p.streak_days}</div>
+              <div style={{ fontFamily: displayFace, fontSize: numberSize.inline, lineHeight: '18px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{p.streak_days}</div>
               <div style={{ ...type.caption, color: color.textSecondary }}>day streak</div>
             </div>
           ) : (

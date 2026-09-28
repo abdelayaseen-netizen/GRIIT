@@ -40,7 +40,7 @@ Notes on the marked cells:
 
 - Laws 1 and 7, frames 14, 15, 19, 20: these screens are the full bleed photo moment and the first
   open. They are `canvas` like every other screen; the mark records that they carry no cards.
-- Law 2, frames 1 to 5, 8 to 10, 12, 13, 15 to 21: Barlow Condensed 600 appears on earned numbers
+- Law 2, frames 1 to 5, 8 to 10, 12, 13, 15 to 21: SF Pro Display Heavy 800 (v40; formerly a condensed face) appears on earned numbers
   only, per the amended law 2.
 - Law 5, frames 9, 17, 20: export assets use radius 60 on the proof and 24 on the stamp, which are 20
   and 12 at 1080 wide. In app the same components render at 20 and 12.

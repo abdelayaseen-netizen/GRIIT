@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, space, radius, displayFace, stamp } from '../tokens';
+import { color, type, space, radius, displayFace, stamp, displayWeight } from '../tokens';
 import type { Badge } from './Badges';
 
 // Chunk U A4: a TREATMENT change to the existing Badges component, not a new badge set.
@@ -38,7 +38,7 @@ export function BadgeRows({ badges, footnote }: { badges: Badge[]; footnote: str
                   border: `${stamp.strokeWidth}px solid ${earned ? color.brandText : color.border}`,
                   borderRadius: radius.input, padding: stamp.padding,
                   fontFamily: displayFace, fontSize: stamp.fontSize, lineHeight: `${stamp.fontSize}px`,
-                  fontWeight: '600', letterSpacing: stamp.tracking, textTransform: 'uppercase', color: c,
+                  fontWeight: displayWeight, letterSpacing: stamp.tracking, textTransform: 'uppercase', color: c,
                 }}>{b.label}</div>
                 {/* Body type, left-aligned, in the row — as A4 asked. */}
                 <div style={{ flex: 1, ...type.caption, color: color.textSecondary }}>

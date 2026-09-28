@@ -3,9 +3,12 @@ branch: main
 
 ## Last sync
 
-date: 2026-09-22T23:12:10Z
+date: 2026-09-25T22:05:52Z
+commit: f3c70b6
 
 ### Updated in this project
+
+- Read `lib/profile-v2-record.ts` @ f3c70b6 and built the v36 Consistency revision against its field names; logged contradictions 79-91.
 
 - Built Chunk U part A (frames 87-92: profile structure, proofs as days, the day viewer, Consistency rebuilt, badges as rows) and part B (frames 93-96: one feed card family, inline comments, the per-challenge board, the week strip).
 - Read `components/feed/FeedEngagementRow.tsx` to confirm the engagement row: it ships Heart, MessageCircle and ArrowUpRight, so share is restored rather than cut.

@@ -21,7 +21,7 @@ export const scrim = 'linear-gradient(to bottom, rgba(15,15,15,0) 0%, rgba(15,15
 export const scrimHeight = '40%';
 
 // LAW AMENDMENTS, Sept 6 2026 (brand layer, additive):
-// law 2  the UI face stays SF Pro 400/500. One second family, Barlow Condensed 600, is
+// law 2  the UI face stays SF Pro 400/500. v40: one family only. Hero numbers use SF Pro Display Heavy 800, which is
 //        allowed for numbers the USER EARNED and for nothing else, and it is the only
 //        place a weight above 500 may appear. Earned: the streak, "Day 23" in a feed
 //        header or on the proof card, rank and points, verified days on a badge, best
@@ -43,15 +43,17 @@ export const scrimHeight = '40%';
 //        fill, one haptic.
 // law 23 a segmented control sits directly under the title OR directly under the hero.
 
-// The display face. Barlow Condensed 600, tabular. `number` only, nowhere else.
-export const displayFace = "'Barlow Condensed', 'SF Pro Display', sans-serif";
+// The display face. SF Pro Display Heavy 800, tabular. `number` only, nowhere else.
+// v40: the condensed face is removed from the product. One family, SF Pro.
+export const displayFace = "'SF Pro Display', -apple-system, system-ui, sans-serif";
+export const displayWeight = '800' as const; // Heavy. Hero numbers only.
 
 // Two weights only. Hierarchy comes from size and colour, never weight.
 export const weight = { regular: '400', medium: '500' } as const;
 
 export const type = {
   display:    { fontSize: 34, lineHeight: 41, fontWeight: weight.medium,  letterSpacing: -0.5 },
-  number:     { fontSize: 64, lineHeight: 64, fontWeight: '600', fontFamily: displayFace, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' },
+  number:     { fontSize: 64, lineHeight: 64, fontWeight: displayWeight, fontFamily: displayFace, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' },
   title:      { fontSize: 28, lineHeight: 34, fontWeight: weight.medium },
   heading:    { fontSize: 20, lineHeight: 25, fontWeight: weight.medium },
   body:       { fontSize: 17, lineHeight: 22, fontWeight: weight.regular },

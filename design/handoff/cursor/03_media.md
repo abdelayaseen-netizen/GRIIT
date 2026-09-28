@@ -53,7 +53,7 @@ text: card recipe with two `border` bars at height 16, radius 12, widths 60 perc
 | story safe zones | 250 top, 250 bottom |
 | composition | number 220, copy 44/56 bodyStrong, proof, stamp, logo 80 |
 | proof width | story 720, feed 560, both at 4:5, radius 60 |
-| stamp | 28pt Barlow Condensed 600, 3pt `textPrimary` stroke, radius 24, padding 10 x 18 |
+| stamp | 28pt SF Pro Display Heavy 800, 3pt `textPrimary` stroke, radius 24, padding 10 x 18 |
 | logo | two `brand` bars 24 x 80 and 24 x 56, radius 12, gap 16, wordmark 56/64 500 `textPrimary` |
 | copy | one line, "Day 23. Verified." or "30 days. Every one witnessed." |
 

@@ -166,7 +166,7 @@ The verification mark. The only decoration in the app.
 
 **States** static.
 
-**Tokens** 1.5pt stroke and label in `brandText`, or `textPrimary` when `onInk`. radius `input` 12. padding 6 vertical, 10 horizontal. label 12pt Barlow Condensed 600, letterSpacing 0.96, uppercase.
+**Tokens** 1.5pt stroke and label in `brandText`, or `textPrimary` when `onInk`. radius `input` 12. padding 6 vertical, 10 horizontal. label 12pt SF Pro Display Heavy 800, letterSpacing 0.96, uppercase.
 
 **Hit** n/a, not tappable.
 
@@ -182,7 +182,7 @@ An earned number.
 
 **States** static; counting (see motion).
 
-**Tokens** family Barlow Condensed 600. sizes 17 / 64 / 96 / 160 / 220. colour `textPrimary`. `fontVariant: ["tabular-nums"]`. letterSpacing -0.64 at 64, -1.92 at 96 and above, 1 at inline.
+**Tokens** family `displayFace` = SF Pro Display Heavy 800 (`displayWeight`). sizes 17 / 64 / 96 / 160 / 220. colour `textPrimary`. `fontVariant: ["tabular-nums"]`. letterSpacing −0.02em. On share stickers the numeral steps down by digit count: `fitNumeral(n)` 64 / 58 / 46.
 
 **Hit** n/a.
 
@@ -334,7 +334,7 @@ Create wizard header.
 
 **Hit** 44 for Cancel.
 
-**Never** never a tab bar; never a CTA that is not pinned above the home indicator; never Barlow on the step number.
+**Never** never a tab bar; never a CTA that is not pinned above the home indicator; never the display face on the step number.
 
 ## TabBar
 
@@ -392,7 +392,7 @@ The five marks.
 
 **States** earned; unearned.
 
-**Tokens** 2 columns, gap 12, on the canvas, no card. cell: stamp frame (1.5pt, radius 12, padding 6 x 10, 12pt Barlow 600 uppercase) plus a caption below. earned stroke and label `brandText`, caption "Earned 6 Sep 2026". unearned stroke `border`, label and caption `textSecondary`, caption is the requirement.
+**Tokens** 2 columns, gap 12, on the canvas, no card. cell: stamp frame (1.5pt, radius 12, padding 6 x 10, 12pt SF Pro Display Heavy 800 uppercase) plus a caption below. earned stroke and label `brandText`, caption
 
 **Hit** 44 if tappable; the grid is static by default.
 

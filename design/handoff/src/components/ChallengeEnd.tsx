@@ -1,5 +1,5 @@
 import React from 'react';
-import { color, type, space, radius, border, buttonHeight, displayFace, numberSize } from '../tokens';
+import { color, type, space, radius, border, buttonHeight, displayFace, numberSize, displayWeight } from '../tokens';
 
 // The end of a challenge. Fires once, on the first launch after the challenge's end date
 // has passed in the USER'S TIMEZONE — not when a day counter exceeds duration_days, which
@@ -178,7 +178,7 @@ function Single(p: ChallengeEndProps) {
       <div style={{ padding: `2px ${space.gutter}px 0`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ ...type.label, color: color.textSecondary }}>Days secured</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: space.sm }}>
-          <div style={{ fontFamily: displayFace, fontSize: numberSize.moment, lineHeight: '88px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{secured}</div>
+          <div style={{ fontFamily: displayFace, fontSize: numberSize.moment, lineHeight: '88px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{secured}</div>
           {/* N, not elapsed. A run that failed on day 28 of 75 reads "27 of 75". */}
           <div style={{ ...type.heading, color: color.textSecondary }}>of {c.duration_days}</div>
         </div>
@@ -245,7 +245,7 @@ function Combined(p: ChallengeEndProps) {
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: space.md }}>
                 <div style={{ flex: 1, ...type.bodyStrong, color: color.textPrimary }}>{c.title}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-                  <div style={{ fontFamily: displayFace, fontSize: 34, lineHeight: '32px', fontWeight: '600', fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{securedCount(c.days)}</div>
+                  <div style={{ fontFamily: displayFace, fontSize: 34, lineHeight: '32px', fontWeight: displayWeight, fontVariantNumeric: 'tabular-nums', color: color.textPrimary }}>{securedCount(c.days)}</div>
                   <div style={{ ...type.secondary, color: color.textSecondary }}>of {c.duration_days}</div>
                 </div>
               </div>
