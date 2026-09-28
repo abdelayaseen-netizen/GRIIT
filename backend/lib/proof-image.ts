@@ -9,6 +9,7 @@ import { getSupabaseServer } from "./supabase-server";
 
 export const PROOF_BUCKET = "task-proofs";
 export const PROOF_SIGN_TTL_SEC = 3600;
+export const SHARED_PATH_BATCH = 10;
 
 const UUID_FOLDER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -166,8 +167,14 @@ export async function loadSharedPathsForCandidates(
   query: SharedPathQuery = supabaseSharedPathQuery,
 ): Promise<Set<string>> {
   if (candidates.length === 0) return new Set();
-  const rows = await query({ candidates, orFilter: sharedProofOrFilter(candidates) });
-  return sharedPathsFromLoadedRows(rows, new Set(candidates));
+  const want = new Set(candidates);
+  const found = new Set<string>();
+  for (let i = 0; i < candidates.length; i += SHARED_PATH_BATCH) {
+    const batch = candidates.slice(i, i + SHARED_PATH_BATCH);
+    const rows = await query({ candidates: batch, orFilter: sharedProofOrFilter(batch) });
+    for (const path of sharedPathsFromLoadedRows(rows, want)) found.add(path);
+  }
+  return found;
 }
 
 async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>> {
