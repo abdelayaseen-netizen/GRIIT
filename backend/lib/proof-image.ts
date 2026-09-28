@@ -101,36 +101,77 @@ export type SignProofPathsOpts = {
   createSignedUrls?: (paths: string[], ttl: number) => Promise<Map<string, string | null>>;
 };
 
-async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>> {
-  const svc = getSupabaseServer();
-  if (!svc || candidates.length === 0) return new Set();
-  const { data, error } = await svc
-    .from("activity_events")
-    .select("user_id, metadata")
-    .eq("share_state", "shared")
-    .in("event_type", ["task_completed", "secured_day"])
-    .limit(800);
-  if (error) {
-    logger.error(
-      { code: error.code, message: error.message, details: error.details },
-      "[proof-image] load shared activity paths",
-    );
-    return new Set();
-  }
-  const want = new Set(candidates);
+export function sharedProofOrFilter(paths: string[]): string {
+  return paths
+    .flatMap((p) => [
+      `metadata->>photo_url.eq.${p}`,
+      `metadata->>proof_photo_url.eq.${p}`,
+      `metadata->>photo_url.eq.task-proofs/${p}`,
+      `metadata->>proof_photo_url.eq.task-proofs/${p}`,
+      `metadata->>photo_url.like.%/task-proofs/${p}%`,
+      `metadata->>proof_photo_url.like.%/task-proofs/${p}%`,
+    ])
+    .join(",");
+}
+
+export function sharedPathsFromLoadedRows(
+  rows: readonly {
+    user_id?: string | null;
+    metadata?: Record<string, unknown> | null;
+  }[],
+  want: ReadonlySet<string>,
+): Set<string> {
   const found = new Set<string>();
-  for (const row of data ?? []) {
-    const author = (row as { user_id?: string }).user_id;
-    const md = ((row as { metadata?: Record<string, unknown> | null }).metadata ?? {}) as Record<
-      string,
-      unknown
-    >;
+  for (const row of rows) {
+    const author = row.user_id;
+    const md = row.metadata ?? {};
     for (const raw of [md.photo_url, md.proof_photo_url]) {
       const path = toProofPath(typeof raw === "string" ? raw : null);
       if (path && want.has(path) && author && pathOwnerId(path) === author) found.add(path);
     }
   }
   return found;
+}
+
+export type SharedPathQuery = (args: {
+  candidates: string[];
+  orFilter: string;
+}) => Promise<{ user_id?: string | null; metadata?: Record<string, unknown> | null }[]>;
+
+async function supabaseSharedPathQuery(args: {
+  candidates: string[];
+  orFilter: string;
+}): Promise<{ user_id?: string | null; metadata?: Record<string, unknown> | null }[]> {
+  const svc = getSupabaseServer();
+  if (!svc || args.candidates.length === 0) return [];
+  const { data, error } = await svc
+    .from("activity_events")
+    .select("user_id, metadata")
+    .eq("share_state", "shared")
+    .in("event_type", ["task_completed", "secured_day"])
+    .or(args.orFilter);
+  if (error) {
+    logger.error(
+      { code: error.code, message: error.message, details: error.details },
+      "[proof-image] load shared activity paths",
+    );
+    return [];
+  }
+  return (data ?? []) as { user_id?: string | null; metadata?: Record<string, unknown> | null }[];
+}
+
+/** Shared rows that reference this path (bare path or /task-proofs/{path} URL). Author must own the path. */
+export async function loadSharedPathsForCandidates(
+  candidates: string[],
+  query: SharedPathQuery = supabaseSharedPathQuery,
+): Promise<Set<string>> {
+  if (candidates.length === 0) return new Set();
+  const rows = await query({ candidates, orFilter: sharedProofOrFilter(candidates) });
+  return sharedPathsFromLoadedRows(rows, new Set(candidates));
+}
+
+async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>> {
+  return loadSharedPathsForCandidates(candidates);
 }
 
 async function defaultCreateSignedUrls(

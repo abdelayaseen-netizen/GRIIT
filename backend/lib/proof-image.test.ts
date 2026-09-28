@@ -4,9 +4,12 @@ import { describe, expect, it } from "vitest";
 import {
   PROOF_SIGN_TTL_SEC,
   canSignProofPath,
+  loadSharedPathsForCandidates,
   ownedProofWrite,
   pathOwnerId,
   sharedPathsFromEvents,
+  sharedPathsFromLoadedRows,
+  sharedProofOrFilter,
   signProofPaths,
   storedProofValue,
   toProofPath,
@@ -122,6 +125,33 @@ describe("signProofPaths", () => {
       createSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
     });
     expect(out[0]).toBeNull();
+  });
+
+  it("finds a shared row outside the first 800 by path, including a public URL", async () => {
+    const deep = `${OTHER}/row801.jpg`;
+    const publicUrl = `https://x.supabase.co/storage/v1/object/public/task-proofs/${deep}`;
+    const first800 = Array.from({ length: 800 }, (_, i) => ({
+      user_id: OWNER,
+      metadata: { photo_url: `${OWNER}/early-${i}.jpg` },
+    }));
+    expect(sharedPathsFromLoadedRows(first800, new Set([deep])).has(deep)).toBe(false);
+    const src = readFileSync(resolve(__dirname, "./proof-image.ts"), "utf8");
+    expect(src).not.toContain(".limit(800)");
+    expect(sharedProofOrFilter([deep])).toContain(`metadata->>photo_url.eq.${deep}`);
+    expect(sharedProofOrFilter([deep])).toContain(`metadata->>photo_url.like.%/task-proofs/${deep}%`);
+    const loaded = await loadSharedPathsForCandidates([deep], async ({ orFilter }) => {
+      expect(orFilter).toContain(deep);
+      return [{ user_id: OTHER, metadata: { photo_url: publicUrl } }];
+    });
+    expect(loaded.has(deep)).toBe(true);
+    const out = await signProofPaths([deep], OWNER, {
+      loadSharedPaths: (c) =>
+        loadSharedPathsForCandidates(c, async () => [
+          { user_id: OTHER, metadata: { photo_url: publicUrl } },
+        ]),
+      createSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
+    });
+    expect(out[0]).toBe(`signed:${deep}`);
   });
 });
 
