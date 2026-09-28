@@ -104,7 +104,7 @@ Commit: `3efc9f0ae6ae6e99d4a3f3606f2969e09f8c2495`
 
 Bucket stays **public**. Phase 3 (flip private) is report-only. Do not apply.
 
-Canonical stored value: `{userId}/{ts}-{rand}.jpg`. APIs mint signed URLs (TTL 300) via service-role `createSignedUrls`. Missing service role → null, not a public URL. Sign only if first folder === viewerId **or** a shared activity row references the path.
+Canonical stored value: `{userId}/{ts}-{rand}.jpg`. APIs mint signed URLs (TTL 300) via service-role `createSignedUrls`. Missing service role → null, not a public URL. Sign only if first folder === viewerId **or** a shared activity row the author owns references the path.
 
 ### Phase 1 — resolver + read sites
 
@@ -133,23 +133,20 @@ Hydrate forces `share_state: "shared"` on already-visible events (`feed-activity
 
 Commit: `74314230b3d95313a2abdee6b93317b463f753e6`
 
-### Phase 2 — writes store a path
+### Phase 2 — writes (build 65 stores the URL as-sent)
 
-`storedProofValue` (`backend/lib/proof-image.ts:17`) — trim, then `toProofPath(trimmed) ?? trimmed`. Old clients still sending a public URL get a path. `file://` and other non-storage values stay as-is.
+Do **not** normalise on write. Build 65 sends a public URL; build 66 will send a path. The read resolver already accepts both. `ownedProofWrite` keeps the trimmed client string when the writer owns the object; `file://` and anyone else's path are stored null.
+
+`storedProofValue` is the rewrite helper for the path-migration SQL only. Writes must not call it.
 
 | Write | File:line |
 |---|---|
-| Upload returns `data.path` (no `getPublicUrl`) | `lib/uploadProofImage.ts:105` |
-| `checkins.complete` `photo_url` / `proof_url` / `completion_image_url` + activity `metadata.photo_url` | `backend/trpc/routes/checkins.ts:252,774-788,849` |
+| Upload on this branch returns `data.path` (build 66 client) | `lib/uploadProofImage.ts:105` |
+| `checkins.complete` + activity `metadata.photo_url` | `backend/trpc/routes/checkins.ts:252,774-788,849` |
 | `checkins.saveProgress` | `backend/trpc/routes/checkins.ts:1182-1185` |
 | `feed.shareCompletion` backfill + `proof_photo_url` | `backend/trpc/routes/feed.ts:469,493` |
-| `shareCompletion` input accepts a path (was `.url()`) | `backend/trpc/routes/feed.ts:417` |
-
-Client complete still sends `photo_url: url` (`components/task-v2/useTaskFlowV2.ts:516-517`). After this upload change that value is a path. Complete already takes `z.string().max(2000)`.
 
 Avatars are a different bucket (`lib/uploadAvatar.ts:57`). Untouched.
-
-Tests (`backend/lib/proof-image.test.ts`): `storedProofValue`; `new uploads store a path and writes normalise URLs`.
 
 ### Columns
 
@@ -171,9 +168,9 @@ Writer: that file, applied by hand. No user UPDATE policy. Strips `/storage/v1/o
 
 Preview (one statement per block): `docs/sql-drafts/20260928010000_task_proofs_store_paths_preview.sql`
 
-### Phase 3 — flip (report only, not this chunk)
+### Phase 3 — after build 66 is installed
 
-Do not run until build 66 is on TestFlight and the migration preview counts are applied.
+Order: install build 66 → apply the rewrite migration → then flip the bucket. Same wait as the flip. Do not apply the migration against build 65.
 
 ```sql
 UPDATE storage.buckets
@@ -185,7 +182,7 @@ DROP POLICY IF EXISTS "Public read proofs" ON storage.objects;
 
 Keep `"Users can upload own proofs"` INSERT (`20250330000000_task_verification_options.sql:54-57`). No public SELECT. No new user UPDATE.
 
-#### What build 65 breaks if the bucket flips now
+#### What build 65 breaks if the bucket flips now (before build 66 + rewrite)
 
 APIs that already sign keep working: feed, getPost, listMine, getRecord covers/proofs, complete return, getTodayCheckins, getTodayCheckinsForUser (`proof_url` / `completion_image_url`).
 
@@ -218,7 +215,7 @@ None. Standard copy stays the gate-copy line. Do not flip `task-proofs` until bu
 
 ## Yaseen to run
 
-Preview only, one statement per block, from `docs/sql-drafts/20260928010000_task_proofs_store_paths_preview.sql`. Do not run `supabase/migrations/20260928010000_task_proofs_store_paths.sql`. Do not flip the bucket.
+Preview only, one statement per block, from `docs/sql-drafts/20260928010000_task_proofs_store_paths_preview.sql`. Do not run `supabase/migrations/20260928010000_task_proofs_store_paths.sql` until build 66 is installed. Do not flip the bucket until after that rewrite.
 
 ## Commits touching `backend/` (Railway after merge)
 

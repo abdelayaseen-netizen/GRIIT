@@ -13,7 +13,7 @@ export const PROOF_SIGN_TTL_SEC = 300;
 const UUID_FOLDER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Persist a path. Old clients still send public URLs; keep non-storage values as-is. */
+/** Rewrite helper for the path-migration SQL. Do not call from writes until build 66. */
 export function storedProofValue(raw: string | null | undefined): string | null {
   if (raw == null) return null;
   const trimmed = raw.trim();
@@ -21,7 +21,7 @@ export function storedProofValue(raw: string | null | undefined): string | null 
   return toProofPath(trimmed) ?? trimmed;
 }
 
-/** Store only a task-proofs object the writer owns. file:// and anyone else's path → null. */
+/** Store the client value as-sent if the writer owns the object. file:// and anyone else's path → null. */
 export function ownedProofWrite(
   raw: string | null | undefined,
   userId: string,
@@ -38,7 +38,7 @@ export function ownedProofWrite(
     logger.warn({ userId, path }, "[proof-image] drop unowned proof write");
     return null;
   }
-  return storedProofValue(trimmed);
+  return trimmed;
 }
 
 export function toProofPath(stored: string | null | undefined): string | null {

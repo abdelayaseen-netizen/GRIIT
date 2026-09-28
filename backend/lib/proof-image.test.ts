@@ -33,7 +33,7 @@ describe("ownedProofWrite", () => {
   it("user A cannot write B's path; file:// is never stored", () => {
     const publicA = `https://x.supabase.co/storage/v1/object/public/task-proofs/${PATH}`;
     const publicB = `https://x.supabase.co/storage/v1/object/public/task-proofs/${OTHER}/secret.jpg`;
-    expect(ownedProofWrite(publicA, OWNER)).toBe(PATH);
+    expect(ownedProofWrite(publicA, OWNER)).toBe(publicA);
     expect(ownedProofWrite(PATH, OWNER)).toBe(PATH);
     expect(ownedProofWrite(publicB, OWNER)).toBeNull();
     expect(ownedProofWrite(`${OTHER}/secret.jpg`, OWNER)).toBeNull();
@@ -174,12 +174,14 @@ describe("API call sites", () => {
     expect(checkins).toContain("signProofPaths");
   });
 
-  it("new uploads store a path and writes normalise URLs", () => {
+  it("writes keep the client value and do not call storedProofValue", () => {
     const checkins = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
     const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
     const upload = readFileSync(resolve(__dirname, "../../lib/uploadProofImage.ts"), "utf8");
     expect(checkins).toContain("ownedProofWrite");
     expect(feed).toContain("ownedProofWrite");
+    expect(checkins).not.toContain("storedProofValue");
+    expect(feed).not.toContain("storedProofValue");
     expect(feed).toContain("proofPhotoUrl: z.string().max(2000)");
     expect(feed).not.toContain("proofPhotoUrl: z.string().url()");
     expect(upload).toContain("return { url: data.path }");
