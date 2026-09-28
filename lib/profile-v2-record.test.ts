@@ -197,7 +197,7 @@ describe("account summary includes abandoned windows", () => {
     expect(rec.consistency.verifiedClosed).toBe(3);
     expect(rec.detail.totalVerified).toBe(3);
     expect(rec.detail.firstProof).toBe("16 Sep 2026");
-    expect(rec.detail.completion).toBe("3 of 7 due days");
+    expect(rec.detail.completion).toBe("3 of 7 days");
     expect(
       consistencyHeadline({
         secured: rec.consistency.verifiedClosed,
@@ -226,7 +226,7 @@ describe("fixture A — 12 due days", () => {
     expect(rec.consistency.verifiedClosed).toBe(10);
     expect(rec.consistency.rate).toBe("91%");
     expect(rec.consistency.verdict).toBe("Locked in");
-    expect(rec.consistency.line).toBe("10 of 11 due days verified. 1 due today.");
+    expect(rec.consistency.line).toBe("10 of 11 days verified. Today still open.");
     expect(rec.consistency.strip).toEqual([V, V, V, M, V, V, V, V, V, V, V, T]);
     expect(rec.consistency.showWindowControl).toBe(true);
   });
@@ -243,7 +243,7 @@ describe("fixture A — 12 due days", () => {
     expect(rec.runs[0]?.meta).toBe("10 verified · 1 missed · 2 tasks daily");
     expect(rec.runs[1]?.meta).toBe("2 verified · 0 missed · 2 tasks daily");
     expect(rec.proofs.map((p) => p.day)).toEqual([11, 10, 9, 8, 7, 6, 5, 3, 2, 1]);
-    expect(rec.detail.completion).toBe("10 of 11 due days");
+    expect(rec.detail.completion).toBe("10 of 11 days");
     expect(rec.detail.firstProof).toBe("25 Aug 2026");
     expect(rec.detail.months).toEqual([
       { label: "Sep 2026", value: "4 of 4", pct: 1 },
@@ -263,8 +263,8 @@ describe("fixture A — 12 due days", () => {
       "30 days",
       "100 verified",
     ]);
-    expect(rec.badges[0]?.state).toBe("Earned 31 Aug 2026");
-    expect(rec.badges[1]?.state).toBe("Earned 4 Sep 2026");
+    expect(rec.badges[0]?.state).toBe("31 Aug 2026");
+    expect(rec.badges[1]?.state).toBe("4 Sep 2026");
     expect(rec.badges[2]?.state).toBe("7 / 14");
     expect(rec.badges[4]?.state).toBe("10 / 100");
   });
@@ -277,10 +277,10 @@ describe("fixture B — 3 due days", () => {
     expect(rec.consistency.dueDayKeys).toHaveLength(3);
     expect(rec.consistency.rate).toBe("2 of 2");
     expect(rec.consistency.verdict).toBe("");
-    expect(rec.consistency.line).toBe("Day 3 of 30. Today's proof is due.");
+    expect(rec.consistency.line).toBe("Day 3 of 30. Today still open.");
     expect(
       buildProfileRecord({ ...fixtureThree(), targetStreak: 75 }).consistency.line
-    ).toBe("Day 3 of 30. Today's proof is due.");
+    ).toBe("Day 3 of 30. Today still open.");
     expect(rec.consistency.strip).toEqual([V, V, T]);
     expect(rec.consistency.showWindowControl).toBe(false);
     expect(rec.proofs.map((p) => p.day)).toEqual([2, 1]);
@@ -307,7 +307,7 @@ describe("fixture D — 30 due days", () => {
     expect(rec.consistency.verifiedClosed).toBe(27);
     expect(rec.consistency.rate).toBe("93%");
     expect(rec.consistency.verdict).toBe("Locked in");
-    expect(rec.consistency.line).toBe("27 of 29 due days verified. 1 due today.");
+    expect(rec.consistency.line).toBe("27 of 29 days verified. Today still open.");
     expect(rec.consistency.strip).toHaveLength(30);
     expect(rec.consistency.strip[3]).toBe(M);
     expect(rec.consistency.strip[11]).toBe(M);
@@ -323,7 +323,7 @@ describe("fixture C — no challenge", () => {
   const rec = buildProfileRecord(fixtureNone());
 
   it("is an empty record, not invented zeros on the strip", () => {
-    expect(rec.consistency.rate).toBe("No due days");
+    expect(rec.consistency.rate).toBe("No days yet");
     expect(rec.consistency.verdict).toBe("");
     expect(rec.consistency.line).toBe("Join a challenge and the strip starts filling.");
     expect(rec.consistency.strip).toEqual([]);
@@ -344,7 +344,7 @@ describe("badgeRows helper matches fixture A", () => {
       verifiedDays: 10,
       badgeDates: { 3: "2026-08-31", 7: "2026-09-04" },
     });
-    expect(rows[0]?.state).toBe("Earned 31 Aug 2026");
+    expect(rows[0]?.state).toBe("31 Aug 2026");
     expect(rows[2]?.state).toBe("7 / 14");
     expect(PROFILE_V2_BADGES).toHaveLength(5);
   });

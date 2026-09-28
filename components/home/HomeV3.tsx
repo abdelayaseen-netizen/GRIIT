@@ -276,11 +276,9 @@ export function HomeV3({
           <Card>
             <View style={styles.cardHead}>
               <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
-              <View style={styles.countChip}>
-                <Text style={styles.countTxt}>
-                  {proof.doneCount} / {proof.totalCount}
-                </Text>
-              </View>
+              <Text style={styles.countTxt}>
+                {proof.doneCount} / {proof.totalCount}
+              </Text>
             </View>
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
@@ -308,11 +306,9 @@ export function HomeV3({
                         )}
                         <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
                       </View>
-                      <View style={styles.countChip}>
-                        <Text style={styles.countTxt}>
-                          {section.doneCount} / {section.totalCount}
-                        </Text>
-                      </View>
+                      <Text style={styles.countTxt}>
+                        {section.doneCount} / {section.totalCount}
+                      </Text>
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={homeSectionToggleA11y(expanded, section.challenge)}
@@ -487,12 +483,6 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textPrimary,
   },
-  countChip: {
-    backgroundColor: DS_V3.color.brandTint,
-    borderRadius: DS_V3.radius.input,
-    paddingVertical: DS_V3.space.xs,
-    paddingHorizontal: DS_V3.space.md,
-  },
   chevronHit: {
     width: DS_V3.size.tap,
     height: DS_V3.size.tap,
@@ -500,10 +490,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   countTxt: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    ...DS_V3.type.caption,
+    color: DS_V3.color.textSecondary,
   },
   taskRow: {
     flexDirection: "row",

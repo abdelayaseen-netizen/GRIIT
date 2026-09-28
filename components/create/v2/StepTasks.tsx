@@ -75,7 +75,7 @@ export type WizardPack = {
 const PACK_ORDER = ["75hard", "athlete", "faith", "morning", "entrepreneur"] as const;
 
 const PACK_COPY: Record<string, { title: string; meta: string }> = {
-  "75hard": { title: "75 Hard Classic", meta: "5 strict tasks · original framework" },
+  "75hard": { title: "No Days Off", meta: "5 strict tasks · original framework" },
   athlete: { title: "Athlete", meta: "3 tasks · run, train, check in" },
   faith: { title: "Faith", meta: "3 tasks · prayer, read, gratitude" },
   morning: { title: "Morning routine", meta: "5 tasks · win the morning" },

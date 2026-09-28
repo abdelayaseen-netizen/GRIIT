@@ -246,8 +246,8 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
 
         <Text style={styles.mode}>
           {p.isHardMode
-            ? "Hard mode. Gates are enforced; a failed gate fails the day."
-            : "Standard mode. Gates are recorded, not enforced."}
+            ? "No freezes. Miss a day, restart from day 1."
+            : "Freezes on. Use one to cover a missed day."}
         </Text>
         <View style={invited ? styles.footerClearInvited : styles.footerClear} />
       </ScrollView>

@@ -1,4 +1,5 @@
 import { calendarDay } from "@/lib/home-day-total";
+import { formatDays, formatOfDays, formatTasks } from "@/lib/format-days";
 
 export type FeedCardVariant =
   | "task_camera"
@@ -62,12 +63,12 @@ export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string
   }
   if (variant === "day_secured") {
     const n = p.taskCount && p.taskCount > 0 ? p.taskCount : 1;
-    return `All ${n} tasks done`;
+    return `All ${formatTasks(n)} done`;
   }
-  if (variant === "challenge_started") return `${p.totalDays} days · ${p.mode ?? "Standard"} mode`;
+  if (variant === "challenge_started") return `${formatDays(p.totalDays)} · ${p.mode ?? "Standard"} mode`;
   if (variant === "challenge_finished") {
     if (typeof p.securedDays !== "number") return "";
-    return `${p.securedDays} of ${p.totalDays} days secured`;
+    return `${formatOfDays(p.securedDays, p.totalDays)} secured`;
   }
   return (p.badgeRequirement ?? "").trim();
 }

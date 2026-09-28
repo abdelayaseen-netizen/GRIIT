@@ -133,7 +133,7 @@ const friendsTeam = {
 
 const publicCatalog = {
   id: CH,
-  title: "75 Hard",
+  title: "No Days Off",
   visibility: "PUBLIC",
   status: "published",
   creator_id: null,
@@ -145,7 +145,7 @@ describe("challenges.getById access", () => {
   it("logged-out service-role path returns PUBLIC and refuses PRIVATE", async () => {
     current = { challenge: publicCatalog, access: {} };
     const open = await caller(null).getById({ id: CH });
-    expect(open.title).toBe("75 Hard");
+    expect(open.title).toBe("No Days Off");
 
     current = { challenge: privateSolo, access: {} };
     await expect(caller(null).getById({ id: CH })).rejects.toMatchObject({

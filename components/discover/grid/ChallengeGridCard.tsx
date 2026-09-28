@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 
 import { ROUTES } from '@/lib/routes';
 import { DS_V3 } from '@/lib/design-system';
+import { formatDays } from '@/lib/format-days';
 import { Avatar } from '@/components/Avatar';
 
 export type RecommendedChallengeDifficulty = 'EASY' | 'MED' | 'HARD';
@@ -60,9 +61,6 @@ function difficultyLabel(d: RecommendedChallengeDifficulty): string {
   return 'Medium';
 }
 
-function dayWord(n: number): string {
-  return n === 1 ? 'day' : 'days';
-}
 
 export const ChallengeGridCard = React.memo(function ChallengeGridCard({
   challenge,
@@ -75,7 +73,7 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
   const Icon = iconFor(challenge.category);
   const diffLabel = difficultyLabel(challenge.difficulty);
   const friendsCount = challenge.previewUsers.length;
-  const meta = `${challenge.duration} ${dayWord(challenge.duration)} · ${diffLabel}`;
+  const meta = `${formatDays(challenge.duration)} · ${diffLabel}`;
   const a11y = `${challenge.title}, ${meta}, ${friendsCount === 1 ? '1 friend' : `${friendsCount} friends`}, tap to view`;
 
   return (

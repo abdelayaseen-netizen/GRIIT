@@ -26,11 +26,15 @@ describe("Chunk U Profile Part A", () => {
     expect(viewer).toContain("Only you can see this. Share it from here.");
     expect(viewer).toContain("Only you can see this.");
     expect(viewer).toContain("Share to the feed");
-    expect(grid).toContain("of {elapsed} days secured");
+    expect(grid).toContain("of {formatDays(elapsed)} secured");
     expect(grid).toContain("By challenge");
     expect(badges).toContain("Five marks, each earned by verified days only. Nothing here can be bought or awarded.");
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
     expect(v3).toContain("Five marks, each earned by verified days only. Nothing here can be bought or awarded.");
+    expect(v3).toContain('title="Profile"');
+    expect(v3).toContain("styles.secondary");
+    expect(v3).toContain("Add a line about what you are building");
+    expect(v3).not.toContain('title={title}');
   });
 
   it("day grouping and visitor drop", () => {

@@ -26,12 +26,12 @@ const MODES = [
     id: "standard" as const,
     title: "Standard",
     caption: "Recommended for your first challenge",
-    line: "Streak freezes on. Miss a day and you do not reset.",
+    line: "Freezes on. Use one to cover a missed day.",
   },
   {
     id: "hard" as const,
     title: "Hard mode",
-    caption: "75 Hard style. No exceptions.",
+    caption: "No exceptions.",
     line: "No freezes. Miss a day, restart from day 1.",
   },
 ] as const;
@@ -116,7 +116,7 @@ export function StepRules({
         <Text style={[styles.caption, styles.muted]}>
           {hard
             ? HARD_MODE_PROOF_CAPTION
-            : "Public accountability lifted goal completion from 43% to 76% (Matthews, 2015)."}
+            : "Public accountability on the feed."}
         </Text>
       </View>
 

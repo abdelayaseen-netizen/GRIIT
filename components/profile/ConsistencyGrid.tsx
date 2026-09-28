@@ -5,7 +5,6 @@ import { DS_V3 } from "@/lib/design-system";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import {
   DAY_GLYPH_LABEL,
-  HELD_DAY_LINE,
   boardRowsFromDays,
   consistencyDenominatorLine,
   monthGridFromDays,
@@ -14,6 +13,7 @@ import {
   type DayState,
   type EnrollmentInput,
 } from "@/lib/day-state";
+import { formatDays, formatOfDays } from "@/lib/format-days";
 import { securedElapsed } from "@/lib/consistency";
 
 const CELL = 30;
@@ -43,11 +43,11 @@ export function monthNameFromKey(monthKey: string): string {
 }
 
 export function monthSummaryLabel(secured: number, elapsed: number, monthName: string): string {
-  return `${secured} of ${elapsed} days secured in ${monthName}`;
+  return `${formatOfDays(secured, elapsed)} secured in ${monthName}`;
 }
 
 export function ofDaysLine(x: number, y: number): string {
-  return `${x} of ${y} days`;
+  return formatOfDays(x, y);
 }
 
 export function DayCell({
@@ -132,11 +132,10 @@ export function ConsistencyGrid({
     <View>
       <View style={styles.hero}>
         <DisplayNumber value={secured} size="home" />
-        <Text style={styles.ofElapsed}>of {elapsed} days secured</Text>
+        <Text style={styles.ofElapsed}>of {formatDays(elapsed)} secured</Text>
       </View>
       <Text style={styles.caption}>{consistencyDenominatorLine(joinedLabel)}</Text>
       <Text style={styles.caption}>{SECURED_LINE}</Text>
-      <Text style={styles.caption}>{HELD_DAY_LINE}</Text>
 
       <View
         style={styles.month}
@@ -155,10 +154,14 @@ export function ConsistencyGrid({
         </View>
         <View style={styles.grid}>
           {Array.from({ length: month.leadingBlanks }, (_, i) => (
-            <DayCell key={`b${i}`} state="beforejoin" />
+            <View key={`b${i}`} style={styles.col}>
+              <DayCell state="beforejoin" />
+            </View>
           ))}
           {month.cells.map((d) => (
-            <DayCell key={d.dateKey} state={d.state} />
+            <View key={d.dateKey} style={styles.col}>
+              <DayCell state={d.state} />
+            </View>
           ))}
         </View>
       </View>
@@ -199,9 +202,17 @@ const styles = StyleSheet.create({
   caption: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary, marginTop: DS_V3.space.sm },
   month: { marginTop: DS_V3.space.section, gap: DS_V3.space.sm },
   monthHead: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
-  weekRow: { flexDirection: "row", justifyContent: "space-between" },
-  wd: { width: CELL, textAlign: "center", ...DS_V3.type.label, letterSpacing: 0, textTransform: "none", color: DS_V3.color.textSecondary },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  weekRow: { flexDirection: "row" },
+  wd: {
+    width: `${100 / 7}%` as `${number}%`,
+    textAlign: "center",
+    ...DS_V3.type.label,
+    letterSpacing: 0,
+    textTransform: "none",
+    color: DS_V3.color.textSecondary,
+  },
+  grid: { flexDirection: "row", flexWrap: "wrap" },
+  col: { width: `${100 / 7}%` as `${number}%`, alignItems: "center", paddingVertical: 3 },
   cell: {
     borderRadius: CELL_R,
     alignItems: "center",

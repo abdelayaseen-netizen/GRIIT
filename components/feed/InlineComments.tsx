@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { inlineCommentsState, NO_COMMENTS_YET, viewAllComments } from "@/lib/feed-card-family";
+import { inlineCommentsState, viewAllComments } from "@/lib/feed-card-family";
 import type { FeedCommentPreview } from "@/components/feed/feedTypes";
 
 export function InlineComments({
@@ -17,7 +17,7 @@ export function InlineComments({
 }) {
   const state = inlineCommentsState(total);
   if (state === "none") {
-    return <Text style={styles.caption}>{NO_COMMENTS_YET}</Text>;
+    return null;
   }
   const shown = comments.slice(0, 2);
   return (

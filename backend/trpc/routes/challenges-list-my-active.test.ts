@@ -37,7 +37,7 @@ const IN_WINDOW: Enrollment = {
   start_at: new Date(NOW - day).toISOString(),
   end_at: new Date(NOW + 30 * day).toISOString(),
   created_at: new Date(NOW - day).toISOString(),
-  challenges: { title: "75 Hard", duration_days: 75, challenge_tasks: [] },
+  challenges: { title: "No Days Off", duration_days: 75, challenge_tasks: [] },
 };
 
 const IN_WINDOW_2: Enrollment = {

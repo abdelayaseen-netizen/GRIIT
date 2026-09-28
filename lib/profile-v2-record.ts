@@ -59,7 +59,7 @@ export function verdictFor(rate: number, closedDueDays: number): string {
   return "Rebuilding";
 }
 
-export function weeklyAverage(weeks: Array<number | null>): number {
+export function weeklyAverage(weeks: (number | null)[]): number {
   const live = weeks.filter((w): w is number => w !== null);
   return live.length ? live.reduce((a, b) => a + b, 0) / live.length : 0;
 }
@@ -126,7 +126,7 @@ export type ProfileRecord = {
     verdict: string;
     line: string;
     strip: DayState[];
-    weeks: Array<number | null>;
+    weeks: (number | null)[];
     weeklyAverage: number;
     dueDayKeys: string[];
     closedDueDays: number;
@@ -265,15 +265,15 @@ function consistencyLine(input: {
   if (input.dueCount === 0) return "Join a challenge and the strip starts filling.";
   if (input.dueCount < 7 && input.primaryDay != null && input.primaryLength != null) {
     return input.dueToday
-      ? `Day ${input.primaryDay} of ${input.primaryLength}. Today's proof is due.`
+      ? `Day ${input.primaryDay} of ${input.primaryLength}. Today still open.`
       : `Day ${input.primaryDay} of ${input.primaryLength}.`;
   }
-  const todayBit = input.dueToday ? " 1 due today." : "";
-  return `${input.verifiedClosed} of ${input.closedDueDays} due days verified.${todayBit}`;
+  const todayBit = input.dueToday ? " Today still open." : "";
+  return `${input.verifiedClosed} of ${input.closedDueDays} days verified.${todayBit}`;
 }
 
 function rateLabel(dueCount: number, closedDueDays: number, verifiedClosed: number, rate: number): string {
-  if (dueCount === 0) return "No due days";
+  if (dueCount === 0) return "No days yet";
   if (dueCount < 7) return `${verifiedClosed} of ${closedDueDays}`;
   return `${Math.round(rate * 100)}%`;
 }
@@ -470,7 +470,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     }),
     detail: {
       totalVerified,
-      completion: closedDueDays === 0 ? "—" : `${verifiedClosed} of ${closedDueDays} due days`,
+      completion: closedDueDays === 0 ? "—" : `${verifiedClosed} of ${closedDueDays} days`,
       firstProof: verifiedClosedKeys[0] ? formatDayMonthYear(verifiedClosedKeys[0]) : "—",
       longestStreak: input.bestStreak,
       months,

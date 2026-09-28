@@ -258,7 +258,7 @@ export const CHALLENGE_PACKS: ChallengePackDef[] = [
   },
   {
     id: "75hard",
-    name: "75 Hard Classic",
+    name: "No Days Off",
     emoji: "🔥",
     description: "The original. 5 strict tasks.",
     category: "discipline",

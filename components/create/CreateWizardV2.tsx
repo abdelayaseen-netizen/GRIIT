@@ -49,6 +49,7 @@ import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome"
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
+import { formatDays, formatTasks } from "@/lib/format-days";
 import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { day1StartCopy } from "@/lib/challenge-detail-mapping";
@@ -93,7 +94,7 @@ const PT = DS_V3.space.xs / 4;
 const ICON = DS_V3.space.xs * 6;
 
 function daysLabel(days: number): string {
-  return days === 1 ? "1 day" : `${days} days`;
+  return formatDays(days);
 }
 
 function canAdvanceStep1(s: WizardState): boolean {
@@ -122,11 +123,11 @@ function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
     { text: `${s.title.trim()} · ${daysLabel(s.durationDays ?? 0)}`, step: 1 },
     { text: s.who === "group" ? "Group" : "Solo", step: 1 },
     {
-      text: `${tasksCount} ${tasksCount === 1 ? "task" : "tasks"} · ${s.difficulty === "hard" ? "Hard mode" : "Standard"}`,
+      text: `${formatTasks(tasksCount)} · ${s.difficulty === "hard" ? "Hard mode" : "Standard"}`,
       step: 2,
     },
     { text: reviewPhotoLine(s.difficulty, s.photoProof), step: 3 },
-    { text: s.category ? `Category ${s.category}` : "Category", step: 3 },
+    { text: s.category ? `Category · ${s.category.charAt(0).toUpperCase()}${s.category.slice(1)}` : "Category", step: 3 },
   ];
 }
 

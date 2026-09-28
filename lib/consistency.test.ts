@@ -23,14 +23,14 @@ describe("consistency builders", () => {
     });
     expect(consistencyHeadline(c)).toBe("10 of 13 days");
     expect(consistencyLine(c)).toBe("10 of 13 days secured.");
-    expect(consistencyContext(c, (k) => k)).toBe("Since 2026-09-01. 1 due today.");
+    expect(consistencyContext(c, (k) => k)).toBe("Since 2026-09-01. Today still open.");
     expect(consistencyContext(c, (k) => k, true)).toBe("Since 2026-09-01. Today secured.");
     expect(consistencyDetailHero(c)).toBe("10 of 13");
     expect(consistencyHeadline({ secured: 0, due: 0, dueToday: false, firstDueDate: null })).toBe(
-      "No due days yet.",
+      "No days yet.",
     );
     expect(consistencyLine({ secured: 0, due: 0, dueToday: true, firstDueDate: null })).toBe(
-      "Today is the first day due.",
+      "Today is the first day.",
     );
   });
 

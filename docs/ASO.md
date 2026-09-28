@@ -26,7 +26,7 @@ Priority bucket - high volume, high relevance:
 - discipline,habits,streak,challenge,accountability,routine,goals,fitness,motivation,self,improve,daily
 
 Secondary bucket - competitor-overlap, lower volume:
-- habit,tracker,75hard,morning,routine,journal,checkin,grit,build,strong,mental,toughness
+- habit,tracker,morning,routine,journal,checkin,grit,build,strong,mental,toughness
 
 Avoid: trademarked names, "Duolingo", "Strava" (will be rejected)
 
@@ -75,7 +75,7 @@ iPhone 6.7" (required) and iPhone 6.5" (compatibility):
 - Rotate screenshots every 4-6 weeks based on conversion data
 
 ## Known Risks
-- Apple may reject "75hard" as keyword if it's trademarked - verify before submission
+- Do not submit trademarked program names as keywords
 - Testimonials in screenshots must be real users with documented consent
 - Hard paywall in screenshots requires reviewer can complete trial signup with sandbox account
 

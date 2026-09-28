@@ -127,7 +127,7 @@ export function ProfileV3({
     <View>
       {showRootHeader ? (
         <RootHeader
-          title={title}
+          title="Profile"
           actions={
             <View style={styles.actionsRow}>
               <HeaderIcon accessibilityLabel="Share" onPress={onShare}>
@@ -171,14 +171,14 @@ export function ProfileV3({
       {bio ? (
         <Text style={styles.bio}>{bio}</Text>
       ) : onEditProfile ? (
-        <View style={styles.bioPrompt}>
-          <Button
-            label="Add a line about what you are building"
-            variant="tertiary"
-            size="small"
-            onPress={onEditProfile}
-          />
-        </View>
+        <Pressable
+          style={styles.bioPrompt}
+          onPress={onEditProfile}
+          accessibilityRole="button"
+          accessibilityLabel="Add a line about what you are building"
+        >
+          <Text style={styles.secondary}>Add a line about what you are building</Text>
+        </Pressable>
       ) : null}
 
       <View style={styles.btnRow}>
