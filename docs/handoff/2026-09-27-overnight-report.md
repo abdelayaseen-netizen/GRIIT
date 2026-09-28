@@ -3,8 +3,8 @@
 ## Run this first
 
 1. SQL blocks below, in order, one statement per editor run.
-2. Simulator-check `fix/build-65-truth` then `fix/drift-polish` then `feat/time-picker`.
-3. Merge order: `fix/build-65-truth` → `fix/drift-polish` → `feat/time-picker`. Do **not** merge `report/audits`.
+2. Simulator-check `fix/build-65-truth` then `fix/drift-polish` then `feat/time-picker` then `fix/gate-copy`.
+3. Merge order: `fix/build-65-truth` → `fix/drift-polish` → `feat/time-picker` → `fix/gate-copy`. Do **not** merge `report/audits`.
 4. After merging `fix/build-65-truth`, deploy Railway. That branch is the only one that changes `backend/` runtime code.
 
 ### Branch heads
@@ -13,9 +13,10 @@
 |---|---|---|
 | `main` | `45dd7296c92892a2a8ca9fd81eedb4459ede63e8` | ~1090 |
 | `fix/build-65-truth` | `7177473ba3728c8ae4f7c77db6fa3f8190cf6de9` | 1117 |
-| `fix/drift-polish` | `4ba3b49e2ea312ed3111947257ef86360b9a15b1` | 1091 |
+| `fix/drift-polish` | `bf8251002056d82838b54f98c3f48ef517965189` | 1091 |
 | `feat/time-picker` | `5914a9610e57b75c9f672a0e37a33ab7b2ccae4a` | 1095 |
-| `report/audits` | `8317ab79e09764a8f610e45ad0ab85d26f6ac314` | 1090 (main suite, docs only) |
+| `fix/gate-copy` | see that branch after push | — |
+| `report/audits` | `bc962ea33fd08a41c33432a8508ca61979d5edcb` | 1090 (main suite, docs only) |
 
 ### Commits that touch `backend/` (Railway after merge)
 
@@ -191,10 +192,10 @@ See Audits below. `supabase/migrations/20260927200000_is_member.sql` is a draft.
 
 1. **T1 unique constraint.** `supabase/migrations/20260927180000_active_challenges_one_active_unique.sql` on `fix/build-65-truth` — apply in the editor, then run the `pg_constraint` block. Logging / start-again TS already shipped.
 2. **T2 private proofs are world-readable.** Bucket `task-proofs` is public (`20250330000000_task_verification_options.sql:50`). SELECT policy `USING (bucket_id = 'task-proofs')` (`:61-63`). Client uses `getPublicUrl` (`lib/uploadProofImage.ts:105`). Proposed fix (not built): private bucket + signed URLs, service-role after ownership / `shared = true`. Needs a product/storage decision.
-3. **Catalog title rename.** `supabase/migrations/20260927190000_rename_75_hard_catalog.sql` on `fix/drift-polish` — apply so prod catalog `75 Hard` becomes `No Days Off`.
+3. **Catalog title rename.** `supabase/migrations/20260927190000_rename_75_hard_catalog.sql` on `fix/drift-polish` (`bf82510`). Title becomes `No Days Off` only when `title = '75' || ' Hard'`. Description replace does not overwrite other titles. Preview SELECT is in the file header.
 4. **T5 5am crew repair.** Confirmed: required Run 05:00–06:30 launched 13:24 EDT makes today impossible. Repair SQL is below. Not run.
 5. **`secure_day` RPC.** Already filters `start_at <= now()` (`today_state.sql:110,255`). No RPC change. If prod function differs, run the `pg_get_functiondef` block.
-6. **`is_member()`.** Draft at `supabase/migrations/20260927200000_is_member.sql`. Do not apply until you review 42P17.
+6. **`is_member(p_challenge_id uuid)`.** Draft at `supabase/migrations/20260927200000_is_member.sql` (`bc962ea`). Uses `auth.uid()` inside. No user-id argument. No `status` filter until the `information_schema` block proves the column. Do not apply until you review 42P17.
 7. **datetimepicker native build.** `feat/time-picker` cannot be simulator-checked on build 65. Needs a new native binary. Do not run EAS from this session.
 8. **T8 timings.** No simulator numbers. Server logs are in place after Railway deploy of `7177473`.
 9. **Design specs.** Finish-flow redesign (v41 F1), time-picker restyle (v41 F2), Visibility v38b — not built.
@@ -206,7 +207,7 @@ See Audits below. `supabase/migrations/20260927200000_is_member.sql` is a draft.
 1. Apply the three SQL migrations (unique index, catalog rename, `is_member`) or not.
 2. Make `task-proofs` private (signed URLs) vs leave public bucket.
 3. Whether pack id `75hard` should be renamed (display is already `No Days Off`).
-4. Onboarding v2 still says `"Standard mode. Gates are recorded, not enforced."` (`lib/onboarding-v2-first-challenge.ts:8`). Left untouched per do-not-touch.
+4. Gate copy: `"Standard mode. Gates are recorded, not enforced."` is false (`backend/trpc/routes/checkins.ts:168` `assertTimeGate`, `:248` camera). Replacement ships on `fix/gate-copy`, including `lib/onboarding-v2-first-challenge.ts:8` (authorized exception).
 
 ---
 
@@ -354,7 +355,7 @@ backend/lib/miss-reconcile.ts:3   Never nulls last_completed_date_key (useFreeze
 backend/lib/miss-reconcile.test.ts:182  cronWrites.some(... last_completed_date_key === null) === false
 ```
 
-`railway.json` has no cron (`daily-reset.ts:8-9`). `POST /internal/daily-reset` exists; nothing in-repo schedules it.
+`railway.json` has no cron (`backend/lib/daily-reset.ts:8-9`). The route **is** scheduled: `.github/workflows/daily-reset.yml:5` `cron: "30 0 * * *"` (00:30 UTC) POSTs `https://grit-backend-production.up.railway.app/internal/daily-reset` (`:17`). The earlier line that said nothing in-repo schedules it was wrong.
 
 Only yesterday can be frozen:
 
@@ -411,7 +412,70 @@ Push copy does not embed proof URLs (notification copy is text). Storage URLs re
 
 Policy at `20250312000000_team_challenges.sql:53-57` SELECTs `challenge_members` from inside its own policy → infinite recursion.
 
-Draft: `supabase/migrations/20260927200000_is_member.sql` (`SECURITY DEFINER is_member()`, then policy uses it). Not applied.
+Draft: `supabase/migrations/20260927200000_is_member.sql` — `is_member(p_challenge_id uuid)` reads `auth.uid()` inside (`bc962ea`). Policy: `auth.uid() = user_id OR public.is_member(challenge_id)`. Not applied.
+
+### 14. `challenge_members` columns (before applying `is_member`)
+
+```sql
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'challenge_members'
+ORDER BY ordinal_position;
+```
+
+Repo create lists `status` (`20250312000000_team_challenges.sql:42`). The draft does not filter on it.
+
+---
+
+## Private `task-proofs` + signed URLs (plan only, not built)
+
+Today the bucket is public and every stored value is a world-readable URL.
+
+### Where a proof URL is written
+
+| Write | File:line |
+|---|---|
+| Upload returns public URL | `lib/uploadProofImage.ts:12` bucket; `:105-106` `getPublicUrl` |
+| `check_ins.proof_url` / `photo_url` | `backend/trpc/routes/checkins.ts:783-785` (complete); `:1159-1160` (saveProgress) |
+| `activity_events.metadata.photo_url` | `backend/trpc/routes/checkins.ts:846` |
+| Share backfill from check-in | `backend/trpc/routes/feed.ts:428-435,447` |
+| Caption flip `proof_photo_url` | `backend/trpc/routes/feed.ts:457` |
+| Client complete payload | `components/task-v2/useTaskFlowV2.ts:508` `photo_url: url` |
+
+No `createSignedUrl` in the repo (grep). Avatars are a different public bucket (`lib/uploadAvatar.ts:57`).
+
+### Where a proof URL is rendered or re-derived
+
+| Surface | File:line |
+|---|---|
+| Path → `/object/public/task-proofs/...` | `lib/profile-v2-proof-photo.ts:28-39,42-58,65-73,81-94` |
+| Home today rows | `app/(tabs)/index.tsx:200-222` |
+| Active task stamps | `app/challenge/active/[activeChallengeId].tsx:83-89,153,281` |
+| Profile proofs grid | `backend/trpc/routes/profiles-record.ts:297-301`; `lib/proofs-grid.ts`; `components/profile/ProofsGrid.tsx` |
+| Proof day / viewer | `lib/day-state.ts`; `components/profile/ProofDayCard.tsx`; `DayViewer.tsx` |
+| Live feed hydrate | `backend/lib/feed-activity-hydrate.ts:334-356` |
+| Feed card | `lib/live-feed-list.ts:15-19`; `components/feed/FeedPostV3.tsx:51-53,94-96` |
+| Post detail | `lib/post-detail.ts:21-26`; `app/post/[id].tsx` |
+| Secured / moment / share | `backend/trpc/routes/checkins.ts:925-967`; `lib/secured-day.ts:84-97`; `components/task-v2/SecuredDayScreen.tsx`; `MomentScreenV3.tsx:243`; `components/share/ShareCardV3.tsx` |
+| Discover hero (main) | `backend/trpc/routes/challenges-discover.ts:276-325` — nulled on `fix/build-65-truth` |
+| Roster | avatars only (`backend/trpc/routes/groups.ts:522-576`) |
+
+### Proposed shape
+
+1. **Store paths, not URLs.** Canonical value: `{userId}/{ts}-{rand}.jpg` (already the upload path at `uploadProofImage.ts:69`). Never persist `https://…/object/public/task-proofs/…`.
+2. **Migration (not written).** Rewrite existing columns to the storage path:
+   - `check_ins.photo_url`, `proof_url`, `completion_image_url`
+   - `activity_events.metadata->>'photo_url'` and `->>'proof_photo_url'`
+   - `regexp_replace` of `/storage/v1/object/(public\|sign)/task-proofs/` → empty, keep `{userId}/{file}`
+3. **Bucket.** `UPDATE storage.buckets SET public = false WHERE name = 'task-proofs'`. Drop `"Public read proofs"` (`20250330000000:59-63`). Keep INSERT own-folder. No public SELECT.
+4. **Mint signed URLs (service role only)** after one of:
+   - `check_ins.user_id = auth.uid()` (owner), or
+   - `activity_events.share_state = 'shared'` (or `shared = true`) for that object, or
+   - the viewer is the owner reading their own unshared row
+   New tRPC e.g. `proofs.sign({ path })` → `supabase.storage.from('task-proofs').createSignedUrl(path, ttl)`. User JWT must not be able to sign arbitrary paths.
+5. **TTL / caching.** 120–300 seconds. Do not persist the signed URL in AsyncStorage or the DB. Image cache key = storage path, not the query-string URL. Refresh on 403. Client `resolveProofImageUrl` (`lib/profile-v2-proof-photo.ts:42-58`) today **rewrites signed → public**; that invert must die.
+6. **Tests.** `lib/proofs-grid.test.ts:100` held a real production object URL (user `10556c76-…`). Removed on `fix/gate-copy` in favor of a fake path.
 
 ---
 
@@ -420,7 +484,8 @@ Draft: `supabase/migrations/20260927200000_is_member.sql` (`SECURITY DEFINER is_
 ```
 main                  45dd729
 fix/build-65-truth    7177473   1117 tests   Railway
-fix/drift-polish      4ba3b49   1091 tests
+fix/drift-polish      bf82510   1091 tests
 feat/time-picker      5914a96   1095 tests   new native build
-report/audits         8317ab7   report + is_member draft only
+fix/gate-copy         (push after copy commit)
+report/audits         bc962ea   report + is_member draft
 ```
