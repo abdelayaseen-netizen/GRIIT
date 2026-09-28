@@ -15,8 +15,8 @@
 | `fix/build-65-truth` | `7177473ba3728c8ae4f7c77db6fa3f8190cf6de9` | 1117 |
 | `fix/drift-polish` | `bf8251002056d82838b54f98c3f48ef517965189` | 1091 |
 | `feat/time-picker` | `5914a9610e57b75c9f672a0e37a33ab7b2ccae4a` | 1095 |
-| `fix/gate-copy` | see that branch after push | — |
-| `report/audits` | `bc962ea33fd08a41c33432a8508ca61979d5edcb` | 1090 (main suite, docs only) |
+| `fix/gate-copy` | `0be2abe` | 1090 |
+| `report/audits` | `ef5bc3f4b15aaf046d109cf5432faf62ec80f334` | 1090 (main suite, docs only) |
 
 ### Commits that touch `backend/` (Railway after merge)
 
@@ -475,7 +475,7 @@ No `createSignedUrl` in the repo (grep). Avatars are a different public bucket (
    - the viewer is the owner reading their own unshared row
    New tRPC e.g. `proofs.sign({ path })` → `supabase.storage.from('task-proofs').createSignedUrl(path, ttl)`. User JWT must not be able to sign arbitrary paths.
 5. **TTL / caching.** 120–300 seconds. Do not persist the signed URL in AsyncStorage or the DB. Image cache key = storage path, not the query-string URL. Refresh on 403. Client `resolveProofImageUrl` (`lib/profile-v2-proof-photo.ts:42-58`) today **rewrites signed → public**; that invert must die.
-6. **Tests.** `lib/proofs-grid.test.ts:100` held a real production object URL (user `10556c76-…`). Removed on `fix/gate-copy` in favor of a fake path.
+6. **Tests.** `lib/proofs-grid.test.ts:100` held a real production object URL. Removed on `fix/gate-copy` `0be2abe` (`task-proofs/00000000-0000-4000-8000-000000000001/fake-proof.jpg`).
 
 ---
 
@@ -486,6 +486,6 @@ main                  45dd729
 fix/build-65-truth    7177473   1117 tests   Railway
 fix/drift-polish      bf82510   1091 tests
 feat/time-picker      5914a96   1095 tests   new native build
-fix/gate-copy         (push after copy commit)
-report/audits         bc962ea   report + is_member draft
+fix/gate-copy         0be2abe   1090 tests
+report/audits         ef5bc3f   report + is_member draft
 ```
