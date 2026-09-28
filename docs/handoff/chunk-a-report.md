@@ -100,36 +100,141 @@ Commit: `3efc9f0ae6ae6e99d4a3f3606f2969e09f8c2495`
 
 ---
 
-## STOP A2
+## A3. Signed URLs — store paths, mint at read (contradiction T2)
 
-A3 (signed URLs) is not started. Waiting.
+Bucket stays **public**. Phase 3 (flip private) is report-only. Do not apply.
+
+Canonical stored value: `{userId}/{ts}-{rand}.jpg`. APIs mint signed URLs (TTL 300) via service-role `createSignedUrls`. Missing service role → null, not a public URL. Sign only if first folder === viewerId **or** a shared activity row references the path.
+
+### Phase 1 — resolver + read sites
+
+`backend/lib/proof-image.ts`
+
+- `toProofPath` / `pathOwnerId` / `canSignProofPath` / `sharedPathsFromEvents`
+- `signProofPaths` — one batch, TTL `PROOF_SIGN_TTL_SEC` = 300
+- `signProofPair`
+
+Wired:
+
+| Surface | File:line |
+|---|---|
+| Feed hydrate `photoUrl` / `proofPhotoUrl` | `backend/lib/feed-activity-hydrate.ts:370-378` |
+| `feed.getPost` | `backend/trpc/routes/feed.ts:253` `signProofPair` |
+| `feed.list` metadata photo fields | `backend/trpc/routes/feed.ts:346` |
+| `feed.listMine` `proofUrl` | `backend/trpc/routes/feed.ts:392` |
+| `profiles.getRecord` `days[].cover_url` + `proofs[].imageUrl` | `backend/trpc/routes/profiles-record.ts:500,517` |
+| `checkins.complete` returned proof fields + `dayProofs` | `backend/trpc/routes/checkins.ts:982` |
+| `checkins.getTodayCheckins` | `backend/trpc/routes/checkins.ts:1257` |
+| `checkins.getTodayCheckinsForUser` (`proof_url`, `completion_image_url`) | `backend/trpc/routes/checkins.ts:1322` |
+
+`publicUrlForProofHttp` no longer rewrites signed → public (`lib/profile-v2-proof-photo.ts:42-51`).
+
+Hydrate forces `share_state: "shared"` on already-visible events (`feed-activity-hydrate.ts:371`). `getPost` uses `sharedPathsFromEvents([ev])` so an owner still signs their own unshared path via first-folder === viewerId.
+
+Commit: `74314230b3d95313a2abdee6b93317b463f753e6`
+
+### Phase 2 — writes store a path
+
+`storedProofValue` (`backend/lib/proof-image.ts:17`) — trim, then `toProofPath(trimmed) ?? trimmed`. Old clients still sending a public URL get a path. `file://` and other non-storage values stay as-is.
+
+| Write | File:line |
+|---|---|
+| Upload returns `data.path` (no `getPublicUrl`) | `lib/uploadProofImage.ts:105` |
+| `checkins.complete` `photo_url` / `proof_url` / `completion_image_url` + activity `metadata.photo_url` | `backend/trpc/routes/checkins.ts:252,774-788,849` |
+| `checkins.saveProgress` | `backend/trpc/routes/checkins.ts:1182-1185` |
+| `feed.shareCompletion` backfill + `proof_photo_url` | `backend/trpc/routes/feed.ts:469,493` |
+| `shareCompletion` input accepts a path (was `.url()`) | `backend/trpc/routes/feed.ts:417` |
+
+Client complete still sends `photo_url: url` (`components/task-v2/useTaskFlowV2.ts:516-517`). After this upload change that value is a path. Complete already takes `z.string().max(2000)`.
+
+Avatars are a different bucket (`lib/uploadAvatar.ts:57`). Untouched.
+
+Tests (`backend/lib/proof-image.test.ts`): `storedProofValue`; `new uploads store a path and writes normalise URLs`.
+
+### Columns
+
+| Column | Table |
+|---|---|
+| `photo_url` | `check_ins` |
+| `proof_url` | `check_ins` |
+| `completion_image_url` | `check_ins` |
+| `metadata->>'photo_url'` | `activity_events` |
+| `metadata->>'proof_photo_url'` | `activity_events` |
+
+Schema: `20260321150000_check_ins_table_and_rls.sql`, `20250310000000_check_ins_completion_image_url.sql`, `20250330000000_task_verification_options.sql`.
+
+### Migration (do not apply)
+
+File: `supabase/migrations/20260928010000_task_proofs_store_paths.sql`
+
+Writer: that file, applied by hand. No user UPDATE policy. Strips `/storage/v1/object/(public|sign)/task-proofs/` (and `?...`) down to `{userId}/{file}`.
+
+Preview (one statement per block): `docs/sql-drafts/20260928010000_task_proofs_store_paths_preview.sql`
+
+### Phase 3 — flip (report only, not this chunk)
+
+Do not run until build 66 is on TestFlight and the migration preview counts are applied.
+
+```sql
+UPDATE storage.buckets
+SET public = false
+WHERE id = 'task-proofs';
+
+DROP POLICY IF EXISTS "Public read proofs" ON storage.objects;
+```
+
+Keep `"Users can upload own proofs"` INSERT (`20250330000000_task_verification_options.sql:54-57`). No public SELECT. No new user UPDATE.
+
+#### What build 65 breaks if the bucket flips now
+
+APIs that already sign keep working: feed, getPost, listMine, getRecord covers/proofs, complete return, getTodayCheckins, getTodayCheckinsForUser (`proof_url` / `completion_image_url`).
+
+These still read a stored value (path or leftover public URL) and/or rebuild `/object/public/task-proofs/…`:
+
+| Surface | Why it 403s / fails to load |
+|---|---|
+| Active today stamps | `app/challenge/active/[activeChallengeId].tsx:153-155` selects `check_ins` with the user JWT. `:90-92` passes the raw stored value into `proof_photo_url`. A path is not an Image URI. A leftover public URL dies when the bucket is private. |
+| Moment / just-captured fallback | `components/task-v2/MomentScreenV3.tsx:243` → `proofImageUrlForCheckIn` → `publicUrlForProofStoragePath` (`lib/profile-v2-proof-photo.ts:29-39`) builds `/object/public/task-proofs/…`. `file://` still works. |
+| Any leftover public URL in DB | Same public path. Migration must land before the flip or those rows stay broken even on signed APIs until `toProofPath` can parse them (it can — signed APIs still work on old public URLs). The client-direct reads do not. |
+| `getTodayCheckinsForUser` `photo_url` | Not signed (`checkins.ts:1307` does not select it; `:1322` signs only `proof_url` / `completion_image_url`). Home today stamps use `hasCameraProof` (boolean), not the image bytes — stamps survive. A later consumer of `photo_url` from this payload would not. |
+
+Build 66 needs Active (and any other client `check_ins` photo read) to go through a signed API, and `publicUrlForProofStoragePath` must stop minting public URLs.
+
+---
+
+## STOP A3
+
+Chunk B / UI / EAS / Railway / RevenueCat / onboarding / v37–v41 screens are not started. Bucket is still public. Migration is not applied. Waiting.
 
 ---
 
 ## Blocked
 
-None for A1/A2.
+None for A1–A3.
 
 ## Needs decision
 
-None. Standard copy stays the gate-copy line.
+None. Standard copy stays the gate-copy line. Do not flip `task-proofs` until build 66.
 
 ## Yaseen to run
 
-None in A1/A2. No SQL.
+Preview only, one statement per block, from `docs/sql-drafts/20260928010000_task_proofs_store_paths_preview.sql`. Do not run `supabase/migrations/20260928010000_task_proofs_store_paths.sql`. Do not flip the bucket.
 
 ## Commits touching `backend/` (Railway after merge)
 
 1. `5040701` `fix(checkins): honour shareChoicePending for every task type`
 2. `3efc9f0` `feat(record): return v41 day states from first start_at to today`
+3. `7431423` `feat(proofs): return signed task-proofs URLs from the API`
+4. `1ff5395` `feat(proofs): store task-proofs paths instead of public URLs`
+5. `c1660a0` `chore(sql): add unapplied task-proofs path rewrite` (SQL only)
 
 ## Branch head
 
-`3efc9f0ae6ae6e99d4a3f3606f2969e09f8c2495` on `feat/chunk-a-backend`
+`feat/chunk-a-backend`. A3 writes `1ff5395e0211d60a90e47dad92ab7e8f6ec8471f`. Migration `c1660a03be97e6e697918a33c11d518c3a335dd6`. This report is the next commit.
 
 ## Test count
 
 - tsc 0
-- **1141** tests, 206 files (was 1128 / 205 on main `fafdb0c`)
+- **1149** tests, 207 files (was 1147 / 207 after A3 phase 1; 1128 / 205 on main `fafdb0c`)
 - eslint 0 on the files this chunk changed
 - repo-wide `npm run lint` is already dirty on main (7 expo warnings). Not introduced here.
