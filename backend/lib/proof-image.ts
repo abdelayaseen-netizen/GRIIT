@@ -13,6 +13,14 @@ export const PROOF_SIGN_TTL_SEC = 300;
 const UUID_FOLDER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Persist a path. Old clients still send public URLs; keep non-storage values as-is. */
+export function storedProofValue(raw: string | null | undefined): string | null {
+  if (raw == null) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  return toProofPath(trimmed) ?? trimmed;
+}
+
 export function toProofPath(stored: string | null | undefined): string | null {
   const s = stored?.trim();
   if (!s || /^file:/i.test(s)) return null;

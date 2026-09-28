@@ -1,5 +1,5 @@
 /**
- * Upload a completion proof image to Supabase storage and return the public URL.
+ * Upload a completion proof image to Supabase storage and return the object path.
  * Used when a task requires photo proof (requires_photo_proof or photo task type).
  *
  * Requires a Supabase storage bucket named "task-proofs" with policy allowing
@@ -102,8 +102,7 @@ export async function uploadProofImageFromBase64(
       return { error: statusCode ? `Storage ${statusCode}: ${msg}` : msg || "Upload failed" };
     }
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
-    return { url: urlData.publicUrl };
+    return { url: data.path };
   } catch (e: unknown) {
     clearTimeout(timeout);
     if (e && typeof e === "object" && "name" in e && (e as { name: string }).name === "AbortError") return { error: "Upload timed out. Please try again." };

@@ -92,7 +92,7 @@ import {
   shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
-import { signProofPaths } from "../../lib/proof-image";
+import { signProofPaths, storedProofValue } from "../../lib/proof-image";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -249,7 +249,7 @@ export const checkinsRouter = createTRPCRouter({
         totalDur
       );
       const requirePhoto = !isMinimumDay && gatesFor(task).includes("camera");
-      const photoUrl = (input.photo_url ?? input.proofUrl)?.trim() || null;
+      const photoUrl = storedProofValue(input.photo_url ?? input.proofUrl);
       // DB maps UI "photo" → task_type "manual"; detect photo proof via flags/payload.
       const isPhotoProof =
         requirePhoto ||
@@ -771,7 +771,7 @@ export const checkinsRouter = createTRPCRouter({
         });
       }
 
-      const proofUrl = photoUrl || input.proofUrl?.trim() || null;
+      const proofUrl = photoUrl;
       // Explicit status — DB default is 'pending'; complete always writes 'completed'.
       const payload: Record<string, unknown> = { user_id: ctx.userId, active_challenge_id: input.activeChallengeId, task_id: input.taskId, date_key: dateKey, status: "completed" };
       payload.task_mode = input.task_mode;
@@ -1180,8 +1180,9 @@ export const checkinsRouter = createTRPCRouter({
       };
       if (input.noteText != null) payload.note_text = input.noteText;
       if (input.proofUrl != null) {
-        payload.proof_url = input.proofUrl;
-        payload.photo_url = input.proofUrl;
+        const stored = storedProofValue(input.proofUrl);
+        payload.proof_url = stored;
+        payload.photo_url = stored;
       }
 
       const { data, error } = await ctx.supabase

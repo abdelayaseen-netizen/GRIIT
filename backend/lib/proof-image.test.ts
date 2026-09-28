@@ -7,12 +7,23 @@ import {
   pathOwnerId,
   sharedPathsFromEvents,
   signProofPaths,
+  storedProofValue,
   toProofPath,
 } from "./proof-image";
 
 const OWNER = "10556c76-3c37-4204-8915-fc7fd3b16a59";
 const OTHER = "00000000-0000-4000-8000-000000000099";
 const PATH = `${OWNER}/1789831043561-74pcldt5.jpg`;
+
+describe("storedProofValue", () => {
+  it("normalises a public URL to a path and leaves a path alone", () => {
+    expect(
+      storedProofValue(`https://x.supabase.co/storage/v1/object/public/task-proofs/${PATH}`),
+    ).toBe(PATH);
+    expect(storedProofValue(PATH)).toBe(PATH);
+    expect(storedProofValue("file:///var/mobile/p.jpg")).toBe("file:///var/mobile/p.jpg");
+  });
+});
 
 describe("toProofPath", () => {
   it("accepts a public URL or a bare path", () => {
@@ -101,5 +112,18 @@ describe("API call sites", () => {
     expect(record).not.toContain("object/public/task-proofs");
     expect(checkins).not.toContain("object/public/task-proofs");
     expect(hydrate).not.toContain("object/public/task-proofs");
+    expect(checkins).toContain("signProofPaths");
+  });
+
+  it("new uploads store a path and writes normalise URLs", () => {
+    const checkins = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
+    const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
+    const upload = readFileSync(resolve(__dirname, "../../lib/uploadProofImage.ts"), "utf8");
+    expect(checkins).toContain("storedProofValue");
+    expect(feed).toContain("storedProofValue");
+    expect(feed).toContain("proofPhotoUrl: z.string().max(2000)");
+    expect(feed).not.toContain("proofPhotoUrl: z.string().url()");
+    expect(upload).toContain("return { url: data.path }");
+    expect(upload).not.toContain("getPublicUrl");
   });
 });

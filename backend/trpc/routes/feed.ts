@@ -23,7 +23,7 @@ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
-import { sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
+import { sharedPathsFromEvents, signProofPair, signProofPaths, storedProofValue } from "../../lib/proof-image";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -414,7 +414,7 @@ export const feedRouter = createTRPCRouter({
     };
   }),
 
-  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().url().optional() })).mutation(async ({ input, ctx }) => {
+  shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().max(2000).optional() })).mutation(async ({ input, ctx }) => {
     const server = getSupabaseServer();
     if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
@@ -466,7 +466,9 @@ export const feedRouter = createTRPCRouter({
           const task = taskRow as { title?: string; task_type?: string } | null;
           taskName = task?.title ?? "Task";
           taskType = task?.task_type ?? "manual";
-          photoFromCheckin = cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null;
+          photoFromCheckin = storedProofValue(
+            cin.proof_url ?? cin.completion_image_url ?? cin.photo_url ?? null,
+          );
         } else {
           logger.warn("[shareCompletion] no check_in found for date_key %s or %s — proceeding with defaults", todayKey, yesterdayKey);
         }
@@ -488,7 +490,7 @@ export const feedRouter = createTRPCRouter({
       eventId = ins.id;
       prevMeta = ins.metadata ?? {};
     }
-    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: input.proofPhotoUrl?.trim() || null, feed_shared: true };
+    const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: storedProofValue(input.proofPhotoUrl), feed_shared: true };
     const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
     if (uErr) {
       logger.error({ err: uErr }, "[shareCompletion] update failed");
