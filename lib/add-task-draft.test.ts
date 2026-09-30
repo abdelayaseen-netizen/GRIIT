@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   ADD_TASK_DEFAULT,
+  ADD_TASK_ON_HOME,
+  ADD_TASK_PROOFS,
   ADD_TASK_STARTERS,
+  ADD_TASK_WHAT_PROVES,
+  applyProof,
   applyStarter,
   canSubmitDraft,
   gatesFromDraft,
   payloadFromDraft,
   previewFromDraft,
+  proofFromDraft,
   type AddTaskDraft,
 } from "@/lib/add-task-draft";
 
@@ -98,6 +103,26 @@ describe("add-task draft", () => {
     const pray = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Pray")!);
     expect(pray.type).toBe("check_off");
     expect(pray.name).toBe("Pray");
+  });
+
+  it("proof radio writes the same camera / time / location flags", () => {
+    expect(ADD_TASK_WHAT_PROVES).toBe("How it's proven");
+    expect(ADD_TASK_ON_HOME).toBe("On Home");
+    expect(ADD_TASK_PROOFS.map((p) => p.title)).toEqual([
+      "Self-report",
+      "Photo",
+      "Photo + time window",
+      "Photo + place",
+    ]);
+    expect(ADD_TASK_DEFAULT.fromTime).toBe("05:00");
+    expect(ADD_TASK_DEFAULT.toTime).toBe("06:30");
+    expect(proofFromDraft(ADD_TASK_DEFAULT)).toBe("self");
+    expect(gatesFromDraft(applyProof(draft(), "self"))).toEqual([]);
+    expect(gatesFromDraft(applyProof(draft(), "photo"))).toEqual(["camera"]);
+    expect(gatesFromDraft(applyProof(draft(), "photo_time"))).toEqual(["camera", "time"]);
+    expect(gatesFromDraft(applyProof(draft(), "photo_place"))).toEqual(["camera", "location"]);
+    expect(applyProof(draft({ time: true, location: true }), "photo").time).toBe(false);
+    expect(applyProof(draft({ time: true, location: true }), "photo").location).toBe(false);
   });
 
   it("preview caption updates with the gate switches", () => {

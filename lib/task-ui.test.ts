@@ -100,12 +100,12 @@ describe("wizardGateLine", () => {
 });
 
 describe("typeCaption", () => {
-  it("matches the frame 42 copy table", () => {
-    expect(typeCaption("check_off")).toBe("Tap it when it is done.");
-    expect(typeCaption("timer")).toBe("Runs in the app. It has to reach the time.");
-    expect(typeCaption("counter")).toBe("Hit a number each day.");
-    expect(typeCaption("text")).toBe("Write a number of words. Counted, not read.");
-    expect(typeCaption("run")).toBe("Distance and time come from GPS.");
+  it("matches the 104–105 one-line captions", () => {
+    expect(typeCaption("check_off")).toBe("Tap when it is done.");
+    expect(typeCaption("timer")).toBe("Run a timer in the app.");
+    expect(typeCaption("counter")).toBe("Hit a number, like 8 glasses.");
+    expect(typeCaption("text")).toBe("Write a set number of words.");
+    expect(typeCaption("run")).toBe("Log distance and time.");
     expect(TYPE_CAPTION.check_off).toBe(typeCaption("check_off"));
   });
 });

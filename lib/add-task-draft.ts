@@ -9,7 +9,37 @@ export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
 export const ADD_TASK_NAME_PLACEHOLDER = "Name it";
 export const ADD_TASK_WHAT_YOU_DO = "What you do";
-export const ADD_TASK_WHAT_PROVES = "What proves it";
+export const ADD_TASK_WHAT_PROVES = "How it's proven";
+export const ADD_TASK_ON_HOME = "On Home";
+
+export type AddTaskProof = "self" | "photo" | "photo_time" | "photo_place";
+
+export const ADD_TASK_PROOFS: readonly {
+  id: AddTaskProof;
+  title: string;
+  caption: string;
+}[] = [
+  {
+    id: "self",
+    title: "Self-report",
+    caption: "You say it is done. Nothing is checked.",
+  },
+  {
+    id: "photo",
+    title: "Photo",
+    caption: "A photo taken in the app.",
+  },
+  {
+    id: "photo_time",
+    title: "Photo + time window",
+    caption: "A photo, only inside the hours you set.",
+  },
+  {
+    id: "photo_place",
+    title: "Photo + place",
+    caption: "A photo, only at the place you set.",
+  },
+] as const;
 export const ADD_TASK_CTA = "Add task";
 export const ADD_TASK_SET_PLACE = "Set place";
 export const ADD_TASK_COMMON = "Common tasks";
@@ -94,13 +124,33 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   location: false,
   timeMode: "by",
   byTime: "07:00",
-  fromTime: "09:30",
-  toTime: "10:30",
+  fromTime: "05:00",
+  toTime: "06:30",
   placeName: "",
   placeLat: null,
   placeLng: null,
   placeRadius: 100,
 };
+
+export function proofFromDraft(draft: Pick<AddTaskDraft, "camera" | "time" | "location">): AddTaskProof {
+  if (draft.location) return "photo_place";
+  if (draft.time) return "photo_time";
+  if (draft.camera) return "photo";
+  return "self";
+}
+
+export function applyProof(draft: AddTaskDraft, proof: AddTaskProof): AddTaskDraft {
+  switch (proof) {
+    case "self":
+      return { ...draft, camera: false, time: false, location: false };
+    case "photo":
+      return { ...draft, camera: true, time: false, location: false };
+    case "photo_time":
+      return { ...draft, camera: true, time: true, location: false };
+    case "photo_place":
+      return { ...draft, camera: true, time: false, location: true };
+  }
+}
 
 export function gatesFromDraft(draft: AddTaskDraft): TaskGate[] {
   const gates: TaskGate[] = [];

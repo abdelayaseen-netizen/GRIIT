@@ -10,11 +10,11 @@ export type { GateTime, TaskGate, TaskModelType };
 export const SELF_REPORTED = "Self-reported";
 
 export const TYPE_CAPTION: Record<TaskModelType, string> = {
-  check_off: "Tap it when it is done.",
-  timer: "Runs in the app. It has to reach the time.",
-  counter: "Hit a number each day.",
-  text: "Write a number of words. Counted, not read.",
-  run: "Distance and time come from GPS.",
+  check_off: "Tap when it is done.",
+  timer: "Run a timer in the app.",
+  counter: "Hit a number, like 8 glasses.",
+  text: "Write a set number of words.",
+  run: "Log distance and time.",
 };
 
 const GATE_CAMERA = "Camera";
