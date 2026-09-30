@@ -210,7 +210,10 @@ export const challengesJoinProcedures = {
 
   /** Leave a challenge. Solo creators end the run (abandon enrollment, keep history). Team/group creators cannot leave. */
   leave: protectedProcedure
-    .input(z.object({ challengeId: z.string().uuid() }))
+    .input(z.object({
+      challengeId: z.string().uuid(),
+      activeChallengeId: z.string().uuid(),
+    }))
     .mutation(async ({ input, ctx }) => {
       const { data: challenge } = await ctx.supabase
         .from("challenges")
@@ -232,6 +235,7 @@ export const challengesJoinProcedures = {
       const { data: ac } = await ctx.supabase
         .from("active_challenges")
         .select("id")
+        .eq("id", input.activeChallengeId)
         .eq("user_id", ctx.userId)
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")

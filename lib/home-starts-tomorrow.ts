@@ -1,4 +1,7 @@
+import { homePrestartLine } from "@/lib/late-join-copy";
+
 export const HOME_STARTS_TOMORROW = "Starts tomorrow";
+export { homePrestartLine };
 
 export type QueuedHomeRow = {
   id: string;

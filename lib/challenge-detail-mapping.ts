@@ -2,6 +2,7 @@ import { isTaskRequired, type ChallengeTaskRowRaw } from "@/backend/lib/challeng
 import { gatesFor } from "@/backend/lib/task-model";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import { taskDisplayName } from "@/lib/home-proof-card";
+import { gateLabel } from "@/lib/task-ui";
 
 export type GateKind = "camera" | "time_window" | "location";
 
@@ -65,6 +66,7 @@ export type ChallengeDetailTask = {
   gates: GateKind[];
   time_window?: string;
   required: boolean;
+  proof: string;
 };
 
 export const OPTIONAL_TASK_LABEL = "Optional";
@@ -139,8 +141,13 @@ export function taskGates(task: DetailTask): Gate[] {
     config.schedule_window_end ??
     ""
   ).trim();
-  if (model.includes("time") || (start && end)) {
-    const label = start && end ? formatTimeWindow(start, end) : null;
+  if (model.includes("time") || (start && end) || (start && model.includes("time"))) {
+    const label =
+      start && end
+        ? formatTimeWindow(start, end)
+        : start
+          ? formatTimeWindow("00:00", start)
+          : null;
     if (label) gates.push({ kind: "time_window", label });
   }
 
@@ -149,6 +156,44 @@ export function taskGates(task: DetailTask): Gate[] {
   }
 
   return gates;
+}
+
+export function detailTaskProof(task: DetailTask): string {
+  const config = task.config ?? {};
+  const model = gatesFor({
+    task_type: task.task_type ?? task.type,
+    require_photo: task.require_photo === true,
+    require_location: task.require_location === true,
+    gate_time_mode: task.gate_time_mode ?? config.gate_time_mode,
+    gate_time_start: task.gate_time_start ?? config.gate_time_start ?? config.schedule_window_start,
+    gate_time_end: task.gate_time_end ?? config.gate_time_end ?? config.schedule_window_end,
+    config: {
+      require_photo_proof:
+        config.require_photo_proof === true || config.require_camera_only === true,
+      photo_required: config.photo_required === true,
+      require_photo: config.require_photo === true,
+      require_location: config.require_location === true,
+    },
+  });
+  const modeRaw = (task.gate_time_mode ?? config.gate_time_mode ?? "").trim();
+  const mode = modeRaw === "by" || modeRaw === "between" ? modeRaw : null;
+  const start = (
+    task.gate_time_start ??
+    config.gate_time_start ??
+    config.schedule_window_start ??
+    ""
+  ).trim() || null;
+  const end = (
+    task.gate_time_end ??
+    config.gate_time_end ??
+    config.schedule_window_end ??
+    ""
+  ).trim() || null;
+  return gateLabel({
+    gates: model,
+    gateTime: { mode, start, end },
+    requirePhoto: task.require_photo === true,
+  });
 }
 
 function parseInstant(raw: string | null | undefined): number | null {
@@ -260,6 +305,7 @@ export function toDetailTasks(
       gates: gates.map((g) => g.kind),
       time_window: windowGate?.label,
       required: detailTaskRequired(t),
+      proof: detailTaskProof(t),
     };
   });
 }

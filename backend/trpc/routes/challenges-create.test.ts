@@ -5,14 +5,14 @@ import { dbTaskType, journalMinWords, taskStrictAndPhoto } from "./challenges";
 import { soloCreateVisibility } from "../../lib/create-visibility";
 
 describe("solo custom visibility", () => {
-  it("never saves PUBLIC for solo, even if the client asks", () => {
-    expect(soloCreateVisibility("solo", "PUBLIC")).toBe("PRIVATE");
+  it("solo may be PUBLIC; group and FRIENDS never persist from create", () => {
+    expect(soloCreateVisibility("solo", "PUBLIC")).toBe("PUBLIC");
     expect(soloCreateVisibility("solo", "FRIENDS")).toBe("PRIVATE");
-    expect(soloCreateVisibility(undefined, "PUBLIC")).toBe("PRIVATE");
+    expect(soloCreateVisibility(undefined, "PUBLIC")).toBe("PUBLIC");
     expect(soloCreateVisibility("team", "PUBLIC")).toBe("PRIVATE");
     const wizard = readFileSync(resolve(__dirname, "../../../components/create/CreateWizardV2.tsx"), "utf8");
-    expect(wizard).toContain('visibility: state.who === "group" ? "FRIENDS" : "PRIVATE"');
-    expect(wizard).not.toContain('visibility: state.who === "group" ? "FRIENDS" : "PUBLIC"');
+    expect(wizard).not.toContain('"FRIENDS"');
+    expect(wizard).toContain("createVisibility");
   });
 });
 

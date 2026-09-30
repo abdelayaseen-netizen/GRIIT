@@ -246,7 +246,7 @@ describe("gates", () => {
       duration_minutes: 45,
       require_photo: true,
     });
-    expect(pendingGate(timer)).toBe("45 min timer · Photo required");
+    expect(pendingGate(timer)).toBe("45 min timer · Camera");
     expect(doneGate(timer)).toBe("45 min timer");
     const water = task({
       id: "w",
@@ -276,6 +276,20 @@ describe("gates", () => {
     expect(mapped).toBe("simple");
     const t = task({ id: "bed", title: "Make Your Bed", task_type: mapped, require_photo: false });
     expect(pendingGate(t)).toBe("Self-reported");
+    expect(
+      pendingGate(
+        task({
+          id: "read",
+          title: "Read",
+          task_type: "counter",
+          target_value: 10,
+          unit: "pages",
+          require_photo: false,
+          gates: ["time"],
+          gateTime: { mode: "by", start: "07:00", end: null },
+        }),
+      ),
+    ).toBe("10 pages · By 7:00 am");
     expect(taskVerb(t.task_type)).not.toBe("Take photo");
     const screen = readFileSync(resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"), "utf8");
     expect(screen).toContain("simple: Circle");

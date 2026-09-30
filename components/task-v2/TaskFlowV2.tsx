@@ -41,10 +41,11 @@ export function TaskFlowV2() {
           {f.step === "ask" ? (
             <PushedHeader
               title={f.headerTitle}
+              label={f.chromeTitle}
               onBack={f.goBack}
             />
           ) : (
-            <TaskChrome title={f.headerTitle} dark={f.dark} onBack={f.goBack} />
+            <TaskChrome title={f.headerTitle} label={f.chromeTitle} dark={f.dark} onBack={f.goBack} />
           )}
         </View>
       ) : null}
@@ -74,6 +75,7 @@ export function TaskFlowV2() {
         <TimerEntryStep
           taskName={f.taskName}
           headerTitle={f.headerTitle}
+          headerLabel={f.chromeTitle}
           requiredSeconds={f.requiredSeconds}
           soundOn={f.soundOn}
           onSoundOn={f.setSoundOn}
@@ -99,6 +101,7 @@ export function TaskFlowV2() {
           taskType={f.taskType}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
+          headerLabel={f.chromeTitle}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
           onToggleUnit={() => f.persistUnit(f.unit === "km" ? "mi" : "km")}
@@ -163,6 +166,7 @@ export function TaskFlowV2() {
           remainingSec={f.remainingSec}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
+          headerLabel={f.chromeTitle}
           startedAtIso={f.startedAtIso}
           requiredSeconds={f.requiredSeconds}
           onPause={f.pauseTimer}
@@ -181,6 +185,7 @@ export function TaskFlowV2() {
           currentDay={f.currentDay}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
+          headerLabel={f.chromeTitle}
           footerCaption={f.writeFooterCaption}
           footerBrand={f.footerBrand}
           onChangeText={f.setText}
@@ -196,6 +201,7 @@ export function TaskFlowV2() {
           counterUnit={f.counterUnit}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
+          headerLabel={f.chromeTitle}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
           keypadOpen={f.keypad?.field === "count"}

@@ -25,12 +25,12 @@ export type TaskFlowStep =
   | "window_closed";
 
 export function chromeTitle(type: string, gates: readonly TaskGate[] = []): string {
-  if (gates.includes("camera")) return "Camera";
-  if (gates.includes("location")) return "Location";
   if (type === "counter" || type === "water" || type === "reading") return "Counter";
   if (type === "timer") return "Timer";
   if (type === "run") return "Run";
   if (type === "photo") return "Photo proof";
+  if (gates.includes("camera")) return "Camera";
+  if (gates.includes("location")) return "Location";
   if (type === "simple" || type === "manual" || type === "check_off") return "Self-report";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }

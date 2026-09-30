@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Share, Snowflake, X } from "lucide-react-native";
+import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Share, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -36,7 +36,7 @@ import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
 import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
-import { HOME_STARTS_TOMORROW, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
+import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
 
 const ICON = DS_V3.space.xs * 6;
 const RING = DS_V3.space.gutter;
@@ -363,11 +363,12 @@ export function HomeV3({
             <View key={row.id} style={styles.gutter}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`${row.name}. ${HOME_STARTS_TOMORROW}`}
+                accessibilityLabel={homePrestartLine(row.name)}
                 onPress={() => row.challengeId && onPressChallenge?.(row.challengeId)}
+                style={styles.prestart}
               >
-                <Text style={styles.task}>{row.name}</Text>
-                <Text style={styles.caption}>{HOME_STARTS_TOMORROW}</Text>
+                <CalendarClock size={RING} color={DS_V3.color.textSecondary} />
+                <Text style={styles.task}>{homePrestartLine(row.name)}</Text>
               </Pressable>
             </View>
           ))
@@ -443,6 +444,12 @@ const styles = StyleSheet.create({
   gutter: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+  },
+  prestart: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
   },
   cardHead: {
     flexDirection: "row",

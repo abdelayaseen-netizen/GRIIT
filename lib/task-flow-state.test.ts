@@ -73,6 +73,7 @@ describe("chromeTitle", () => {
     expect(chromeTitle("simple")).toBe("Self-report");
     expect(chromeTitle("manual")).toBe("Self-report");
     expect(chromeTitle("timer")).toBe("Timer");
+    expect(chromeTitle("timer", ["camera"])).toBe("Timer");
     expect(chromeTitle("run")).toBe("Run");
     expect(chromeTitle("journal")).toBe("Journal");
     expect(chromeTitle("check_off", ["camera"])).toBe("Camera");

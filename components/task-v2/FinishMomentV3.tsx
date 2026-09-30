@@ -48,7 +48,6 @@ export type FinishMomentV3Props = {
   photoShared?: boolean;
   onRetry: () => void;
   onShareFeed: () => void;
-  onStory?: () => void;
   onCopy?: () => void;
   onSave?: () => void;
   onMore?: () => void;
@@ -64,7 +63,6 @@ export default function FinishMomentV3({
   photoShared = false,
   onRetry,
   onShareFeed,
-  onStory,
   onCopy,
   onSave,
   onMore,
@@ -84,7 +82,6 @@ export default function FinishMomentV3({
   const openSheet = () => {
     if (shareDisabled) return;
     setSheetOpen(true);
-    onStory?.();
   };
 
   return (

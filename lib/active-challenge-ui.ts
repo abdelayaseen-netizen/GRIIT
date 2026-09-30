@@ -1,5 +1,7 @@
+import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import { securedElapsed } from "@/lib/consistency";
 import { flowOpensCamera } from "@/lib/task-flow-state";
+import { gateLabel } from "@/lib/task-ui";
 
 /**
  * Active challenge (frame 28) binding. Server fields only.
@@ -33,6 +35,8 @@ export type ActiveChallengeTask = {
   completed_today: boolean;
   verified?: boolean;
   proof_photo_url?: string | null;
+  gates?: readonly TaskGate[] | null;
+  gateTime?: GateTime | null;
 };
 
 export const TASK_VERB: Record<ActiveTaskType, string> = {
@@ -79,13 +83,16 @@ function sizePart(t: ActiveChallengeTask): string {
   return "";
 }
 
-function proofPart(t: ActiveChallengeTask): string {
-  return t.require_photo ? "Photo required" : "Self-reported";
-}
-
-/** Pending row caption: size · proof. Built from fields, never typed. */
+/** Pending row caption: size · gateLabel(task). */
 export function pendingGate(t: ActiveChallengeTask): string {
-  return [sizePart(t), proofPart(t)].filter(Boolean).join(" · ");
+  return [
+    sizePart(t),
+    gateLabel({
+      gates: t.gates,
+      gateTime: t.gateTime,
+      requirePhoto: t.require_photo,
+    }),
+  ].filter(Boolean).join(" · ");
 }
 
 /** Done row caption: size only. Trailing Stamp / Self-reported carries the proof. */

@@ -3,10 +3,12 @@ import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import {
   TYPE_CAPTION,
   closedWindowCaption,
+  closedWindowTime,
   format12h,
   formatGateTime,
   formatWindowRange,
   gateLine,
+  windowClosedAtLine,
   typeCaption,
   wizardGateLine,
 } from "@/lib/task-ui";
@@ -100,12 +102,12 @@ describe("wizardGateLine", () => {
 });
 
 describe("typeCaption", () => {
-  it("matches the frame 42 copy table", () => {
-    expect(typeCaption("check_off")).toBe("Tap it when it is done.");
-    expect(typeCaption("timer")).toBe("Runs in the app. It has to reach the time.");
-    expect(typeCaption("counter")).toBe("Hit a number each day.");
-    expect(typeCaption("text")).toBe("Write a number of words. Counted, not read.");
-    expect(typeCaption("run")).toBe("Distance and time come from GPS.");
+  it("matches the 104–105 one-line captions", () => {
+    expect(typeCaption("check_off")).toBe("Tap when it is done.");
+    expect(typeCaption("timer")).toBe("Run a timer in the app.");
+    expect(typeCaption("counter")).toBe("Hit a number, like 8 glasses.");
+    expect(typeCaption("text")).toBe("Write a set number of words.");
+    expect(typeCaption("run")).toBe("Log distance and time.");
     expect(TYPE_CAPTION.check_off).toBe(typeCaption("check_off"));
   });
 });
@@ -118,5 +120,22 @@ describe("closed window range", () => {
 
   it("by-mode uses midnight to the deadline", () => {
     expect(closedWindowCaption(bySeven)).toBe("Window closed · 12:00–7:00 am");
+  });
+});
+
+describe("windowClosedAtLine", () => {
+  it("uses the By time and the Between end", () => {
+    expect(closedWindowTime(bySeven)).toBe("7:00 am");
+    expect(closedWindowTime({ mode: "by", start: null, end: "07:00" })).toBe("7:00 am");
+    expect(closedWindowTime(betweenNineThirty)).toBe("10:30 am");
+    expect(windowClosedAtLine(closedWindowTime(bySeven))).toBe(
+      "Window closed at 7:00 am. Today is not secured.",
+    );
+    expect(windowClosedAtLine(closedWindowTime(betweenNineThirty))).toBe(
+      "Window closed at 10:30 am. Today is not secured.",
+    );
+    expect(windowClosedAtLine(closedWindowTime(bySeven))).not.toBe(
+      "Window closed at . Today is not secured.",
+    );
   });
 });

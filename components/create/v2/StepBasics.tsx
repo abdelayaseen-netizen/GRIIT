@@ -1,5 +1,5 @@
 /**
- * Step 1 — Name, duration, solo/group. Visual layer; parent owns state.
+ * Step 1 — Name, category, duration, solo/group. Visual layer; parent owns state.
  */
 import React from "react";
 import {
@@ -14,12 +14,18 @@ import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import Chip from "@/components/ds/Chip";
 import HintBox from "@/components/ds/HintBox";
+import {
+  CREATE_CATEGORIES,
+  type WizardCategory,
+} from "@/lib/challenge-category";
 
 export type WizardWho = "solo" | "group";
 
 export type StepBasicsProps = {
   title: string;
   onChangeTitle: (v: string) => void;
+  category: WizardCategory | null;
+  onChangeCategory: (v: WizardCategory) => void;
   durationDays: number | null;
   onChangeDuration: (days: number | null) => void;
   customDuration: string;
@@ -43,6 +49,8 @@ const PT = DS_V3.space.xs / 4;
 export function StepBasics({
   title,
   onChangeTitle,
+  category,
+  onChangeCategory,
   durationDays,
   onChangeDuration,
   customDuration,
@@ -98,6 +106,21 @@ export function StepBasics({
         <Text style={[styles.caption, styles.muted]}>
           Examples: read 30 min before phone · workout 5x weekly · 30 days no alcohol
         </Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.heading}>Category</Text>
+        <View style={styles.chipGrid}>
+          {CREATE_CATEGORIES.map((c) => (
+            <View key={c.id} style={styles.chipCell}>
+              <Chip
+                label={c.label}
+                selected={category === c.id}
+                onPress={() => onChangeCategory(c.id)}
+              />
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.section}>

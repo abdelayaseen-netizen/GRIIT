@@ -70,13 +70,10 @@ describe("gate-last ordering", () => {
 });
 
 describe("header title", () => {
-  it("names the gate when present, the type when not", () => {
-    expect(workStepHeader(12, [], "timer")).toBe("Day 12 · Timer");
-    expect(workStepHeader(12, ["camera"], "timer")).toBe("Day 12 · Camera");
-    expect(workStepHeader(12, ["camera"], "counter")).toBe("Day 12 · Camera");
-    expect(workStepHeader(1, [], "counter")).toBe("Day 1 · Counter");
-    expect(workStepHeader(1, [], "run")).toBe("Day 1 · Run");
-    expect(chromeTitle("timer", ["camera"])).toBe("Camera");
+  it("names the type; gates stay on the gate line", () => {
+    expect(workStepHeader("5am crew", 12, 30)).toBe("5am crew · Day 12 of 30");
+    expect(workStepHeader("Read 30 min", 1, 7)).toBe("Read 30 min · Day 1 of 7");
+    expect(chromeTitle("timer", ["camera"])).toBe("Timer");
     expect(chromeTitle("timer")).toBe("Timer");
     expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("run")).toBe("Run");

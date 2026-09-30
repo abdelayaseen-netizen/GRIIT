@@ -11,13 +11,15 @@ const ICON = DS_V3.space.xs * 6;
 
 export type PushedHeaderProps = {
   title: string;
+  /** Small type label above the title (106). */
+  label?: string;
   onBack: () => void;
   trailing?: ReactNode;
 };
 
-export default function PushedHeader({ title, onBack, trailing }: PushedHeaderProps) {
+export default function PushedHeader({ title, label, onBack, trailing }: PushedHeaderProps) {
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, label ? styles.barTall : null]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Go back"
@@ -26,7 +28,10 @@ export default function PushedHeader({ title, onBack, trailing }: PushedHeaderPr
       >
         <ChevronLeft size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.center}>
+        {label ? <Text style={styles.label}>{label}</Text> : null}
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+      </View>
       <View style={styles.side}>{trailing}</View>
     </View>
   );
@@ -39,6 +44,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  barTall: {
+    height: DS_V3.size.tap + DS_V3.space.gutter,
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: DS_V3.type.label.textTransform,
+    color: DS_V3.color.textSecondary,
   },
   side: {
     width: DS_V3.size.tap,

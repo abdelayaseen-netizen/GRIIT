@@ -95,7 +95,7 @@ function createLeaveMock(rows: AcRow[]) {
       },
       update: (p: Record<string, unknown>) => {
         events.push({ table: "active_challenges", op: "update" });
-        for (const row of matched()) Object.assign(row, p);
+        q._pendingUpdate = p;
         return q;
       },
       delete: () => {
@@ -106,11 +106,16 @@ function createLeaveMock(rows: AcRow[]) {
         }
         return q;
       },
-      then: (onFulfilled: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) =>
-        Promise.resolve({ data: matched(), error: null, count: matched().length }).then(
+      then: (onFulfilled: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) => {
+        if (q._pendingUpdate) {
+          for (const row of matched()) Object.assign(row, q._pendingUpdate);
+          q._pendingUpdate = undefined;
+        }
+        return Promise.resolve({ data: matched(), error: null, count: matched().length }).then(
           onFulfilled,
           onRejected,
-        ),
+        );
+      },
     };
     return q;
   }
@@ -214,7 +219,7 @@ describe("participant leave", () => {
   it("keeps the row and writes abandoned with ended_at", async () => {
     const supabase = createLeaveMock([liveRow()]);
     const caller = joinCaller(supabase);
-    const result = await caller.challenges.leave({ challengeId: CH });
+    const result = await caller.challenges.leave({ challengeId: CH, activeChallengeId: AC });
     expect(result).toEqual({ left: true });
     expect(supabase.ac).toHaveLength(1);
     expect(supabase.ac[0]?.status).toBe("abandoned");
@@ -223,6 +228,26 @@ describe("participant leave", () => {
     expect(supabase.events.filter((e) => e.table === "active_challenges" && e.op === "delete")).toEqual([]);
     expect(supabase.events.filter((e) => e.table === "check_ins")).toEqual([]);
     expect(supabase.events.filter((e) => e.table === "activity_events")).toEqual([]);
+  });
+
+  it("leave updates only the tapped active_challenge id", async () => {
+    const OTHER_AC = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const OTHER_CH = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    const supabase = createLeaveMock([
+      liveRow(),
+      liveRow({ id: OTHER_AC, challenge_id: OTHER_CH }),
+    ]);
+    const tappedId = AC;
+    // eslint-disable-next-line no-console
+    console.log("leave targets active_challenge id", tappedId);
+    expect(tappedId).toBe("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    const result = await joinCaller(supabase).challenges.leave({
+      challengeId: CH,
+      activeChallengeId: tappedId,
+    });
+    expect(result).toEqual({ left: true });
+    expect(supabase.ac.find((r) => r.id === tappedId)?.status).toBe("abandoned");
+    expect(supabase.ac.find((r) => r.id === OTHER_AC)?.status).toBe("active");
   });
 
   it("abandoned enrollment is absent from listMyActive, listUnseenEndings, and home.bootstrap", async () => {

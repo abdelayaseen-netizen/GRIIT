@@ -47,7 +47,13 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       gateTime:
         t.gateTime && typeof t.gateTime === "object"
           ? t.gateTime
-          : undefined,
+          : t.gate_time_mode === "by" || t.gate_time_mode === "between"
+            ? {
+                mode: t.gate_time_mode,
+                start: typeof t.gate_time_start === "string" ? t.gate_time_start : null,
+                end: typeof t.gate_time_end === "string" ? t.gate_time_end : null,
+              }
+            : undefined,
       windowState: typeof t.windowState === "string" ? t.windowState : undefined,
       minutesLeft: typeof t.minutesLeft === "number" ? t.minutesLeft : undefined,
       // Additive only — optional Ready subtype source for run (and others).

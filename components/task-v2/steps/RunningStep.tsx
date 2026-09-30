@@ -21,6 +21,7 @@ type Props = {
   remainingSec: number;
   taskName: string;
   headerTitle: string;
+  headerLabel?: string;
   startedAtIso: string | null;
   requiredSeconds: number;
   onPause: () => void;
@@ -37,6 +38,7 @@ export function RunningStep({
   remainingSec,
   taskName,
   headerTitle,
+  headerLabel,
   startedAtIso,
   requiredSeconds,
   onPause,
@@ -55,7 +57,7 @@ export function RunningStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} onBack={onBack} />
+        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>

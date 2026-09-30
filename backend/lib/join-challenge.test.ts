@@ -77,9 +77,16 @@ describe("join deferral", () => {
     gate_time_end: "06:30",
     config: { required: true },
   };
+  const at4am = new Date("2026-09-27T08:00:00.000Z"); // 04:00 EDT
   const beforeOpen = new Date("2026-09-27T08:30:00.000Z"); // 04:30 EDT
   const inside = new Date("2026-09-27T09:45:00.000Z"); // 05:45 EDT
   const afterClose = new Date("2026-09-27T17:24:00.000Z"); // 13:24 EDT
+
+  it("launch at 4:00 am starts today", () => {
+    expect(anyTimeWindowClosedToday([between], at4am, TZ)).toBe(false);
+    expect(enrollmentStartAt(at4am, TZ, false)).toBe(at4am);
+    expect(dateKeyInTimeZone(at4am, TZ)).toBe("2026-09-27");
+  });
 
   it("launch before the window opens starts today", () => {
     expect(anyTimeWindowClosedToday([between], beforeOpen, TZ)).toBe(false);
@@ -100,6 +107,24 @@ describe("join deferral", () => {
       anyTimeWindowClosedToday(
         [{ gate_time_mode: "by", gate_time_start: "07:00", config: { required: true } }],
         afterClose,
+        TZ,
+      ),
+    ).toBe(true);
+  });
+
+  const at937pm = new Date("2026-09-30T01:37:00.000Z"); // 21:37 EDT
+
+  it("By 7:00 created 21:37 → tomorrow; By 23:00 created 21:37 → today", () => {
+    const bySeven = { gate_time_mode: "by", gate_time_start: "07:00", config: { required: true } };
+    const byEleven = { gate_time_mode: "by", gate_time_start: "23:00", config: { required: true } };
+    expect(anyTimeWindowClosedToday([bySeven], at937pm, TZ)).toBe(true);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, true), TZ)).toBe("2026-09-30");
+    expect(anyTimeWindowClosedToday([byEleven], at937pm, TZ)).toBe(false);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, false), TZ)).toBe("2026-09-29");
+    expect(
+      anyTimeWindowClosedToday(
+        [{ gate_time_mode: "by", gate_time_end: "07:00", config: { required: true } }],
+        at937pm,
         TZ,
       ),
     ).toBe(true);

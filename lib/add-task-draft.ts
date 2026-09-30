@@ -3,13 +3,57 @@
  */
 
 import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
-import { gateLine } from "@/lib/task-ui";
+import { SELF_REPORTED, gateLine } from "@/lib/task-ui";
+import {
+  DEFAULT_BETWEEN_END_HHMM,
+  DEFAULT_BETWEEN_START_HHMM,
+  DEFAULT_BY_HHMM,
+  TIME_WINDOW_NOT_SET,
+  betweenEndAfterStart,
+  fmt12,
+  fmtWindow,
+} from "@/lib/time-gate-picker";
 
 export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
 export const ADD_TASK_NAME_PLACEHOLDER = "Name it";
 export const ADD_TASK_WHAT_YOU_DO = "What you do";
-export const ADD_TASK_WHAT_PROVES = "What proves it";
+export const ADD_TASK_WHAT_PROVES = "How it's proven";
+export const ADD_TASK_ON_HOME = "On Home";
+
+export type AddTaskProof = "self" | "self_time" | "photo" | "photo_time" | "photo_place";
+
+export const ADD_TASK_PROOFS: readonly {
+  id: AddTaskProof;
+  title: string;
+  caption: string;
+}[] = [
+  {
+    id: "self",
+    title: "Self-report",
+    caption: "You say it is done. Nothing is checked.",
+  },
+  {
+    id: "self_time",
+    title: "Self-report + time window",
+    caption: "You say it is done, only inside the hours you set.",
+  },
+  {
+    id: "photo",
+    title: "Photo",
+    caption: "A photo taken in the app.",
+  },
+  {
+    id: "photo_time",
+    title: "Photo + time window",
+    caption: "A photo, only inside the hours you set.",
+  },
+  {
+    id: "photo_place",
+    title: "Photo + place",
+    caption: "A photo, only at the place you set.",
+  },
+] as const;
 export const ADD_TASK_CTA = "Add task";
 export const ADD_TASK_SET_PLACE = "Set place";
 export const ADD_TASK_COMMON = "Common tasks";
@@ -17,8 +61,7 @@ export const ADD_TASK_SEARCH_PLACE = "Search an address";
 export const ADD_TASK_USE_LOCATION = "Use my current location";
 export const ADD_TASK_HOW_CLOSE = "How close you have to be";
 export const ADD_TASK_SAVE_PLACE = "Save place";
-export const ADD_TASK_PLACE_NO_MAP =
-  "Bigger radius, easier to pass. There is no map in the design system, so the radius is a number, not a circle on a map.";
+export const ADD_TASK_PLACE_NO_MAP = "A bigger radius is easier to pass.";
 
 export const ADD_TASK_TYPE_CHIPS: { id: TaskModelType; label: string }[] = [
   { id: "check_off", label: "Check off" },
@@ -93,14 +136,36 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   time: false,
   location: false,
   timeMode: "by",
-  byTime: "07:00",
-  fromTime: "09:30",
-  toTime: "10:30",
+  byTime: DEFAULT_BY_HHMM,
+  fromTime: DEFAULT_BETWEEN_START_HHMM,
+  toTime: DEFAULT_BETWEEN_END_HHMM,
   placeName: "",
   placeLat: null,
   placeLng: null,
   placeRadius: 100,
 };
+
+export function proofFromDraft(draft: Pick<AddTaskDraft, "camera" | "time" | "location">): AddTaskProof {
+  if (draft.location) return "photo_place";
+  if (draft.time) return draft.camera ? "photo_time" : "self_time";
+  if (draft.camera) return "photo";
+  return "self";
+}
+
+export function applyProof(draft: AddTaskDraft, proof: AddTaskProof): AddTaskDraft {
+  switch (proof) {
+    case "self":
+      return { ...draft, camera: false, time: false, location: false };
+    case "self_time":
+      return { ...draft, camera: false, time: true, location: false };
+    case "photo":
+      return { ...draft, camera: true, time: false, location: false };
+    case "photo_time":
+      return { ...draft, camera: true, time: true, location: false };
+    case "photo_place":
+      return { ...draft, camera: true, time: false, location: true };
+  }
+}
 
 export function gatesFromDraft(draft: AddTaskDraft): TaskGate[] {
   const gates: TaskGate[] = [];
@@ -175,8 +240,27 @@ export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
 }
 
 export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
+  const title = draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER;
+  if (
+    draft.time &&
+    draft.timeMode === "between" &&
+    !betweenEndAfterStart(draft.fromTime, draft.toTime)
+  ) {
+    return {
+      title,
+      caption: draft.camera ? TIME_WINDOW_NOT_SET : `${SELF_REPORTED} · Time window not set`,
+    };
+  }
+  if (draft.time && draft.timeMode === "by") {
+    const time = `By ${fmt12(draft.byTime)}`;
+    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
+  }
+  if (draft.time && draft.timeMode === "between") {
+    const time = fmtWindow(draft.fromTime, draft.toTime);
+    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
+  }
   return {
-    title: draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER,
+    title,
     caption: gateLine(gatesFromDraft(draft), gateTimeFromDraft(draft) ?? null),
   };
 }
@@ -282,6 +366,9 @@ export function draftFromWizardTask(task: {
 
 export function canSubmitDraft(draft: AddTaskDraft): boolean {
   if (!draft.name.trim()) return false;
+  if (draft.time && draft.timeMode === "between" && !betweenEndAfterStart(draft.fromTime, draft.toTime)) {
+    return false;
+  }
   if (draft.type === "timer") return timerMinutesFromDraft(draft) > 0;
   if (draft.type === "counter") return parseInt(draft.counterTarget, 10) > 0;
   if (draft.type === "text") return parseInt(draft.minWords, 10) > 0;

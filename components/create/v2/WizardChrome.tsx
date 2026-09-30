@@ -12,18 +12,22 @@ export function WizardHeader({
   step,
   total,
   onCancel,
+  cancelLabel = "Cancel",
+  center,
 }: {
   step: 1 | 2 | 3;
   total: 3;
   onCancel: () => void;
+  cancelLabel?: string;
+  center?: string;
 }) {
   return (
     <View>
       <View style={styles.bar}>
         <View style={styles.side}>
-          <Button label="Cancel" variant="tertiary" size="small" flush onPress={onCancel} />
+          <Button label={cancelLabel} variant="tertiary" size="small" flush onPress={onCancel} />
         </View>
-        <Text style={styles.stepLabel}>{`Step ${step} of ${total}`}</Text>
+        <Text style={styles.stepLabel}>{center ?? `Step ${step} of ${total}`}</Text>
         <View style={styles.side} />
       </View>
       <View style={styles.progress}>

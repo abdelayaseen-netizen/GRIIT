@@ -10,11 +10,11 @@ export type { GateTime, TaskGate, TaskModelType };
 export const SELF_REPORTED = "Self-reported";
 
 export const TYPE_CAPTION: Record<TaskModelType, string> = {
-  check_off: "Tap it when it is done.",
-  timer: "Runs in the app. It has to reach the time.",
-  counter: "Hit a number each day.",
-  text: "Write a number of words. Counted, not read.",
-  run: "Distance and time come from GPS.",
+  check_off: "Tap when it is done.",
+  timer: "Run a timer in the app.",
+  counter: "Hit a number, like 8 glasses.",
+  text: "Write a set number of words.",
+  run: "Log distance and time.",
 };
 
 const GATE_CAMERA = "Camera";
@@ -120,6 +120,15 @@ export function wizardGateLine(task: {
   return gateLine(task.gates ?? [], task.gateTime);
 }
 
+/** Review / detail / feed requirement line. Same as wizardGateLine. */
+export function gateLabel(task: {
+  gates?: readonly TaskGate[] | null;
+  gateTime?: GateTime | null;
+  requirePhoto?: boolean;
+}): string {
+  return wizardGateLine(task);
+}
+
 export function minutesLeftCaption(minutes: number): string {
   return `${minutes} minutes left in the window.`;
 }
@@ -135,16 +144,17 @@ export const WINDOW_CLOSED_FORBIDDEN = "Window closed.";
 
 export function closedWindowTime(gateTime: GateTime | null | undefined): string {
   if (gateTime?.mode === "between") return format12h(gateTime.end);
-  return format12h(gateTime?.start);
+  if (gateTime?.mode === "by") return format12h(gateTime.start) || format12h(gateTime?.end);
+  return format12h(gateTime?.start) || format12h(gateTime?.end);
 }
 
 export function flowHeaderTitle(
+  challenge: string,
   day: number,
-  gateTime: GateTime | null | undefined,
-  fallback: string,
+  durationDays: number,
 ): string {
-  if (fallback === "Camera" || fallback === "Location") return `Day ${day} · ${fallback}`;
-  const time = formatGateTime(gateTime);
-  if (time) return `Day ${day} · ${time}`;
-  return `Day ${day} · ${fallback}`;
+  const name = challenge.trim() || "Challenge";
+  const n = Math.max(1, Math.floor(day));
+  const total = Math.max(n, Math.floor(durationDays) || n);
+  return `${name} · Day ${n} of ${total}`;
 }

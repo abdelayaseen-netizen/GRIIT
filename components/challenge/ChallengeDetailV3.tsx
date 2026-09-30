@@ -10,7 +10,6 @@ import {
   Camera,
   ChevronLeft,
   Circle,
-  Clock,
   Dumbbell,
   Droplet,
   Ellipsis,
@@ -30,7 +29,6 @@ import {
   joinCaption,
   type ChallengeDetailTask,
   type DetailState,
-  type GateKind,
   type ParticipationType,
 } from "@/lib/challenge-detail-mapping";
 import {
@@ -41,8 +39,6 @@ import {
 
 const PT = DS_V3.space.xs / 4;
 const ICON = 22;
-const GATE_ICON = 12;
-const GATE_ORDER: GateKind[] = ["camera", "time_window", "location"];
 const FOOTER_CLEAR = 176;
 
 const TASK_ICON: Record<string, LucideIcon> = {
@@ -55,12 +51,6 @@ const TASK_ICON: Record<string, LucideIcon> = {
   photo: Camera,
   checkin: MapPin,
   journal: Pencil,
-};
-
-const GATE_GLYPH: Record<GateKind, LucideIcon> = {
-  camera: Camera,
-  time_window: Clock,
-  location: MapPin,
 };
 
 const PARTICIPATION_LABEL: Record<ParticipationType, string> = {
@@ -108,32 +98,6 @@ export type ChallengeDetailV3Props = {
 
 function peopleLabel(n: number): string {
   return n === 1 ? "1 person" : `${n} people`;
-}
-
-function GateLabel({
-  gate,
-  window,
-  muted,
-}: {
-  gate?: GateKind;
-  window?: string;
-  muted?: boolean;
-}) {
-  const Glyph = gate ? GATE_GLYPH[gate] : null;
-  const label =
-    gate === "camera"
-      ? "Camera"
-      : gate === "time_window"
-        ? `Time window ${window ?? ""}`.trim()
-        : gate === "location"
-          ? "Location"
-          : "Self-reported";
-  return (
-    <View style={[styles.gate, muted ? styles.gateMuted : null]}>
-      {Glyph ? <Glyph size={GATE_ICON} color={DS_V3.color.textPrimary} /> : null}
-      <Text style={muted ? styles.gateTextMuted : styles.gateText}>{label}</Text>
-    </View>
-  );
 }
 
 export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
@@ -222,7 +186,6 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
         ) : (
           p.tasks.map((t, i) => {
             const Icon = TASK_ICON[t.task_type] ?? Circle;
-            const shown = GATE_ORDER.filter((g) => t.gates.includes(g));
             return (
               <View key={`${t.title}-${i}`}>
                 {i > 0 ? <View style={styles.divider} /> : null}
@@ -236,13 +199,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                           <Text style={styles.gateTextMuted}>Optional</Text>
                         </View>
                       ) : null}
-                      {shown.length
-                        ? shown.map((g) => (
-                            <GateLabel key={g} gate={g} window={t.time_window} />
-                          ))
-                        : t.required === false
-                          ? null
-                          : <GateLabel muted />}
+                      <Text style={t.required === false ? styles.gateTextMuted : styles.gateText}>
+                        {t.proof}
+                      </Text>
                     </View>
                   </View>
                 </View>

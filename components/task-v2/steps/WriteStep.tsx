@@ -28,6 +28,7 @@ type Props = {
   currentDay: number;
   taskName: string;
   headerTitle?: string;
+  headerLabel?: string;
   footerCaption?: string;
   footerBrand?: boolean;
   onChangeText: (t: string) => void;
@@ -43,6 +44,7 @@ export function WriteStep({
   currentDay,
   taskName,
   headerTitle,
+  headerLabel,
   footerCaption = WRITE_FOOTER_CAPTION,
   footerBrand,
   onChangeText,
@@ -58,7 +60,7 @@ export function WriteStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} onBack={onBack} />
+        <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>

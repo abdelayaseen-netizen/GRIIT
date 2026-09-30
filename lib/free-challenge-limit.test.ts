@@ -6,6 +6,7 @@ import {
   FREE_ACTIVE_LIMIT_MESSAGE,
   countActiveEnrollments,
   isFreeActiveLimitReached,
+  wizardBlockedByFreeLimit,
 } from "@/lib/free-challenge-limit";
 import { detailState } from "@/lib/challenge-detail-mapping";
 
@@ -59,6 +60,33 @@ describe("isFreeActiveLimitReached", () => {
     const joinScreen = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
     expect(joinScreen).toContain("countActiveEnrollments(");
     expect(joinScreen).not.toMatch(/myActiveListQuery\.data\.length/);
+  });
+});
+
+describe("wizardBlockedByFreeLimit", () => {
+  it("blocks the wizard on open at 3 active, never after submit", () => {
+    expect(
+      wizardBlockedByFreeLimit({
+        isPremium: false,
+        enrollments: [{ status: "active" }, { status: "active" }, { status: "active" }],
+      }),
+    ).toBe(true);
+    expect(
+      wizardBlockedByFreeLimit({
+        isPremium: false,
+        enrollments: [{ status: "active" }, { status: "active" }],
+      }),
+    ).toBe(false);
+    expect(
+      wizardBlockedByFreeLimit({
+        isPremium: true,
+        enrollments: [{ status: "active" }, { status: "active" }, { status: "active" }],
+      }),
+    ).toBe(false);
+    const wizard = readFileSync(resolve(__dirname, "../components/create/CreateWizardV2.tsx"), "utf8");
+    expect(wizard).toContain("wizardBlockedByFreeLimit");
+    expect(wizard).not.toContain("router.push(ROUTES.PAYWALL");
+    expect(wizard).not.toMatch(/trpcMutate\(TRPC\.challenges\.join/);
   });
 });
 

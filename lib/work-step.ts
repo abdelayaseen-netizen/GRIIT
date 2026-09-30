@@ -1,8 +1,9 @@
 /**
  * Counter, Timer and Run — frame 49 copy and chrome.
- * No display face. Header names the gate when there is one.
+ * No display face. Header names the type. Gates stay on the gate line.
  */
 import type { TaskGate } from "@/backend/lib/task-model";
+import { flowHeaderTitle } from "@/lib/task-ui";
 import type { DistanceUnit } from "@/lib/distance-unit";
 import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
@@ -66,11 +67,9 @@ export function workStepDay(
   return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
 }
 
-/** Gate outranks type. Camera outranks a time-window string. */
-export function workStepHeader(day: number, gates: readonly TaskGate[], type: string): string {
-  if (gates.includes("camera")) return `Day ${day} · Camera`;
-  if (gates.includes("location")) return `Day ${day} · Location`;
-  return `Day ${day} · ${workTypeLabel(type)}`;
+/** Same as the task-flow header. Type is a label, not this string. */
+export function workStepHeader(challenge: string, day: number, durationDays: number): string {
+  return flowHeaderTitle(challenge, day, durationDays);
 }
 
 export function workThenCamera(type: string, gates: readonly TaskGate[]): boolean {
