@@ -144,7 +144,8 @@ export const WINDOW_CLOSED_FORBIDDEN = "Window closed.";
 
 export function closedWindowTime(gateTime: GateTime | null | undefined): string {
   if (gateTime?.mode === "between") return format12h(gateTime.end);
-  return format12h(gateTime?.start);
+  if (gateTime?.mode === "by") return format12h(gateTime.start) || format12h(gateTime.end);
+  return format12h(gateTime?.start) || format12h(gateTime.end);
 }
 
 export function flowHeaderTitle(
