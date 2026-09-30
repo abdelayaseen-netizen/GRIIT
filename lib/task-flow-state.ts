@@ -16,7 +16,7 @@ export type TaskFlowStep =
   | "write"
   | "count"
   | "ask"
-  | "verifying"
+  | "finish"
   | "confirmation"
   | "challenge_done"
   | "day_open"
@@ -105,7 +105,7 @@ export function chromeFlags(step: TaskFlowStep): { dark: boolean; hideChrome: bo
       step === "confirmation" ||
       step === "challenge_done" ||
       step === "day_open" ||
-      step === "verifying" ||
+      step === "finish" ||
       step === "capture" ||
       step === "write" ||
       step === "window_closed",

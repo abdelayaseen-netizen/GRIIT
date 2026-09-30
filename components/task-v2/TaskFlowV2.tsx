@@ -9,8 +9,8 @@ import { useTaskFlowV2 } from "./useTaskFlowV2";
 import { AskStep } from "./steps/AskStep";
 import { BlockedStep } from "./steps/BlockedStep";
 import { CaptureStep } from "./steps/CaptureStep";
-import { ChallengeDoneStep } from "./steps/ChallengeDoneStep";
 import { CheckinEntryStep } from "./steps/CheckinEntryStep";
+import FinishMomentV3 from "./FinishMomentV3";
 import { ConfirmationStep } from "./steps/ConfirmationStep";
 import { CountStep } from "./steps/CountStep";
 import { DiscardPhotoModal } from "./steps/DiscardPhotoModal";
@@ -20,7 +20,6 @@ import { ReviewStep } from "./steps/ReviewStep";
 import { RunningStep } from "./steps/RunningStep";
 import { SessionStep } from "./steps/SessionStep";
 import { TimerEntryStep } from "./steps/TimerEntryStep";
-import { VerifyingStep } from "./steps/VerifyingStep";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 import { workStepOwnsChrome } from "@/lib/work-step";
@@ -34,7 +33,7 @@ export function TaskFlowV2() {
       style={[
         styles.root,
         f.dark && { backgroundColor: DS_V3.color.canvas },
-        (f.step === "verifying" || f.step === "ask") && { backgroundColor: DS_V3.color.canvas },
+        (f.step === "finish" || f.step === "ask") && { backgroundColor: DS_V3.color.canvas },
       ]}
     >
       {!f.hideChrome && !workStepOwnsChrome(f.step, f.taskType) ? (
@@ -220,7 +219,31 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "verifying" ? <VerifyingStep taskType={f.taskType} /> : null}
+      {f.step === "finish" ? (
+        <FinishMomentV3
+          task={{
+            title: f.taskName,
+            challengeTitle: f.challengeName,
+            dayN: f.currentDay,
+            durationDays: f.durationDays,
+            gateLine: f.finishGateLine,
+            proofUri: f.photoUri,
+            proofKind: f.photoUri
+              ? f.finishGateLine.includes("Location")
+                ? "camera_place"
+                : "camera"
+              : "self",
+          }}
+          save={f.finishSave}
+          share={f.finishShare}
+          alsoToday={f.alsoToday}
+          photoShared={f.finishFeedPosted}
+          onRetry={f.onFinishRetry}
+          onShareFeed={f.onFinishShare}
+          onNextTask={f.openDayOpenTask}
+          onLeave={f.exit}
+        />
+      ) : null}
 
       {f.step === "confirmation" && f.result ? (
         <ConfirmationStep
@@ -232,20 +255,6 @@ export function TaskFlowV2() {
           verifyLine={f.verifyLine}
           onDone={f.exit}
           onShare={f.onShare}
-        />
-      ) : null}
-
-      {f.step === "day_open" && f.dayOpen ? (
-        <ChallengeDoneStep
-          model={f.dayOpen}
-          proofUri={f.photoUri}
-          shareFailed={f.shareFailed}
-          sharing={f.sharing}
-          onOpenTask={f.openDayOpenTask}
-          onNext={f.goNextTask}
-          onDone={f.exit}
-          onShare={f.onShareProof}
-          onKeep={f.onKeepProof}
         />
       ) : null}
 

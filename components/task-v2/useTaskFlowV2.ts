@@ -39,9 +39,18 @@ import {
 } from "@/lib/task-session-store";
 import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
-import { VERIFYING_TAKEOVER_MS } from "@/lib/verifying-takeover";
+import {
+  FINISH_SLOW_MS,
+  alsoTodayFromTasks,
+  enrollmentDueToday,
+  finishAfterMutation,
+  resolveHeldShare,
+  type AlsoTodayRow,
+  type SaveState,
+  type ShareIntent,
+} from "@/lib/finish-moment";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { formatGateTime } from "@/lib/task-ui";
+import { closedWindowTime, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -52,7 +61,6 @@ import {
   workStepOwnsChrome,
   workThenCamera,
 } from "@/lib/work-step";
-import { closedWindowTime } from "@/lib/task-ui";
 import {
   flowAllowsSubmit,
   flowFooterBrand,
@@ -172,6 +180,10 @@ export function useTaskFlowV2() {
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [dayOpen, setDayOpen] = useState<DayOpenModel | null>(null);
+  const [finishSave, setFinishSave] = useState<SaveState>("saving");
+  const [finishShare, setFinishShare] = useState<ShareIntent>("none");
+  const [finishFeedPosted, setFinishFeedPosted] = useState(false);
+  const [alsoToday, setAlsoToday] = useState<AlsoTodayRow[]>([]);
   const [failNote, setFailNote] = useState("");
   const [failCode, setFailCode] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -180,6 +192,17 @@ export function useTaskFlowV2() {
   const [shareFailed, setShareFailed] = useState(false);
   const [sharing, setSharing] = useState(false);
   const submitInFlight = useRef(false);
+  const finishShareRef = useRef<ShareIntent>("none");
+  const lastSubmitRef = useRef<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(
+    null,
+  );
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const windowEval = evaluateScheduleWindow({
     start: config.schedule_window_start,
@@ -264,12 +287,17 @@ export function useTaskFlowV2() {
   );
 
   const goNextTask = useCallback(() => {
+    const next = alsoToday[0];
+    if (next) {
+      openDayOpenTask(next.id);
+      return;
+    }
     if (dayOpen?.nextId) {
       openDayOpenTask(dayOpen.nextId);
       return;
     }
     exit();
-  }, [dayOpen, exit, openDayOpenTask]);
+  }, [alsoToday, dayOpen, exit, openDayOpenTask]);
 
   const persistUnit = useCallback((next: DistanceUnit) => {
     setUnit(next);
@@ -304,6 +332,62 @@ export function useTaskFlowV2() {
     return uploaded.url;
   };
 
+  const postHeldShare = async (eventId: string | undefined) => {
+    if (
+      resolveHeldShare({ held: finishShareRef.current === "feed_held", after: "saved" }) !==
+      "call_share"
+    ) {
+      return;
+    }
+    if (!eventId) return;
+    try {
+      await trpcMutate(TRPC.checkins.shareProof, { eventId });
+      finishShareRef.current = "none";
+      if (mountedRef.current) {
+        setFinishShare("none");
+        setShareEventId(eventId);
+        setFinishFeedPosted(true);
+      }
+    } catch {
+      if (mountedRef.current) setShareFailed(true);
+    }
+  };
+
+  const loadAlsoToday = async () => {
+    try {
+      const [activeList, checkins] = await Promise.all([
+        trpcQuery(TRPC.challenges.listMyActive) as Promise<
+          Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]
+        >,
+        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
+          Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
+        >,
+      ]);
+      const enrollments = (Array.isArray(activeList) ? activeList : []).filter((row) =>
+        enrollmentDueToday({
+          startAt:
+            (row as { start_at?: string | null }).start_at ??
+            (row as { started_at?: string | null }).started_at ??
+            (row as { created_at?: string | null }).created_at,
+          timeZone,
+          todayKey: dateKey,
+        }),
+      );
+      const tasks = dayOpenTasksFromActive({
+        enrollments,
+        completed: Array.isArray(checkins) ? checkins : [],
+        todayKey: dateKey,
+        timeZone,
+      });
+      if (mountedRef.current) {
+        setAlsoToday(alsoTodayFromTasks(tasks, taskId));
+      }
+      return tasks;
+    } catch {
+      return [];
+    }
+  };
+
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
     if (submitInFlight.current) return;
     if (!flowAllowsSubmit(windowState)) {
@@ -311,12 +395,19 @@ export function useTaskFlowV2() {
       setStep("window_closed");
       return;
     }
+    lastSubmitRef.current = { payload, kind };
     submitInFlight.current = true;
     setSaving(true);
-    let cancelled = false;
-    const takeoverTimer = setTimeout(() => {
-      if (!cancelled) setStep("verifying");
-    }, VERIFYING_TAKEOVER_MS);
+    finishShareRef.current = "none";
+    setFinishShare("none");
+    setFinishFeedPosted(false);
+    setFinishSave("saving");
+    setAlsoToday([]);
+    setShareFailed(false);
+    setStep("finish");
+    const slowTimer = setTimeout(() => {
+      if (mountedRef.current && submitInFlight.current) setFinishSave("slow");
+    }, FINISH_SLOW_MS);
     try {
       const proofUrl =
         typeof payload.proofUrl === "string"
@@ -330,16 +421,17 @@ export function useTaskFlowV2() {
         activeChallengeId,
         taskId,
         ...payload,
-        ...(hasCameraProof ? { shareChoicePending: true } : {}),
+        shareChoicePending: true,
       });
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
-        cancelled = true;
-        clearTimeout(takeoverTimer);
+        clearTimeout(slowTimer);
         submitInFlight.current = false;
         setSaving(false);
-        setFailCode(undefined);
-        setFailNote("Couldn't save. Try again.");
-        setStep("failed");
+        finishShareRef.current = "none";
+        if (mountedRef.current) {
+          setFinishShare("none");
+          setFinishSave("failed");
+        }
         return;
       }
       let secure: {
@@ -386,56 +478,37 @@ export function useTaskFlowV2() {
         dayAlreadySecured: complete.dayAlreadySecured === true,
         secureDaySecured: after.ui.kind === "secured" || after.result?.secured === true,
       });
+      const outcome = finishAfterMutation({ complete, securedToday });
       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
       void endLiveActivity();
-      cancelled = true;
-      clearTimeout(takeoverTimer);
+      clearTimeout(slowTimer);
       setSaving(false);
-      if (finishSubmitOutcome({ complete, securedToday }) === "day_open") {
-        let tasks = dayOpenTasksFromActive({
-          enrollments: [],
-          completed: [],
-          todayKey: dateKey,
-          timeZone,
-        });
-        try {
-          const [activeList, checkins] = await Promise.all([
-            trpcQuery(TRPC.challenges.listMyActive) as Promise<Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]>,
-            trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-              Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
-            >,
-          ]);
-          tasks = dayOpenTasksFromActive({
-            enrollments: Array.isArray(activeList) ? activeList : [],
-            completed: Array.isArray(checkins) ? checkins : [],
-            todayKey: dateKey,
-            timeZone,
-          });
-        } catch {
-          tasks = [
-            {
-              id: taskId,
-              name: taskName,
-              challengeName: complete.challengeName ?? challengeName,
-              activeChallengeId,
-              currentDay: complete.challengeDay ?? currentDay,
-              durationDays: complete.challengeLength ?? durationDays,
-              done: true,
-              challengeSecuredToday: false,
-            },
-          ];
+      const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+      if (outcome === "failed") {
+        submitInFlight.current = false;
+        finishShareRef.current = "none";
+        if (mountedRef.current) {
+          setFinishShare("none");
+          setFinishSave("failed");
         }
-        setShareEventId(closingProofEventId(complete.dayProofs, proofUrl));
-        setShareFailed(false);
-        setDayOpen(
-          selectDayOpen({
-            taskName,
-            challengeId: activeChallengeId,
-            tasks,
-            targetStreak: profile?.target_streak,
-          }),
-        );
-        setStep("day_open");
+        return;
+      }
+      await postHeldShare(eventId ?? undefined);
+      if (outcome === "saved") {
+        const tasks = await loadAlsoToday();
+        if (mountedRef.current) {
+          setShareEventId(eventId);
+          setFinishSave("saved");
+          setDayOpen(
+            selectDayOpen({
+              taskName,
+              challengeId: activeChallengeId,
+              tasks,
+              targetStreak: profile?.target_streak,
+            }),
+          );
+          setStep("finish");
+        }
         submitInFlight.current = false;
         return;
       }
@@ -458,7 +531,6 @@ export function useTaskFlowV2() {
             }
           : null,
       });
-      setResult(assembled);
       if (
         !canOpenSecuredScreen({
           daySecured: assembled.daySecured,
@@ -466,12 +538,15 @@ export function useTaskFlowV2() {
         })
       ) {
         submitInFlight.current = false;
-        setFailNote("Couldn't confirm the streak.");
-        setStep("failed");
+        finishShareRef.current = "none";
+        if (mountedRef.current) {
+          setFinishShare("none");
+          setFinishSave("failed");
+        }
         return;
       }
-      if (securedNavOnce() === "replace") {
-        const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+      if (mountedRef.current && securedNavOnce() === "replace") {
+        setResult(assembled);
         setSecuredHandoff({
           proofs: proofsFromComplete({
             dayProofs: complete.dayProofs,
@@ -491,20 +566,26 @@ export function useTaskFlowV2() {
           }) as never,
         );
       }
+      submitInFlight.current = false;
     } catch (err) {
-      cancelled = true;
-      clearTimeout(takeoverTimer);
+      clearTimeout(slowTimer);
       submitInFlight.current = false;
       setSaving(false);
       const msg = err instanceof Error ? err.message : "";
       if (isWindowClosedError(msg)) {
-        setWindowForbidden(true);
-        setStep("window_closed");
+        if (mountedRef.current) {
+          setWindowForbidden(true);
+          setStep("window_closed");
+        }
         return;
       }
-      setFailCode(failureErrorCode(err));
-      setFailNote(err instanceof Error ? err.message : "Couldn't save. Try again.");
-      setStep("failed");
+      finishShareRef.current = "none";
+      if (mountedRef.current) {
+        setFailCode(failureErrorCode(err));
+        setFinishShare("none");
+        setFinishSave("failed");
+        setStep("finish");
+      }
     }
   };
 
@@ -822,6 +903,12 @@ export function useTaskFlowV2() {
     counterUnit,
     result,
     dayOpen,
+    finishSave,
+    finishShare,
+    finishFeedPosted,
+    alsoToday,
+    durationDays,
+    finishGateLine: gateLine(gates, gateTime),
     fail,
     discardAsk,
     taskRequired,
@@ -923,6 +1010,40 @@ export function useTaskFlowV2() {
           setSharing(false);
           setShareFailed(true);
         });
+    },
+    onFinishShare: () => {
+      if (finishSave === "failed") return;
+      if (finishSave === "saved") {
+        if (!shareEventId) {
+          setShareFailed(true);
+          return;
+        }
+        if (sharing) return;
+        setSharing(true);
+        void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
+          .then(() => {
+            finishShareRef.current = "none";
+            if (mountedRef.current) {
+              setSharing(false);
+              setFinishShare("none");
+              setFinishFeedPosted(true);
+            }
+          })
+          .catch(() => {
+            if (mountedRef.current) {
+              setSharing(false);
+              setShareFailed(true);
+            }
+          });
+        return;
+      }
+      finishShareRef.current = "feed_held";
+      setFinishShare("feed_held");
+    },
+    onFinishRetry: () => {
+      const last = lastSubmitRef.current;
+      if (!last) return;
+      void finishSubmit(last.payload, last.kind);
     },
     onKeepProof: () => {
       exit();

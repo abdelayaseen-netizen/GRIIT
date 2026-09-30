@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   PROOF_SIGN_TTL_SEC,
+  SHARED_PATH_BATCH,
   canSignProofPath,
   loadSharedPathsForCandidates,
   ownedProofWrite,
@@ -152,6 +153,25 @@ describe("signProofPaths", () => {
       createSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
     });
     expect(out[0]).toBe(`signed:${deep}`);
+  });
+
+  it("35 candidates produce 4 queries, and the results are merged", async () => {
+    expect(SHARED_PATH_BATCH).toBe(10);
+    const paths = Array.from({ length: 35 }, (_, i) => `${OTHER}/batch-${i}.jpg`);
+    let calls = 0;
+    const loaded = await loadSharedPathsForCandidates(paths, async ({ candidates }) => {
+      calls += 1;
+      expect(candidates.length).toBeLessThanOrEqual(SHARED_PATH_BATCH);
+      return candidates
+        .filter((_, i) => i === 0)
+        .map((p) => ({ user_id: OTHER, metadata: { photo_url: p } }));
+    });
+    expect(calls).toBe(4);
+    expect(loaded.size).toBe(4);
+    expect(loaded.has(`${OTHER}/batch-0.jpg`)).toBe(true);
+    expect(loaded.has(`${OTHER}/batch-10.jpg`)).toBe(true);
+    expect(loaded.has(`${OTHER}/batch-20.jpg`)).toBe(true);
+    expect(loaded.has(`${OTHER}/batch-30.jpg`)).toBe(true);
   });
 });
 

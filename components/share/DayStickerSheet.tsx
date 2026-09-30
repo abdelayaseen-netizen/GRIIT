@@ -1,23 +1,17 @@
 /**
  * Frame 111 share sheet. Which day = challenges secured today, only when more than one.
  */
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
-import Button from "@/components/ds/Button";
-import Sheet from "@/components/ds/Sheet";
-import ShareCardV3 from "@/components/share/ShareCardV3";
+import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import {
-  DAY_STICKER_SHARE,
   WHICH_DAY,
-  dayStickerCopy,
   defaultShareTodayChallenge,
   shareTodayPickerLine,
   showWhichDayPicker,
   type ShareTodayChallenge,
 } from "@/lib/day-sticker";
-import { shareProgressImage } from "@/lib/share";
 
 export type DayStickerSheetProps = {
   visible: boolean;
@@ -25,6 +19,7 @@ export type DayStickerSheetProps = {
   challenges: readonly ShareTodayChallenge[];
   preselectedId?: string | null;
   proofUri?: string;
+  photoShared?: boolean;
 };
 
 export default function DayStickerSheet({
@@ -33,13 +28,11 @@ export default function DayStickerSheet({
   challenges,
   preselectedId,
   proofUri,
+  photoShared = false,
 }: DayStickerSheetProps) {
-  const shotRef = useRef<ViewShot>(null);
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null);
   const selected =
     challenges.find((c) => c.id === selectedId) ?? defaultShareTodayChallenge(challenges, preselectedId);
-  const copy = selected ? dayStickerCopy(selected) : "";
-  const [sharing, setSharing] = useState(false);
   const showPicker = showWhichDayPicker(challenges);
 
   useEffect(() => {
@@ -47,29 +40,22 @@ export default function DayStickerSheet({
     setSelectedId(defaultShareTodayChallenge(challenges, preselectedId)?.id ?? null);
   }, [visible, challenges, preselectedId]);
 
-  const share = useCallback(async () => {
-    if (!selected || sharing) return;
-    setSharing(true);
-    try {
-      const uri = await shotRef.current?.capture?.();
-      if (uri) await shareProgressImage(uri, copy);
-    } finally {
-      setSharing(false);
-    }
-  }, [copy, selected, sharing]);
-
   return (
-    <Sheet
+    <ShareStickerSheet
       visible={visible}
       onDismiss={onDismiss}
-      heading={DAY_STICKER_SHARE}
-      footer={
-        <Button
-          label={DAY_STICKER_SHARE}
-          submitting={sharing}
-          disabled={!selected}
-          onPress={() => void share()}
-        />
+      variant="day"
+      day={
+        selected
+          ? {
+              challenge: selected.name,
+              day: selected.day,
+              durationDays: selected.dayTotal ?? selected.day,
+              proof: (selected.photoCount ?? 0) > 0 ? "camera" : "self",
+              photoUri: proofUri,
+              photoShared,
+            }
+          : undefined
       }
     >
       {showPicker ? (
@@ -96,19 +82,7 @@ export default function DayStickerSheet({
           })}
         </View>
       ) : null}
-      <View pointerEvents="none" style={styles.offscreen} accessibilityElementsHidden>
-        {selected ? (
-          <ShareCardV3
-            ref={shotRef}
-            size="story"
-            streak={selected.day}
-            copy={copy}
-            proofUri={proofUri}
-            label="Verified"
-          />
-        ) : null}
-      </View>
-    </Sheet>
+    </ShareStickerSheet>
   );
 }
 
@@ -160,10 +134,5 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
-  },
-  offscreen: {
-    position: "absolute",
-    left: -4000,
-    top: 0,
   },
 });

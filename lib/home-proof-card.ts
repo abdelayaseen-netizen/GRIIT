@@ -161,8 +161,16 @@ function rowGates(task: HomeProofTask): TaskGate[] {
   return task.requirePhoto ? ["camera"] : [];
 }
 
+/** Same closed check Home uses for the “Window closed” ring and caption. */
+export function homeWindowClosed(task: {
+  windowState?: WindowState | null;
+  done?: boolean;
+}): boolean {
+  return task.windowState === "closed" && task.done !== true;
+}
+
 export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
-  const closed = task.windowState === "closed" && !task.done;
+  const closed = homeWindowClosed(task);
   return {
     id: task.id ?? `${task.name}-${index}`,
     name: taskDisplayName({

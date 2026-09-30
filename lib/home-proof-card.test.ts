@@ -11,6 +11,7 @@ import {
   homeProofTitleMuted,
   homeRingA11y,
   homeSectionToggleA11y,
+  homeWindowClosed,
   selectHomeProofCard,
   taskDisplayName,
 } from "@/lib/home-proof-card";
@@ -314,6 +315,14 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[0]?.rows[5]?.caption).toBe("Self-reported");
     expect(card.sections[0]?.doneCount).toBe(2);
     expect(card.sections[0]?.totalCount).toBe(6);
+  });
+});
+
+describe("homeWindowClosed", () => {
+  it("matches the Window closed ring: closed and not done", () => {
+    expect(homeWindowClosed({ windowState: "closed", done: false })).toBe(true);
+    expect(homeWindowClosed({ windowState: "closed", done: true })).toBe(false);
+    expect(homeWindowClosed({ windowState: "open", done: false })).toBe(false);
   });
 });
 

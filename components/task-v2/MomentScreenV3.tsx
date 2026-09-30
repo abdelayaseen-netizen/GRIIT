@@ -2,16 +2,14 @@
  * MomentScreenV3 — frames 15 and 20, Secured / Self reported / Complete.
  * Variants map from pickConfirmationVariant A–D plus complete.
  */
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { AccessibilityInfo, StatusBar, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Camera, ShieldOff } from "lucide-react-native";
-import type ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
 import { buildWeekStripDays } from "@/lib/week-strip-days";
-import { shareProgressImage } from "@/lib/share";
 import type { SubmitResult } from "@/lib/task-completion-result";
 import { pickConfirmationVariant } from "@/lib/task-completion-result";
 import { taskWord } from "@/lib/active-challenge-ui";
@@ -30,7 +28,7 @@ import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
 import Stamp from "@/components/ds/Stamp";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
-import ShareCardV3 from "@/components/share/ShareCardV3";
+import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import ContactSheet, { type ContactSheetProof } from "./ContactSheet";
 
 const PHOTO_FRAME = DS_V3.space.gutter * 12;
@@ -111,6 +109,7 @@ export type MomentScreenV3Props = {
   day?: number;
   remaining?: number;
   target?: number;
+  challengeName?: string;
   proofUri?: string;
   proofSource?: number;
   proofs?: ContactSheetProof[];
@@ -129,18 +128,18 @@ export default function MomentScreenV3({
   day = 1,
   remaining = 0,
   target,
+  challengeName,
   proofUri,
   proofSource,
   proofs,
   week,
   todayIndex = 0,
   fillToday: fillTodayProp,
-  onShare,
   onDone,
   onNext,
 }: MomentScreenV3Props) {
   const insets = useSafeAreaInsets();
-  const shotRef = useRef<ViewShot>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const counts = isSecuredVariant(variant);
   const camera =
     variant === "verified" ||
@@ -158,8 +157,6 @@ export default function MomentScreenV3({
     : rawDays;
   const goal = target ?? streak;
   const copy = stateLine({ variant, day, remaining, target: goal, camera });
-  const shareCopy = variant === "complete" ? `${goal} days. Every one witnessed.` : copy;
-  const shareLabel = variant === "complete" ? "Complete" : camera ? "Verified" : undefined;
   const hasPhoto = proofSource != null || Boolean(proofUri);
   const keepCount = formatSecuredKeepCount(moreDaysThisWeek(weekToday));
 
@@ -181,38 +178,9 @@ export default function MomentScreenV3({
     });
   }, []);
 
-  const share = useCallback(async () => {
-    const uri = await shotRef.current?.capture?.();
-    if (uri && onShare) {
-      onShare(uri);
-      return;
-    }
-    if (uri) {
-      await shareProgressImage(uri, shareCopy);
-    }
-  }, [onShare, shareCopy]);
-
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
-      <View
-        pointerEvents="none"
-        style={styles.offscreen}
-        accessibilityElementsHidden
-      >
-        {shareLabel ? (
-          <ShareCardV3
-            ref={shotRef}
-            size="story"
-            streak={variant === "complete" ? goal : streak}
-            copy={shareCopy}
-            proofUri={proofUri}
-            proofSource={proofSource}
-            proofs={variant === "complete" ? proofs : undefined}
-            label={shareLabel}
-          />
-        ) : null}
-      </View>
       {counts ? (
         <View style={[styles.block, { paddingTop: insets.top + DS_V3.space.md }]}>
           <Text style={styles.streakLabel}>{SECURED_STREAK_LABEL}</Text>
@@ -290,7 +258,7 @@ export default function MomentScreenV3({
             <Button label="Start the next one" onPress={onNext} />
             <View style={styles.row}>
               <View style={styles.flex}>
-                <Button label="Share" variant="secondary" onPress={() => void share()} />
+                <Button label="Share" variant="secondary" onPress={() => setSheetOpen(true)} />
               </View>
               <View style={styles.flex}>
                 <Button label={SECURED_DONE} variant="tertiary" onPress={onDone} />
@@ -306,6 +274,19 @@ export default function MomentScreenV3({
           <Button label={SECURED_DONE} onPress={onDone} />
         )}
       </View>
+      <ShareStickerSheet
+        visible={sheetOpen}
+        onDismiss={() => setSheetOpen(false)}
+        variant="day"
+        day={{
+          challenge: challengeName?.trim() || copy,
+          day,
+          durationDays: goal,
+          proof: camera ? "camera" : "self",
+          photoUri: proofUri,
+          photoShared: false,
+        }}
+      />
     </View>
   );
 }
@@ -314,11 +295,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
-  },
-  offscreen: {
-    position: "absolute",
-    left: -9999,
-    top: 0,
   },
   block: {
     flex: 1,

@@ -28,11 +28,16 @@
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
         "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
+        "NSPhotoLibraryAddUsageDescription": "Save your GRIIT stickers to Photos.",
         "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,
-        "NSSupportsLiveActivitiesFrequentUpdates": true
+        "NSSupportsLiveActivitiesFrequentUpdates": true,
+        "LSApplicationQueriesSchemes": [
+          "instagram-stories",
+          "instagram"
+        ]
       },
       "entitlements": {
         "com.apple.developer.usernotifications.time-sensitive": true
@@ -78,6 +83,21 @@
         "expo-camera",
         {
           "cameraPermission": "GRIIT needs camera access to take photos as proof of challenge completion."
+        }
+      ],
+      "expo-build-properties",
+      [
+        "react-native-share",
+        {
+          "ios": ["instagram", "instagram-stories"],
+          "android": ["com.instagram.android"]
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "Save your GRIIT stickers to Photos."
         }
       ]
     ],

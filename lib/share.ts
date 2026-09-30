@@ -1,12 +1,15 @@
-import { Share, Platform, Linking } from "react-native";
+import { Share, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
+import RNShare, { Social } from "react-native-share";
 import {
   challengeDeepLink,
   inviteDeepLink,
   profileDeepLink,
 } from "@/lib/deep-links";
-import { DEEP_LINK_BASE_URL } from "@/lib/config";
+import { DEEP_LINK_BASE_URL, facebookAppId } from "@/lib/config";
+import { instagramStoriesShareInput, type SavePhotosResult } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import { groupInviteShareMessage } from "@/lib/group-ui";
 
@@ -117,31 +120,56 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
 }
 
 /**
- * Open Instagram Stories with the image as background (if Instagram is installed).
- * Falls back to regular share sheet otherwise.
+ * Save the captured PNG to Photos. Add-only permission.
+ * Denied does not throw — the sheet shows the Settings copy.
  */
-export async function shareToInstagramStory(imageUri: string): Promise<void> {
+export async function saveStickerToPhotos(imageUri: string): Promise<SavePhotosResult> {
+  if (Platform.OS === "web") {
+    return "denied";
+  }
+  try {
+    const perm = await MediaLibrary.requestPermissionsAsync(true);
+    if (perm.status !== "granted") {
+      return "denied";
+    }
+    await MediaLibrary.saveToLibraryAsync(imageUri);
+    return "saved";
+  } catch {
+    return "denied";
+  }
+}
+
+/**
+ * Instagram Stories via pasteboard (stickerImage / backgroundImage).
+ * App ID from config only. Does not put the image in a URL.
+ */
+export async function shareToInstagramStory(
+  imageUri: string,
+  opts?: { asSticker?: boolean },
+): Promise<void> {
   if (Platform.OS === "web") {
     return;
   }
+  const input = instagramStoriesShareInput({
+    imageUri,
+    asSticker: opts?.asSticker === true,
+    appId: facebookAppId(),
+  });
+  if (!input) return;
   try {
-    const encoded = encodeURIComponent(imageUri);
-    const url = `instagram-stories://share?backgroundImage=${encoded}`;
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-      try {
-        trackEvent("share_completed", { content_type: "instagram_story" });
-      } catch {
-        /* non-fatal */
-      }
-    } else {
-      const available = await Sharing.isAvailableAsync();
-      if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+    await RNShare.shareSingle({
+      social: Social.InstagramStories,
+      appId: input.appId,
+      stickerImage: input.stickerImage,
+      backgroundImage: input.backgroundImage,
+    });
+    try {
+      trackEvent("share_completed", { content_type: "instagram_story" });
+    } catch {
+      /* non-fatal */
     }
   } catch {
-    const available = await Sharing.isAvailableAsync();
-    if (available) await Sharing.shareAsync(imageUri, { mimeType: "image/png" });
+    /* Instagram missing or share cancelled — do not URL-pass the image. */
   }
 }
 

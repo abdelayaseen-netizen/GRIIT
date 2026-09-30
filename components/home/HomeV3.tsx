@@ -3,6 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bell, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Share, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
@@ -140,6 +141,7 @@ export function HomeV3({
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
+  const insets = useSafeAreaInsets();
   const secured = homeProofFilled(fillToday === true);
   const days = LETTERS.map((letter, i) => {
     const state = weekStates?.[i] ?? (weekFilled?.[i] === true ? "secured" : "missed");
@@ -215,7 +217,7 @@ export function HomeV3({
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       <RootHeader
         kicker={kicker}
         title={headerTitle}
