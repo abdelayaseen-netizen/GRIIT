@@ -24,7 +24,7 @@ import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
-import { canSeeContent, isFriend, mutualFriendIds, normalizeVisibilityLevel } from "../../lib/is-friend";
+import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds, normalizeVisibilityLevel } from "../../lib/is-friend";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -56,10 +56,11 @@ export const feedRouter = createTRPCRouter({
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
     const { data: recentMovers } = await server.from("activity_events").select("user_id").eq("share_state", "shared").gte("created_at", dayAgo).limit(500);
     const movingUserCount = new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id)).size;
-    const [{ data: follows }, friendIds, blockedIds] = await Promise.all([
+    const [{ data: follows }, friendIds, blockedIds, coMemberIds] = await Promise.all([
       ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200),
       mutualFriendIds(ctx.supabase, viewerId),
       getBlockedUserIds(ctx.supabase, viewerId),
+      coMemberChallengeIds(ctx.supabase, viewerId),
     ]);
     const followingIds = new Set<string>();
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
@@ -90,7 +91,11 @@ export const feedRouter = createTRPCRouter({
       challengeMap.set(c.id, c);
     }
     const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean =>
-      canSeeContent(viewerId, ev.user_id, vis, friendIds);
+      canSeeContent(viewerId, ev.user_id, vis, friendIds, {
+        challengeId: ev.challenge_id,
+        coMemberChallengeIds: coMemberIds,
+        shared: eventIsShared(ev),
+      });
     const preFiltered: EvRow[] = [];
     for (const ev of events) {
       if (preFiltered.length >= input.limit) break;
@@ -103,7 +108,7 @@ export const feedRouter = createTRPCRouter({
       if (!passesVisibility(ev, vis)) continue;
       preFiltered.push(ev);
     }
-    const posts = await hydrateActivityEventsToPosts(preFiltered, viewerId, friendIds, ctx, server);
+    const posts = await hydrateActivityEventsToPosts(preFiltered, viewerId, friendIds, ctx, server, coMemberIds);
     return { movingCount: movingUserCount, posts };
   }),
 
@@ -123,10 +128,11 @@ export const feedRouter = createTRPCRouter({
     if (!canSeeContent(viewerId, input.userId, profileVis, friendIds)) {
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
+    const coMemberIds = await coMemberChallengeIds(ctx.supabase, viewerId);
+    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at, shared, share_state").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
-    const posts = await hydrateActivityEventsToPosts(events, viewerId, friendIds, ctx, server);
+    const posts = await hydrateActivityEventsToPosts(events, viewerId, friendIds, ctx, server, coMemberIds);
     return { posts: posts.slice(0, input.limit) };
   }),
 
@@ -143,10 +149,11 @@ export const feedRouter = createTRPCRouter({
       throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
     }
     const challengeIds = ev.challenge_id ? [ev.challenge_id] : [];
-    const [chRes, acRes, profRes] = await Promise.all([
+    const [chRes, acRes, profRes, postCoMembers] = await Promise.all([
       challengeIds.length ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id: string; title?: string; visibility?: string; duration_days?: number }[] }),
       challengeIds.length ? server.from("active_challenges").select("id, user_id, challenge_id, start_at, end_at, ended_at, status").in("challenge_id", challengeIds).limit(200) : Promise.resolve({ data: [] as { id?: string; user_id: string; challenge_id: string; start_at?: string; end_at?: string; ended_at?: string | null; status?: string }[] }),
       server.from("profiles").select("user_id, display_name, username, avatar_url, timezone").in("user_id", [ev.user_id]).limit(200),
+      coMemberChallengeIds(ctx.supabase, viewerId),
     ]);
     const challenges = (chRes as { data: unknown }).data as { id: string; title?: string; visibility?: string; duration_days?: number }[];
     const activeRows = (acRes as { data: unknown }).data as { id?: string; user_id: string; challenge_id: string; start_at?: string; end_at?: string; ended_at?: string | null; status?: string }[];
@@ -164,7 +171,11 @@ export const feedRouter = createTRPCRouter({
     const vis = normalizeChallengeVisibility(ch?.visibility);
     const postFriendIds = new Set<string>();
     if (ev.user_id !== viewerId && (await isFriend(ctx.supabase, viewerId, ev.user_id))) postFriendIds.add(ev.user_id);
-    if (!canSeeContent(viewerId, ev.user_id, vis, postFriendIds)) {
+    if (!canSeeContent(viewerId, ev.user_id, vis, postFriendIds, {
+      challengeId: ev.challenge_id,
+      coMemberChallengeIds: postCoMembers,
+      shared: eventIsShared(ev),
+    })) {
       throw new TRPCError({ code: "FORBIDDEN", message: "You can't view this post" });
     }
     const { data: reactions } = await ctx.supabase
@@ -1060,9 +1071,10 @@ export const feedRouter = createTRPCRouter({
       const viewerId = ctx.userId;
       const sinceIso = new Date(Date.now() - 7 * 86400000).toISOString();
 
-      const [friendIds, blockedIds] = await Promise.all([
+      const [friendIds, blockedIds, coMemberIds] = await Promise.all([
         mutualFriendIds(ctx.supabase, viewerId),
         getBlockedUserIds(ctx.supabase, viewerId),
+        coMemberChallengeIds(ctx.supabase, viewerId),
       ]);
 
       const { data: rawEvents, error: evErr } = await server
@@ -1129,7 +1141,7 @@ export const feedRouter = createTRPCRouter({
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       const top = ranked.slice(0, limit);
-      const posts = await hydrateActivityEventsToPosts(top, viewerId, friendIds, ctx, server);
+      const posts = await hydrateActivityEventsToPosts(top, viewerId, friendIds, ctx, server, coMemberIds);
       return { posts };
     }),
 });

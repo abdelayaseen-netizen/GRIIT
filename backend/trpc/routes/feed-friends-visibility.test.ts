@@ -7,9 +7,11 @@ vi.mock("../../lib/sendPush", () => ({ sendPushToProfile: vi.fn().mockResolvedVa
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
+const C = "33333333-3333-4333-8333-333333333333";
 const CH = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 type Follow = { follower_id: string; following_id: string; status: string };
+type Member = { user_id: string; challenge_id: string; status: string };
 type EventRow = {
   id: string;
   user_id: string;
@@ -18,17 +20,20 @@ type EventRow = {
   metadata: Record<string, unknown>;
   created_at: string;
   share_state?: string;
+  shared?: boolean;
 };
 
 function feedClient(opts: {
   events: EventRow[];
   follows: Follow[];
   visibility: "PUBLIC" | "FRIENDS" | "PRIVATE";
+  members?: Member[];
 }) {
   const challenges = [{ id: CH, title: "Run", visibility: opts.visibility, duration_days: 14, creator_id: B }];
-  const profiles = [
+    const profiles = [
     { user_id: A, profile_visibility: "public", display_name: "A", username: "a" },
     { user_id: B, profile_visibility: "public", display_name: "B", username: "b" },
+    { user_id: C, profile_visibility: "public", display_name: "C", username: "c" },
   ];
   return {
     from(table: string) {
@@ -40,6 +45,15 @@ function feedClient(opts: {
           let rows = opts.events;
           if (filters.user_id) rows = rows.filter((e) => e.user_id === filters.user_id);
           if (filters.id) rows = rows.filter((e) => e.id === filters.id);
+          if (filters.share_state) rows = rows.filter((e) => (e.share_state ?? "shared") === filters.share_state);
+          return { data: rows, error: null };
+        }
+        if (table === "challenge_members" || table === "active_challenges") {
+          const rows = (opts.members ?? []).filter((m) => {
+            if (filters.user_id && m.user_id !== filters.user_id) return false;
+            if (filters.challenge_id && m.challenge_id !== filters.challenge_id) return false;
+            return true;
+          });
           return { data: rows, error: null };
         }
         if (table === "user_follows") {
@@ -155,5 +169,62 @@ describe("friends-only posts require a mutual follow", () => {
     const owner = caller(B, feedClient({ events: [event(B)], follows: mutual, visibility: "PRIVATE" }));
     const own = await owner.feed.getLiveFeed({ scope: "everyone", limit: 20 });
     expect(own.posts.map((p) => p.userId)).toEqual([B]);
+  });
+});
+
+const groupMembers = [
+  { user_id: A, challenge_id: CH, status: "active" },
+  { user_id: B, challenge_id: CH, status: "active" },
+];
+
+describe("group co-members see shared challenge posts", () => {
+  it("A and B in the same group, no follows → A sees B's shared post, not an unshared one", async () => {
+    const shared = event(B);
+    const unshared: EventRow = {
+      ...shared,
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      share_state: "kept",
+      shared: false,
+    };
+    const c = caller(
+      A,
+      feedClient({ events: [shared, unshared], follows: [], visibility: "FRIENDS", members: groupMembers }),
+    );
+    const live = await c.feed.getLiveFeed({ scope: "everyone", limit: 20 });
+    expect(live.posts.map((p) => p.id)).toEqual([shared.id]);
+    expect((await c.feed.getPost({ eventId: shared.id })).userId).toBe(B);
+    await expect(c.feed.getPost({ eventId: unshared.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("a co-member still sees a PRIVATE group post", async () => {
+    const c = caller(
+      A,
+      feedClient({ events: [event(B)], follows: [], visibility: "PRIVATE", members: groupMembers }),
+    );
+    const live = await c.feed.getLiveFeed({ scope: "everyone", limit: 20 });
+    expect(live.posts.map((p) => p.userId)).toEqual([B]);
+  });
+
+  it("C not in the group, no follows → cannot see FRIENDS or PRIVATE", async () => {
+    for (const visibility of ["FRIENDS", "PRIVATE"] as const) {
+      const c = caller(
+        C,
+        feedClient({ events: [event(B)], follows: [], visibility, members: groupMembers }),
+      );
+      expect((await c.feed.getLiveFeed({ scope: "everyone", limit: 20 })).posts).toEqual([]);
+      await expect(c.feed.getPost({ eventId: event(B).id })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    }
+  });
+
+  it("mutual friends still see a FRIENDS post they did not join", async () => {
+    const c = caller(A, feedClient({ events: [event(B)], follows: mutual, visibility: "FRIENDS", members: [] }));
+    expect((await c.feed.getLiveFeed({ scope: "everyone", limit: 20 })).posts.map((p) => p.userId)).toEqual([B]);
+  });
+
+  it("PRIVATE solo challenge with no membership stays owner-only", async () => {
+    const stranger = caller(A, feedClient({ events: [event(B)], follows: mutual, visibility: "PRIVATE", members: [] }));
+    expect((await stranger.feed.getLiveFeed({ scope: "everyone", limit: 20 })).posts).toEqual([]);
+    const owner = caller(B, feedClient({ events: [event(B)], follows: [], visibility: "PRIVATE", members: [] }));
+    expect((await owner.feed.getLiveFeed({ scope: "everyone", limit: 20 })).posts.map((p) => p.userId)).toEqual([B]);
   });
 });

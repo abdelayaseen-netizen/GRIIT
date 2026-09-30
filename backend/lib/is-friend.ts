@@ -69,18 +69,83 @@ export async function mutualFriendIds(supabase: SupabaseClient, viewerId: string
   return mutual;
 }
 
+const MEMBERSHIP_LIMIT = 200;
+
+/** Enrollment still on the challenge, or a finished run. Quit/abandoned/failed do not count. */
+function enrollmentCounts(status: string | null | undefined): boolean {
+  const s = String(status ?? "").toLowerCase();
+  return s === "active" || s === "completed";
+}
+
+function memberCounts(status: string | null | undefined): boolean {
+  return String(status ?? "active").toLowerCase() === "active";
+}
+
+/**
+ * Challenge ids where the viewer is an active member or has an active/finished enrollment.
+ * Loaded once per request. Two bounded reads because members and enrollments are different tables.
+ */
+export async function coMemberChallengeIds(supabase: SupabaseClient, viewerId: string): Promise<Set<string>> {
+  const [members, enrollments] = await Promise.all([
+    supabase
+      .from("challenge_members")
+      .select("challenge_id, status")
+      .eq("user_id", viewerId)
+      .limit(MEMBERSHIP_LIMIT),
+    supabase
+      .from("active_challenges")
+      .select("challenge_id, status")
+      .eq("user_id", viewerId)
+      .limit(MEMBERSHIP_LIMIT),
+  ]);
+  const ids = new Set<string>();
+  for (const r of (members.data ?? []) as { challenge_id?: string | null; status?: string | null }[]) {
+    if (r.challenge_id && memberCounts(r.status)) ids.add(r.challenge_id);
+  }
+  for (const r of (enrollments.data ?? []) as { challenge_id?: string | null; status?: string | null }[]) {
+    if (r.challenge_id && enrollmentCounts(r.status)) ids.add(r.challenge_id);
+  }
+  return ids;
+}
+
+/** Feed selects omit share columns after filtering share_state = shared. An explicit kept/unshared row is not shared. */
+export function eventIsShared(ev: { share_state?: string | null; shared?: boolean | null }): boolean {
+  if (ev.shared === false) return false;
+  if (ev.share_state === "shared" || ev.shared === true) return true;
+  if (ev.share_state != null) return false;
+  return true;
+}
+
+export type SeeContentOpts = {
+  challengeId?: string | null;
+  coMemberChallengeIds?: ReadonlySet<string>;
+  shared?: boolean;
+};
+
 /**
  * Author always sees their own content.
  * Public: anyone. Friends: mutual follow. Private: owner only.
+ * A shared event on a challenge the viewer joined (active or finished) is visible
+ * even when that challenge is friends or private. Profile privacy does not use this bypass.
  */
 export function canSeeContent(
   viewerId: string,
   authorId: string,
   visibility: VisibilityLevel,
   friendIds: ReadonlySet<string>,
+  opts?: SeeContentOpts,
 ): boolean {
   if (viewerId === authorId) return true;
   if (visibility === "public") return true;
+  const challengeId = opts?.challengeId ?? null;
+  if (
+    opts?.shared === true &&
+    challengeId != null &&
+    challengeId.length > 0 &&
+    opts.coMemberChallengeIds?.has(challengeId)
+  ) {
+    return true;
+  }
   if (visibility === "friends") return friendIds.has(authorId);
   return false;
 }
