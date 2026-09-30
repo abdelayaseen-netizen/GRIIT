@@ -2,7 +2,7 @@ import {
   anyTimeWindowClosedToday,
   enrollmentStartAt,
   type TaskWindowRow,
-} from "@/backend/lib/join-challenge";
+} from "@/backend/lib/late-join-window";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import { REVIEW_STARTS_TODAY } from "@/lib/create-review";
 import {
