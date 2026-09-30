@@ -1,5 +1,5 @@
 /**
- * Step 3 — Strictness, public proof, category. Visual layer; parent owns state.
+ * Step 3 — Strictness and public proof. Visual layer; parent owns state.
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -7,32 +7,34 @@ import { ShieldAlert, ShieldCheck } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Chip from "@/components/ds/Chip";
 import { HARD_MODE_PROOF_CAPTION, effectivePhotoProof } from "@/lib/create-wizard-hard-proof";
+import {
+  MODE_HARD_BODY,
+  MODE_HARD_TITLE,
+  MODE_STANDARD_BODY,
+  MODE_STANDARD_TITLE,
+} from "@/lib/create-mode-copy";
 
 export type WizardDifficulty = "standard" | "hard";
 export type WizardPhotoProof = "off" | "optional" | "required";
-export type WizardCategory = "fitness" | "mind" | "faith" | "discipline";
+export type { WizardCategory } from "@/lib/challenge-category";
 
 export type StepRulesProps = {
   difficulty: WizardDifficulty;
   onChangeDifficulty: (v: WizardDifficulty) => void;
   photoProof: WizardPhotoProof;
   onChangePhotoProof: (v: WizardPhotoProof) => void;
-  category: WizardCategory | null;
-  onChangeCategory: (v: WizardCategory) => void;
 };
 
 const MODES = [
   {
     id: "standard" as const,
-    title: "Standard",
-    caption: "Recommended for your first challenge",
-    line: "Freezes on. Use one to cover a missed day.",
+    title: MODE_STANDARD_TITLE,
+    line: MODE_STANDARD_BODY,
   },
   {
     id: "hard" as const,
-    title: "Hard mode",
-    caption: "No exceptions.",
-    line: "No freezes. Miss a day, restart from day 1.",
+    title: MODE_HARD_TITLE,
+    line: MODE_HARD_BODY,
   },
 ] as const;
 
@@ -40,13 +42,6 @@ const PUBLIC_PROOF: readonly { id: WizardPhotoProof; label: string }[] = [
   { id: "off", label: "Off" },
   { id: "optional", label: "Optional" },
   { id: "required", label: "Required" },
-] as const;
-
-const CATEGORIES: readonly { id: WizardCategory; label: string }[] = [
-  { id: "fitness", label: "Fitness" },
-  { id: "mind", label: "Mind" },
-  { id: "faith", label: "Faith" },
-  { id: "discipline", label: "Discipline" },
 ] as const;
 
 const ICON = DS_V3.space.xs * 6;
@@ -58,8 +53,6 @@ export function StepRules({
   onChangeDifficulty,
   photoProof,
   onChangePhotoProof,
-  category,
-  onChangeCategory,
 }: StepRulesProps) {
   const hard = difficulty === "hard";
   const shownProof = effectivePhotoProof(difficulty, photoProof);
@@ -90,7 +83,6 @@ export function StepRules({
                 )}
                 <Text style={styles.bodyStrong}>{m.title}</Text>
               </View>
-              <Text style={[styles.caption, styles.muted]}>{m.caption}</Text>
               <Text style={styles.secondary}>{m.line}</Text>
             </Pressable>
           );
@@ -119,20 +111,6 @@ export function StepRules({
             : "Public accountability on the feed."}
         </Text>
       </View>
-
-      <View style={styles.catSection}>
-        <Text style={styles.heading}>Category</Text>
-        <View style={styles.chipWrap}>
-          {CATEGORIES.map((c) => (
-            <Chip
-              key={c.id}
-              label={c.label}
-              selected={category === c.id}
-              onPress={() => onChangeCategory(c.id)}
-            />
-          ))}
-        </View>
-      </View>
     </View>
   );
 }
@@ -152,12 +130,6 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.section,
-    gap: DS_V3.space.md,
-  },
-  catSection: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.section,
-    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   title: {
@@ -211,5 +183,4 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   chipRow: { flexDirection: "row", gap: DS_V3.space.xs },
-  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: DS_V3.space.sm },
 });

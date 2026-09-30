@@ -41,10 +41,10 @@ import {
 } from "@/components/create/v2/StepTasks";
 import {
   StepRules,
-  type WizardCategory,
   type WizardDifficulty,
   type WizardPhotoProof,
 } from "@/components/create/v2/StepRules";
+import { displayCategory, type WizardCategory } from "@/lib/challenge-category";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
@@ -127,7 +127,7 @@ function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
       step: 2,
     },
     { text: reviewPhotoLine(s.difficulty, s.photoProof), step: 3 },
-    { text: s.category ? `Category · ${s.category.charAt(0).toUpperCase()}${s.category.slice(1)}` : "Category", step: 3 },
+    { text: s.category ? `Category · ${displayCategory(s.category)}` : "Category", step: 1 },
   ];
 }
 
@@ -384,6 +384,8 @@ export function CreateWizardV2() {
             <StepBasics
               title={state.title}
               onChangeTitle={setTitle}
+              category={state.category}
+              onChangeCategory={setCategory}
               durationDays={state.durationDays}
               onChangeDuration={setDuration}
               customDuration={state.customDuration}
@@ -415,8 +417,6 @@ export function CreateWizardV2() {
               onChangeDifficulty={setDifficulty}
               photoProof={effectivePhotoProof(state.difficulty, state.photoProof)}
               onChangePhotoProof={setPhotoProof}
-              category={state.category}
-              onChangeCategory={setCategory}
             />
           ) : null}
         </ScrollView>
@@ -428,7 +428,13 @@ export function CreateWizardV2() {
             <Text style={styles.secondary}>Name this task.</Text>
           ) : null}
           <Button
-            label={state.step === 3 ? "Review" : "Continue"}
+            label={
+              state.step === 1 && state.title.trim().length < 3
+                ? "Name the challenge to continue."
+                : state.step === 3
+                  ? "Review"
+                  : "Continue"
+            }
             disabled={primaryDisabled}
             onPress={handlePrimary}
           />

@@ -15,10 +15,8 @@ import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import ListRow from "@/components/ds/ListRow";
 import SegmentedControl from "@/components/ds/SegmentedControl";
-import type {
-  WizardCategory,
-  WizardDifficulty,
-} from "@/components/create/v2/StepRules";
+import type { WizardDifficulty } from "@/components/create/v2/StepRules";
+import type { WizardCategory } from "@/lib/challenge-category";
 import {
   CHALLENGE_PACKS,
   wizardTasksFromPack,

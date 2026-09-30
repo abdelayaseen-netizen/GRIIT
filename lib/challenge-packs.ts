@@ -4,6 +4,7 @@
  */
 
 import type { JournalCategory } from "@/types";
+import type { WizardCategory } from "@/lib/challenge-category";
 import type { WizardTaskPayloadSource } from "@/lib/create-wizard-payload";
 
 type PackTaskPhoto = "none" | "optional" | "required";
@@ -23,7 +24,7 @@ export type ChallengePackDef = {
   taskCount: number;
   tasks: PackTaskDef[];
   /** Wizard-only presentation. */
-  category?: "fitness" | "mind" | "faith" | "discipline";
+  category?: WizardCategory;
   durationDays?: number;
   difficulty?: "standard" | "hard";
 };
