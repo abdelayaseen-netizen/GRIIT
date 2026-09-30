@@ -19,6 +19,7 @@ import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import StatusBarBacking from "@/components/ds/StatusBarBacking";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
@@ -597,12 +598,13 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
-      <SafeAreaView style={s.container}>
+      <SafeAreaView style={s.container} edges={["left", "right"]}>
+        <StatusBarBacking />
         <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={guestKeyExtractor}
           renderItem={() => (
-            <View style={s.guestWrap}>
+            <View style={[s.guestWrap, { paddingTop: insets.top + DS_V3.space.section }]}>
               <Text style={s.guestTitle}>GRIIT</Text>
               <Text style={s.guestBody}>
                 Sign in to start your discipline streak and see what your friends are doing.
@@ -618,7 +620,8 @@ export default function HomeScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={s.container}>
+      <SafeAreaView style={s.container} edges={["left", "right"]}>
+        <StatusBarBacking />
         <LiveFeedSection
           onRefresh={refresh}
           scope={feedScope}

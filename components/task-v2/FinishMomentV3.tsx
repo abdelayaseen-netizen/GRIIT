@@ -8,6 +8,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
+import StatusBarBacking from "@/components/ds/StatusBarBacking";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import {
@@ -85,6 +86,7 @@ export default function FinishMomentV3({
 
   return (
     <View style={styles.root}>
+      <StatusBarBacking />
       <ScrollView
         contentContainerStyle={[
           styles.body,
