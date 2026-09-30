@@ -5,17 +5,13 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { X } from "lucide-react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { DS_V3 } from "@/lib/design-system";
@@ -27,8 +23,9 @@ import { trpcMutate } from "@/lib/trpc";
 import { trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import Button from "@/components/ds/Button";
-import EmptyState from "@/components/ds/EmptyState";
 import Sheet from "@/components/ds/Sheet";
+import { StepReview } from "@/components/create/v2/StepReview";
+import { LaunchedScreen } from "@/components/create/v2/LaunchedScreen";
 
 import {
   StepBasics,
@@ -43,20 +40,18 @@ import {
   StepRules,
   type WizardDifficulty,
 } from "@/components/create/v2/StepRules";
-import { displayCategory, type WizardCategory } from "@/lib/challenge-category";
+import { type WizardCategory } from "@/lib/challenge-category";
 import {
-  REVIEW_PHOTOS_LINE,
   createVisibility,
-  visibilityLabel,
   type CreateVisibility,
 } from "@/backend/lib/create-visibility";
+import { REVIEW_STARTS_TODAY } from "@/lib/create-review";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
-import { formatDays, formatTasks } from "@/lib/format-days";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
-import { day1StartCopy } from "@/lib/challenge-detail-mapping";
+import { JOIN_CAPTION_TOMORROW, day1StartCopy } from "@/lib/challenge-detail-mapping";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { useApp } from "@/contexts/AppContext";
@@ -94,13 +89,6 @@ const INITIAL_STATE: WizardState = {
   category: "discipline",
 };
 
-const PT = DS_V3.space.xs / 4;
-const ICON = DS_V3.space.xs * 6;
-
-function daysLabel(days: number): string {
-  return formatDays(days);
-}
-
 function canAdvanceStep1(s: WizardState): boolean {
   if (s.title.trim().length < 3) return false;
   if (s.title.length > 60) return false;
@@ -121,26 +109,11 @@ function canLaunch(s: WizardState): boolean {
   return true;
 }
 
-function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
-  const tasksCount = s.useCustom ? s.customTasks.length : s.pack?.tasks.length ?? 0;
-  return [
-    { text: `${s.title.trim()} · ${daysLabel(s.durationDays ?? 0)}`, step: 1 },
-    { text: s.who === "group" ? "Group" : "Solo", step: 1 },
-    {
-      text: `${formatTasks(tasksCount)} · ${s.difficulty === "hard" ? "Hard mode" : "Standard"}`,
-      step: 2,
-    },
-    { text: visibilityLabel(s.visibility), step: 3 },
-    { text: REVIEW_PHOTOS_LINE, step: 3 },
-    { text: s.category ? `Category · ${displayCategory(s.category)}` : "Category", step: 1 },
-  ];
-}
-
 export function CreateWizardV2() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
-  const [confirmOpen, setConfirmOpen] = useState<boolean>(false);
+  const [reviewing, setReviewing] = useState<boolean>(false);
   const [cancelOpen, setCancelOpen] = useState<boolean>(false);
   const [newTaskOpen, setNewTaskOpen] = useState<boolean>(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -149,9 +122,11 @@ export function CreateWizardV2() {
   const { profile } = useApp();
   const [launched, setLaunched] = useState<{
     title: string;
+    days: number;
     group: boolean;
     challengeId: string;
     startAt?: string | null;
+    tasks: WizardTask[];
   } | null>(null);
 
   const isDirty = useMemo(() => {
@@ -219,6 +194,10 @@ export function CreateWizardV2() {
   }, []);
 
   const handleCancel = useCallback(() => {
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
     if (state.step !== 1) {
       setStep((state.step - 1) as WizardStep);
       return;
@@ -228,7 +207,7 @@ export function CreateWizardV2() {
     } else {
       router.back();
     }
-  }, [isDirty, router, setStep, state.step]);
+  }, [isDirty, reviewing, router, setStep, state.step]);
 
   const handlePrimary = useCallback(() => {
     if (state.step === 1) {
@@ -242,7 +221,7 @@ export function CreateWizardV2() {
     if (state.step === 3) {
       if (canLaunch(state)) {
         setLaunchError("");
-        setConfirmOpen(true);
+        setReviewing(true);
       }
     }
   }, [state, setStep]);
@@ -304,16 +283,18 @@ export function CreateWizardV2() {
       void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
-      setConfirmOpen(false);
+      setReviewing(false);
       const startAt =
         (result as { start_at?: string | null }).start_at ??
         (result as { activeChallenge?: { start_at?: string } | null }).activeChallenge?.start_at ??
         null;
       setLaunched({
         title: state.title.trim(),
+        days: state.durationDays ?? 30,
         group: state.who === "group",
         challengeId: result.id,
         startAt,
+        tasks: tasksForApi,
       });
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
@@ -328,40 +309,57 @@ export function CreateWizardV2() {
     }
   }, [state, queryClient, router]);
 
-  const rows = useMemo(() => reviewRows(state), [state]);
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
+  const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
+  const timeZone = resolveHomeTimeZone(
+    (profile as { timezone?: string | null } | null)?.timezone,
+    getDeviceIanaTimeZone(),
+  );
 
   if (launched) {
+    const tomorrow =
+      day1StartCopy(launched.startAt, timeZone) === JOIN_CAPTION_TOMORROW;
+    return (
+      <LaunchedScreen
+        title={launched.title}
+        days={launched.days}
+        group={launched.group}
+        tomorrow={tomorrow}
+        tasks={launched.tasks}
+        timeZone={timeZone}
+        onHome={() => router.replace(ROUTES.TABS_HOME as never)}
+        onInvite={
+          launched.group
+            ? () => {
+                router.push(ROUTES.CHALLENGE_INVITE(launched.challengeId) as never);
+              }
+            : undefined
+        }
+        onNext={() => router.replace(ROUTES.CHALLENGE_ID(launched.challengeId) as never)}
+      />
+    );
+  }
+
+  if (reviewing) {
     return (
       <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
-        <View style={styles.launchedBody}>
-          <Text style={styles.launchedTitle}>You&apos;re in.</Text>
-          <Text style={styles.secondary}>
-            {day1StartCopy(
-              launched.startAt,
-              resolveHomeTimeZone(
-                (profile as { timezone?: string | null } | null)?.timezone,
-                getDeviceIanaTimeZone(),
-              ),
-            )}
-          </Text>
-          <Text style={styles.bodyStrong}>{launched.title}</Text>
-        </View>
-        <View style={styles.launchedFooter}>
-          {launched.group ? (
-            <Button
-              label="Invite friends"
-              variant="secondary"
-              onPress={() => {
-                router.push(ROUTES.CHALLENGE_INVITE(launched.challengeId) as never);
-              }}
-            />
-          ) : null}
-          <Button
-            label="Back to Home"
-            onPress={() => router.replace(ROUTES.TABS_HOME as never)}
-          />
-        </View>
+        <StepReview
+          title={state.title}
+          category={state.category}
+          days={state.durationDays ?? 30}
+          who={state.who}
+          difficulty={state.difficulty}
+          visibility={state.visibility}
+          starts={REVIEW_STARTS_TODAY}
+          tasks={reviewTasks}
+          launchState={launchState}
+          onBack={() => setReviewing(false)}
+          onLaunch={() => void handleLaunch()}
+          onEditStep={(step) => {
+            setReviewing(false);
+            setStep(step);
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -465,78 +463,6 @@ export function CreateWizardV2() {
           <Text style={styles.secondary}>You&apos;ll lose what you&apos;ve entered so far.</Text>
         </Sheet>
 
-        <Modal
-          visible={confirmOpen}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setConfirmOpen(false)}
-        >
-          <View style={styles.sheetRoot}>
-            <Pressable
-              style={styles.dim}
-              accessibilityRole="button"
-              accessibilityLabel="Close review"
-              onPress={() => setConfirmOpen(false)}
-            />
-            <View style={[styles.sheet, launchState === "error" ? styles.sheetError : styles.sheetIdle]}>
-              <View style={styles.grabberWrap}>
-                <View style={styles.grabber} />
-              </View>
-              <View style={styles.sheetTitleRow}>
-                <Text style={styles.bodyStrong}>Review and launch</Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Close review"
-                  onPress={() => setConfirmOpen(false)}
-                  style={styles.closeHit}
-                >
-                  <X size={ICON} color={DS_V3.color.textPrimary} strokeWidth={2} />
-                </Pressable>
-              </View>
-              <View style={styles.sheetRows}>
-                {rows.map((r, i) => (
-                  <View key={r.text}>
-                    <View style={styles.reviewRow}>
-                      <Text style={styles.body}>{r.text}</Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Edit"
-                        onPress={() => {
-                          setConfirmOpen(false);
-                          setStep(r.step);
-                        }}
-                        style={styles.editHit}
-                      >
-                        <Text style={styles.edit}>Edit</Text>
-                      </Pressable>
-                    </View>
-                    {i < rows.length - 1 ? <View style={styles.divider} /> : null}
-                  </View>
-                ))}
-              </View>
-              {launchState === "error" ? (
-                <View style={styles.errorWrap}>
-                  <EmptyState
-                    heading="Could not launch"
-                    body="Check your connection and try again."
-                    actionLabel="Retry"
-                    variant="error"
-                    onAction={() => void handleLaunch()}
-                  />
-                </View>
-              ) : (
-                <View style={styles.sheetFooter}>
-                  <Button
-                    label={launchState === "loading" ? "Launching" : "Launch"}
-                    submitting={launchState === "loading"}
-                    onPress={() => void handleLaunch()}
-                  />
-                </View>
-              )}
-            </View>
-          </View>
-        </Modal>
-
         <AddTaskSheet
           visible={newTaskOpen}
           initial={
@@ -567,109 +493,5 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
-  },
-  bodyStrong: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  body: {
-    flex: 1,
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  launchedBody: {
-    flex: 1,
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.xs * 16,
-    gap: DS_V3.space.md,
-    justifyContent: "center",
-  },
-  launchedTitle: {
-    fontSize: DS_V3.type.title.fontSize,
-    lineHeight: DS_V3.type.title.lineHeight,
-    fontWeight: DS_V3.type.title.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  launchedFooter: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingBottom: DS_V3.space.gutter,
-    gap: DS_V3.space.sm,
-  },
-  sheetRoot: { flex: 1, justifyContent: "flex-end" },
-  dim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: DS_V3.color.canvas,
-    opacity: 0.65,
-  },
-  sheet: {
-    backgroundColor: DS_V3.color.surface,
-    borderTopLeftRadius: DS_V3.radius.card,
-    borderTopRightRadius: DS_V3.radius.card,
-    borderTopWidth: PT,
-    borderColor: DS_V3.color.border,
-  },
-  sheetIdle: { minHeight: "55%" },
-  sheetError: { minHeight: "70%" },
-  grabberWrap: {
-    alignItems: "center",
-    paddingTop: DS_V3.space.sm,
-  },
-  grabber: {
-    width: DS_V3.space.xs * 9,
-    height: DS_V3.space.xs,
-    borderRadius: DS_V3.radius.input,
-    backgroundColor: DS_V3.color.border,
-  },
-  sheetTitleRow: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  closeHit: {
-    width: DS_V3.size.tap,
-    height: DS_V3.size.tap,
-    alignItems: "flex-end",
-    justifyContent: "center",
-  },
-  sheetRows: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.sm,
-  },
-  reviewRow: {
-    minHeight: DS_V3.size.tap,
-    paddingVertical: DS_V3.space.gutter,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.lg,
-  },
-  editHit: {
-    minHeight: DS_V3.size.tap,
-    justifyContent: "center",
-  },
-  edit: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
-  },
-  divider: {
-    height: PT,
-    backgroundColor: DS_V3.color.border,
-  },
-  errorWrap: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.section,
-    paddingBottom: DS_V3.space.section,
-  },
-  sheetFooter: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-    paddingBottom: DS_V3.space.section,
   },
 });

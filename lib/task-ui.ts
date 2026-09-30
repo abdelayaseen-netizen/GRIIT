@@ -120,6 +120,15 @@ export function wizardGateLine(task: {
   return gateLine(task.gates ?? [], task.gateTime);
 }
 
+/** Review / detail / feed requirement line. Same as wizardGateLine. */
+export function gateLabel(task: {
+  gates?: readonly TaskGate[] | null;
+  gateTime?: GateTime | null;
+  requirePhoto?: boolean;
+}): string {
+  return wizardGateLine(task);
+}
+
 export function minutesLeftCaption(minutes: number): string {
   return `${minutes} minutes left in the window.`;
 }
