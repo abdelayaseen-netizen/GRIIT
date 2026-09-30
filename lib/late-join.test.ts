@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anyTimeWindowClosedToday, enrollmentStartAt } from "@/backend/lib/join-challenge";
+import { anyTimeWindowClosedToday, enrollmentStartAt } from "@/backend/lib/late-join-window";
 import { dateKeyInTimeZone } from "@/backend/lib/date-utils";
 import { detailLateJoinCard, reviewLateJoinState } from "@/lib/late-join";
 import { homePrestartLine, reviewLateJoinLine } from "@/lib/late-join-copy";

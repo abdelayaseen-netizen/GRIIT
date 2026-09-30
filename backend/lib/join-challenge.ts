@@ -4,86 +4,28 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRPCError } from "@trpc/server";
-import { addCalendarDaysToDateKey, dateKeyInTimeZone, getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
-import { enrollmentEndAt, enrollmentIsPastEnd, localMidnightUtc } from "./enrollment-end-at";
+import { getTodayDateKey, getTomorrowDateKey, getProfileTimeZoneForUser } from "./date-utils";
+import { enrollmentEndAt, enrollmentIsPastEnd } from "./enrollment-end-at";
 import {
   ALREADY_IN_CHALLENGE_MESSAGE,
   JOIN_FAILED_FALLBACK,
   joinFailureFromInsert,
 } from "./join-errors";
-import { currentMinutesInTimeZone } from "./task-time-gate";
+import {
+  anyTimeWindowClosedToday,
+  enrollmentStartAt,
+  type TaskWindowRow,
+} from "./late-join-window";
 
-export type TaskWindowRow = {
-  time_window_end?: string | null;
-  schedule_window_end?: string | null;
-  gate_time_end?: string | null;
-  gate_time_start?: string | null;
-  gate_time_mode?: string | null;
-  required?: boolean | null;
-  config?: {
-    required?: boolean | null;
-    schedule_window_end?: string | null;
-    time_window_end?: string | null;
-  } | null;
-};
-
-function windowTaskRequired(task: TaskWindowRow): boolean {
-  if (task.required === false) return false;
-  if (task.config && typeof task.config === "object" && task.config.required === false) return false;
-  return true;
-}
-
-function firstHHMM(...values: Array<string | null | undefined>): string | null {
-  for (const raw of values) {
-    if (typeof raw === "string" && raw.trim()) return raw.trim();
-  }
-  return null;
-}
-
-/** HH:MM end of a task time window. By = the By time (start or end column). */
-export function taskWindowEndHHMM(task: TaskWindowRow): string | null {
-  const mode = task.gate_time_mode?.trim();
-  if (mode === "by") return firstHHMM(task.gate_time_start, task.gate_time_end);
-  if (mode === "between") return firstHHMM(task.gate_time_end);
-  return firstHHMM(
-    task.time_window_end,
-    task.schedule_window_end,
-    task.gate_time_end,
-    task.config?.schedule_window_end,
-    task.config?.time_window_end,
-  );
-}
-
-function parseHHMMMinutes(raw: string): number | null {
-  const [hStr, mStr] = raw.split(":");
-  const h = parseInt(hStr ?? "", 10);
-  const m = parseInt(mStr ?? "0", 10);
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
-  return h * 60 + m;
-}
-
-/** True when any required task's time gate has already closed today in `timeZone`. */
-export function anyTimeWindowClosedToday(
-  tasks: TaskWindowRow[],
-  now: Date,
-  timeZone: string,
-): boolean {
-  const current = currentMinutesInTimeZone(now, timeZone);
-  return tasks.some((t) => {
-    if (!windowTaskRequired(t)) return false;
-    const end = taskWindowEndHHMM(t);
-    if (!end) return false;
-    const mins = parseHHMMMinutes(end);
-    return mins != null && current >= mins;
-  });
-}
-
-/** Defer to tomorrow local 00:00; otherwise start now. */
-export function enrollmentStartAt(now: Date, timeZone: string, defer: boolean): Date {
-  if (!defer) return now;
-  const tomorrowKey = addCalendarDaysToDateKey(dateKeyInTimeZone(now, timeZone), 1);
-  return localMidnightUtc(tomorrowKey, timeZone);
-}
+export {
+  anyTimeWindowClosedToday,
+  enrollmentStartAt,
+  firstHHMM,
+  parseHHMMMinutes,
+  taskWindowEndHHMM,
+  windowTaskRequired,
+  type TaskWindowRow,
+} from "./late-join-window";
 
 export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string };
 
