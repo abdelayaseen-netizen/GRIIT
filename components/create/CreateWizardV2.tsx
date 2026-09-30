@@ -42,15 +42,19 @@ import {
 import {
   StepRules,
   type WizardDifficulty,
-  type WizardPhotoProof,
 } from "@/components/create/v2/StepRules";
 import { displayCategory, type WizardCategory } from "@/lib/challenge-category";
+import {
+  REVIEW_PHOTOS_LINE,
+  createVisibility,
+  visibilityLabel,
+  type CreateVisibility,
+} from "@/backend/lib/create-visibility";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
 import { formatDays, formatTasks } from "@/lib/format-days";
-import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { day1StartCopy } from "@/lib/challenge-detail-mapping";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
@@ -72,7 +76,7 @@ export type WizardState = {
   customTasks: WizardTask[];
   useCustom: boolean;
   difficulty: WizardDifficulty;
-  photoProof: WizardPhotoProof;
+  visibility: CreateVisibility;
   category: WizardCategory | null;
 };
 
@@ -86,7 +90,7 @@ const INITIAL_STATE: WizardState = {
   customTasks: [],
   useCustom: false,
   difficulty: "standard",
-  photoProof: "optional",
+  visibility: "PRIVATE",
   category: "discipline",
 };
 
@@ -126,7 +130,8 @@ function reviewRows(s: WizardState): { text: string; step: WizardStep }[] {
       text: `${formatTasks(tasksCount)} · ${s.difficulty === "hard" ? "Hard mode" : "Standard"}`,
       step: 2,
     },
-    { text: reviewPhotoLine(s.difficulty, s.photoProof), step: 3 },
+    { text: visibilityLabel(s.visibility), step: 3 },
+    { text: REVIEW_PHOTOS_LINE, step: 3 },
     { text: s.category ? `Category · ${displayCategory(s.category)}` : "Category", step: 1 },
   ];
 }
@@ -171,7 +176,11 @@ export function CreateWizardV2() {
     setState((p) => ({ ...p, customDuration: v }));
   }, []);
   const setWho = useCallback((who: WizardWho) => {
-    setState((p) => ({ ...p, who }));
+    setState((p) => ({
+      ...p,
+      who,
+      visibility: who === "group" ? "PRIVATE" : p.visibility,
+    }));
   }, []);
   const setPack = useCallback((pack: WizardPack | null) => {
     setState((p) => {
@@ -183,7 +192,6 @@ export function CreateWizardV2() {
         category: pack.category,
         durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
         difficulty,
-        photoProof: effectivePhotoProof(difficulty, p.photoProof),
         customDuration: "",
       };
     });
@@ -201,17 +209,10 @@ export function CreateWizardV2() {
     }));
   }, []);
   const setDifficulty = useCallback((d: WizardDifficulty) => {
-    setState((p) => ({
-      ...p,
-      difficulty: d,
-      photoProof: effectivePhotoProof(d, p.photoProof),
-    }));
+    setState((p) => ({ ...p, difficulty: d }));
   }, []);
-  const setPhotoProof = useCallback((v: WizardPhotoProof) => {
-    setState((p) => ({
-      ...p,
-      photoProof: effectivePhotoProof(p.difficulty, v),
-    }));
+  const setVisibility = useCallback((visibility: CreateVisibility) => {
+    setState((p) => ({ ...p, visibility }));
   }, []);
   const setCategory = useCallback((c: WizardCategory) => {
     setState((p) => ({ ...p, category: c }));
@@ -259,10 +260,6 @@ export function CreateWizardV2() {
         ? state.customTasks
         : state.pack?.tasks ?? [];
 
-      const photoProof = effectivePhotoProof(state.difficulty, state.photoProof);
-      const requirePhoto = photoProof === "required";
-      const allowPhoto = photoProof !== "off";
-
       const payload: CreateChallengeInput = {
         title: state.title.trim(),
         description: "",
@@ -274,13 +271,16 @@ export function CreateWizardV2() {
         categories: state.category ? [state.category] : [],
         participationType: state.who === "group" ? "team" : "solo",
         teamSize: state.who === "group" ? 10 : 1,
-        visibility: state.who === "group" ? "FRIENDS" : "PRIVATE",
+        visibility: createVisibility(
+          state.who === "group" ? "team" : "solo",
+          state.visibility,
+        ),
         replayPolicy: "allow_replay",
         showReplayLabel: false,
         requireSameRules: state.difficulty === "hard",
         liveDate: "",
         tasks: tasksForApi.map((t) =>
-          mapWizardTaskToCreateInput(t, { requirePhoto, allowPhoto }),
+          mapWizardTaskToCreateInput(t, { requirePhoto: false, allowPhoto: true }),
         ),
       };
 
@@ -298,7 +298,6 @@ export function CreateWizardV2() {
         length_days: state.durationDays ?? 30,
         mode: state.who === "group" ? "group" : "solo",
         strictness: state.difficulty,
-        public_proof: photoProof,
         task_count: tasksForApi.length,
         has_verified_task: tasksForApi.some((t) => t.requirePhoto === true),
       });
@@ -415,8 +414,9 @@ export function CreateWizardV2() {
             <StepRules
               difficulty={state.difficulty}
               onChangeDifficulty={setDifficulty}
-              photoProof={effectivePhotoProof(state.difficulty, state.photoProof)}
-              onChangePhotoProof={setPhotoProof}
+              who={state.who}
+              visibility={state.visibility}
+              onChangeVisibility={setVisibility}
             />
           ) : null}
         </ScrollView>
