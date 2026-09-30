@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ADD_TASK_DEFAULT,
   ADD_TASK_ON_HOME,
+  ADD_TASK_PLACE_NO_MAP,
   ADD_TASK_PROOFS,
   ADD_TASK_STARTERS,
   ADD_TASK_WHAT_PROVES,
@@ -21,6 +22,11 @@ function draft(partial: Partial<AddTaskDraft> = {}): AddTaskDraft {
 }
 
 describe("add-task draft", () => {
+  it("place radius copy has no design-system note", () => {
+    expect(ADD_TASK_PLACE_NO_MAP).toBe("A bigger radius is easier to pass.");
+    expect(ADD_TASK_PLACE_NO_MAP.toLowerCase()).not.toMatch(/design system/);
+  });
+
   it("default state is check_off with no gates", () => {
     expect(ADD_TASK_DEFAULT.type).toBe("check_off");
     expect(ADD_TASK_DEFAULT.camera).toBe(false);

@@ -61,8 +61,7 @@ export const ADD_TASK_SEARCH_PLACE = "Search an address";
 export const ADD_TASK_USE_LOCATION = "Use my current location";
 export const ADD_TASK_HOW_CLOSE = "How close you have to be";
 export const ADD_TASK_SAVE_PLACE = "Save place";
-export const ADD_TASK_PLACE_NO_MAP =
-  "Bigger radius, easier to pass. There is no map in the design system, so the radius is a number, not a circle on a map.";
+export const ADD_TASK_PLACE_NO_MAP = "A bigger radius is easier to pass.";
 
 export const ADD_TASK_TYPE_CHIPS: { id: TaskModelType; label: string }[] = [
   { id: "check_off", label: "Check off" },
