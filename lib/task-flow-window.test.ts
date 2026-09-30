@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { GateTime } from "@/backend/lib/task-model";
 import {
   flowAllowsSubmit,
   flowFooterBrand,
@@ -10,28 +9,11 @@ import {
 } from "@/lib/task-flow-window";
 import { WINDOW_CLOSED_FORBIDDEN } from "@/lib/task-ui";
 
-const bySeven: GateTime = { mode: "by", start: "07:00", end: null };
-const between: GateTime = { mode: "between", start: "09:30", end: "10:30" };
-
 describe("flowHeaderTitle", () => {
-  it("Day n · By 7:00 am", () => {
-    expect(flowHeaderTitle(3, bySeven, "Self-report")).toBe("Day 3 · By 7:00 am");
-  });
-
-  it("Day n · Between 9:30 and 10:30 am", () => {
-    expect(flowHeaderTitle(1, between, "Timer")).toBe("Day 1 · Between 9:30 and 10:30 am");
-  });
-
-  it("falls back when there is no time gate", () => {
-    expect(flowHeaderTitle(2, null, "Self-report")).toBe("Day 2 · Self-report");
-  });
-
-  it("Day n · Camera when the camera gate is the header fallback", () => {
-    expect(flowHeaderTitle(1, null, "Camera")).toBe("Day 1 · Camera");
-  });
-
-  it("Camera outranks a time window in the header", () => {
-    expect(flowHeaderTitle(12, bySeven, "Camera")).toBe("Day 12 · Camera");
+  it("is {challenge} · Day {n} of {N} and never the type", () => {
+    expect(flowHeaderTitle("5am crew", 3, 30)).toBe("5am crew · Day 3 of 30");
+    expect(flowHeaderTitle("Read 30 min", 1, 7)).toBe("Read 30 min · Day 1 of 7");
+    expect(flowHeaderTitle("5am crew", 3, 30)).not.toMatch(/Camera|Timer|Counter|Self-report|By |Between /);
   });
 });
 

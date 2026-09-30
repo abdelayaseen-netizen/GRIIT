@@ -46,6 +46,7 @@ type Props = {
   taskType: string;
   taskName: string;
   headerTitle: string;
+  headerLabel?: string;
   footerCaption?: string;
   footerBrand?: boolean;
   unit: DistanceUnit;
@@ -72,6 +73,7 @@ export function LogStep({
   taskType,
   taskName,
   headerTitle,
+  headerLabel,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
   unit,
@@ -131,7 +133,7 @@ export function LogStep({
       keyboardVerticalOffset={insets.top}
     >
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} onBack={onBack} />
+        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       </View>
       <ScrollView
         style={styles.scroll}

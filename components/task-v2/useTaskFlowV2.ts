@@ -57,8 +57,6 @@ import {
   TIMER_PHOTO_AFTER,
   workDoneLine,
   workStepDay,
-  workStepHeader,
-  workStepOwnsChrome,
   workThenCamera,
 } from "@/lib/work-step";
 import {
@@ -918,9 +916,7 @@ export function useTaskFlowV2() {
     fromGps: false,
     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
     chromeTitle: chromeTitle(taskType, gates),
-    headerTitle: workStepOwnsChrome(step, taskType)
-      ? workStepHeader(currentDay, gates, taskType)
-      : flowHeaderTitle(currentDay, gateTime, chromeTitle(taskType, gates)),
+    headerTitle: flowHeaderTitle(challengeName, currentDay, durationDays),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),

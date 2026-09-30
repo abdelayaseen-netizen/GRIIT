@@ -18,6 +18,7 @@ import {
 type Props = {
   taskName: string;
   headerTitle: string;
+  headerLabel?: string;
   requiredSeconds: number;
   soundOn: boolean;
   onSoundOn: (v: boolean) => void;
@@ -32,6 +33,7 @@ const FIGURE = DS_V3.size.shutter + DS_V3.space.xs;
 export function TimerEntryStep({
   taskName,
   headerTitle,
+  headerLabel,
   requiredSeconds,
   soundOn,
   onSoundOn,
@@ -44,7 +46,7 @@ export function TimerEntryStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} onBack={onBack} />
+        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>

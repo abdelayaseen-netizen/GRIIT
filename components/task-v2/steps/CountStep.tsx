@@ -24,6 +24,7 @@ type Props = {
   counterUnit: string;
   taskName: string;
   headerTitle: string;
+  headerLabel?: string;
   footerCaption?: string;
   footerBrand?: boolean;
   keypadOpen: boolean;
@@ -44,6 +45,7 @@ export function CountStep({
   counterUnit,
   taskName,
   headerTitle,
+  headerLabel,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
   keypadOpen,
@@ -63,7 +65,7 @@ export function CountStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} onBack={onBack} />
+        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>

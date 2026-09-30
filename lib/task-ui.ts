@@ -148,12 +148,12 @@ export function closedWindowTime(gateTime: GateTime | null | undefined): string 
 }
 
 export function flowHeaderTitle(
+  challenge: string,
   day: number,
-  gateTime: GateTime | null | undefined,
-  fallback: string,
+  durationDays: number,
 ): string {
-  if (fallback === "Camera" || fallback === "Location") return `Day ${day} · ${fallback}`;
-  const time = formatGateTime(gateTime);
-  if (time) return `Day ${day} · ${time}`;
-  return `Day ${day} · ${fallback}`;
+  const name = challenge.trim() || "Challenge";
+  const n = Math.max(1, Math.floor(day));
+  const total = Math.max(n, Math.floor(durationDays) || n);
+  return `${name} · Day ${n} of ${total}`;
 }

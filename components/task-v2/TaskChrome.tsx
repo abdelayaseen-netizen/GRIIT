@@ -4,10 +4,12 @@ import { DS_V3 } from "@/lib/design-system";
 
 export function TaskChrome({
   title,
+  label,
   dark,
   onBack,
 }: {
   title: string;
+  label?: string;
   dark?: boolean;
   onBack: () => void;
 }) {
@@ -26,9 +28,12 @@ export function TaskChrome({
       >
         <View style={[styles.chevron, { borderColor: dark ? DS_V3.color.textPrimary : DS_V3.color.textPrimary }]} />
       </Pressable>
-      <Text style={[styles.title, { color, marginRight: 44 }]} numberOfLines={1}>
-        {title}
-      </Text>
+      <View style={styles.center}>
+        {label ? <Text style={[styles.label, { color }]}>{label}</Text> : null}
+        <Text style={[styles.title, { color }]} numberOfLines={1}>
+          {title}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -54,8 +59,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     transform: [{ rotate: "45deg" }],
   },
-  title: {
+  center: {
     flex: 1,
+    marginRight: 44,
+    alignItems: "center",
+  },
+  label: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: DS_V3.type.label.textTransform,
+  },
+  title: {
     textAlign: "center",
     fontSize: 13,
     fontWeight: "400",
