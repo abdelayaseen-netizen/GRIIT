@@ -35,7 +35,7 @@ export function wizardTasksToWindowRows(
   tasks: readonly { gates?: readonly TaskGate[] | null; gateTime?: GateTime | null }[],
 ): TaskWindowRow[] {
   return tasks
-    .filter((t) => t.gates?.includes("time") && t.gateTime?.mode)
+    .filter((t) => t.gateTime?.mode === "by" || t.gateTime?.mode === "between" || t.gates?.includes("time"))
     .map((t) => ({
       gate_time_mode: t.gateTime?.mode,
       gate_time_start: t.gateTime?.start,

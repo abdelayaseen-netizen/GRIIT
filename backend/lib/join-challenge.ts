@@ -33,19 +33,25 @@ function windowTaskRequired(task: TaskWindowRow): boolean {
   return true;
 }
 
-/** HH:MM end of a task time window, any mode. */
+function firstHHMM(...values: Array<string | null | undefined>): string | null {
+  for (const raw of values) {
+    if (typeof raw === "string" && raw.trim()) return raw.trim();
+  }
+  return null;
+}
+
+/** HH:MM end of a task time window. By = the By time (start or end column). */
 export function taskWindowEndHHMM(task: TaskWindowRow): string | null {
   const mode = task.gate_time_mode?.trim();
-  if (mode === "by" && task.gate_time_start) return task.gate_time_start;
-  if (mode === "between" && task.gate_time_end) return task.gate_time_end;
-  const raw =
-    task.time_window_end ??
-    task.schedule_window_end ??
-    task.gate_time_end ??
-    task.config?.schedule_window_end ??
-    task.config?.time_window_end ??
-    null;
-  return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  if (mode === "by") return firstHHMM(task.gate_time_start, task.gate_time_end);
+  if (mode === "between") return firstHHMM(task.gate_time_end);
+  return firstHHMM(
+    task.time_window_end,
+    task.schedule_window_end,
+    task.gate_time_end,
+    task.config?.schedule_window_end,
+    task.config?.time_window_end,
+  );
 }
 
 function parseHHMMMinutes(raw: string): number | null {
@@ -133,7 +139,7 @@ export async function joinChallengeDirect(
     throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
   }
 
-  const { data: tasksForWindowCheck } = await reader
+  const { data: tasksForWindowCheck } = await supabase
     .from("challenge_tasks")
     .select("id, time_window_end, schedule_window_end, gate_time_end, gate_time_start, gate_time_mode, config")
     .eq("challenge_id", challengeId);

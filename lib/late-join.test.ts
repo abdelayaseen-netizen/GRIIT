@@ -31,6 +31,32 @@ describe("116 late join", () => {
     expect(detailLateJoinCard("2026-09-28T04:00:00.000Z", TZ)).toContain("Day 1 is tomorrow ·");
   });
 
+  it("By 7:00 created 21:37 → tomorrow; By 23:00 created 21:37 → today", () => {
+    const at937pm = new Date("2026-09-30T01:37:00.000Z"); // 21:37 EDT
+    const bySeven = {
+      gates: ["time"] as const,
+      gateTime: { mode: "by" as const, start: "07:00", end: null },
+    };
+    const byEleven = {
+      gates: ["time"] as const,
+      gateTime: { mode: "by" as const, start: "23:00", end: null },
+    };
+    expect(anyTimeWindowClosedToday(
+      [{ gate_time_mode: "by", gate_time_start: "07:00" }],
+      at937pm,
+      TZ,
+    )).toBe(true);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, true), TZ)).toBe("2026-09-30");
+    expect(reviewLateJoinState([bySeven], TZ, at937pm).defer).toBe(true);
+    expect(anyTimeWindowClosedToday(
+      [{ gate_time_mode: "by", gate_time_start: "23:00" }],
+      at937pm,
+      TZ,
+    )).toBe(false);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, false), TZ)).toBe("2026-09-29");
+    expect(reviewLateJoinState([byEleven], TZ, at937pm).starts).toBe("Today");
+  });
+
   it("launch at 4:00 am → Day 1 today", () => {
     expect(anyTimeWindowClosedToday(
       [{ gate_time_mode: "between", gate_time_start: "05:00", gate_time_end: "06:30" }],

@@ -112,6 +112,24 @@ describe("join deferral", () => {
     ).toBe(true);
   });
 
+  const at937pm = new Date("2026-09-30T01:37:00.000Z"); // 21:37 EDT
+
+  it("By 7:00 created 21:37 → tomorrow; By 23:00 created 21:37 → today", () => {
+    const bySeven = { gate_time_mode: "by", gate_time_start: "07:00", config: { required: true } };
+    const byEleven = { gate_time_mode: "by", gate_time_start: "23:00", config: { required: true } };
+    expect(anyTimeWindowClosedToday([bySeven], at937pm, TZ)).toBe(true);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, true), TZ)).toBe("2026-09-30");
+    expect(anyTimeWindowClosedToday([byEleven], at937pm, TZ)).toBe(false);
+    expect(dateKeyInTimeZone(enrollmentStartAt(at937pm, TZ, false), TZ)).toBe("2026-09-29");
+    expect(
+      anyTimeWindowClosedToday(
+        [{ gate_time_mode: "by", gate_time_end: "07:00", config: { required: true } }],
+        at937pm,
+        TZ,
+      ),
+    ).toBe(true);
+  });
+
   it("no time gate starts today", () => {
     expect(anyTimeWindowClosedToday([{ config: { required: true } }], afterClose, TZ)).toBe(false);
   });

@@ -462,9 +462,9 @@ export function buildTaskInsertPayload(
     taskHasGate(t, "camera");
   const location = t.require_location === true || taskHasGate(t, "location");
   if (location) config.require_location = true;
-  const gateTime = taskHasGate(t, "time")
-    ? readGateTime(t)
-    : { mode: null, start: null, end: null };
+  const read = readGateTime(t);
+  const gateTime =
+    taskHasGate(t, "time") || read.mode ? read : { mode: null, start: null, end: null };
   return {
     challenge_id: challengeId,
     title: task.title,

@@ -194,4 +194,21 @@ describe("buildTaskInsertPayload — old and new write shapes", () => {
     expect(row.gate_time_start).toBe("07:00");
     expect(row.config.require_photo_proof).toBe(true);
   });
+
+  it("self-report + time writes By columns without a camera gate", () => {
+    const row = buildTaskInsertPayload(
+      {
+        title: "Journal",
+        type: "check_off",
+        required: true,
+        gates: ["time"],
+        gateTime: { mode: "by", start: "07:00", end: null },
+      },
+      "challenge-1",
+      0,
+    );
+    expect(row.require_photo).toBeUndefined();
+    expect(row.gate_time_mode).toBe("by");
+    expect(row.gate_time_start).toBe("07:00");
+  });
 });
