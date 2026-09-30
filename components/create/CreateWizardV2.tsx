@@ -50,11 +50,16 @@ import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome"
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
 import { mapWizardTaskToCreateInput } from "@/lib/create-wizard-payload";
-import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { JOIN_CAPTION_TOMORROW, day1StartCopy } from "@/lib/challenge-detail-mapping";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import {
+  FREE_ACTIVE_LIMIT_MESSAGE,
+  wizardBlockedByFreeLimit,
+} from "@/lib/free-challenge-limit";
 
 type CreateChallengeInput = inferRouterInputs<AppRouter>["challenges"]["create"];
 type CreateChallengeOutput = inferRouterOutputs<AppRouter>["challenges"]["create"];
@@ -119,7 +124,15 @@ export function CreateWizardV2() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [launchBusy, setLaunchBusy] = useState<boolean>(false);
   const [launchError, setLaunchError] = useState<string>("");
-  const { profile } = useApp();
+  const { profile, isPremium } = useApp();
+  const { user } = useAuth();
+  const bootstrap = useHomeBootstrap(user?.id);
+  const limitBlocked = wizardBlockedByFreeLimit({
+    isPremium,
+    enrollments: Array.isArray(bootstrap.data?.activeChallenges)
+      ? (bootstrap.data.activeChallenges as { status?: string | null }[])
+      : [],
+  });
   const [launched, setLaunched] = useState<{
     title: string;
     days: number;
@@ -232,6 +245,7 @@ export function CreateWizardV2() {
     (state.step === 3 && !canLaunch(state));
 
   const handleLaunch = useCallback(async () => {
+    if (limitBlocked) return;
     setLaunchError("");
     setLaunchBusy(true);
     try {
@@ -299,15 +313,11 @@ export function CreateWizardV2() {
     } catch (err) {
       captureError(err, "CreateWizardV2Launch");
       const msg = err instanceof Error ? err.message : "";
-      if (msg.includes(FREE_ACTIVE_LIMIT_MESSAGE) || msg.includes("FREE_LIMIT_REACHED")) {
-        router.push(ROUTES.PAYWALL as never);
-        return;
-      }
       setLaunchError(msg || "Could not launch.");
     } finally {
       setLaunchBusy(false);
     }
-  }, [state, queryClient, router]);
+  }, [state, queryClient, limitBlocked]);
 
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
   const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
@@ -315,6 +325,21 @@ export function CreateWizardV2() {
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
   );
+
+  if (limitBlocked) {
+    return (
+      <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+        <WizardHeader step={1} total={3} onCancel={() => router.replace(ROUTES.TABS_HOME as never)} />
+        <Text style={styles.limitCopy}>{FREE_ACTIVE_LIMIT_MESSAGE}</Text>
+        <WizardFooter>
+          <Button
+            label="Upgrade to GRIIT Pro"
+            onPress={() => router.replace(ROUTES.PAYWALL as never)}
+          />
+        </WizardFooter>
+      </SafeAreaView>
+    );
+  }
 
   if (launched) {
     const tomorrow =
@@ -495,5 +520,14 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  limitCopy: {
+    flex: 1,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
 });

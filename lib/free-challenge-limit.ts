@@ -16,3 +16,12 @@ export function isFreeActiveLimitReached(
 ): boolean {
   return countActiveEnrollments(enrollments) >= FREE_ACTIVE_CHALLENGES_LIMIT;
 }
+
+/** Wizard shows the cap before any building. Premium never blocked. */
+export function wizardBlockedByFreeLimit(args: {
+  isPremium: boolean;
+  enrollments: readonly { status?: string | null }[];
+}): boolean {
+  if (args.isPremium) return false;
+  return isFreeActiveLimitReached(args.enrollments);
+}
