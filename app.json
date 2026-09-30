@@ -27,8 +27,6 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
-        "NSPhotoLibraryUsageDescription": "GRIIT needs photo library access to select proof photos for challenge tasks.",
-        "NSPhotoLibraryAddUsageDescription": "Save your GRIIT stickers to Photos.",
         "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
         "ITSAppUsesNonExemptEncryption": false,
@@ -97,7 +95,7 @@
       [
         "expo-media-library",
         {
-          "photosPermission": false,
+          "photosPermission": "GRIIT saves your stickers to Photos. It never reads your library.",
           "savePhotosPermission": "Save your GRIIT stickers to Photos."
         }
       ]

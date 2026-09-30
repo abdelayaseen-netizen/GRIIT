@@ -121,8 +121,12 @@ describe("native share modules vs package.json", () => {
     expect(ios).toContain("react-native-share");
     expect(ios).toContain("instagram-stories");
     expect(ios).toContain("expo-media-library");
-    expect(ios).toContain("NSPhotoLibraryAddUsageDescription");
+    expect(ios).toContain('"photosPermission"');
+    expect(ios).toContain("GRIIT saves your stickers to Photos. It never reads your library.");
+    expect(ios).toContain('"savePhotosPermission"');
     expect(ios).toContain("Save your GRIIT stickers to Photos.");
+    expect(ios).not.toContain("NSPhotoLibraryUsageDescription");
+    expect(ios).not.toContain("NSPhotoLibraryAddUsageDescription");
   });
 });
 
