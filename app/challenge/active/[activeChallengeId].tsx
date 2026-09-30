@@ -330,10 +330,10 @@ export default function ActiveChallengeDetailScreen() {
   }, [challengeId, clearLeaveError]);
 
   const confirmLeaveChallenge = useCallback(async () => {
-    if (!challengeId) return;
+    if (!challengeId || !id) return;
     setLeaveConfirmVisible(false);
     try {
-      await trpcMutate(TRPC.challenges.leave, { challengeId });
+      await trpcMutate(TRPC.challenges.leave, { challengeId, activeChallengeId: id });
       try {
         track({ name: "challenge_left", challenge_id: challengeId });
       } catch {
@@ -341,22 +341,18 @@ export default function ActiveChallengeDetailScreen() {
       }
       const dropLeft = (old: unknown) => {
         if (!Array.isArray(old)) return old;
-        return old.filter((r: { challenge_id?: string; id?: string }) => {
-          if (r.id && id && r.id === id) return false;
-          if (r.challenge_id && r.challenge_id === challengeId) return false;
-          return true;
-        });
+        return old.filter((r: { id?: string }) => r.id !== id);
       };
       queryClient.setQueriesData({ queryKey: ["challenge", "listMyActive"] }, dropLeft);
       queryClient.setQueriesData({ queryKey: ["discover", "myActive"] }, dropLeft);
       await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+      await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
       await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
       await queryClient.invalidateQueries({ queryKey: ["activeChallenge", id] });
-      await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
       await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] });
       await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
       await queryClient.invalidateQueries({ queryKey: ["challenge", "endedEnrollment"] });
-      router.replace(ROUTES.CHALLENGE_ID(challengeId) as never);
+      router.replace(ROUTES.TABS_HOME as never);
     } catch (err) {
       captureError(err, "ActiveChallengeLeaveChallenge");
       showLeaveError(inlineServerError(err));
