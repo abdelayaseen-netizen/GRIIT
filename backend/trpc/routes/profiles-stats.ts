@@ -18,6 +18,7 @@ import { logger } from "../../lib/logger";
 import { reconcileMissForUser } from "../../lib/miss-reconcile";
 import { loadDayTaskTally } from "../../lib/record-days";
 import { restoreStreakCount } from "./streaks";
+import { viewerCanSee } from "../../lib/is-friend";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -361,27 +362,13 @@ export const profilesStatsProcedures = {
       const { getAchievementsByDimension } = await import("../../lib/achievement-definitions");
       const server = getSupabaseServer() ?? ctx.supabase;
 
-      let canSee = input.userId === ctx.userId;
-      if (!canSee) {
-        const { data: pr } = await server
-          .from("profiles")
-          .select("profile_visibility")
-          .eq("user_id", input.userId)
-          .maybeSingle();
-        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
-        if (vis === "public") {
-          canSee = true;
-        } else {
-          const { data: fol } = await ctx.supabase
-            .from("user_follows")
-            .select("status")
-            .eq("follower_id", ctx.userId)
-            .eq("following_id", input.userId)
-            .maybeSingle();
-          canSee = Boolean(fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted");
-        }
-      }
-      if (!canSee) {
+      const { data: pr } = await server
+        .from("profiles")
+        .select("profile_visibility")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public");
+      if (!(await viewerCanSee(ctx.supabase, ctx.userId, input.userId, vis))) {
         return { earned: [], next: [] };
       }
 
@@ -466,31 +453,13 @@ export const profilesStatsProcedures = {
           level: 0 as const,
         }));
 
-      let canSee = userId === ctx.userId;
-      if (!canSee) {
-        const { data: pr } = await server
-          .from("profiles")
-          .select("profile_visibility")
-          .eq("user_id", userId)
-          .maybeSingle();
-        const vis = String(
-          (pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public"
-        ).toLowerCase();
-        if (vis === "public") {
-          canSee = true;
-        } else {
-          const { data: fol } = await ctx.supabase
-            .from("user_follows")
-            .select("status")
-            .eq("follower_id", ctx.userId)
-            .eq("following_id", userId)
-            .maybeSingle();
-          canSee = Boolean(
-            fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted"
-          );
-        }
-      }
-      if (!canSee) {
+      const { data: pr } = await server
+        .from("profiles")
+        .select("profile_visibility")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public");
+      if (!(await viewerCanSee(ctx.supabase, ctx.userId, userId, vis))) {
         return { days: buildEmpty() };
       }
 
