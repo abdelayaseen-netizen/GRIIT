@@ -4,6 +4,15 @@
 
 import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
 import { gateLine } from "@/lib/task-ui";
+import {
+  DEFAULT_BETWEEN_END_HHMM,
+  DEFAULT_BETWEEN_START_HHMM,
+  DEFAULT_BY_HHMM,
+  TIME_WINDOW_NOT_SET,
+  betweenEndAfterStart,
+  fmt12,
+  fmtWindow,
+} from "@/lib/time-gate-picker";
 
 export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
@@ -123,9 +132,9 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   time: false,
   location: false,
   timeMode: "by",
-  byTime: "07:00",
-  fromTime: "05:00",
-  toTime: "06:30",
+  byTime: DEFAULT_BY_HHMM,
+  fromTime: DEFAULT_BETWEEN_START_HHMM,
+  toTime: DEFAULT_BETWEEN_END_HHMM,
   placeName: "",
   placeLat: null,
   placeLng: null,
@@ -225,8 +234,22 @@ export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
 }
 
 export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
+  const title = draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER;
+  if (
+    draft.time &&
+    draft.timeMode === "between" &&
+    !betweenEndAfterStart(draft.fromTime, draft.toTime)
+  ) {
+    return { title, caption: TIME_WINDOW_NOT_SET };
+  }
+  if (draft.camera && draft.time && draft.timeMode === "by") {
+    return { title, caption: `Camera · By ${fmt12(draft.byTime)}` };
+  }
+  if (draft.camera && draft.time && draft.timeMode === "between") {
+    return { title, caption: `Camera · ${fmtWindow(draft.fromTime, draft.toTime)}` };
+  }
   return {
-    title: draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER,
+    title,
     caption: gateLine(gatesFromDraft(draft), gateTimeFromDraft(draft) ?? null),
   };
 }
@@ -332,6 +355,9 @@ export function draftFromWizardTask(task: {
 
 export function canSubmitDraft(draft: AddTaskDraft): boolean {
   if (!draft.name.trim()) return false;
+  if (draft.time && draft.timeMode === "between" && !betweenEndAfterStart(draft.fromTime, draft.toTime)) {
+    return false;
+  }
   if (draft.type === "timer") return timerMinutesFromDraft(draft) > 0;
   if (draft.type === "counter") return parseInt(draft.counterTarget, 10) > 0;
   if (draft.type === "text") return parseInt(draft.minWords, 10) > 0;

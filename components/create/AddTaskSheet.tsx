@@ -2,7 +2,8 @@
  * Add task sheet — frames 42 and 50.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { LocateFixed } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -12,6 +13,7 @@ import ListRow from "@/components/ds/ListRow";
 import SegmentedControl from "@/components/ds/SegmentedControl";
 import Sheet from "@/components/ds/Sheet";
 import TextField from "@/components/ds/TextField";
+import TimeField from "@/components/ds/TimeField";
 import { StatusRing } from "@/components/home/HomeV3";
 import type { WizardTask } from "@/components/create/v2/StepTasks";
 import {
@@ -48,6 +50,16 @@ import {
 } from "@/lib/add-task-draft";
 import { typeCaption } from "@/lib/task-ui";
 import type { HomeProofRow } from "@/lib/home-proof-card";
+import {
+  ADD_TASK_PLACE_LIVE,
+  betweenEndAfterStart,
+  betweenHelper,
+  byHelper,
+  dateToHhmm,
+  hhmmToDate,
+  pickerWindowCaption,
+  validate,
+} from "@/lib/time-gate-picker";
 
 const NAME_MAX = 60;
 export const NAME_THIS_TASK = "Name this task.";
@@ -68,6 +80,8 @@ export default function AddTaskSheet({
   initial,
 }: AddTaskSheetProps) {
   const [draft, setDraft] = useState<AddTaskDraft>(initial ?? ADD_TASK_DEFAULT);
+  const [picking, setPicking] = useState<null | "by" | "from" | "to">(null);
+  const [pickRevert, setPickRevert] = useState<string | null>(null);
   const [placeOpen, setPlaceOpen] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [recent, setRecent] = useState<{ name: string }[]>([]);
@@ -76,8 +90,29 @@ export default function AddTaskSheet({
     if (visible) {
       setDraft(initial ?? ADD_TASK_DEFAULT);
       setPlaceOpen(false);
+      setPicking(null);
+      setPickRevert(null);
     }
   }, [visible, initial]);
+
+  const openPicker = useCallback((field: "by" | "from" | "to", current: string) => {
+    setPickRevert(current);
+    setPicking(field);
+  }, []);
+
+  const applyPicked = useCallback((hhmm: string) => {
+    setDraft((d) => {
+      if (picking === "from") return { ...d, fromTime: hhmm };
+      if (picking === "to") return { ...d, toTime: hhmm };
+      return { ...d, byTime: hhmm };
+    });
+  }, [picking]);
+
+  const closePicker = useCallback((revert: boolean) => {
+    if (revert && pickRevert != null) applyPicked(pickRevert);
+    setPicking(null);
+    setPickRevert(null);
+  }, [applyPicked, pickRevert]);
 
   const save = useCallback(() => {
     if (!canSubmitDraft(draft)) return;
@@ -375,33 +410,47 @@ export default function AddTaskSheet({
               }
             />
             {draft.timeMode === "by" ? (
-              <TextField
-                label="By"
-                value={draft.byTime}
-                onChangeText={(byTime) => setDraft((d) => ({ ...d, byTime }))}
-                placeholder="07:00"
-              />
+              <>
+                <TimeField
+                  label="By"
+                  value={draft.byTime}
+                  active={picking === "by"}
+                  onPress={() => openPicker("by", draft.byTime)}
+                />
+                <Text style={styles.caption}>{byHelper(draft.byTime)}</Text>
+              </>
             ) : (
               <>
-                <TextField
+                <TimeField
                   label="From"
                   value={draft.fromTime}
-                  onChangeText={(fromTime) => setDraft((d) => ({ ...d, fromTime }))}
-                  placeholder="05:00"
+                  invalid={!betweenEndAfterStart(draft.fromTime, draft.toTime)}
+                  active={picking === "from"}
+                  onPress={() => openPicker("from", draft.fromTime)}
                 />
-                <TextField
+                <TimeField
                   label="To"
                   value={draft.toTime}
-                  onChangeText={(toTime) => setDraft((d) => ({ ...d, toTime }))}
-                  placeholder="06:30"
+                  invalid={!betweenEndAfterStart(draft.fromTime, draft.toTime)}
+                  active={picking === "to"}
+                  onPress={() => openPicker("to", draft.toTime)}
                 />
+                {!betweenEndAfterStart(draft.fromTime, draft.toTime) ? (
+                  <Text style={styles.timeError}>{validate(draft.fromTime, draft.toTime)}</Text>
+                ) : (
+                  <Text style={styles.caption}>{betweenHelper(draft.fromTime, draft.toTime)}</Text>
+                )}
               </>
             )}
           </View>
         ) : null}
         {draft.location ? (
           <View style={styles.place}>
-            <ListRow title={ADD_TASK_SET_PLACE} onPress={() => setPlaceOpen(true)} divider={false} />
+            <ListRow
+              title={ADD_TASK_PLACE_LIVE}
+              onPress={() => setPlaceOpen(true)}
+              divider={false}
+            />
           </View>
         ) : null}
 
@@ -415,6 +464,44 @@ export default function AddTaskSheet({
           />
         </View>
       </ScrollView>
+      <Sheet
+        visible={picking != null}
+        onDismiss={() => closePicker(true)}
+        heading={picking === "from" ? "From" : picking === "to" ? "To" : "By"}
+        footer={
+          <>
+            <Button label="Done" onPress={() => closePicker(false)} />
+            <Button
+              label="Cancel"
+              variant="tertiary"
+              onPress={() => closePicker(true)}
+            />
+          </>
+        }
+      >
+        <DateTimePicker
+          value={hhmmToDate(
+            picking === "from"
+              ? draft.fromTime
+              : picking === "to"
+                ? draft.toTime
+                : draft.byTime,
+          )}
+          mode="time"
+          display="spinner"
+          is24Hour={false}
+          locale={Platform.OS === "ios" ? "en_US" : undefined}
+          onChange={(_, next) => {
+            if (!next) return;
+            applyPicked(dateToHhmm(next));
+          }}
+        />
+        {draft.timeMode === "between" ? (
+          <Text style={styles.caption}>
+            {pickerWindowCaption(draft.fromTime, draft.toTime)}
+          </Text>
+        ) : null}
+      </Sheet>
     </Sheet>
   );
 }
@@ -508,6 +595,12 @@ const styles = StyleSheet.create({
   },
   reveal: {
     gap: DS_V3.space.md,
+  },
+  timeError: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
   },
   place: {
     marginHorizontal: -DS_V3.space.gutter,

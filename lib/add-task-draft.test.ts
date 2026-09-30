@@ -8,6 +8,7 @@ import {
   applyProof,
   applyStarter,
   canSubmitDraft,
+  draftFromWizardTask,
   gatesFromDraft,
   payloadFromDraft,
   previewFromDraft,
@@ -123,6 +124,51 @@ describe("add-task draft", () => {
     expect(gatesFromDraft(applyProof(draft(), "photo_place"))).toEqual(["camera", "location"]);
     expect(applyProof(draft({ time: true, location: true }), "photo").time).toBe(false);
     expect(applyProof(draft({ time: true, location: true }), "photo").location).toBe(false);
+  });
+
+  it("invalid Between window disables Add task and marks the preview", () => {
+    const bad = draft({
+      name: "Crew",
+      camera: true,
+      time: true,
+      timeMode: "between",
+      fromTime: "05:00",
+      toTime: "04:30",
+    });
+    expect(canSubmitDraft(bad)).toBe(false);
+    expect(previewFromDraft(bad).caption).toBe("Camera · Time window not set");
+    expect(
+      previewFromDraft(
+        draft({
+          name: "Crew",
+          camera: true,
+          time: true,
+          timeMode: "between",
+          fromTime: "05:00",
+          toTime: "06:30",
+        }),
+      ).caption,
+    ).toBe("Camera · 5:00–6:30 am");
+  });
+
+  it("editing loads saved By / Between values", () => {
+    const between = draftFromWizardTask({
+      name: "Crew",
+      type: "check_off",
+      gates: ["camera", "time"],
+      gateTime: { mode: "between", start: "05:00", end: "06:30" },
+    });
+    expect(between.timeMode).toBe("between");
+    expect(between.fromTime).toBe("05:00");
+    expect(between.toTime).toBe("06:30");
+    const by = draftFromWizardTask({
+      name: "Crew",
+      type: "check_off",
+      gates: ["camera", "time"],
+      gateTime: { mode: "by", start: "07:00", end: null },
+    });
+    expect(by.timeMode).toBe("by");
+    expect(by.byTime).toBe("07:00");
   });
 
   it("preview caption updates with the gate switches", () => {

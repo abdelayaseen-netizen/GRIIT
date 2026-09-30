@@ -85,6 +85,7 @@
           "cameraPermission": "GRIIT needs camera access to take photos as proof of challenge completion."
         }
       ],
+      "@react-native-community/datetimepicker",
       "expo-build-properties",
       [
         "react-native-share",
