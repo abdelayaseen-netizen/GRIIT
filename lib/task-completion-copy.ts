@@ -36,7 +36,7 @@ export function failedUploadCopy(): { eyebrow: string; headline: string; body: s
   return {
     eyebrow: "NOT POSTED",
     headline: "Upload didn't go through",
-    body: "Your photo is saved on this device. The day is not secured yet. Retry when you have signal — the capture keeps its original timestamp.",
+    body: "Your photo is saved on this device. The day is not secured yet. Retry when you have signal.",
     retryNote: "Retry will secure today's date, not the capture date.",
   };
 }

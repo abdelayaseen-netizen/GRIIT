@@ -1,6 +1,6 @@
 /**
  * Counter, Timer and Run — frame 49 copy and chrome.
- * No display face. Header names the gate when there is one.
+ * No display face. Header names the type. Gates stay on the gate line.
  */
 import type { TaskGate } from "@/backend/lib/task-model";
 import { flowHeaderTitle } from "@/lib/task-ui";

@@ -70,10 +70,10 @@ describe("gate-last ordering", () => {
 });
 
 describe("header title", () => {
-  it("names the gate when present, the type when not", () => {
+  it("names the type; gates stay on the gate line", () => {
     expect(workStepHeader("5am crew", 12, 30)).toBe("5am crew · Day 12 of 30");
     expect(workStepHeader("Read 30 min", 1, 7)).toBe("Read 30 min · Day 1 of 7");
-    expect(chromeTitle("timer", ["camera"])).toBe("Camera");
+    expect(chromeTitle("timer", ["camera"])).toBe("Timer");
     expect(chromeTitle("timer")).toBe("Timer");
     expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("run")).toBe("Run");

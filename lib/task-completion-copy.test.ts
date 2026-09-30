@@ -31,7 +31,13 @@ describe("verificationLine", () => {
 
 describe("failedUploadCopy", () => {
   it("says retry secures today's date, not the capture date (Q11)", () => {
-    expect(failedUploadCopy().retryNote).toBe("Retry will secure today's date, not the capture date.");
+    const copy = failedUploadCopy();
+    expect(copy.retryNote).toBe("Retry will secure today's date, not the capture date.");
+    expect(copy.body).toBe(
+      "Your photo is saved on this device. The day is not secured yet. Retry when you have signal.",
+    );
+    expect(copy.body).not.toMatch(/original timestamp/);
+    expect(copy.retryNote).not.toMatch(/original timestamp/);
   });
 });
 
