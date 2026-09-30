@@ -3,7 +3,7 @@
  */
 
 import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
-import { gateLine } from "@/lib/task-ui";
+import { SELF_REPORTED, gateLine } from "@/lib/task-ui";
 import {
   DEFAULT_BETWEEN_END_HHMM,
   DEFAULT_BETWEEN_START_HHMM,
@@ -21,7 +21,7 @@ export const ADD_TASK_WHAT_YOU_DO = "What you do";
 export const ADD_TASK_WHAT_PROVES = "How it's proven";
 export const ADD_TASK_ON_HOME = "On Home";
 
-export type AddTaskProof = "self" | "photo" | "photo_time" | "photo_place";
+export type AddTaskProof = "self" | "self_time" | "photo" | "photo_time" | "photo_place";
 
 export const ADD_TASK_PROOFS: readonly {
   id: AddTaskProof;
@@ -32,6 +32,11 @@ export const ADD_TASK_PROOFS: readonly {
     id: "self",
     title: "Self-report",
     caption: "You say it is done. Nothing is checked.",
+  },
+  {
+    id: "self_time",
+    title: "Self-report + time window",
+    caption: "You say it is done, only inside the hours you set.",
   },
   {
     id: "photo",
@@ -143,7 +148,7 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
 
 export function proofFromDraft(draft: Pick<AddTaskDraft, "camera" | "time" | "location">): AddTaskProof {
   if (draft.location) return "photo_place";
-  if (draft.time) return "photo_time";
+  if (draft.time) return draft.camera ? "photo_time" : "self_time";
   if (draft.camera) return "photo";
   return "self";
 }
@@ -152,6 +157,8 @@ export function applyProof(draft: AddTaskDraft, proof: AddTaskProof): AddTaskDra
   switch (proof) {
     case "self":
       return { ...draft, camera: false, time: false, location: false };
+    case "self_time":
+      return { ...draft, camera: false, time: true, location: false };
     case "photo":
       return { ...draft, camera: true, time: false, location: false };
     case "photo_time":
@@ -240,13 +247,18 @@ export function previewFromDraft(draft: AddTaskDraft): { title: string; caption:
     draft.timeMode === "between" &&
     !betweenEndAfterStart(draft.fromTime, draft.toTime)
   ) {
-    return { title, caption: TIME_WINDOW_NOT_SET };
+    return {
+      title,
+      caption: draft.camera ? TIME_WINDOW_NOT_SET : `${SELF_REPORTED} · Time window not set`,
+    };
   }
-  if (draft.camera && draft.time && draft.timeMode === "by") {
-    return { title, caption: `Camera · By ${fmt12(draft.byTime)}` };
+  if (draft.time && draft.timeMode === "by") {
+    const time = `By ${fmt12(draft.byTime)}`;
+    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
   }
-  if (draft.camera && draft.time && draft.timeMode === "between") {
-    return { title, caption: `Camera · ${fmtWindow(draft.fromTime, draft.toTime)}` };
+  if (draft.time && draft.timeMode === "between") {
+    const time = fmtWindow(draft.fromTime, draft.toTime);
+    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
   }
   return {
     title,
