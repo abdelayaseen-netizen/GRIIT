@@ -27,6 +27,7 @@ import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { GROUP_MAX_MEMBERS, shouldEvaluateTeamDay } from "../../lib/group-challenges";
 import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
+import { viewerCanSee } from "../../lib/is-friend";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
 export function dbTaskType(type: string): string {
@@ -448,32 +449,18 @@ export const challengesRouter = createTRPCRouter({
       return ((data ?? []) as { status?: string }[]).filter((row) => row.status === "active");
     }),
 
-  /** Another user's active challenges (privacy: public profile or accepted follow). */
+  /** Another user's active challenges. Public: anyone. Friends: mutual follow. Private: owner only. */
   getPublicChallenges: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const server = ctx.supabase;
-      let canSee = input.userId === ctx.userId;
-      if (!canSee) {
-        const { data: pr } = await server
-          .from("profiles")
-          .select("profile_visibility")
-          .eq("user_id", input.userId)
-          .maybeSingle();
-        const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
-        if (vis === "public") {
-          canSee = true;
-        } else {
-          const { data: fol } = await ctx.supabase
-            .from("user_follows")
-            .select("status")
-            .eq("follower_id", ctx.userId)
-            .eq("following_id", input.userId)
-            .maybeSingle();
-          canSee = Boolean(fol && String((fol as { status?: string }).status ?? "").toLowerCase() === "accepted");
-        }
-      }
-      if (!canSee) return [];
+      const { data: pr } = await server
+        .from("profiles")
+        .select("profile_visibility")
+        .eq("user_id", input.userId)
+        .maybeSingle();
+      const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public");
+      if (!(await viewerCanSee(ctx.supabase, ctx.userId, input.userId, vis))) return [];
       const { data, error } = await server
         .from("active_challenges")
         .select(

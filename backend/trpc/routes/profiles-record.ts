@@ -28,7 +28,7 @@ import {
 import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-tasks";
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { followRowAccepted } from "../../lib/feed-activity-hydrate";
+import { isFriend } from "../../lib/is-friend";
 import { buildProfileRecord, rangeSecuredElapsed, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import {
   buildProofsDays,
@@ -41,7 +41,6 @@ import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from 
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
-  mutualFollowAccepted,
   parseVisibility,
   resolveRecordGate,
   type ProfileRelationship,
@@ -179,23 +178,7 @@ export const profilesRecordProcedures = {
       if (ownerId === ctx.userId && !previewStranger) {
         relationship = "self";
       } else if (!previewStranger && ownerId !== ctx.userId) {
-        const [outRes, inRes] = await Promise.all([
-          db
-            .from("user_follows")
-            .select("status")
-            .eq("follower_id", ctx.userId)
-            .eq("following_id", ownerId)
-            .maybeSingle(),
-          db
-            .from("user_follows")
-            .select("status")
-            .eq("follower_id", ownerId)
-            .eq("following_id", ctx.userId)
-            .maybeSingle(),
-        ]);
-        const outOk = Boolean(outRes.data && followRowAccepted(outRes.data as { status?: string | null }));
-        const inOk = Boolean(inRes.data && followRowAccepted(inRes.data as { status?: string | null }));
-        relationship = mutualFollowAccepted(outOk, inOk) ? "accepted" : "none";
+        relationship = (await isFriend(db, ctx.userId, ownerId)) ? "accepted" : "none";
       }
 
       const gate = resolveRecordGate({ ...visibility, relationship });

@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, protectedProcedure, type Context } from "../create-context";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
+import { mutualFriendIds } from "../../lib/is-friend";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
 import { getTodayDateKey, getRollingWeekStartDateKey, getWeekStartDateKey, elapsedWeekEnded, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { getCached, setCached } from "../../lib/cache";
@@ -9,24 +10,6 @@ import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { consistencyScore } from "../../lib/scoring";
 
 const LEADERBOARD_MAX = 100;
-
-function followRowAcceptedLb(row: { status?: string | null }): boolean {
-  return String(row.status ?? "accepted").toLowerCase() === "accepted";
-}
-
-async function mutualFriendUserIds(ctx: Context, viewerId: string): Promise<Set<string>> {
-  const { data: out } = await ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200);
-  const iFollow = new Set<string>();
-  for (const r of (out ?? []) as { following_id: string; status?: string | null }[]) {
-    if (followRowAcceptedLb(r)) iFollow.add(r.following_id);
-  }
-  const { data: inc } = await ctx.supabase.from("user_follows").select("follower_id, status").eq("following_id", viewerId).limit(200);
-  const mutual = new Set<string>();
-  for (const r of (inc ?? []) as { follower_id: string; status?: string | null }[]) {
-    if (followRowAcceptedLb(r) && iFollow.has(r.follower_id)) mutual.add(r.follower_id);
-  }
-  return mutual;
-}
 
 export const leaderboardRouter = createTRPCRouter({
   getWeekly: publicProcedure
@@ -170,7 +153,7 @@ export const leaderboardRouter = createTRPCRouter({
     const weekStartKey = getRollingWeekStartDateKey(tz);
     const todayKey = getTodayDateKey(tz);
 
-    const mutual = await mutualFriendUserIds(ctx, viewerId);
+    const mutual = await mutualFriendIds(ctx.supabase, viewerId);
     const candidateIds = [...new Set([viewerId, ...mutual])];
 
     const { data: secures, error: sErr } = await server
@@ -291,7 +274,7 @@ export const leaderboardRouter = createTRPCRouter({
       }
 
       if (input.scope === "friends" && vis !== "private") {
-        const mutual = await mutualFriendUserIds(ctx, viewerId);
+        const mutual = await mutualFriendIds(ctx.supabase, viewerId);
         userIds = userIds.filter((id) => id === viewerId || mutual.has(id));
       }
 

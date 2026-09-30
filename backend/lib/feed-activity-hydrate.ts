@@ -4,6 +4,7 @@ import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
 import { finishedRunFromEnrollment } from "./finished-run";
+import { canSeeContent, eventIsShared } from "./is-friend";
 import { sharedPathsFromEvents, signProofPaths } from "./proof-image";
 
 export const LIVE_FEED_TYPES = [
@@ -29,6 +30,7 @@ export type EvRow = {
   metadata: Record<string, unknown>;
   created_at: string;
   shared?: boolean;
+  share_state?: string | null;
 };
 
 const START_PAIR_MS = 60_000;
@@ -146,9 +148,10 @@ export function feedEventCurrentDay(input: {
 export async function hydrateActivityEventsToPosts(
   events: EvRow[],
   viewerId: string,
-  followingIds: Set<string>,
+  friendIds: ReadonlySet<string>,
   ctx: Context,
-  server: SupabaseClient
+  server: SupabaseClient,
+  coMemberIds: ReadonlySet<string> = new Set(),
 ): Promise<
   {
     id: string;
@@ -212,11 +215,12 @@ export async function hydrateActivityEventsToPosts(
     if (row.id) activeById.set(row.id, row);
     activeMap.set(`${row.user_id}:${row.challenge_id}`, row);
   }
-  const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean => {
-    if (vis === "private" && ev.user_id !== viewerId) return false;
-    if (vis === "friends" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
-    return true;
-  };
+  const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean =>
+    canSeeContent(viewerId, ev.user_id, vis, friendIds, {
+      challengeId: ev.challenge_id,
+      coMemberChallengeIds: coMemberIds,
+      shared: eventIsShared(ev),
+    });
   const filtered: EvRow[] = [];
   for (const ev of events) {
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
