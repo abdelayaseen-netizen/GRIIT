@@ -1,7 +1,7 @@
 import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
-import { closedWindowCaption, gateLine } from "@/lib/task-ui";
+import { closedWindowCaption, gateLabel } from "@/lib/task-ui";
 import {
   shareTodayCaption,
   shareTodayChallenges,
@@ -180,7 +180,13 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
       requirePhoto: task.requirePhoto,
     }),
     type: task.type ?? task.taskType ?? "check_off",
-    caption: closed ? closedWindowCaption(task.gateTime) : gateLine(rowGates(task), task.gateTime),
+    caption: closed
+      ? closedWindowCaption(task.gateTime)
+      : gateLabel({
+          gates: rowGates(task),
+          gateTime: task.gateTime,
+          requirePhoto: task.requirePhoto,
+        }),
     done: task.done,
     closed,
     hasCameraProof: task.hasCameraProof === true,

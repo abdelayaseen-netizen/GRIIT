@@ -22,6 +22,7 @@ import Sheet from "@/components/ds/Sheet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
 import { inlineServerError } from "@/lib/inline-server-error";
+import { gatesFor, gateTimeFor } from "@/backend/lib/task-model";
 import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -278,6 +279,8 @@ export default function ActiveChallengeDetailScreen() {
           requirePhoto: row.require_photo,
           config: cfg,
         }),
+        gates: gatesFor(row),
+        gateTime: gateTimeFor(row),
         completed_today: Boolean(cin),
         verified: Boolean(cin && proofUrl(cin)),
         proof_photo_url: cin ? proofUrl(cin) : null,

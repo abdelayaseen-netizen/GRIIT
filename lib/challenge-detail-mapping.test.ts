@@ -9,6 +9,7 @@ import {
   OPTIONAL_TASK_LABEL,
   day1StartCopy,
   detailState,
+  detailTaskProof,
   detailTaskRequired,
   formatTimeWindow,
   joinCaption,
@@ -71,6 +72,39 @@ describe("taskGates", () => {
         config: { schedule_window_start: "06:00", schedule_window_end: "09:00" },
       }).map((g) => g.kind),
     ).toEqual(["camera", "time_window", "location"]);
+  });
+
+  it("detail / Home / review proof line is gateLabel including By", () => {
+    expect(
+      detailTaskProof({
+        gate_time_mode: "by",
+        gate_time_start: "07:00",
+      }),
+    ).toBe("By 7:00 am");
+    expect(
+      toDetailTasks([
+        {
+          title: "Read 10 pages",
+          task_type: "counter",
+          gate_time_mode: "by",
+          gate_time_start: "07:00",
+        },
+      ])[0]?.proof,
+    ).toBe("By 7:00 am");
+    const detail = readFileSync(
+      resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"),
+      "utf8",
+    );
+    expect(detail).toContain("{t.proof}");
+    const home = readFileSync(resolve(__dirname, "../lib/home-proof-card.ts"), "utf8");
+    expect(home).toContain("gateLabel({");
+    const review = readFileSync(resolve(__dirname, "../lib/create-review.ts"), "utf8");
+    expect(review).toContain("gateLabel(task)");
+    const launched = readFileSync(
+      resolve(__dirname, "../components/create/v2/LaunchedScreen.tsx"),
+      "utf8",
+    );
+    expect(launched).toContain("gateLabel(first)");
   });
 });
 
