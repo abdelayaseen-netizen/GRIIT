@@ -97,6 +97,7 @@ export type ActiveChallengeV3Props = {
   onParticipants?: () => void;
   onShare?: () => void;
   showShareToday?: boolean;
+  prestartCard?: string | null;
 };
 
 export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
@@ -153,6 +154,12 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
           ) : undefined
         }
       >
+        {p.prestartCard ? (
+          <View style={styles.prestart}>
+            <Text style={styles.status}>{p.prestartCard}</Text>
+          </View>
+        ) : null}
+
         <View style={styles.dayBlock}>
           <Text style={styles.dayLabel}>Day</Text>
           {p.loading ? (
@@ -353,6 +360,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 0,
+  },
+  prestart: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.gutter,
   },
   dayBlock: {
     paddingTop: DS_V3.space.lg + DS_V3.space.sm,

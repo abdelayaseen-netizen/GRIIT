@@ -45,7 +45,7 @@ import {
   createVisibility,
   type CreateVisibility,
 } from "@/backend/lib/create-visibility";
-import { REVIEW_STARTS_TODAY } from "@/lib/create-review";
+import { reviewLateJoinState } from "@/lib/late-join";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
@@ -341,6 +341,7 @@ export function CreateWizardV2() {
   }
 
   if (reviewing) {
+    const late = reviewLateJoinState(reviewTasks, timeZone);
     return (
       <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
         <StepReview
@@ -350,7 +351,8 @@ export function CreateWizardV2() {
           who={state.who}
           difficulty={state.difficulty}
           visibility={state.visibility}
-          starts={REVIEW_STARTS_TODAY}
+          starts={late.starts}
+          lateJoinLine={late.line}
           tasks={reviewTasks}
           launchState={launchState}
           onBack={() => setReviewing(false)}

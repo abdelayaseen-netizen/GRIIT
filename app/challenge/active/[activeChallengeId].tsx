@@ -26,6 +26,7 @@ import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { shareTodayVisible } from "@/lib/day-sticker";
+import { detailLateJoinCard } from "@/lib/late-join";
 import {
   RESET_NOTICE,
   activeEnrollmentNeedsRedirect,
@@ -424,6 +425,11 @@ export default function ActiveChallengeDetailScreen() {
           loading={isLoading && !activeChallenge}
           error={Boolean(error) || (!isLoading && !activeChallenge)}
           refreshing={isRefetching}
+          prestartCard={
+            startIso && startDateKey > todayKey
+              ? detailLateJoinCard(String(startIso), profileTz ?? "UTC")
+              : null
+          }
           onRefresh={() => void refetch()}
           onBack={goBack}
           onMore={handleLeaveChallenge}

@@ -25,3 +25,19 @@ export function opensAtLine(time: string): string {
 export function nextTaskLabel(name: string): string {
   return `Next: ${name}`;
 }
+
+export function reviewLateJoinLine(window: string): string {
+  return `Today's ${window} window has passed. Day 1 is tomorrow.`;
+}
+
+export function reviewStartsTomorrow(weekdayDMonth: string): string {
+  return `Tomorrow, ${weekdayDMonth}`;
+}
+
+export function lateJoinDetailCard(weekdayDMonth: string): string {
+  return `Day 1 is tomorrow · ${weekdayDMonth}. Today's window had passed when you started.`;
+}
+
+export function homePrestartLine(challenge: string): string {
+  return `${challenge} · Starts tomorrow. Nothing to do today.`;
+}

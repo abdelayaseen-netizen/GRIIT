@@ -77,9 +77,16 @@ describe("join deferral", () => {
     gate_time_end: "06:30",
     config: { required: true },
   };
+  const at4am = new Date("2026-09-27T08:00:00.000Z"); // 04:00 EDT
   const beforeOpen = new Date("2026-09-27T08:30:00.000Z"); // 04:30 EDT
   const inside = new Date("2026-09-27T09:45:00.000Z"); // 05:45 EDT
   const afterClose = new Date("2026-09-27T17:24:00.000Z"); // 13:24 EDT
+
+  it("launch at 4:00 am starts today", () => {
+    expect(anyTimeWindowClosedToday([between], at4am, TZ)).toBe(false);
+    expect(enrollmentStartAt(at4am, TZ, false)).toBe(at4am);
+    expect(dateKeyInTimeZone(at4am, TZ)).toBe("2026-09-27");
+  });
 
   it("launch before the window opens starts today", () => {
     expect(anyTimeWindowClosedToday([between], beforeOpen, TZ)).toBe(false);

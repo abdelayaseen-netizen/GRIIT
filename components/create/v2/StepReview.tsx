@@ -29,6 +29,7 @@ export function StepReview({
   difficulty,
   visibility,
   starts,
+  lateJoinLine,
   tasks,
   launchState,
   onBack,
@@ -42,6 +43,7 @@ export function StepReview({
   difficulty: WizardDifficulty;
   visibility: string;
   starts: string;
+  lateJoinLine?: string | null;
   tasks: WizardTask[];
   launchState: "idle" | "loading" | "error";
   onBack: () => void;
@@ -90,6 +92,7 @@ export function StepReview({
         ) : null}
       </View>
       <WizardFooter>
+        {lateJoinLine ? <Text style={styles.lateJoin}>{lateJoinLine}</Text> : null}
         <Button
           label={launchState === "loading" ? "Starting" : START_THE_CHALLENGE}
           submitting={launchState === "loading"}
@@ -156,5 +159,12 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  lateJoin: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    marginBottom: DS_V3.space.sm,
   },
 });
