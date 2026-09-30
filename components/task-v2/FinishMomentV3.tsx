@@ -25,6 +25,7 @@ import {
   type ShareIntent,
   finishAlsoTodayLabel,
   finishNextLabel,
+  finishPrimaryCta,
   finishShareLabel,
 } from "@/lib/finish-moment";
 
@@ -174,9 +175,11 @@ export default function FinishMomentV3({
           <Button label={FINISH_LEAVE_SAVING} variant="secondary" onPress={onLeave} />
         ) : failed ? null : (
           <Button
-            label={next && !pending ? finishNextLabel(next.title) : finishNextLabel()}
-            disabled={pending || !next}
-            onPress={next && !pending ? () => onNextTask(next.id) : undefined}
+            label={pending ? finishNextLabel() : finishPrimaryCta(next?.title)}
+            disabled={pending}
+            onPress={
+              pending ? undefined : next ? () => onNextTask(next.id) : onLeave
+            }
           />
         )}
         <Button

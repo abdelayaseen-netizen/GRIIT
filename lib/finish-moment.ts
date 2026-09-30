@@ -3,7 +3,9 @@
  * save follows the completion mutation. shared flips only after save succeeds.
  */
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
+import type { WindowState } from "@/backend/lib/task-time-gate";
 import { dateKeyFromIso } from "@/lib/home-day-total";
+import { homeWindowClosed } from "@/lib/home-proof-card";
 import { taskWord } from "@/lib/format-days";
 import { finishSubmitOutcome } from "@/lib/task-flow-state";
 import { gateLine } from "@/lib/task-ui";
@@ -28,6 +30,7 @@ export const FINISH_STORY = "Story";
 export const FINISH_DONE = "Done";
 export const FINISH_TRY_AGAIN = "Try again";
 export const FINISH_NEXT = "Next task";
+export const FINISH_BACK_HOME = "Back to Home";
 export const FINISH_KEEP = "Keep it to the record";
 export const FINISH_LEAVE_SAVING = "Leave it saving";
 export const FINISH_BACK_TODAY = "Back to today";
@@ -53,11 +56,13 @@ export function alsoTodayFromTasks(
     done?: boolean;
     gates?: readonly TaskGate[] | null;
     gateTime?: GateTime | null;
+    windowState?: WindowState | null;
   }[],
   excludeTaskId: string,
 ): AlsoTodayRow[] {
   return tasks
     .filter((t) => Boolean(t.id) && t.id !== excludeTaskId && t.done !== true)
+    .filter((t) => !homeWindowClosed(t))
     .map((t) => ({
       id: String(t.id),
       title: t.name,
@@ -73,6 +78,12 @@ export function finishAlsoTodayLabel(n: number): string {
 export function finishNextLabel(title?: string | null): string {
   const t = title?.trim();
   return t ? `Next task · ${t}` : FINISH_NEXT;
+}
+
+/** Primary footer: first doable remaining task, or Home when none are open. */
+export function finishPrimaryCta(title?: string | null): string {
+  const t = title?.trim();
+  return t ? finishNextLabel(t) : FINISH_BACK_HOME;
 }
 
 export function finishShareLabel(share: ShareIntent): string {

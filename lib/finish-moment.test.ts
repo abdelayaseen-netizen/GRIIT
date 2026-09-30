@@ -6,11 +6,14 @@ import {
   FINISH_FAILED_BODY,
   FINISH_SLOW_MS,
   FINISH_STATUS,
+  FINISH_BACK_HOME,
   alsoTodayFromTasks,
   enrollmentDueToday,
   finishAfterMutation,
   finishAlsoTodayLabel,
   finishLetter,
+  finishNextLabel,
+  finishPrimaryCta,
   finishSaveFromElapsed,
   finishShareLabel,
   resolveHeldShare,
@@ -79,6 +82,41 @@ describe("branch reads secured_today not a client count", () => {
     expect(src).toContain("securedToday");
     expect(src).not.toContain("requiredRemaining");
     expect(src).toContain("finishSubmitOutcome");
+  });
+});
+
+describe("next task skips closed windows the way Home does", () => {
+  it("points at the first open task and goes Home when every remaining window is closed", () => {
+    expect(
+      alsoTodayFromTasks(
+        [
+          { id: "workout", name: "Workout", done: false, windowState: "closed" },
+          { id: "bed", name: "Make your bed", done: false, windowState: "open" },
+        ],
+        "current",
+      ),
+    ).toEqual([{ id: "bed", title: "Make your bed", gate_line: "Self-reported" }]);
+    expect(finishPrimaryCta(alsoTodayFromTasks(
+      [
+        { id: "workout", name: "Workout", done: false, windowState: "closed" },
+        { id: "bed", name: "Make your bed", done: false, windowState: "open" },
+      ],
+      "current",
+    )[0]?.title)).toBe("Next task · Make your bed");
+    expect(
+      alsoTodayFromTasks(
+        [{ id: "workout", name: "Workout", done: false, windowState: "closed" }],
+        "current",
+      ),
+    ).toEqual([]);
+    expect(finishPrimaryCta(undefined)).toBe(FINISH_BACK_HOME);
+    expect(finishPrimaryCta("")).toBe("Back to Home");
+    expect(finishNextLabel("Make your bed")).toBe("Next task · Make your bed");
+    const src = readFileSync(resolve(__dirname, "./finish-moment.ts"), "utf8");
+    const ui = readFileSync(resolve(__dirname, "../components/task-v2/FinishMomentV3.tsx"), "utf8");
+    expect(src).toContain("homeWindowClosed");
+    expect(ui).toContain("finishPrimaryCta");
+    expect(ui).toContain("onLeave");
   });
 });
 
