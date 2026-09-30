@@ -107,14 +107,19 @@ export function dayStickerCaption(args: {
 }
 
 /**
- * Facebook / Meta App ID for Instagram Stories. Env or Expo extra only.
- * An empty string means Stories is not offered.
+ * Facebook / Meta App ID for Instagram Stories. Env only — never extra, never a fallback id.
+ * Empty / unset / the literal strings "undefined" and "null" mean Stories is not offered.
+ * Default path reads EXPO_PUBLIC_FACEBOOK_APP_ID as a static member so Expo inlines it.
  */
-export function facebookAppId(env: Record<string, string | undefined> = process.env as Record<
-  string,
-  string | undefined
->): string {
-  return (env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? env.FACEBOOK_APP_ID ?? "").trim();
+export function facebookAppId(env?: Record<string, string | undefined>): string {
+  const raw = env
+    ? (env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? env.FACEBOOK_APP_ID ?? "")
+    : typeof process !== "undefined"
+      ? (process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? "")
+      : "";
+  const id = String(raw ?? "").trim();
+  if (!id || id === "undefined" || id === "null") return "";
+  return id;
 }
 
 /** Pasteboard payload for react-native-share. Never a URL with the image in the query. */

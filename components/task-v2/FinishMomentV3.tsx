@@ -11,6 +11,7 @@ import ProofImage from "@/components/ds/ProofImage";
 import StatusBarBacking from "@/components/ds/StatusBarBacking";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
+import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
 import {
   FINISH_BACK_TODAY,
   FINISH_DONE,
@@ -79,6 +80,7 @@ export default function FinishMomentV3({
   const shrinkPhoto = save === "saved" && alsoToday.length > 0;
   const photoH = shrinkPhoto ? 170 : 252;
   const camera = Boolean(task.proofUri);
+  const showStory = showStoryAction(facebookAppId());
   const openSheet = () => {
     if (shareDisabled) return;
     setSheetOpen(true);
@@ -136,9 +138,11 @@ export default function FinishMomentV3({
               onPress={share === "feed_held" || shareDisabled ? undefined : onShareFeed}
             />
           </View>
-          <View style={styles.shareBtn}>
-            <Button label={FINISH_STORY} variant="secondary" disabled={shareDisabled} onPress={shareDisabled ? undefined : openSheet} />
-          </View>
+          {showStory ? (
+            <View style={styles.shareBtn}>
+              <Button label={FINISH_STORY} variant="secondary" disabled={shareDisabled} onPress={shareDisabled ? undefined : openSheet} />
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.iconRow}>

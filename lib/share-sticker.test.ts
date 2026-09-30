@@ -70,6 +70,9 @@ describe("Meta App ID comes from config only", () => {
   it("reads EXPO_PUBLIC_FACEBOOK_APP_ID and never ships a hardcoded id", () => {
     expect(facebookAppId({})).toBe("");
     expect(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: " 123 " })).toBe("123");
+    expect(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: "undefined" })).toBe("");
+    expect(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: "null" })).toBe("");
+    expect(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: undefined })).toBe("");
     expect(
       instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: true, appId: "123" }),
     ).toEqual({
@@ -150,16 +153,25 @@ describe("ShareCardV3 is gone and Story uses the text card or ShareSticker", () 
 describe("empty id → no Story action rendered", () => {
   it("hides Instagram Story when the Meta App ID is empty", () => {
     expect(showStoryAction("")).toBe(false);
+    expect(showStoryAction(facebookAppId({}))).toBe(false);
+    expect(showStoryAction(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: undefined }))).toBe(false);
     const sheet = readFileSync(
       resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
       "utf8",
     );
+    const finish = readFileSync(
+      resolve(__dirname, "../components/task-v2/FinishMomentV3.tsx"),
+      "utf8",
+    );
     expect(sheet).toContain("showStoryAction(facebookAppId())");
     expect(sheet).toContain("{showStory ? (");
+    expect(finish).toContain("showStoryAction(facebookAppId())");
+    expect(finish).toContain("{showStory ? (");
     expect(sheet).toContain("SHARE_STORY");
     expect(sheet).toContain("SHARE_COPY");
     expect(sheet).toContain("SHARE_SAVE");
     expect(sheet).toContain("SHARE_MORE");
+    expect(finish).toContain("FINISH_STORY");
   });
 });
 
