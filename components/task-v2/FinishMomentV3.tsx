@@ -129,32 +129,60 @@ export default function FinishMomentV3({
           )}
         </View>
 
-        <View style={styles.shareRow}>
-          <View style={styles.shareBtn}>
-            <Button
-              label={finishShareLabel(share)}
-              variant="secondary"
-              disabled={shareDisabled || share === "feed_held"}
-              onPress={share === "feed_held" || shareDisabled ? undefined : onShareFeed}
-            />
-          </View>
+        <View style={styles.shareCol}>
+          <Button
+            label={finishShareLabel(share)}
+            variant="secondary"
+            fill
+            singleLine
+            disabled={shareDisabled || share === "feed_held"}
+            onPress={share === "feed_held" || shareDisabled ? undefined : onShareFeed}
+          />
           {showStory ? (
-            <View style={styles.shareBtn}>
-              <Button label={FINISH_STORY} variant="secondary" disabled={shareDisabled} onPress={shareDisabled ? undefined : openSheet} />
-            </View>
+            <Button
+              label={FINISH_STORY}
+              variant="secondary"
+              fill
+              disabled={shareDisabled}
+              onPress={shareDisabled ? undefined : openSheet}
+            />
           ) : null}
         </View>
 
-        <View style={styles.iconRow}>
-          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onCopy?.(); }} accessibilityRole="button" accessibilityLabel="Copy">
-            <Text style={styles.iconLabel}>Copy</Text>
-          </Pressable>
-          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onSave?.(); }} accessibilityRole="button" accessibilityLabel="Save">
-            <Text style={styles.iconLabel}>Save</Text>
-          </Pressable>
-          <Pressable style={styles.iconHit} onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onMore?.(); }} accessibilityRole="button" accessibilityLabel="More">
-            <Text style={styles.iconLabel}>More</Text>
-          </Pressable>
+        <View style={styles.auxRow}>
+          <View style={styles.auxBtn}>
+            <Button
+              label="Copy"
+              variant="secondary"
+              size="small"
+              fill
+              labelType="secondary"
+              disabled={shareDisabled}
+              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onCopy?.(); }}
+            />
+          </View>
+          <View style={styles.auxBtn}>
+            <Button
+              label="Save"
+              variant="secondary"
+              size="small"
+              fill
+              labelType="secondary"
+              disabled={shareDisabled}
+              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onSave?.(); }}
+            />
+          </View>
+          <View style={styles.auxBtn}>
+            <Button
+              label="More"
+              variant="secondary"
+              size="small"
+              fill
+              labelType="secondary"
+              disabled={shareDisabled}
+              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onMore?.(); }}
+            />
+          </View>
         </View>
 
         {save === "saved" && alsoToday.length > 0 ? (
@@ -247,16 +275,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardWrap: { width: "100%" },
-  shareRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.md },
-  shareBtn: { flex: 1 },
-  iconRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.sm },
-  iconHit: {
-    width: 64,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconLabel: { fontSize: 11, lineHeight: 14, color: DS_V3.color.textSecondary },
+  shareCol: { gap: 8, marginTop: DS_V3.space.md },
+  auxRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.sm },
+  auxBtn: { flex: 1 },
   also: { marginTop: DS_V3.space.md },
   failedBody: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary, marginTop: DS_V3.space.md },
   footer: {

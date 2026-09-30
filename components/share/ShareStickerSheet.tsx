@@ -2,7 +2,7 @@
  * Frame 99 share sheet. Clear / Card / Photo. Story, Copy, Save, More.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -279,30 +279,36 @@ export default function ShareStickerSheet({
               />
             ) : null}
             <View style={styles.row}>
-              <Pressable
-                style={styles.hit}
-                onPress={() => void run("copy")}
-                accessibilityRole="button"
-                accessibilityLabel={SHARE_COPY}
-              >
-                <Text style={styles.hitLabel}>{SHARE_COPY}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.hit}
-                onPress={() => void run("save")}
-                accessibilityRole="button"
-                accessibilityLabel={SHARE_SAVE}
-              >
-                <Text style={styles.hitLabel}>{SHARE_SAVE}</Text>
-              </Pressable>
-              <Pressable
-                style={styles.hit}
-                onPress={() => void run("more")}
-                accessibilityRole="button"
-                accessibilityLabel={SHARE_MORE}
-              >
-                <Text style={styles.hitLabel}>{SHARE_MORE}</Text>
-              </Pressable>
+              <View style={styles.auxBtn}>
+                <Button
+                  label={SHARE_COPY}
+                  variant="secondary"
+                  size="small"
+                  fill
+                  labelType="secondary"
+                  onPress={() => void run("copy")}
+                />
+              </View>
+              <View style={styles.auxBtn}>
+                <Button
+                  label={SHARE_SAVE}
+                  variant="secondary"
+                  size="small"
+                  fill
+                  labelType="secondary"
+                  onPress={() => void run("save")}
+                />
+              </View>
+              <View style={styles.auxBtn}>
+                <Button
+                  label={SHARE_MORE}
+                  variant="secondary"
+                  size="small"
+                  fill
+                  labelType="secondary"
+                  onPress={() => void run("more")}
+                />
+              </View>
             </View>
           </View>
         </>
@@ -338,9 +344,8 @@ const styles = StyleSheet.create({
     marginTop: DS_V3.space.sm,
   },
   actions: { gap: DS_V3.space.sm, marginTop: DS_V3.space.md },
-  row: { flexDirection: "row", justifyContent: "center", gap: 8 },
-  hit: { width: 64, height: 44, alignItems: "center", justifyContent: "center" },
-  hitLabel: { fontSize: 11, lineHeight: 14, color: DS_V3.color.textSecondary },
+  row: { flexDirection: "row", gap: 8 },
+  auxBtn: { flex: 1 },
   empty: { paddingVertical: DS_V3.space.section, gap: DS_V3.space.sm },
   emptyTitle: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
   emptyHint: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },

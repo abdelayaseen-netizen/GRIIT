@@ -38,6 +38,12 @@ export type ButtonProps = {
   flush?: boolean;
   /** Tertiary label in textPrimary (Welcome Log in, Secured Done, Capture Cancel). */
   ink?: boolean;
+  /** Stretch to the parent width (full-width share row). */
+  fill?: boolean;
+  /** Keep the label on one line. */
+  singleLine?: boolean;
+  /** Label uses DS secondary type (15/20) instead of bodyStrong. */
+  labelType?: "secondary";
 };
 
 export default function Button({
@@ -53,6 +59,9 @@ export default function Button({
   accessibilityLabel,
   flush,
   ink,
+  fill,
+  singleLine,
+  labelType,
 }: ButtonProps) {
   const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
   const spinning = Boolean(submitting || loading);
@@ -87,6 +96,7 @@ export default function Button({
         { height, minHeight: height, minWidth: DS_V3.size.tap },
         flush ? styles.padFlush : size === "small" ? styles.padSmall : styles.padRegular,
         flush ? styles.flush : null,
+        fill ? styles.fill : null,
         variant === "primary" && !disabledLook && !destructive && styles.primary,
         variant === "primary" && !disabledLook && destructive && styles.primaryDestructive,
         (variant === "secondary" || disabledLook) && styles.secondary,
@@ -107,7 +117,16 @@ export default function Button({
           {icon}
         </View>
       ) : null}
-      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      <Text
+        numberOfLines={singleLine ? 1 : undefined}
+        style={[
+          styles.label,
+          labelType === "secondary" ? styles.labelSecondary : null,
+          { color: labelColor },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -133,6 +152,15 @@ const styles = StyleSheet.create({
     minWidth: 0,
     alignSelf: "flex-start",
     justifyContent: "center",
+  },
+  fill: {
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  labelSecondary: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
   },
   primary: {
     backgroundColor: DS_V3.color.brand,

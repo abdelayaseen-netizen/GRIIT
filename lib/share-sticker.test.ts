@@ -175,6 +175,28 @@ describe("empty id → no Story action rendered", () => {
   });
 });
 
+describe("Share to the feed stays on one line", () => {
+  it("uses a full-width share row and ds secondary Copy/Save/More", () => {
+    const finish = readFileSync(
+      resolve(__dirname, "../components/task-v2/FinishMomentV3.tsx"),
+      "utf8",
+    );
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      "utf8",
+    );
+    const button = readFileSync(resolve(__dirname, "../components/ds/Button.tsx"), "utf8");
+    expect(finish).toContain("shareCol");
+    expect(finish).toContain("singleLine");
+    expect(finish).not.toContain("shareRow");
+    expect(finish).toContain('labelType="secondary"');
+    expect(sheet).toContain('labelType="secondary"');
+    expect(sheet).not.toContain("hitLabel");
+    expect(button).toContain("labelSecondary");
+    expect(button).toContain("DS_V3.type.secondary");
+  });
+});
+
 describe("Save writes the PNG to Photos", () => {
   it("uses add-only permission and keeps More on the system sheet", () => {
     expect(savePhotosCopy("saved")).toBe("Saved to Photos.");
