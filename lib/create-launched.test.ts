@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { launchedFirstCard, windowHasNotOpened } from "@/lib/create-launched";
 import {
@@ -33,5 +35,18 @@ describe("create launched", () => {
     expect(launchedTomorrowBody("Cold shower", "5:00 am", "6:30 am")).toBe(
       "Tomorrow's first task is Cold shower, between 5:00 am and 6:30 am. Today still counts for your other challenges.",
     );
+  });
+
+  it("Start the challenge always lands on Launched, never a task or detail", () => {
+    const wizard = readFileSync(
+      resolve(__dirname, "../components/create/CreateWizardV2.tsx"),
+      "utf8",
+    );
+    expect(wizard).toContain("setLaunched(");
+    expect(wizard).toContain("<LaunchedScreen");
+    expect(wizard).not.toContain("onNext=");
+    expect(wizard).not.toContain("ROUTES.CHALLENGE_ID(launched.challengeId)");
+    expect(wizard).not.toContain("TASK_COMPLETE");
+    expect(LAUNCHED_TOMORROW_TITLE).toBe("You're in. Day 1 is tomorrow.");
   });
 });

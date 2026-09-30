@@ -360,7 +360,6 @@ export function CreateWizardV2() {
               }
             : undefined
         }
-        onNext={() => router.replace(ROUTES.CHALLENGE_ID(launched.challengeId) as never)}
       />
     );
   }
