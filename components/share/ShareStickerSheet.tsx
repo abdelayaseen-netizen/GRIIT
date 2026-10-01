@@ -10,7 +10,7 @@ import SegmentedControl from "@/components/ds/SegmentedControl";
 import Sheet from "@/components/ds/Sheet";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import { BadgeSticker, ConsistencySticker, DaySticker } from "@/components/share/ShareSticker";
-import { saveStickerToPhotos, sharePlainMessage, shareProgressImage, shareToInstagramStory } from "@/lib/share";
+import { copyStickerPngToPasteboard, saveStickerToPhotos, shareProgressImage, shareToInstagramStory } from "@/lib/share";
 import {
   SHARE_BG_CLEAR,
   SHARE_BG_ITEMS,
@@ -43,6 +43,7 @@ export type ShareStickerDay = {
   day: number;
   durationDays: number;
   proof: ProofKind;
+  status?: string;
   photoUri?: string | null;
   photoShared?: boolean;
 };
@@ -167,7 +168,7 @@ export default function ShareStickerSheet({
           return;
         }
         if (kind === "copy") {
-          await sharePlainMessage(copyLine, SHARE_COPY);
+          await copyStickerPngToPasteboard(uri);
           return;
         }
         if (kind === "save") {
@@ -205,6 +206,7 @@ export default function ShareStickerSheet({
           day={day.day}
           durationDays={day.durationDays}
           proof={day.proof}
+          status={day.status}
           photoUri={day.photoUri}
         />
       );

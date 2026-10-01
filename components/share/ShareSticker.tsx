@@ -101,6 +101,7 @@ export function DaySticker(p: {
   day: number;
   durationDays: number;
   proof: ProofKind;
+  status?: string;
   photoUri?: string | null;
 }) {
   const n = Math.min(p.day, p.durationDays);
@@ -127,7 +128,7 @@ export function DaySticker(p: {
       </View>
       <View style={styles.foot}>
         <View style={styles.footLeft}>
-          <Text style={[styles.secured, typeShadow(p.bg)]}>{STICKER_SECURED}</Text>
+          <Text style={[styles.secured, typeShadow(p.bg)]}>{p.status ?? STICKER_SECURED}</Text>
           <ProofMark bg={p.bg} proof={p.proof} />
         </View>
         <Wordmark bg={p.bg} />

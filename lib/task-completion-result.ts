@@ -17,6 +17,8 @@ export type SubmitResult = {
   challengeLength: number;
   challengeName: string;
   verificationKind: VerificationKind;
+  challengeDone?: boolean;
+  activeChallengeId?: string;
 };
 
 export type ConfirmationVariant = "A" | "B" | "C" | "D";
@@ -104,5 +106,6 @@ export function assembleSubmitResult(args: {
     challengeLength: args.challengeLength,
     challengeName: args.challengeName,
     verificationKind: args.verificationKind,
+    challengeDone: args.secure?.challenge_done === true,
   };
 }

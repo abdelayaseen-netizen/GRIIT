@@ -52,6 +52,8 @@ export function taskSecuredHref(
       challengeLength: String(result.challengeLength),
       challengeName: result.challengeName,
       verificationKind: result.verificationKind,
+      challengeDone: result.challengeDone ? "1" : "0",
+      activeChallengeId: result.activeChallengeId ?? "",
       proofUri: proofUri ?? "",
       taskName: taskName ?? "",
       shareEventId: share?.shareEventId ?? "",
@@ -72,6 +74,8 @@ export function submitResultFromSecuredParams(params: {
   challengeLength?: string;
   challengeName?: string;
   verificationKind?: string;
+  challengeDone?: string;
+  activeChallengeId?: string;
 }): SubmitResult {
   const kind = KINDS.includes(params.verificationKind as VerificationKind)
     ? (params.verificationKind as VerificationKind)
@@ -87,5 +91,7 @@ export function submitResultFromSecuredParams(params: {
     challengeLength: Math.max(1, parseInt(params.challengeLength ?? "1", 10) || 1),
     challengeName: params.challengeName ?? "",
     verificationKind: kind,
+    challengeDone: params.challengeDone === "1",
+    activeChallengeId: params.activeChallengeId?.trim() || undefined,
   };
 }

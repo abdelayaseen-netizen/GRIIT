@@ -51,6 +51,14 @@ describe("runFinalizeEndedOnForeground", () => {
     expect(openEnd).not.toHaveBeenCalled();
   });
 
+  it("does not open the recap on Secured — that was the 5:20 am stack", async () => {
+    trpcMutate.mockResolvedValue({ ok: true });
+    trpcQuery.mockResolvedValue(UNSEEN);
+    const openEnd = vi.fn();
+    await runFinalizeEndedOnForeground({ userId: USER, pathname: "/task/secured", openEnd });
+    expect(openEnd).not.toHaveBeenCalled();
+  });
+
   it("both succeed → opens once", async () => {
     trpcMutate.mockResolvedValue({ ok: true });
     trpcQuery.mockResolvedValue(UNSEEN);

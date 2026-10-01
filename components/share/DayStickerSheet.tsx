@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
+import { STICKER_SECURED } from "@/lib/share-sticker";
+import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 import {
   WHICH_DAY,
   defaultShareTodayChallenge,
@@ -51,7 +53,8 @@ export default function DayStickerSheet({
               challenge: selected.name,
               day: selected.day,
               durationDays: selected.dayTotal ?? selected.day,
-              proof: (selected.photoCount ?? 0) > 0 ? "camera" : "self",
+              proof: selected.proof ?? ((selected.photoCount ?? 0) > 0 ? "camera" : "self"),
+              status: selected.stickerKind === "challenge" ? DONE_FOR_TODAY : STICKER_SECURED,
               photoUri: proofUri,
               photoShared,
             }

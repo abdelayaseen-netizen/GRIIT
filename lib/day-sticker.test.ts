@@ -112,6 +112,14 @@ describe("Which day picker is challenges secured today", () => {
     photoCount: 0,
   };
 
+  it("omits a challenge that has nothing done today even if the day is secured", () => {
+    const options = shareTodayChallenges([
+      { ...iron, doneCount: 1, totalCount: 1 },
+      { ...open, securedToday: true, doneCount: 0, totalCount: 1 },
+    ]);
+    expect(options.map((o) => o.id)).toEqual(["ac-iron"]);
+  });
+
   it("lists only challenges secured today — no past calendar days", () => {
     const options = shareTodayChallenges([iron, read, open]);
     expect(options.map((o) => o.id)).toEqual(["ac-iron", "ac-read"]);
@@ -150,15 +158,16 @@ describe("frame 111 surfaces", () => {
     expect(home).toContain("DAY_SECURED");
     expect(home).toContain("shareTodayCaption");
     expect(home).not.toContain("section.showShareToday");
-    expect(detail).toContain("TODAY_IS_SECURED");
+    expect(detail).toContain("DONE_FOR_TODAY");
     expect(detail).toContain("SHARE_TODAY");
     expect(detail).not.toContain("Share today's proof");
+    expect(detail).not.toContain("Today is secured.");
     expect(sheet).toContain("WHICH_DAY");
     expect(sheet).toContain("showWhichDayPicker");
     expect(SHARE_TODAY).toBe("Share today");
     expect(WHICH_DAY).toBe("Which day");
     expect(DAY_SECURED).toBe("Day secured.");
-    expect(TODAY_IS_SECURED).toBe("Today is secured.");
+    expect(TODAY_IS_SECURED).toBe("Done for today.");
     expect(DAY_STICKER_SHARE).toBe("Share");
   });
 });

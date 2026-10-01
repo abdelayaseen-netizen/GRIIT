@@ -87,6 +87,11 @@ export function combinedFooter(n: number): string {
   return `All ${n} are in Profile, Finished. Start any again from there.`;
 }
 
+/** 1-day recaps have nowhere honest to restart. */
+export function showStartAgain(durationDays: number): boolean {
+  return durationDays > 1;
+}
+
 export function capCaption(activeCount: number, challengeLimit: number): string {
   return `You are running ${activeCount} of ${challengeLimit}. Starting this again means leaving one.`;
 }
@@ -212,13 +217,7 @@ export function endedChallengeFromUnseen(
   };
 }
 
-export function shouldPresentEndScreen(pathname: string): boolean {
-  if (pathname.includes("/onboarding")) return false;
-  if (pathname.includes("/auth")) return false;
-  if (pathname.includes("/create-profile")) return false;
-  if (pathname.includes("/challenge/end")) return false;
-  return true;
-}
+export { shouldPresentAwayRecap as shouldPresentEndScreen } from "@/lib/moment-queue";
 
 export const MARK_END_SEEN_FAILED = "Couldn't save. Try again.";
 

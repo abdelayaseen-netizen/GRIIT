@@ -8,7 +8,7 @@ export const SHARE_TODAY = "Share today";
 export const WHICH_DAY = "Which day";
 export const DAY_STICKER_SHARE = "Share";
 export const DAY_SECURED = "Day secured.";
-export const TODAY_IS_SECURED = "Today is secured.";
+export const TODAY_IS_SECURED = "Done for today.";
 export const UNTIL_MIDNIGHT = "Until midnight";
 
 export type ShareTodayChallenge = {
@@ -17,6 +17,8 @@ export type ShareTodayChallenge = {
   day: number;
   dayTotal: number | null;
   photoCount: number;
+  proof?: "camera" | "camera_place" | "self";
+  stickerKind?: "day" | "challenge";
 };
 
 function isDateKey(value: string): boolean {
@@ -71,16 +73,26 @@ export function shareTodayChallenges(
     dayTotal: number | null;
     securedToday: boolean;
     photoCount?: number;
+    doneCount?: number;
+    totalCount?: number;
+    proof?: "camera" | "camera_place" | "self";
   }[],
 ): ShareTodayChallenge[] {
   return sections
-    .filter((s) => s.securedToday)
+    .filter((s) => {
+      const total = s.totalCount ?? 0;
+      const done = s.doneCount ?? 0;
+      if (total > 0) return done === total;
+      return s.securedToday;
+    })
     .map((s) => ({
       id: s.id,
       name: s.challenge,
       day: s.day,
       dayTotal: s.dayTotal,
       photoCount: Math.max(0, Math.floor(s.photoCount ?? 0)),
+      proof: s.proof,
+      stickerKind: "day" as const,
     }));
 }
 

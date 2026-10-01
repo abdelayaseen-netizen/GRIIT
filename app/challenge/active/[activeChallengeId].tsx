@@ -23,10 +23,17 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
 import { inlineServerError } from "@/lib/inline-server-error";
 import { gatesFor, gateTimeFor } from "@/backend/lib/task-model";
+import { windowStateFor } from "@/backend/lib/task-time-gate";
 import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
-import { shareTodayVisible } from "@/lib/day-sticker";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import {
+  challengeDetailTodayCopy,
+  challengeEnrollmentDone,
+  challengeStickerProofFromTasks,
+  othersLeftFromBootstrap,
+} from "@/lib/challenge-today-copy";
 import { detailLateJoinCard } from "@/lib/late-join";
 import {
   RESET_NOTICE,
@@ -52,6 +59,10 @@ type TaskRow = {
   order_index?: number | null;
   config?: Record<string, unknown> | null;
   require_photo?: boolean | null;
+  require_location?: boolean | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
   min_duration_minutes?: number | null;
   target_mode?: string | null;
   start_value?: number | null;
@@ -106,6 +117,7 @@ export default function ActiveChallengeDetailScreen() {
   const queryClient = useQueryClient();
   const { profile, stats } = useApp();
   const { user } = useAuth();
+  const bootstrap = useHomeBootstrap(user?.id);
   const profileTz = (profile as { timezone?: string | null })?.timezone;
   const todayKey = getTodayDateKey(profileTz);
   const weekKeys = useMemo(() => getCurrentWeekDateKeys(profileTz), [profileTz]);
@@ -127,7 +139,8 @@ export default function ActiveChallengeDetailScreen() {
           challenges (
             id, title, description, duration_days, difficulty, is_hard_mode, participants_count, participation_type,
             challenge_tasks (
-              id, title, task_type, order_index, config, require_photo,
+              id, title, task_type, order_index, config, require_photo, require_location,
+              gate_time_mode, gate_time_start, gate_time_end,
               min_duration_minutes, target_mode, start_value, start_duration_minutes
             )
           )
@@ -281,12 +294,32 @@ export default function ActiveChallengeDetailScreen() {
         }),
         gates: gatesFor(row),
         gateTime: gateTimeFor(row),
+        windowState: windowStateFor(row, profileTz ?? "UTC"),
         completed_today: Boolean(cin),
         verified: Boolean(cin && proofUrl(cin)),
         proof_photo_url: cin ? proofUrl(cin) : null,
       };
     });
-  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration]);
+  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration, profileTz]);
+
+  const thisDone = challengeEnrollmentDone(tasks);
+  const todayCopy = challengeDetailTodayCopy({
+    thisDone,
+    daySecured: securedToday,
+    others: othersLeftFromBootstrap(
+      bootstrap.data?.activeChallenges,
+      bootstrap.data?.todayCheckinsForUser,
+      id ?? "",
+    ),
+  });
+  const stickerProof = challengeStickerProofFromTasks(
+    tasks.map((t) => ({
+      completed_today: t.completed_today,
+      require_photo: t.require_photo,
+      hasCameraProof: Boolean(t.proof_photo_url) || t.verified === true,
+      gates: t.gates,
+    })),
+  );
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [shareTodayOpen, setShareTodayOpen] = useState(false);
@@ -435,25 +468,29 @@ export default function ActiveChallengeDetailScreen() {
           onRetry={() => void refetch()}
           onTask={openTask}
           onParticipants={handleParticipants}
-          onShare={handleShare}
-          showShareToday={shareTodayVisible({
-            serverSecuredDateKeys: Array.isArray(securedDateKeys) ? securedDateKeys : [],
-            profileTimeZone: profileTz,
-            now: new Date(),
-          })}
+          onShare={thisDone ? handleShare : undefined}
+          showShareToday={todayCopy.showShareToday}
+          todayStatus={todayCopy.status}
+          todaySub={todayCopy.sub}
         />
         <DayStickerSheet
-          visible={shareTodayOpen}
+          visible={shareTodayOpen && thisDone}
           onDismiss={() => setShareTodayOpen(false)}
-          challenges={[
-            {
-              id: id ?? title,
-              name: title,
-              day: shownDay,
-              dayTotal: durationDays,
-              photoCount: todayProofUri ? 1 : 0,
-            },
-          ]}
+          challenges={
+            thisDone && stickerProof
+              ? [
+                  {
+                    id: id ?? title,
+                    name: title,
+                    day: shownDay,
+                    dayTotal: durationDays,
+                    photoCount: todayProofUri ? 1 : 0,
+                    proof: stickerProof,
+                    stickerKind: "challenge",
+                  },
+                ]
+              : []
+          }
           preselectedId={id ?? title}
           proofUri={todayProofUri}
         />

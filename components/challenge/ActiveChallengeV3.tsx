@@ -52,7 +52,9 @@ import {
   type ActiveChallengeTask,
   type ActiveTaskType,
 } from "@/lib/active-challenge-ui";
-import { SHARE_TODAY, TODAY_IS_SECURED, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
+import { homeWindowClosed } from "@/lib/home-proof-card";
+import { SHARE_TODAY, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
+import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -97,6 +99,8 @@ export type ActiveChallengeV3Props = {
   onParticipants?: () => void;
   onShare?: () => void;
   showShareToday?: boolean;
+  todayStatus?: string | null;
+  todaySub?: string | null;
   prestartCard?: string | null;
 };
 
@@ -172,9 +176,14 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
 
         {p.loading ? (
           <View style={styles.statusSkel} />
+        ) : p.todayStatus ? (
+          <View style={styles.statusRow}>
+            <Text style={styles.secured}>{p.todayStatus}</Text>
+            {p.todaySub ? <Text style={styles.status}>{p.todaySub}</Text> : null}
+          </View>
         ) : line.kind === "secured" ? (
           <View style={styles.statusRow}>
-            <Text style={styles.secured}>Day secured.</Text>
+            <Text style={styles.secured}>{DONE_FOR_TODAY}</Text>
             <Text style={styles.status}>{line.allDone}</Text>
           </View>
         ) : (
@@ -241,6 +250,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : (
           <View>
             {p.tasks.map((t, i) => {
+              const closed = homeWindowClosed({ windowState: t.windowState, done: t.completed_today });
               const Icon = t.completed_today ? Check : TASK_ICON[t.task_type];
               const iconTone = t.completed_today ? DS_V3.color.brandText : DS_V3.color.textSecondary;
               return (
@@ -249,14 +259,14 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t.title}
-                    accessibilityState={{ disabled: t.completed_today }}
-                    disabled={t.completed_today}
-                    onPress={t.completed_today ? undefined : () => p.onTask?.(t)}
+                    accessibilityState={{ disabled: t.completed_today || closed }}
+                    disabled={t.completed_today || closed}
+                    onPress={t.completed_today || closed ? undefined : () => p.onTask?.(t)}
                     style={styles.taskRow}
                   >
                     <Icon size={ICON} color={iconTone} />
                     <View style={styles.taskCopy}>
-                      <Text style={t.completed_today ? styles.taskTitleDone : styles.taskTitle}>
+                      <Text style={t.completed_today || closed ? styles.taskTitleDone : styles.taskTitle}>
                         {t.title}
                       </Text>
                       <Text style={styles.caption}>
@@ -269,7 +279,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                       ) : (
                         <Text style={styles.caption}>Self-reported</Text>
                       )
-                    ) : (
+                    ) : closed ? null : (
                       <Text style={styles.verb}>{taskVerb(t.task_type)}</Text>
                     )}
                   </Pressable>
@@ -278,7 +288,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             })}
             {p.showShareToday && p.onShare ? (
               <>
-                <Text style={styles.todaySecured}>{TODAY_IS_SECURED}</Text>
+                <Text style={styles.todaySecured}>{p.todayStatus ?? DONE_FOR_TODAY}</Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={SHARE_TODAY}
