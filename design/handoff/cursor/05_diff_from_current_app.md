@@ -167,3 +167,34 @@ carries it.
 - **Backend, blocks F1.** Every completion writes its feed row unshared (`shared = false`) and flips on Share, for every task type, not only camera. Today self-reported rows are written `shared = true`. Contradiction 115.
 - **Copy.** Replace "Standard mode. Gates are recorded, not enforced." with "Standard mode. Every gate blocks. Freezes cover a missed day." everywhere; grep `recorded, not enforced`. Gates block in both modes; modes differ only in freezes.
 - **Location gate stays live** in the add-task sheet: row "Only counts at this place.", opens Set place, sets `require_location`. Do not ship the inert "Not available yet." row from the earlier v41 draft.
+
+
+## v42 · Chunk D
+
+1. Wrap every screen in `ScreenChrome` (`v42/ScreenChrome.tsx`). Delete per-screen SafeAreaView top padding.
+2. Replace every avatar render with `v42/Avatar`. Grep: `avatar_url ?`, `borderRadius: 999` + `Image`.
+3. Home: remove the "{n} days · {pct}%" line and the "{n} freezes left" line. Add the freeze chip and the "since {date}" hero line. Move next-badge progress to Profile → Badges. Reorder the sections.
+4. Feed: replace the VERIFIED pill with `CameraSeal`. Render completions without a photo as `FeedCompactRow`. Group joins with `joinLine()`. Exclude guests server-side in the feed query. Wrap posts in `DoubleTapRespect`.
+5. Profile: `ProfileHeader`; icon tabs; the calendar as frame 117 at the new density; the Challenges tab as `ChallengeCard`; remove the footnote paragraph.
+6. Badges: server-side evaluation of the 12 in `v42/badges.ts`. Award only from the listed facts. No manual grants.
+7. Onboarding: the new strings (frames 137–141). The Start here query uses catalog only, duration ≥ the chosen line, and never 1 day. Gate labels are derived from the task's gates.
+8. Finish: `ShareActions`, feed and Story as separate actions; the sheet captions from `STICKER_STYLES`.
+
+9. v42.1: in the Start here sort, put No Days Off last and never pre-select it. Cap `ProgressStrip` at 14 segments with its label. System lines use `FeedSystemLine` with the avatar. Challenge detail: replace any "Day secured" / "Today is secured" with "Done for today." plus the sub-line (frame 145). Guard the double tap on your own post.
+
+10. v42.1 privacy strings. `rg "365-day|verified the day"` against `main` @ 74072b5, current time 2026-09-30T00:31Z:
+   - `app/settings/privacy.tsx:34` — ACTIVITY_COPY.public "Anyone can see your 365-day map and your proof photos." → "Anyone can see your calendar and the proofs you shared."
+   - `app/settings/privacy.tsx:35` — ACTIVITY_COPY.friends "Only your circle sees your map and proof photos." → "People you follow who follow you back can see your calendar and the proofs you shared."
+   - `app/settings/privacy.tsx:36` — ACTIVITY_COPY.private "Your map and proofs are yours alone." → "Only you see your calendar and proofs."
+   - `app/settings/privacy.tsx:124` — honesty title "None of this hides a proof from a challenge you joined" → "Photos stay private until you share them."
+   - `app/settings/privacy.tsx:127` — honesty body "Everyone in a shared challenge sees whether you verified the day. Privacy controls what your profile shows outside it." → "Challenge members see whether you finished the day, never a photo you kept."
+   - Design-only copies, not shipped: `claude/design/profile-v2/GRIIT Profile and Settings v3.dc.html:658, :1127`, `claude/design/profile-v2/README.md:243, :245`, `claude/design/profile-v2/src/screens/Privacy.jsx:60`, `claude/design/profile-v2/GRIIT Profile and Settings (standalone).html:400`. Update or delete them so they are not copied back in.
+   - Clean: `components/`, `backend/`. `lib/` returned nothing, but the scan was partial (319 of 341 files). Run the rg locally before closing.
+   Lines 35, 36 and 124 match the old strings but not the grep; they are listed because their replacements were in the same instruction.
+
+11. v42.1, contradiction 121 resolved. Friends = mutual follow. In `app/settings/privacy.tsx`:
+   - `:23` PROFILE_COPY.friends → "Only people you follow who follow you back see the record. Others see your name, photo and bio only."
+   - `:29` CHALLENGE_COPY.friends → "Only people you follow who follow you back see your runs. Others see the tab as hidden."
+   - `:35` ACTIVITY_COPY.friends → "People you follow who follow you back can see your calendar and the proofs you shared."
+   - `app/profile/[username].tsx:243` "…to people they have accepted. Follow to see the record." → "…to people they follow who follow them back. Follow to see the record."
+   The server's `friends` visibility check must be mutual follow.

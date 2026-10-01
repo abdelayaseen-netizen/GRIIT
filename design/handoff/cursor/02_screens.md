@@ -5654,3 +5654,228 @@ Override: the Location gate is live. Decision 8 is reversed; Place works in fram
 
 
 **115. Self-reported completions are shared at write time.** Today only camera completions send `shareChoicePending`; every other task type writes its feed row with `shared = true` the moment it completes. F1 gives every task type a Share / Keep choice, so that write is now a leak: a text-card task would be public before the user answered. **Backend change required before F1 ships:** every completion, of every task type, writes its feed row unshared and flips it only on Share. Unanswered stays private (R7). This extends contradiction 45 (the camera case) to all types.
+
+
+# v42 · Chunk D — Home, Feed, Profile, Badges, Onboarding
+
+Frames 124–143 in `GRIIT v42 Chunk D.dc.html`. Source in `src/components/v42/`. No new tokens.
+
+**Two conflicts with earlier founder decisions, resolved by the founder in the v42 review (contradictions 116, 117):**
+- The brief locks "Barlow 600 for earned numbers". v40 removed Barlow from the product. Every earned number here is **SF Pro Display Heavy 800, tabular** (`displayFace`/`displayWeight`). Nothing loads Barlow.
+- The brief puts a feed on Home; v38 option A moved the feed to Activity. Home here ends with a short **Following** list (system lines and compact rows from people you follow) and "See all in Activity". The full feed, with Everyone, stays in Activity → Feed.
+
+**Mock record used in every frame.** Today is Wed 30 Sep 2026. First due day Sep 16. The days: 16 secured (self-reported), 17–21 missed, 22 held by Last Stand, 23 missed, 24 camera, photo not saved, 25 self-reported, 26 camera, private, 27 self-reported, 28 camera, 29 held by a freeze, 30 open. Result: streak **5** (24–28; the freeze on 29 holds the run and adds nothing), secured **6 of 14** days. The same numbers appear on Home, Profile, the calendar and the badges. In frame 125, where today is secured, they become streak 6, 7 of 15.
+
+## New components
+| component | props | replaces |
+|---|---|---|
+| `ScreenChrome` | children | ad-hoc SafeAreaView per screen |
+| `Avatar` | userId, uri?, displayName?, username?, size 24/32/40/80 | blank-circle fallbacks |
+| `CameraSeal` + `SealSheet` | onPress, size 16/28 · visible, onDismiss, gates {time?, place?} | VERIFIED pill |
+| `DoubleTapRespect` | respected, onRespect, onOpen, burstSize 64/104, children | heart-only respect |
+| `FeedCompactRow`, `FeedJoinLine`, `joinLine()` | see file | full-height text posts, one row per join |
+| `ProfileHeader` | userId, avatarUrl, displayName, username, bio, streakDays, securedDays, followers, following, isOwner, isFollowing, handlers | ProfileHeaderV2 |
+| `ChallengeCard`, `ProgressStrip`, `challengeLine()` | title, status, line, todayChip?, days: Seg[], members?, memberCount? | Challenges tab rows |
+| `ShareActions` | feed idle/held/shared, storyAvailable, handlers | finish-screen action block |
+| `BADGES` (data) | 12 definitions with rule, target, source | 5 badges |
+
+Reused unchanged from ds/: `Sheet`, `SegmentedControl`, `Chip`, `Button`, `CommentRow`, `WeekStrip` (cells now drawn by the shared day-cell), the v41 `ProofsCalendar`, `TabBar`.
+
+## G1 ScreenChrome (frame 126)
+Every screen is wrapped in `ScreenChrome`: a solid `color.canvas` band of height `safeAreaInsets.top`, drawn above the scroll view at z-index 10. There is no blur. Content scrolls behind it and is cut at its lower edge.
+Acceptance: on Home, Profile, Activity and the finish screen, scroll until the content passes the clock; no pixel of content shows above the band.
+
+## G2 Avatar (frames 134 and every avatar)
+Initials: two from `display_name` (one if it is a single word), else from `username`. Tint from a hash of `user_id`: `brandTint` + `brandText`, or `border` + `textPrimary`. Sizes: 24 rows and stacks, 32 feed and comments, 40 sheets, 80 profile header.
+Acceptance: an account with no `avatar_url` shows initials in the profile header, in feed rows and in comment rows. None of them is a blank circle.
+
+## 124–125 Home
+**Order:** hero → morning-after block (only when present) → Today card → This week → Following.
+
+| element | binds to |
+|---|---|
+| streak number | `streak_days` (display face 60/60) |
+| "days" / "day" | plural of `streak_days` |
+| freeze chip | `profiles.streak_freezes_remaining`. Hidden at 0 and on No Days Off |
+| hero line | `secured` = count of `day_secures` for due days; `due` = due days from the first due day, **counting today only once it is secured**; date = the first due day, formatted "Sep 16" |
+| morning-after | v28.2 rules, unchanged. Dismissed per date in local storage |
+| Today card chip | done / total required tasks across active, started enrollments |
+| section head | challenge `title`, "Day {n} of {duration_days}", done / total for that challenge |
+| "Starts tomorrow" section | enrollment with `start_at` > today (v41 F3). Not counted in the chip |
+| week strip | the same day-cell component as the calendar, Monday first |
+
+| string | style |
+|---|---|
+| {Weekday}, {d} {Month} | secondary textSecondary |
+| {n} days / {n} day | hero + body textSecondary |
+| {n} freeze / {n} freezes | chip caption medium |
+| {secured} of {due} days secured since {Mon d} | secondary textSecondary |
+| Yesterday wasn't secured. | bodyStrong |
+| {done} of {total} tasks. {missed task names}. A freeze covered it. {n} left this month. | secondary |
+| Today | heading |
+| {done} / {total} | chip brandText on brandTint |
+| Day {n} of {N} | caption |
+| Starts tomorrow | caption |
+| Share today · Until midnight | bodyStrong · caption (frame 111) |
+| This week | label |
+| Following | label |
+| See all in Activity | bodyStrong brandText |
+
+Acceptance: no "%" anywhere on Home. The week strip's bottom edge is at least 16pt above the tab bar on a 393×852 device. At 0 freezes there is no freeze text anywhere on Home.
+
+## 126 Day states
+One cell component serves the week strip and the calendar. **Secured, self-reported:** solid brand fill. **Camera photo:** the photo (placeholder in the mock). **Private:** photo plus a lock, owner only. **Photo not saved:** surface cell with an `image-off` glyph, never black. **Freeze:** surface cell with a snowflake. **Last Stand:** surface cell with a shield. **Missed:** a 1pt `textSecondary` outline with no fill. **Today:** a 2pt brand ring. **Future or before Day 1:** 35% opacity. Every state differs in shape or glyph as well as in colour.
+
+## 127 Feed
+Photo post: header (avatar 32, name 14/500, time), 4:5 photo, caption over the photo (eyebrow challenge label, task bodyStrong, "Day {n} of {N}" caption), seal top-right on camera proofs only. Actions: heart + count, comment + count, send. Then inline comments.
+Compact row, for self-reported, text, timer, counter and run completions without a photo: avatar 32, name + time, "completed {task} · Day {n} of {N}", "{challenge} · {gate line}", then heart and comment counts. The challenge name appears **once** per card.
+System lines ("{name} secured Day {n} of {N} · {challenge}", finished) lead with the poster's 32pt avatar, like every other row (`FeedSystemLine`). Join line: "{A}, {B} and {n} others started {challenge}", grouped per challenge within one hour. **Guests** (no `username` or `is_guest`) are excluded server-side from the Everyone query and from the count.
+Inline comments: none at zero. At 1–2 comments show them. At 3 or more show the first two plus "View all {n} comments".
+
+| string | style |
+|---|---|
+| completed {task} · Day {n} of {N} | 14/19 textPrimary |
+| {challenge} · Self-reported / Camera · By 7:00 am | caption |
+| {names} and {n} others started {challenge} · {n} other (singular) | secondary textPrimary |
+| {name} secured Day {n} of {N} · {challenge} | secondary textPrimary |
+| View all {n} comments | secondary textSecondary |
+
+Acceptance: a compact row is at most one third of a photo post's height. With a guest in a join group, that guest is neither named nor counted.
+
+## 128 Double tap
+The spec is in the frame annotation and in `DoubleTapRespect.tsx`. Key points: the second tap must land within 250 ms; a single tap opens the post after 250 ms; a double tap never removes respect; the burst is centred on the tap point; with Reduce Motion there is no burst, only the fill. "Respect" is the product's name for the like, and the count is `respects_count`.
+
+## 129 Seal
+It renders only when `proof_photo_url` is non-null and the capture came from the in-app camera. The sheet lists passed gates only: Time from `gate_time_start`/`gate_time_end` (or By), Location from the set place's name.
+
+| string |
+|---|
+| How this was proven |
+| Taken in the app with the camera |
+| Not uploaded from the camera roll |
+| Time · Inside {start}–{end} / By {time} |
+| Location · At {place name} |
+
+## 130–134 Profile
+Header: see `ProfileHeader.tsx`. Stats: `streak_days`, `secured` (the count of `day_secures`, the same number as the Home line), `followers_count`, `following_count`. Earned numbers use the display face; social counts use weight 500. Counts under 10,000 appear in full with a comma; from 10,000 on, one decimal and "K". The type size never shrinks.
+Tabs: calendar-days, flag, award icons, with a 1.5pt underline. The calendar is **v41 frame 117 unchanged**, restyled only: 44pt cells, 6/8 gaps, and a legend below. The visitor sees private and not-saved days as plain secured cells. Empty account: "No days yet. Day 1 is today."
+Challenges tab: `ChallengeCard`. The strip shows **at most 14 segments**: the whole run when it is 14 days or shorter, otherwise the last 14 days up to today, with "{secured} of {due} days" beside it on running cards (today counts in due only once secured). Never one segment per day for a run over 14. The line comes from `challengeLine()` over `active_challenges.status`: active "Day {n} of {N} · {range}"; completed "Finished · {secured} of {N} days · {range}"; abandoned "Left on day {n} · {range}"; failed "Ended on day {n} · {range}"; pre-start "Day 1 is {date} · {range}". The today chip reads "Secured today", "{n} tasks left" / "1 task left", or "Starts tomorrow". Sections are labelled Running and Finished. No footnote.
+
+| string | style |
+|---|---|
+| streak · secured · followers · following | caption |
+| Add a bio | secondary textSecondary (owner, empty bio) |
+| Edit profile · Share profile · Follow · Following | secondary medium |
+| September 2026 | bodyStrong |
+| {secured} of {due} days | secondary |
+| No days yet. Day 1 is today. | secondary |
+| Secured · Camera photo · Private · Freeze · Last Stand · Missed · Today | caption legend |
+| Running · Finished | label |
+
+Acceptance: at 393pt, "following" and a five-digit count both render in full. The owner's calendar count equals the Home hero's secured count. The visitor view never shows a lock.
+
+## 135–136 Badges
+Twelve badges; definitions and data sources are in `badges.ts`. 100-day streak was cut to make twelve: it overlaps 100 days secured, and 75 is the longest preset. Earned: solid brand disc with an ink figure and a double ring, and the date earned in brandText. Locked: a hollow outline, with "{n} of {m}" or "Not yet". The count line above the grid reads "{earned} of 12 earned". Only an earned badge's sheet offers Share, which opens the v37 badge sticker, variant c.
+
+| badge | rule | source |
+|---|---|---|
+| 3/7/14/30/75-day streak | Secure {n} days in a row. | longest run of consecutive `day_secures`; holds don't add |
+| 100 days secured | Secure 100 days in total. | count `day_secures` |
+| First finish / Three finishes | Finish a challenge. / Finish three challenges. | `active_challenges.status = 'completed'` |
+| Comeback | Secure a day right after a day that wasn't secured. | `day_secures(d)` with d−1 a due day that has no secure and no hold |
+| Full house | Finish a group challenge where every member finished. | group roster, all `completed` |
+| Early | Secure 10 days that included a task with a Time gate. | `day_secures` × check-ins on tasks with `gate_time_*` |
+| Camera 30 | Post 30 proofs taken with the camera. | check-ins with `proof_photo_url` from the in-app camera |
+
+| string |
+|---|
+| {earned} of 12 earned |
+| Earned {d} {Month}. |
+| {n} of {m}. Your streak is {n} days. (streak badges) |
+| Not yet |
+| Share |
+
+## 137–141 Onboarding
+137: "Streaks are easy to fake." (verbatim) · "Here the day is secured only when every task is done. The server decides, not you." The demo card starts at "2 of 3. The day is not secured." and ends at "Day secured. 3 of 3 tasks." The contradiction is gone: the card never reads "secured" while a task is open.
+138: keyframes. Hold 600 ms; third ring fills in 240 ms; header ring closes in 360 ms; the line cross-fades in 200 ms. It plays once per appearance; with Reduce Motion it opens on the end state.
+139: "Discipline, witnessed." (verbatim) · "People you follow see what you share. Your proof stays private until you share it."
+140 Start here rules: **catalog only** (`creator_id is null`); match at least one picked goal via category; `duration_days` ≥ the chosen line (Custom counts as its number); never 1 day; up to three results, sorted by |duration_days − line| ascending, then by goals matched. **The first result is pre-selected. No Days Off is never pre-selected and always sorts last**, whatever its distance. Each task's gate label is derived from its real gates, so any task with the camera gate reads "Camera". If fewer than three match, show fewer; if none match, keep the v5 no-match state. The mode line uses the v41.1 strings. The line under the button follows v41 F3: "Day 1 is today." or "Day 1 is tomorrow."
+141: "Save your streak." · "You are in {challenge}. Day 1 is today." · Continue with Apple · Continue with email · "So your days stay yours if you change phones." · Log in · "Skip — I'll risk losing my progress" · Saved and waiting for you: {challenge} Day 1 of {N} · Your line {n} days · Reminder {time}.
+
+Acceptance: no onboarding screen has more than two lines of body copy at 393pt. Picking Physical toughness + Daily habits with a 30-day line returns no challenge shorter than 30 days.
+
+## 142–143 Finish and Story sheet
+The `ShareActions` states are idle, held ("Sharing when saved", v41 hold rule) and shared ("Shared to the feed", inert). Story shows only when `META_APP_ID` is set. Copy, Save and More are 40pt secondary buttons. "Keep it to the record" becomes "Done" after a share.
+The sheet offers Clear, Card and Photo with the captions in `STICKER_STYLES`. Photo is hidden for text-card tasks. Under the buttons: "Copy: paste it as a sticker in Instagram."
+
+| string |
+|---|
+| Share to the feed |
+| Sharing when saved |
+| Shared to the feed |
+| Share to Instagram Story |
+| Copy · Save · More |
+| Keep it to the record · Done |
+| Clear · Card · Photo |
+| Transparent sticker to paste over your own photo · Dark card · Your proof photo |
+| Copy: paste it as a sticker in Instagram. |
+| Open Instagram |
+
+Acceptance: "Share to the feed" never wraps at 393pt. After a feed share succeeds, Story is still tappable and the feed button is not.
+
+## Contradictions
+**116. Barlow vs v40. Resolved:** earned numbers are SF Pro Display Heavy 800, tabular. The LOCKED list now reads that way.
+**117. Feed on Home. Resolved:** Home ends with at most 3 Following items and "See all in Activity". The full feed stays in Activity.
+**118. Resolved: seal everywhere, including stickers.** The frame 100 check mark vs v42's "no check mark". The approved verified mark was a check glyph + proof type. v42 replaces it with the camera seal everywhere, including the v37 stickers (frame 143 shows the seal). Frame 100 is superseded.
+**119. "Like" vs respect.** The code and earlier frames call it respect (`respects_count`, WhoRespectedSheet). The brief says like. The UI shows only the heart and a number, so no copy changes. Keep the respect naming in code.
+**120. Guests in Everyone. Resolved:** guest = `username is null` or `is_guest = true`, filtered server-side. The feed query currently returns guest-created events (user_014b510a). The filter must be server-side, because a client filter still counts them in "n others".
+
+
+## v42.1 review fixes and sections 7–8
+
+**Double tap on your own post does nothing:** no burst, no respect, no haptic. A single tap still opens it.
+
+**Home Following** is capped at 3 items.
+
+### 144 · Section 7, privacy copy
+The section 7 text did not arrive with the review. Drafted from the locked rules; replace it if yours differs.
+| surface | string |
+|---|---|
+| Onboarding, who sees what | Your proof stays private until you share it. |
+| Finish, default action | Keep it to the record |
+| Finish, after a feed share | Shared to the feed |
+| Finish, share held for the save | Sharing when saved |
+| Proof viewer, owner | Private / Shared |
+| Calendar legend, owner only | Private |
+| VoiceOver, cell or tile | {task}, {date}, private / shared |
+| Visitor view | (none: private photos are not rendered; the day shows as a plain secured cell) |
+| Settings → Privacy, Activity and proofs · Public | Anyone can see your calendar and the proofs you shared. |
+| Settings → Privacy, Activity and proofs · Friends | People you follow who follow you back can see your calendar and the proofs you shared. |
+| Settings → Privacy, Activity and proofs · Private | Only you see your calendar and proofs. |
+| Settings → Privacy, info card title | Photos stay private until you share them. |
+| Settings → Privacy, info card body | Challenge members see whether you finished the day, never a photo you kept. |
+| Settings → Privacy, Profile · Friends | Only people you follow who follow you back see the record. Others see your name, photo and bio only. |
+| Settings → Privacy, Challenges · Friends | Only people you follow who follow you back see your runs. Others see the tab as hidden. |
+| Settings → Privacy, Profile and Challenges · Public, Private | unchanged from `app/settings/privacy.tsx` |
+| Sheet dismissed | (none: stays private) |
+| Answered Keep | (none: never offered again) |
+
+**144 B** draws Settings → Privacy: SettingsNav "Privacy", the intro line (unchanged), three `DsCard` groups with the Public / Friends / Private segmented control, the info card (surface, radius.card, lock 18), and "See how a stranger sees your profile". The info card keeps its place and styling from `privacy.tsx`; only the strings change.
+
+**121. "Friends" definition. Resolved:** Friends = you follow each other (mutual). All three Friends lines use "people you follow who follow you back". Engineering is aligning the server's `friends` check to mutual follow.
+
+### 145 · Section 8, challenge detail "Done for today"
+The section 8 text did not arrive. Built from the rule: **a challenge never says "Day secured."** "Day secured" means every active enrollment's required tasks are done, so it appears only on Home, the Today card and the Secured screen.
+
+| state | status line | sub-line | extra |
+|---|---|---|---|
+| this challenge done, day open | Done for today. | Your day is secured when {other challenge} is done too. {n} tasks left there. / 1 task left there. | none |
+| this challenge done, more than one other open | Done for today. | Your day is secured when your other challenges are done. {n} tasks left. | none |
+| every challenge done | Done for today. | Every challenge is done. Your day is secured on Home. | Share today row (frame 111) |
+| not done | (no status line) | | |
+
+The week strip on the detail shows this challenge's days only, from `start_at`. The status line binds to "all required tasks of this enrollment done today"; the sub-line binds to the server's `secured_today`.
+
+**Frame 111 fixed:** its challenge detail read "Today is secured." It now reads "Done for today."
+
+Acceptance: grep the challenge detail screen for "secured". The only allowed occurrence is "Your day is secured…" in the sub-line.
