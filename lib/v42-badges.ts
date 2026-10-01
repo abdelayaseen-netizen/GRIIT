@@ -1,4 +1,4 @@
-import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { addCalendarDaysToDateKey } from "./date-utils";
 
 export type V42BadgeId =
   | "streak_3"

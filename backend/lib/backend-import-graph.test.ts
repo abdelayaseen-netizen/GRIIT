@@ -99,6 +99,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/retention-config.ts",
       "lib/task-completion-result.ts",
       "lib/task-progress.ts",
+      "lib/v42-badges.ts",
     ]);
   });
 

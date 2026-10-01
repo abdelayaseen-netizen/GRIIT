@@ -9,7 +9,7 @@ import { Camera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
-import { WHY_CIRCLE_VISIBILITY } from "@/lib/onboarding-v2-why-circle";
+import { WHY_CIRCLE_SUB, WHY_CIRCLE_TITLE } from "@/lib/onboarding-v42-copy";
 import { ChromePrimary, OnboardingScreen } from "../OnboardingChrome";
 
 const PROOF = DS_V3.space.gutter * 10;
@@ -31,8 +31,8 @@ export default function WhyCircleScreen({
       onBack={onBack}
       skipLabel="Skip"
       onSkip={onSkip}
-      title="Discipline, witnessed."
-      subtitle="This is your row in the feed once you post."
+      title={WHY_CIRCLE_TITLE}
+      subtitle={WHY_CIRCLE_SUB}
       footer={<ChromePrimary label="Continue" onPress={onContinue} />}
     >
       <View style={styles.wrap}>
@@ -54,7 +54,6 @@ export default function WhyCircleScreen({
           </View>
         </Card>
       </View>
-      <Text style={styles.visibility}>{WHY_CIRCLE_VISIBILITY}</Text>
     </OnboardingScreen>
   );
 }
@@ -121,14 +120,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  visibility: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.lg,
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
 });
