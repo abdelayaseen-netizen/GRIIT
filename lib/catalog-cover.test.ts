@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { canShowParticipantProof, catalogCoverUri } from "./catalog-cover";
+import { canShowParticipantProof, catalogCoverLabel, catalogCoverUri } from "./catalog-cover";
 
 describe("catalogCoverUri", () => {
   it("never resolves a proof image on a catalog card", () => {
@@ -22,6 +22,8 @@ describe("catalogCoverUri", () => {
       "https://cdn.example/covers/bed.jpg",
     );
     expect(catalogCoverUri(null)).toBeNull();
+    expect(catalogCoverLabel({ category: "mind", title: "Read" })).toBe("Mind");
+    expect(catalogCoverLabel({ title: "Read" })).toBe("Read");
   });
 
   it("Discover featured does not query activity_events for a cover", () => {
@@ -38,7 +40,14 @@ describe("catalogCoverUri", () => {
     expect(hero).toContain("featuredProof: null");
     const ui = readFileSync(resolve(__dirname, "../components/discover/DiscoverV3.tsx"), "utf8");
     expect(ui).toContain("catalogCoverUri");
+    expect(ui).toContain("catalogCoverLabel");
+    expect(ui).toContain("featuredJoined");
+    expect(ui).toContain("{circle ? (");
     expect(ui).not.toContain("featured.featuredProof?.photo_url");
+    const route = readFileSync(resolve(__dirname, "../app/(tabs)/discover.tsx"), "utf8");
+    expect(route).toContain("circleCount={featuredQuery.data?.circleCount ?? 0}");
+    expect(route).toContain("listMyActive");
+    expect(route).not.toContain("joinedTodayCount ?? 0");
   });
 });
 

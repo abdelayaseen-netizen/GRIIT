@@ -24,7 +24,7 @@ import PersonCard from "@/components/discover/PersonCard";
 import type { DiscoverCategory } from "@/components/discover/CategoryChips";
 import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
-import { catalogCoverUri } from "@/lib/catalog-cover";
+import { catalogCoverLabel, catalogCoverUri } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
 
 export type DiscoverPerson = {
@@ -46,6 +46,8 @@ export type DiscoverV3Props = {
   challengesLoading: boolean;
   people: DiscoverPerson[];
   circleCount: number;
+  featuredJoined?: boolean;
+  joinedIds?: ReadonlySet<string>;
   error: boolean;
   onRetry: () => void;
   onOpenChallenge: (id: string, slug?: string | null) => void;
@@ -89,6 +91,8 @@ export function DiscoverV3({
   challengesLoading,
   people,
   circleCount,
+  featuredJoined,
+  joinedIds,
   error,
   onRetry,
   onOpenChallenge,
@@ -127,6 +131,7 @@ export function DiscoverV3({
           <ChallengeCard
             title={featured.name}
             coverUri={catalogCoverUri(featured)}
+            coverLabel={catalogCoverLabel(featured)}
             days={featured.duration_days}
             difficulty={difficultyLabel(featured.difficulty)}
             proofType={discoverProofLabel({
@@ -134,16 +139,19 @@ export function DiscoverV3({
               taskTypes: featured.task_types,
             })}
             featured
+            joined={featuredJoined === true}
             onStart={onStartFeatured}
             onPress={() => onOpenChallenge(featured.id, featured.slug)}
           />
         ) : null}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>Popular with your circle</Text>
-        {circle ? <Text style={styles.caption}>{circle}</Text> : null}
-      </View>
+      {circle ? (
+        <View style={styles.section}>
+          <Text style={styles.heading}>Popular with your circle</Text>
+          <Text style={styles.caption}>{circle}</Text>
+        </View>
+      ) : null}
       {challengesLoading ? (
         <View style={styles.grid}>
           <View style={styles.col}>
@@ -224,8 +232,11 @@ export function DiscoverV3({
             <View style={styles.col}>
               <ChallengeCard
                 title={item.title}
+                coverUri={catalogCoverUri(item)}
+                coverLabel={catalogCoverLabel(item)}
                 days={item.duration}
                 difficulty={difficultyLabel(item.difficulty)}
+                joined={joinedIds?.has(item.id) === true}
                 onPress={() => onOpenChallenge(item.id)}
               />
             </View>

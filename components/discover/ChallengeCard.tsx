@@ -12,6 +12,7 @@ import ProofImage from "@/components/ds/ProofImage";
 export type ChallengeCardProps = {
   title: string;
   coverUri?: string | null;
+  coverLabel?: string | null;
   days: number;
   difficulty: string;
   featured?: boolean;
@@ -34,6 +35,7 @@ function httpsCover(uri?: string | null): string | null {
 export default function ChallengeCard({
   title,
   coverUri,
+  coverLabel,
   days,
   difficulty,
   featured,
@@ -46,6 +48,7 @@ export default function ChallengeCard({
   const featuredMeta = proofType ? `${dayPhrase(days)} · ${proofType}` : gridMeta;
   const size = featured ? "feed" : "card";
   const cover = httpsCover(coverUri);
+  const fallbackTitle = coverLabel?.trim() || title;
 
   return (
     <Pressable
@@ -59,8 +62,8 @@ export default function ChallengeCard({
           uri={cover}
           size={size}
           scrim
-          title={featured ? undefined : title}
-          recyclingKey={cover ?? title}
+          title={cover && featured ? undefined : fallbackTitle}
+          recyclingKey={cover ?? fallbackTitle}
         />
         {featured ? (
           <View style={styles.featuredRow} pointerEvents="box-none">
@@ -74,8 +77,7 @@ export default function ChallengeCard({
               label={joined ? "Joined" : "Start"}
               variant={joined ? "secondary" : "primary"}
               size="small"
-              disabled={joined}
-              onPress={onStart ?? onPress}
+              onPress={joined ? onPress : (onStart ?? onPress)}
             />
           </View>
         ) : null}
