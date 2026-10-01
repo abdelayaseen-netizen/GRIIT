@@ -42,6 +42,7 @@ import {
   consistencyFromDayArray,
   consistencyHeadline,
 } from "@/lib/consistency";
+import { visitorFriendsLockBody } from "@/lib/privacy-copy";
 import {
   consistencyDenominatorLine,
   daysFromSource,
@@ -240,7 +241,7 @@ export default function VisitorProfileScreen() {
   const lockBody =
     vis === "private"
       ? `${name} keeps this record private. Nothing is shown, and requests are not accepted automatically.`
-      : `${name} shows the streak, activity and proofs to people they have accepted. Follow to see the record.`;
+      : visitorFriendsLockBody(name);
 
   const proofs = rec?.proofs ?? [];
   const proofItems = itemsFromRecordProofs(proofs);

@@ -142,7 +142,7 @@ The visitor fixture obeys the same rule as the owner's: current streak 47 days (
 
 **Gated state** — identity block, bio and the relationship control stay visible; everything below is replaced by:
 - Lock card — `#FFFFFF`, `2px solid #E7E2D8`, `radius 22`, `padding 24px 20px`, centered: 22px line lock icon, title 17px, body 13px/1.5 `#6B6862`.
-  - Friends-only: "Visible to their circle" / "Marcus shows the streak, activity and proofs to people they have accepted. Send a request to see the record."
+  - Friends-only: "Visible to their circle" / "Marcus shows the streak, activity and proofs to people they follow who follow them back. Follow to see the record."
   - Private: "This profile is private" / "Marcus keeps this record private. Nothing is shown, and requests are not accepted automatically."
 - Two `#EFEBE2` tiles, `radius 16`: **STREAK** / **CONSISTENCY**, both reading "Hidden" in 19px `#8A867E` — the labels name the two cards that would have been shown. Hidden is stated, never faked with blurred numbers.
 
@@ -238,11 +238,11 @@ Three cards, `#FFFFFF`, `radius 20`, `padding 16`, `gap: 12px`. Each: label 15px
 
 | Control | Public | Friends | Private |
 |---|---|---|---|
-| Profile | "Anyone can open your profile and see your bio, stats and activity." | "Only people you have accepted see the record. Others see your name, photo and bio only." | "Nobody but you. You still appear to people inside challenges you share." |
-| Challenges | "Anyone can see which challenges you are running and how far in you are." | "Only your circle sees your runs. Others see the tab as hidden." | "Your runs are hidden from your profile entirely." |
-| Activity and proofs | "Anyone can see your 365-day map and your proof photos." | "Only your circle sees your map and proof photos." | "Your map and proofs are yours alone." |
+| Profile | "Anyone can open your profile and see your bio, stats and activity." | "Only people you follow who follow you back see the record. Others see your name, photo and bio only." | "Nobody but you. You still appear to people inside challenges you share." |
+| Challenges | "Anyone can see which challenges you are running and how far in you are." | "Only people you follow who follow you back see your runs. Others see the tab as hidden." | "Your runs are hidden from your profile entirely." |
+| Activity and proofs | "Anyone can see your calendar and the proofs you shared." | "People you follow who follow you back can see your calendar and the proofs you shared." | "Only you see your calendar and proofs." |
 
-**Honesty panel** — `#EFEBE2`, `radius 20`: "None of this hides a proof from a challenge you joined" / "Everyone in a shared challenge sees whether you verified the day. Privacy controls what your profile shows outside it." This is true of the current data model and must not be dropped.
+**Honesty panel** — `#EFEBE2`, `radius 20`: "Photos stay private until you share them." / "Challenge members see whether you finished the day, never a photo you kept."
 
 **Footer** — 48px `2px dashed #D5D0C5` button "See how a stranger sees your profile" -> the visitor view of the user's own profile, rendered with their current settings. It is the only way a user can check what they just changed.
 

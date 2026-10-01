@@ -655,7 +655,7 @@
           </div>
           <div style="margin-top: 16px; background: #EFEBE2; border-radius: 20px; padding: 16px;">
             <div style="font-size: 13px; color: #0A0A0A;">None of this hides a proof from a challenge you joined</div>
-            <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: #6B6862;">Everyone in a shared challenge sees whether you verified the day. Privacy controls what your profile shows outside it.</p>
+            <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: #6B6862;">Challenge members see whether you finished the day, never a photo you kept.</p>
           </div>
           <button onClick="{{ goVisitor }}" style="margin-top: 16px; width: 100%; height: 48px; border: 2px dashed #D5D0C5; border-radius: 16px; background: none; font-size: 14px; color: #4A4741; cursor: pointer;" style-hover="border-color: #0A0A0A">See how a stranger sees your profile</button>
         </div>
@@ -1115,17 +1115,17 @@ class Component extends DCLogic {
       privacyGroups: [
         pgroup('profile', 'Profile', {
           public: 'Anyone can open your profile and see your bio, stats and activity.',
-          friends: 'Only people you have accepted see the record. Others see your name, photo and bio only.',
+          friends: 'Only people you follow who follow you back see the record. Others see your name, photo and bio only.',
           private: 'Nobody but you. You still appear to people inside challenges you share.'
         }),
         pgroup('challenge', 'Challenges', {
           public: 'Anyone can see which challenges you are running and how far in you are.',
-          friends: 'Only your circle sees your runs. Others see the tab as hidden.',
+          friends: 'Only people you follow who follow you back see your runs. Others see the tab as hidden.',
           private: 'Your runs are hidden from your profile entirely.'
         }),
         pgroup('activity', 'Activity and proofs', {
-          public: 'Anyone can see your 365-day map and your proof photos.',
-          friends: 'Only your circle sees your map and proof photos.',
+          public: 'Anyone can see your calendar and the proofs you shared.',
+          friends: 'People you follow who follow you back can see your calendar and the proofs you shared.',
           private: 'Your map and proofs are yours alone.'
         })
       ],

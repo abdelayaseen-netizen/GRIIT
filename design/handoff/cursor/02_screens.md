@@ -5828,7 +5828,7 @@ Acceptance: "Share to the feed" never wraps at 393pt. After a feed share succeed
 **117. Feed on Home. Resolved:** Home ends with at most 3 Following items and "See all in Activity". The full feed stays in Activity.
 **118. Resolved: seal everywhere, including stickers.** The frame 100 check mark vs v42's "no check mark". The approved verified mark was a check glyph + proof type. v42 replaces it with the camera seal everywhere, including the v37 stickers (frame 143 shows the seal). Frame 100 is superseded.
 **119. "Like" vs respect.** The code and earlier frames call it respect (`respects_count`, WhoRespectedSheet). The brief says like. The UI shows only the heart and a number, so no copy changes. Keep the respect naming in code.
-**120. Guests in Everyone. Resolved:** guest = `username is null` or `is_guest = true`, filtered server-side. The feed query currently returns guest-created events (user_014b510a). The filter must be server-side, because a client filter still counts them in "n others".
+**120. Guests in Everyone. Resolved: is_anonymous.** Guest = `auth.users.is_anonymous`. Filtered server-side (`anonymousUserIdSet`). Do not filter by `username`. A client filter still counts them in "n others".
 
 
 ## v42.1 review fixes and sections 7–8

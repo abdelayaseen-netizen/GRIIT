@@ -65,7 +65,7 @@ export default function VisitorProfile({ visibility = 'public', onBack }) {
               <p className="empty__body" style={{ marginBottom: 0 }}>
                 {visibility === 'private'
                   ? 'Marcus keeps this record private. Nothing is shown, and requests are not accepted automatically.'
-                  : 'Marcus shows the streak, activity and proofs to people they have accepted. Send a request to see the record.'}
+                  : 'Marcus shows the streak, activity and proofs to people they follow who follow them back. Follow to see the record.'}
               </p>
             </div>
             {/* what is hidden is NAMED, never faked with blurred numbers */}
