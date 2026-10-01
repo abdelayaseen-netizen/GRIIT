@@ -35,8 +35,11 @@ describe("secured day copy", () => {
       securedDayCaption({ taskCount: 4, challengeCount: 2, cameraProofs: 3 }),
     ).toBe("4 tasks across 2 challenges. 3 camera proofs.");
     expect(
+      securedDayCaption({ taskCount: 1, challengeCount: 1, cameraProofs: 1 }),
+    ).toBe("1 task. 1 camera proof.");
+    expect(
       securedDayCaption({ taskCount: 2, challengeCount: 1, cameraProofs: 1 }),
-    ).toBe("2 tasks. 1 camera proofs.");
+    ).toBe("2 tasks. 1 camera proof.");
     expect(
       securedDayCaption({
         taskCount: 3,
