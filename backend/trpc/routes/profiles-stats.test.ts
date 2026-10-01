@@ -309,11 +309,88 @@ describe("profiles.getStats", () => {
     });
     const lost = createCaller({
       streakOverrides: { active_streak_count: 0, last_completed_date_key: addCalendarDaysToDateKey(yesterday, -1) },
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-01T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
     });
     await expect(lost.getStats()).resolves.toMatchObject({
       lastStandUsedThisSession: false,
       streakLostNoLastStand: true,
     });
+  });
+
+  it("hides streakLostNoLastStand when yesterday was not a due day", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const today = getTodayDateKey("UTC");
+
+    const joinedToday = createCaller({
+      streakOverrides: { active_streak_count: 0, last_completed_date_key: null },
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: `${today}T00:00:00.000Z`,
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
+    });
+    await expect(joinedToday.getStats()).resolves.toMatchObject({ streakLostNoLastStand: false });
+
+    const missedYesterday = createCaller({
+      streakOverrides: { active_streak_count: 0, last_completed_date_key: addCalendarDaysToDateKey(yesterday, -1) },
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-11T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
+    });
+    await expect(missedYesterday.getStats()).resolves.toMatchObject({ streakLostNoLastStand: true });
+
+    const beforeStart = createCaller({
+      streakOverrides: { active_streak_count: 0, last_completed_date_key: null },
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: `${today}T00:00:00.000Z`,
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
+    });
+    await expect(beforeStart.getStats()).resolves.toMatchObject({ streakLostNoLastStand: false });
+
+    const zeroTasks = createCaller({
+      streakOverrides: { active_streak_count: 0, last_completed_date_key: addCalendarDaysToDateKey(yesterday, -1) },
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-01T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [],
+    });
+    await expect(zeroTasks.getStats()).resolves.toMatchObject({ streakLostNoLastStand: false });
   });
 
   it("profile read error throws", async () => {
@@ -340,7 +417,6 @@ describe("profiles.reconcileStreak", () => {
     await expect(caller.reconcileStreak()).resolves.toEqual({
       streak_broken: true,
       previous_streak: 5,
-      lostStreak: 0,
       lastStandUsedThisSession: false,
       lastStandsAvailable: 0,
       missedTaskNames: [],
@@ -393,6 +469,16 @@ describe("profiles.reconcileStreak", () => {
     ];
     const fixture = {
       securedDateKeys,
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-01T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
       streakOverrides: {
         last_completed_date_key: last,
       },
@@ -432,6 +518,16 @@ describe("profiles.reconcileStreak", () => {
     const caller = createCaller({
       securedDateKeys,
       freezeDateKeys,
+      activeChallengeRows: [
+        {
+          id: "a1",
+          challenge_id: CHALLENGE,
+          status: "active",
+          start_at: "2026-09-01T00:00:00.000Z",
+          end_at: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+      yesterdayTasks: [{ id: "t1", title: "Run", challenge_id: CHALLENGE }],
       streakOverrides: {
         last_completed_date_key: today,
         active_streak_count: 1,

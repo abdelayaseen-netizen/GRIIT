@@ -132,7 +132,7 @@ describe("buildRecordDays", () => {
 describe("loadDayTaskTally", () => {
   it("uses the same due-task set as the month rows", () => {
     const src = readFileSync(resolve(__dirname, "./record-days.ts"), "utf8");
-    expect(src).toContain("return tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds });");
+    expect(src).toContain("...tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds })");
   });
 });
 

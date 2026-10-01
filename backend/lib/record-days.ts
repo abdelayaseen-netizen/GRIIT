@@ -224,16 +224,23 @@ export function nextMonthKey(monthKey: string, delta: number): string {
   return monthKeyFromDateKey(addCalendarDaysToDateKey(first, delta * 32)).slice(0, 7);
 }
 
+export type DayTaskTally = {
+  done: number;
+  total: number;
+  missedTaskNames: string[];
+  ranges: { status: string; startDateKey: string; endDateKey: string }[];
+};
+
 export async function loadDayTaskTally(
   supabase: SupabaseClient,
   userId: string,
   dateKey: string,
   timezone: string,
-): Promise<{ done: number; total: number; missedTaskNames: string[] }> {
+): Promise<DayTaskTally> {
   const [acRes, cinRes] = await Promise.all([
     supabase
       .from("active_challenges")
-      .select("id, challenge_id, status, start_at, end_at")
+      .select("id, challenge_id, status, start_at, end_at, ended_at")
       .eq("user_id", userId)
       .in("status", ["active", "completed"])
       .limit(50),
@@ -246,12 +253,15 @@ export async function loadDayTaskTally(
   ]);
   const acRows = (acRes.data ?? []) as {
     challenge_id: string;
+    status: string;
     start_at: string;
     end_at: string;
+    ended_at?: string | null;
   }[];
+  const empty: DayTaskTally = { done: 0, total: 0, missedTaskNames: [], ranges: [] };
   const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
   if (challengeIds.length === 0) {
-    return { done: 0, total: 0, missedTaskNames: [] };
+    return empty;
   }
   const { data: taskRows } = await supabase
     .from("challenge_tasks")
@@ -266,9 +276,17 @@ export async function loadDayTaskTally(
       .filter((t) => t.challenge_id === row.challenge_id)
       .map((t) => ({ id: t.id, title: (t.title ?? "Task").trim() || "Task" })),
   }));
+  const ranges = acRows.map((row) => {
+    const startDateKey = dateKeyFromIsoInTimeZone(row.start_at, timezone);
+    return {
+      status: row.status,
+      startDateKey,
+      endDateKey: exclusiveEndDateKey(row, startDateKey, timezone),
+    };
+  });
   const completedIds = ((cinRes.data ?? []) as { task_id?: string; status?: string }[])
     .filter((r) => !r.status || r.status === "completed")
     .map((r) => r.task_id)
     .filter((id): id is string => typeof id === "string");
-  return tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds });
+  return { ...tallyTasks({ tasks: tasksDueOnDay(dateKey, enrollments), completedIds }), ranges };
 }

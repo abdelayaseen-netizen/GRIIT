@@ -60,6 +60,15 @@ export function morningAfterVisible(
   return variant != null && !isMissAcked(ackedDateKey, dateKey);
 }
 
+/** Same rule as yesterdayWasDueDay: due-keys membership + required tasks. */
+export function morningAfterYesterdayWasDue(
+  yesterdayKey: string,
+  dueDayKeys: readonly string[],
+  requiredDueCount: number,
+): boolean {
+  return requiredDueCount > 0 && dueDayKeys.includes(yesterdayKey);
+}
+
 export function morningAfterCost(done: number, total: number, missedTaskNames: readonly string[]): string {
   const names = missedTaskNames.map((n) => n.trim()).filter(Boolean).join(", ");
   const head = `${done} of ${total} tasks.`;

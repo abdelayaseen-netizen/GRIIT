@@ -66,6 +66,7 @@ import {
   morningAfterKeepsLostStreak,
   morningAfterVariant,
   morningAfterVisible,
+  morningAfterYesterdayWasDue,
 } from "@/lib/morning-after";
 import {
   parseTodaySectionChoice,
@@ -305,6 +306,14 @@ export default function HomeScreen() {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
     const lostStreak = recon.result.lostStreak;
+    const yesterdayDue = morningAfterYesterdayWasDue(
+      yesterdayKey,
+      dueDayKeys,
+      recon.result.total ?? 0,
+    );
+    if (!yesterdayDue && !morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey)) {
+      return null;
+    }
     const variant = morningAfterVariant({
       lastStandUsed: Boolean(
         recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
@@ -345,7 +354,7 @@ export default function HomeScreen() {
         setShowFreezeSheet(true);
       } : undefined,
     };
-  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
+  }, [dueDayKeys, freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
