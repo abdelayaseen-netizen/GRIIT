@@ -13,6 +13,8 @@ import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
+import { anonymousUserIdSet } from "../../lib/anonymous-authors";
+import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 /** Discover v3 category chips → DB `challenges.category` values. */
 const DISCOVER_CATEGORY_VALUES = ["all", "body", "mind", "faith", "focus"] as const;
@@ -251,14 +253,21 @@ export const challengesDiscoverProcedures = {
       const ids = candidates.map((c) => c.id);
       const { data: joinToday } = await server
         .from("active_challenges")
-        .select("challenge_id")
+        .select("challenge_id, user_id")
         .in("challenge_id", ids)
         .gte("created_at", dayStartIso)
         .limit(500);
+      const joinRows = (joinToday ?? []) as { challenge_id: string; user_id: string }[];
+      const joinAnonIds = hasSupabaseAdmin()
+        ? await anonymousUserIdSet(
+            getSupabaseAdmin(),
+            joinRows.map((r) => r.user_id),
+          )
+        : new Set<string>();
       const todayMap = new Map<string, number>();
-      for (const r of joinToday ?? []) {
-        const id = (r as { challenge_id: string }).challenge_id;
-        todayMap.set(id, (todayMap.get(id) ?? 0) + 1);
+      for (const r of joinRows) {
+        if (joinAnonIds.has(r.user_id)) continue;
+        todayMap.set(r.challenge_id, (todayMap.get(r.challenge_id) ?? 0) + 1);
       }
 
       const scored = [...candidates].sort((a, b) => {

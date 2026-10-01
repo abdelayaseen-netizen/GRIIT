@@ -25,6 +25,8 @@ import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds, normalizeVisibilityLevel } from "../../lib/is-friend";
+import { anonymousUserIdSet } from "../../lib/anonymous-authors";
+import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 /**
  * Compute hours remaining until midnight in the user's local IANA timezone.
@@ -55,7 +57,6 @@ export const feedRouter = createTRPCRouter({
     const viewerId = ctx.userId;
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
     const { data: recentMovers } = await server.from("activity_events").select("user_id").eq("share_state", "shared").gte("created_at", dayAgo).limit(500);
-    const movingUserCount = new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id)).size;
     const [{ data: follows }, friendIds, blockedIds, coMemberIds] = await Promise.all([
       ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200),
       mutualFriendIds(ctx.supabase, viewerId),
@@ -67,8 +68,13 @@ export const feedRouter = createTRPCRouter({
     const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(60);
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
-    // Load profile visibility for feed filtering
     const eventUserIds = [...new Set(events.map((e) => e.user_id))];
+    const moverIds = [...new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id))];
+    const anonymousIds = hasSupabaseAdmin()
+      ? await anonymousUserIdSet(getSupabaseAdmin(), [...eventUserIds, ...moverIds])
+      : new Set<string>();
+    const movingUserCount = new Set(moverIds.filter((id) => !anonymousIds.has(id))).size;
+    // Load profile visibility for feed filtering
     const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];
 
     // Parallelize visibility + challenge lookups
@@ -100,6 +106,7 @@ export const feedRouter = createTRPCRouter({
     for (const ev of events) {
       if (preFiltered.length >= input.limit) break;
       if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) continue;
+      if (input.scope === "everyone" && anonymousIds.has(ev.user_id)) continue;
       if (input.scope === "everyone" && ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) continue;
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
