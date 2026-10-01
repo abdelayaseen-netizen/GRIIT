@@ -127,11 +127,13 @@ describe("longestSecuredStreak", () => {
 });
 
 describe("shouldPresentEndScreen", () => {
-  it("skips onboarding, auth, and the end route itself", () => {
+  it("skips onboarding, auth, task flow, Secured, and the end route itself", () => {
     expect(shouldPresentEndScreen("/(tabs)")).toBe(true);
     expect(shouldPresentEndScreen("/onboarding")).toBe(false);
     expect(shouldPresentEndScreen("/auth/login")).toBe(false);
     expect(shouldPresentEndScreen("/challenge/end")).toBe(false);
+    expect(shouldPresentEndScreen("/task/secured")).toBe(false);
+    expect(shouldPresentEndScreen("/task/complete")).toBe(false);
   });
 });
 

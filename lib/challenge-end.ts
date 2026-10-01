@@ -212,13 +212,7 @@ export function endedChallengeFromUnseen(
   };
 }
 
-export function shouldPresentEndScreen(pathname: string): boolean {
-  if (pathname.includes("/onboarding")) return false;
-  if (pathname.includes("/auth")) return false;
-  if (pathname.includes("/create-profile")) return false;
-  if (pathname.includes("/challenge/end")) return false;
-  return true;
-}
+export { shouldPresentAwayRecap as shouldPresentEndScreen } from "@/lib/moment-queue";
 
 export const MARK_END_SEEN_FAILED = "Couldn't save. Try again.";
 

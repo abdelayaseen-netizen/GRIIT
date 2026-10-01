@@ -300,7 +300,7 @@ export default function ActiveChallengeDetailScreen() {
         proof_photo_url: cin ? proofUrl(cin) : null,
       };
     });
-  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration]);
+  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration, profileTz]);
 
   const thisDone = challengeEnrollmentDone(tasks);
   const todayCopy = challengeDetailTodayCopy({

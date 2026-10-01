@@ -543,6 +543,8 @@ export function useTaskFlowV2() {
         }
         return;
       }
+      assembled.challengeDone = secure?.challenge_done === true;
+      assembled.activeChallengeId = activeChallengeId;
       if (mountedRef.current && securedNavOnce() === "replace") {
         setResult(assembled);
         setSecuredHandoff({

@@ -442,7 +442,7 @@ function FinalizeEndedGate() {
     setFinalizeEndedForegroundHandler(run);
     run();
     return () => setFinalizeEndedForegroundHandler(null);
-  }, [user, nav]);
+  }, [user, nav, pathname]);
 
   return null;
 }

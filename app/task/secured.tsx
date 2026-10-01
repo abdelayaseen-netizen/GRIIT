@@ -24,6 +24,7 @@ import {
   submitResultFromSecuredParams,
   todayIsSecuredInCache,
 } from "@/lib/task-secured-nav";
+import { afterSecuredNext } from "@/lib/moment-queue";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -41,6 +42,8 @@ function TaskSecuredInner() {
     taskName?: string;
     shareEventId?: string;
     closingPhoto?: string;
+    challengeDone?: string;
+    activeChallengeId?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -57,6 +60,8 @@ function TaskSecuredInner() {
     challengeLength: firstString(params.challengeLength),
     challengeName: firstString(params.challengeName),
     verificationKind: firstString(params.verificationKind),
+    challengeDone: firstString(params.challengeDone),
+    activeChallengeId: firstString(params.activeChallengeId),
   });
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
@@ -151,6 +156,26 @@ function TaskSecuredInner() {
   }, [proofs, queryClient, tz, retryTick]);
 
   const done = () => {
+    const next = afterSecuredNext({
+      challengeDone: result.challengeDone,
+      challengeDay: result.challengeDay,
+      challengeLength: result.challengeLength,
+    });
+    if (next === "challenge_complete") {
+      const enrollmentId = result.activeChallengeId;
+      if (enrollmentId) {
+        void trpcMutate(TRPC.challenges.markEndSeen, { enrollmentIds: [enrollmentId] }).catch(() => {});
+      }
+      router.replace({
+        pathname: ROUTES.CHALLENGE_COMPLETE,
+        params: {
+          challengeName: result.challengeName,
+          totalDays: String(result.challengeLength),
+          totalDaysSecured: String(result.streakDays),
+        },
+      } as never);
+      return;
+    }
     router.replace(ROUTES.HOME as never);
   };
 
