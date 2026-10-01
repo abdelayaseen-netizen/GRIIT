@@ -52,6 +52,7 @@ import {
   type ActiveChallengeTask,
   type ActiveTaskType,
 } from "@/lib/active-challenge-ui";
+import { homeWindowClosed } from "@/lib/home-proof-card";
 import { SHARE_TODAY, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 
@@ -249,6 +250,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : (
           <View>
             {p.tasks.map((t, i) => {
+              const closed = homeWindowClosed({ windowState: t.windowState, done: t.completed_today });
               const Icon = t.completed_today ? Check : TASK_ICON[t.task_type];
               const iconTone = t.completed_today ? DS_V3.color.brandText : DS_V3.color.textSecondary;
               return (
@@ -257,14 +259,14 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t.title}
-                    accessibilityState={{ disabled: t.completed_today }}
-                    disabled={t.completed_today}
-                    onPress={t.completed_today ? undefined : () => p.onTask?.(t)}
+                    accessibilityState={{ disabled: t.completed_today || closed }}
+                    disabled={t.completed_today || closed}
+                    onPress={t.completed_today || closed ? undefined : () => p.onTask?.(t)}
                     style={styles.taskRow}
                   >
                     <Icon size={ICON} color={iconTone} />
                     <View style={styles.taskCopy}>
-                      <Text style={t.completed_today ? styles.taskTitleDone : styles.taskTitle}>
+                      <Text style={t.completed_today || closed ? styles.taskTitleDone : styles.taskTitle}>
                         {t.title}
                       </Text>
                       <Text style={styles.caption}>
@@ -277,7 +279,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                       ) : (
                         <Text style={styles.caption}>Self-reported</Text>
                       )
-                    ) : (
+                    ) : closed ? null : (
                       <Text style={styles.verb}>{taskVerb(t.task_type)}</Text>
                     )}
                   </Pressable>

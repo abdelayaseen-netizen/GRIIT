@@ -23,6 +23,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackEvent } from "@/lib/analytics";
 import { inlineServerError } from "@/lib/inline-server-error";
 import { gatesFor, gateTimeFor } from "@/backend/lib/task-model";
+import { windowStateFor } from "@/backend/lib/task-time-gate";
 import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -58,6 +59,10 @@ type TaskRow = {
   order_index?: number | null;
   config?: Record<string, unknown> | null;
   require_photo?: boolean | null;
+  require_location?: boolean | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
   min_duration_minutes?: number | null;
   target_mode?: string | null;
   start_value?: number | null;
@@ -134,7 +139,8 @@ export default function ActiveChallengeDetailScreen() {
           challenges (
             id, title, description, duration_days, difficulty, is_hard_mode, participants_count, participation_type,
             challenge_tasks (
-              id, title, task_type, order_index, config, require_photo,
+              id, title, task_type, order_index, config, require_photo, require_location,
+              gate_time_mode, gate_time_start, gate_time_end,
               min_duration_minutes, target_mode, start_value, start_duration_minutes
             )
           )
@@ -288,6 +294,7 @@ export default function ActiveChallengeDetailScreen() {
         }),
         gates: gatesFor(row),
         gateTime: gateTimeFor(row),
+        windowState: windowStateFor(row, profileTz ?? "UTC"),
         completed_today: Boolean(cin),
         verified: Boolean(cin && proofUrl(cin)),
         proof_photo_url: cin ? proofUrl(cin) : null,

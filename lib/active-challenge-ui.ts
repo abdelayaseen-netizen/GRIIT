@@ -1,7 +1,9 @@
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
+import type { WindowState } from "@/backend/lib/task-time-gate";
 import { securedElapsed } from "@/lib/consistency";
+import { homeWindowClosed } from "@/lib/home-proof-card";
 import { flowOpensCamera } from "@/lib/task-flow-state";
-import { gateLabel } from "@/lib/task-ui";
+import { closedWindowCaption, gateLabel } from "@/lib/task-ui";
 
 /**
  * Active challenge (frame 28) binding. Server fields only.
@@ -37,6 +39,7 @@ export type ActiveChallengeTask = {
   proof_photo_url?: string | null;
   gates?: readonly TaskGate[] | null;
   gateTime?: GateTime | null;
+  windowState?: WindowState | null;
 };
 
 export const TASK_VERB: Record<ActiveTaskType, string> = {
@@ -83,8 +86,11 @@ function sizePart(t: ActiveChallengeTask): string {
   return "";
 }
 
-/** Pending row caption: size · gateLabel(task). */
+/** Pending row caption: size · gateLabel(task). Closed windows match Home. */
 export function pendingGate(t: ActiveChallengeTask): string {
+  if (homeWindowClosed({ windowState: t.windowState, done: t.completed_today })) {
+    return closedWindowCaption(t.gateTime);
+  }
   return [
     sizePart(t),
     gateLabel({
@@ -188,10 +194,14 @@ export function footerAction(args: {
   tasks: ActiveChallengeTask[];
 }): FooterAction {
   if (args.securedToday) return { kind: "share" };
-  const next = args.tasks.find((t) => !t.completed_today);
+  const next = args.tasks.find(
+    (t) =>
+      !t.completed_today &&
+      !homeWindowClosed({ windowState: t.windowState, done: t.completed_today }),
+  );
   if (next) return { kind: "next", task: next };
   const last = args.tasks[args.tasks.length - 1];
-  if (last) return { kind: "next", task: last };
+  if (last?.completed_today) return { kind: "next", task: last };
   return { kind: "none" };
 }
 

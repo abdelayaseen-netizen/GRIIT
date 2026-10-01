@@ -20,6 +20,7 @@ import {
   weekStripFilledForEnrollment,
   type ActiveChallengeTask,
 } from "./active-challenge-ui";
+import { homeWindowClosed } from "./home-proof-card";
 
 const WEEK = [
   "2026-09-07",
@@ -295,6 +296,29 @@ describe("gates", () => {
     expect(screen).toContain("simple: Circle");
     expect(screen).not.toMatch(/simple:\s*Camera/);
     expect(screen).toContain("taskVerb(t.task_type)");
+  });
+
+  it("closed window is inert like Home: Window closed caption, no Check off CTA", () => {
+    const closed = task({
+      id: "wake",
+      title: "Wake up",
+      task_type: "simple",
+      windowState: "closed",
+      gates: ["time"],
+      gateTime: { mode: "between", start: "06:00", end: "09:00" },
+    });
+    expect(pendingGate(closed)).toBe("Window closed · 6:00–9:00 am");
+    expect(homeWindowClosed({ windowState: "closed", done: false })).toBe(true);
+    expect(footerAction({ securedToday: false, tasks: [closed] })).toEqual({ kind: "none" });
+    const src = readFileSync(resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"), "utf8");
+    expect(src).toContain("homeWindowClosed");
+    expect(src).toContain("disabled={t.completed_today || closed}");
+    const screen = readFileSync(
+      resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
+      "utf8",
+    );
+    expect(screen).toContain("windowStateFor");
+    expect(screen).toContain("gate_time_mode");
   });
 });
 
