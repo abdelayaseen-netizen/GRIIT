@@ -58,6 +58,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
 import ProofsCalendar from "@/components/profile/ProofsCalendar";
 import type { ProofsDayIn } from "@/lib/day-cell";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
@@ -73,6 +74,7 @@ type RecordPayload = ProfileRecord & {
   header?: ProofsHeader;
   monthKey?: string;
   days?: ProofsDayIn[];
+  badgeGrid?: V42BadgeState[];
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -270,6 +272,7 @@ export default function ProfileScreen() {
               length: r.dayTotal,
             }))}
             proofs={proofs}
+            badgeGrid={record?.badgeGrid}
             badges={badgeItemsFromRows(
               // Old: 99b1cc4 app/(tabs)/profile.tsx:393
               //   <BadgeRows rows={record?.badges ?? []} />

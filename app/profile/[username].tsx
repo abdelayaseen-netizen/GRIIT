@@ -38,6 +38,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
 import ProofsCalendar from "@/components/profile/ProofsCalendar";
 import type { ProofsDayIn } from "@/lib/day-cell";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyHeadline,
@@ -80,6 +81,7 @@ type RecordPayload = ProfileRecord & {
   header?: ProofsHeader;
   monthKey?: string;
   days?: ProofsDayIn[];
+  badgeGrid?: V42BadgeState[];
 };
 
 export default function VisitorProfileScreen() {
@@ -314,6 +316,7 @@ export default function VisitorProfileScreen() {
                 length: r.dayTotal,
               }))}
               proofs={proofs}
+              badgeGrid={rec?.badgeGrid}
               badges={badgeItemsFromRows(
                 rec?.badges ??
                   badgeRowsFromProgress({

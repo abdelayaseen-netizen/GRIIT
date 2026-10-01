@@ -1,0 +1,16 @@
+-- Draft only. Do not apply live.
+-- Full house: a group challenge where every roster member's
+-- active_challenges.status = 'completed'. Evaluated in-process when
+-- getRecord already has the roster; otherwise the badge stays locked.
+
+-- select ac.challenge_id, ac.ended_at
+-- from active_challenges ac
+-- join challenges c on c.id = ac.challenge_id
+-- where ac.user_id = $1
+--   and ac.status = 'completed'
+--   and c.participation_type = 'group'
+--   and not exists (
+--     select 1 from active_challenges peer
+--     where peer.challenge_id = ac.challenge_id
+--       and peer.status is distinct from 'completed'
+--   );

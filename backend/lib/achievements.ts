@@ -25,7 +25,6 @@ export async function checkAndUnlockAchievements(
     ACHIEVEMENTS.STREAK_30,
     ACHIEVEMENTS.STREAK_60,
     ACHIEVEMENTS.STREAK_75,
-    ACHIEVEMENTS.STREAK_100,
   ];
   for (const ach of streakBadges) {
     if (ach.threshold && longestStreak >= ach.threshold) toUnlock.push(ach.key);

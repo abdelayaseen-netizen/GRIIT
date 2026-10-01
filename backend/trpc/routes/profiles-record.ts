@@ -39,6 +39,7 @@ import {
 import { signProofPaths, toProofPath } from "../../lib/proof-image";
 import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
+import { evaluateV42Badges } from "../../../lib/v42-badges";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   parseVisibility,
@@ -69,6 +70,8 @@ type TaskCountRow = {
   require_photo?: boolean | null;
   require_location?: boolean | null;
   gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
   task_type?: string | null;
 };
 
@@ -284,13 +287,13 @@ export const profilesRecordProcedures = {
           challengeIds.length > 0
             ? db
                 .from("challenge_tasks")
-                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
+                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, task_type")
                 .in("challenge_id", challengeIds)
                 .limit(400)
             : Promise.resolve({ data: [], error: null }),
           db
             .from("check_ins")
-            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, created_at")
+            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, proof_photo_url, created_at")
             .eq("user_id", ownerId)
             .limit(800),
         ]);
@@ -516,6 +519,47 @@ export const profilesRecordProcedures = {
       );
       const proofsOut = sliced.proofs.map((p, i) => ({ ...p, imageUrl: signedProofs[i] ?? null }));
 
-      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header });
+      const timeTaskIds = new Set(
+        taskRows
+          .filter((t) => {
+            const mode = String(t.gate_time_mode ?? "").toLowerCase();
+            return (
+              mode === "by" ||
+              mode === "between" ||
+              Boolean(t.gate_time_start) ||
+              Boolean(t.gate_time_end)
+            );
+          })
+          .map((t) => t.id)
+          .filter((id): id is string => Boolean(id)),
+      );
+      const securedSet = new Set(securedDateKeys);
+      const timeGateSecuredKeys = checkInRows
+        .filter((r) => r.task_id && timeTaskIds.has(r.task_id) && securedSet.has(r.date_key))
+        .map((r) => r.date_key);
+      const cameraProofKeys = checkInRows
+        .filter((r) => Boolean(r.proof_photo_url))
+        .map((r) => r.date_key);
+      const holdKeys = [
+        ...((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        ...((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+      ];
+      const completedEndedKeys = acRows
+        .filter((r) => r.status === "completed")
+        .map((r) => dateKeyFromIsoInTimeZone(r.ended_at ?? r.end_at, timezone))
+        .filter(Boolean);
+      const badgeGrid =
+        relationship === "self"
+          ? evaluateV42Badges({
+              securedKeys: securedDateKeys,
+              dueKeys: record.consistency.dueDayKeys,
+              holdKeys,
+              completedEndedKeys,
+              timeGateSecuredKeys,
+              cameraProofKeys,
+            })
+          : [];
+
+      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header, badgeGrid });
     }),
 };

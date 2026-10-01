@@ -6,7 +6,9 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Award, CalendarDays, Flag, Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { type BadgeItem } from "@/components/ds/Badges";
+import { BadgeGrid } from "@/components/profile/BadgeGrid";
 import { BadgeRows } from "@/components/profile/BadgeRows";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import EmptyState from "@/components/ds/EmptyState";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import ProofImage from "@/components/ds/ProofImage";
@@ -66,6 +68,8 @@ export type ProfileV3Props = {
   runs: ProfileV3Run[];
   proofs: ProfileV3Proof[];
   badges: BadgeItem[];
+  badgeGrid?: V42BadgeState[];
+  onShareBadge?: (badge: V42BadgeState) => void;
   onShare: () => void;
   onSettings?: () => void;
   onEditProfile?: () => void;
@@ -104,6 +108,8 @@ export function ProfileV3({
   runs,
   proofs,
   badges,
+  badgeGrid,
+  onShareBadge,
   onShare,
   onSettings,
   onEditProfile,
@@ -256,6 +262,9 @@ export function ProfileV3({
         ) : null}
 
         {tab === "Badges" ? (
+          badgeGrid ? (
+            <BadgeGrid badges={badgeGrid} onShare={onShareBadge} />
+          ) : (
           <BadgeRows
             badges={
               badges.length > 0
@@ -266,6 +275,7 @@ export function ProfileV3({
             }
             footnote={FOOTNOTE}
           />
+          )
         ) : null}
       </View>
 
