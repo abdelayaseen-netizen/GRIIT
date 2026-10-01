@@ -13,7 +13,19 @@ import {
   runMarkEndSeenOnDone,
   securedCount,
   shouldPresentEndScreen,
+  showStartAgain,
 } from "./challenge-end";
+
+describe("recap day cell and Start it again", () => {
+  it("self-reported secured uses brand fill, and 1-day hides Start it again", () => {
+    expect(showStartAgain(1)).toBe(false);
+    expect(showStartAgain(7)).toBe(true);
+    const ui = readFileSync(resolve(__dirname, "../components/challenge/ChallengeEnd.tsx"), "utf8");
+    expect(ui).toContain('state === "camera" || state === "self" ? DS_V3.color.brand');
+    expect(ui).not.toContain('state === "self" ? DS_V3.color.border');
+    expect(ui).toContain("showStartAgain(c.duration_days)");
+  });
+});
 
 describe("securedCount", () => {
   it("excludes frozen and Last Stand", () => {

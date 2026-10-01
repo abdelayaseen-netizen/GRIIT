@@ -87,6 +87,11 @@ export function combinedFooter(n: number): string {
   return `All ${n} are in Profile, Finished. Start any again from there.`;
 }
 
+/** 1-day recaps have nowhere honest to restart. */
+export function showStartAgain(durationDays: number): boolean {
+  return durationDays > 1;
+}
+
 export function capCaption(activeCount: number, challengeLimit: number): string {
   return `You are running ${activeCount} of ${challengeLimit}. Starting this again means leaving one.`;
 }

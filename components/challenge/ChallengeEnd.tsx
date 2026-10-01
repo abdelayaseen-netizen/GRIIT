@@ -16,6 +16,7 @@ import {
   combinedTitle,
   factLine,
   securedCount,
+  showStartAgain,
   type DayState,
   type EndedChallenge,
 } from "@/lib/challenge-end";
@@ -35,7 +36,7 @@ const LEGEND: [DayState, string][] = [
 
 function Tile({ state, size = TILE }: { state: DayState; size?: number }) {
   const fill =
-    state === "camera" ? DS_V3.color.brand : state === "self" ? DS_V3.color.border : "transparent";
+    state === "camera" || state === "self" ? DS_V3.color.brand : "transparent";
   const stroke =
     state === "last_stand"
       ? DS_V3.color.brand
@@ -178,11 +179,13 @@ function Single(p: ChallengeEndProps) {
       <View style={[styles.footer, { paddingBottom: 26 + insets.bottom }]}>
         <Button label="Done" onPress={p.onDone} />
         {p.saveError ? <Text style={styles.saveError}>{p.saveError}</Text> : null}
-        <Button
-          label="Start it again"
-          variant="secondary"
-          onPress={() => p.onRestart?.(c.challengeId)}
-        />
+        {showStartAgain(c.duration_days) ? (
+          <Button
+            label="Start it again"
+            variant="secondary"
+            onPress={() => p.onRestart?.(c.challengeId)}
+          />
+        ) : null}
         {atCap ? <Text style={styles.cap}>{capCaption(p.activeCount, p.challengeLimit!)}</Text> : null}
       </View>
     </View>
