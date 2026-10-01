@@ -11,7 +11,12 @@ import { captureError } from "@/lib/sentry";
 import { uploadAvatarFromUri } from "@/lib/uploadAvatar";
 import { pickAvatar } from "@/lib/pick-avatar";
 import { isValidAccountUsername } from "@/lib/onboarding-v2-account-name";
-import { normalizeOnboardingUsername, persistThenAdvance } from "@/lib/onboarding-v2-profile";
+import {
+  normalizeOnboardingUsername,
+  persistThenAdvance,
+  profileContinueDisabled,
+  shouldRecheckUsername,
+} from "@/lib/onboarding-v2-profile";
 import { DS_V3 } from "@/lib/design-system";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
@@ -42,10 +47,14 @@ export default function ProfileScreen({
   const [availability, setAvailability] = useState<"idle" | "checking" | "available" | "taken">(
     "idle"
   );
+  const [lastResultValue, setLastResultValue] = useState<string | null>(null);
 
   const checkUsername = useCallback(async (value: string) => {
     if (value.length < 3) {
       setAvailability("idle");
+      return;
+    }
+    if (!shouldRecheckUsername({ value, lastCheckedValue: lastResultValue })) {
       return;
     }
     setAvailability("checking");
@@ -53,16 +62,21 @@ export default function ProfileScreen({
       const result = await trpcQuery<{ available: boolean }>(TRPC.profiles.checkUsername, {
         username: value,
       });
+      setLastResultValue(value);
       setAvailability(result.available ? "available" : "taken");
     } catch (e) {
       captureError(e, "OnboardingV2CheckUsername");
       setAvailability("idle");
     }
-  }, []);
+  }, [lastResultValue]);
 
   useEffect(() => {
     if (username.length < 3) {
       setAvailability("idle");
+      setLastResultValue(null);
+      return;
+    }
+    if (!shouldRecheckUsername({ value: username, lastCheckedValue: lastResultValue })) {
       return;
     }
     setAvailability("checking");
@@ -70,7 +84,7 @@ export default function ProfileScreen({
       void checkUsername(username);
     }, 400);
     return () => clearTimeout(t);
-  }, [username, checkUsername]);
+  }, [username, checkUsername, lastResultValue]);
 
   const handlePick = useCallback(async () => {
     try {
@@ -141,7 +155,12 @@ export default function ProfileScreen({
         <>
           <ChromePrimary
             label="Continue"
-            disabled={saving || availability === "taken" || availability === "checking"}
+            disabled={profileContinueDisabled({
+              saving,
+              username,
+              availability,
+              lastResultValue,
+            })}
             onPress={() => void persistThen(onContinue)}
           />
           <TextLink label="Skip for now" onPress={onSkip} />
@@ -169,7 +188,11 @@ export default function ProfileScreen({
           label="Username"
           value={username}
           onChangeText={(t) => setUsernameField(normalizeOnboardingUsername(t))}
-          onBlur={() => void checkUsername(username)}
+          onBlur={() => {
+            if (shouldRecheckUsername({ value: username, lastCheckedValue: lastResultValue })) {
+              void checkUsername(username);
+            }
+          }}
           placeholder="username"
           autoCap="none"
           hint={

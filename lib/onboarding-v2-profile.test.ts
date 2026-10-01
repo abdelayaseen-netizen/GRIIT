@@ -1,6 +1,41 @@
 import { describe, expect, it, vi } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
-import { normalizeOnboardingUsername, persistThenAdvance } from "@/lib/onboarding-v2-profile";
+import {
+  normalizeOnboardingUsername,
+  persistThenAdvance,
+  profileContinueDisabled,
+  shouldRecheckUsername,
+} from "@/lib/onboarding-v2-profile";
+
+describe("profile Continue after keyboard dismiss", () => {
+  it("stays enabled when an available name is blurred", () => {
+    expect(shouldRecheckUsername({ value: "maya", lastCheckedValue: "maya" })).toBe(false);
+    expect(
+      profileContinueDisabled({
+        saving: false,
+        username: "maya",
+        availability: "checking",
+        lastResultValue: "maya",
+      }),
+    ).toBe(false);
+    expect(
+      profileContinueDisabled({
+        saving: false,
+        username: "maya",
+        availability: "available",
+        lastResultValue: "maya",
+      }),
+    ).toBe(false);
+    expect(
+      profileContinueDisabled({
+        saving: false,
+        username: "newname",
+        availability: "checking",
+        lastResultValue: "maya",
+      }),
+    ).toBe(true);
+  });
+});
 
 describe("normalizeOnboardingUsername", () => {
   it("strips backticks, lowercases, and drops spaces", () => {
