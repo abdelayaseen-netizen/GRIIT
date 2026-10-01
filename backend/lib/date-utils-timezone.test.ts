@@ -1,10 +1,23 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
+  dateKeyFromIsoInTimeZone,
   elapsedWeekEnded,
   getTodayDateKey,
   getWeekStartDateKey,
   resolveCheckInTimeZone,
 } from "./date-utils";
+
+describe("dateKeyFromIsoInTimeZone", () => {
+  it("does not throw Invalid time value on null, empty, or unparseable start_at", () => {
+    expect(dateKeyFromIsoInTimeZone(undefined, "UTC")).toBe("");
+    expect(dateKeyFromIsoInTimeZone(null, "UTC")).toBe("");
+    expect(dateKeyFromIsoInTimeZone("", "America/New_York")).toBe("");
+    expect(dateKeyFromIsoInTimeZone("not-a-date", "UTC")).toBe("");
+    expect(dateKeyFromIsoInTimeZone("2026-09-01T00:00:00.000Z", "UTC")).toBe("2026-09-01");
+    expect(dateKeyFromIsoInTimeZone("2026-10-01", "UTC")).toBe("2026-10-01");
+    expect(dateKeyFromIsoInTimeZone("2026-09-01T00:00:00.000Z", "Not/AZone")).toBe("2026-09-01");
+  });
+});
 
 describe("elapsedWeekEnded — Monday week in profile IANA", () => {
   it("Monday → zero, Saturday → five, Sunday → six", () => {

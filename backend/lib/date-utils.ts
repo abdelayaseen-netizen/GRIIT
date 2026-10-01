@@ -15,7 +15,12 @@ export function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): st
   return dt.toISOString().slice(0, 10);
 }
 
+function isValidDate(instant: Date): boolean {
+  return !Number.isNaN(instant.getTime());
+}
+
 function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
+  if (!isValidDate(isoInstant)) return "";
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -27,6 +32,7 @@ function formatDateKeyInTimeZone(isoInstant: Date, timeZone: string): string {
 }
 
 export function dateKeyInTimeZone(instant: Date, timezone?: string | null): string {
+  if (!isValidDate(instant)) return "";
   const tz = timezone?.trim() || "UTC";
   try {
     return formatDateKeyInTimeZone(instant, tz);
@@ -191,12 +197,18 @@ export function calendarDayIndexInclusive(startDateKey: string, endDateKey: stri
   return Math.floor((u2 - u1) / 86400000) + 1;
 }
 
-/** UTC date key for an ISO instant rendered in `timeZone` (same helper as streak / check-ins). */
-export function dateKeyFromIsoInTimeZone(iso: string, timeZone: string): string {
+/** Calendar date of an ISO instant in `timeZone`. Empty input or an unparseable instant returns "". */
+export function dateKeyFromIsoInTimeZone(
+  iso: string | null | undefined,
+  timeZone?: string | null,
+): string {
+  if (iso == null || String(iso).trim() === "") return "";
+  const instant = new Date(iso);
+  if (!isValidDate(instant)) return "";
   try {
-    return formatDateKeyInTimeZone(new Date(iso), timeZone);
+    return formatDateKeyInTimeZone(instant, timeZone?.trim() || "UTC");
   } catch {
-    return new Date(iso).toISOString().slice(0, 10);
+    return instant.toISOString().slice(0, 10);
   }
 }
 

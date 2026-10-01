@@ -269,21 +269,24 @@ export async function loadDayTaskTally(
     .in("challenge_id", challengeIds)
     .limit(400);
   const required = ((taskRows ?? []) as ChallengeTaskRowRaw[]).filter((t) => isTaskRequired(t));
-  const enrollments: EnrollmentTasks[] = acRows.map((row) => ({
-    startDateKey: dateKeyFromIsoInTimeZone(row.start_at, timezone),
-    endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
-    tasks: required
-      .filter((t) => t.challenge_id === row.challenge_id)
-      .map((t) => ({ id: t.id, title: (t.title ?? "Task").trim() || "Task" })),
-  }));
-  const ranges = acRows.map((row) => {
+  const enrollments: EnrollmentTasks[] = [];
+  const ranges: { status: string; startDateKey: string; endDateKey: string }[] = [];
+  for (const row of acRows) {
     const startDateKey = dateKeyFromIsoInTimeZone(row.start_at, timezone);
-    return {
+    if (!startDateKey) continue;
+    enrollments.push({
+      startDateKey,
+      endDateKey: dateKeyFromIsoInTimeZone(row.end_at, timezone),
+      tasks: required
+        .filter((t) => t.challenge_id === row.challenge_id)
+        .map((t) => ({ id: t.id, title: (t.title ?? "Task").trim() || "Task" })),
+    });
+    ranges.push({
       status: row.status,
       startDateKey,
       endDateKey: exclusiveEndDateKey(row, startDateKey, timezone),
-    };
-  });
+    });
+  }
   const completedIds = ((cinRes.data ?? []) as { task_id?: string; status?: string }[])
     .filter((r) => !r.status || r.status === "completed")
     .map((r) => r.task_id)
