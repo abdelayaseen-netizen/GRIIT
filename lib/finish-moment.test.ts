@@ -13,6 +13,8 @@ import {
   finishAlsoTodayLabel,
   finishLetter,
   finishNextLabel,
+  finishFeedState,
+  finishKeepLabel,
   finishPrimaryCta,
   finishSaveFromElapsed,
   finishShareLabel,
@@ -38,8 +40,15 @@ describe("finish moment A–F from save and secured_today", () => {
     expect(FINISH_FAILED_BODY).toContain("Nothing was saved and nothing was shared");
     expect(finishAlsoTodayLabel(1)).toBe("Also today · 1 task");
     expect(finishAlsoTodayLabel(2)).toBe("Also today · 2 tasks");
-    expect(finishShareLabel("none")).toBe("Share to the feed");
-    expect(finishShareLabel("feed_held")).toBe("Shares when saved");
+    expect(finishShareLabel("idle")).toBe("Share to the feed");
+    expect(finishShareLabel("held")).toBe("Sharing when saved");
+    expect(finishShareLabel("shared")).toBe("Shared to the feed");
+    expect(finishKeepLabel("idle")).toBe("Keep it to the record");
+    expect(finishKeepLabel("shared")).toBe("Done");
+    expect(finishFeedState({ share: "none", posted: false })).toBe("idle");
+    expect(finishFeedState({ share: "feed_held", posted: false })).toBe("held");
+    expect(finishFeedState({ share: "feed_held", posted: true })).toBe("shared");
+    expect(finishFeedState({ share: "none", posted: true })).toBe("shared");
   });
 });
 
@@ -117,7 +126,8 @@ describe("next task skips closed windows the way Home does", () => {
     expect(src).toContain("homeWindowClosed");
     expect(ui).toContain("finishPrimaryCta");
     expect(ui).toContain("onLeave");
-    expect(ui).not.toContain("onStory");
+    expect(ui).toContain("ShareActions");
+    expect(ui).toContain("onStory={openSheet}");
   });
 });
 
@@ -139,6 +149,27 @@ describe("also today skips pre-start enrollments like Home", () => {
         "current",
       ),
     ).toEqual([{ id: "next", title: "Run", gate_line: "Camera" }]);
+  });
+});
+
+describe("ShareActions idle held shared", () => {
+  it("keeps Story after a feed share and never stacks text with Copy", () => {
+    const actions = readFileSync(
+      resolve(__dirname, "../components/share/ShareActions.tsx"),
+      "utf8",
+    );
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      "utf8",
+    );
+    expect(actions).toContain("storyAvailable");
+    expect(actions).toContain("FINISH_SHARED");
+    expect(actions).toContain("FINISH_SHARE_HELD");
+    expect(actions).toContain("FINISH_STORY");
+    expect(actions).toContain("height: AUX_H");
+    expect(actions).toContain("const AUX_H = 40");
+    expect(sheet).toContain("COPY_CAPTION");
+    expect(sheet).toContain("stickerStyleCaption");
   });
 });
 

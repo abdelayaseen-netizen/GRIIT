@@ -68,8 +68,8 @@ describe("proof moment wiring", () => {
     expect(flow).not.toContain("hasCameraProof ? { shareChoicePending");
     expect(flow).toContain("TRPC.checkins.shareProof");
     expect(flow).toContain("closingProofEventId");
-    expect(screen).toContain("finishShareLabel");
-    expect(screen).toContain("FINISH_KEEP");
+    expect(screen).toContain("finishFeedState");
+    expect(screen).toContain("ShareActions");
     expect(screen).not.toContain("shareProgressImage");
   });
 });

@@ -16,8 +16,13 @@ export const SHARE_BG_CLEAR = "Clear";
 export const SHARE_BG_CARD = "Card";
 export const SHARE_BG_PHOTO = "Photo";
 export const SHARE_BG_ITEMS = [SHARE_BG_CLEAR, SHARE_BG_CARD, SHARE_BG_PHOTO] as const;
-export const SHARE_CLEAR_CAPTION =
-  "Clear is a transparent sticker. Lay it over your own photo in Instagram.";
+export const STICKER_STYLES = [
+  { id: "clear", label: "Clear", caption: "Transparent sticker to paste over your own photo" },
+  { id: "card", label: "Card", caption: "Dark card" },
+  { id: "photo", label: "Photo", caption: "Your proof photo" },
+] as const;
+export const COPY_CAPTION = "Paste it as a sticker in Instagram.";
+export const SHARE_CLEAR_CAPTION = STICKER_STYLES[0].caption;
 export const SHARE_PHOTO_PRIVATE = "This photo is private, so it can't be used here.";
 export const SHARE_STORY = "Instagram Story";
 export const SHARE_COPY = "Copy";
@@ -75,6 +80,10 @@ export function photoBackgroundAllowed(args: {
   if (!args.hasPhoto) return "absent";
   if (!args.photoShared) return "private";
   return "ok";
+}
+
+export function stickerStyleCaption(bg: StickerBackground): string {
+  return STICKER_STYLES.find((s) => s.id === bg)?.caption ?? "";
 }
 
 export function stickerBackgrounds(photo: PhotoBackground): StickerBackground[] {

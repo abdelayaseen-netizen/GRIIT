@@ -12,6 +12,7 @@ import { gateLine } from "@/lib/task-ui";
 
 export type SaveState = "saving" | "slow" | "saved" | "failed";
 export type ShareIntent = "none" | "feed_held";
+export type ShareFeedState = "idle" | "held" | "shared";
 export type FinishAfter = "failed" | "saved" | "secured_nav";
 export type HeldShareAction = "call_share" | "drop" | "keep_held";
 
@@ -25,8 +26,9 @@ export const FINISH_STATUS: Record<SaveState, string> = {
 };
 
 export const FINISH_SHARE = "Share to the feed";
-export const FINISH_SHARE_HELD = "Shares when saved";
-export const FINISH_STORY = "Story";
+export const FINISH_SHARE_HELD = "Sharing when saved";
+export const FINISH_SHARED = "Shared to the feed";
+export const FINISH_STORY = "Share to Instagram Story";
 export const FINISH_DONE = "Done";
 export const FINISH_TRY_AGAIN = "Try again";
 export const FINISH_NEXT = "Next task";
@@ -86,8 +88,23 @@ export function finishPrimaryCta(title?: string | null): string {
   return t ? finishNextLabel(t) : FINISH_BACK_HOME;
 }
 
-export function finishShareLabel(share: ShareIntent): string {
-  return share === "feed_held" ? FINISH_SHARE_HELD : FINISH_SHARE;
+export function finishFeedState(args: {
+  share: ShareIntent;
+  posted: boolean;
+}): ShareFeedState {
+  if (args.posted) return "shared";
+  if (args.share === "feed_held") return "held";
+  return "idle";
+}
+
+export function finishShareLabel(feed: ShareFeedState): string {
+  if (feed === "held") return FINISH_SHARE_HELD;
+  if (feed === "shared") return FINISH_SHARED;
+  return FINISH_SHARE;
+}
+
+export function finishKeepLabel(feed: ShareFeedState): string {
+  return feed === "shared" ? FINISH_DONE : FINISH_KEEP;
 }
 
 /** Pending save. After 3 s the status becomes slow. */
