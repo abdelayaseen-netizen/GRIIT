@@ -982,3 +982,42 @@ Frames 114–123, in `GRIIT v41 Finish Time Record.dc.html`. Source is in `src/c
 - **F6, F9 and F10 are judged without the build 65 screenshots**, which aren't in the project. The deltas rest on your descriptions, not the device. Re-attach them and I'll re-audit.
 - **The two definitions of Standard (open question 2) are unresolved.** The Rules copy assumes freezes-only.
 - **The Secured-with-share frame (114 F) redraws frame 59's layout** rather than referencing its source directly. Check it against the shipped Secured screen.
+
+
+## v42 · Chunk D — Home, Feed, Profile, Badges, Onboarding (frames 124–143)
+
+File: `GRIIT v42 Chunk D.dc.html`. Source: `src/components/v42/`. Spec: `cursor/02_screens.md` → "v42 · Chunk D". No new tokens.
+
+**What changed**
+- **Home.** Order: hero, morning-after, Today, This week, Following. The hero line is "{n} of {m} days secured since {date}". No percentage. Freezes are a chip. The week strip clears the tab bar.
+- **Feed.** Photo posts have a camera seal instead of VERIFIED. Self-reported and text completions are compact rows. Joins are one line with guests excluded. Double tap respects the whole post; the heart still toggles.
+- **Profile.** Instagram header: 80pt avatar and four stats that never truncate. Icon tabs. The v41 calendar is kept, restyled only. Challenges are cards with a day strip.
+- **Badges.** Twelve badges, each from a named server fact, with an earned and a locked mark.
+- **Onboarding.** The secured contradiction is fixed. The privacy line is true. A self-playing demo card replaces the paragraphs. Start here only offers multi-day catalog challenges.
+- **Finish.** The feed and Story are two actions, and both stay available.
+- **System.** ScreenChrome is a solid top band on every screen. Avatars fall back to initials everywhere.
+
+**Decisions I made**
+1. The earned numbers (streak, secured) use the hero face in the profile stats; the social counts use 500. This shows earned against social at a glance.
+2. There are 12 badges, not 13. The 100-day streak was cut: it overlaps 100 days secured, and 75 is the longest preset.
+3. The freeze chip is hidden at 0 and on No Days Off. A "0" chip repeats the floating "0 freezes left" problem.
+4. The morning-after block is an outline with no fill, so it sits below the filled Today card in weight.
+5. There are two avatar tints, both from existing tokens. This adds no new colour.
+6. The profile buttons are 36pt, with a 4pt hitSlop to reach 44.
+7. The seal applies to stickers as well as posts (contradiction 118).
+
+**v42.1 (founder review):** SF Pro 800 for earned numbers (LOCKED fixed); Home ends with Following ×3 + "See all in Activity"; seal everywhere including stickers; guests are `username is null` or `is_guest`, filtered server-side; a double tap on your own post does nothing. Fixes: Start here pre-selects the closest length and puts No Days Off last, never pre-selected; challenge strips are capped at 14 segments with "{secured} of {due} days"; system lines carry the 32pt avatar. Added 144 (privacy copy) and 145 (challenge detail "Done for today"). Frame 111's "Today is secured." is now "Done for today."
+
+**Self-score: 8.5 / 10**, measured against ACCEPTANCE.
+- Met: every frame is 393pt; ScreenChrome is on every phone; every number traces to a field in the spec; copy tables are complete; components are listed; no percentages.
+- Below 9, **real copy from the screenshots**: no new screenshots arrived with this brief. The newest in uploads are the Sep 25 set. I built from the copy quoted in the brief and from earlier frames.
+- Below 9, **LOCKED rules**: two items conflict with later decisions (Barlow, and the feed on Home). I followed the later decisions and flagged them rather than silently breaking either.
+
+**Open questions**, all answered in the v42 review. The one left: the section 7 and 8 text and the screenshots did not arrive, so 144 and 145 are drafts from the rules.
+
+~~Original questions~~
+1. Barlow or SF Pro 800 for earned numbers? *Recommend SF Pro 800 (v40). Fix the brief's LOCKED list.*
+2. Should Home carry a feed? *Recommend the Following list as drawn, at most 3 items, with "See all in Activity". Home stays about today, and followers still show up there.*
+3. Should frame 100's check mark be retired everywhere? *Recommend yes, the seal everywhere, including stickers.*
+4. What counts as a guest? *Recommend `username is null` or `is_guest = true`, filtered in the feed query.*
+5. Should a double tap on your own post respect it? *Recommend no: it opens nothing and does nothing. Own-post respect is already disabled.*

@@ -3,6 +3,17 @@ branch: main
 
 ## Last sync
 
+date: 2026-09-30T00:32:56Z
+
+### Updated in this project
+
+- Read `app/settings/privacy.tsx` and drew Settings → Privacy as frame 144 B with the five replacement strings.
+- Grepped `365-day` and `verified the day` across app/, components/, lib/ (partial), backend/ and claude/design/; hits listed in `cursor/05_diff_from_current_app.md` item 10.
+
+## Sync history
+
+### Previous sync
+
 date: 2026-09-25T22:05:52Z
 commit: f3c70b6
 
@@ -15,7 +26,6 @@ commit: f3c70b6
 - Restored the five real badges from `components/ds/Badges.tsx` and frame 21 after an earlier pass invented a new set; the stamp language (no icons, no circles, no cards) holds.
 - Logged contradictions 64 to 74, including `FeedEngagementRow` on the daylight palette and its counts hidden at zero.
 
-## Sync history
 
 date: 2026-09-18T22:41:47Z
 tree: 9e4f1d5897ae
@@ -112,5 +122,6 @@ tree: 9e4f1d5897ae
 | 66 One number | `lib/profile-consistency.ts`, `backend/trpc/routes/profiles-record.ts` |
 | 87-92 Profile, proofs, consistency, badges | `app/(tabs)/profile.tsx`, `app/profile/record.tsx`, `components/ds/Badges.tsx` |
 | 93-96 Feed cards, comments, board, week strip | `components/feed/{FeedPostV3,FeedEngagementRow,FeedPostCard}.tsx`, `components/ds/WeekStrip.tsx`, `app/(tabs)/index.tsx` |
+| 144 B Settings → Privacy | `app/settings/privacy.tsx` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |
