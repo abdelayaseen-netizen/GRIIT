@@ -1,19 +1,16 @@
 /**
- * Profile → Challenges. Running / Finished. Port of
- * design/handoff/src/components/ProfileChallenges.tsx on DS_V3.
+ * Profile → Challenges. Running / Finished. ChallengeCard, no footnote.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { ChallengeCard } from "@/components/profile/ChallengeCard";
 import {
-  detailLine,
-  statusLine,
+  cardChip,
+  cardDue,
+  cardLine,
   type ChallengeRow,
 } from "@/lib/profile-challenges";
-
-export const FINISHED_PREDATE_CAPTION =
-  "Runs that ended before this version shipped are here too, without an end screen.";
 
 export function ProfileChallenges({
   challenges,
@@ -24,6 +21,7 @@ export function ProfileChallenges({
   formatDate: (iso: string) => string;
   onOpen?: (row: ChallengeRow) => void;
 }) {
+  void formatDate;
   const running = challenges.filter((c) => c.status === "active");
   const finished = challenges
     .filter((c) => c.status !== "active")
@@ -35,11 +33,19 @@ export function ProfileChallenges({
         <>
           <Text style={styles.section}>Running</Text>
           <View style={styles.gutter}>
-            {running.map((c, i) => (
-              <React.Fragment key={c.id}>
-                {i > 0 ? <View style={styles.rule} /> : null}
-                <Row c={c} fmt={formatDate} onPress={() => onOpen?.(c)} />
-              </React.Fragment>
+            {running.map((c) => (
+              <View key={c.id} style={styles.cardWrap}>
+                <ChallengeCard
+                  title={c.title}
+                  status={c.status}
+                  line={cardLine(c)}
+                  todayChip={cardChip(c)}
+                  days={c.segs ?? []}
+                  secured={c.secured_days}
+                  due={cardDue(c)}
+                  onPress={() => onOpen?.(c)}
+                />
+              </View>
             ))}
           </View>
         </>
@@ -49,43 +55,21 @@ export function ProfileChallenges({
         <>
           <Text style={styles.section}>Finished</Text>
           <View style={styles.gutter}>
-            {finished.map((c, i) => (
-              <React.Fragment key={c.id}>
-                {i > 0 ? <View style={styles.rule} /> : null}
-                <Row c={c} fmt={formatDate} onPress={() => onOpen?.(c)} />
-              </React.Fragment>
+            {finished.map((c) => (
+              <View key={c.id} style={styles.cardWrap}>
+                <ChallengeCard
+                  title={c.title}
+                  status={c.status}
+                  line={cardLine(c)}
+                  days={c.segs ?? []}
+                  onPress={() => onOpen?.(c)}
+                />
+              </View>
             ))}
           </View>
-          <Text style={styles.foot}>{FINISHED_PREDATE_CAPTION}</Text>
         </>
       ) : null}
     </View>
-  );
-}
-
-function Row({
-  c,
-  fmt,
-  onPress,
-}: {
-  c: ChallengeRow;
-  fmt: (iso: string) => string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${c.title} challenge`}
-      style={styles.row}
-    >
-      <View style={styles.col}>
-        <Text style={styles.title}>{c.title}</Text>
-        <Text style={styles.caption}>{detailLine(c, fmt)}</Text>
-      </View>
-      <Text style={styles.caption}>{statusLine(c)}</Text>
-      <ChevronRight size={18} color={DS_V3.color.textSecondary} />
-    </Pressable>
   );
 }
 
@@ -93,7 +77,7 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: 14,
-    paddingBottom: 2,
+    paddingBottom: 8,
     fontSize: DS_V3.type.label.fontSize,
     lineHeight: DS_V3.type.label.lineHeight,
     fontWeight: DS_V3.type.label.fontWeight,
@@ -101,34 +85,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: DS_V3.color.textSecondary,
   },
-  gutter: { paddingHorizontal: DS_V3.space.gutter },
-  rule: { height: 1, backgroundColor: DS_V3.color.border },
-  row: {
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.md,
-    minHeight: DS_V3.size.tap,
-  },
-  col: { flex: 1, gap: 1 },
-  title: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  caption: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  foot: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: 14,
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
+  gutter: { paddingHorizontal: DS_V3.space.gutter, gap: 10 },
+  cardWrap: {},
 });

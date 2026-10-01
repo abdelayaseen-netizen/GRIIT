@@ -148,6 +148,7 @@ export type ProfileRecord = {
     missed: number;
     tasksPerDay: number;
     days: DayState[];
+    startDateKey?: string;
   }[];
   completed: {
     id: string;
@@ -357,6 +358,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
         missed,
         tasksPerDay: range.tasksPerDay,
         days: runStates(range.durationDays, Math.min(elapsed, range.durationDays), misses),
+        startDateKey: range.startDateKey,
       };
     });
 

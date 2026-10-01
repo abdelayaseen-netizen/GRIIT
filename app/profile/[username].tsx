@@ -55,6 +55,8 @@ import {
   type DaySource,
 } from "@/lib/day-state";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
+import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
+import { rowsFromProfileRecord } from "@/lib/profile-challenges";
 
 type RecordPayload = ProfileRecord & {
   timezone: string;
@@ -361,7 +363,24 @@ export default function VisitorProfileScreen() {
                   : { heading: lockTitle, body: lockBody }
               }
               proofsInParent
+              challengesInParent
             />
+            {tab === "Challenges" && gate.profile ? (
+              <ProfileChallenges
+                challenges={rowsFromProfileRecord(rec ?? { runs: [], completed: [] }, {
+                  todaySecured: !!rec && rec.streak.lastCompletedDateKey === rec.todayKey,
+                  formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
+                })}
+                formatDate={(key) => formatDayMonthYear(key.slice(0, 10))}
+                onOpen={(row) =>
+                  router.push(
+                    (row.status === "active"
+                      ? ROUTES.CHALLENGE_ACTIVE(row.id)
+                      : ROUTES.CHALLENGE_ID(row.challengeId)) as never,
+                  )
+                }
+              />
+            ) : null}
             </>
             }
             renderItem={() => null}

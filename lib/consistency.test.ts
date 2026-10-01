@@ -44,9 +44,9 @@ describe("consistency builders", () => {
     expect(profile).toContain("consistencyContext");
     expect(profile).toContain("consistencyContext(consistency, formatSinceDate, todaySecured)");
     expect(profile).toContain("header.secured");
-    const profileV3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
-    expect(profileV3).toContain("numberOfLines={2}");
-    expect(profileV3).not.toContain("numberOfLines={1}");
+    const header = readFileSync(resolve(__dirname, "../components/profile/ProfileHeader.tsx"), "utf8");
+    expect(header).toContain("numberOfLines={1}");
+    expect(header).toContain("compact(");
     expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");

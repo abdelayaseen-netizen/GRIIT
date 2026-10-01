@@ -223,6 +223,7 @@ export default function ProfileScreen() {
     : "";
   const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
     todaySecured,
+    formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
   });
 
   return (

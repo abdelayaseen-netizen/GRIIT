@@ -32,7 +32,7 @@ describe("initialsFrom", () => {
     const avatar = readFileSync(resolve(__dirname, "../components/ds/Avatar.tsx"), "utf8");
     expect(avatar).not.toMatch(/\bUser\b/);
     expect(avatar).toContain("avatarTint");
-    const profile = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
+    const profile = readFileSync(resolve(__dirname, "../components/profile/ProfileHeader.tsx"), "utf8");
     expect(profile).toContain("size={80}");
   });
 
