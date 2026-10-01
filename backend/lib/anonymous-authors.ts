@@ -1,7 +1,8 @@
 /**
  * Everyone feed / social counts: drop anonymous Supabase sessions.
- * Flag is auth.users.is_anonymous (service-role admin.getUserById).
- * Anon upgrade keeps the same uid and sets is_anonymous false.
+ * Spec 120 resolved: is_anonymous. Flag is auth.users.is_anonymous
+ * (service-role admin.getUserById). Anon upgrade keeps the same uid
+ * and sets is_anonymous false.
  * There is no profiles.is_guest column — do not filter usernames.
  */
 

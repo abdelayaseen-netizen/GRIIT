@@ -3,19 +3,17 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Settings, Share2 } from "lucide-react-native";
+import { Award, CalendarDays, Flag, Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { dayWord, formatDays } from "@/lib/format-days";
-import Avatar from "@/components/ds/Avatar";
 import { type BadgeItem } from "@/components/ds/Badges";
+import { BadgeGrid } from "@/components/profile/BadgeGrid";
 import { BadgeRows } from "@/components/profile/BadgeRows";
-import Button from "@/components/ds/Button";
-import DisplayNumber from "@/components/ds/DisplayNumber";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import EmptyState from "@/components/ds/EmptyState";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import ProofImage from "@/components/ds/ProofImage";
 import RootHeader from "@/components/ds/RootHeader";
-import SegmentedControl from "@/components/ds/SegmentedControl";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { streakLineFor } from "@/lib/home-streak";
 
@@ -52,6 +50,7 @@ export type ProfileV3Proof = {
 };
 
 export type ProfileV3Props = {
+  userId?: string | null;
   title: string;
   handle: string;
   avatarUrl?: string | null;
@@ -69,6 +68,8 @@ export type ProfileV3Props = {
   runs: ProfileV3Run[];
   proofs: ProfileV3Proof[];
   badges: BadgeItem[];
+  badgeGrid?: V42BadgeState[];
+  onShareBadge?: (badge: V42BadgeState) => void;
   onShare: () => void;
   onSettings?: () => void;
   onEditProfile?: () => void;
@@ -91,6 +92,7 @@ export type ProfileV3Props = {
 };
 
 export function ProfileV3({
+  userId,
   title,
   handle,
   avatarUrl,
@@ -98,6 +100,7 @@ export function ProfileV3({
   following,
   bio,
   streak,
+  totalDaysSecured,
   consistency,
   consistencySub,
   tab,
@@ -105,6 +108,8 @@ export function ProfileV3({
   runs,
   proofs,
   badges,
+  badgeGrid,
+  onShareBadge,
   onShare,
   onSettings,
   onEditProfile,
@@ -123,6 +128,10 @@ export function ProfileV3({
   proofsInParent = false,
   challengesInParent = false,
 }: ProfileV3Props) {
+  void consistency;
+  void consistencySub;
+  void onSeeRecord;
+  void onInvite;
   return (
     <View>
       {showRootHeader ? (
@@ -143,65 +152,26 @@ export function ProfileV3({
         />
       ) : null}
 
-      <View style={styles.identity}>
-        <Avatar size={56} uri={avatarUrl} displayName={title} />
-        <View style={styles.idCol}>
-          <Text style={styles.name}>{title}</Text>
-          <Text style={styles.handle}>
-            @{handle} ·{" "}
-            <Text
-              onPress={onFollowing}
-              accessibilityRole="button"
-              accessibilityLabel={`${following} following`}
-            >
-              {following} following
-            </Text>
-            {" · "}
-            <Text
-              onPress={onFollowers}
-              accessibilityRole="button"
-              accessibilityLabel={`${followers} followers`}
-            >
-              {followers} followers
-            </Text>
-          </Text>
-        </View>
-      </View>
-
-      {bio ? (
-        <Text style={styles.bio}>{bio}</Text>
-      ) : onEditProfile ? (
-        <Pressable
-          style={styles.bioPrompt}
-          onPress={onEditProfile}
-          accessibilityRole="button"
-          accessibilityLabel="Add a line about what you are building"
-        >
-          <Text style={styles.secondary}>Add a line about what you are building</Text>
-        </Pressable>
-      ) : null}
-
-      <View style={styles.btnRow}>
-        {onFollow ? (
-          <View style={styles.flex}>
-            <Button
-              label={followLabel ?? "Request to follow"}
-              variant="secondary"
-              disabled={followDisabled}
-              onPress={onFollow}
-            />
-          </View>
-        ) : (
-          <>
-            <View style={styles.flex}>
-              <Button label="Edit profile" variant="secondary" onPress={onEditProfile} />
-            </View>
-            <View style={styles.flex}>
-              <Button label="Invite friends" variant="secondary" onPress={onInvite} />
-            </View>
-          </>
-        )}
-      </View>
+      <ProfileHeader
+        userId={userId ?? ""}
+        avatarUrl={avatarUrl}
+        displayName={title}
+        username={handle}
+        bio={bio}
+        streakDays={locked ? 0 : streak}
+        securedDays={locked ? 0 : (totalDaysSecured ?? 0)}
+        followers={followers}
+        following={following}
+        isOwner={!onFollow}
+        isFollowing={followLabel === "Following"}
+        followLabel={followLabel}
+        onEdit={onEditProfile ?? (() => undefined)}
+        onFollow={followDisabled ? () => undefined : (onFollow ?? (() => undefined))}
+        onShare={onShare}
+        onEditBio={onEditProfile ?? (() => undefined)}
+        onFollowers={onFollowers}
+        onFollowing={onFollowing}
+      />
 
       {locked ? (
         <View style={styles.lock}>
@@ -210,24 +180,26 @@ export function ProfileV3({
         </View>
       ) : (
         <>
-      <Pressable
-        onPress={onSeeRecord}
-        accessibilityRole="button"
-        accessibilityLabel={`${formatDays(streak)} streak. ${consistency}`}
-        style={styles.mergeRow}
-      >
-        <View style={styles.mergeHalf}>
-          <DisplayNumber value={streak} size="inline" />
-          <Text style={styles.caption}>{dayWord(streak)} streak</Text>
-        </View>
-        <View style={styles.mergeHalf}>
-          <Text style={styles.mergeConsist}>{consistency}</Text>
-          {consistencySub ? <Text style={styles.caption} numberOfLines={2}>{consistencySub}</Text> : null}
-        </View>
-      </Pressable>
-
       <View style={styles.seg}>
-        <SegmentedControl items={[...TABS]} value={tab} onChange={(v) => onChangeTab(v as (typeof TABS)[number])} />
+        <View style={styles.iconTabs}>
+          {TABS.map((item) => {
+            const Icon = item === "Proofs" ? CalendarDays : item === "Challenges" ? Flag : Award;
+            const on = tab === item;
+            return (
+              <Pressable
+                key={item}
+                onPress={() => onChangeTab(item)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={item}
+                style={styles.iconTab}
+              >
+                <Icon size={22} color={on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary} />
+                {on ? <View style={styles.iconUnderline} /> : <View style={styles.iconGap} />}
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       <View style={styles.tabBody}>
@@ -290,6 +262,9 @@ export function ProfileV3({
         ) : null}
 
         {tab === "Badges" ? (
+          badgeGrid ? (
+            <BadgeGrid badges={badgeGrid} onShare={onShareBadge} />
+          ) : (
           <BadgeRows
             badges={
               badges.length > 0
@@ -300,6 +275,7 @@ export function ProfileV3({
             }
             footnote={FOOTNOTE}
           />
+          )
         ) : null}
       </View>
 
@@ -403,6 +379,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.section,
   },
+  iconTabs: { flexDirection: "row", justifyContent: "space-around" },
+  iconTab: { minHeight: 44, minWidth: 44, alignItems: "center", justifyContent: "flex-end", gap: 6 },
+  iconUnderline: { width: 22, height: 1.5, backgroundColor: DS_V3.color.textPrimary },
+  iconGap: { width: 22, height: 1.5 },
   tabBody: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.md,

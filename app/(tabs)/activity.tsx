@@ -1,30 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import LiveFeedSection from "@/components/LiveFeedSection";
 import { NotificationsTab } from "@/components/activity/NotificationsTab";
 import { LeaderboardTab } from "@/components/activity/LeaderboardTab";
 import RootHeader from "@/components/ds/RootHeader";
 import SegmentedControl from "@/components/ds/SegmentedControl";
 import { DS_V3 } from "@/lib/design-system";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 
-type MainTab = "notifications" | "leaderboard";
+type MainTab = "feed" | "notifications" | "leaderboard";
 
 function isMainTab(value: string | undefined): value is MainTab {
-  return value === "notifications" || value === "leaderboard";
+  return value === "feed" || value === "notifications" || value === "leaderboard";
 }
 
-const SEGMENTS = ["Notifications", "Leaderboard"] as const;
+const SEGMENTS = ["Feed", "Notifications", "Leaderboard"] as const;
 
 export default function ActivityScreen() {
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const initialTab: MainTab = isMainTab(tab) ? tab : "notifications";
+  const initialTab: MainTab = isMainTab(tab) ? tab : "feed";
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
+  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
   useEffect(() => {
     if (isMainTab(tab) && tab !== mainTab) {
@@ -36,21 +41,25 @@ export default function ActivityScreen() {
 
   if (isGuest || !user?.id) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.guestWrap}>
           <Text style={styles.guestText}>
-            Sign in to see notifications and leaderboards.
+            Sign in to see the feed, notifications and leaderboards.
           </Text>
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
-  const segment = mainTab === "notifications" ? "Notifications" : "Leaderboard";
+  const segment =
+    mainTab === "leaderboard" ? "Leaderboard" : mainTab === "notifications" ? "Notifications" : "Feed";
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.segment}>
@@ -58,18 +67,30 @@ export default function ActivityScreen() {
             items={[...SEGMENTS]}
             value={segment}
             onChange={(v) =>
-              setMainTab(v === "Leaderboard" ? "leaderboard" : "notifications")
+              setMainTab(
+                v === "Leaderboard" ? "leaderboard" : v === "Notifications" ? "notifications" : "feed",
+              )
             }
           />
         </View>
         <View style={styles.tabShell}>
-          {mainTab === "notifications" ? (
+          {mainTab === "feed" ? (
+            <LiveFeedSection
+              activeChallengesCount={countActiveEnrollments(
+                (Array.isArray(bootstrap.data?.activeChallenges)
+                  ? bootstrap.data.activeChallenges
+                  : []) as { status?: string }[],
+              )}
+              viewerTargetStreak={bootstrap.data?.profile?.target_streak ?? null}
+            />
+          ) : mainTab === "notifications" ? (
             <NotificationsTab userId={user.id} />
           ) : (
             <LeaderboardTab userId={user.id} />
           )}
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

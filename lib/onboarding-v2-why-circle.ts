@@ -1,2 +1,1 @@
-export const WHY_CIRCLE_VISIBILITY =
-  "Everyone in the challenge sees your proof. Outside it, the challenge's visibility and your own profile settings decide who else does.";
+export { WHY_CIRCLE_SUB as WHY_CIRCLE_VISIBILITY } from "@/lib/onboarding-v42-copy";

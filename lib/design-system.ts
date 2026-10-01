@@ -1532,7 +1532,7 @@ export const DS_V3 = {
   },
   type: {
     display:    { fontSize: 34, lineHeight: 41, fontWeight: '500' as const, letterSpacing: -0.5 },
-    number:     { fontSize: 64, lineHeight: 64, fontWeight: '600' as const, fontFamily: 'BarlowCondensed_600SemiBold', fontVariant: ['tabular-nums'] as const, letterSpacing: -0.64 },
+    number:     { fontSize: 64, lineHeight: 64, fontWeight: '800' as const, fontFamily: undefined, fontVariant: ['tabular-nums'] as const, letterSpacing: -0.64 },
     title:      { fontSize: 28, lineHeight: 34, fontWeight: '500' as const },
     heading:    { fontSize: 20, lineHeight: 25, fontWeight: '500' as const },
     body:       { fontSize: 17, lineHeight: 22, fontWeight: '400' as const },
@@ -1540,7 +1540,7 @@ export const DS_V3 = {
     secondary:  { fontSize: 15, lineHeight: 20, fontWeight: '400' as const },
     caption:    { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
     label:      { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, letterSpacing: 0.72, textTransform: 'uppercase' as const },
-    stamp:      { fontSize: 12, lineHeight: 16, fontWeight: '600' as const, fontFamily: 'BarlowCondensed_600SemiBold', letterSpacing: 0.96, textTransform: 'uppercase' as const },
+    stamp:      { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, fontFamily: undefined, letterSpacing: 0.96, textTransform: 'uppercase' as const },
   },
   space: { xs: 4, sm: 8, md: 12, lg: 16, gutter: 20, section: 32 },
   radius: {
@@ -1557,6 +1557,8 @@ export const DS_V3 = {
     avatar: { xs: 32, sm: 40, md: 56, lg: 96 },
   },
   numberSize: { inline: 17, home: 64, moment: 96, mid: 160, share: 220 },
+  displayFace: undefined as undefined,
+  displayWeight: '800' as const,
   contactSheet: { cols: 6, rows: 5, gap: 4, radius: 4, revealMs: 600, dimmed: 0.4 },
   motion: {
     count: 400,                // tokens.ts:74 motion.daySecuredMs; 00_READ_FIRST.md:81

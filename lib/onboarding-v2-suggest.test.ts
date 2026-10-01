@@ -125,6 +125,12 @@ describe("suggestChallengesForGoals", () => {
     expect(suggestChallengesForGoals(["faith_prayer"], faithOnly)).toEqual([]);
   });
 
+  it("Physical toughness + Daily habits at 30 days has no result shorter than 30", () => {
+    const rows = suggestChallengesForGoals(["physical_toughness", "daily_habits"], CATALOG, 3, 30);
+    expect(rows.every((c) => (c.duration_days ?? 0) >= 30)).toBe(true);
+    expect(rows.some((c) => (c.duration_days ?? 0) < 30)).toBe(false);
+  });
+
   it("never offers 1-day challenges and requires duration ≥ the line", () => {
     expect(meetsOnboardingDuration(1, 7)).toBe(false);
     expect(meetsOnboardingDuration(7, 7)).toBe(true);

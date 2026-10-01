@@ -1,24 +1,25 @@
-import { GOAL_LABELS } from "@/lib/goal-challenge-map";
 import { reminderTimeText, type ReminderCustom, type ReminderPresetId } from "@/lib/onboarding-v2-reminders";
-import type { OnboardingGoal } from "@/store/onboardingStore";
+import {
+  accountSavedChallengeLine,
+  accountSavedLineDays,
+  accountSavedReminder,
+} from "@/lib/onboarding-v42-copy";
 
 export function accountSavedLines(input: {
   challengeTitle: string | null | undefined;
+  durationDays?: number | null;
   targetStreak: number | null | undefined;
   remindersEnabled: boolean;
   reminderPreset: ReminderPresetId;
   reminderCustom: ReminderCustom | null;
-  goals: readonly OnboardingGoal[];
 }): string[] {
   const lines: string[] = [];
   const title = input.challengeTitle?.trim();
-  if (title) lines.push(`${title}, joined`);
-  if (input.targetStreak != null) lines.push(`${input.targetStreak} day target`);
+  const n = input.durationDays ?? input.targetStreak;
+  if (title && n) lines.push(accountSavedChallengeLine(title, n));
+  if (input.targetStreak != null) lines.push(accountSavedLineDays(input.targetStreak));
   if (input.remindersEnabled) {
-    lines.push(`Reminder at ${reminderTimeText(input.reminderPreset, input.reminderCustom)}`);
-  }
-  if (input.goals.length > 0) {
-    lines.push(input.goals.map((g) => GOAL_LABELS[g]).join(", "));
+    lines.push(accountSavedReminder(reminderTimeText(input.reminderPreset, input.reminderCustom)));
   }
   return lines;
 }

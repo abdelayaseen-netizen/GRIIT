@@ -12,8 +12,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { Shield, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import DayCell from "@/components/ds/DayCell";
+import { dayCellFromWeekState } from "@/lib/day-cell";
 import {
   WEEK_STRIP_WEEKDAYS,
   weekStripAccessibilityLabel,
@@ -22,8 +23,6 @@ import {
 
 const DAY_SECURED_MS = DS_V3.motion.count;
 const STROKE = (DS_V3.space.xs * 3) / 8;
-const MARK = DS_V3.space.lg;
-
 export type WeekStripDay = {
   letter: string;
   filled: boolean;
@@ -84,31 +83,24 @@ function Square({
     },
   ];
 
-  if (state === "frozen" || state === "last_stand") {
-    const Icon = state === "frozen" ? Snowflake : Shield;
-    return (
-      <View style={styles.cell} accessibilityLabel={label}>
-        <Text style={letterStyle}>{letter}</Text>
-        <View style={[styles.square, styles.squareMarked]}>
-          <Icon size={MARK} color={DS_V3.color.textSecondary} />
-        </View>
-      </View>
-    );
-  }
-
+  const kind = dayCellFromWeekState(state, isToday);
   const settled = filled && !animateFill;
 
   return (
     <View style={styles.cell} accessibilityLabel={label}>
       <Text style={letterStyle}>{letter}</Text>
-      <Animated.View
-        style={[
-          styles.square,
-          settled ? styles.squareFilled : animateFill ? styles.squareBorderOnly : styles.squareEmpty,
-          isToday ? styles.today : null,
-          animateFill || !settled ? fillStyle : null,
-        ]}
-      />
+      {animateFill ? (
+        <Animated.View
+          style={[
+            styles.square,
+            settled ? styles.squareFilled : styles.squareBorderOnly,
+            isToday ? styles.today : null,
+            fillStyle,
+          ]}
+        />
+      ) : (
+        <DayCell kind={kind} size={DS_V3.size.tap} />
+      )}
     </View>
   );
 }

@@ -13,6 +13,7 @@ import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
+import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
 import {
   CONFIRM_EMAIL_NOTICE,
   EMAIL_TAKEN_NOTICE,
@@ -48,11 +49,11 @@ export default function AccountScreen({
 }) {
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
   const challengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
+  const durationDays = useOnboardingStore((s) => s.selectedChallengeDurationDays);
   const targetStreak = useOnboardingStore((s) => s.targetStreak);
   const remindersEnabled = useOnboardingStore((s) => s.remindersEnabled);
   const reminderPreset = useOnboardingStore((s) => s.reminderPreset);
   const reminderCustom = useOnboardingStore((s) => s.reminderCustom);
-  const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [state, setState] = useState<AccountIdentityState>("default");
   const [email, setEmail] = useState("");
@@ -68,11 +69,11 @@ export default function AccountScreen({
 
   const saved = accountSavedLines({
     challengeTitle,
+    durationDays,
     targetStreak,
     remindersEnabled,
     reminderPreset: reminderPreset ?? "am6",
     reminderCustom: reminderCustom ?? null,
-    goals: selectedGoals,
   });
 
   const handleApple = useCallback(async () => {
@@ -215,7 +216,7 @@ export default function AccountScreen({
     }
   };
 
-  const skip = <TextLink label="Skip — I'll risk losing my progress" onPress={onSkip} />;
+  const skip = <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
   const footer =
     state === "default" ? (
       <>
@@ -230,8 +231,8 @@ export default function AccountScreen({
     <OnboardingScreen
       step={6}
       onBack={onBack}
-      title="Save your streak."
-      subtitle="You are in already. An account is what makes your proof, streak and challenges survive this phone."
+      title={ACCOUNT_TITLE}
+      subtitle={accountInLine(challengeTitle)}
       footer={footer}
     >
       <View style={styles.body}>
@@ -253,6 +254,7 @@ export default function AccountScreen({
               onPress={() => setState("email_entry")}
               disabled={loading}
             />
+            <Text style={styles.phone}>{ACCOUNT_PHONE_LINE}</Text>
             <TextLink
               label="Have an account? Log in"
               tone={DS_V3.color.brandText}
@@ -414,6 +416,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
     gap: DS_V3.space.md,
+  },
+  phone: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   auth: { gap: DS_V3.space.sm },
   field: { gap: DS_V3.space.xs + 2 },

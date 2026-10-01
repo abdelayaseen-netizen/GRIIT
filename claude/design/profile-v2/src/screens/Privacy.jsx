@@ -5,18 +5,18 @@ const LEVELS = ['public', 'friends', 'private'];
 const EXPLAIN = {
   profile: {
     public: 'Anyone can open your profile and see your bio, stats and activity.',
-    friends: 'Only people you have accepted see the record. Others see your name, photo and bio only.',
+    friends: 'Only people you follow who follow you back see the record. Others see your name, photo and bio only.',
     private: 'Nobody but you. You still appear to people inside challenges you share.',
   },
   challenge: {
     public: 'Anyone can see which challenges you are running and how far in you are.',
-    friends: 'Only your circle sees your runs. Others see the tab as hidden.',
+    friends: 'Only people you follow who follow you back see your runs. Others see the tab as hidden.',
     private: 'Your runs are hidden from your profile entirely.',
   },
   activity: {
-    public: 'Anyone can see your consistency record and your proof photos.',
-    friends: 'Only your circle sees your record and proof photos.',
-    private: 'Your record and proofs are yours alone.',
+    public: 'Anyone can see your calendar and the proofs you shared.',
+    friends: 'People you follow who follow you back can see your calendar and the proofs you shared.',
+    private: 'Only you see your calendar and proofs.',
   },
 };
 
@@ -55,9 +55,9 @@ export default function Privacy({ value, onChange, onPreviewVisitor, onBack }) {
 
         {/* true of the current data model — do not drop it */}
         <div className="card card--sunken" style={{ padding: 16, borderRadius: 20 }}>
-          <div style={{ fontSize: 13 }}>None of this hides a proof from a challenge you joined</div>
+          <div style={{ fontSize: 13 }}>Photos stay private until you share them.</div>
           <p className="explain" style={{ marginTop: 6 }}>
-            Everyone in a shared challenge sees whether you verified the day. Privacy controls what your profile shows outside it.
+            Challenge members see whether you finished the day, never a photo you kept.
           </p>
         </div>
 

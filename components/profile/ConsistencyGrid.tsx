@@ -13,8 +13,9 @@ import {
   type DayState,
   type EnrollmentInput,
 } from "@/lib/day-state";
-import { formatDays, formatOfDays } from "@/lib/format-days";
-import { securedElapsed } from "@/lib/consistency";
+import { formatOfDays } from "@/lib/format-days";
+import type { ProofsHeader } from "@/lib/secured-since";
+import { calendarHeaderLine } from "@/lib/secured-since";
 
 const CELL = 30;
 const CELL_R = 6;
@@ -110,9 +111,10 @@ export function ConsistencyGrid({
   names,
   joinedLabel,
   monthKey,
-  dueDayKeys,
-  securedDateKeys,
-  todayKey,
+  dueDayKeys: _dueDayKeys,
+  securedDateKeys: _securedDateKeys,
+  todayKey: _todayKey,
+  header,
 }: {
   days: readonly DayRecord[];
   enrollments: readonly EnrollmentInput[];
@@ -122,8 +124,8 @@ export function ConsistencyGrid({
   dueDayKeys: readonly string[];
   securedDateKeys: readonly string[];
   todayKey: string;
+  header: ProofsHeader;
 }) {
-  const { secured, elapsed } = securedElapsed({ dueDayKeys, securedDateKeys, todayKey });
   const month = monthGridFromDays(days, monthKey);
   const monthName = monthNameFromKey(monthKey);
   const legend = weekStripLegendStates(days);
@@ -131,8 +133,8 @@ export function ConsistencyGrid({
   return (
     <View>
       <View style={styles.hero}>
-        <DisplayNumber value={secured} size="home" />
-        <Text style={styles.ofElapsed}>of {formatDays(elapsed)} secured</Text>
+        <DisplayNumber value={header.secured} size="home" />
+        <Text style={styles.ofElapsed}>{calendarHeaderLine(header)}</Text>
       </View>
       <Text style={styles.caption}>{consistencyDenominatorLine(joinedLabel)}</Text>
       <Text style={styles.caption}>{SECURED_LINE}</Text>

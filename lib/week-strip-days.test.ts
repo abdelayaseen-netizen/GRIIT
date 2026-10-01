@@ -61,9 +61,11 @@ describe("weekStripDayState", () => {
     expect(secured).toContain("weekFromSecuredKeys");
     expect(secured).toContain("frozenDateKeys");
     expect(secured).toContain("lastStandDateKeys");
-    expect(strip).toContain("Snowflake");
-    expect(strip).toContain("Shield");
-    expect(strip).toContain("DS_V3.color.surface");
+    expect(strip).toContain("DayCell");
+    expect(strip).toContain("dayCellFromWeekState");
+    const cell = readFileSync(resolve(__dirname, "../components/ds/DayCell.tsx"), "utf8");
+    expect(cell).toContain("Snowflake");
+    expect(cell).toContain("Shield");
     expect(strip).toContain("weekStripAccessibilityLabel");
   });
 });

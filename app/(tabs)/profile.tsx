@@ -11,6 +11,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -26,17 +27,21 @@ import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyContext,
-  consistencyFromDayArray,
   consistencyHeadline,
   consistencyLine,
 } from "@/lib/consistency";
+import {
+  EMPTY_SECURED_HEADER,
+  consistencyFromHeader,
+  formatSinceDate,
+  type ProofsHeader,
+} from "@/lib/secured-since";
 import {
   consistencyDenominatorLine,
   daysFromSource,
   streakFromDays,
   type DaySource,
 } from "@/lib/day-state";
-import { itemsFromRecordProofs, proofsDateLabel } from "@/lib/proofs-grid";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -51,7 +56,9 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
+import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import type { ProofsDayIn } from "@/lib/day-cell";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
@@ -64,6 +71,10 @@ type RecordPayload = ProfileRecord & {
   todayKey: string;
   elapsedMs: number;
   daySource?: DaySource;
+  header?: ProofsHeader;
+  monthKey?: string;
+  days?: ProofsDayIn[];
+  badgeGrid?: V42BadgeState[];
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -109,7 +120,6 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
-  const proofItems = itemsFromRecordProofs(proofs);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -137,17 +147,20 @@ export default function ProfileScreen() {
 
   if (isGuest) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.centerGuest}>
           <Text style={styles.guestTitle}>Sign in to view your profile</Text>
           <Text style={styles.guestSub}>Track streaks, rank, and activity in one place.</Text>
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   if ((profileLoading && !profile) || (!profile && !isError)) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.skel}>
           <Skeleton />
@@ -155,11 +168,13 @@ export default function ProfileScreen() {
           <Skeleton />
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   if ((isError || profileMissing) && !profile) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.centerGuest}>
           <EmptyState
@@ -173,6 +188,7 @@ export default function ProfileScreen() {
           />
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
@@ -199,11 +215,8 @@ export default function ProfileScreen() {
   const todaySecured = homeSecuredToday(securedDateKeys, todayKey);
   const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : streak;
-  const consistency = consistencyFromDayArray({
-    dueDayKeys: record?.consistency.dueDayKeys ?? [],
-    securedDateKeys,
-    todayKey,
-  });
+  const header = record?.header ?? EMPTY_SECURED_HEADER;
+  const consistency = consistencyFromHeader(header);
   const firstJoin = record?.daySource?.enrollments
     .map((e) => e.startDateKey)
     .sort()[0];
@@ -212,10 +225,12 @@ export default function ProfileScreen() {
     : "";
   const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
     todaySecured,
+    formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
   });
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <FlatList
@@ -226,6 +241,7 @@ export default function ProfileScreen() {
           ListHeaderComponent={
           <>
           <ProfileV3
+            userId={user.id}
             title={name}
             handle={handle}
             avatarUrl={profile.avatar_url}
@@ -235,10 +251,10 @@ export default function ProfileScreen() {
             streak={streakFromArray}
             best={best}
             todaySecured={todaySecured}
-            totalDaysSecured={record?.detail.totalVerified ?? 0}
+            totalDaysSecured={header.secured}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
-              consistencyContext(consistency, proofsDateLabel, todaySecured) ||
+              consistencyContext(consistency, formatSinceDate, todaySecured) ||
               consistencyLine(consistency) ||
               consistencySubFromU
             }
@@ -256,6 +272,7 @@ export default function ProfileScreen() {
               length: r.dayTotal,
             }))}
             proofs={proofs}
+            badgeGrid={record?.badgeGrid}
             badges={badgeItemsFromRows(
               // Old: 99b1cc4 app/(tabs)/profile.tsx:393
               //   <BadgeRows rows={record?.badges ?? []} />
@@ -306,10 +323,12 @@ export default function ProfileScreen() {
             )
           ) : null}
           {v3Tab === "Proofs" ? (
-            <ProofDaysGrid
-              items={proofItems}
-              isOwner
-              onOpenDay={(dateKey) =>
+            <ProofsCalendar
+              monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
+              days={record?.days ?? []}
+              header={header}
+              viewer="owner"
+              onDay={(dateKey) =>
                 router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
               }
             />
@@ -327,6 +346,7 @@ export default function ProfileScreen() {
         />
         </GriitFade>
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

@@ -22,7 +22,7 @@ export function getFeedAvatarBgFromUserId(userId: string): string {
   return FEED_AVATAR_BY_USER_ID[idx] ?? FEED_AVATAR_BY_USER_ID[0];
 }
 
-/** Same letters as `initialsFrom` — empty string when that helper returns null. */
+/** Same letters as `initialsFrom`. */
 export function getDisplayInitials(displayName: string): string {
-  return initialsFrom(displayName) ?? "";
+  return initialsFrom(displayName);
 }

@@ -9,6 +9,7 @@
 
 export type CheckInProofRow = {
   date_key: string;
+  task_id?: string | null;
   active_challenge_id?: string | null;
   photo_url?: string | null;
   proof_url?: string | null;

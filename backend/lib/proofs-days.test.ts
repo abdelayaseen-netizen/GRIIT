@@ -245,8 +245,18 @@ describe("buildProofsDays", () => {
     const securedDateKeys = ["2026-09-16", "2026-09-17", "2026-09-19"];
     const header = proofsHeader({ dueDayKeys, securedDateKeys, todayKey: "2026-09-19" });
     const home = consistencyFromDayArray({ dueDayKeys, securedDateKeys, todayKey: "2026-09-19" });
-    expect(header).toEqual({ secured: home.secured, days: home.due });
-    expect(header).toEqual({ secured: 3, days: 8 });
+    expect(header).toEqual({
+      secured: home.secured,
+      days: home.due,
+      firstDueDate: home.firstDueDate,
+      dueToday: home.dueToday,
+    });
+    expect(header).toEqual({
+      secured: 3,
+      days: 8,
+      firstDueDate: "2026-09-12",
+      dueToday: true,
+    });
   });
 });
 

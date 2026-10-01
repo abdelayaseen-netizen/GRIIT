@@ -39,6 +39,8 @@ import {
 import { signProofPaths, toProofPath } from "../../lib/proof-image";
 import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
+import { evaluateV42Badges } from "../../../lib/v42-badges";
+import { fullHouseAtFromRoster } from "../../lib/full-house";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   parseVisibility,
@@ -59,6 +61,7 @@ type ChallengeRow = {
   id: string;
   title?: string | null;
   duration_days?: number | null;
+  participation_type?: string | null;
 };
 
 type TaskCountRow = {
@@ -69,6 +72,8 @@ type TaskCountRow = {
   require_photo?: boolean | null;
   require_location?: boolean | null;
   gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
   task_type?: string | null;
 };
 
@@ -224,7 +229,12 @@ export const profilesRecordProcedures = {
       };
 
       if (!gate.profile) {
-        return finish(emptyRecord(), { monthKey, days: [], daySource: emptyDaySource });
+        return finish(emptyRecord(), {
+          monthKey,
+          days: [],
+          daySource: emptyDaySource,
+          header: { secured: 0, days: 0, firstDueDate: null, dueToday: false },
+        });
       }
 
       const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
@@ -274,18 +284,18 @@ export const profilesRecordProcedures = {
       if (challengeIds.length > 0 || securedDateKeys.length > 0) {
         const [chRes, taskRes, cinRes] = await Promise.all([
           challengeIds.length > 0
-            ? db.from("challenges").select("id, title, duration_days").in("id", challengeIds).limit(50)
+            ? db.from("challenges").select("id, title, duration_days, participation_type").in("id", challengeIds).limit(50)
             : Promise.resolve({ data: [], error: null }),
           challengeIds.length > 0
             ? db
                 .from("challenge_tasks")
-                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
+                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, task_type")
                 .in("challenge_id", challengeIds)
                 .limit(400)
             : Promise.resolve({ data: [], error: null }),
           db
             .from("check_ins")
-            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, created_at")
+            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, proof_photo_url, created_at")
             .eq("user_id", ownerId)
             .limit(800),
         ]);
@@ -511,6 +521,75 @@ export const profilesRecordProcedures = {
       );
       const proofsOut = sliced.proofs.map((p, i) => ({ ...p, imageUrl: signedProofs[i] ?? null }));
 
-      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header });
+      const timeTaskIds = new Set(
+        taskRows
+          .filter((t) => {
+            const mode = String(t.gate_time_mode ?? "").toLowerCase();
+            return (
+              mode === "by" ||
+              mode === "between" ||
+              Boolean(t.gate_time_start) ||
+              Boolean(t.gate_time_end)
+            );
+          })
+          .map((t) => t.id)
+          .filter((id): id is string => Boolean(id)),
+      );
+      const securedSet = new Set(securedDateKeys);
+      const timeGateSecuredKeys = checkInRows
+        .filter((r) => r.task_id && timeTaskIds.has(r.task_id) && securedSet.has(r.date_key))
+        .map((r) => r.date_key);
+      const cameraProofKeys = checkInRows
+        .filter((r) => Boolean(r.proof_photo_url))
+        .map((r) => r.date_key);
+      const holdKeys = [
+        ...((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+        ...((standRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
+      ];
+      const completedEndedKeys = acRows
+        .filter((r) => r.status === "completed")
+        .map((r) => dateKeyFromIsoInTimeZone(r.ended_at ?? r.end_at, timezone))
+        .filter(Boolean);
+      const typeById = new Map(challenges.map((c) => [c.id, (c.participation_type ?? "").toLowerCase()]));
+      const teamCompletedIds = [
+        ...new Set(
+          acRows
+            .filter((r) => r.status === "completed" && typeById.get(r.challenge_id) === "team")
+            .map((r) => r.challenge_id),
+        ),
+      ].slice(0, 20);
+      let fullHouseAt: string | null = null;
+      if (relationship === "self" && teamCompletedIds.length > 0) {
+        const rosterRes = await db
+          .from("active_challenges")
+          .select("challenge_id, user_id, status, ended_at")
+          .in("challenge_id", teamCompletedIds)
+          .limit(200);
+        if (rosterRes.error) {
+          logger.error({ err: rosterRes.error }, "[getRecord] full-house roster");
+        } else {
+          fullHouseAt = fullHouseAtFromRoster(
+            ownerId,
+            ((rosterRes.data ?? []) as { challenge_id: string; user_id: string; status: string; ended_at?: string | null }[]).map(
+              (r) => ({ ...r, participation_type: "team" }),
+            ),
+            timezone,
+          );
+        }
+      }
+      const badgeGrid =
+        relationship === "self"
+          ? evaluateV42Badges({
+              securedKeys: securedDateKeys,
+              dueKeys: record.consistency.dueDayKeys,
+              holdKeys,
+              completedEndedKeys,
+              fullHouseAt,
+              timeGateSecuredKeys,
+              cameraProofKeys,
+            })
+          : [];
+
+      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header, badgeGrid });
     }),
 };

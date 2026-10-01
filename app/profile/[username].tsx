@@ -12,6 +12,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,13 +36,19 @@ import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
-import { itemsFromRecordProofs } from "@/lib/proofs-grid";
+import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import type { ProofsDayIn } from "@/lib/day-cell";
+import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
-  consistencyFromDayArray,
   consistencyHeadline,
 } from "@/lib/consistency";
+import {
+  EMPTY_SECURED_HEADER,
+  consistencyFromHeader,
+  type ProofsHeader,
+} from "@/lib/secured-since";
+import { visitorFriendsLockBody } from "@/lib/privacy-copy";
 import {
   consistencyDenominatorLine,
   daysFromSource,
@@ -49,6 +56,8 @@ import {
   type DaySource,
 } from "@/lib/day-state";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
+import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
+import { rowsFromProfileRecord } from "@/lib/profile-challenges";
 
 type RecordPayload = ProfileRecord & {
   timezone: string;
@@ -69,6 +78,10 @@ type RecordPayload = ProfileRecord & {
   };
   gate: { profile: boolean; challenges: boolean; activity: boolean };
   daySource?: DaySource;
+  header?: ProofsHeader;
+  monthKey?: string;
+  days?: ProofsDayIn[];
+  badgeGrid?: V42BadgeState[];
 };
 
 export default function VisitorProfileScreen() {
@@ -240,22 +253,13 @@ export default function VisitorProfileScreen() {
   const lockBody =
     vis === "private"
       ? `${name} keeps this record private. Nothing is shown, and requests are not accepted automatically.`
-      : `${name} shows the streak, activity and proofs to people they have accepted. Follow to see the record.`;
+      : visitorFriendsLockBody(name);
 
   const proofs = rec?.proofs ?? [];
-  const proofItems = itemsFromRecordProofs(proofs);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
-  const securedDateKeys = (rec?.daySource?.securedDays ?? []).map((s) =>
-    typeof s === "string" ? s : s.dateKey,
-  );
-  const consistency = consistencyHeadline(
-    consistencyFromDayArray({
-      dueDayKeys: rec?.consistency.dueDayKeys ?? [],
-      securedDateKeys,
-      todayKey: rec?.todayKey ?? "",
-    }),
-  );
+  const header = rec?.header ?? EMPTY_SECURED_HEADER;
+  const consistency = consistencyHeadline(consistencyFromHeader(header));
   const firstJoin = rec?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
   const consistencySub = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
@@ -263,6 +267,7 @@ export default function VisitorProfileScreen() {
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <PushedHeader
           title={name || handle}
@@ -287,6 +292,7 @@ export default function VisitorProfileScreen() {
             ) : null}
             <InlineError message={followError} onDismiss={clearFollowError} />
             <ProfileV3
+              userId={ownerId}
               title={name || handle}
               handle={handle}
               avatarUrl={avatar}
@@ -298,7 +304,7 @@ export default function VisitorProfileScreen() {
               todaySecured={
                 !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
               }
-              totalDaysSecured={rec?.detail.totalVerified ?? 0}
+              totalDaysSecured={header.secured}
               consistency={consistency}
               consistencySub={consistencySub}
               tab={tab}
@@ -310,6 +316,7 @@ export default function VisitorProfileScreen() {
                 length: r.dayTotal,
               }))}
               proofs={proofs}
+              badgeGrid={rec?.badgeGrid}
               badges={badgeItemsFromRows(
                 rec?.badges ??
                   badgeRowsFromProgress({
@@ -359,17 +366,35 @@ export default function VisitorProfileScreen() {
                   : { heading: lockTitle, body: lockBody }
               }
               proofsInParent
+              challengesInParent
             />
+            {tab === "Challenges" && gate.profile ? (
+              <ProfileChallenges
+                challenges={rowsFromProfileRecord(rec ?? { runs: [], completed: [] }, {
+                  todaySecured: !!rec && rec.streak.lastCompletedDateKey === rec.todayKey,
+                  formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
+                })}
+                formatDate={(key) => formatDayMonthYear(key.slice(0, 10))}
+                onOpen={(row) =>
+                  router.push(
+                    (row.status === "active"
+                      ? ROUTES.CHALLENGE_ACTIVE(row.id)
+                      : ROUTES.CHALLENGE_ID(row.challengeId)) as never,
+                  )
+                }
+              />
+            ) : null}
             </>
             }
             renderItem={() => null}
             ListFooterComponent={
               tab === "Proofs" ? (
-                <ProofDaysGrid
-                  items={proofItems}
-                  isOwner={isSelf}
-                  visitorName={name || handle}
-                  onOpenDay={(dateKey) =>
+                <ProofsCalendar
+                  monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
+                  days={rec?.days ?? []}
+                  header={header}
+                  viewer={isSelf ? "owner" : "visitor"}
+                  onDay={(dateKey) =>
                     router.push({
                       pathname: ROUTES.PROFILE_DAY as never,
                       params: { dateKey, userId: isSelf ? undefined : ownerId },
@@ -409,6 +434,7 @@ export default function VisitorProfileScreen() {
           onCancel={() => setShowBlock(false)}
         />
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

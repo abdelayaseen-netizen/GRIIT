@@ -3,6 +3,14 @@
  */
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { inclusiveLastDateKey } from "../backend/lib/record-days";
+import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import {
+  challengeLine,
+  dueForStrip,
+  segsFromDayStates,
+  todayChip,
+  type Seg,
+} from "@/lib/challenge-card";
 
 export type ChallengeStatus = "active" | "completed" | "abandoned" | "failed";
 
@@ -19,7 +27,37 @@ export type ChallengeRow = {
   tasks_today?: number;
   started_at: string;
   ended_at?: string;
+  segs?: Seg[];
+  range?: string;
+  startsTomorrow?: boolean;
+  startDateLabel?: string;
+  tasksLeft?: number;
 };
+
+export function cardLine(c: ChallengeRow): string {
+  return challengeLine({
+    status: c.status,
+    dayN: Math.max(1, c.ended_on_day ?? c.current_day),
+    durationDays: c.duration_days,
+    secured: c.secured_days,
+    range: c.range ?? "",
+    startsTomorrow: c.startsTomorrow,
+    startDate: c.startDateLabel,
+  });
+}
+
+export function cardChip(c: ChallengeRow): string | undefined {
+  return todayChip({
+    status: c.status,
+    startsTomorrow: c.startsTomorrow,
+    securedToday: c.secured_today,
+    tasksLeft: c.tasksLeft ?? (c.secured_today ? 0 : c.tasks_today),
+  });
+}
+
+export function cardDue(c: ChallengeRow): number {
+  return dueForStrip(c.current_day, c.secured_today === true);
+}
 
 export function statusLine(c: ChallengeRow): string {
   switch (c.status) {
@@ -112,20 +150,31 @@ function asStatus(status: string): ChallengeStatus {
 
 export function rowsFromProfileRecord(
   record: Pick<ProfileRecord, "runs" | "completed">,
-  opts?: { todaySecured?: boolean },
+  opts?: { todaySecured?: boolean; formatDate?: (key: string) => string },
 ): ChallengeRow[] {
-  const active: ChallengeRow[] = record.runs.map((r) => ({
-    id: r.id,
-    challengeId: r.challengeId,
-    title: r.name,
-    status: "active",
-    duration_days: r.dayTotal,
-    current_day: r.day,
-    secured_days: r.verified,
-    secured_today: opts?.todaySecured === true,
-    tasks_today: r.tasksPerDay,
-    started_at: r.dayLabel,
-  }));
+  const fmt = opts?.formatDate ?? ((key: string) => key);
+  const active: ChallengeRow[] = record.runs.map((r) => {
+    const start = r.startDateKey;
+    const exclusive = start ? addCalendarDaysToDateKey(start, r.dayTotal) : "";
+    const startsTomorrow = r.day < 1;
+    return {
+      id: r.id,
+      challengeId: r.challengeId,
+      title: r.name,
+      status: "active" as const,
+      duration_days: r.dayTotal,
+      current_day: Math.max(1, r.day),
+      secured_days: r.verified,
+      secured_today: opts?.todaySecured === true,
+      tasks_today: r.tasksPerDay,
+      started_at: start || r.dayLabel,
+      segs: segsFromDayStates(r.days),
+      range: start && exclusive ? finishedDateRangeLine(start, exclusive, fmt) : "",
+      startsTomorrow,
+      startDateLabel: start ? fmt(start) : undefined,
+      tasksLeft: opts?.todaySecured === true ? 0 : r.tasksPerDay,
+    };
+  });
   const finished: ChallengeRow[] = record.completed.map((c) => ({
     id: c.id,
     challengeId: c.challengeId,
@@ -137,6 +186,12 @@ export function rowsFromProfileRecord(
     ended_on_day: c.endedOnDay,
     started_at: c.startDateKey,
     ended_at: c.endDateKey,
+    segs: segsFromDayStates(
+      Array.from({ length: c.length }, (_, i) =>
+        i < c.verified ? "verified" : i < c.endedOnDay ? "missed" : "future",
+      ),
+    ),
+    range: finishedDateRangeLine(c.startDateKey, c.endDateKey, fmt),
   }));
   return [...active, ...finished];
 }

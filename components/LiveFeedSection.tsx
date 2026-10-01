@@ -28,7 +28,9 @@ import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import DiscoverCTA from "@/components/home/DiscoverCTA";
 import { useProStatus } from "@/hooks/useProStatus";
 import FeedPostV3 from "@/components/feed/FeedPostV3";
+import { FeedJoinLine } from "@/components/feed/FeedCompactRow";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
+import { groupFeedJoins, isJoinGroup, joinLine, type FeedListItem } from "@/lib/feed-join";
 import EmptyState from "@/components/ds/EmptyState";
 import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -38,6 +40,7 @@ import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
@@ -133,7 +136,7 @@ function LiveFeedSection({
   const [isPulling, setIsPulling] = useState(false);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
-  const listRef = useRef<FlashListRef<LiveFeedPost> | null>(null);
+  const listRef = useRef<FlashListRef<FeedListItem> | null>(null);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -176,6 +179,7 @@ function LiveFeedSection({
   });
 
   const finalFeed = keepLiveFeedPosts(posts).slice(0, 20);
+  const listItems = useMemo(() => groupFeedJoins(finalFeed), [finalFeed]);
   const feedViewTracked = useRef(false);
 
   useEffect(() => {
@@ -407,10 +411,20 @@ function LiveFeedSection({
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: LiveFeedPost }) => {
+    ({ item }: { item: FeedListItem }) => {
       void previewByPostId;
       void submitComment;
       void openPostMenu;
+      if (isJoinGroup(item)) {
+        return (
+          <View style={styles.v3Item}>
+            <FeedJoinLine
+              text={joinLine(item.names, item.others, item.challengeName)}
+              ago={formatTimeAgoCompact(item.createdAt)}
+            />
+          </View>
+        );
+      }
       return (
         <View style={styles.v3Item}>
           <FeedPostV3
@@ -438,6 +452,7 @@ function LiveFeedSection({
                     } as never)
                 : undefined
             }
+            onOpenPost={() => router.push(ROUTES.POST_ID(item.id) as never)}
           />
         </View>
       );
@@ -573,7 +588,7 @@ function LiveFeedSection({
     <View style={styles.wrap}>
       <FlashList
         ref={listRef}
-        data={finalFeed}
+        data={listItems}
         keyExtractor={(item) => item.id}
         scrollEnabled
         renderItem={renderItem}

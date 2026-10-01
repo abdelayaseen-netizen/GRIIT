@@ -1,7 +1,7 @@
 /**
  * Welcome — frame 19 and 02_screens.md Welcome.
  * Display face on a headline is permitted here only (02_screens.md:311, law 2).
- * Size is 44pt Barlow (02_screens.md:305–306); 44 is DS_V3.size.tap.
+ * Size is 44pt SF Pro Display Heavy (contradiction 116); 44 is DS_V3.size.tap.
  */
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";

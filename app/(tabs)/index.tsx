@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,9 +18,8 @@ import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
-import StatusBarBacking from "@/components/ds/StatusBarBacking";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
@@ -33,11 +33,20 @@ import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } fr
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
-import { useFeedToggle } from "@/store/feedToggleStore";
+import { runHomePullRefresh } from "@/lib/home-pull-refresh";
+import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import {
+  EMPTY_SECURED_HEADER,
+  activeChallengesAreHard,
+  homeFollowingLine,
+  securedSinceLine,
+  showHomeFreezeChip,
+  type ProofsHeader,
+} from "@/lib/secured-since";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
-import { consistencyFromDayArray, consistencyLine } from "@/lib/consistency";
-import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 import {
   daysFromSource,
   streakFromDays,
@@ -123,10 +132,7 @@ export default function HomeScreen() {
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
-
-  const feedScope = useFeedToggle((s) => s.scope);
-  const setFeedScope = useFeedToggle((s) => s.setScope);
-  const initFeedToggle = useFeedToggle((s) => s.initIfFirstRun);
+  const [isPulling, setIsPulling] = React.useState(false);
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
   const recordQuery = useQuery({
@@ -142,22 +148,27 @@ export default function HomeScreen() {
         timezone?: string;
         todayKey?: string;
         daySource?: DaySource;
+        header?: ProofsHeader;
+      }>,
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const followingQuery = useQuery({
+    queryKey: ["liveFeed", "following", user?.id ?? "", 3],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.getLiveFeed, { scope: "following", limit: 3 }) as Promise<{
+        posts: LiveFeedPost[];
       }>,
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
-  const followCounts = bootstrap.data?.followCounts ?? null;
   const statsFailed = bootstrap.data?.failed.includes("stats") === true;
   const securedDateKeys = useMemo(
     () => (Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : []),
     [bootstrap.data?.securedDateKeys],
   );
-
-  React.useEffect(() => {
-    initFeedToggle(followCounts?.following ?? 0);
-  }, [followCounts?.following, initFeedToggle]);
 
   const homeTimeZone = resolveHomeTimeZone(
     (profile as { timezone?: string | null } | null)?.timezone,
@@ -288,13 +299,25 @@ export default function HomeScreen() {
   const streak =
     streakFromArray ?? resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
   const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys ?? [];
-  const streakLine = consistencyLine(
-    consistencyFromDayArray({
-      dueDayKeys,
-      securedDateKeys,
-      todayKey,
-    }),
+  const header = recordQuery.data?.header ?? EMPTY_SECURED_HEADER;
+  const streakLine = securedSinceLine(header);
+  const hardMode = activeChallengesAreHard(
+    (Array.isArray(bootstrap.data?.activeChallenges)
+      ? bootstrap.data.activeChallenges
+      : []) as { challenges?: { is_hard_mode?: boolean; difficulty?: string; title?: string } }[],
   );
+  const showFreeze = showHomeFreezeChip(freezeStatus?.remaining ?? 0, hardMode);
+  const followingItems = keepLiveFeedPosts(followingQuery.data?.posts ?? [])
+    .slice(0, 3)
+    .map((post) => ({
+      id: post.id,
+      userId: post.userId,
+      username: post.username,
+      displayName: post.displayName,
+      avatarUrl: post.avatarUrl,
+      when: formatTimeAgoCompact(post.createdAt),
+      line: homeFollowingLine(post),
+    }));
 
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
@@ -597,8 +620,8 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={s.container} edges={["left", "right"]}>
-        <StatusBarBacking />
         <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={guestKeyExtractor}
@@ -614,24 +637,29 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={s.container} edges={["left", "right"]}>
-        <StatusBarBacking />
-        <LiveFeedSection
-          onRefresh={refresh}
-          scope={feedScope}
-          onScopeChange={setFeedScope}
-          hideHeaderToggle
-          activeChallengesCount={countActiveEnrollments(
-            (Array.isArray(bootstrap.data?.activeChallenges)
-              ? bootstrap.data.activeChallenges
-              : []) as { status?: string }[],
-          )}
-          viewerTargetStreak={profile?.target_streak ?? null}
+        <FlashList
+          data={[{ key: "home" }]}
+          keyExtractor={(item) => item.key}
+          renderItem={() => null}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: tabBarContentPad(insets.bottom) }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isPulling}
+              onRefresh={() => {
+                void runHomePullRefresh(refresh, setIsPulling);
+              }}
+              tintColor={DS_V3.color.brand}
+            />
+          }
           ListHeaderComponent={
             <HomeV3
               title={greetingTitle(profile ?? {})}
@@ -643,8 +671,9 @@ export default function HomeScreen() {
               weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}
-              feedScope={feedScope}
-              onChangeFeedScope={setFeedScope}
+              following={followingItems}
+              onSeeAllActivity={() => router.push(`${ROUTES.ACTIVITY}?tab=feed` as never)}
+              onPressFollowing={(id) => router.push(ROUTES.POST_ID(id) as never)}
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
@@ -657,6 +686,7 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
+              showFreezeChip={showFreeze}
               loading={bootstrap.isPending && !bootstrap.data}
             />
           }
@@ -707,6 +737,7 @@ export default function HomeScreen() {
           onDismiss={onJeopardyDismiss}
         />
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

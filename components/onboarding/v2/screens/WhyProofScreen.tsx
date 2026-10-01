@@ -1,60 +1,17 @@
-/**
- * TodayCard is ported presentational (components/home/TodayCard.tsx + lib/today-card.ts).
- * feat/today-source-of-truth / Chunk J is not on this branch's ancestry.
- * No lib/today-state.ts here.
- */
-import React, { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { AccessibilityInfo, Animated, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { formatTimeWindow, taskGates } from "@/lib/challenge-detail-mapping";
-import type { TodayCardModel } from "@/lib/today-card";
-import TodayCard from "@/components/home/TodayCard";
 import { ChromePrimary, OnboardingScreen } from "../OnboardingChrome";
-
-function sampleTodayModel(): TodayCardModel {
-  const runGates = taskGates({
-    require_photo: true,
-    config: { schedule_window_start: "06:00", schedule_window_end: "09:00" },
-  });
-  const showerGates = taskGates({
-    require_photo: true,
-    require_location: true,
-  });
-  const window = formatTimeWindow("06:00", "09:00") ?? "";
-  return {
-    groups: [
-      {
-        challenge_name: "Sample",
-        active_challenge_id: "onboarding-why-proof",
-        tasks: [
-          {
-            id: "run",
-            name: "Run 5km",
-            gates: runGates.map((g) => g.kind),
-            time_window: window,
-            done: false,
-          },
-          {
-            id: "read",
-            name: "Read 10 pages",
-            gates: [],
-            done: true,
-          },
-          {
-            id: "shower",
-            name: "Cold shower",
-            gates: showerGates.map((g) => g.kind),
-            done: true,
-          },
-        ],
-      },
-    ],
-    done: 2,
-    total: 3,
-    labelled: false,
-    day_secured: false,
-  };
-}
+import {
+  WHY_PROOF_END,
+  WHY_PROOF_FADE_MS,
+  WHY_PROOF_HEADER_MS,
+  WHY_PROOF_HOLD_MS,
+  WHY_PROOF_RING_MS,
+  WHY_PROOF_START,
+  WHY_PROOF_SUB,
+  WHY_PROOF_TITLE,
+} from "@/lib/onboarding-v42-copy";
 
 export default function WhyProofScreen({
   onContinue,
@@ -65,7 +22,34 @@ export default function WhyProofScreen({
   onSkip: () => void;
   onBack: () => void;
 }) {
-  const model = useMemo(() => sampleTodayModel(), []);
+  const third = useRef(new Animated.Value(0)).current;
+  const header = useRef(new Animated.Value(0)).current;
+  const line = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let cancelled = false;
+    let seq: Animated.CompositeAnimation | undefined;
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (cancelled) return;
+      if (reduce) {
+        third.setValue(1);
+        header.setValue(1);
+        line.setValue(1);
+        return;
+      }
+      seq = Animated.sequence([
+        Animated.delay(WHY_PROOF_HOLD_MS),
+        Animated.timing(third, { toValue: 1, duration: WHY_PROOF_RING_MS, useNativeDriver: true }),
+        Animated.timing(header, { toValue: 1, duration: WHY_PROOF_HEADER_MS, useNativeDriver: true }),
+        Animated.timing(line, { toValue: 1, duration: WHY_PROOF_FADE_MS, useNativeDriver: true }),
+      ]);
+      seq.start();
+    });
+    return () => {
+      cancelled = true;
+      seq?.stop();
+    };
+  }, [header, line, third]);
 
   return (
     <OnboardingScreen
@@ -73,68 +57,90 @@ export default function WhyProofScreen({
       onBack={onBack}
       skipLabel="Skip"
       onSkip={onSkip}
-      title="Streaks are easy to fake."
-      subtitle="Everywhere else you tap a box. Here the server secures the day, and only when every task in every challenge you joined is done."
+      title={WHY_PROOF_TITLE}
+      subtitle={WHY_PROOF_SUB}
       footer={<ChromePrimary label="Continue" onPress={onContinue} />}
     >
-      <View style={styles.streak}>
-        <Text style={styles.secondary}>Current streak</Text>
-        <View style={styles.streakRow}>
-          <Text style={styles.zero}>0</Text>
-          <Text style={styles.days}>days</Text>
-        </View>
-        <Text style={styles.secondary}>Post today to start.</Text>
-      </View>
       <View style={styles.cardWrap}>
-        <TodayCard model={model} />
+        <View style={styles.card}>
+          <View style={styles.head}>
+            <Text style={styles.today}>Today</Text>
+            <View style={styles.chip}>
+              <Animated.Text style={[styles.chipTxt, { opacity: header.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+                2 / 3
+              </Animated.Text>
+              <Animated.Text style={[styles.chipTxt, styles.chipAbs, { opacity: header }]}>3 / 3</Animated.Text>
+            </View>
+          </View>
+          <Row name="Run 5km" done />
+          <Row name="Read 10 pages" done />
+          <View style={styles.row}>
+            <View style={styles.dotSlot}>
+              <View style={styles.dotOff} />
+              <Animated.View style={[styles.dotOn, styles.dotAbs, { opacity: third }]} />
+            </View>
+            <Text style={styles.task}>Cold shower</Text>
+          </View>
+        </View>
       </View>
-      <Text style={styles.caption}>
-        {model.done} of {model.total}. The day is not secured, and nothing you tap changes that.
-      </Text>
+      <View style={styles.captionWrap}>
+        <Animated.Text style={[styles.caption, { opacity: line.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+          {WHY_PROOF_START}
+        </Animated.Text>
+        <Animated.Text style={[styles.caption, styles.captionAbs, { opacity: line }]}>{WHY_PROOF_END}</Animated.Text>
+      </View>
     </OnboardingScreen>
   );
 }
 
+function Row({ name, done }: { name: string; done: boolean }) {
+  return (
+    <View style={styles.row}>
+      <View style={[styles.dot, done ? styles.dotOn : styles.dotOff]} />
+      <Text style={[styles.task, done ? styles.taskDone : null]}>{name}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  streak: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-    gap: DS_V3.space.xs,
+  cardWrap: { paddingHorizontal: DS_V3.space.gutter, paddingTop: DS_V3.space.gutter },
+  card: {
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.gutter,
+    gap: DS_V3.space.md,
   },
-  secondary: {
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
-    color: DS_V3.color.textSecondary,
+  head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  today: { ...DS_V3.type.heading, color: DS_V3.color.textPrimary },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: DS_V3.radius.input,
+    backgroundColor: DS_V3.color.brandTint,
+    minWidth: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: DS_V3.space.sm,
+  chipTxt: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.brandText },
+  chipAbs: { position: "absolute" },
+  row: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.md, minHeight: 44 },
+  dotSlot: { width: 20, height: 20 },
+  dot: { width: 20, height: 20, borderRadius: 999 },
+  dotOn: { width: 20, height: 20, borderRadius: 999, backgroundColor: DS_V3.color.brand },
+  dotOff: {
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: DS_V3.color.textSecondary,
   },
-  zero: {
-    fontSize: DS_V3.size.tap,
-    lineHeight: DS_V3.space.section + DS_V3.space.lg,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
-    fontVariant: ["tabular-nums"],
-  },
-  days: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  cardWrap: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.lg,
-  },
-  caption: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.md,
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
+  dotAbs: { position: "absolute", left: 0 },
+  task: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
+  taskDone: { color: DS_V3.color.textSecondary },
+  captionWrap: { paddingHorizontal: DS_V3.space.gutter, paddingTop: DS_V3.space.md, minHeight: 40 },
+  caption: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
+  captionAbs: { position: "absolute", left: DS_V3.space.gutter, right: DS_V3.space.gutter, top: DS_V3.space.md },
 });

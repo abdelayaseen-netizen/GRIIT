@@ -71,9 +71,8 @@ const styles = StyleSheet.create({
   stampEarned: { borderColor: DS_V3.color.brandText },
   stampLocked: { borderColor: DS_V3.color.border },
   stampText: {
-    fontFamily: "BarlowCondensed_600SemiBold",
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: DS_V3.displayWeight,
     letterSpacing: 0.96,
     textTransform: "uppercase",
   },

@@ -12,10 +12,10 @@ import FinishTextCard from "@/components/share/FinishTextCard";
 import { BadgeSticker, ConsistencySticker, DaySticker } from "@/components/share/ShareSticker";
 import { copyStickerPngToPasteboard, saveStickerToPhotos, shareProgressImage, shareToInstagramStory } from "@/lib/share";
 import {
+  COPY_CAPTION,
   SHARE_BG_CLEAR,
   SHARE_BG_ITEMS,
   SHARE_BG_PHOTO,
-  SHARE_CLEAR_CAPTION,
   SHARE_COPY,
   SHARE_EMPTY,
   SHARE_EMPTY_HINT,
@@ -33,6 +33,7 @@ import {
   savePhotosCopy,
   segmentFromBackground,
   showStoryAction,
+  stickerStyleCaption,
   type ProofKind,
   type StickerBackground,
   type StickerVariant,
@@ -139,11 +140,9 @@ export default function ShareStickerSheet({
   const showStory = showStoryAction(facebookAppId());
   const items = photo === "absent" ? [SHARE_BG_CLEAR, "Card"] : [...SHARE_BG_ITEMS];
   const caption =
-    liveBg === "clear"
-      ? SHARE_CLEAR_CAPTION
-      : bg === "photo" && photo === "private"
-        ? SHARE_PHOTO_PRIVATE
-        : null;
+    bg === "photo" && photo === "private"
+      ? SHARE_PHOTO_PRIVATE
+      : stickerStyleCaption(liveBg);
   const copyLine =
     variant === "day" && day
       ? dayStickerCaption(day)
@@ -312,6 +311,7 @@ export default function ShareStickerSheet({
                 />
               </View>
             </View>
+            <Text style={styles.caption}>{COPY_CAPTION}</Text>
           </View>
         </>
       )}

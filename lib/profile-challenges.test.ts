@@ -307,13 +307,14 @@ describe("rowsFromProfileRecord", () => {
   });
 });
 
-describe("Finished predate caption", () => {
-  it("is the spec line", () => {
+describe("Finished list", () => {
+  it("uses ChallengeCard and drops the predate footnote", () => {
     const src = readFileSync(
       resolve(__dirname, "../components/profile/ProfileChallenges.tsx"),
       "utf8",
     );
-    expect(src).toContain(
+    expect(src).toContain("ChallengeCard");
+    expect(src).not.toContain(
       "Runs that ended before this version shipped are here too, without an end screen.",
     );
   });

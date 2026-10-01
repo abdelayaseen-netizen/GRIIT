@@ -16,7 +16,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFonts } from "@expo-google-fonts/inter/useFonts";
 import { Inter_500Medium, Inter_600SemiBold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
-import { BarlowCondensed_600SemiBold } from "@expo-google-fonts/barlow-condensed";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -304,7 +303,6 @@ function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_800ExtraBold,
-    BarlowCondensed_600SemiBold,
   });
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 

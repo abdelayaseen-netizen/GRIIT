@@ -8,26 +8,25 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
-import StatusBarBacking from "@/components/ds/StatusBarBacking";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import FinishTextCard from "@/components/share/FinishTextCard";
+import ShareActions from "@/components/share/ShareActions";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
 import {
   FINISH_BACK_TODAY,
   FINISH_DONE,
   FINISH_FAILED_BODY,
-  FINISH_KEEP,
   FINISH_LEAVE_SAVING,
   FINISH_STATUS,
-  FINISH_STORY,
   FINISH_TRY_AGAIN,
   type AlsoTodayRow,
   type SaveState,
   type ShareIntent,
   finishAlsoTodayLabel,
+  finishFeedState,
   finishNextLabel,
   finishPrimaryCta,
-  finishShareLabel,
 } from "@/lib/finish-moment";
 
 export type FinishMomentTask = {
@@ -79,14 +78,15 @@ export default function FinishMomentV3({
   const photoH = shrinkPhoto ? 170 : 252;
   const camera = Boolean(task.proofUri);
   const showStory = showStoryAction(facebookAppId());
+  const feed = finishFeedState({ share, posted: photoShared });
   const openSheet = () => {
     if (shareDisabled) return;
     setSheetOpen(true);
   };
 
   return (
+    <ScreenChrome>
     <View style={styles.root}>
-      <StatusBarBacking />
       <ScrollView
         contentContainerStyle={[
           styles.body,
@@ -127,59 +127,27 @@ export default function FinishMomentV3({
         </View>
 
         <View style={styles.shareCol}>
-          <Button
-            label={finishShareLabel(share)}
-            variant="secondary"
-            fill
-            singleLine
-            disabled={shareDisabled || share === "feed_held"}
-            onPress={share === "feed_held" || shareDisabled ? undefined : onShareFeed}
+          <ShareActions
+            feed={feed}
+            storyAvailable={showStory}
+            disabled={shareDisabled}
+            onFeed={onShareFeed}
+            onStory={openSheet}
+            onCopy={() => {
+              setSheetOpen(true);
+              onCopy?.();
+            }}
+            onSave={() => {
+              setSheetOpen(true);
+              onSave?.();
+            }}
+            onMore={() => {
+              setSheetOpen(true);
+              onMore?.();
+            }}
+            onKeep={onLeave}
+            onDone={onLeave}
           />
-          {showStory ? (
-            <Button
-              label={FINISH_STORY}
-              variant="secondary"
-              fill
-              disabled={shareDisabled}
-              onPress={shareDisabled ? undefined : openSheet}
-            />
-          ) : null}
-        </View>
-
-        <View style={styles.auxRow}>
-          <View style={styles.auxBtn}>
-            <Button
-              label="Copy"
-              variant="secondary"
-              size="small"
-              fill
-              labelType="secondary"
-              disabled={shareDisabled}
-              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onCopy?.(); }}
-            />
-          </View>
-          <View style={styles.auxBtn}>
-            <Button
-              label="Save"
-              variant="secondary"
-              size="small"
-              fill
-              labelType="secondary"
-              disabled={shareDisabled}
-              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onSave?.(); }}
-            />
-          </View>
-          <View style={styles.auxBtn}>
-            <Button
-              label="More"
-              variant="secondary"
-              size="small"
-              fill
-              labelType="secondary"
-              disabled={shareDisabled}
-              onPress={shareDisabled ? undefined : () => { setSheetOpen(true); onMore?.(); }}
-            />
-          </View>
         </View>
 
         {save === "saved" && alsoToday.length > 0 ? (
@@ -211,12 +179,9 @@ export default function FinishMomentV3({
             }
           />
         )}
-        <Button
-          label={failed ? FINISH_BACK_TODAY : FINISH_KEEP}
-          variant="tertiary"
-          ink
-          onPress={onLeave}
-        />
+        {failed ? (
+          <Button label={FINISH_BACK_TODAY} variant="tertiary" ink onPress={onLeave} />
+        ) : null}
       </View>
       <ShareStickerSheet
         visible={sheetOpen}
@@ -247,6 +212,7 @@ export default function FinishMomentV3({
         }
       />
     </View>
+    </ScreenChrome>
   );
 }
 
@@ -272,9 +238,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cardWrap: { width: "100%" },
-  shareCol: { gap: 8, marginTop: DS_V3.space.md },
-  auxRow: { flexDirection: "row", gap: 8, marginTop: DS_V3.space.sm },
-  auxBtn: { flex: 1 },
+  shareCol: { marginTop: DS_V3.space.md },
   also: { marginTop: DS_V3.space.md },
   failedBody: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary, marginTop: DS_V3.space.md },
   footer: {

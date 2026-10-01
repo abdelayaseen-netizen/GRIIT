@@ -13,6 +13,7 @@ describe("tab bar scroll inset", () => {
   it("is used on Profile, Home, Discover, and Activity", () => {
     const files = [
       "../app/(tabs)/profile.tsx",
+      "../app/(tabs)/index.tsx",
       "../components/LiveFeedSection.tsx",
       "../components/discover/DiscoverV3.tsx",
       "../components/activity/NotificationsTab.tsx",

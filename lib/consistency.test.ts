@@ -34,20 +34,19 @@ describe("consistency builders", () => {
     );
   });
 
-  it("Home and Profile read verifiedClosed / closedDueDays", () => {
+  it("Home and Profile read the one getRecord header", () => {
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     const profile = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
-    expect(home).toContain("consistencyLine");
-    expect(home).toContain("consistencyFromDayArray");
-    expect(home).toContain("dueDayKeys");
-    expect(home).toContain("verifiedClosed");
+    expect(home).toContain("securedSinceLine");
+    expect(home).toContain("header");
+    expect(home).not.toContain("consistencyFromDayArray");
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
-    expect(profile).toContain("consistencyContext(consistency, proofsDateLabel, todaySecured)");
-    const profileV3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
-    expect(profileV3).toContain("numberOfLines={2}");
-    expect(profileV3).not.toContain("numberOfLines={1}");
-    expect(profile).toContain("consistencyFromDayArray");
+    expect(profile).toContain("consistencyContext(consistency, formatSinceDate, todaySecured)");
+    expect(profile).toContain("header.secured");
+    const header = readFileSync(resolve(__dirname, "../components/profile/ProfileHeader.tsx"), "utf8");
+    expect(header).toContain("numberOfLines={1}");
+    expect(header).toContain("compact(");
     expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
@@ -178,10 +177,10 @@ describe("consistency builders", () => {
     expect(impl).toContain("export function securedElapsed");
     expect(barrel).toContain('from "../backend/lib/secured-elapsed"');
     expect(securedElapsed).toBe(backendSecuredElapsed);
-    expect(visitor).toContain("consistencyFromDayArray");
-    expect(home).toContain("consistencyFromDayArray");
-    expect(profile).toContain("consistencyFromDayArray");
-    expect(grid).toContain("securedElapsed");
+    expect(visitor).toContain("header.secured");
+    expect(home).toContain("securedSinceLine");
+    expect(profile).toContain("header.secured");
+    expect(grid).toContain("header.secured");
     expect(record).toContain("securedElapsed");
     expect(dayState).toContain("securedElapsed");
     expect(dayState).not.toMatch(/filter\(\(k\) => k < /);

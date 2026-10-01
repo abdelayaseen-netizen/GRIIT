@@ -59,7 +59,7 @@ describe("photo background is only offered for a shared photo", () => {
     expect(defaultStickerBackground("private")).toBe("card");
     expect(backgroundFromSegment("Photo")).toBe("photo");
     expect(SHARE_PHOTO_PRIVATE).toBe("This photo is private, so it can't be used here.");
-    expect(SHARE_CLEAR_CAPTION).toContain("transparent sticker");
+    expect(SHARE_CLEAR_CAPTION).toBe("Transparent sticker to paste over your own photo");
     expect(SHARE_SHEET).toBe("Share");
     expect(SHARE_EMPTY).toBe("Nothing to share yet.");
     expect([...SHARE_BG_ITEMS]).toEqual(["Clear", "Card", "Photo"]);
@@ -170,12 +170,12 @@ describe("empty id → no Story action rendered", () => {
     expect(sheet).toContain("showStoryAction(facebookAppId())");
     expect(sheet).toContain("{showStory ? (");
     expect(finish).toContain("showStoryAction(facebookAppId())");
-    expect(finish).toContain("{showStory ? (");
+    expect(finish).toContain("storyAvailable={showStory}");
     expect(sheet).toContain("SHARE_STORY");
     expect(sheet).toContain("SHARE_COPY");
     expect(sheet).toContain("SHARE_SAVE");
     expect(sheet).toContain("SHARE_MORE");
-    expect(finish).toContain("FINISH_STORY");
+    expect(finish).toContain("ShareActions");
   });
 });
 
@@ -191,9 +191,8 @@ describe("Share to the feed stays on one line", () => {
     );
     const button = readFileSync(resolve(__dirname, "../components/ds/Button.tsx"), "utf8");
     expect(finish).toContain("shareCol");
-    expect(finish).toContain("singleLine");
+    expect(finish).toContain("ShareActions");
     expect(finish).not.toContain("shareRow");
-    expect(finish).toContain('labelType="secondary"');
     expect(sheet).toContain('labelType="secondary"');
     expect(sheet).not.toContain("hitLabel");
     expect(button).toContain("labelSecondary");

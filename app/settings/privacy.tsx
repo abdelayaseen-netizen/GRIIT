@@ -12,29 +12,18 @@ import { DS_V3 } from "@/lib/design-system";
 import DsCard from "@/components/ds/Card";
 import type { VisibilityLevel } from "@/lib/profile-v2-visibility";
 import { parseVisibility } from "@/lib/profile-v2-visibility";
+import {
+  ACTIVITY_COPY,
+  CHALLENGE_COPY,
+  PRIVACY_HONESTY_BODY,
+  PRIVACY_HONESTY_TITLE,
+  PROFILE_COPY,
+} from "@/lib/privacy-copy";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const LEVELS: VisibilityLevel[] = ["public", "friends", "private"];
-
-const PROFILE_COPY: Record<VisibilityLevel, string> = {
-  public: "Anyone can open your profile and see your bio, stats and activity.",
-  friends: "Only people you have accepted see the record. Others see your name, photo and bio only.",
-  private: "Nobody but you. You still appear to people inside challenges you share.",
-};
-
-const CHALLENGE_COPY: Record<VisibilityLevel, string> = {
-  public: "Anyone can see which challenges you are running and how far in you are.",
-  friends: "Only your circle sees your runs. Others see the tab as hidden.",
-  private: "Your runs are hidden from your profile entirely.",
-};
-
-const ACTIVITY_COPY: Record<VisibilityLevel, string> = {
-  public: "Anyone can see your 365-day map and your proof photos.",
-  friends: "Only your circle sees your map and proof photos.",
-  private: "Your map and proofs are yours alone.",
-};
 
 export default function SettingsPrivacyScreen() {
   const isGuest = useIsGuest();
@@ -122,11 +111,8 @@ export default function SettingsPrivacyScreen() {
             />
 
             <View style={styles.honesty}>
-              <Text style={styles.honestyT}>None of this hides a proof from a challenge you joined</Text>
-              <Text style={styles.honestyB}>
-                Everyone in a shared challenge sees whether you verified the day. Privacy controls what
-                your profile shows outside it.
-              </Text>
+              <Text style={styles.honestyT}>{PRIVACY_HONESTY_TITLE}</Text>
+              <Text style={styles.honestyB}>{PRIVACY_HONESTY_BODY}</Text>
             </View>
 
             {username ? (
