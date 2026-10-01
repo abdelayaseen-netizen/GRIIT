@@ -201,6 +201,23 @@ describe("Share to the feed stays on one line", () => {
   });
 });
 
+describe("Copy puts the PNG on the pasteboard", () => {
+  it("writes the captured image and never a caption", () => {
+    const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      "utf8",
+    );
+    expect(share).toContain("copyStickerPngToPasteboard");
+    expect(share).toContain("setImageAsync");
+    expect(share).not.toMatch(/copyStickerPngToPasteboard[\s\S]*setStringAsync/);
+    expect(share).not.toMatch(/copyStickerPngToPasteboard[\s\S]*writeText/);
+    expect(sheet).toContain("copyStickerPngToPasteboard(uri)");
+    expect(sheet).not.toContain("sharePlainMessage(copyLine");
+    expect(sheet).toContain('kind === "copy"');
+  });
+});
+
 describe("Save writes the PNG to Photos", () => {
   it("uses add-only permission and keeps More on the system sheet", () => {
     expect(savePhotosCopy("saved")).toBe("Saved to Photos.");

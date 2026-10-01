@@ -1,4 +1,6 @@
 import { Share, Platform } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
@@ -123,6 +125,16 @@ export async function shareProgressImage(imageUri: string, message: string): Pro
  * Save the captured PNG to Photos. Add-only permission.
  * Denied does not throw — the sheet shows the Settings copy.
  */
+/** PNG only on the pasteboard. Never a caption — Instagram would paste the text. */
+export async function copyStickerPngToPasteboard(imageUri: string): Promise<void> {
+  const raw = imageUri.trim();
+  if (!raw) return;
+  const base64 = raw.includes("base64,")
+    ? raw.slice(raw.indexOf("base64,") + "base64,".length)
+    : await FileSystem.readAsStringAsync(raw, { encoding: FileSystem.EncodingType.Base64 });
+  await Clipboard.setImageAsync(base64);
+}
+
 export async function saveStickerToPhotos(imageUri: string): Promise<SavePhotosResult> {
   if (Platform.OS === "web") {
     return "denied";
