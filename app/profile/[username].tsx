@@ -36,8 +36,8 @@ import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
-import { itemsFromRecordProofs } from "@/lib/proofs-grid";
+import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import type { ProofsDayIn } from "@/lib/day-cell";
 import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyHeadline,
@@ -76,6 +76,8 @@ type RecordPayload = ProfileRecord & {
   gate: { profile: boolean; challenges: boolean; activity: boolean };
   daySource?: DaySource;
   header?: ProofsHeader;
+  monthKey?: string;
+  days?: ProofsDayIn[];
 };
 
 export default function VisitorProfileScreen() {
@@ -250,7 +252,6 @@ export default function VisitorProfileScreen() {
       : visitorFriendsLockBody(name);
 
   const proofs = rec?.proofs ?? [];
-  const proofItems = itemsFromRecordProofs(proofs);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
   const header = rec?.header ?? EMPTY_SECURED_HEADER;
@@ -366,11 +367,12 @@ export default function VisitorProfileScreen() {
             renderItem={() => null}
             ListFooterComponent={
               tab === "Proofs" ? (
-                <ProofDaysGrid
-                  items={proofItems}
-                  isOwner={isSelf}
-                  visitorName={name || handle}
-                  onOpenDay={(dateKey) =>
+                <ProofsCalendar
+                  monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
+                  days={rec?.days ?? []}
+                  header={header}
+                  viewer={isSelf ? "owner" : "visitor"}
+                  onDay={(dateKey) =>
                     router.push({
                       pathname: ROUTES.PROFILE_DAY as never,
                       params: { dateKey, userId: isSelf ? undefined : ownerId },

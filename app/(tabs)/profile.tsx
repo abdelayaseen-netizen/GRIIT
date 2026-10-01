@@ -42,7 +42,6 @@ import {
   streakFromDays,
   type DaySource,
 } from "@/lib/day-state";
-import { itemsFromRecordProofs } from "@/lib/proofs-grid";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -57,7 +56,8 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
+import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import type { ProofsDayIn } from "@/lib/day-cell";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
@@ -71,6 +71,8 @@ type RecordPayload = ProfileRecord & {
   elapsedMs: number;
   daySource?: DaySource;
   header?: ProofsHeader;
+  monthKey?: string;
+  days?: ProofsDayIn[];
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -116,7 +118,6 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
-  const proofItems = itemsFromRecordProofs(proofs);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -318,10 +319,12 @@ export default function ProfileScreen() {
             )
           ) : null}
           {v3Tab === "Proofs" ? (
-            <ProofDaysGrid
-              items={proofItems}
-              isOwner
-              onOpenDay={(dateKey) =>
+            <ProofsCalendar
+              monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
+              days={record?.days ?? []}
+              header={header}
+              viewer="owner"
+              onDay={(dateKey) =>
                 router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
               }
             />
