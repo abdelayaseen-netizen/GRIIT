@@ -10,6 +10,8 @@ import { ROUTES } from "@/lib/routes";
 import { setKnownOnboardingCompleted, setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
 import { clearOnboardingV2Step } from "@/lib/onboarding-v2-step";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
+import { queryClient } from "@/lib/query-client";
+import { invalidateAfterOnboardingJoin } from "@/lib/onboarding-v2-invalidate";
 
 export async function completeOnboardingV2(opts?: { destination?: string }): Promise<void> {
   setOnboardingV2Exit(opts?.destination ?? ROUTES.TABS);
@@ -47,5 +49,11 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
     await clearOnboardingV2Step();
   } catch (e) {
     captureError(e, "OnboardingV2PersistFlag");
+  }
+
+  try {
+    await invalidateAfterOnboardingJoin(queryClient);
+  } catch (e) {
+    captureError(e, "OnboardingV2Invalidate");
   }
 }

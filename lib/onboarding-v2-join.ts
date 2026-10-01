@@ -2,6 +2,8 @@ import { ensureAnonymousSession } from "@/lib/anon-auth";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { isJoinableChallengeId } from "@/lib/onboarding-v2-suggest";
+import { queryClient } from "@/lib/query-client";
+import { invalidateAfterOnboardingJoin } from "@/lib/onboarding-v2-invalidate";
 
 export type JoinFirstChallengeResult = { ok: true } | { ok: false; message: string };
 
@@ -19,6 +21,7 @@ export async function joinFirstChallenge(challengeId: string): Promise<JoinFirst
   }
   try {
     await trpcMutate(TRPC.challenges.join, { challengeId });
+    await invalidateAfterOnboardingJoin(queryClient);
     return { ok: true };
   } catch (e) {
     return {
