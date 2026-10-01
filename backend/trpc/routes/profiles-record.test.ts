@@ -22,5 +22,7 @@ describe("getRecord proofs days", () => {
     expect(src).not.toContain("fractionDateKeysForRange");
     expect(src).toContain("daySource");
     expect(src).toContain("checkInHasCameraProof");
+    expect(src).toContain("fullHouseAtFromRoster");
+    expect(src).toContain("fullHouseAt");
   });
 });

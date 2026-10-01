@@ -1,16 +1,14 @@
 -- Draft only. Do not apply live.
--- Full house: a group challenge where every roster member's
--- active_challenges.status = 'completed'. Evaluated in-process when
--- getRecord already has the roster; otherwise the badge stays locked.
+-- Full house: a team challenge (participation_type = 'team', never 'group')
+-- where this user's enrollment is completed and every enrolled member's
+-- active_challenges.status = 'completed'. getRecord runs one bounded roster
+-- query and awards the earliest ended_at.
 
--- select ac.challenge_id, ac.ended_at
--- from active_challenges ac
--- join challenges c on c.id = ac.challenge_id
--- where ac.user_id = $1
---   and ac.status = 'completed'
---   and c.participation_type = 'group'
---   and not exists (
---     select 1 from active_challenges peer
---     where peer.challenge_id = ac.challenge_id
---       and peer.status is distinct from 'completed'
---   );
+-- select ac.challenge_id, ac.user_id, ac.status, ac.ended_at
+-- from active_challenges mine
+-- join challenges c on c.id = mine.challenge_id
+-- join active_challenges ac on ac.challenge_id = mine.challenge_id
+-- where mine.user_id = $1
+--   and mine.status = 'completed'
+--   and c.participation_type = 'team'
+-- limit 200;

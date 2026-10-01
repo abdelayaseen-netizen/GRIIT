@@ -46,11 +46,25 @@ describe("v42 badges", () => {
     expect(rows.find((r) => r.id === "comeback")?.progress).toBe("Not yet");
     expect(rows.find((r) => r.id === "camera_30")?.progress).toBe("2 of 30");
     expect(rows.find((r) => r.id === "full_house")?.earned).toBe(false);
+    expect(
+      evaluateV42Badges({
+        securedKeys: [],
+        dueKeys: [],
+        holdKeys: [],
+        completedEndedKeys: [],
+        fullHouseAt: "2026-09-20",
+        timeGateSecuredKeys: [],
+        cameraProofKeys: [],
+      }).find((r) => r.id === "full_house"),
+    ).toMatchObject({ earned: true, earnedOn: "2026-09-20" });
     expect(badgesEarnedLine(rows)).toBe("2 of 12 earned");
     const ach = readFileSync(resolve(__dirname, "../backend/lib/achievements.ts"), "utf8");
     expect(ach).not.toContain("ACHIEVEMENTS.STREAK_100");
     const rec = readFileSync(resolve(__dirname, "../backend/trpc/routes/profiles-record.ts"), "utf8");
     expect(rec).toContain("evaluateV42Badges");
     expect(rec).toContain("proof_photo_url");
+    expect(rec).toContain("fullHouseAt");
+    expect(rec).toContain('=== "team"');
+    expect(rec).not.toMatch(/participation_type === ["']group["']/);
   });
 });

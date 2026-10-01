@@ -40,6 +40,7 @@ import { signProofPaths, toProofPath } from "../../lib/proof-image";
 import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { evaluateV42Badges } from "../../../lib/v42-badges";
+import { fullHouseAtFromRoster } from "../../lib/full-house";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   parseVisibility,
@@ -60,6 +61,7 @@ type ChallengeRow = {
   id: string;
   title?: string | null;
   duration_days?: number | null;
+  participation_type?: string | null;
 };
 
 type TaskCountRow = {
@@ -282,7 +284,7 @@ export const profilesRecordProcedures = {
       if (challengeIds.length > 0 || securedDateKeys.length > 0) {
         const [chRes, taskRes, cinRes] = await Promise.all([
           challengeIds.length > 0
-            ? db.from("challenges").select("id, title, duration_days").in("id", challengeIds).limit(50)
+            ? db.from("challenges").select("id, title, duration_days, participation_type").in("id", challengeIds).limit(50)
             : Promise.resolve({ data: [], error: null }),
           challengeIds.length > 0
             ? db
@@ -548,6 +550,33 @@ export const profilesRecordProcedures = {
         .filter((r) => r.status === "completed")
         .map((r) => dateKeyFromIsoInTimeZone(r.ended_at ?? r.end_at, timezone))
         .filter(Boolean);
+      const typeById = new Map(challenges.map((c) => [c.id, (c.participation_type ?? "").toLowerCase()]));
+      const teamCompletedIds = [
+        ...new Set(
+          acRows
+            .filter((r) => r.status === "completed" && typeById.get(r.challenge_id) === "team")
+            .map((r) => r.challenge_id),
+        ),
+      ].slice(0, 20);
+      let fullHouseAt: string | null = null;
+      if (relationship === "self" && teamCompletedIds.length > 0) {
+        const rosterRes = await db
+          .from("active_challenges")
+          .select("challenge_id, user_id, status, ended_at")
+          .in("challenge_id", teamCompletedIds)
+          .limit(200);
+        if (rosterRes.error) {
+          logger.error({ err: rosterRes.error }, "[getRecord] full-house roster");
+        } else {
+          fullHouseAt = fullHouseAtFromRoster(
+            ownerId,
+            ((rosterRes.data ?? []) as { challenge_id: string; user_id: string; status: string; ended_at?: string | null }[]).map(
+              (r) => ({ ...r, participation_type: "team" }),
+            ),
+            timezone,
+          );
+        }
+      }
       const badgeGrid =
         relationship === "self"
           ? evaluateV42Badges({
@@ -555,6 +584,7 @@ export const profilesRecordProcedures = {
               dueKeys: record.consistency.dueDayKeys,
               holdKeys,
               completedEndedKeys,
+              fullHouseAt,
               timeGateSecuredKeys,
               cameraProofKeys,
             })
