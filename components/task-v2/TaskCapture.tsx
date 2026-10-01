@@ -1,7 +1,7 @@
 /**
  * Capture — frame 63. Live 4:5 crop. Shutter is a textPrimary ring and fill.
  */
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Linking, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -10,6 +10,7 @@ import { SwitchCamera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { cropRectTo45 } from "@/lib/crop-to-45";
 import { createCameraCaptureMeta } from "@/lib/photo-capture-meta";
+import { cameraPermissionGate } from "@/lib/camera-permission-gate";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 
@@ -40,6 +41,14 @@ export function TaskCapture({
   const [busy, setBusy] = useState(false);
   const [facing, setFacing] = useState<"back" | "front">("back");
   const pill = [task, windowLabel].filter(Boolean).join(" · ");
+  const gate = cameraPermissionGate(permission);
+  const askedRef = useRef(false);
+
+  useEffect(() => {
+    if (gate !== "request" || askedRef.current) return;
+    askedRef.current = true;
+    void requestPermission();
+  }, [gate, requestPermission]);
 
   const shutter = async () => {
     if (busy) return;
@@ -61,10 +70,25 @@ export function TaskCapture({
     }
   };
 
-  if (!permission) {
+  if (gate === "loading" || (gate === "request" && permission?.status !== "denied")) {
     return <View style={styles.root} />;
   }
-  if (!permission.granted) {
+  if (gate === "request") {
+    return (
+      <SafeAreaView style={[styles.root, styles.permission]}>
+        <StatusBar barStyle="light-content" />
+        <EmptyState
+          heading="Camera access"
+          body="Allow the camera to post proof."
+          actionLabel="Continue"
+          onAction={() => {
+            void requestPermission();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+  if (gate === "settings") {
     return (
       <SafeAreaView style={[styles.root, styles.permission]}>
         <StatusBar barStyle="light-content" />
@@ -73,7 +97,6 @@ export function TaskCapture({
           body="Turn it on in Settings to post proof."
           actionLabel="Open Settings"
           onAction={() => {
-            void requestPermission();
             void Linking.openSettings();
           }}
         />

@@ -407,6 +407,16 @@ describe("Home Today card", () => {
     expect(card.showShareToday).toBe(false);
   });
 
+  it("has no badge percentage under the week row", () => {
+    const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    expect(src).not.toContain("badgeCaption");
+    expect(src).not.toContain("badgePct");
+    expect(src).not.toMatch(/%/);
+    expect(home).not.toContain("badgePct");
+    expect(home).not.toContain("nextProfileV2Badge");
+  });
+
   it("has no per-section Post your proof button", () => {
     const src = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     expect(src).not.toContain("HOME_PROOF_CTA_TODAY");

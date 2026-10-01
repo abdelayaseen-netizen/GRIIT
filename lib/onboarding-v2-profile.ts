@@ -1,4 +1,32 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { isValidAccountUsername } from "@/lib/onboarding-v2-account-name";
+
+export type UsernameAvailability = "idle" | "checking" | "available" | "taken";
+
+export function shouldRecheckUsername(input: {
+  value: string;
+  lastCheckedValue: string | null;
+}): boolean {
+  if (input.value.length < 3) return false;
+  return input.lastCheckedValue !== input.value;
+}
+
+/** Disable only for taken/invalid, or while checking a value with no result yet. */
+export function profileContinueDisabled(input: {
+  saving: boolean;
+  username: string;
+  availability: UsernameAvailability;
+  lastResultValue: string | null;
+}): boolean {
+  if (input.saving) return true;
+  if (input.availability === "taken") return true;
+  const user = normalizeOnboardingUsername(input.username);
+  if (user.length >= 3 && !isValidAccountUsername(user)) return true;
+  if (input.availability === "checking" && input.lastResultValue !== input.username) {
+    return true;
+  }
+  return false;
+}
 
 /** Live username: lowercase, keep [a-z0-9_.] only. */
 export function normalizeOnboardingUsername(raw: string): string {

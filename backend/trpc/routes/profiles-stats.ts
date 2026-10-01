@@ -17,6 +17,7 @@ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { logger } from "../../lib/logger";
 import { reconcileMissForUser } from "../../lib/miss-reconcile";
 import { loadDayTaskTally } from "../../lib/record-days";
+import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
 import { viewerCanSee } from "../../lib/is-friend";
 
@@ -55,8 +56,14 @@ export const profilesStatsProcedures = {
       const yesterdayMissed = !securedDateKeys.includes(yesterdayKey);
       const yesterdayCovered =
         lastStandDateKeys.includes(yesterdayKey) || frozenDateKeys.includes(yesterdayKey);
+      const yesterdayDue = yesterdayWasDueDay({
+        yesterdayKey,
+        todayKey,
+        ranges: tally.ranges,
+        requiredDueCount: tally.total,
+      });
       const lostStreak =
-        yesterdayMissed && !yesterdayCovered
+        yesterdayDue && yesterdayMissed && !yesterdayCovered
           ? restoreStreakCount({
               todayKey,
               lastCompletedDateKey:
@@ -178,6 +185,13 @@ export const profilesStatsProcedures = {
       .eq("date_key", yesterdayKey)
       .maybeSingle();
     const yesterdaySecured = Boolean(yesterdaySecure);
+    const tally = await loadDayTaskTally(ctx.supabase, ctx.userId, yesterdayKey, tz);
+    const yesterdayDue = yesterdayWasDueDay({
+      yesterdayKey,
+      todayKey,
+      ranges: tally.ranges,
+      requiredDueCount: tally.total,
+    });
 
     const lastStandsAvailable = Math.min(
       2,
@@ -219,6 +233,7 @@ export const profilesStatsProcedures = {
       lastStandsAvailable,
       lastStandUsedThisSession: lastStandUsedDateKeys.has(yesterdayKey),
       streakLostNoLastStand:
+        yesterdayDue &&
         activeStreak === 0 &&
         !yesterdaySecured &&
         !lastStandUsedDateKeys.has(yesterdayKey) &&

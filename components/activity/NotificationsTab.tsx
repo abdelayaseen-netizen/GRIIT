@@ -173,10 +173,9 @@ function NotificationsBody({
                   accessibilityLabel="Notifications"
                 />
               }
-              heading="No notifications yet"
-              body="Join a challenge and updates from your circle land here."
-              actionLabel="Find a challenge"
-              onAction={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              heading="No notifications yet."
+              body=""
+              actionLabel=""
             />
           </View>
         ) : null

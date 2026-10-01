@@ -6,12 +6,14 @@ export interface HeroFeaturedData {
   id: string;
   slug: string | null;
   name: string;
+  cover_url?: string | null;
   duration_days: number;
   difficulty: HeroFeaturedDifficulty;
   proof_type: HeroFeaturedProofType;
   task_types?: string[];
   category: HeroFeaturedCategory;
   joinedTodayCount: number;
+  circleCount?: number;
   featuredProof: {
     user_display_name: string;
     day_number: number;

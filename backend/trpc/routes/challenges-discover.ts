@@ -4,15 +4,17 @@ import { requireNoError } from "../errors";
 import type { ChallengeWithTasksRow } from "../../types/db";
 import {
   type ChallengeTaskRowRaw,
-  type ChallengeTaskApiShape,
   mapTaskRowsToApi,
 } from "../../lib/challenge-tasks";
+import { filterOnboardingStarterPack } from "../../lib/onboarding-starter-pack";
 import { deriveProofType } from "../../lib/task-model";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
+import { anonymousUserIdSet } from "../../lib/anonymous-authors";
+import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 /** Discover v3 category chips → DB `challenges.category` values. */
 const DISCOVER_CATEGORY_VALUES = ["all", "body", "mind", "faith", "focus"] as const;
@@ -219,7 +221,7 @@ export const challengesDiscoverProcedures = {
       let baseQuery = server
         .from("challenges")
         .select(
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, cover_url, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")
@@ -251,14 +253,21 @@ export const challengesDiscoverProcedures = {
       const ids = candidates.map((c) => c.id);
       const { data: joinToday } = await server
         .from("active_challenges")
-        .select("challenge_id")
+        .select("challenge_id, user_id")
         .in("challenge_id", ids)
         .gte("created_at", dayStartIso)
         .limit(500);
+      const joinRows = (joinToday ?? []) as { challenge_id: string; user_id: string }[];
+      const joinAnonIds = hasSupabaseAdmin()
+        ? await anonymousUserIdSet(
+            getSupabaseAdmin(),
+            joinRows.map((r) => r.user_id),
+          )
+        : new Set<string>();
       const todayMap = new Map<string, number>();
-      for (const r of joinToday ?? []) {
-        const id = (r as { challenge_id: string }).challenge_id;
-        todayMap.set(id, (todayMap.get(id) ?? 0) + 1);
+      for (const r of joinRows) {
+        if (joinAnonIds.has(r.user_id)) continue;
+        todayMap.set(r.challenge_id, (todayMap.get(r.challenge_id) ?? 0) + 1);
       }
 
       const scored = [...candidates].sort((a, b) => {
@@ -274,6 +283,7 @@ export const challengesDiscoverProcedures = {
 
       let friendNames: string[] = [];
       let othersCount = joinedTodayCount;
+      let circleCount = 0;
       if (ctx.userId) {
         const { data: follows } = await server
           .from("user_follows")
@@ -296,6 +306,7 @@ export const challengesDiscoverProcedures = {
           const friendIds = [
             ...new Set((starters ?? []).map((r: { user_id: string }) => r.user_id)),
           ];
+          circleCount = friendIds.length;
           if (friendIds.length > 0) {
             const { data: friendProfs } = await server
               .from("profiles")
@@ -318,6 +329,7 @@ export const challengesDiscoverProcedures = {
         id: pick.id,
         slug: null as string | null,
         name: pick.title ?? "Challenge",
+        cover_url: (pick as { cover_url?: string | null }).cover_url ?? null,
         duration_days: pick.duration_days ?? 7,
         difficulty: toDiscoverDifficulty(pick.difficulty),
         proof_type: deriveProofType(
@@ -328,6 +340,7 @@ export const challengesDiscoverProcedures = {
         ),
         category: toDiscoverCategory(pick.category),
         joinedTodayCount,
+        circleCount,
         featuredProof: null,
         friendsStarted: {
           friend_names: friendNames,
@@ -555,7 +568,7 @@ export const challengesDiscoverProcedures = {
     // NOTE(v2): Personalize by user goals when goal data is available
     const { data: rows, error } = await server
       .from("challenges")
-      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id")
+      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id, cover_url")
       .eq("status", "published")
       .eq("visibility", "PUBLIC")
       .limit(60);
@@ -621,6 +634,7 @@ export const challengesDiscoverProcedures = {
         duration: (c.duration_days as number) ?? 7,
         difficulty: toDiff(c.difficulty as string | undefined),
         category: String(c.category ?? "discipline"),
+        cover_url: typeof c.cover_url === "string" ? c.cover_url : null,
         participantCount: pc,
         completionRate: Math.min(96, 42 + Math.round(Math.log10(pc + 1) * 22)),
         previewUsers,
@@ -738,14 +752,6 @@ export const challengesDiscoverProcedures = {
   /** Discover tab: all published public challenges with join stats + team avatar previews (service role when available). */
   getStarterPack: publicProcedure
     .query(async ({ ctx }) => {
-      const ORDER: string[] = [
-        'onboard-water',
-        'onboard-steps',
-        'onboard-read',
-        'onboard-journal',
-        'onboard-breath',
-        'onboard-bed',
-      ];
       const { data: rows, error } = await ctx.supabase
         .from('challenges')
         .select(`
@@ -759,28 +765,21 @@ export const challengesDiscoverProcedures = {
           is_hard_mode,
           participation_type,
           source_starter_id,
+          creator_id,
           challenge_tasks (id, title, task_type, order_index, config)
         `)
-        .not('source_starter_id', 'is', null)
         .eq('visibility', 'PUBLIC')
         .eq('status', 'published')
         .limit(50);
 
       requireNoError(error, "Failed to load starter pack.");
-      const list = (rows ?? []).map((c: { challenge_tasks?: ChallengeTaskRowRaw[] } & Record<string, unknown>) => ({
+      const catalog = filterOnboardingStarterPack(
+        (rows ?? []) as (ChallengeWithTasksRow & { creator_id?: string | null; source_starter_id?: string | null; duration_days?: number | null })[],
+      );
+      return catalog.map((c) => ({
         ...c,
-        tasks: mapTaskRowsToApi(c.challenge_tasks ?? []),
+        tasks: mapTaskRowsToApi((c.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
       }));
-      type StarterListEntry = { source_starter_id?: string; tasks: ChallengeTaskApiShape[]; challenge_tasks?: ChallengeTaskRowRaw[] };
-      list.sort((a: StarterListEntry, b: StarterListEntry) => {
-        const ai = ORDER.indexOf(a.source_starter_id ?? "");
-        const bi = ORDER.indexOf(b.source_starter_id ?? "");
-        if (ai === -1 && bi === -1) return 0;
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
-        return ai - bi;
-      });
-      return list.slice(0, 10);
     }),
 
 };

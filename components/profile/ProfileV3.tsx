@@ -222,7 +222,7 @@ export function ProfileV3({
         </View>
         <View style={styles.mergeHalf}>
           <Text style={styles.mergeConsist}>{consistency}</Text>
-          {consistencySub ? <Text style={styles.caption} numberOfLines={1}>{consistencySub}</Text> : null}
+          {consistencySub ? <Text style={styles.caption} numberOfLines={2}>{consistencySub}</Text> : null}
         </View>
       </Pressable>
 

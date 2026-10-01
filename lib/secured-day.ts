@@ -3,6 +3,7 @@
  * Day numbers only appear with a challenge name. Zero photos means no image area.
  */
 import type { HomeProofTask } from "@/lib/home-proof-card";
+import { countNoun } from "@/lib/onboarding-v2-suggest";
 
 export const SECURED_TODAY = "Today is secured.";
 export const SECURED_SELF = "Self-reported";
@@ -60,8 +61,10 @@ export function securedDayCaption(args: {
   const m = Math.max(0, Math.floor(args.challengeCount));
   const k = Math.max(0, Math.floor(args.cameraProofs));
   const across = m > 1 ? ` across ${m} challenges` : "";
-  if (args.allSelfReported === true) return `${n} tasks${across}, all self-reported. Nothing was checked.`;
-  return `${n} tasks${across}. ${k} camera proofs.`;
+  if (args.allSelfReported === true) {
+    return `${countNoun(n, "task", "tasks")}${across}, all self-reported. Nothing was checked.`;
+  }
+  return `${countNoun(n, "task", "tasks")}${across}. ${countNoun(k, "camera proof", "camera proofs")}.`;
 }
 
 export function securedOverflowLabel(total: number): string | null {

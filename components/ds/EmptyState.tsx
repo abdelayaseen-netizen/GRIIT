@@ -41,10 +41,12 @@ export default function EmptyState({
         </View>
       ) : null}
       <Text style={styles.heading}>{heading}</Text>
-      <Text style={styles.body}>{body}</Text>
-      <View style={styles.action}>
-        <Button label={actionLabel} onPress={press} />
-      </View>
+      {body ? <Text style={styles.body}>{body}</Text> : null}
+      {actionLabel ? (
+        <View style={styles.action}>
+          <Button label={actionLabel} onPress={press} />
+        </View>
+      ) : null}
     </View>
   );
 }

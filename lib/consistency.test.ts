@@ -44,6 +44,9 @@ describe("consistency builders", () => {
     expect(profile).toContain("consistencyHeadline");
     expect(profile).toContain("consistencyContext");
     expect(profile).toContain("consistencyContext(consistency, proofsDateLabel, todaySecured)");
+    const profileV3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
+    expect(profileV3).toContain("numberOfLines={2}");
+    expect(profileV3).not.toContain("numberOfLines={1}");
     expect(profile).toContain("consistencyFromDayArray");
     expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");

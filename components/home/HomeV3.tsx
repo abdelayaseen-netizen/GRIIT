@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Medal, Share, Snowflake, X } from "lucide-react-native";
+import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
@@ -103,8 +103,6 @@ export type HomeV3Props = {
   onToggleSection?: (sectionId: string, expanded: boolean) => void;
   awayCount?: number;
   freezesLeft: number;
-  badgeName: string;
-  badgePct: number;
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
@@ -132,8 +130,6 @@ export function HomeV3({
   onToggleSection,
   awayCount = 0,
   freezesLeft,
-  badgeName,
-  badgePct,
   loading,
   error,
   onRetry,
@@ -179,7 +175,6 @@ export function HomeV3({
 
   const freezeCaption =
     freezesLeft === 1 ? "1 freeze left" : `${freezesLeft} freezes left`;
-  const badgeCaption = `${badgeName} · ${badgePct}%`;
   const awayLine = friendsPostedAwayLine(awayCount);
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
@@ -380,10 +375,6 @@ export function HomeV3({
           <View style={styles.metaItem}>
             <Snowflake size={META} color={DS_V3.color.brand} />
             <Text style={styles.caption}>{freezeCaption}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Medal size={META} color={DS_V3.color.brand} />
-            <Text style={styles.caption}>{badgeCaption}</Text>
           </View>
         </View>
       </View>

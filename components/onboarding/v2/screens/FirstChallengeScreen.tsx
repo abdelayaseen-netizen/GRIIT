@@ -4,7 +4,11 @@ import { Check, SearchX } from "lucide-react-native";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { suggestChallengesForGoals, type SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
+import {
+  preselectedSuggestionId,
+  suggestChallengesForGoals,
+  type SuggestableChallenge,
+} from "@/lib/onboarding-v2-suggest";
 import { mergePickedIntoSuggestions } from "@/lib/onboarding-v2-browse";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import {
@@ -83,6 +87,7 @@ export default function FirstChallengeScreen({
 }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
+  const targetStreak = useOnboardingStore((s) => s.targetStreak);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const [catalog, setCatalog] = useState<SuggestableChallenge[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestableChallenge[]>([]);
@@ -99,7 +104,7 @@ export default function FirstChallengeScreen({
         const list = Array.isArray(data) ? (data as SuggestableChallenge[]) : [];
         if (!cancelled) {
           setCatalog(list);
-          setSuggestions(suggestChallengesForGoals(selectedGoals, list, 3));
+          setSuggestions(suggestChallengesForGoals(selectedGoals, list, 3, targetStreak));
         }
       } catch {
         if (!cancelled) {
@@ -113,17 +118,11 @@ export default function FirstChallengeScreen({
     return () => {
       cancelled = true;
     };
-  }, [selectedGoals]);
+  }, [selectedGoals, targetStreak]);
 
   useEffect(() => {
     if (selectedChallengeId) setPickedId(selectedChallengeId);
   }, [selectedChallengeId]);
-
-  const cards = useMemo(
-    () => mergePickedIntoSuggestions(suggestions, catalog, pickedId),
-    [suggestions, catalog, pickedId]
-  );
-  const empty = !loading && suggestions.length === 0;
 
   const pick = (c: SuggestableChallenge) => {
     setPickedId(c.id);
@@ -135,6 +134,20 @@ export default function FirstChallengeScreen({
       durationDays: c.duration_days ?? null,
     });
   };
+
+  useEffect(() => {
+    if (selectedChallengeId || pickedId || loading) return;
+    const pre = preselectedSuggestionId(suggestions);
+    if (!pre) return;
+    const row = suggestions.find((c) => c.id === pre);
+    if (row) pick(row);
+  }, [loading, suggestions, selectedChallengeId, pickedId]);
+
+  const cards = useMemo(
+    () => mergePickedIntoSuggestions(suggestions, catalog, pickedId),
+    [suggestions, catalog, pickedId]
+  );
+  const empty = !loading && suggestions.length === 0;
 
   const handleJoin = async () => {
     if (!pickedId || joining) return;

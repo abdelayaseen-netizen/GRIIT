@@ -11,6 +11,11 @@ vi.mock("@/lib/trpc", () => ({
   trpcMutate: (...args: unknown[]) => trpcMutate(...args),
 }));
 
+const invalidateQueries = vi.fn();
+vi.mock("@/lib/query-client", () => ({
+  queryClient: { invalidateQueries: (...args: unknown[]) => invalidateQueries(...args) },
+}));
+
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 
 const UUID = "a1000001-4000-4000-8000-000000000005";
@@ -19,6 +24,7 @@ describe("joinFirstChallenge", () => {
   beforeEach(() => {
     ensureAnonymousSession.mockReset();
     trpcMutate.mockReset();
+    invalidateQueries.mockReset();
   });
 
   it("does not join when ensureAnonymousSession fails", async () => {
@@ -61,6 +67,7 @@ describe("joinFirstChallenge", () => {
     expect(res).toEqual({ ok: true });
     expect(ensureAnonymousSession).toHaveBeenCalledTimes(1);
     expect(trpcMutate).toHaveBeenCalledWith("challenges.join", { challengeId: UUID });
+    expect(invalidateQueries).toHaveBeenCalled();
   });
 
   it("rejects non-joinable ids without hitting the network", async () => {

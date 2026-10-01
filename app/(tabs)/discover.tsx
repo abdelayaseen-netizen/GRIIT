@@ -103,6 +103,13 @@ function DiscoverScreenInner() {
     enabled: signedIn,
   });
 
+  const myActiveQuery = useQuery({
+    queryKey: ["challenge", "listMyActive"],
+    queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string }[]>,
+    staleTime: 60 * 1000,
+    enabled: signedIn,
+  });
+
   const peopleQuery = useQuery({
     queryKey: ["discover", "foryou", "suggested"],
     queryFn: () =>
@@ -137,6 +144,13 @@ function DiscoverScreenInner() {
     const list = recommendedQuery.data?.challenges ?? [];
     return list.filter((c) => categoryMatches(c, selectedCategory));
   }, [recommendedQuery.data, selectedCategory]);
+
+  const joinedIds = useMemo(() => {
+    const rows = myActiveQuery.data ?? [];
+    return new Set(
+      rows.map((r) => r.challenge_id).filter((id): id is string => typeof id === "string" && id.length > 0),
+    );
+  }, [myActiveQuery.data]);
 
   const people: DiscoverPerson[] = useMemo(() => {
     return (peopleQuery.data ?? []).map((p) => {
@@ -256,7 +270,11 @@ function DiscoverScreenInner() {
         challenges={filteredChallenges}
         challengesLoading={challengesLoading}
         people={people}
-        circleCount={featuredQuery.data?.joinedTodayCount ?? 0}
+        circleCount={featuredQuery.data?.circleCount ?? 0}
+        featuredJoined={
+          featuredQuery.data?.id ? joinedIds.has(featuredQuery.data.id) : false
+        }
+        joinedIds={joinedIds}
         error={error}
         onRetry={() => {
           void featuredQuery.refetch();

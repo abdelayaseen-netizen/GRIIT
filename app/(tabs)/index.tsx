@@ -55,7 +55,6 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
-import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import {
   MISS_ACK_STORAGE_KEY,
   missAckPayload,
@@ -66,6 +65,7 @@ import {
   morningAfterKeepsLostStreak,
   morningAfterVariant,
   morningAfterVisible,
+  morningAfterYesterdayWasDue,
 } from "@/lib/morning-after";
 import {
   parseTodaySectionChoice,
@@ -305,6 +305,14 @@ export default function HomeScreen() {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
     const lostStreak = recon.result.lostStreak;
+    const yesterdayDue = morningAfterYesterdayWasDue(
+      yesterdayKey,
+      dueDayKeys,
+      recon.result.total ?? 0,
+    );
+    if (!yesterdayDue && !morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey)) {
+      return null;
+    }
     const variant = morningAfterVariant({
       lastStandUsed: Boolean(
         recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
@@ -345,7 +353,7 @@ export default function HomeScreen() {
         setShowFreezeSheet(true);
       } : undefined,
     };
-  }, [freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
+  }, [dueDayKeys, freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
 
   const heroMetrics = useMemo(() => {
     const totalTasksToday = heroTasks.length;
@@ -509,15 +517,6 @@ export default function HomeScreen() {
     setShowJeopardyModal(false);
   }, []);
 
-  const nextBadge = useMemo(() => {
-    const mark = nextProfileV2Badge({
-      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
-      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
-    });
-    if (!mark) return { name: "First badge", progress: 1 };
-    return { name: mark.name, progress: mark.progress };
-  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
-
   const firstProofEver =
     !statsFailed &&
     (resolvedStats?.totalDaysSecured ?? 0) === 0 &&
@@ -658,8 +657,6 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
-              badgeName={nextBadge.name}
-              badgePct={Math.round(nextBadge.progress * 100)}
               loading={bootstrap.isPending && !bootstrap.data}
             />
           }

@@ -16,7 +16,20 @@ import {
   morningAfterFreezeCaption,
   morningAfterVariant,
   morningAfterVisible,
+  morningAfterYesterdayWasDue,
 } from "./morning-after";
+
+describe("morningAfterYesterdayWasDue", () => {
+  it("hides the block when yesterday was not a due day", () => {
+    expect(morningAfterYesterdayWasDue("2026-09-13", ["2026-09-14"], 2)).toBe(false);
+    expect(morningAfterYesterdayWasDue("2026-09-13", ["2026-09-11", "2026-09-12", "2026-09-13"], 0)).toBe(
+      false,
+    );
+    expect(morningAfterYesterdayWasDue("2026-09-13", ["2026-09-11", "2026-09-13"], 1)).toBe(true);
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    expect(home).toContain("morningAfterYesterdayWasDue(");
+  });
+});
 
 describe("morningAfterVariant", () => {
   it("selects Last Stand, freeze, or reset", () => {
