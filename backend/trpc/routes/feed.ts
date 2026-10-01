@@ -106,7 +106,11 @@ export const feedRouter = createTRPCRouter({
     for (const ev of events) {
       if (preFiltered.length >= input.limit) break;
       if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) continue;
-      if (input.scope === "everyone" && anonymousIds.has(ev.user_id)) continue;
+      // Guests = auth.users.is_anonymous. Drop from Everyone; never name/count them in join groups.
+      if (anonymousIds.has(ev.user_id)) {
+        if (input.scope === "everyone") continue;
+        if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") continue;
+      }
       if (input.scope === "everyone" && ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) continue;
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;

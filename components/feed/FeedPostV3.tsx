@@ -3,22 +3,24 @@
  */
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { ArrowUpRight, ChevronRight, Heart, MessageCircle } from "lucide-react-native";
+import { ArrowUpRight, Heart, MessageCircle } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
 import ProofImage from "@/components/ds/ProofImage";
+import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraSeal";
+import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
+import { FeedCompactRow, FeedSystemLine } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
+import { systemLine } from "@/lib/feed-join";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
 import {
-  SEE_THE_DAY,
   feedCardEyebrow,
   feedCardMeta,
-  feedCardShowsVerified,
   feedCardSubject,
   feedCardVariant,
 } from "@/lib/feed-card-family";
@@ -39,6 +41,7 @@ export type FeedPostV3Props = {
   onChallengePress?: () => void;
   onCommentAuthorPress?: (comment: FeedCommentPreview) => void;
   onSeeDay?: () => void;
+  onOpenPost?: () => void;
 };
 
 export default function FeedPostV3({
@@ -52,7 +55,9 @@ export default function FeedPostV3({
   onChallengePress,
   onCommentAuthorPress,
   onSeeDay,
+  onOpenPost,
 }: FeedPostV3Props) {
+  const [sealOpen, setSealOpen] = React.useState(false);
   const photo = liveFeedProofUrl(post);
   const cameraProof = hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
@@ -83,9 +88,59 @@ export default function FeedPostV3({
     { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof, cameraGate: cameraProof, photo: Boolean(photo), securedDays: post.securedDays },
     variant,
   );
-  const stamp = feedCardShowsVerified(variant, cameraProof || variant === "task_camera", Boolean(photo));
+  const ownPost = Boolean(viewerUserId && viewerUserId === post.userId);
+  const seal = showCameraSeal(post.proofPhotoUrl ?? null);
+  const open = onOpenPost ?? onSeeDay ?? (() => undefined);
+
+  if (variant === "day_secured" || variant === "challenge_finished") {
+    return (
+      <FeedSystemLine
+        userId={post.userId}
+        displayName={name}
+        username={post.username}
+        avatarUrl={avatarUri}
+        text={systemLine(name, post.currentDay, post.totalDays, post.challengeName)}
+        ago={when}
+        onProfile={onProfilePress ?? (() => undefined)}
+      />
+    );
+  }
+
+  if (variant !== "task_camera" || !photo) {
+    return (
+      <DoubleTapRespect
+        respected={post.reactedByMe}
+        onRespect={onLike}
+        onOpen={open}
+        ownPost={ownPost}
+        burstSize={64}
+      >
+        <FeedCompactRow
+          userId={post.userId}
+          displayName={name}
+          username={post.username}
+          avatarUrl={avatarUri}
+          ago={when}
+          task={subject || "a task"}
+          dayN={post.currentDay}
+          dayOf={post.totalDays}
+          challenge={post.challengeName}
+          gateLine={meta || "Self-reported"}
+          respects={post.respectCount}
+          respected={post.reactedByMe}
+          comments={post.commentCount}
+          onProfile={onProfilePress ?? (() => undefined)}
+          onChallenge={onChallengePress ?? (() => undefined)}
+          onRespect={ownPost ? () => undefined : onLike}
+          onComments={onComment}
+        />
+      </DoubleTapRespect>
+    );
+  }
 
   return (
+    <>
+    <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
     <Card style={styles.card}>
       <View style={styles.header}>
         <Pressable
@@ -108,15 +163,21 @@ export default function FeedPostV3({
         <Text style={styles.when}>{when}</Text>
       </View>
       {variant === "task_camera" && photo ? (
-        <ProofImage
-          uri={photo}
-          size="feed"
-          title={post.challengeName}
-          caption={post.caption ?? undefined}
-          scrim
-          stamp={stamp ? "Verified" : undefined}
-          recyclingKey={post.id}
-        />
+        <View style={styles.photoWrap}>
+          <ProofImage
+            uri={photo}
+            size="feed"
+            title={post.challengeName}
+            caption={post.caption ?? undefined}
+            scrim
+            recyclingKey={post.id}
+          />
+          {seal ? (
+            <View style={styles.seal}>
+              <CameraSeal onPress={() => setSealOpen(true)} />
+            </View>
+          ) : null}
+        </View>
       ) : null}
       {onChallengePress ? (
         <Pressable
@@ -132,12 +193,6 @@ export default function FeedPostV3({
       )}
       {subject ? <Text style={styles.subject}>{subject}</Text> : null}
       {meta ? <Text style={styles.meta}>{meta}</Text> : null}
-      {variant === "day_secured" && onSeeDay ? (
-        <Pressable onPress={onSeeDay} accessibilityRole="button" accessibilityLabel={SEE_THE_DAY} style={styles.seeDay}>
-          <Text style={styles.seeDayTxt}>{SEE_THE_DAY}</Text>
-          <ChevronRight size={14} color={DS_V3.color.brandText} />
-        </Pressable>
-      ) : null}
       <ActionRow
         liked={post.reactedByMe}
         respectCount={post.respectCount}
@@ -154,6 +209,9 @@ export default function FeedPostV3({
         onAuthorPress={onCommentAuthorPress}
       />
     </Card>
+    </DoubleTapRespect>
+    <SealSheet visible={sealOpen} onDismiss={() => setSealOpen(false)} gates={{}} />
+    </>
   );
 }
 
@@ -211,6 +269,8 @@ function ActionRow({
 
 const styles = StyleSheet.create({
   card: { borderRadius: CARD_R, overflow: "hidden" },
+  photoWrap: { position: "relative" },
+  seal: { position: "absolute", top: DS_V3.space.md, right: DS_V3.space.md, zIndex: 2 },
   header: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.md, marginBottom: DS_V3.space.sm },
   flex: { flex: 1 },
   name: { fontSize: 14, lineHeight: 19, fontWeight: "500", color: DS_V3.color.textPrimary },
