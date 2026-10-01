@@ -100,11 +100,17 @@ describe("Home RefreshControl wiring", () => {
     expect(block).not.toContain("[isGuest, user?.id, bootstrap]");
   });
 
-  it("has one liveFeed query, owned by the list", () => {
+  it("Home Following uses a 3-row query; the full feed list stays in Activity", () => {
     expect(homeSrc).not.toContain('queryKey: ["liveFeed", feedScope');
     expect(homeSrc).not.toContain("countFriendsPostedAway");
+    expect(homeSrc).not.toContain("LiveFeedSection");
+    expect(homeSrc).toContain('queryKey: ["liveFeed", "following"');
+    expect(homeSrc).toContain("limit: 3");
+    expect(homeSrc).toContain("runHomePullRefresh");
+    expect(homeSrc).toContain("refreshing={isPulling}");
     expect(feedSrc).toContain('queryKey: ["liveFeed", scope, user?.id ?? ""]');
     expect(feedSrc).toContain("countFriendsPostedAway(feedQuery.data?.posts");
-    expect(feedSrc).toContain("React.cloneElement(ListHeaderComponent, { awayCount })");
+    const activity = readFileSync(join(process.cwd(), "app/(tabs)/activity.tsx"), "utf8");
+    expect(activity).toContain("LiveFeedSection");
   });
 });

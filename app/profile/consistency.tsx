@@ -8,6 +8,7 @@ import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
+import { EMPTY_SECURED_HEADER, type ProofsHeader } from "@/lib/secured-since";
 import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import { daysFromSource, type DaySource } from "@/lib/day-state";
 import { CONSISTENCY_TITLE } from "@/lib/consistency-record";
@@ -21,6 +22,7 @@ type RecordPayload = ProfileRecord & {
   todayKey: string;
   monthKey?: string;
   daySource?: DaySource;
+  header?: ProofsHeader;
 };
 
 export default function ConsistencyDetailScreen() {
@@ -73,6 +75,7 @@ export default function ConsistencyDetailScreen() {
                 typeof s === "string" ? s : s.dateKey,
               )}
               todayKey={todayKey ?? ""}
+              header={rec?.header ?? EMPTY_SECURED_HEADER}
             />
           )}
         </ScrollView>

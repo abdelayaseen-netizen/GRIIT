@@ -12,15 +12,18 @@ import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
+import Avatar from "@/components/ds/Avatar";
 import Button from "@/components/ds/Button";
-import Chip from "@/components/ds/Chip";
 import Divider from "@/components/ds/Divider";
 import WeekStrip from "@/components/ds/WeekStrip";
 import type { WeekStripDayState } from "@/lib/week-strip-days";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
-import type { FeedScope } from "@/store/feedToggleStore";
 import { greetingName } from "@/lib/profile-display";
+import {
+  FOLLOWING_LABEL,
+  SEE_ALL_IN_ACTIVITY,
+} from "@/lib/secured-since";
 import {
   HOME_PROOF_HEADING,
   homeChallengeOpenA11y,
@@ -33,7 +36,6 @@ import {
   type HomeProofRow,
 } from "@/lib/home-proof-card";
 import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
-import { friendsPostedAwayLine } from "@/lib/home-away-count";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
@@ -73,6 +75,16 @@ export function greetingTitle(p: {
 
 export type HomeV3Proof = HomeProofCard;
 
+export type HomeFollowingItem = {
+  id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  when: string;
+  line: string;
+};
+
 export type HomeV3MorningAfter = {
   cost: string;
   cushion: string;
@@ -92,8 +104,9 @@ export type HomeV3Props = {
   weekStates?: WeekStripDayState[];
   todayIndex: number;
   fillToday?: boolean;
-  feedScope: FeedScope;
-  onChangeFeedScope: (s: FeedScope) => void;
+  following?: HomeFollowingItem[];
+  onSeeAllActivity?: () => void;
+  onPressFollowing?: (id: string) => void;
   onPressBell: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
@@ -101,8 +114,8 @@ export type HomeV3Props = {
   onPressShareToday?: () => void;
   sectionChoices?: Record<string, boolean | undefined>;
   onToggleSection?: (sectionId: string, expanded: boolean) => void;
-  awayCount?: number;
   freezesLeft: number;
+  showFreezeChip?: boolean;
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
@@ -119,8 +132,9 @@ export function HomeV3({
   weekStates,
   todayIndex,
   fillToday,
-  feedScope,
-  onChangeFeedScope,
+  following = [],
+  onSeeAllActivity,
+  onPressFollowing,
   onPressBell,
   onPressProof: _onPressProof,
   onPressTask,
@@ -128,8 +142,8 @@ export function HomeV3({
   onPressShareToday,
   sectionChoices,
   onToggleSection,
-  awayCount = 0,
   freezesLeft,
+  showFreezeChip = false,
   loading,
   error,
   onRetry,
@@ -174,8 +188,7 @@ export function HomeV3({
   }
 
   const freezeCaption =
-    freezesLeft === 1 ? "1 freeze left" : `${freezesLeft} freezes left`;
-  const awayLine = friendsPostedAwayLine(awayCount);
+    freezesLeft === 1 ? "1 freeze" : `${freezesLeft} freezes`;
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
     const pending = !row.done && !closed;
@@ -370,32 +383,51 @@ export function HomeV3({
         : null}
 
       <View style={styles.week}>
+        <Text style={styles.weekLabel}>This week</Text>
         <WeekStrip days={days} todayIndex={todayIndex} fillToday={secured.todaySquareFilled} />
-        <View style={styles.meta}>
-          <View style={styles.metaItem}>
-            <Snowflake size={META} color={DS_V3.color.brand} />
-            <Text style={styles.caption}>{freezeCaption}</Text>
+        {showFreezeChip ? (
+          <View style={styles.meta}>
+            <View style={styles.metaItem}>
+              <Snowflake size={META} color={DS_V3.color.brand} />
+              <Text style={styles.caption}>{freezeCaption}</Text>
+            </View>
           </View>
-        </View>
+        ) : null}
       </View>
 
-      <View style={styles.feedHead}>
-        <Text style={styles.heading}>Feed</Text>
-        <View style={styles.chips}>
-          <Chip
-            label="Friends"
-            selected={feedScope === "following"}
-            onPress={() => onChangeFeedScope("following")}
-          />
-          <Chip
-            label="Everyone"
-            selected={feedScope === "everyone"}
-            onPress={() => onChangeFeedScope("everyone")}
-          />
-        </View>
+      <View style={styles.following}>
+        <Text style={styles.weekLabel}>{FOLLOWING_LABEL}</Text>
+        {following.map((item) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={item.displayName || item.username}
+            onPress={() => onPressFollowing?.(item.id)}
+            style={styles.followRow}
+          >
+            <Avatar
+              size={32}
+              userId={item.userId}
+              uri={item.avatarUrl}
+              displayName={item.displayName}
+              username={item.username}
+            />
+            <View style={styles.taskCopy}>
+              <Text style={styles.task}>{item.displayName || item.username}</Text>
+              <Text style={styles.caption}>{item.line}</Text>
+            </View>
+            <Text style={styles.caption}>{item.when}</Text>
+          </Pressable>
+        ))}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={SEE_ALL_IN_ACTIVITY}
+          onPress={onSeeAllActivity}
+          style={styles.seeAllHit}
+        >
+          <Text style={styles.seeAll}>{SEE_ALL_IN_ACTIVITY}</Text>
+        </Pressable>
       </View>
-
-      {awayLine ? <Text style={styles.away}>{awayLine}</Text> : null}
     </View>
   );
 }
@@ -584,6 +616,29 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
     gap: DS_V3.space.sm,
   },
+  weekLabel: {
+    ...DS_V3.type.label,
+    color: DS_V3.color.textSecondary,
+  },
+  following: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.section,
+    gap: DS_V3.space.md,
+  },
+  followRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
+  },
+  seeAllHit: {
+    minHeight: DS_V3.size.tap,
+    justifyContent: "center",
+  },
+  seeAll: {
+    ...DS_V3.type.bodyStrong,
+    color: DS_V3.color.brandText,
+  },
   meta: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -593,24 +648,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.sm,
-  },
-  feedHead: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.section,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: DS_V3.space.md,
-  },
-  chips: { flexDirection: "row", gap: DS_V3.space.xs },
-  away: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.md,
-    paddingBottom: DS_V3.space.md,
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
   },
   shareTodayBlock: {
     marginTop: DS_V3.space.lg,

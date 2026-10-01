@@ -26,7 +26,7 @@ describe("Chunk U Profile Part A", () => {
     expect(viewer).toContain("Only you can see this. Share it from here.");
     expect(viewer).toContain("Only you can see this.");
     expect(viewer).toContain("Share to the feed");
-    expect(grid).toContain("of {formatDays(elapsed)} secured");
+    expect(grid).toContain("calendarHeaderLine(header)");
     expect(grid).toContain("By challenge");
     expect(badges).toContain("Five marks, each earned by verified days only. Nothing here can be bought or awarded.");
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");

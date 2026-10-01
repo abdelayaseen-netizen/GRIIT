@@ -57,7 +57,7 @@ describe("homeStreakLine", () => {
       resolve(__dirname, "../components/profile/ProfileV3.tsx"),
       "utf8",
     );
-    expect(homeSrc).toContain("consistencyLine(");
+    expect(homeSrc).toContain("securedSinceLine(");
     expect(profileSrc).toContain("formatDays(streak)");
     expect(profileSrc).toContain("onSeeRecord");
   });

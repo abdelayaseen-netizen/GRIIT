@@ -27,17 +27,22 @@ import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyContext,
-  consistencyFromDayArray,
   consistencyHeadline,
   consistencyLine,
 } from "@/lib/consistency";
+import {
+  EMPTY_SECURED_HEADER,
+  consistencyFromHeader,
+  formatSinceDate,
+  type ProofsHeader,
+} from "@/lib/secured-since";
 import {
   consistencyDenominatorLine,
   daysFromSource,
   streakFromDays,
   type DaySource,
 } from "@/lib/day-state";
-import { itemsFromRecordProofs, proofsDateLabel } from "@/lib/proofs-grid";
+import { itemsFromRecordProofs } from "@/lib/proofs-grid";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -65,6 +70,7 @@ type RecordPayload = ProfileRecord & {
   todayKey: string;
   elapsedMs: number;
   daySource?: DaySource;
+  header?: ProofsHeader;
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -206,11 +212,8 @@ export default function ProfileScreen() {
   const todaySecured = homeSecuredToday(securedDateKeys, todayKey);
   const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : streak;
-  const consistency = consistencyFromDayArray({
-    dueDayKeys: record?.consistency.dueDayKeys ?? [],
-    securedDateKeys,
-    todayKey,
-  });
+  const header = record?.header ?? EMPTY_SECURED_HEADER;
+  const consistency = consistencyFromHeader(header);
   const firstJoin = record?.daySource?.enrollments
     .map((e) => e.startDateKey)
     .sort()[0];
@@ -244,10 +247,10 @@ export default function ProfileScreen() {
             streak={streakFromArray}
             best={best}
             todaySecured={todaySecured}
-            totalDaysSecured={record?.detail.totalVerified ?? 0}
+            totalDaysSecured={header.secured}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
-              consistencyContext(consistency, proofsDateLabel, todaySecured) ||
+              consistencyContext(consistency, formatSinceDate, todaySecured) ||
               consistencyLine(consistency) ||
               consistencySubFromU
             }

@@ -224,7 +224,12 @@ export const profilesRecordProcedures = {
       };
 
       if (!gate.profile) {
-        return finish(emptyRecord(), { monthKey, days: [], daySource: emptyDaySource });
+        return finish(emptyRecord(), {
+          monthKey,
+          days: [],
+          daySource: emptyDaySource,
+          header: { secured: 0, days: 0, firstDueDate: null, dueToday: false },
+        });
       }
 
       const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([

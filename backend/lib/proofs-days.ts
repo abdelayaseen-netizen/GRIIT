@@ -175,13 +175,25 @@ export function proofsBreakdown(days: readonly ProofsDay[]): {
   return { cameraDays, selfReportedDays, lastStandDays, freezeDays };
 }
 
+export type ProofsHeader = {
+  secured: number;
+  days: number;
+  firstDueDate: string | null;
+  dueToday: boolean;
+};
+
 export function proofsHeader(args: {
   dueDayKeys: readonly string[];
   securedDateKeys: readonly string[];
   todayKey: string;
-}): { secured: number; days: number } {
+}): ProofsHeader {
   const w = securedElapsed(args);
-  return { secured: w.secured, days: w.elapsed };
+  return {
+    secured: w.secured,
+    days: w.elapsed,
+    firstDueDate: w.firstDueDate,
+    dueToday: w.dueToday,
+  };
 }
 
 export function shareEventsFromActivity(

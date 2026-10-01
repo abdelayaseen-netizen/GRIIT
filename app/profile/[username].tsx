@@ -40,9 +40,13 @@ import { ProofDaysGrid } from "@/components/profile/ProofDaysGrid";
 import { itemsFromRecordProofs } from "@/lib/proofs-grid";
 import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
-  consistencyFromDayArray,
   consistencyHeadline,
 } from "@/lib/consistency";
+import {
+  EMPTY_SECURED_HEADER,
+  consistencyFromHeader,
+  type ProofsHeader,
+} from "@/lib/secured-since";
 import { visitorFriendsLockBody } from "@/lib/privacy-copy";
 import {
   consistencyDenominatorLine,
@@ -71,6 +75,7 @@ type RecordPayload = ProfileRecord & {
   };
   gate: { profile: boolean; challenges: boolean; activity: boolean };
   daySource?: DaySource;
+  header?: ProofsHeader;
 };
 
 export default function VisitorProfileScreen() {
@@ -248,16 +253,8 @@ export default function VisitorProfileScreen() {
   const proofItems = itemsFromRecordProofs(proofs);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
-  const securedDateKeys = (rec?.daySource?.securedDays ?? []).map((s) =>
-    typeof s === "string" ? s : s.dateKey,
-  );
-  const consistency = consistencyHeadline(
-    consistencyFromDayArray({
-      dueDayKeys: rec?.consistency.dueDayKeys ?? [],
-      securedDateKeys,
-      todayKey: rec?.todayKey ?? "",
-    }),
-  );
+  const header = rec?.header ?? EMPTY_SECURED_HEADER;
+  const consistency = consistencyHeadline(consistencyFromHeader(header));
   const firstJoin = rec?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
   const consistencySub = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
@@ -302,7 +299,7 @@ export default function VisitorProfileScreen() {
               todaySecured={
                 !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
               }
-              totalDaysSecured={rec?.detail.totalVerified ?? 0}
+              totalDaysSecured={header.secured}
               consistency={consistency}
               consistencySub={consistencySub}
               tab={tab}
