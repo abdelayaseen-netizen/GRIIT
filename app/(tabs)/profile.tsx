@@ -11,6 +11,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -137,17 +138,20 @@ export default function ProfileScreen() {
 
   if (isGuest) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.centerGuest}>
           <Text style={styles.guestTitle}>Sign in to view your profile</Text>
           <Text style={styles.guestSub}>Track streaks, rank, and activity in one place.</Text>
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   if ((profileLoading && !profile) || (!profile && !isError)) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.skel}>
           <Skeleton />
@@ -155,11 +159,13 @@ export default function ProfileScreen() {
           <Skeleton />
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   if ((isError || profileMissing) && !profile) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.centerGuest}>
           <EmptyState
@@ -173,6 +179,7 @@ export default function ProfileScreen() {
           />
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
@@ -216,6 +223,7 @@ export default function ProfileScreen() {
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
         <FlatList
@@ -226,6 +234,7 @@ export default function ProfileScreen() {
           ListHeaderComponent={
           <>
           <ProfileV3
+            userId={user.id}
             title={name}
             handle={handle}
             avatarUrl={profile.avatar_url}
@@ -327,6 +336,7 @@ export default function ProfileScreen() {
         />
         </GriitFade>
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

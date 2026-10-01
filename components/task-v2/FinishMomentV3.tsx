@@ -8,7 +8,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
-import StatusBarBacking from "@/components/ds/StatusBarBacking";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
@@ -85,8 +85,8 @@ export default function FinishMomentV3({
   };
 
   return (
+    <ScreenChrome>
     <View style={styles.root}>
-      <StatusBarBacking />
       <ScrollView
         contentContainerStyle={[
           styles.body,
@@ -247,6 +247,7 @@ export default function FinishMomentV3({
         }
       />
     </View>
+    </ScreenChrome>
   );
 }
 

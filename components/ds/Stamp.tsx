@@ -1,6 +1,6 @@
 /**
  * Stamp — 01_components.md "Stamp"
- * Laws: 2 (Barlow Condensed 600 only here and DisplayNumber), 11 (uppercase the
+ * Laws: 2 (system SF, weight 500), 11 (uppercase the
  * string in JS; Android has no textTransform). Never on self reported content.
  * Spec label is "Verified" | "Complete"; uppercase at render.
  */

@@ -94,7 +94,7 @@ export default function FeedPostV3({
           accessibilityLabel={`${name} profile`}
           hitSlop={FEED_TAP_HIT_SLOP}
         >
-          <Avatar size={40} uri={avatarUri} displayName={name} />
+          <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
         </Pressable>
         <Pressable
           onPress={onProfilePress}

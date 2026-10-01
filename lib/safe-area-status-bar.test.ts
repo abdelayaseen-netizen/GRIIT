@@ -12,9 +12,9 @@ describe("safe area and status bar", () => {
     expect(capture).toContain("paddingTop: insets.top");
   });
 
-  it("covers the status bar with solid canvas so FinishMoment and Home cannot scroll under it", () => {
-    const backing = readFileSync(
-      resolve(__dirname, "../components/ds/StatusBarBacking.tsx"),
+  it("covers the status bar with ScreenChrome so Home, Profile, Activity, and Finish scroll under a solid canvas band", () => {
+    const chrome = readFileSync(
+      resolve(__dirname, "../components/ds/ScreenChrome.tsx"),
       "utf8",
     );
     const finish = readFileSync(
@@ -23,14 +23,18 @@ describe("safe area and status bar", () => {
     );
     const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     const tab = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-    expect(backing).toContain("height: insets.top");
-    expect(backing).toContain("DS_V3.color.canvas");
-    expect(backing).toContain('position: "absolute"');
-    expect(finish).toContain("StatusBarBacking");
+    const profile = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
+    const activity = readFileSync(resolve(__dirname, "../app/(tabs)/activity.tsx"), "utf8");
+    expect(chrome).toContain("DS_V3.color.canvas");
+    expect(chrome).toContain('position: "absolute"');
+    expect(chrome).not.toContain("marginTop");
+    expect(finish).toContain("ScreenChrome");
     expect(finish).toContain("paddingTop: insets.top");
     expect(home).toContain("paddingTop: insets.top");
-    expect(tab).toContain("StatusBarBacking");
+    expect(tab).toContain("ScreenChrome");
     expect(tab).toContain('edges={["left", "right"]}');
+    expect(profile).toContain("ScreenChrome");
+    expect(activity).toContain("ScreenChrome");
   });
 
   it("uses light status bar on dark chrome and dark on the light edit sheet", () => {

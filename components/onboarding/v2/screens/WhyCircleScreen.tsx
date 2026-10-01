@@ -1,5 +1,5 @@
 /**
- * Witness preview. FeedPostV3 photo rows use DisplayNumber (Barlow) for Day.
+ * Witness preview. FeedPostV3 photo rows use DisplayNumber (SF Pro Display Heavy) for Day.
  * This screen must stay SF Pro, so the row uses the same Avatar + Card kit
  * with a 200pt proof block and no action row.
  */
@@ -38,7 +38,7 @@ export default function WhyCircleScreen({
       <View style={styles.wrap}>
         <Card style={styles.card}>
           <View style={styles.header}>
-            <Avatar size={DS_V3.size.avatar.sm} />
+            <Avatar size={32} />
             <View style={styles.who}>
               <Text style={styles.name}>your username</Text>
               <Text style={styles.meta}>First challenge · Day 12</Text>

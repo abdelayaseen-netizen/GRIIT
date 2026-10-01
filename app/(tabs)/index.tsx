@@ -19,7 +19,7 @@ import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
-import StatusBarBacking from "@/components/ds/StatusBarBacking";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
@@ -597,8 +597,8 @@ export default function HomeScreen() {
 
   if (isGuest) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={s.container} edges={["left", "right"]}>
-        <StatusBarBacking />
         <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={guestKeyExtractor}
@@ -614,13 +614,14 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
         />
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={s.container} edges={["left", "right"]}>
-        <StatusBarBacking />
         <LiveFeedSection
           onRefresh={refresh}
           scope={feedScope}
@@ -707,6 +708,7 @@ export default function HomeScreen() {
           onDismiss={onJeopardyDismiss}
         />
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

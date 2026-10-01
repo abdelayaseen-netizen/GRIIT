@@ -1,6 +1,6 @@
 /**
  * DisplayNumber — 01_components.md "DisplayNumber" and Motion
- * Laws: 2 (Barlow Condensed 600, the only weight above 500), 19 (400ms count up
+ * Laws: 2 (SF Pro Display Heavy 800 tabular — contradiction 116), 19 (400ms count up
  * is one of two animated moments). Reduce Motion cuts to the final value and
  * skips the haptic. Spec sizes: inline | home | moment | mid | share.
  */

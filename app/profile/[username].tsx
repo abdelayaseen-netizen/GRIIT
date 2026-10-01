@@ -12,6 +12,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -264,6 +265,7 @@ export default function VisitorProfileScreen() {
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <PushedHeader
           title={name || handle}
@@ -288,6 +290,7 @@ export default function VisitorProfileScreen() {
             ) : null}
             <InlineError message={followError} onDismiss={clearFollowError} />
             <ProfileV3
+              userId={ownerId}
               title={name || handle}
               handle={handle}
               avatarUrl={avatar}
@@ -410,6 +413,7 @@ export default function VisitorProfileScreen() {
           onCancel={() => setShowBlock(false)}
         />
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

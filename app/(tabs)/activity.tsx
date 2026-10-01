@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -36,6 +37,7 @@ export default function ActivityScreen() {
 
   if (isGuest || !user?.id) {
     return (
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.guestWrap}>
@@ -44,6 +46,7 @@ export default function ActivityScreen() {
           </Text>
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     );
   }
 
@@ -51,6 +54,7 @@ export default function ActivityScreen() {
 
   return (
     <ErrorBoundary>
+      <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.segment}>
@@ -70,6 +74,7 @@ export default function ActivityScreen() {
           )}
         </View>
       </SafeAreaView>
+      </ScreenChrome>
     </ErrorBoundary>
   );
 }

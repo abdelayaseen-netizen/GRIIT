@@ -52,6 +52,7 @@ export type ProfileV3Proof = {
 };
 
 export type ProfileV3Props = {
+  userId?: string | null;
   title: string;
   handle: string;
   avatarUrl?: string | null;
@@ -91,6 +92,7 @@ export type ProfileV3Props = {
 };
 
 export function ProfileV3({
+  userId,
   title,
   handle,
   avatarUrl,
@@ -144,7 +146,7 @@ export function ProfileV3({
       ) : null}
 
       <View style={styles.identity}>
-        <Avatar size={56} uri={avatarUrl} displayName={title} />
+        <Avatar size={80} userId={userId} uri={avatarUrl} displayName={title} username={handle} />
         <View style={styles.idCol}>
           <Text style={styles.name}>{title}</Text>
           <Text style={styles.handle}>
