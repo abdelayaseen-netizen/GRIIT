@@ -26,7 +26,13 @@ import { gatesFor, gateTimeFor } from "@/backend/lib/task-model";
 import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
-import { shareTodayVisible } from "@/lib/day-sticker";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import {
+  challengeDetailTodayCopy,
+  challengeEnrollmentDone,
+  challengeStickerProofFromTasks,
+  othersLeftFromBootstrap,
+} from "@/lib/challenge-today-copy";
 import { detailLateJoinCard } from "@/lib/late-join";
 import {
   RESET_NOTICE,
@@ -106,6 +112,7 @@ export default function ActiveChallengeDetailScreen() {
   const queryClient = useQueryClient();
   const { profile, stats } = useApp();
   const { user } = useAuth();
+  const bootstrap = useHomeBootstrap(user?.id);
   const profileTz = (profile as { timezone?: string | null })?.timezone;
   const todayKey = getTodayDateKey(profileTz);
   const weekKeys = useMemo(() => getCurrentWeekDateKeys(profileTz), [profileTz]);
@@ -288,6 +295,25 @@ export default function ActiveChallengeDetailScreen() {
     });
   }, [rawTasks, checkinByTask, currentDay, enrollmentDuration]);
 
+  const thisDone = challengeEnrollmentDone(tasks);
+  const todayCopy = challengeDetailTodayCopy({
+    thisDone,
+    daySecured: securedToday,
+    others: othersLeftFromBootstrap(
+      bootstrap.data?.activeChallenges,
+      bootstrap.data?.todayCheckinsForUser,
+      id ?? "",
+    ),
+  });
+  const stickerProof = challengeStickerProofFromTasks(
+    tasks.map((t) => ({
+      completed_today: t.completed_today,
+      require_photo: t.require_photo,
+      hasCameraProof: Boolean(t.proof_photo_url) || t.verified === true,
+      gates: t.gates,
+    })),
+  );
+
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [shareTodayOpen, setShareTodayOpen] = useState(false);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =
@@ -435,25 +461,29 @@ export default function ActiveChallengeDetailScreen() {
           onRetry={() => void refetch()}
           onTask={openTask}
           onParticipants={handleParticipants}
-          onShare={handleShare}
-          showShareToday={shareTodayVisible({
-            serverSecuredDateKeys: Array.isArray(securedDateKeys) ? securedDateKeys : [],
-            profileTimeZone: profileTz,
-            now: new Date(),
-          })}
+          onShare={thisDone ? handleShare : undefined}
+          showShareToday={todayCopy.showShareToday}
+          todayStatus={todayCopy.status}
+          todaySub={todayCopy.sub}
         />
         <DayStickerSheet
-          visible={shareTodayOpen}
+          visible={shareTodayOpen && thisDone}
           onDismiss={() => setShareTodayOpen(false)}
-          challenges={[
-            {
-              id: id ?? title,
-              name: title,
-              day: shownDay,
-              dayTotal: durationDays,
-              photoCount: todayProofUri ? 1 : 0,
-            },
-          ]}
+          challenges={
+            thisDone && stickerProof
+              ? [
+                  {
+                    id: id ?? title,
+                    name: title,
+                    day: shownDay,
+                    dayTotal: durationDays,
+                    photoCount: todayProofUri ? 1 : 0,
+                    proof: stickerProof,
+                    stickerKind: "challenge",
+                  },
+                ]
+              : []
+          }
           preselectedId={id ?? title}
           proofUri={todayProofUri}
         />

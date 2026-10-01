@@ -135,6 +135,7 @@ export type HomeProofSection = {
   securedToday: boolean;
   startDateKey: string | null;
   photoCount: number;
+  proof?: "camera" | "camera_place" | "self";
 };
 
 export type HomeProofCard = {
@@ -235,6 +236,9 @@ function sectionFromTasks(
     securedToday: first.challengeSecuredToday === true,
     startDateKey: first.startDateKey ?? null,
     photoCount: rows.filter((r) => r.hasCameraProof).length,
+    proof: rows.some((r) => r.hasCameraProof) || tasks.some((t) => t.requirePhoto || (t.gates ?? []).includes("camera"))
+      ? "camera"
+      : "self",
   };
 }
 

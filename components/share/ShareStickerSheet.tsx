@@ -43,6 +43,7 @@ export type ShareStickerDay = {
   day: number;
   durationDays: number;
   proof: ProofKind;
+  status?: string;
   photoUri?: string | null;
   photoShared?: boolean;
 };
@@ -205,6 +206,7 @@ export default function ShareStickerSheet({
           day={day.day}
           durationDays={day.durationDays}
           proof={day.proof}
+          status={day.status}
           photoUri={day.photoUri}
         />
       );

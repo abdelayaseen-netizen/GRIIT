@@ -52,7 +52,8 @@ import {
   type ActiveChallengeTask,
   type ActiveTaskType,
 } from "@/lib/active-challenge-ui";
-import { SHARE_TODAY, TODAY_IS_SECURED, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
+import { SHARE_TODAY, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
+import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -97,6 +98,8 @@ export type ActiveChallengeV3Props = {
   onParticipants?: () => void;
   onShare?: () => void;
   showShareToday?: boolean;
+  todayStatus?: string | null;
+  todaySub?: string | null;
   prestartCard?: string | null;
 };
 
@@ -172,9 +175,14 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
 
         {p.loading ? (
           <View style={styles.statusSkel} />
+        ) : p.todayStatus ? (
+          <View style={styles.statusRow}>
+            <Text style={styles.secured}>{p.todayStatus}</Text>
+            {p.todaySub ? <Text style={styles.status}>{p.todaySub}</Text> : null}
+          </View>
         ) : line.kind === "secured" ? (
           <View style={styles.statusRow}>
-            <Text style={styles.secured}>Day secured.</Text>
+            <Text style={styles.secured}>{DONE_FOR_TODAY}</Text>
             <Text style={styles.status}>{line.allDone}</Text>
           </View>
         ) : (
@@ -278,7 +286,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             })}
             {p.showShareToday && p.onShare ? (
               <>
-                <Text style={styles.todaySecured}>{TODAY_IS_SECURED}</Text>
+                <Text style={styles.todaySecured}>{p.todayStatus ?? DONE_FOR_TODAY}</Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={SHARE_TODAY}
