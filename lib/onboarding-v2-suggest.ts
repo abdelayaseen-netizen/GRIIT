@@ -1,6 +1,10 @@
 import type { OnboardingGoal } from "@/store/onboardingStore";
-import { filterChallengesByGoals, inferChallengeGoalTags } from "@/lib/goal-challenge-map";
+import { inferChallengeGoalTags } from "@/lib/goal-challenge-map";
+import { parseTargetStreak } from "@/lib/onboarding-v2-target-streak-parse";
 import type { SuggestionTask } from "@/lib/onboarding-v2-first-challenge";
+
+export const DEFAULT_ONBOARDING_LINE = 7;
+export const NO_DAYS_OFF_TITLE = "No Days Off";
 
 export type SuggestableChallenge = {
   id: string;
@@ -55,13 +59,76 @@ export function isJoinableChallengeId(id: string): boolean {
   return UUID_RE.test(id);
 }
 
-/** Rank catalog by selected goals. Empty / non-UUID catalog → []. Never invents ids. */
+/** Custom is its number. Invalid / missing line falls back to the 7-day preset. */
+export function resolveOnboardingLine(line: number | null | undefined): number {
+  return parseTargetStreak(line) ?? DEFAULT_ONBOARDING_LINE;
+}
+
+export function isNoDaysOffChallenge(c: { title?: string | null }): boolean {
+  return (c.title ?? "").trim().toLowerCase() === NO_DAYS_OFF_TITLE.toLowerCase();
+}
+
+/** Never 1-day. Duration must be at least the locked line. */
+export function meetsOnboardingDuration(
+  durationDays: number | null | undefined,
+  line: number,
+): boolean {
+  const days = durationDays ?? 0;
+  return days > 1 && days >= line;
+}
+
+function goalScore(c: SuggestableChallenge, goals: readonly OnboardingGoal[]): number {
+  if (goals.length === 0) return 0;
+  const selected = new Set(goals);
+  return inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
+}
+
+/** First card that is not No Days Off. Null when the list is empty or only NDO. */
+export function preselectedSuggestionId(
+  suggestions: readonly SuggestableChallenge[],
+): string | null {
+  for (const c of suggestions) {
+    if (!isNoDaysOffChallenge(c)) return c.id;
+  }
+  return null;
+}
+
+/**
+ * Catalog rows with duration_days ≥ line. Never 1-day.
+ * Sort |duration − line| then goals matched. No Days Off is last and never pre-selected.
+ */
 export function suggestChallengesForGoals(
   goals: readonly OnboardingGoal[],
   catalog: readonly SuggestableChallenge[],
-  limit = 3
+  limit = 3,
+  line?: number | null,
 ): SuggestableChallenge[] {
-  const joinable = catalog.filter((c) => typeof c.id === "string" && isJoinableChallengeId(c.id));
+  const resolved = resolveOnboardingLine(line);
+  const joinable = catalog.filter(
+    (c) =>
+      typeof c.id === "string" &&
+      isJoinableChallengeId(c.id) &&
+      meetsOnboardingDuration(c.duration_days, resolved),
+  );
   if (joinable.length === 0) return [];
-  return filterChallengesByGoals(goals, joinable, limit);
+
+  const noDaysOff = joinable.filter(isNoDaysOffChallenge);
+  const rest = joinable.filter((c) => !isNoDaysOffChallenge(c));
+  const ranked = rest
+    .map((row) => ({ row, score: goalScore(row, goals) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => {
+      const da = Math.abs((a.row.duration_days ?? 0) - resolved);
+      const db = Math.abs((b.row.duration_days ?? 0) - resolved);
+      if (da !== db) return da - db;
+      if (b.score !== a.score) return b.score - a.score;
+      return a.row.id.localeCompare(b.row.id);
+    })
+    .map((entry) => entry.row);
+
+  const ndo = noDaysOff[0];
+  const regularLimit = ndo ? Math.max(0, limit - 1) : limit;
+  const regular = ranked.slice(0, regularLimit);
+  if (!ndo) return regular;
+  return [...regular, ndo];
 }

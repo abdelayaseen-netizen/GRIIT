@@ -4,9 +4,9 @@ import { requireNoError } from "../errors";
 import type { ChallengeWithTasksRow } from "../../types/db";
 import {
   type ChallengeTaskRowRaw,
-  type ChallengeTaskApiShape,
   mapTaskRowsToApi,
 } from "../../lib/challenge-tasks";
+import { filterOnboardingStarterPack } from "../../lib/onboarding-starter-pack";
 import { deriveProofType } from "../../lib/task-model";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
@@ -738,14 +738,6 @@ export const challengesDiscoverProcedures = {
   /** Discover tab: all published public challenges with join stats + team avatar previews (service role when available). */
   getStarterPack: publicProcedure
     .query(async ({ ctx }) => {
-      const ORDER: string[] = [
-        'onboard-water',
-        'onboard-steps',
-        'onboard-read',
-        'onboard-journal',
-        'onboard-breath',
-        'onboard-bed',
-      ];
       const { data: rows, error } = await ctx.supabase
         .from('challenges')
         .select(`
@@ -759,28 +751,21 @@ export const challengesDiscoverProcedures = {
           is_hard_mode,
           participation_type,
           source_starter_id,
+          creator_id,
           challenge_tasks (id, title, task_type, order_index, config)
         `)
-        .not('source_starter_id', 'is', null)
         .eq('visibility', 'PUBLIC')
         .eq('status', 'published')
         .limit(50);
 
       requireNoError(error, "Failed to load starter pack.");
-      const list = (rows ?? []).map((c: { challenge_tasks?: ChallengeTaskRowRaw[] } & Record<string, unknown>) => ({
+      const catalog = filterOnboardingStarterPack(
+        (rows ?? []) as (ChallengeWithTasksRow & { creator_id?: string | null; source_starter_id?: string | null; duration_days?: number | null })[],
+      );
+      return catalog.map((c) => ({
         ...c,
-        tasks: mapTaskRowsToApi(c.challenge_tasks ?? []),
+        tasks: mapTaskRowsToApi((c.challenge_tasks ?? []) as unknown as ChallengeTaskRowRaw[]),
       }));
-      type StarterListEntry = { source_starter_id?: string; tasks: ChallengeTaskApiShape[]; challenge_tasks?: ChallengeTaskRowRaw[] };
-      list.sort((a: StarterListEntry, b: StarterListEntry) => {
-        const ai = ORDER.indexOf(a.source_starter_id ?? "");
-        const bi = ORDER.indexOf(b.source_starter_id ?? "");
-        if (ai === -1 && bi === -1) return 0;
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
-        return ai - bi;
-      });
-      return list.slice(0, 10);
     }),
 
 };

@@ -25,9 +25,10 @@ export function browseAllExitPolicy(): {
 /** Same starter-pack catalog as the three cards, ranked, without the take-3. */
 export function catalogueForBrowseAll(
   goals: readonly OnboardingGoal[],
-  catalog: readonly SuggestableChallenge[]
+  catalog: readonly SuggestableChallenge[],
+  line?: number | null,
 ): SuggestableChallenge[] {
-  return suggestChallengesForGoals(goals, catalog, catalog.length);
+  return suggestChallengesForGoals(goals, catalog, catalog.length, line);
 }
 
 /**

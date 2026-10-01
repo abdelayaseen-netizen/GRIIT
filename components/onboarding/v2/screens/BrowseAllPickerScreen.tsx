@@ -17,6 +17,7 @@ export default function BrowseAllPickerScreen({
 }) {
   const selectedGoals = useOnboardingStore((s) => s.selectedGoals);
   const selectedChallengeId = useOnboardingStore((s) => s.selectedChallengeId);
+  const targetStreak = useOnboardingStore((s) => s.targetStreak);
   const [catalog, setCatalog] = useState<SuggestableChallenge[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,7 @@ export default function BrowseAllPickerScreen({
       try {
         const data = (await trpcQuery(TRPC.challenges.getStarterPack)) as unknown;
         const list = Array.isArray(data) ? (data as SuggestableChallenge[]) : [];
-        if (!cancelled) setCatalog(catalogueForBrowseAll(selectedGoals, list));
+        if (!cancelled) setCatalog(catalogueForBrowseAll(selectedGoals, list, targetStreak));
       } catch {
         if (!cancelled) setCatalog([]);
       } finally {
@@ -36,7 +37,7 @@ export default function BrowseAllPickerScreen({
     return () => {
       cancelled = true;
     };
-  }, [selectedGoals]);
+  }, [selectedGoals, targetStreak]);
 
   return (
     <View style={styles.content}>
