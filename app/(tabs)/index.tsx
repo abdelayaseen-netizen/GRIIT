@@ -55,7 +55,6 @@ import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import { JeopardyModal } from "@/components/home/JeopardyModal";
-import { nextProfileV2Badge } from "@/lib/profile-v2-badges";
 import {
   MISS_ACK_STORAGE_KEY,
   missAckPayload,
@@ -518,15 +517,6 @@ export default function HomeScreen() {
     setShowJeopardyModal(false);
   }, []);
 
-  const nextBadge = useMemo(() => {
-    const mark = nextProfileV2Badge({
-      bestStreak: resolvedStats?.longestStreak ?? streak ?? 0,
-      verifiedDays: resolvedStats?.totalDaysSecured ?? 0,
-    });
-    if (!mark) return { name: "First badge", progress: 1 };
-    return { name: mark.name, progress: mark.progress };
-  }, [resolvedStats?.longestStreak, resolvedStats?.totalDaysSecured, streak]);
-
   const firstProofEver =
     !statsFailed &&
     (resolvedStats?.totalDaysSecured ?? 0) === 0 &&
@@ -667,8 +657,6 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
-              badgeName={nextBadge.name}
-              badgePct={Math.round(nextBadge.progress * 100)}
               loading={bootstrap.isPending && !bootstrap.data}
             />
           }
