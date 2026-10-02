@@ -25,3 +25,13 @@ export function avatarTint(userId?: string | null): { bg: string; fg: string } {
     ? { bg: DS_V3.color.brandTint, fg: DS_V3.color.brandText }
     : { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
 }
+
+/** Photo only while this uri has not failed. A new uri retries. */
+export function avatarShowsPhoto(
+  uri: string | null | undefined,
+  failedUri: string | null,
+): boolean {
+  const next = (uri ?? "").trim();
+  if (!next) return false;
+  return failedUri !== next;
+}
