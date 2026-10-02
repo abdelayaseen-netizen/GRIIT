@@ -46,7 +46,23 @@ import {
   parseVisibility,
   type ProfileRelationship,
 } from "../../../lib/profile-v2-visibility";
-import { canSeeProfileContent } from "../../../lib/profile-privacy";
+import { canSeeProfileContent, isPrivateAccount, type PrivacyProfileFields } from "../../../lib/profile-privacy";
+
+/** Owner "see as stranger": public account → public view; private → lock. */
+export function recordAccountVisible(opts: {
+  previewStranger: boolean;
+  viewerId: string;
+  owner: PrivacyProfileFields;
+  isMutual: boolean;
+}): boolean {
+  return opts.previewStranger
+    ? !isPrivateAccount(opts.owner)
+    : canSeeProfileContent(opts.viewerId, opts.owner, {
+        isMutual: opts.isMutual,
+        isCoMember: false,
+      });
+}
+
 
 type ActiveRow = {
   id: string;
@@ -186,12 +202,12 @@ export const profilesRecordProcedures = {
         relationship = (await isFriend(db, ctx.userId, ownerId)) ? "accepted" : "none";
       }
 
-      const canSeeAccount =
-        !previewStranger &&
-        canSeeProfileContent(ctx.userId, p, {
-          isMutual: relationship === "accepted",
-          isCoMember: false,
-        });
+      const canSeeAccount = recordAccountVisible({
+        previewStranger,
+        viewerId: ctx.userId,
+        owner: p,
+        isMutual: relationship === "accepted",
+      });
       const gate = canSeeAccount
         ? { profile: true, challenges: true, activity: true }
         : { profile: false, challenges: false, activity: false };
