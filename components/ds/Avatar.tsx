@@ -11,7 +11,7 @@ import { initialsFrom, avatarTint } from "@/lib/avatar-initials";
 
 export { initialsFrom };
 
-export type AvatarSize = 24 | 32 | 40 | 56 | 80 | 96;
+export type AvatarSize = 24 | 28 | 32 | 40 | 56 | 80 | 96;
 
 export type AvatarProps = {
   userId?: string | null;

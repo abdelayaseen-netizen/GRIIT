@@ -100,17 +100,14 @@ describe("Home RefreshControl wiring", () => {
     expect(block).not.toContain("[isGuest, user?.id, bootstrap]");
   });
 
-  it("Home Following uses a 3-row query; the full feed list stays in Activity", () => {
-    expect(homeSrc).not.toContain('queryKey: ["liveFeed", feedScope');
-    expect(homeSrc).not.toContain("countFriendsPostedAway");
-    expect(homeSrc).not.toContain("LiveFeedSection");
-    expect(homeSrc).toContain('queryKey: ["liveFeed", "following"');
-    expect(homeSrc).toContain("limit: 3");
-    expect(homeSrc).toContain("runHomePullRefresh");
-    expect(homeSrc).toContain("refreshing={isPulling}");
+  it("Home hosts the paginated live feed; Activity has no Feed segment", () => {
+    expect(homeSrc).toContain("LiveFeedSection");
+    expect(homeSrc).not.toContain("limit: 3");
     expect(feedSrc).toContain('queryKey: ["liveFeed", scope, user?.id ?? ""]');
-    expect(feedSrc).toContain("countFriendsPostedAway(feedQuery.data?.posts");
+    expect(feedSrc).toContain("countFriendsPostedAway(pagePosts");
+    expect(feedSrc).toContain("refreshing={isPulling}");
+    expect(feedSrc).toContain("runHomePullRefresh");
     const activity = readFileSync(join(process.cwd(), "app/(tabs)/activity.tsx"), "utf8");
-    expect(activity).toContain("LiveFeedSection");
+    expect(activity).not.toContain("LiveFeedSection");
   });
 });

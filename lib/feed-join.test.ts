@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { doubleTapAction, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal, systemLine } from "@/lib/feed-join";
+import { doubleTapAction, eventLine, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal, systemLine } from "@/lib/feed-join";
 
 function post(partial: Partial<LiveFeedPost> & { id: string }): LiveFeedPost {
   return {
@@ -85,6 +85,19 @@ describe("groupFeedJoins", () => {
     expect(isJoinGroup(items[1]!) && items[1].names).toEqual(["Drew"]);
     expect(items[2] && !isJoinGroup(items[2]) && items[2].id).toBe("task");
   });
+
+  it("groups equal-timestamp secured events once and leaves a photo post alone", () => {
+    const t = "2026-10-01T12:00:00.000Z";
+    const items = groupFeedJoins([
+      post({ id: "s1", userId: "a", displayName: "Alex", eventType: "secured_day", createdAt: t, currentDay: 2 }),
+      post({ id: "s2", userId: "b", displayName: "Bina", eventType: "secured_day", createdAt: t, currentDay: 2 }),
+      post({ id: "photo", eventType: "task_completed", proofPhotoUrl: "https://cdn.example/p.jpg" }),
+    ]);
+    expect(isJoinGroup(items[0]!)).toBe(true);
+    expect(isJoinGroup(items[0]!) && items[0].verb).toBe("secured");
+    expect(isJoinGroup(items[0]!) && eventLine(items[0])).toBe("Alex and Bina secured Day 2 · Iron man");
+    expect(items[1] && !isJoinGroup(items[1]) && items[1].id).toBe("photo");
+  });
 });
 
 describe("CameraSeal and DoubleTapRespect", () => {
@@ -104,7 +117,7 @@ describe("CameraSeal and DoubleTapRespect", () => {
     expect(card).not.toContain('stamp={stamp ? "Verified"');
     const feed = readFileSync(resolve(__dirname, "../components/LiveFeedSection.tsx"), "utf8");
     expect(feed).toContain("groupFeedJoins");
-    expect(feed).toContain("FeedJoinLine");
+    expect(feed).toContain("FeedEvent");
     const route = readFileSync(resolve(__dirname, "../backend/trpc/routes/feed.ts"), "utf8");
     expect(route).toContain("anonymousIds.has(ev.user_id)");
     expect(route).toContain("joined_challenge");

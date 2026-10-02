@@ -4,14 +4,12 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, Snowflake, X } from "lucide-react-native";
+import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame, Share, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { dayWord, formatDays } from "@/lib/format-days";
-import RootHeader from "@/components/ds/RootHeader";
+import { formatDays } from "@/lib/format-days";
 import HeaderIcon from "@/components/ds/HeaderIcon";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
-import Avatar from "@/components/ds/Avatar";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
 import Skeleton from "@/components/ds/Skeleton";
@@ -19,9 +17,11 @@ import EmptyState from "@/components/ds/EmptyState";
 import { greetingName } from "@/lib/profile-display";
 import type { WeekStripDayState } from "@/lib/week-strip-days";
 import {
-  FOLLOWING_LABEL,
-  SEE_ALL_IN_ACTIVITY,
-} from "@/lib/secured-since";
+  CREATE_CHALLENGE,
+  FIND_A_CHALLENGE,
+  NO_CHALLENGE_YET,
+  homeDateCaption,
+} from "@/lib/g2b-home";
 import {
   HOME_PROOF_HEADING,
   homeChallengeOpenA11y,
@@ -108,6 +108,8 @@ export type HomeV3Props = {
   following?: HomeFollowingItem[];
   onSeeAllActivity?: () => void;
   onPressFollowing?: (id: string) => void;
+  onFindChallenge?: () => void;
+  onCreateChallenge?: () => void;
   onPressBell: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
@@ -130,7 +132,7 @@ export type HomeV3Props = {
 export function HomeV3({
   title,
   streak,
-  streakLine,
+  streakLine: _streakLine,
   morningAfter,
   proof,
   startsTomorrow,
@@ -138,9 +140,11 @@ export function HomeV3({
   weekStates: _weekStates,
   todayIndex: _todayIndex,
   fillToday: _fillToday,
-  following = [],
-  onSeeAllActivity,
-  onPressFollowing,
+  following: _following = [],
+  onSeeAllActivity: _onSeeAllActivity,
+  onPressFollowing: _onPressFollowing,
+  onFindChallenge,
+  onCreateChallenge,
   onPressBell,
   onPressProof: _onPressProof,
   onPressTask,
@@ -148,8 +152,8 @@ export function HomeV3({
   onPressShareToday,
   sectionChoices,
   onToggleSection,
-  freezesLeft,
-  showFreezeChip = false,
+  freezesLeft: _freezesLeft,
+  showFreezeChip: _showFreezeChip = false,
   loading,
   error,
   onRetry,
@@ -160,8 +164,8 @@ export function HomeV3({
   showFirstProofSlot,
 }: HomeV3Props) {
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
-  const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
+  const dateCaption = homeDateCaption();
   const insets = useSafeAreaInsets();
 
   if (error) {
@@ -189,8 +193,6 @@ export function HomeV3({
     );
   }
 
-  const freezeCaption =
-    freezesLeft === 1 ? "1 freeze" : `${freezesLeft} freezes`;
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
     const pending = !row.done && !closed;
@@ -228,32 +230,23 @@ export function HomeV3({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <RootHeader
-        kicker={kicker}
-        title={headerTitle}
-        actions={
-          <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
-            <Bell size={ICON} color={DS_V3.color.textPrimary} />
-          </HeaderIcon>
-        }
-      />
-
-      <View style={styles.streak}>
-        <Text style={styles.secondary}>Current streak</Text>
-        <View
-          style={styles.numRow}
-          accessibilityLabel={streak == null ? "Streak unavailable" : formatDays(streak)}
-        >
-          {streak == null ? (
-            <Text style={styles.days}>—</Text>
-          ) : (
-            <>
-              <DisplayNumber value={streak} size="home" />
-              <Text style={styles.days}>{dayWord(streak)}</Text>
-            </>
-          )}
+      <View style={styles.homeHead}>
+        <View style={styles.homeHeadCopy}>
+          <Text style={styles.dateCaption}>{dateCaption}</Text>
+          <Text style={styles.homeName}>{headerTitle}</Text>
         </View>
-        <Text style={styles.secondary}>{streakLine}</Text>
+        {streak == null ? null : (
+          <View
+            style={styles.streakChip}
+            accessibilityLabel={formatDays(streak)}
+          >
+            <Flame size={16} color={DS_V3.color.brand} />
+            <Text style={styles.streakChipNum}>{streak}</Text>
+          </View>
+        )}
+        <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
+          <Bell size={ICON} color={DS_V3.color.textPrimary} />
+        </HeaderIcon>
       </View>
 
       {morningAfter ? (
@@ -352,7 +345,13 @@ export function HomeV3({
                 );
               })
             ) : (
-              <Text style={[styles.secondary, styles.sectionFirst]}>No active challenge</Text>
+              <View style={styles.emptyChallenge}>
+                <Text style={styles.secondary}>{NO_CHALLENGE_YET}</Text>
+                <View style={styles.emptyActions}>
+                  <Button label={FIND_A_CHALLENGE} onPress={onFindChallenge} />
+                  <Button label={CREATE_CHALLENGE} variant="secondary" onPress={onCreateChallenge} />
+                </View>
+              </View>
             )}
             {proof.showShareToday ? (
               <View style={styles.shareTodayBlock}>
@@ -407,50 +406,6 @@ export function HomeV3({
           ))
         : null}
 
-      {showFreezeChip ? (
-        <View style={styles.week}>
-          <View style={styles.meta}>
-            <View style={styles.metaItem}>
-              <Snowflake size={META} color={DS_V3.color.brand} />
-              <Text style={styles.caption}>{freezeCaption}</Text>
-            </View>
-          </View>
-        </View>
-      ) : null}
-
-      <View style={styles.following}>
-        <Text style={styles.weekLabel}>{FOLLOWING_LABEL}</Text>
-        {following.map((item) => (
-          <Pressable
-            key={item.id}
-            accessibilityRole="button"
-            accessibilityLabel={item.displayName || item.username}
-            onPress={() => onPressFollowing?.(item.id)}
-            style={styles.followRow}
-          >
-            <Avatar
-              size={32}
-              userId={item.userId}
-              uri={item.avatarUrl}
-              displayName={item.displayName}
-              username={item.username}
-            />
-            <View style={styles.taskCopy}>
-              <Text style={styles.task}>{item.displayName || item.username}</Text>
-              <Text style={styles.caption}>{item.line}</Text>
-            </View>
-            <Text style={styles.caption}>{item.when}</Text>
-          </Pressable>
-        ))}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={SEE_ALL_IN_ACTIVITY}
-          onPress={onSeeAllActivity}
-          style={styles.seeAllHit}
-        >
-          <Text style={styles.seeAll}>{SEE_ALL_IN_ACTIVITY}</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -464,6 +419,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
     gap: DS_V3.space.md,
+  },
+  homeHead: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+  },
+  homeHeadCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  dateCaption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  homeName: {
+    fontSize: DS_V3.type.heading.fontSize,
+    lineHeight: DS_V3.type.heading.lineHeight,
+    fontWeight: DS_V3.type.heading.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  streakChip: {
+    height: 32,
+    paddingHorizontal: 10,
+    paddingLeft: 8,
+    borderRadius: DS_V3.radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  streakChipNum: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  emptyChallenge: {
+    marginTop: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+  },
+  emptyActions: {
+    gap: DS_V3.space.sm,
   },
   streak: {
     paddingHorizontal: DS_V3.space.gutter,

@@ -65,7 +65,7 @@ describe("excludeOwnFollowingPosts", () => {
     expect(excludeOwnFollowingPosts(rows, "me").map((p) => p.id)).toEqual(["theirs"]);
     expect(excludeOwnFollowingPosts(rows, null).map((p) => p.id)).toEqual(["mine", "theirs"]);
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-    expect(home).toContain("excludeOwnFollowingPosts");
-    expect(home).toContain("user?.id");
+    expect(home).not.toContain("excludeOwnFollowingPosts");
+    expect(home).toContain("LiveFeedSection");
   });
 });

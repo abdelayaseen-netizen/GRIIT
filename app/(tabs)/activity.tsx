@@ -6,30 +6,26 @@ import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import LiveFeedSection from "@/components/LiveFeedSection";
 import { NotificationsTab } from "@/components/activity/NotificationsTab";
 import { LeaderboardTab } from "@/components/activity/LeaderboardTab";
 import RootHeader from "@/components/ds/RootHeader";
 import SegmentedControl from "@/components/ds/SegmentedControl";
 import { DS_V3 } from "@/lib/design-system";
-import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
-import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 
-type MainTab = "feed" | "notifications" | "leaderboard";
+type MainTab = "notifications" | "leaderboard";
 
 function isMainTab(value: string | undefined): value is MainTab {
-  return value === "feed" || value === "notifications" || value === "leaderboard";
+  return value === "notifications" || value === "leaderboard";
 }
 
-const SEGMENTS = ["Feed", "Notifications", "Leaderboard"] as const;
+const SEGMENTS = ["Notifications", "Leaderboard"] as const;
 
 export default function ActivityScreen() {
   const { user } = useAuth();
   const isGuest = useIsGuest();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const initialTab: MainTab = isMainTab(tab) ? tab : "feed";
+  const initialTab: MainTab = isMainTab(tab) ? tab : "notifications";
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
-  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
   useEffect(() => {
     if (isMainTab(tab) && tab !== mainTab) {
@@ -46,7 +42,7 @@ export default function ActivityScreen() {
         <RootHeader title="Activity" />
         <View style={styles.guestWrap}>
           <Text style={styles.guestText}>
-            Sign in to see the feed, notifications and leaderboards.
+            Sign in to see notifications and leaderboards.
           </Text>
         </View>
       </SafeAreaView>
@@ -54,8 +50,7 @@ export default function ActivityScreen() {
     );
   }
 
-  const segment =
-    mainTab === "leaderboard" ? "Leaderboard" : mainTab === "notifications" ? "Notifications" : "Feed";
+  const segment = mainTab === "leaderboard" ? "Leaderboard" : "Notifications";
 
   return (
     <ErrorBoundary>
@@ -66,24 +61,11 @@ export default function ActivityScreen() {
           <SegmentedControl
             items={[...SEGMENTS]}
             value={segment}
-            onChange={(v) =>
-              setMainTab(
-                v === "Leaderboard" ? "leaderboard" : v === "Notifications" ? "notifications" : "feed",
-              )
-            }
+            onChange={(v) => setMainTab(v === "Leaderboard" ? "leaderboard" : "notifications")}
           />
         </View>
         <View style={styles.tabShell}>
-          {mainTab === "feed" ? (
-            <LiveFeedSection
-              activeChallengesCount={countActiveEnrollments(
-                (Array.isArray(bootstrap.data?.activeChallenges)
-                  ? bootstrap.data.activeChallenges
-                  : []) as { status?: string }[],
-              )}
-              viewerTargetStreak={bootstrap.data?.profile?.target_streak ?? null}
-            />
-          ) : mainTab === "notifications" ? (
+          {mainTab === "notifications" ? (
             <NotificationsTab userId={user.id} />
           ) : (
             <LeaderboardTab userId={user.id} />

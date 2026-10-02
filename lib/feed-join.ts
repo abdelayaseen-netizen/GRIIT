@@ -17,22 +17,39 @@ export function doubleTapAction(ownPost: boolean, alreadyRespected: boolean): "n
   return alreadyRespected ? "keep" : "respect";
 }
 
+export type FeedEventVerb = "started" | "secured" | "finished";
+
+export function feedEventVerb(post: Pick<LiveFeedPost, "eventType" | "isCompleted">): FeedEventVerb | null {
+  if (post.eventType === "joined_challenge" || post.eventType === "challenge_created") return "started";
+  if (post.eventType === "secured_day") return "secured";
+  if (post.isCompleted || post.eventType === "completed_challenge") return "finished";
+  return null;
+}
+
+function whoLine(names: string[], others: number): string {
+  if (names.length === 1 && !others) return names[0] ?? "";
+  if (others) return `${names.join(", ")} and ${others}${others === 1 ? " other" : " others"}`;
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 export function joinLine(names: string[], others: number, challenge: string): string {
-  const who =
-    names.length === 1 && !others
-      ? names[0]
-      : others
-        ? `${names.join(", ")} and ${others}${others === 1 ? " other" : " others"}`
-        : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-  return `${who} started ${challenge}`;
+  return `${whoLine(names, others)} started ${challenge}`;
 }
 
 export function systemLine(name: string, dayN: number, dayOf: number, challenge: string): string {
   return `${name} secured Day ${dayN} of ${dayOf} · ${challenge}`;
 }
 
-export type FeedJoinGroup = {
-  kind: "join";
+export type FeedEventAvatar = {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+};
+
+export type FeedEventGroup = {
+  kind: "join" | "event";
+  verb: FeedEventVerb;
   id: string;
   challengeId: string | null;
   challengeName: string;
@@ -40,57 +57,103 @@ export type FeedJoinGroup = {
   others: number;
   createdAt: string;
   memberIds: string[];
+  avatars: FeedEventAvatar[];
+  dayN: number;
+  dayOf: number;
+  secured: number;
 };
 
-export type FeedListItem = LiveFeedPost | FeedJoinGroup;
+export type FeedJoinGroup = FeedEventGroup;
+export type FeedListItem = LiveFeedPost | FeedEventGroup;
 
 export function isJoinEvent(post: LiveFeedPost): boolean {
-  return post.eventType === "joined_challenge" || post.eventType === "challenge_created";
+  return feedEventVerb(post) === "started";
 }
 
-export function isJoinGroup(item: FeedListItem): item is FeedJoinGroup {
-  return "kind" in item && item.kind === "join";
+export function isJoinGroup(item: FeedListItem): item is FeedEventGroup {
+  return "kind" in item && (item.kind === "join" || item.kind === "event");
 }
 
-/** Group join events per challenge within one hour. Guests (is_anonymous) are dropped in feed.ts. */
+export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb" | "challengeName" | "dayN" | "dayOf" | "secured">): string {
+  const who = whoLine(group.names, group.others);
+  if (group.verb === "started") return `${who} started ${group.challengeName}`;
+  if (group.verb === "finished") {
+    return `${who} finished ${group.challengeName} · ${group.secured} of ${group.dayOf} days`;
+  }
+  return `${who} secured Day ${group.dayN} · ${group.challengeName}`;
+}
+
+/** Group consecutive same-verb + challenge events within 60 minutes. */
 export function groupFeedJoins(posts: readonly LiveFeedPost[]): FeedListItem[] {
   const out: FeedListItem[] = [];
-  const used = new Set<string>();
-  for (let i = 0; i < posts.length; i += 1) {
-    const post = posts[i]!;
-    if (used.has(post.id)) continue;
-    if (!isJoinEvent(post) || !post.challengeId) {
+  let open: {
+    verb: FeedEventVerb;
+    challengeId: string;
+    t0: number;
+    grouped: LiveFeedPost[];
+  } | null = null;
+
+  const flush = () => {
+    if (!open || open.grouped.length === 0) {
+      open = null;
+      return;
+    }
+    const first = open.grouped[0]!;
+    const names: string[] = [];
+    const memberIds: string[] = [];
+    const avatars: FeedEventAvatar[] = [];
+    for (const other of open.grouped) {
+      const label = (other.displayName || other.username || "").trim();
+      if (label && !names.includes(label)) names.push(label);
+      if (other.userId && !memberIds.includes(other.userId)) {
+        memberIds.push(other.userId);
+        avatars.push({
+          userId: other.userId,
+          username: other.username,
+          displayName: other.displayName,
+          avatarUrl: other.avatarUrl,
+        });
+      }
+    }
+    const shown = names.slice(0, 2);
+    out.push({
+      kind: open.verb === "started" ? "join" : "event",
+      verb: open.verb,
+      id: first.id,
+      challengeId: first.challengeId,
+      challengeName: first.challengeName,
+      names: shown,
+      others: Math.max(0, names.length - shown.length),
+      createdAt: first.createdAt,
+      memberIds,
+      avatars,
+      dayN: first.currentDay,
+      dayOf: first.totalDays,
+      secured: first.securedDays ?? first.currentDay,
+    });
+    open = null;
+  };
+
+  for (const post of posts) {
+    const verb = feedEventVerb(post);
+    if (!verb || !post.challengeId) {
+      flush();
       out.push(post);
       continue;
     }
-    const t0 = Date.parse(post.createdAt);
-    const names: string[] = [];
-    const memberIds: string[] = [];
-    const grouped: LiveFeedPost[] = [];
-    for (let j = i; j < posts.length; j += 1) {
-      const other = posts[j]!;
-      if (used.has(other.id) || !isJoinEvent(other)) continue;
-      if (other.challengeId !== post.challengeId) continue;
-      if (Math.abs(Date.parse(other.createdAt) - t0) > HOUR_MS) continue;
-      used.add(other.id);
-      grouped.push(other);
-      const label = (other.displayName || other.username || "").trim();
-      if (label && !names.includes(label)) names.push(label);
-      if (other.userId && !memberIds.includes(other.userId)) memberIds.push(other.userId);
+    const t = Date.parse(post.createdAt);
+    if (
+      open &&
+      open.verb === verb &&
+      open.challengeId === post.challengeId &&
+      Math.abs(t - open.t0) <= HOUR_MS
+    ) {
+      open.grouped.push(post);
+      continue;
     }
-    if (grouped.length === 0) continue;
-    const shown = names.slice(0, 2);
-    const others = Math.max(0, names.length - shown.length);
-    out.push({
-      kind: "join",
-      id: grouped[0]?.id ?? post.id,
-      challengeId: post.challengeId,
-      challengeName: post.challengeName,
-      names: shown,
-      others,
-      createdAt: grouped[0]?.createdAt ?? post.createdAt,
-      memberIds,
-    });
+    flush();
+    open = { verb, challengeId: post.challengeId, t0: t, grouped: [post] };
   }
+  flush();
   return out;
 }
