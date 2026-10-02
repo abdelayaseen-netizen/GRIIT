@@ -1,3 +1,4 @@
+import "@/lib/push-registration-logbox";
 import { Stack, usePathname, useRouter, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
