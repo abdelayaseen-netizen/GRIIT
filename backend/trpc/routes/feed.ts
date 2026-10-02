@@ -26,6 +26,7 @@ import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds } from "../../lib/is-friend";
 import { canSeeProfileContent, type PrivacyProfileFields } from "../../../lib/profile-privacy";
+import { liveFeedNextCursor } from "../../lib/live-feed-page";
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -53,7 +54,7 @@ function hoursUntilLocalMidnight(timezone: string): number {
 }
 
 export const feedRouter = createTRPCRouter({
-  getLiveFeed: protectedProcedure.input(z.object({ scope: z.enum(["following", "everyone"]), limit: z.number().min(1).max(30).default(20) })).query(async ({ ctx, input }) => {
+  getLiveFeed: protectedProcedure.input(z.object({ scope: z.enum(["following", "everyone"]), limit: z.number().min(1).max(30).default(20), cursor: z.string().min(1).optional() })).query(async ({ ctx, input }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
     const viewerId = ctx.userId;
     const dayAgo = new Date(Date.now() - 86400000).toISOString();
@@ -66,7 +67,10 @@ export const feedRouter = createTRPCRouter({
     ]);
     const followingIds = new Set<string>();
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(60);
+    const fetchLimit = Math.min(100, Math.max(80, input.limit * 4));
+    let evQuery = server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(fetchLimit);
+    if (input.cursor) evQuery = evQuery.lt("created_at", input.cursor);
+    const { data: rawEvents, error: evErr } = await evQuery;
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
     const events = (rawEvents ?? []) as EvRow[];
     const eventUserIds = [...new Set(events.map((e) => e.user_id))];
@@ -124,7 +128,12 @@ export const feedRouter = createTRPCRouter({
       preFiltered.push(ev);
     }
     const posts = await hydrateActivityEventsToPosts(preFiltered, viewerId, friendIds, ctx, server, coMemberIds);
-    return { movingCount: movingUserCount, posts };
+    return {
+      movingCount: movingUserCount,
+      posts,
+      following_count: followingIds.size,
+      nextCursor: liveFeedNextCursor(posts, input.limit),
+    };
   }),
 
   getUserPosts: protectedProcedure.input(z.object({ userId: z.string().uuid(), limit: z.number().min(1).max(50).default(20) })).query(async ({ ctx, input }) => {
