@@ -24,7 +24,8 @@ import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
-import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds, normalizeVisibilityLevel } from "../../lib/is-friend";
+import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds } from "../../lib/is-friend";
+import { canSeeProfileContent, type PrivacyProfileFields } from "../../../lib/profile-privacy";
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -80,17 +81,16 @@ export const feedRouter = createTRPCRouter({
     // Parallelize visibility + challenge lookups
     const [visResult, chResult] = await Promise.all([
       eventUserIds.length > 0
-        ? server.from("profiles").select("user_id, profile_visibility").in("user_id", eventUserIds).limit(200)
+        ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility").in("user_id", eventUserIds).limit(200)
         : Promise.resolve({ data: [] }),
       challengeIds.length > 0
         ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
         : Promise.resolve({ data: [] }),
     ]);
 
-    const privateUserIds = new Set<string>();
-    for (const r of ((visResult.data ?? []) as { user_id: string; profile_visibility?: string | null }[])) {
-      const v = String(r.profile_visibility ?? "public").toLowerCase();
-      if (v === "private") privateUserIds.add(r.user_id);
+    const authorProfiles = new Map<string, PrivacyProfileFields>();
+    for (const r of ((visResult.data ?? []) as PrivacyProfileFields[])) {
+      if (r.user_id) authorProfiles.set(r.user_id, r);
     }
     const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
     for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
@@ -111,7 +111,11 @@ export const feedRouter = createTRPCRouter({
         if (input.scope === "everyone") continue;
         if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") continue;
       }
-      if (input.scope === "everyone" && ev.user_id !== viewerId && privateUserIds.has(ev.user_id)) continue;
+      if (input.scope === "everyone" && ev.user_id !== viewerId) {
+        const owner = authorProfiles.get(ev.user_id) ?? { user_id: ev.user_id };
+        const isCoMember = Boolean(ev.challenge_id && coMemberIds.has(ev.challenge_id));
+        if (!canSeeProfileContent(viewerId, owner, { isMutual: friendIds.has(ev.user_id), isCoMember })) continue;
+      }
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
       if (ev.challenge_id && !ch) continue;
@@ -130,13 +134,12 @@ export const feedRouter = createTRPCRouter({
     if (input.userId !== viewerId && (await isBlockRelationship(ctx.supabase, viewerId, input.userId))) {
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
-    const { data: targetRow, error: pErr } = await server.from("profiles").select("user_id, profile_visibility").eq("user_id", input.userId).maybeSingle();
+    const { data: targetRow, error: pErr } = await server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility").eq("user_id", input.userId).maybeSingle();
     if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
     if (!targetRow) return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
-    const profileVis = normalizeVisibilityLevel((targetRow as { profile_visibility?: string }).profile_visibility);
     const friendIds = new Set<string>();
     if (input.userId !== viewerId && (await isFriend(ctx.supabase, viewerId, input.userId))) friendIds.add(input.userId);
-    if (!canSeeContent(viewerId, input.userId, profileVis, friendIds)) {
+    if (!canSeeProfileContent(viewerId, targetRow as PrivacyProfileFields, { isMutual: friendIds.has(input.userId), isCoMember: false })) {
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
     const coMemberIds = await coMemberChallengeIds(ctx.supabase, viewerId);

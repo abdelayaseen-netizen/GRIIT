@@ -6,6 +6,8 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
+import { canViewerSeeAccountContent } from "../../lib/account-privacy";
+import { isPrivateAccount } from "../../../lib/profile-privacy";
 
 export const profilesSocialProcedures = {
   followUser: protectedProcedure
@@ -16,14 +18,13 @@ export const profilesSocialProcedures = {
       }
       const { data: target, error: tErr } = await ctx.supabase
         .from("profiles")
-        .select("profile_visibility")
+        .select("user_id, profile_visibility, challenge_visibility, activity_visibility")
         .eq("user_id", input.userId)
         .maybeSingle();
       if (tErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: tErr.message });
       }
-      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
-      if (vis === "private" || vis === "friends") {
+      if (isPrivateAccount(target as { profile_visibility?: string; challenge_visibility?: string; activity_visibility?: string } | null)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "This profile requires a follow request.",
@@ -208,14 +209,13 @@ export const profilesSocialProcedures = {
       }
       const { data: target, error: tErr } = await ctx.supabase
         .from("profiles")
-        .select("profile_visibility, username")
+        .select("user_id, username, profile_visibility, challenge_visibility, activity_visibility")
         .eq("user_id", input.userId)
         .maybeSingle();
       if (tErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: tErr.message });
       }
-      const vis = String((target as { profile_visibility?: string } | null)?.profile_visibility ?? "public").toLowerCase();
-      if (vis !== "private" && vis !== "friends") {
+      if (!isPrivateAccount(target as { profile_visibility?: string; challenge_visibility?: string; activity_visibility?: string } | null)) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Use follow for public profiles." });
       }
       const { data: existing } = await ctx.supabase
@@ -363,6 +363,9 @@ export const profilesSocialProcedures = {
     .query(async ({ input, ctx }) => {
       const { getSupabaseServer } = await import("../../lib/supabase-server");
       const server = getSupabaseServer() ?? ctx.supabase;
+      if (!(await canViewerSeeAccountContent(server, ctx.userId, input.userId))) {
+        return { followers: 0, following: 0 };
+      }
       const { count: followers, error: fErr } = await server
         .from("user_follows")
         .select("id", { count: "exact", head: true })

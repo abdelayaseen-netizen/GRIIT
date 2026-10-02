@@ -20,6 +20,7 @@ import { profilesRecordProcedures } from "./profiles-record";
 import { resolveIanaTimeZone } from "../../lib/iana-timezone";
 import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
 import { ensureProfile } from "../../lib/ensure-profile";
+import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
@@ -104,12 +105,12 @@ export const profilesRouter = createTRPCRouter({
       const profileQuery = isUuid
         ? server
             .from("profiles")
-            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility, challenge_visibility, activity_visibility")
             .eq("user_id", trimmed)
             .maybeSingle()
         : server
             .from("profiles")
-            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility")
+            .select("user_id, username, display_name, avatar_url, total_days_secured, tier, bio, created_at, profile_visibility, challenge_visibility, activity_visibility")
             .eq("username", trimmed)
             .maybeSingle();
       const { data: profile, error: profileError } = await profileQuery;
@@ -133,7 +134,10 @@ export const profilesRouter = createTRPCRouter({
         bio: string | null;
         created_at: string | null;
         profile_visibility?: string | null;
+        challenge_visibility?: string | null;
+        activity_visibility?: string | null;
       };
+      const canSee = await canViewerSeeAccountContent(server, ctx.userId, p.user_id);
       const { data: streakRow, error: streakError } = await server
         .from("streaks")
         .select("active_streak_count, longest_streak_count")
@@ -169,13 +173,13 @@ export const profilesRouter = createTRPCRouter({
         username: p.username,
         display_name: p.display_name,
         avatar_url: p.avatar_url,
-        total_days_secured: p.total_days_secured ?? 0,
+        total_days_secured: canSee ? (p.total_days_secured ?? 0) : 0,
         tier: p.tier ?? "Starter",
         active_streak: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
-        longest_streak: (streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0,
-        active_challenges_count: activeChal ?? 0,
-        completed_challenges_count: doneChal ?? 0,
-        bio: p.bio ?? null,
+        longest_streak: canSee ? ((streakRow as { longest_streak_count?: number } | null)?.longest_streak_count ?? 0) : 0,
+        active_challenges_count: canSee ? (activeChal ?? 0) : 0,
+        completed_challenges_count: canSee ? (doneChal ?? 0) : 0,
+        bio: canSee ? (p.bio ?? null) : null,
         created_at: p.created_at ?? null,
         profile_visibility: String(p.profile_visibility ?? "public").toLowerCase(),
       };

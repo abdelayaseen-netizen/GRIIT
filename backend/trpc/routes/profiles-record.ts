@@ -44,9 +44,9 @@ import { fullHouseAtFromRoster } from "../../lib/full-house";
 import { type CheckInProofRow } from "../../../lib/profile-v2-proof-photo";
 import {
   parseVisibility,
-  resolveRecordGate,
   type ProfileRelationship,
 } from "../../../lib/profile-v2-visibility";
+import { canSeeProfileContent } from "../../../lib/profile-privacy";
 
 type ActiveRow = {
   id: string;
@@ -186,14 +186,22 @@ export const profilesRecordProcedures = {
         relationship = (await isFriend(db, ctx.userId, ownerId)) ? "accepted" : "none";
       }
 
-      const gate = resolveRecordGate({ ...visibility, relationship });
+      const canSeeAccount =
+        !previewStranger &&
+        canSeeProfileContent(ctx.userId, p, {
+          isMutual: relationship === "accepted",
+          isCoMember: false,
+        });
+      const gate = canSeeAccount
+        ? { profile: true, challenges: true, activity: true }
+        : { profile: false, challenges: false, activity: false };
       const timezone = p.timezone?.trim() || p.reminder_timezone?.trim() || "UTC";
       const todayKey = getTodayDateKey(timezone);
       const identity = {
         userId: p.user_id,
         username: p.username ?? "",
         displayName: p.display_name ?? p.username ?? "",
-        bio: p.bio ?? "",
+        bio: canSeeAccount ? (p.bio ?? "") : "",
         avatarUrl: p.avatar_url ?? null,
       };
       const viewer = { relationship, preview: previewStranger };
@@ -229,7 +237,15 @@ export const profilesRecordProcedures = {
       };
 
       if (!gate.profile) {
-        return finish(emptyRecord(), {
+        const { data: streakRow } = await db
+          .from("streaks")
+          .select("active_streak_count")
+          .eq("user_id", ownerId)
+          .maybeSingle();
+        const locked = emptyRecord();
+        locked.streak.current =
+          (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
+        return finish(locked, {
           monthKey,
           days: [],
           daySource: emptyDaySource,

@@ -19,7 +19,7 @@ import { reconcileMissForUser } from "../../lib/miss-reconcile";
 import { loadDayTaskTally } from "../../lib/record-days";
 import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
-import { viewerCanSee } from "../../lib/is-friend";
+import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -377,13 +377,7 @@ export const profilesStatsProcedures = {
       const { getAchievementsByDimension } = await import("../../lib/achievement-definitions");
       const server = getSupabaseServer() ?? ctx.supabase;
 
-      const { data: pr } = await server
-        .from("profiles")
-        .select("profile_visibility")
-        .eq("user_id", input.userId)
-        .maybeSingle();
-      const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public");
-      if (!(await viewerCanSee(ctx.supabase, ctx.userId, input.userId, vis))) {
+      if (!(await canViewerSeeAccountContent(server, ctx.userId, input.userId))) {
         return { earned: [], next: [] };
       }
 
@@ -468,13 +462,7 @@ export const profilesStatsProcedures = {
           level: 0 as const,
         }));
 
-      const { data: pr } = await server
-        .from("profiles")
-        .select("profile_visibility")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const vis = String((pr as { profile_visibility?: string } | null)?.profile_visibility ?? "public");
-      if (!(await viewerCanSee(ctx.supabase, ctx.userId, userId, vis))) {
+      if (!(await canViewerSeeAccountContent(server, ctx.userId, userId))) {
         return { days: buildEmpty() };
       }
 

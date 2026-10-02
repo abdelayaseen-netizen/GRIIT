@@ -39,7 +39,7 @@ import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
 import ProofsCalendar from "@/components/profile/ProofsCalendar";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
-import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
+import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyHeadline,
 } from "@/lib/consistency";
@@ -317,13 +317,7 @@ export default function VisitorProfileScreen() {
               }))}
               proofs={proofs}
               badgeGrid={rec?.badgeGrid}
-              badges={badgeItemsFromRows(
-                rec?.badges ??
-                  badgeRowsFromProgress({
-                    bestStreak: rec?.streak.best ?? 0,
-                    verifiedDays: rec?.detail.totalVerified ?? 0,
-                  }),
-              )}
+              badges={badgeItemsFromRows(rec?.badges ?? [])}
               onShare={() =>
                 void shareProfile({
                   username: handle,

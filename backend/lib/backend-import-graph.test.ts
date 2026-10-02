@@ -91,6 +91,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/free-challenge-limit.ts",
       "lib/home-day-total.ts",
       "lib/iana-timezone-core.ts",
+      "lib/profile-privacy.ts",
       "lib/profile-update-schema.ts",
       "lib/profile-v2-badges.ts",
       "lib/profile-v2-proof-photo.ts",
