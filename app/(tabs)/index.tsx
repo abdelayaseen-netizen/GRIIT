@@ -35,7 +35,7 @@ import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
-import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { excludeOwnFollowingPosts, keepLiveFeedPosts } from "@/lib/live-feed-list";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import {
   EMPTY_SECURED_HEADER,
@@ -307,7 +307,10 @@ export default function HomeScreen() {
       : []) as { challenges?: { is_hard_mode?: boolean; difficulty?: string; title?: string } }[],
   );
   const showFreeze = showHomeFreezeChip(freezeStatus?.remaining ?? 0, hardMode);
-  const followingItems = keepLiveFeedPosts(followingQuery.data?.posts ?? [])
+  const followingItems = excludeOwnFollowingPosts(
+    keepLiveFeedPosts(followingQuery.data?.posts ?? []),
+    user?.id,
+  )
     .slice(0, 3)
     .map((post) => ({
       id: post.id,

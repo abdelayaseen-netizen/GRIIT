@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { feedAvatarUri, keepLiveFeedPosts } from "./live-feed-list";
+import { excludeOwnFollowingPosts, feedAvatarUri, keepLiveFeedPosts } from "./live-feed-list";
 
 function post(
   partial: Partial<Parameters<typeof keepLiveFeedPosts>[0][number]> & { id: string },
@@ -53,5 +53,19 @@ describe("keepLiveFeedPosts", () => {
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
     expect(card).toContain("feedAvatarUri(post.avatarUrl, photo)");
     expect(card).not.toContain("uri={post.photoUrl");
+  });
+});
+
+describe("excludeOwnFollowingPosts", () => {
+  it("drops the viewer's posts so Home Following is others only", () => {
+    const rows = [
+      post({ id: "mine", userId: "me" }),
+      post({ id: "theirs", userId: "you" }),
+    ];
+    expect(excludeOwnFollowingPosts(rows, "me").map((p) => p.id)).toEqual(["theirs"]);
+    expect(excludeOwnFollowingPosts(rows, null).map((p) => p.id)).toEqual(["mine", "theirs"]);
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    expect(home).toContain("excludeOwnFollowingPosts");
+    expect(home).toContain("user?.id");
   });
 });

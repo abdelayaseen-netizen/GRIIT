@@ -221,7 +221,8 @@ export const challengesDiscoverProcedures = {
       let baseQuery = server
         .from("challenges")
         .select(
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, cover_url, challenge_tasks (id, title, task_type, order_index, config)"
+          // challenges.cover_url does not exist in prod — client uses generated covers.
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")
@@ -329,7 +330,7 @@ export const challengesDiscoverProcedures = {
         id: pick.id,
         slug: null as string | null,
         name: pick.title ?? "Challenge",
-        cover_url: (pick as { cover_url?: string | null }).cover_url ?? null,
+        cover_url: null,
         duration_days: pick.duration_days ?? 7,
         difficulty: toDiscoverDifficulty(pick.difficulty),
         proof_type: deriveProofType(
@@ -568,7 +569,8 @@ export const challengesDiscoverProcedures = {
     // NOTE(v2): Personalize by user goals when goal data is available
     const { data: rows, error } = await server
       .from("challenges")
-      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id, cover_url")
+      // challenges.cover_url does not exist in prod — client uses generated covers.
+      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id")
       .eq("status", "published")
       .eq("visibility", "PUBLIC")
       .limit(60);
@@ -634,7 +636,7 @@ export const challengesDiscoverProcedures = {
         duration: (c.duration_days as number) ?? 7,
         difficulty: toDiff(c.difficulty as string | undefined),
         category: String(c.category ?? "discipline"),
-        cover_url: typeof c.cover_url === "string" ? c.cover_url : null,
+        cover_url: null,
         participantCount: pc,
         completionRate: Math.min(96, 42 + Math.round(Math.log10(pc + 1) * 22)),
         previewUsers,

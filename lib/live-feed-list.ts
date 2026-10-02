@@ -46,3 +46,12 @@ export function keepLiveFeedPosts<T extends LiveFeedListPost>(posts: readonly T[
     return true;
   });
 }
+
+/** Home Following is people you follow. Own posts stay in Activity. */
+export function excludeOwnFollowingPosts<T extends { userId: string }>(
+  posts: readonly T[],
+  userId: string | null | undefined,
+): T[] {
+  if (!userId) return [...posts];
+  return posts.filter((post) => post.userId !== userId);
+}
