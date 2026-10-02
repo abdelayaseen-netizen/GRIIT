@@ -151,10 +151,9 @@ export default function ChallengeMembersScreen() {
                 {justYou ? (
                   <View style={styles.emptyCard}>
                     <Card>
-                      <Text style={styles.emptyTitle}>Just you so far.</Text>
+                      <Text style={styles.emptyTitle}>Just you so far</Text>
                       <Text style={styles.emptyBody}>
-                        Up to nine more can join. The group streak starts on the first day all of you
-                        secure.
+                        Anyone with the link can join. They start at Day 1 the day they join, with their own streak.
                       </Text>
                     </Card>
                   </View>

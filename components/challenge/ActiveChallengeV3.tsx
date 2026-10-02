@@ -24,6 +24,7 @@ import {
   Users,
   ChevronRight,
   Share,
+  Snowflake,
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -55,6 +56,7 @@ import {
 import { homeWindowClosed } from "@/lib/home-proof-card";
 import { SHARE_TODAY, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
+import { THIS_WEEK } from "@/lib/g2a-challenge";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -100,6 +102,11 @@ export type ActiveChallengeV3Props = {
   onShare?: () => void;
   showShareToday?: boolean;
   todayStatus?: string | null;
+  weekLine?: string | null;
+  weekDaysOverride?: { letter: string; filled: boolean }[];
+  freezeRow?: { title: string; caption: string; icon: "snowflake" | "shield-off" } | null;
+  people?: { heading: string; body: string; showInvite: boolean; inviteLabel: string } | null;
+  onInvite?: () => void;
   todaySub?: string | null;
   prestartCard?: string | null;
 };
@@ -205,6 +212,8 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : null}
 
         <View style={styles.weekWrap}>
+          <Text style={styles.label}>{THIS_WEEK}</Text>
+          {p.weekLine ? <Text style={styles.status}>{p.weekLine}</Text> : null}
           {p.loading ? (
             <View style={styles.weekSkelRow}>
               {LETTERS.map((letter, i) => (
@@ -214,9 +223,26 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
               ))}
             </View>
           ) : (
-            <WeekStrip days={weekDays} todayIndex={p.todayIndex} fillToday={p.securedToday} />
+            <WeekStrip
+              days={p.weekDaysOverride ?? weekDays}
+              todayIndex={p.todayIndex}
+              fillToday={p.securedToday}
+            />
           )}
         </View>
+        {p.freezeRow ? (
+          <View style={styles.freezeRow}>
+            {p.freezeRow.icon === "shield-off" ? (
+              <ShieldOff size={META_ICON} color={DS_V3.color.textSecondary} />
+            ) : (
+              <Snowflake size={META_ICON} color={DS_V3.color.textSecondary} />
+            )}
+            <View style={styles.resetCopy}>
+              <Text style={styles.taskTitle}>{p.freezeRow.title}</Text>
+              <Text style={styles.caption}>{p.freezeRow.caption}</Text>
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
@@ -304,7 +330,15 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 </Pressable>
               </>
             ) : null}
-            {p.participationType === "team" || p.participantsCount > 1 ? (
+            {p.people ? (
+              <View style={styles.peopleCard}>
+                <Text style={styles.taskTitle}>{p.people.heading}</Text>
+                {p.people.body ? <Text style={styles.caption}>{p.people.body}</Text> : null}
+                {p.people.showInvite ? (
+                  <Button label={p.people.inviteLabel} onPress={p.onInvite} />
+                ) : null}
+              </View>
+            ) : p.participationType === "team" || p.participantsCount > 1 ? (
               <>
                 <View style={styles.divider} />
                 <Pressable
@@ -563,6 +597,36 @@ const styles = StyleSheet.create({
   },
   footerClear: {
     height: FOOTER_CLEAR,
+  },
+  label: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase" as const,
+    color: DS_V3.color.textSecondary,
+    paddingHorizontal: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.xs,
+  },
+  freezeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
+    marginHorizontal: DS_V3.space.gutter,
+    marginBottom: DS_V3.space.lg,
+    padding: DS_V3.space.lg,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+  },
+  peopleCard: {
+    gap: DS_V3.space.sm,
+    marginTop: DS_V3.space.lg,
+    marginHorizontal: DS_V3.space.gutter,
+    padding: DS_V3.space.lg,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
   },
   footer: {
     position: "absolute",

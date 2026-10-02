@@ -22,6 +22,14 @@ import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
+import {
+  closeTimeLabel,
+  pickStartTask,
+  startCtaLabel,
+  todayDay2Hero,
+  todayFirstDayLine,
+  windowClosesBanner,
+} from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
@@ -505,6 +513,24 @@ export default function HomeScreen() {
     [router],
   );
 
+  const startTask = useMemo(
+    () =>
+      pickStartTask(
+        heroTasks.map((t) => ({
+          id: t.id,
+          name: t.name,
+          minutesLeft: t.minutesLeft,
+          gateTime: t.gateTime,
+          done: t.done,
+          closed: t.windowState === "closed",
+          challengeName: t.challengeName,
+          currentDay: t.currentDay,
+          durationDays: t.durationDays,
+        })),
+      ),
+    [heroTasks],
+  );
+
   const onPressPrimaryCTA = useCallback(() => {
     if (heroTasks.length === 0) {
       track({ name: 'discover_challenge_tapped' });
@@ -512,15 +538,16 @@ export default function HomeScreen() {
       return;
     }
     if (heroMetrics.tasksRemaining > 0) {
-      const next = heroTasks.find((t) => !t.done);
+      const next = startTask
+        ? heroTasks.find((t) => t.id === startTask.id)
+        : heroTasks.find((t) => !t.done);
       if (next) {
         track({ name: 'task_completed' });
         onPressTask(next);
       }
       return;
     }
-    // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
-  }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
+  }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router, startTask]);
 
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
@@ -691,6 +718,27 @@ export default function HomeScreen() {
               freezesLeft={freezeStatus?.remaining ?? 0}
               showFreezeChip={showFreeze}
               loading={bootstrap.isPending && !bootstrap.data}
+              firstDayLine={
+                !todaySecured && proof.sections.some((s) => s.day === 1)
+                  ? todayFirstDayLine(proof.totalCount)
+                  : null
+              }
+              day2Hero={
+                !todaySecured &&
+                proof.sections.some((s) => s.day >= 2) &&
+                typeof streak === "number"
+                  ? todayDay2Hero(streak)
+                  : null
+              }
+              windowBanner={
+                startTask && closeTimeLabel(startTask.gateTime)
+                  ? windowClosesBanner(startTask.name, closeTimeLabel(startTask.gateTime))
+                  : null
+              }
+              startLabel={
+                !todaySecured && startTask ? startCtaLabel(startTask.name) : null
+              }
+              showFirstProofSlot={firstProofEver && !todaySecured}
             />
           }
         />

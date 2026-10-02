@@ -216,6 +216,7 @@ export function streakCaption(streakDays: number): string {
 }
 
 export function participantsLine(count: number, participationType?: string): string {
+  if (count <= 1) return "Just you so far";
   if (participationType === "team") return `${count} of 10 in this group`;
   return `${count} in this challenge`;
 }

@@ -6,7 +6,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { homeProofFilled } from "@/lib/home-secured-visuals";
 import { dayWord, formatDays } from "@/lib/format-days";
 import RootHeader from "@/components/ds/RootHeader";
 import HeaderIcon from "@/components/ds/HeaderIcon";
@@ -15,11 +14,10 @@ import Card from "@/components/ds/Card";
 import Avatar from "@/components/ds/Avatar";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
-import WeekStrip from "@/components/ds/WeekStrip";
-import type { WeekStripDayState } from "@/lib/week-strip-days";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import { greetingName } from "@/lib/profile-display";
+import type { WeekStripDayState } from "@/lib/week-strip-days";
 import {
   FOLLOWING_LABEL,
   SEE_ALL_IN_ACTIVITY,
@@ -39,6 +37,10 @@ import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
+import {
+  FIRST_PROOF_SLOT_BODY,
+  FIRST_PROOF_SLOT_HEADING,
+} from "@/lib/g2a-home";
 
 const ICON = DS_V3.space.xs * 6;
 const RING = DS_V3.space.gutter;
@@ -46,7 +48,6 @@ const RING_CHECK = DS_V3.space.md;
 const META = DS_V3.space.lg;
 const STROKE = (DS_V3.space.xs * 3) / 8;
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-const LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
 export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
@@ -119,6 +120,11 @@ export type HomeV3Props = {
   loading?: boolean;
   error?: boolean;
   onRetry?: () => void;
+  firstDayLine?: string | null;
+  day2Hero?: { hero: string; line: string } | null;
+  windowBanner?: string | null;
+  startLabel?: string | null;
+  showFirstProofSlot?: boolean;
 };
 
 export function HomeV3({
@@ -128,10 +134,10 @@ export function HomeV3({
   morningAfter,
   proof,
   startsTomorrow,
-  weekFilled,
-  weekStates,
-  todayIndex,
-  fillToday,
+  weekFilled: _weekFilled,
+  weekStates: _weekStates,
+  todayIndex: _todayIndex,
+  fillToday: _fillToday,
   following = [],
   onSeeAllActivity,
   onPressFollowing,
@@ -147,20 +153,16 @@ export function HomeV3({
   loading,
   error,
   onRetry,
+  firstDayLine,
+  day2Hero,
+  windowBanner,
+  startLabel,
+  showFirstProofSlot,
 }: HomeV3Props) {
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const kicker = title ? weekday : undefined;
   const headerTitle = title ?? weekday;
   const insets = useSafeAreaInsets();
-  const secured = homeProofFilled(fillToday === true);
-  const days = LETTERS.map((letter, i) => {
-    const state = weekStates?.[i] ?? (weekFilled?.[i] === true ? "secured" : "missed");
-    return {
-      letter,
-      filled: state === "secured",
-      state,
-    };
-  });
 
   if (error) {
     return (
@@ -293,6 +295,15 @@ export function HomeV3({
                 {proof.doneCount} / {proof.totalCount}
               </Text>
             </View>
+            {day2Hero ? (
+              <View style={styles.day2Hero}>
+                <DisplayNumber value={Number(day2Hero.hero)} size="home" />
+                <Text style={styles.secondary}>{day2Hero.line}</Text>
+              </View>
+            ) : firstDayLine ? (
+              <Text style={[styles.secondary, styles.sectionFirst]}>{firstDayLine}</Text>
+            ) : null}
+            {windowBanner ? <Text style={styles.caption}>{windowBanner}</Text> : null}
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
                 const expanded = todaySectionExpanded(
@@ -363,6 +374,20 @@ export function HomeV3({
               </View>
             ) : null}
           </Card>
+          {startLabel ? (
+            <View style={styles.startWrap}>
+              <Button label={startLabel} onPress={_onPressProof} />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {showFirstProofSlot ? (
+        <View style={styles.gutter}>
+          <View style={styles.firstSlot} accessibilityLabel={FIRST_PROOF_SLOT_HEADING}>
+            <Text style={styles.task}>{FIRST_PROOF_SLOT_HEADING}</Text>
+            <Text style={styles.caption}>{FIRST_PROOF_SLOT_BODY}</Text>
+          </View>
         </View>
       ) : null}
 
@@ -382,18 +407,16 @@ export function HomeV3({
           ))
         : null}
 
-      <View style={styles.week}>
-        <Text style={styles.weekLabel}>This week</Text>
-        <WeekStrip days={days} todayIndex={todayIndex} fillToday={secured.todaySquareFilled} />
-        {showFreezeChip ? (
+      {showFreezeChip ? (
+        <View style={styles.week}>
           <View style={styles.meta}>
             <View style={styles.metaItem}>
               <Snowflake size={META} color={DS_V3.color.brand} />
               <Text style={styles.caption}>{freezeCaption}</Text>
             </View>
           </View>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
 
       <View style={styles.following}>
         <Text style={styles.weekLabel}>{FOLLOWING_LABEL}</Text>
@@ -666,4 +689,20 @@ const styles = StyleSheet.create({
     minHeight: DS_V3.size.tap,
   },
   gap20: { height: DS_V3.space.gutter },
+  day2Hero: {
+    gap: DS_V3.space.xs,
+    paddingBottom: DS_V3.space.sm,
+  },
+  startWrap: {
+    marginTop: DS_V3.space.md,
+  },
+  firstSlot: {
+    minHeight: DS_V3.size.button,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: DS_V3.color.brand,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
+  },
 });

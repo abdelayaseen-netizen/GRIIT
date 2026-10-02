@@ -14,6 +14,10 @@ import {
   scheduleChallengeCountdowns,
   scheduleTaskWindowAlerts,
 } from "@/lib/notifications";
+import { g2aPushCandidates } from "@/lib/g2a-notifications";
+import { cancelG2aDayReminders, scheduleG2aDayReminders } from "@/lib/g2a-notification-schedule";
+import { closeTimeLabel } from "@/lib/g2a-home";
+import { calendarDayFromStartAt } from "@/lib/home-day-total";
 import { getTodayDateKey, countSecuredLast7Days } from "@/lib/date-utils";
 import type { EveningRemaining } from "@/lib/evening-secure";
 import { tasksDueTodayAcrossEnrollments } from "@/lib/notification-due-count";
@@ -183,6 +187,7 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
         anchorTimeLocal?: string | null;
         windowStartOffsetMin?: number | null;
         challengeName?: string;
+        taskName?: string;
       }[] = [];
       for (const ac of Array.isArray(myActive) ? myActive : []) {
         const chInner = ac.challenges;
@@ -213,22 +218,75 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
                   : 0;
 
           const rawType = (t as { type?: string }).type;
+          const taskName =
+            typeof (t as { title?: string }).title === "string" && (t as { title: string }).title.trim()
+              ? (t as { title: string }).title.trim()
+              : "task";
           winTasks.push({
             id: `${ac.id ?? "ac"}-${String((t as { id?: string }).id)}`,
             taskType: typeof rawType === "string" ? rawType : undefined,
             anchorTimeLocal: anchor,
             windowStartOffsetMin: w,
             challengeName: title,
+            taskName,
           });
         }
       }
       scheduleTaskWindowAlerts(winTasks).catch(() => {});
+
+      const securedToday = lastKey === todayKey;
+      if (securedToday) {
+        await cancelG2aDayReminders();
+      } else {
+        const now = new Date();
+        let earliest: { at: Date; name: string; hhmm: string } | null = null;
+        for (const t of winTasks) {
+          const hhmm = t.anchorTimeLocal;
+          if (!hhmm) continue;
+          const parts = hhmm.split(":");
+          const hRaw = Number(parts[0]);
+          const mRaw = Number(parts[1]);
+          const at = new Date(now);
+          at.setHours(Number.isFinite(hRaw) ? hRaw : 0, Number.isFinite(mRaw) ? mRaw : 0, 0, 0);
+          if (at.getTime() <= now.getTime()) continue;
+          if (!earliest || at.getTime() < earliest.at.getTime()) {
+            earliest = { at, name: t.taskName ?? "task", hhmm };
+          }
+        }
+        const windowCloseAt = earliest?.at ?? null;
+        const closeLabel = earliest
+          ? closeTimeLabel({ mode: "by", start: earliest.hhmm, end: null }) || earliest.hhmm
+          : "";
+        const matched = activeRows.find((r) => r.id && r.id === (activeChallenge as { id?: string } | null)?.id) ?? activeRows[0];
+        const startAt =
+          matched?.start_at ?? matched?.started_at ?? matched?.created_at ?? null;
+        const durationDays =
+          typeof matched?.challenges?.duration_days === "number"
+            ? matched.challenges.duration_days
+            : 1;
+        const shownDay = calendarDayFromStartAt(startAt, timezone ?? "UTC", todayKey, durationDays);
+        const title = challengeTitle ?? matched?.challenges?.title ?? "GRIIT";
+        const challengeLine = `${title} · Day ${shownDay} of ${durationDays}`;
+        const candidates = g2aPushCandidates({
+          now,
+          securedToday: false,
+          windowCloseAt,
+          windowBody: earliest
+            ? `${earliest.name} window closes at ${closeLabel}. Your streak is ${streakCount} days.`
+            : null,
+          challengeLine,
+          eveningBody: `${dueToday.remaining} tasks left today. Your streak is ${streakCount} days.`,
+          morningBody: `Secure today and it's ${streakCount + 1}.`,
+        });
+        await scheduleG2aDayReminders(candidates);
+      }
     };
     void runExtended();
 
     return () => {
       cancelled = true;
       cancelSecureReminders();
+      void cancelG2aDayReminders();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deps derived from stats; listing stats would re-run on any stats change
   }, [

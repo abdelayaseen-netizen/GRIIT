@@ -5,10 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
-import {
-  getCurrentWeekDateKeys,
-  getTodayDateKey,
-} from "@/lib/date-utils";
+import { getTodayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
@@ -48,6 +45,14 @@ import {
 } from "@/lib/active-challenge-ui";
 import { dateKeyFromIso } from "@/lib/challenge-end";
 import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
+import {
+  enrollmentWeekDateKeys,
+  freezeDetailCopy,
+  peopleCardCopy,
+  weekdayLetterForDateKey,
+  weekSecuredOfDue,
+} from "@/lib/g2a-challenge";
+import { inviteToChallenge } from "@/lib/share";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
@@ -120,7 +125,6 @@ export default function ActiveChallengeDetailScreen() {
   const bootstrap = useHomeBootstrap(user?.id);
   const profileTz = (profile as { timezone?: string | null })?.timezone;
   const todayKey = getTodayDateKey(profileTz);
-  const weekKeys = useMemo(() => getCurrentWeekDateKeys(profileTz), [profileTz]);
 
   const {
     data: activeChallenge,
@@ -216,6 +220,10 @@ export default function ActiveChallengeDetailScreen() {
   const startDateKey = startIso
     ? dateKeyFromIso(String(startIso), profileTz ?? "UTC")
     : todayKey;
+  const weekKeys = useMemo(
+    () => enrollmentWeekDateKeys(startDateKey, todayKey),
+    [startDateKey, todayKey],
+  );
   const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
   const securedToday =
     todayKey >= startDateKey && securedTodayFromKeys(keys, todayKey);
@@ -403,6 +411,35 @@ export default function ActiveChallengeDetailScreen() {
     return undefined;
   }, [checkins]);
 
+  const weekMeta = weekSecuredOfDue({
+    weekKeys,
+    securedDateKeys: keys,
+    todayKey,
+    startDateKey,
+    durationDays,
+    todaySecured: securedToday,
+  });
+  const freezeRow = freezeDetailCopy({
+    remaining: bootstrap.data?.freezeStatus?.remaining ?? 0,
+    lastFreezeUsedAt: bootstrap.data?.freezeStatus?.lastFreezeUsedAt,
+    hardMode: difficulty === "hard",
+    timeZone: profileTz ?? "UTC",
+  });
+  const vis = String((challenge as { visibility?: string | null } | undefined)?.visibility ?? "").toLowerCase();
+  const people = peopleCardCopy({
+    memberCount: participantsCount,
+    privateOrSolo: participationType === "solo" || vis === "private",
+    challengeTitle: title,
+  });
+  const weekDaysOverride = weekKeys.map((key, i) => ({
+    letter: weekdayLetterForDateKey(key),
+    filled: weekSecured[i] === true,
+  }));
+
+  const handleInvite = useCallback(() => {
+    void inviteToChallenge({ name: title, id: challengeId || title });
+  }, [title, challengeId]);
+
   const handleParticipants = useCallback(() => {
     if (!challengeId) return;
     if (participationType === "team") {
@@ -472,6 +509,11 @@ export default function ActiveChallengeDetailScreen() {
           showShareToday={todayCopy.showShareToday}
           todayStatus={todayCopy.status}
           todaySub={todayCopy.sub}
+          weekLine={weekMeta.line}
+          weekDaysOverride={weekDaysOverride}
+          freezeRow={freezeRow}
+          people={people}
+          onInvite={people.showInvite ? handleInvite : undefined}
         />
         <DayStickerSheet
           visible={shareTodayOpen && thisDone}

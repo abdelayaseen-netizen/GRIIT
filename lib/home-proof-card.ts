@@ -2,6 +2,7 @@ import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { SELF_REPORTED, closedWindowCaption, gateLabel } from "@/lib/task-ui";
+import { countdownSuffix } from "@/lib/g2a-home";
 import {
   shareTodayCaption,
   shareTodayChallenges,
@@ -104,6 +105,7 @@ export type HomeProofTask = {
   gates?: TaskGate[];
   gateTime?: GateTime | null;
   windowState?: WindowState;
+  minutesLeft?: number | null;
   hasCameraProof?: boolean;
   taskConfig?: string;
 };
@@ -181,7 +183,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
       requirePhoto: task.requirePhoto,
     }),
     type: task.type ?? task.taskType ?? "check_off",
-    caption: closed
+    caption: (closed
       ? closedWindowCaption(task.gateTime)
       : task.done && task.hasCameraProof !== true
         ? SELF_REPORTED
@@ -189,7 +191,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
             gates: rowGates(task),
             gateTime: task.gateTime,
             requirePhoto: task.requirePhoto,
-          }),
+          })) + (!closed && !task.done ? countdownSuffix(task.minutesLeft) : ""),
     done: task.done,
     closed,
     hasCameraProof: task.hasCameraProof === true,
