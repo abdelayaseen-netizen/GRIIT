@@ -29,7 +29,8 @@ import * as Notifications from "expo-notifications";
 import { SchedulableTriggerInputTypes } from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
-import { captureError } from "@/lib/sentry";
+import { captureError, captureSilentError } from "@/lib/sentry";
+import "@/lib/push-registration-logbox";
 import { DS_V3 } from "@/lib/design-system";
 import {
   pickTemplate,
@@ -642,7 +643,7 @@ export async function registerForPushNotificationsAsync(opts?: {
       (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ??
       Constants.easConfig?.projectId;
     if (!projectId) {
-      captureError(new Error("Missing EAS projectId for push token"), "registerForPushNotificationsAsync");
+      captureSilentError(new Error("Missing EAS projectId for push token"), "registerForPushNotificationsAsync");
       return null;
     }
 
@@ -657,7 +658,7 @@ export async function registerForPushNotificationsAsync(opts?: {
 
     return tokenData.data;
   } catch (error) {
-    captureError(error, "registerForPushNotificationsAsync");
+    captureSilentError(error, "registerForPushNotificationsAsync");
     return null;
   }
 }

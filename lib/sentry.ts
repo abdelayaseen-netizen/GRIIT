@@ -30,13 +30,7 @@ export function clearSentryUser(): void {
   Sentry.setUser(null);
 }
 
-export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
-  if (__DEV__) {
-    const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
-    // DEV-only: surface errors to the dev console; stripped in production builds.
-    console.error(`[${label}]`, error);
-    return;
-  }
+function reportToSentry(error: unknown, context?: string | Record<string, unknown>): void {
   if (!SENTRY_DSN) return;
   if (typeof context === "string") {
     if (error instanceof Error) {
@@ -52,6 +46,23 @@ export function captureError(error: unknown, context?: string | Record<string, u
   } else {
     Sentry.captureMessage(String(error), extra ? { extra } : undefined);
   }
+}
+
+export function captureError(error: unknown, context?: string | Record<string, unknown>): void {
+  if (__DEV__) {
+    const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
+    // DEV-only: surface errors to the dev console; stripped in production builds.
+    console.error(`[${label}]`, error);
+    return;
+  }
+  reportToSentry(error, context);
+}
+
+/** Log + Sentry, never console.error — LogBox turns that into a user toast. */
+export function captureSilentError(error: unknown, context?: string | Record<string, unknown>): void {
+  const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
+  console.warn(`[${label}]`, error);
+  reportToSentry(error, context);
 }
 
 export function captureMessage(message: string, level: Sentry.SeverityLevel = "info"): void {
