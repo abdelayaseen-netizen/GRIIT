@@ -253,17 +253,40 @@ export function streakClause(streak: number): string {
   return ` Your streak is ${countNoun(streak, "day", "days")}.`;
 }
 
-export function g2aWindowBody(taskName: string, closeLabel: string, streak: number): string {
-  return `${taskName.trim() || "task"} window closes at ${closeLabel}.${streakClause(streak)}`;
+export function g2aWindowBody(
+  taskName: string,
+  closeLabel: string,
+  streak: number,
+  opts?: { includeStreak?: boolean },
+): string {
+  const clause = opts?.includeStreak === false ? "" : streakClause(streak);
+  return `${taskName.trim() || "task"} window closes at ${closeLabel}.${clause}`;
 }
 
-export function g2aEveningBody(remaining: number, streak: number): string {
-  return `${countNoun(Math.max(0, Math.floor(remaining)), "task", "tasks")} left today.${streakClause(streak)}`;
+export function g2aEveningBody(
+  remaining: number,
+  streak: number,
+  opts?: { includeStreak?: boolean },
+): string {
+  const clause = opts?.includeStreak === false ? "" : streakClause(streak);
+  return `${countNoun(Math.max(0, Math.floor(remaining)), "task", "tasks")} left today.${clause}`;
 }
 
-export function g2aMorningBody(args: { streak: number; taskName: string }): string {
+export function g2aChallengeLine(title: string, day: number, durationDays: number): string {
+  return `${title.trim() || "GRIIT"} · Day ${Math.max(1, Math.floor(day))} of ${Math.max(1, Math.floor(durationDays))}`;
+}
+
+export function g2aMorningBody(args: {
+  streak: number;
+  taskName: string;
+  day: number;
+  forTomorrow?: boolean;
+}): string {
+  const task = args.taskName.trim() || "task";
+  if (args.forTomorrow) return `Finish ${task} to secure today.`;
+  const day = Math.max(1, Math.floor(args.day));
   if (args.streak <= 0) {
-    return `Day 1 is today. Finish ${args.taskName.trim() || "task"} to secure it.`;
+    return `Day ${day} is today. Finish ${task} to secure it.`;
   }
   return `Secure today and it's ${args.streak + 1}.`;
 }

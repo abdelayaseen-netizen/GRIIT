@@ -11,6 +11,7 @@ import {
   earliestWindowClose,
   planG2aAhead,
   planG2aDay,
+  g2aChallengeLine,
   g2aEveningBody,
   g2aMorningBody,
   g2aWindowBody,
@@ -124,11 +125,29 @@ describe("g2a copy", () => {
     expect(g2aWindowBody("Read", "12:00 pm", 1)).toBe("Read window closes at 12:00 pm. Your streak is 1 day.");
   });
 
-  it("morning with streak 0 names Day 1 and the task", () => {
-    expect(g2aMorningBody({ streak: 0, taskName: "Read" })).toBe(
+  it("morning with streak 0 uses the real challenge day, Day 1 only when it is Day 1", () => {
+    expect(g2aMorningBody({ streak: 0, taskName: "Read", day: 1 })).toBe(
       "Day 1 is today. Finish Read to secure it.",
     );
-    expect(g2aMorningBody({ streak: 4, taskName: "Read" })).toBe("Secure today and it's 5.");
+    expect(g2aMorningBody({ streak: 0, taskName: "Read", day: 3 })).toBe(
+      "Day 3 is today. Finish Read to secure it.",
+    );
+    expect(g2aMorningBody({ streak: 4, taskName: "Read", day: 5 })).toBe("Secure today and it's 5.");
+  });
+
+  it("tomorrow copy has no streak and uses tomorrow's calendar day from start_at", () => {
+    expect(g2aChallengeLine("Crew", 2, 30)).toBe("Crew · Day 2 of 30");
+    expect(g2aMorningBody({ streak: 0, taskName: "Read", day: 2, forTomorrow: true })).toBe(
+      "Finish Read to secure today.",
+    );
+    expect(g2aMorningBody({ streak: 5, taskName: "Read", day: 6, forTomorrow: true })).toBe(
+      "Finish Read to secure today.",
+    );
+    expect(g2aWindowBody("Read", "12:00 pm", 5, { includeStreak: false })).toBe(
+      "Read window closes at 12:00 pm.",
+    );
+    expect(g2aEveningBody(1, 5, { includeStreak: false })).toBe("1 task left today.");
+    expect(g2aWindowBody("Read", "12:00 pm", 5)).toContain("Your streak is 5 days.");
   });
 });
 

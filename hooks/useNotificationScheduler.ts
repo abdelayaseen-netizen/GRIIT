@@ -13,6 +13,7 @@ import {
   addLocalDays,
   calendarDateKey,
   lapsedOffsetsAvoidingG2a,
+  g2aChallengeLine,
   g2aEveningBody,
   g2aMorningBody,
   g2aWindowBody,
@@ -22,7 +23,7 @@ import {
 import { cancelG2aDayReminders, scheduleG2aDayReminders } from "@/lib/g2a-notification-schedule";
 import { closeTimeLabel } from "@/lib/g2a-home";
 import { calendarDayFromStartAt } from "@/lib/home-day-total";
-import { getTodayDateKey, countSecuredLast7Days } from "@/lib/date-utils";
+import { getTodayDateKey, countSecuredLast7Days, addCalendarDaysToDateKey } from "@/lib/date-utils";
 import type { EveningRemaining } from "@/lib/evening-secure";
 import { tasksDueTodayAcrossEnrollments } from "@/lib/notification-due-count";
 import { deriveUserRank } from "@/lib/derive-user-rank";
@@ -158,19 +159,35 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       const dueTomorrow = dueToday.due;
       const morningTask =
         [...winTasks].sort((a, b) => (a.closeHHMM ?? "").localeCompare(b.closeHHMM ?? ""))[0]?.name ?? "task";
-      const copyFor = (day: number, remaining: number) => ({
-        challengeLine: `${title} · Day ${day} of ${durationDays}`,
+      const tomorrowKey = addCalendarDaysToDateKey(todayKey, 1);
+      const tomorrowDay = calendarDayFromStartAt(startAt, timezone ?? "UTC", tomorrowKey, durationDays);
+      const closeLabel = (hhmm: string) =>
+        closeTimeLabel({ mode: "by", start: hhmm, end: null }) || hhmm;
+      const todayCopy = {
+        challengeLine: g2aChallengeLine(title, shownDay, durationDays),
         windowBody: (close: { name: string; hhmm: string }) =>
-          g2aWindowBody(close.name, closeTimeLabel({ mode: "by", start: close.hhmm, end: null }) || close.hhmm, streakCount),
-        eveningBody: g2aEveningBody(remaining, streakCount),
-        morningBody: g2aMorningBody({ streak: streakCount, taskName: morningTask }),
-      });
+          g2aWindowBody(close.name, closeLabel(close.hhmm), streakCount),
+        eveningBody: g2aEveningBody(remainingToday, streakCount),
+        morningBody: g2aMorningBody({ streak: streakCount, taskName: morningTask, day: shownDay }),
+      };
+      const tomorrowCopy = {
+        challengeLine: g2aChallengeLine(title, tomorrowDay, durationDays),
+        windowBody: (close: { name: string; hhmm: string }) =>
+          g2aWindowBody(close.name, closeLabel(close.hhmm), streakCount, { includeStreak: false }),
+        eveningBody: g2aEveningBody(dueTomorrow, streakCount, { includeStreak: false }),
+        morningBody: g2aMorningBody({
+          streak: streakCount,
+          taskName: morningTask,
+          day: tomorrowDay,
+          forTomorrow: true,
+        }),
+      };
       const plan = planG2aAhead({
         now,
         securedToday,
         tasks: winTasks,
-        today: copyFor(shownDay, remainingToday),
-        tomorrow: copyFor(shownDay + 1, dueTomorrow),
+        today: todayCopy,
+        tomorrow: tomorrowCopy,
       });
       if (securedToday) {
         await cancelG2aDayReminders("today");
