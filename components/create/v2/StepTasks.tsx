@@ -47,6 +47,7 @@ export type WizardTask = {
   durationMinutes?: number;
   minWords?: number;
   requirePhoto?: boolean;
+  photoMode?: "required" | "optional" | "none";
   targetValue?: number;
   locationName?: string;
   radiusMeters?: number;

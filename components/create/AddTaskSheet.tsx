@@ -2,7 +2,7 @@
  * Add task sheet — frames 42 and 50.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { LocateFixed } from "lucide-react-native";
@@ -31,12 +31,14 @@ import {
   ADD_TASK_STARTERS,
   ADD_TASK_TYPE_CHIPS,
   ADD_TASK_USE_LOCATION,
+  ADD_TASK_LIMITS,
   ADD_TASK_ON_HOME,
-  ADD_TASK_PROOFS,
-  ADD_TASK_WHAT_PROVES,
+  ADD_TASK_PHOTO,
+  ADD_TASK_PHOTO_CAPTIONS,
+  ADD_TASK_PHOTO_SEGMENTS,
   ADD_TASK_WHAT_YOU_DO,
-  applyProof,
-  proofFromDraft,
+  photoModeFromDraft,
+  placePreviewLine,
   PLACE_RADIUS_CHIPS,
   TIMER_CHIPS,
   TIMER_CUSTOM,
@@ -127,6 +129,7 @@ export default function AddTaskSheet({
       minWords: row.minWords,
       targetValue: row.targetValue,
       requirePhoto: row.requirePhoto,
+      photoMode: row.photoMode,
       unit: row.unit,
     });
     onClose();
@@ -258,6 +261,7 @@ export default function AddTaskSheet({
           value={draft.name}
           onChangeText={(name) => setDraft((d) => ({ ...d, name: name.slice(0, NAME_MAX) }))}
           placeholder={ADD_TASK_NAME_PLACEHOLDER}
+          placeholderOpacity={0.7}
           accessibilityLabel={ADD_TASK_NAME_LABEL}
           maxLength={NAME_MAX}
         />
@@ -378,27 +382,40 @@ export default function AddTaskSheet({
           </View>
         ) : null}
 
-        <Text style={styles.section}>{ADD_TASK_WHAT_PROVES}</Text>
-        <View style={styles.proofs}>
-          {ADD_TASK_PROOFS.map((proof) => {
-            const on = proofFromDraft(draft) === proof.id;
-            return (
-              <Pressable
-                key={proof.id}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={proof.title}
-                onPress={() => setDraft((d) => applyProof(d, proof.id))}
-                style={styles.proof}
-              >
-                <View style={[styles.radio, on ? styles.radioOn : null]} />
-                <View style={styles.proofCopy}>
-                  <Text style={styles.gateLabel}>{proof.title}</Text>
-                  <Text style={styles.caption}>{proof.caption}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
+        <Text style={styles.section}>{ADD_TASK_PHOTO}</Text>
+        <SegmentedControl
+          items={[...ADD_TASK_PHOTO_SEGMENTS]}
+          value={
+            photoModeFromDraft(draft) === "required"
+              ? "Required"
+              : photoModeFromDraft(draft) === "optional"
+                ? "Optional"
+                : "None"
+          }
+          onChange={(v) =>
+            setDraft((d) => ({
+              ...d,
+              photoMode: v === "Required" ? "required" : v === "Optional" ? "optional" : "none",
+              camera: v === "Required",
+            }))
+          }
+        />
+        <Text style={styles.caption}>{ADD_TASK_PHOTO_CAPTIONS[photoModeFromDraft(draft)]}</Text>
+
+        <Text style={styles.section}>{ADD_TASK_LIMITS}</Text>
+        <View style={styles.chips}>
+          <Chip
+            label="Time window"
+            variant="form"
+            selected={draft.time}
+            onPress={() => setDraft((d) => ({ ...d, time: !d.time }))}
+          />
+          <Chip
+            label="Place"
+            variant="form"
+            selected={draft.location}
+            onPress={() => setDraft((d) => ({ ...d, location: !d.location }))}
+          />
         </View>
         {draft.time ? (
           <View style={styles.reveal}>
@@ -447,7 +464,8 @@ export default function AddTaskSheet({
         {draft.location ? (
           <View style={styles.place}>
             <ListRow
-              title={ADD_TASK_PLACE_LIVE}
+              title={canSavePlace(draft) ? placePreviewLine(draft) : ADD_TASK_PLACE_LIVE}
+              subtitle={canSavePlace(draft) ? "Change" : undefined}
               onPress={() => setPlaceOpen(true)}
               divider={false}
             />

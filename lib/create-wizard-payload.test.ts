@@ -40,3 +40,26 @@ describe("create payload packs (regression)", () => {
     }
   });
 });
+
+
+describe("v43.1 photo_mode on create payload", () => {
+  it("writes optional without a camera gate", () => {
+    const row = mapWizardTaskToCreateInput(
+      { name: "Read", type: "check_off", photoMode: "optional" },
+      { requirePhoto: false, allowPhoto: true },
+    );
+    expect(row.photo_mode).toBe("optional");
+    expect(row.requirePhotoProof).toBe(false);
+    expect(row.gates ?? []).not.toContain("camera");
+  });
+
+  it("writes required when photoMode is required", () => {
+    const row = mapWizardTaskToCreateInput(
+      { name: "Shower", type: "check_off", photoMode: "required" },
+      { requirePhoto: false, allowPhoto: true },
+    );
+    expect(row.photo_mode).toBe("required");
+    expect(row.requirePhotoProof).toBe(true);
+    expect(row.gates).toEqual(["camera"]);
+  });
+});

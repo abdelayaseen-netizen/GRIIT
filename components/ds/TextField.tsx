@@ -19,6 +19,8 @@ export type TextFieldProps = {
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
+  /** 0–1. Spec v43 name field uses 0.7 on textSecondary. */
+  placeholderOpacity?: number;
   trailing?: React.ReactNode;
   accessibilityLabel?: string;
   /** Default surface. Canvas on a surface sheet so the field stays one step from its ground. */
@@ -48,6 +50,7 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
     value,
     onChangeText,
     placeholder,
+    placeholderOpacity = 1,
     trailing,
     accessibilityLabel,
     ground = "surface",
@@ -65,7 +68,11 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={DS_V3.color.textSecondary}
+          placeholderTextColor={
+            placeholderOpacity < 1
+              ? `${DS_V3.color.textSecondary}${Math.round(placeholderOpacity * 255).toString(16).padStart(2, "0")}`
+              : DS_V3.color.textSecondary
+          }
           style={styles.input}
           accessibilityLabel={accessibilityLabel ?? label}
           editable={editable}
