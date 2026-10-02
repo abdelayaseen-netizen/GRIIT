@@ -6,6 +6,7 @@ export interface TaskConfig {
   duration_minutes?: number;
   tracking_mode?: string;
   min_words?: number;
+  photo_mode?: "required" | "optional" | "none";
   photo_required?: boolean;
   require_photo_proof?: boolean;
   strict_timer_mode?: boolean;

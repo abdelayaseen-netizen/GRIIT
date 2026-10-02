@@ -7,6 +7,7 @@ import {
   gateTimeFor,
   normalizeTaskType,
   overlayTaskModel,
+  photoModeFor,
   verificationMethodFor,
   type TaskModelRow,
 } from "./task-model";
@@ -77,6 +78,20 @@ describe("gatesFor", () => {
   it("location from require_location column or config", () => {
     expect(gatesFor({ task_type: "check_off", require_location: true })).toEqual(["location"]);
     expect(gatesFor({ task_type: "run", config: { require_location: true } })).toEqual(["location"]);
+  });
+});
+
+describe("photoModeFor", () => {
+  it("reads config.photo_mode and falls back to legacy required", () => {
+    expect(photoModeFor({ config: { photo_mode: "optional" }, require_photo: true })).toBe("optional");
+    expect(photoModeFor({ config: { photo_mode: "none" }, require_photo: true })).toBe("none");
+    expect(photoModeFor({ require_photo: true })).toBe("required");
+    expect(photoModeFor({ task_type: "manual" })).toBe("none");
+  });
+
+  it("does not treat optional as a camera gate", () => {
+    expect(gatesFor({ config: { photo_mode: "optional" }, require_photo: true })).toEqual([]);
+    expect(gatesFor({ config: { photo_mode: "required" } })).toEqual(["camera"]);
   });
 });
 
@@ -210,5 +225,16 @@ describe("buildTaskInsertPayload — old and new write shapes", () => {
     expect(row.require_photo).toBeUndefined();
     expect(row.gate_time_mode).toBe("by");
     expect(row.gate_time_start).toBe("07:00");
+  });
+
+  it("writes photo_mode optional without legacy require_photo", () => {
+    const row = buildTaskInsertPayload(
+      { title: "Read", type: "check_off", required: true, photo_mode: "optional" },
+      "challenge-1",
+      0,
+    );
+    expect(row.config.photo_mode).toBe("optional");
+    expect(row.config.require_photo_proof).toBe(false);
+    expect(row.require_photo).toBeUndefined();
   });
 });

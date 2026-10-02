@@ -71,11 +71,7 @@ export function challengeStickerProof(args: {
   gates?: readonly string[] | null;
 }): ProofKind | null {
   if (!args.done) return null;
-  const camera =
-    args.hasCameraProof === true ||
-    args.requirePhoto === true ||
-    (args.gates ?? []).includes("camera");
-  if (!camera) return "self";
+  if (args.hasCameraProof !== true) return "self";
   return (args.gates ?? []).includes("location") ? "camera_place" : "camera";
 }
 
