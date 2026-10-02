@@ -5,6 +5,10 @@
 
 export const G2A_PUSH_A = "g2a-day-a";
 export const G2A_PUSH_B = "g2a-day-b";
+export const G2A_NEXT_A = "g2a-next-a";
+export const G2A_NEXT_B = "g2a-next-b";
+export const G2A_TODAY_IDS = [G2A_PUSH_A, G2A_PUSH_B] as const;
+export const G2A_TOMORROW_IDS = [G2A_NEXT_A, G2A_NEXT_B] as const;
 
 export type G2aPushCandidate = {
   at: Date;
@@ -114,6 +118,42 @@ export function planG2aDay(args: {
     eveningBody: args.eveningBody,
     morningBody: args.morningBody,
   });
+}
+
+export type G2aDayCopy = {
+  challengeLine: string;
+  windowBody: (close: { name: string; hhmm: string; at: Date }) => string;
+  eveningBody: string;
+  morningBody: string;
+};
+
+/** Today’s remaining pair plus tomorrow’s two. Tomorrow is always unsecured. */
+export function planG2aAhead(args: {
+  now: Date;
+  securedToday: boolean;
+  tasks: readonly G2aTimedTask[];
+  today: G2aDayCopy;
+  tomorrow: G2aDayCopy;
+}): { today: G2aPushCandidate[]; tomorrow: G2aPushCandidate[] } {
+  const today = planG2aDay({
+    now: args.now,
+    securedToday: args.securedToday,
+    tasks: args.tasks,
+    ...args.today,
+  });
+  const tomorrowDay = addLocalDays(args.now, 1);
+  const close = earliestWindowClose(args.tasks, tomorrowDay, args.now);
+  const tomorrow = g2aPushCandidates({
+    now: args.now,
+    day: tomorrowDay,
+    securedToday: false,
+    windowCloseAt: close?.at ?? null,
+    windowBody: close ? args.tomorrow.windowBody(close) : null,
+    challengeLine: args.tomorrow.challengeLine,
+    eveningBody: args.tomorrow.eveningBody,
+    morningBody: args.tomorrow.morningBody,
+  });
+  return { today, tomorrow };
 }
 
 export function countByCalendarDay(items: readonly { at: Date }[]): Record<string, number> {

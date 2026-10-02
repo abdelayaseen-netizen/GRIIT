@@ -12,6 +12,7 @@ import {
   fireStreakCelebration,
   isStreakCelebrationMilestone,
 } from "@/lib/notifications";
+import { cancelG2aDayReminders } from "@/lib/g2a-notification-schedule";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { displayDay } from "@/lib/challenge-day";
@@ -328,6 +329,9 @@ export function useAppChallengeMutations({
       }
       if (Platform.OS !== "web") {
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
+        if (userDaySecured) {
+          await cancelG2aDayReminders("today");
+        }
         await cancelLapsedUserReminders();
         const challengeName =
           result.challengeName ??

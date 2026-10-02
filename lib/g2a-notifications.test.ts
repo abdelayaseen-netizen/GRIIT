@@ -6,6 +6,9 @@ import {
   g2aPushCandidates,
   lapsedOffsetDateKeys,
   lapsedOffsetsAvoidingG2a,
+  addLocalDays,
+  calendarDateKey,
+  planG2aAhead,
   planG2aDay,
 } from "@/lib/g2a-notifications";
 
@@ -70,6 +73,39 @@ describe("g2a day pushes", () => {
       );
     }
     expect(keep.every((n) => !g2aDays.includes(lapsedOffsetDateKeys(now, [n])[0] ?? ""))).toBe(true);
+  });
+
+  it("keeps tomorrow's two queued when the user never opens on day 2", () => {
+    const day1Open = new Date(2026, 9, 2, 8, 0, 0);
+    const copy = {
+      challengeLine: "Crew · Day 1 of 30",
+      windowBody: (close: { name: string; hhmm: string }) => `${close.name} window closes at ${close.hhmm}.`,
+      eveningBody: "1 task left today.",
+      morningBody: "Day 1 is today. Finish Read to secure it.",
+    };
+    const plan = planG2aAhead({
+      now: day1Open,
+      securedToday: false,
+      tasks: [{ name: "Read", closeHHMM: "12:00" }],
+      today: copy,
+      tomorrow: { ...copy, challengeLine: "Crew · Day 2 of 30" },
+    });
+    const day2 = calendarDateKey(addLocalDays(day1Open, 1));
+    expect(plan.tomorrow).toHaveLength(2);
+    expect(plan.tomorrow.every((c) => calendarDateKey(c.at) === day2)).toBe(true);
+    const stillQueued = [...plan.today, ...plan.tomorrow].filter((c) => calendarDateKey(c.at) === day2);
+    expect(stillQueued).toHaveLength(2);
+    const secured = planG2aAhead({
+      now: day1Open,
+      securedToday: true,
+      tasks: [{ name: "Read", closeHHMM: "12:00" }],
+      today: copy,
+      tomorrow: { ...copy, challengeLine: "Crew · Day 2 of 30" },
+    });
+    expect(secured.today).toEqual([]);
+    expect(secured.tomorrow).toHaveLength(2);
+    const perDay = countByCalendarDay([...plan.today, ...plan.tomorrow]);
+    for (const n of Object.values(perDay)) expect(n).toBeLessThanOrEqual(2);
   });
 });
 
