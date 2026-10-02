@@ -84,6 +84,7 @@ describe("backend import graph (Railway tsx)", () => {
       .filter((f) => f.startsWith("lib/"))
       .sort();
     expect(appLib).toEqual([
+      "lib/challenge-category.ts",
       "lib/challenge-day.ts",
       "lib/consistency.ts",
       "lib/date-utils.ts",

@@ -39,7 +39,6 @@ export type RecommendedChallenge = {
   category: string;
   cover_url?: string | null;
   participantCount: number;
-  completionRate: number;
   previewUsers: RecommendedChallengePreviewUser[];
 };
 
