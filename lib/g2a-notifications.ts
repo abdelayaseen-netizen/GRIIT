@@ -1,5 +1,6 @@
 /**
- * Frame 160 local-push candidates. Max two. Empty when the day is secured.
+ * Frame 160 — the only per-day reminder pair.
+ * Max two identifiers per calendar day. Empty when that day is secured.
  */
 
 export const G2A_PUSH_A = "g2a-day-a";
@@ -11,8 +12,55 @@ export type G2aPushCandidate = {
   body: string;
 };
 
+export type G2aTimedTask = {
+  name: string;
+  closeHHMM?: string | null;
+};
+
+export function calendarDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+export function addLocalDays(d: Date, n: number): Date {
+  const next = new Date(d);
+  next.setDate(next.getDate() + n);
+  return next;
+}
+
+export function hmOnDay(day: Date, hhmm: string): Date | null {
+  const parts = hhmm.split(":");
+  const hRaw = Number(parts[0]);
+  const mRaw = Number(parts[1]);
+  if (!Number.isFinite(hRaw) || !Number.isFinite(mRaw)) return null;
+  const at = new Date(day);
+  at.setHours(hRaw, mRaw, 0, 0);
+  return at;
+}
+
+export function earliestWindowClose(
+  tasks: readonly G2aTimedTask[],
+  day: Date,
+  now: Date,
+): { at: Date; name: string; hhmm: string } | null {
+  let best: { at: Date; name: string; hhmm: string } | null = null;
+  for (const t of tasks) {
+    const hhmm = t.closeHHMM?.trim();
+    if (!hhmm) continue;
+    const at = hmOnDay(day, hhmm);
+    if (!at || at.getTime() <= now.getTime()) continue;
+    if (!best || at.getTime() < best.at.getTime()) {
+      best = { at, name: t.name.trim() || "task", hhmm };
+    }
+  }
+  return best;
+}
+
 export function g2aPushCandidates(args: {
   now: Date;
+  day?: Date;
   securedToday: boolean;
   morningHour?: number;
   eveningTime?: string;
@@ -23,6 +71,7 @@ export function g2aPushCandidates(args: {
   morningBody: string;
 }): G2aPushCandidate[] {
   if (args.securedToday) return [];
+  const day = args.day ?? args.now;
   const evening = parseHm(args.eveningTime ?? "20:00");
   const morningHour = args.morningHour ?? 7;
   const list: G2aPushCandidate[] = [];
@@ -32,16 +81,64 @@ export function g2aPushCandidates(args: {
       list.push({ at, title: args.challengeLine, body: args.windowBody });
     }
   }
-  const eveningAt = onDay(args.now, evening.h, evening.m);
+  const eveningAt = onDay(day, evening.h, evening.m);
   if (eveningAt.getTime() > args.now.getTime()) {
     list.push({ at: eveningAt, title: args.challengeLine, body: args.eveningBody });
   }
-  const morningAt = onDay(args.now, morningHour, 0);
+  const morningAt = onDay(day, morningHour, 0);
   if (morningAt.getTime() > args.now.getTime()) {
     list.push({ at: morningAt, title: args.challengeLine, body: args.morningBody });
   }
   list.sort((a, b) => a.at.getTime() - b.at.getTime());
   return list.slice(0, 2);
+}
+
+/** Today's remaining G2a pair for a user with timed tasks. Never more than two. */
+export function planG2aDay(args: {
+  now: Date;
+  securedToday: boolean;
+  tasks: readonly G2aTimedTask[];
+  challengeLine: string;
+  windowBody: (close: { name: string; hhmm: string; at: Date }) => string;
+  eveningBody: string;
+  morningBody: string;
+}): G2aPushCandidate[] {
+  const close = earliestWindowClose(args.tasks, args.now, args.now);
+  return g2aPushCandidates({
+    now: args.now,
+    day: args.now,
+    securedToday: args.securedToday,
+    windowCloseAt: close?.at ?? null,
+    windowBody: close ? args.windowBody(close) : null,
+    challengeLine: args.challengeLine,
+    eveningBody: args.eveningBody,
+    morningBody: args.morningBody,
+  });
+}
+
+export function countByCalendarDay(items: readonly { at: Date }[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const item of items) {
+    const key = calendarDateKey(item.at);
+    out[key] = (out[key] ?? 0) + 1;
+  }
+  return out;
+}
+
+export const LAPSED_OFFSETS = [3, 7, 14] as const;
+
+export function lapsedOffsetDateKeys(now: Date, offsets: readonly number[] = LAPSED_OFFSETS): string[] {
+  return offsets.map((n) => calendarDateKey(addLocalDays(now, n)));
+}
+
+/** Keep lapsed offsets that do not land on a day that already has a G2a reminder. */
+export function lapsedOffsetsAvoidingG2a(
+  now: Date,
+  g2aDateKeys: readonly string[],
+  offsets: readonly number[] = LAPSED_OFFSETS,
+): number[] {
+  const blocked = new Set(g2aDateKeys);
+  return offsets.filter((n) => !blocked.has(calendarDateKey(addLocalDays(now, n))));
 }
 
 function parseHm(hhmm: string): { h: number; m: number } {

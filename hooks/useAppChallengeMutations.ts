@@ -6,8 +6,6 @@ import type { QueryClient } from "@tanstack/react-query";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import {
-  scheduleNextSecureReminder,
-  SECURE_REMINDER_TIME,
   scheduleLapsedUserReminders,
   cancelLapsedUserReminders,
   scheduleMilestoneApproachingIfNeeded,
@@ -329,22 +327,7 @@ export function useAppChallengeMutations({
         trackEvent("streak_milestone", { days: streakN });
       }
       if (Platform.OS !== "web") {
-        const preferred = SECURE_REMINDER_TIME;
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const currentLastStands = (stats as StatsFromApi)?.lastStandsAvailable ?? 0;
-        const newLastStands = result?.lastStandEarned ? Math.min(2, currentLastStands + 1) : currentLastStands;
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        scheduleNextSecureReminder(preferred, tomorrow, newLastStands, newStreakCount, {
-          remaining: 0,
-          total: 0,
-          challenge:
-            result.challengeName ??
-            (activeChallenge as { challenges?: { title?: string } } | null)?.challenges?.title ??
-            "GRIIT",
-        }).catch((err: unknown) => {
-          captureError(err, "scheduleNextSecureReminder");
-        });
         await cancelLapsedUserReminders();
         const challengeName =
           result.challengeName ??

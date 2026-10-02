@@ -4,7 +4,6 @@ import { BellOff, Shield } from "lucide-react-native";
 import {
   getNotificationPermissionStatus,
   requestNotificationPermissions,
-  scheduleNextSecureReminder,
 } from "@/lib/notifications";
 import { v2MayPromptNotificationPermission } from "@/lib/onboarding-v2-notifications";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -14,7 +13,6 @@ import {
   REMINDER_PRESETS,
   formatReminderTimeLong,
   notificationBody,
-  reminderTime24h,
   reminderTimeShort,
   reminderTimeText,
   type ReminderCustom,
@@ -100,7 +98,6 @@ export default function RemindersScreen({
         granted = await requestNotificationPermissions();
       }
       if (granted) {
-        await scheduleNextSecureReminder(reminderTime24h(reminderPreset, reminderCustom));
         finish(true);
         return;
       }

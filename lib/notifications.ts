@@ -235,60 +235,39 @@ export async function scheduleLapsedUserReminders(params: {
   streakCount: number;
   challengeName?: string;
   lastSecuredDate?: string;
+  /** Days after last open. Default 3/7/14. Never pass a day that already has a G2a reminder. */
+  offsets?: readonly number[];
 }): Promise<void> {
   try {
     const { streakCount, challengeName } = params;
-    const day3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-    const day7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const day14 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-
+    const keep = new Set(params.offsets ?? [3, 7, 14]);
     const { track } = await import("@/lib/analytics");
 
-    await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[0]);
-    const d3 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day3.toISOString().slice(0, 10));
-    await Notifications.scheduleNotificationAsync({
-      identifier: LAPSED_IDS[0],
-      content: scheduleWithReminderType({
-        title: d3.title,
-        body: d3.body,
-        sound: true,
-      }, "lapsed_3d"),
-      trigger: { type: "date", date: day3 } as Notifications.NotificationTriggerInput,
-    });
-    trackNotificationScheduled({ reminder_type: "lapsed_3d", scheduled_for: day3.toISOString() });
-    track({ name: "lapsed_notification_scheduled", day: 3 });
-
-    await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[1]);
-    const d7 = pickTemplate(
-      "lapsed",
-      { challenge: challengeName ?? "", streak: streakCount },
-      day7.toISOString().slice(0, 10)
-    );
-    await Notifications.scheduleNotificationAsync({
-      identifier: LAPSED_IDS[1],
-      content: scheduleWithReminderType({
-        title: d7.title,
-        body: d7.body,
-        sound: true,
-      }, "lapsed_7d"),
-      trigger: { type: "date", date: day7 } as Notifications.NotificationTriggerInput,
-    });
-    trackNotificationScheduled({ reminder_type: "lapsed_7d", scheduled_for: day7.toISOString() });
-    track({ name: "lapsed_notification_scheduled", day: 7 });
-
-    await Notifications.cancelScheduledNotificationAsync(LAPSED_IDS[2]);
-    const d14 = pickTemplate("lapsed", { challenge: challengeName ?? "" }, day14.toISOString().slice(0, 10));
-    await Notifications.scheduleNotificationAsync({
-      identifier: LAPSED_IDS[2],
-      content: scheduleWithReminderType({
-        title: d14.title,
-        body: d14.body,
-        sound: true,
-      }, "comeback"),
-      trigger: { type: "date", date: day14 } as Notifications.NotificationTriggerInput,
-    });
-    trackNotificationScheduled({ reminder_type: "comeback", scheduled_for: day14.toISOString() });
-    track({ name: "lapsed_notification_scheduled", day: 14 });
+    const slots: { offset: number; id: string; reminder: "lapsed_3d" | "lapsed_7d" | "comeback" }[] = [
+      { offset: 3, id: LAPSED_IDS[0], reminder: "lapsed_3d" },
+      { offset: 7, id: LAPSED_IDS[1], reminder: "lapsed_7d" },
+      { offset: 14, id: LAPSED_IDS[2], reminder: "comeback" },
+    ];
+    for (const slot of slots) {
+      await Notifications.cancelScheduledNotificationAsync(slot.id);
+      if (!keep.has(slot.offset)) continue;
+      const at = new Date(Date.now() + slot.offset * 24 * 60 * 60 * 1000);
+      const vars = slot.offset === 7
+        ? { challenge: challengeName ?? "", streak: streakCount }
+        : { challenge: challengeName ?? "" };
+      const copy = pickTemplate("lapsed", vars, at.toISOString().slice(0, 10));
+      await Notifications.scheduleNotificationAsync({
+        identifier: slot.id,
+        content: scheduleWithReminderType({
+          title: copy.title,
+          body: copy.body,
+          sound: true,
+        }, slot.reminder),
+        trigger: { type: "date", date: at } as Notifications.NotificationTriggerInput,
+      });
+      trackNotificationScheduled({ reminder_type: slot.reminder, scheduled_for: at.toISOString() });
+      track({ name: "lapsed_notification_scheduled", day: slot.offset });
+    }
   } catch {
     // ignore
   }
@@ -395,6 +374,22 @@ export async function scheduleMorningMotivation(params: {
 export async function cancelMorningMotivation(): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(MORNING_MOTIVATION_ID);
+  } catch {
+    // ignore
+  }
+}
+
+/** Builds 69/70 queued secure / morning / task-window identifiers. G2a is the only per-day pair. */
+export async function cancelLegacyDailyReminders(): Promise<void> {
+  await cancelSecureReminders();
+  await cancelMorningMotivation();
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of scheduled) {
+      if (n.identifier.startsWith(TASK_WINDOW_PREFIX) || n.identifier.startsWith(TASK_PREP_PREFIX)) {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier);
+      }
+    }
   } catch {
     // ignore
   }
