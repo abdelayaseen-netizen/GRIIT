@@ -8,8 +8,11 @@ import {
   lapsedOffsetsAvoidingG2a,
   addLocalDays,
   calendarDateKey,
+  earliestWindowClose,
   planG2aAhead,
   planG2aDay,
+  taskCloseHHMM,
+  taskOpenHHMM,
 } from "@/lib/g2a-notifications";
 
 describe("g2a day pushes", () => {
@@ -106,6 +109,41 @@ describe("g2a day pushes", () => {
     expect(secured.tomorrow).toHaveLength(2);
     const perDay = countByCalendarDay([...plan.today, ...plan.tomorrow]);
     for (const n of Object.values(perDay)) expect(n).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("window close is the anchor for By and Between", () => {
+  it("By: close is the By time; offset 0 means open equals close", () => {
+    const by = {
+      gateTime: { mode: "by" as const, start: "07:00", end: null },
+      anchorTimeLocal: "07:00",
+      windowStartOffsetMin: 0,
+    };
+    expect(taskCloseHHMM(by)).toBe("07:00");
+    expect(taskOpenHHMM("07:00", 0)).toBe("07:00");
+    const now = new Date(2026, 9, 2, 5, 0, 0);
+    const close = earliestWindowClose([{ name: "Water", closeHHMM: taskCloseHHMM(by) }], now, now);
+    expect(close?.hhmm).toBe("07:00");
+    expect(close?.at.getHours()).toBe(7);
+    expect(new Date(close!.at.getTime() - 45 * 60 * 1000).getHours()).toBe(6);
+    expect(new Date(close!.at.getTime() - 45 * 60 * 1000).getMinutes()).toBe(15);
+  });
+
+  it("Between: close is the end, not the open; offset is minutes from close", () => {
+    const between = {
+      gateTime: { mode: "between" as const, start: "06:00", end: "08:00" },
+      anchorTimeLocal: "08:00",
+      windowStartOffsetMin: -120,
+    };
+    expect(taskCloseHHMM(between)).toBe("08:00");
+    expect(taskCloseHHMM(between)).not.toBe("06:00");
+    expect(taskOpenHHMM("08:00", -120)).toBe("06:00");
+    const now = new Date(2026, 9, 2, 5, 0, 0);
+    const close = earliestWindowClose([{ name: "Read", closeHHMM: taskCloseHHMM(between) }], now, now);
+    expect(close?.hhmm).toBe("08:00");
+    const warn = new Date(close!.at.getTime() - 45 * 60 * 1000);
+    expect(warn.getHours()).toBe(7);
+    expect(warn.getMinutes()).toBe(15);
   });
 });
 

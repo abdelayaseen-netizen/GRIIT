@@ -21,6 +21,55 @@ export type G2aTimedTask = {
   closeHHMM?: string | null;
 };
 
+export type G2aCloseSource = {
+  gateTime?: { mode?: string | null; start?: string | null; end?: string | null } | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
+  anchorTimeLocal?: string | null;
+  anchor_time_local?: string | null;
+  config?: { anchorTimeLocal?: unknown } | null;
+  windowStartOffsetMin?: number | null;
+  window_start_offset_min?: number | null;
+};
+
+function firstHHMM(...values: Array<string | null | undefined>): string | null {
+  for (const raw of values) {
+    if (typeof raw === "string" && raw.trim()) return raw.trim();
+  }
+  return null;
+}
+
+/**
+ * Close time for By and Between. `anchorTimeLocal` is the close in both modes;
+ * `windowStartOffsetMin` is minutes from that close to the open (usually ≤ 0).
+ */
+export function taskCloseHHMM(task: G2aCloseSource): string | null {
+  const mode = (task.gateTime?.mode ?? task.gate_time_mode ?? "").trim();
+  const anchor = firstHHMM(
+    task.anchorTimeLocal,
+    task.anchor_time_local,
+    typeof task.config?.anchorTimeLocal === "string" ? task.config.anchorTimeLocal : null,
+  );
+  if (mode === "by") {
+    return firstHHMM(task.gateTime?.start, task.gate_time_start, task.gateTime?.end, task.gate_time_end, anchor);
+  }
+  if (mode === "between") {
+    return firstHHMM(task.gateTime?.end, task.gate_time_end, anchor);
+  }
+  return anchor;
+}
+
+/** Open clock from close + windowStartOffsetMin. */
+export function taskOpenHHMM(closeHHMM: string, windowStartOffsetMin: number | null | undefined): string | null {
+  const at = hmOnDay(new Date(2026, 0, 1), closeHHMM);
+  if (!at) return null;
+  at.setMinutes(at.getMinutes() + (windowStartOffsetMin ?? 0));
+  const h = String(at.getHours()).padStart(2, "0");
+  const m = String(at.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
 export function calendarDateKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

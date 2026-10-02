@@ -14,6 +14,7 @@ import {
   calendarDateKey,
   lapsedOffsetsAvoidingG2a,
   planG2aAhead,
+  taskCloseHHMM,
 } from "@/lib/g2a-notifications";
 import { cancelG2aDayReminders, scheduleG2aDayReminders } from "@/lib/g2a-notification-schedule";
 import { closeTimeLabel } from "@/lib/g2a-home";
@@ -124,23 +125,21 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       for (const ac of activeRows) {
         const tasks = ac.challenges?.challenge_tasks ?? [];
         for (const t of tasks) {
-          const cfg = (t as { config?: Record<string, unknown> }).config;
-          if (cfg && cfg.timeEnforcementEnabled === false) continue;
-          const anchorFromCfg = typeof cfg?.anchorTimeLocal === "string" ? cfg.anchorTimeLocal : null;
-          const anchor =
-            anchorFromCfg ??
-            (typeof (t as { anchorTimeLocal?: string }).anchorTimeLocal === "string"
-              ? (t as { anchorTimeLocal: string }).anchorTimeLocal
-              : null) ??
-            (typeof (t as { anchor_time_local?: string }).anchor_time_local === "string"
-              ? (t as { anchor_time_local: string }).anchor_time_local
-              : null);
-          if (!anchor?.trim()) continue;
-          const taskName =
-            typeof (t as { title?: string }).title === "string" && (t as { title: string }).title.trim()
-              ? (t as { title: string }).title.trim()
-              : "task";
-          winTasks.push({ name: taskName, closeHHMM: anchor.trim() });
+          const row = t as {
+            title?: string;
+            config?: { timeEnforcementEnabled?: boolean; anchorTimeLocal?: string };
+            gateTime?: { mode?: string | null; start?: string | null; end?: string | null } | null;
+            gate_time_mode?: string | null;
+            gate_time_start?: string | null;
+            gate_time_end?: string | null;
+            anchorTimeLocal?: string | null;
+            anchor_time_local?: string | null;
+          };
+          if (row.config && row.config.timeEnforcementEnabled === false) continue;
+          const closeHHMM = taskCloseHHMM(row);
+          if (!closeHHMM) continue;
+          const taskName = typeof row.title === "string" && row.title.trim() ? row.title.trim() : "task";
+          winTasks.push({ name: taskName, closeHHMM });
         }
       }
 
