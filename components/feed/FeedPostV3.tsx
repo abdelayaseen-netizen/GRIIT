@@ -70,7 +70,7 @@ export default function FeedPostV3({
     taskName: post.taskName,
     currentDay: post.currentDay,
     totalDays: post.totalDays,
-    cameraGate: cameraProof || post.eventType === "task_completed",
+    cameraGate: cameraProof,
     photo: Boolean(photo),
   });
   const name = post.displayName || post.username;

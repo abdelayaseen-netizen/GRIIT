@@ -12,6 +12,7 @@ import {
   securedDayCaption,
   securedOverflowLabel,
   selectSecuredDayMeta,
+  taskProofIsSelfReported,
 } from "@/lib/secured-day";
 
 function task(partial: Partial<HomeProofTask> & Pick<HomeProofTask, "name" | "challengeName">): HomeProofTask {
@@ -76,6 +77,7 @@ describe("secured day data", () => {
       challengeName: "Iron man",
       requirePhoto: true,
       gates: ["camera"],
+      hasCameraProof: true,
     });
     const selfDone = task({
       name: "Write",
@@ -108,7 +110,7 @@ describe("secured day data", () => {
     ]);
     const meta = selectSecuredDayMeta({
       tasks: [
-        task({ name: "Run", challengeName: "Iron man", currentDay: 3, requirePhoto: true, gates: ["camera"] }),
+        task({ name: "Run", challengeName: "Iron man", currentDay: 3, requirePhoto: true, gates: ["camera"], hasCameraProof: true }),
         task({ name: "Write", challengeName: "Daily Gratitude", currentDay: 2, durationDays: 30 }),
       ],
       proofs,
@@ -154,5 +156,14 @@ describe("secured screen wiring", () => {
     expect(screen).toContain("SECURED_LOAD_ERROR");
     expect(screen).toContain("SECURED_LOAD_RETRY");
     expect(screen).toContain('variant="error"');
+  });
+});
+
+describe("162 render rule", () => {
+  it("proof_photo_url / hasCameraProof decide self-reported, not photo_mode", () => {
+    expect(taskProofIsSelfReported({ requirePhoto: true, gates: ["camera"] })).toBe(true);
+    expect(taskProofIsSelfReported({ hasCameraProof: true })).toBe(false);
+    expect(taskProofIsSelfReported({ proof_photo_url: "https://cdn/a.jpg" })).toBe(false);
+    expect(taskProofIsSelfReported({ proof_photo_url: null })).toBe(true);
   });
 });

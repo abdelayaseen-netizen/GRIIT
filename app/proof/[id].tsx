@@ -10,6 +10,8 @@ import { firstString } from "@/lib/task-helpers";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { PROOF_SHARE, PROOF_SHARE_FAILED } from "@/lib/proof-moment";
+import { SECURED_PILL_SELF } from "@/lib/simple-log";
+import { SELF_REPORTED } from "@/lib/task-ui";
 import {
   proofsDateLabel,
   proofsFullBody,
@@ -49,12 +51,22 @@ function ProofFullViewInner() {
         <Text style={styles.header}>{proofsDateLabel(item.dateKey)}</Text>
         <View style={styles.side} />
       </View>
-      <Image source={{ uri: item.uri }} style={styles.photo} resizeMode="cover" />
+      {item.uri ? (
+        <Image source={{ uri: item.uri }} style={styles.photo} resizeMode="cover" />
+      ) : (
+        <View style={styles.textPanel}>
+          <Text style={styles.panelEyebrow}>{SELF_REPORTED}</Text>
+          <Text style={styles.task}>{item.taskName}</Text>
+          <Text style={styles.body}>{SECURED_PILL_SELF}</Text>
+        </View>
+      )}
       <View style={styles.copy}>
-        <Text style={styles.task}>{item.taskName}</Text>
-        <Text style={styles.body}>{proofsFullBody(item)}</Text>
+        {item.uri ? <Text style={styles.task}>{item.taskName}</Text> : null}
+        <Text style={styles.body}>
+          {item.uri ? proofsFullBody(item) : `${proofsFullBody(item)} · ${SELF_REPORTED}`}
+        </Text>
         <View style={styles.pill}>
-          <Text style={styles.pillText}>{proofsGatePill(item)}</Text>
+          <Text style={styles.pillText}>{item.uri ? proofsGatePill(item) : SELF_REPORTED}</Text>
         </View>
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </View>
@@ -121,6 +133,23 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 4 / 5,
     backgroundColor: DS_V3.color.surface,
+  },
+  textPanel: {
+    marginHorizontal: DS_V3.space.gutter,
+    borderRadius: DS_V3.radius.card,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: PT,
+    borderColor: DS_V3.color.border,
+    padding: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
+  },
+  panelEyebrow: {
+    fontSize: DS_V3.type.label.fontSize,
+    lineHeight: DS_V3.type.label.lineHeight,
+    fontWeight: DS_V3.type.label.fontWeight,
+    letterSpacing: DS_V3.type.label.letterSpacing,
+    textTransform: "uppercase",
+    color: DS_V3.color.textSecondary,
   },
   copy: {
     paddingHorizontal: DS_V3.space.gutter,

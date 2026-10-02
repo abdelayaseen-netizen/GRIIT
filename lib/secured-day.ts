@@ -46,9 +46,12 @@ export function readSecuredHandoff(): SecuredHandoff | null {
 export function taskProofIsSelfReported(task: {
   requirePhoto?: boolean;
   gates?: readonly string[] | null;
+  hasCameraProof?: boolean;
+  proof_photo_url?: string | null;
 }): boolean {
-  if (task.requirePhoto === true) return false;
-  return !(task.gates ?? []).includes("camera");
+  if (task.hasCameraProof === true) return false;
+  if (task.proof_photo_url) return false;
+  return true;
 }
 
 export function securedDayCaption(args: {

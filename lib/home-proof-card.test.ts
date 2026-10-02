@@ -459,3 +459,30 @@ describe("taskDisplayName and a11y helpers", () => {
     expect(homeChallengeOpenA11y("Iron man")).toBe("Open Iron man challenge");
   });
 });
+
+
+describe("162 render on Today rows", () => {
+  it("a done camera-gated task with no photo is Self-reported", () => {
+    const card = selectHomeProofCard({
+      tasks: [
+        task({
+          name: "Read",
+          challengeName: "Pages",
+          done: true,
+          requirePhoto: true,
+          gates: ["camera"],
+          hasCameraProof: false,
+        }),
+      ],
+      tasksDoneToday: 1,
+      totalTasksToday: 1,
+      firstProofEver: false,
+      securedToday: true,
+    });
+    expect(card.sections[0]?.rows[0]).toMatchObject({
+      done: true,
+      hasCameraProof: false,
+      caption: "Self-reported",
+    });
+  });
+});

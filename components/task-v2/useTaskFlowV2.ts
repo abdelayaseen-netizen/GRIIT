@@ -1,3 +1,4 @@
+import { photoModeFor } from "@/backend/lib/task-model";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -144,6 +145,7 @@ export function useTaskFlowV2() {
     () => gatesFromConfig(config as Record<string, unknown>),
     [config],
   );
+  const photoMode = photoModeFor({ config: config as Record<string, unknown> });
   const requirePhoto = flowOpensCamera(gates);
   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
   const windowState = windowStateFromConfig(config as Record<string, unknown>);
@@ -915,9 +917,10 @@ export function useTaskFlowV2() {
     verifyLine,
     saving,
     requirePhoto,
+    photoMode,
     fromGps: false,
     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
-    chromeTitle: chromeTitle(taskType, gates),
+    chromeTitle: photoMode === "optional" ? "Photo optional" : chromeTitle(taskType, gates),
     headerTitle: flowHeaderTitle(challengeName, currentDay, durationDays),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
