@@ -26,7 +26,12 @@ import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds } from "../../lib/is-friend";
 import { canSeeProfileContent, type PrivacyProfileFields } from "../../../lib/profile-privacy";
-import { liveFeedNextCursor } from "../../lib/live-feed-page";
+import {
+  eventAfterCursor,
+  liveFeedNextCursor,
+  parseLiveFeedCursor,
+} from "../../lib/live-feed-page";
+
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -68,71 +73,109 @@ export const feedRouter = createTRPCRouter({
     const followingIds = new Set<string>();
     for (const r of (follows ?? []) as { following_id: string; status?: string | null }[]) if (followRowAccepted(r)) followingIds.add(r.following_id);
     const fetchLimit = Math.min(100, Math.max(80, input.limit * 4));
-    let evQuery = server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(fetchLimit);
-    if (input.cursor) evQuery = evQuery.lt("created_at", input.cursor);
-    const { data: rawEvents, error: evErr } = await evQuery;
-    if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
-    const events = (rawEvents ?? []) as EvRow[];
-    const eventUserIds = [...new Set(events.map((e) => e.user_id))];
-    const moverIds = [...new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id))];
-    const anonymousIds = hasSupabaseAdmin()
-      ? await anonymousUserIdSet(getSupabaseAdmin(), [...eventUserIds, ...moverIds])
-      : new Set<string>();
-    const movingUserCount = new Set(moverIds.filter((id) => !anonymousIds.has(id))).size;
-    // Load profile visibility for feed filtering
-    const challengeIds = [...new Set(events.map((e) => e.challenge_id).filter((id): id is string => !!id))];
-
-    // Parallelize visibility + challenge lookups
-    const [visResult, chResult] = await Promise.all([
-      eventUserIds.length > 0
-        ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility").in("user_id", eventUserIds).limit(200)
-        : Promise.resolve({ data: [] }),
-      challengeIds.length > 0
-        ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
-        : Promise.resolve({ data: [] }),
-    ]);
-
+    let cursor = parseLiveFeedCursor(input.cursor);
+    const preFiltered: EvRow[] = [];
+    let lastScanned: EvRow | null = null;
+    let moreRemain = false;
     const authorProfiles = new Map<string, PrivacyProfileFields>();
-    for (const r of ((visResult.data ?? []) as PrivacyProfileFields[])) {
-      if (r.user_id) authorProfiles.set(r.user_id, r);
-    }
     const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
-    for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
-      challengeMap.set(c.id, c);
+    const moverIds = [...new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id))];
+    let anonymousIds = new Set<string>();
+    if (hasSupabaseAdmin()) {
+      anonymousIds = await anonymousUserIdSet(getSupabaseAdmin(), moverIds);
     }
+    const movingUserCount = new Set(moverIds.filter((id) => !anonymousIds.has(id))).size;
     const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean =>
       canSeeContent(viewerId, ev.user_id, vis, friendIds, {
         challengeId: ev.challenge_id,
         coMemberChallengeIds: coMemberIds,
         shared: eventIsShared(ev),
       });
-    const preFiltered: EvRow[] = [];
-    for (const ev of events) {
-      if (preFiltered.length >= input.limit) break;
-      if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) continue;
-      // Guests = auth.users.is_anonymous. Drop from Everyone; never name/count them in join groups.
+    const keepEvent = (ev: EvRow): boolean => {
+      if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) return false;
       if (anonymousIds.has(ev.user_id)) {
-        if (input.scope === "everyone") continue;
-        if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") continue;
+        if (input.scope === "everyone") return false;
+        if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") return false;
       }
       if (input.scope === "everyone" && ev.user_id !== viewerId) {
         const owner = authorProfiles.get(ev.user_id) ?? { user_id: ev.user_id };
         const isCoMember = Boolean(ev.challenge_id && coMemberIds.has(ev.challenge_id));
-        if (!canSeeProfileContent(viewerId, owner, { isMutual: friendIds.has(ev.user_id), isCoMember })) continue;
+        if (!canSeeProfileContent(viewerId, owner, { isMutual: friendIds.has(ev.user_id), isCoMember })) return false;
       }
-      if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) continue;
+      if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
-      if (ev.challenge_id && !ch) continue;
+      if (ev.challenge_id && !ch) return false;
       const vis = normalizeChallengeVisibility(ch?.visibility);
-      if (!passesVisibility(ev, vis)) continue;
-      preFiltered.push(ev);
+      if (!passesVisibility(ev, vis)) return false;
+      return true;
+    };
+
+    for (let batch = 0; batch < 8 && preFiltered.length < input.limit; batch++) {
+      let evQuery = server
+        .from("activity_events")
+        .select("id, user_id, event_type, challenge_id, metadata, created_at")
+        .in("event_type", [...LIVE_FEED_TYPES])
+        .eq("share_state", "shared")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(fetchLimit);
+      if (cursor) evQuery = evQuery.lte("created_at", cursor.createdAt);
+      const { data: rawEvents, error: evErr } = await evQuery;
+      if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
+      const events = ((rawEvents ?? []) as EvRow[]).filter((ev) => eventAfterCursor(ev, cursor));
+      if (events.length === 0) break;
+
+      const eventUserIds = [...new Set(events.map((e) => e.user_id).filter((id) => !authorProfiles.has(id)))];
+      const challengeIds = [
+        ...new Set(
+          events
+            .map((e) => e.challenge_id)
+            .filter((id): id is string => !!id && !challengeMap.has(id)),
+        ),
+      ];
+      const [visResult, chResult] = await Promise.all([
+        eventUserIds.length > 0
+          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility").in("user_id", eventUserIds).limit(200)
+          : Promise.resolve({ data: [] }),
+        challengeIds.length > 0
+          ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
+          : Promise.resolve({ data: [] }),
+      ]);
+      for (const r of ((visResult.data ?? []) as PrivacyProfileFields[])) {
+        if (r.user_id) authorProfiles.set(r.user_id, r);
+      }
+      for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
+        challengeMap.set(c.id, c);
+      }
+      if (hasSupabaseAdmin() && eventUserIds.length > 0) {
+        const extra = await anonymousUserIdSet(getSupabaseAdmin(), eventUserIds);
+        extra.forEach((id) => anonymousIds.add(id));
+      }
+
+      for (let i = 0; i < events.length; i++) {
+        const ev = events[i]!;
+        lastScanned = ev;
+        if (keepEvent(ev)) preFiltered.push(ev);
+        if (preFiltered.length >= input.limit) {
+          moreRemain = i < events.length - 1 || events.length >= fetchLimit;
+          break;
+        }
+      }
+      if (preFiltered.length >= input.limit) break;
+      if (events.length < fetchLimit) {
+        moreRemain = false;
+        break;
+      }
+      moreRemain = true;
+      if (lastScanned) cursor = { createdAt: lastScanned.created_at, id: lastScanned.id };
     }
+
     const posts = await hydrateActivityEventsToPosts(preFiltered, viewerId, friendIds, ctx, server, coMemberIds);
     return {
       movingCount: movingUserCount,
       posts,
       following_count: followingIds.size,
-      nextCursor: liveFeedNextCursor(posts, input.limit),
+      nextCursor: liveFeedNextCursor(lastScanned, preFiltered.length >= input.limit && moreRemain),
     };
   }),
 
