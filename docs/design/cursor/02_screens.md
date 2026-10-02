@@ -5899,8 +5899,8 @@ Frames 146–154 in `GRIIT v43 Restructure.dc.html`. iPhone 16 Pro (402 × 874).
 | avatars | 80 profile · 40 notifications · 32 posts and single events · 28 grouped events · 24/20 stacks |
 
 ## 146 Home
-Tree: `HomeHeader` (day caption 12, name heading 17, streak chip 32 high with flame 16 + HERO 15, bell 44 with an unread dot) → `TodayCard` (v42 logic unchanged) → `FeedHeader` ("Feed" heading + Friends | Everyone segmented, 176 wide, 30 high) → infinite `FlatList` of `ProofPost` and `FeedEvent`.
-- Default scope: Everyone until `following_count >= 3`, then Friends. A manual choice persists per user.
+Tree: `HomeHeader` (day caption 12, name heading 17, streak chip 32 high with flame 16 + HERO 15, bell 44 with an unread dot) → `TodayCard` (v42 logic unchanged) → `FeedHeader` ("Feed" heading + Following | Everyone segmented, 196 wide, 30 high) → infinite `FlatList` of `ProofPost` and `FeedEvent`.
+- Default scope: Everyone until `following_count >= 3`, then Following (one-way follows). A manual choice persists per user.
 - Removed from Home: the This-week strip and the freeze line (both live on challenge detail), and "See all in Activity".
 - Pagination: 20 items per page, prefetch at 5 from the end; footer spinner 24, never a full-screen loader.
 - New user (no enrollments): Today card empty state, "No challenge yet. Your tasks show here once you join one." plus Find a challenge / Create. Feed is on Everyone with the caption "Everyone is on until you follow 3 people."
@@ -5911,7 +5911,7 @@ Tree: `HomeHeader` (day caption 12, name heading 17, streak chip 32 high with fl
 | {display_name} | heading |
 | {streak_days} | HERO 15 in chip |
 | Feed | heading |
-| Friends · Everyone | segmented 13 |
+| Following · Everyone | segmented 13 |
 | No challenge yet. Your tasks show here once you join one. | secondary |
 | Find a challenge · Create | buttons 40 |
 | Everyone is on until you follow 3 people. | caption |
@@ -5950,21 +5950,21 @@ Tabs: grid-3x3 Proofs, flag Challenges, award Badges, icon 18 + label 13/500, 1.
 - New account: "No proofs yet." / "Proofs you share show here. Self-reported days show as text."
 
 ## 152 Privacy
-One switch: `profiles.is_private`.
+One switch. **No new column** (v43.1 architect override): it writes the existing `profile_visibility`, `challenge_visibility` and `activity_visibility` together, all three `public` or all three `private`. Read: the account is private if any of the three is `private` or `friends`.
 | row | public | private |
 |---|---|---|
 | Anyone | Your profile, the proofs you shared and your challenges. | Your name, photo and streak. |
 | Friends | Everything you shared. Friends are people you follow who follow you back. | same |
 | People in a challenge with you | Always see your posts in it. | same |
 Info card: "Photos stay private until you share them." / "This switch changes who sees what you shared. It never shares a photo you kept." Button: "See how a stranger sees you" opens the visitor view as a non-friend, with the banner "This is what someone who isn't your friend sees."
-Migration: treat the old Profile, Challenges and Activity values as private if any of them was `private` or `friends`; otherwise public. Lines 23, 29 and 35 of `app/settings/privacy.tsx` (v42.1) are replaced by this screen.
+No migration step: the read rule above already covers mixed legacy values. Flipping the switch normalises all three. Lines 23, 29 and 35 of `app/settings/privacy.tsx` (v42.1) are replaced by this screen.
 
 ## 153 Add task
 Order: Common tasks (Pray, Read, Water, Journal, Workout, Stretch; **Run removed**, since it is a type) → Name → What you do (5 type cards, 3 columns, 44 min) → type field → **Photo** (Required | Optional | None) → **Limits** (Time window toggle → By | Between + 1 or 2 pickers; Place toggle → set place row "{place} · Within {radius}" + Change) → **On Home** (dashed live preview) → Add task.
 - Placeholder: "e.g. Read 10 pages" in textSecondary at 70% opacity behind the caret. Never in textPrimary.
 - Photo captions: Required "Only counts with a photo taken in the app." · Optional "Add a photo or mark it done. With no photo it posts as self-reported." · None "Mark it done. Posts as self-reported."
 - Gate line in the preview: Required → "Camera", Optional → "Photo optional", None → "Self-reported", then " · By {t}" or " · {from}–{to}", then " · {place}".
-- Data: `require_photo` becomes `photo_mode: 'required' | 'optional' | 'none'`. `gate_time_start`/`gate_time_end` and `require_location` are unchanged.
+- Data: **no new column**. `challenge_tasks.config.photo_mode: 'required' | 'optional' | 'none'` (JSON). Absent means read `require_photo` (true → required, false → none). `gate_time_start`/`gate_time_end` and `require_location` are unchanged.
 - Check-in sheet for Photo: Optional: label "{challenge} · Day {n} of {N}", title the task, "Photo optional. With a photo it shows the camera seal. Without one it posts as self-reported.", primary "Add a photo", secondary "Done without photo".
 
 ## Contradictions
@@ -5972,3 +5972,62 @@ Order: Common tasks (Pray, Read, Water, Journal, Workout, Stretch; **Run removed
 **123.** Discover community challenges vs v41 "catalog only". Reversed for public user-created challenges.
 **124.** Token: the brief says #0E0E0E; v42 is #0F0F0F. Kept #0F0F0F.
 **125.** A Photo: Optional completion without a photo must post as self-reported, with no seal and `proof_photo_url` null. A badge such as Camera 30 counts only completions with a photo.
+
+
+# v43.1 · Design for 5 users
+
+Frames 155–163 in `GRIIT v43-1 Sparse.dc.html`. No new tokens, no new fields. Every number on these frames is one the 5-person test could produce.
+
+## Spec sync (architect overrides)
+1. Feed segment: **Following | Everyone**. Following = one-way follows. **Friends** = mutual follows, used only in profile stats, privacy copy and "Friends are doing". Caption: "Everyone is on until you follow 3 people." Frame 146 updated.
+2. Privacy: no `is_private`. See 152 above.
+3. `photo_mode` lives in `challenge_tasks.config`. See 153 above.
+4. **No completion rate in Discover**, anywhere. Rows show "{N} days · {proof} · {n} people". The v38 cut list already removed "0% completion rate"; this makes it permanent.
+
+## 155 Home, sparse · drives: invite a friend
+After the last real post: check-check 18 + "You're caught up. {n} posts since {weekday}." (`count` and `min(created_at)` of the posts returned). Then one `InviteCard` **only if** the user is the sole member of their most recently active challenge: "Invite one person to {challenge}" / "You are the only one in it. People you invite join at Day 1 of their own run." / Share invite link. Never suggested users, never sample posts. When nothing has arrived in the last 24 hours, the line stays the same.
+
+## 156 First 10 seconds · drives: post proof
+Today card shows the first-day line "Day 1 is today. Finish {both|all {n}} tasks to secure it." Under the card, a full-width primary "Start: {first pending task}" (icon from its gate). The first feed item is a dashed slot: "Your first proof goes here." / "It stays private until you choose to share it." It disappears after the first completion. No invite card until the first day is secured.
+
+## 157 One member · drives: invite a friend
+Leaderboard: picker "Just you", a single row, then "A board needs two." / "Invite someone to {challenge}. Their days count here from the day they join." Primary "Invite to {challenge}". Link field `griit.app/c/{slug}` + Copy.
+Challenge detail People card: "Just you so far" · "1 of 10" · "Anyone with the link can join. They start at Day 1 the day they join, with their own streak." · primary Invite · Copy link / Messages.
+Private and solo challenges have no link (v41 locked); the People card there reads "Private. Only you." with no invite.
+
+## 158 Discover, sparse · drives: join a challenge
+While `count(public community challenges) < 5`: a single list titled **Challenges**, catalog and community merged, sorted by `active_members` descending, then by name. Community rows carry "by {creator}". The right column reads "{n} people" (1 person). "Friends are doing" is hidden while no friend is in a public challenge. At 5 or more, the v43 sections return.
+
+## 159 Profile, 2 days old · drives: post proof
+Grid leads with a **Today tile** (1.5 dashed brand border, plus 18, "Today", "{n} tasks left"). It is owner only, while today is open; tapping it opens the first pending task. The bio placeholder for an empty bio under 7 days old is "Joined {weekday}. Running {challenge}." (owner sees it; visitors see nothing). With 0 friends, "Share profile" becomes "Find friends". The next-badge card sits under the grid when fewer than 6 tiles exist.
+
+## 160 Day 2 morning · drives: post proof
+Inside the Today card, above the section: "{streak}" HERO 28 + "day. Secure today and it's {streak+1}." (pluralised: "days … it's"). If a pending task has a closing window: "The {task} window closes at {time}. After that, today can't be secured." On that row the gate line gains " · {h} h {m} min left" while under 3 hours. Primary "Start: {task with the earliest closing window, else first pending}".
+Pushes: morning, 45 minutes before the earliest window closes, "{challenge} · Day {n} of {N}" / "{task} window closes at {time}. Your streak is {n} days." Evening at 8:00 pm, "{n} tasks left today. Your streak is {n} days." Never sent once the day is secured. At most 2 a day.
+
+## 161 Challenge detail owns the week · drives: come back tomorrow
+Under the meta line: "This week" label + "{secured} of {due} days" (today counts once secured), then a 7-column strip of this challenge's days from `start_at` (v42 day-cell). Then the freeze line, a bordered row with snowflake 18:
+| state | title | caption |
+|---|---|---|
+| freezes > 0 | {n} freeze left / freezes left | A freeze covers yesterday only. Use it from the morning-after card. |
+| 0, used | 0 freezes left | You used one on {date}. Next one on {date + 30}. |
+| No Days Off | No freezes | No Days Off. A missed day goes back to Day 1. (icon shield-off) |
+Binds `profiles.streak_freezes_remaining` and `last_freeze_used_at`.
+
+## 162 Photo: Optional, no photo
+Render rule everywhere (sticker, proof viewer, feed, profile grid, badges): **proof_photo_url null means self-reported.** Sticker: no seal, a "Self-reported" line in textSecondary, Card style (Photo style hidden). Viewer: the text panel with "Self-reported. Nothing was checked." and the meta line "… · Self-reported". `photo_mode` never decides the render.
+
+## 163 What to watch
+| behaviour | signal |
+|---|---|
+| Day 2 return | opens on day 2 before the first window closes; with or without the push |
+| First share | proofs shared to the feed in days 1–3; time from Keep to a later share |
+| Invites sent | challenge link copies or shares, and joins from a link |
+| Self-report ratio | for Photo: Optional tasks, the share done without a photo |
+| Dead feed | Home sessions under 10 s that reach "You're caught up" |
+
+## Contradictions
+**126.** 159's "Find friends" replaces v43's "Share profile" when friends = 0. The v43 two-button rule stands; only the second label changes.
+**127.** v43 hid "See all in Activity" and the invite from Home. 155 brings back one invite card, conditional on being alone in a challenge. It is not a general invite block.
+**128.** v43 removed the week strip from Home, and 160's streak line goes in the Today card. That is one number in one sentence, not the strip.
+**129.** The pushes in 160 replace any earlier reminder copy that names percentages or the "secure reminder" time. `SECURE_REMINDER_TIME` stays at 8:00 pm for the evening push.

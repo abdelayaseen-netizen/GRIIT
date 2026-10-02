@@ -1036,3 +1036,27 @@ File: `GRIIT v43 Restructure.dc.html`. Spec: `cursor/02_screens.md` → "v43 · 
 - **Add task:** Photo Required/Optional/None and Limits Time/Place. Run removed from the chips. A hint-style placeholder. A check-in sheet for optional photos.
 
 **Flags:** token #0E0E0E vs #0F0F0F (kept #0F0F0F); Discover community challenges reverse the catalog-only rule; the one-switch privacy and the grid-first Proofs supersede v42.1 and v42. Contradictions 122–125.
+
+
+## v43.1 · Design for 5 users (frames 155–163)
+
+File: `GRIIT v43-1 Sparse.dc.html`. Spec: `cursor/02_screens.md` → "v43.1".
+
+- **155 Sparse feed** (invite a friend): one "You're caught up" line, then one invite card if you are alone in your challenge. No filler.
+- **156 First 10 seconds** (post proof): one full-width "Start: {task}" and a dashed slot for your first proof. No invite yet.
+- **157 Solo** (invite a friend): the board and the challenge detail make Invite the primary action, with a copyable link.
+- **158 Discover** (join a challenge): below 5 community challenges, one merged "Challenges" list sorted by people in it.
+- **159 Two-day profile** (post proof): an open Today tile at the front of the grid, the next badge one day away, and "Find friends".
+- **160 Day 2 morning** (post proof): "1 day. Secure today and it's 2." plus the window deadline, and two pushes at most.
+- **161** The challenge detail owns the week strip and the freeze line.
+- **162** An optional-photo task done without a photo renders as self-reported everywhere.
+- **163** What to watch in the 5-person test.
+
+Spec sync: Following | Everyone (Friends = mutual); privacy writes the existing three visibility fields; `photo_mode` in `challenge_tasks.config`; no completion rate in Discover. Frame 146's segment label is updated. Contradictions 126–129.
+
+### What to watch in the 5-person test
+1. **Day 2 return:** do all 5 open before the first window closes, and who needed the push?
+2. **First share:** how many share a proof to the feed in days 1–3?
+3. **Invites:** does anyone copy the challenge link? One person bringing a second is the test.
+4. **Self-report ratio:** on Photo: Optional tasks, nearly all done without a photo means the photo isn't worth its friction.
+5. **Dead feed:** Home sessions under 10 s that reach "You're caught up".

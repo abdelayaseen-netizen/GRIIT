@@ -209,3 +209,12 @@ carries it.
 6. Privacy: replace the three controls with `is_private`, migrating as specified. Keep the stranger preview.
 7. Add task: `photo_mode` replaces `require_photo`; Limits UI; remove Run from the starter chips; placeholder at textSecondary 70%. Check-in sheet for optional photos.
 8. Backend: an optional-photo completion without a photo writes `proof_photo_url` null and is self-reported everywhere (seal, badges, stickers).
+
+
+## v43.1
+1. The feed segment label is Following | Everyone. Keep "Friends" for mutual-follow only (profile stat, privacy, Friends are doing).
+2. Privacy: write `profile_visibility`, `challenge_visibility` and `activity_visibility` together. Do not add `is_private`.
+3. `photo_mode` goes in `challenge_tasks.config`, falling back to `require_photo`. Do not add a column.
+4. Remove any completion rate from Discover.
+5. Sparse states 155–160 and the challenge detail week/freeze section 161. Optional-photo render rule 162: `proof_photo_url` null means self-reported.
+6. Pushes: morning push 45 minutes before the earliest open window closes, plus the evening push at `SECURE_REMINDER_TIME` (8:00 pm). At most 2 a day, none once secured.
