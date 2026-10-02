@@ -13,6 +13,9 @@ import {
   addLocalDays,
   calendarDateKey,
   lapsedOffsetsAvoidingG2a,
+  g2aEveningBody,
+  g2aMorningBody,
+  g2aWindowBody,
   planG2aAhead,
   taskCloseHHMM,
 } from "@/lib/g2a-notifications";
@@ -153,12 +156,14 @@ export function useNotificationScheduler({ user, stats, activeChallenge, timezon
       const title = challengeTitle ?? matched?.challenges?.title ?? "GRIIT";
       const remainingToday = evening?.remaining ?? dueToday.remaining;
       const dueTomorrow = dueToday.due;
+      const morningTask =
+        [...winTasks].sort((a, b) => (a.closeHHMM ?? "").localeCompare(b.closeHHMM ?? ""))[0]?.name ?? "task";
       const copyFor = (day: number, remaining: number) => ({
         challengeLine: `${title} · Day ${day} of ${durationDays}`,
         windowBody: (close: { name: string; hhmm: string }) =>
-          `${close.name} window closes at ${closeTimeLabel({ mode: "by", start: close.hhmm, end: null }) || close.hhmm}. Your streak is ${streakCount} days.`,
-        eveningBody: `${remaining} tasks left today. Your streak is ${streakCount} days.`,
-        morningBody: `Secure today and it's ${streakCount + 1}.`,
+          g2aWindowBody(close.name, closeTimeLabel({ mode: "by", start: close.hhmm, end: null }) || close.hhmm, streakCount),
+        eveningBody: g2aEveningBody(remaining, streakCount),
+        morningBody: g2aMorningBody({ streak: streakCount, taskName: morningTask }),
       });
       const plan = planG2aAhead({
         now,

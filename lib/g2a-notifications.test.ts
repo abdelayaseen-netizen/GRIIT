@@ -11,6 +11,9 @@ import {
   earliestWindowClose,
   planG2aAhead,
   planG2aDay,
+  g2aEveningBody,
+  g2aMorningBody,
+  g2aWindowBody,
   taskCloseHHMM,
   taskOpenHHMM,
 } from "@/lib/g2a-notifications";
@@ -109,6 +112,23 @@ describe("g2a day pushes", () => {
     expect(secured.tomorrow).toHaveLength(2);
     const perDay = countByCalendarDay([...plan.today, ...plan.tomorrow]);
     for (const n of Object.values(perDay)) expect(n).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("g2a copy", () => {
+  it("pluralizes and drops the streak clause at 0", () => {
+    expect(g2aEveningBody(1, 1)).toBe("1 task left today. Your streak is 1 day.");
+    expect(g2aEveningBody(2, 2)).toBe("2 tasks left today. Your streak is 2 days.");
+    expect(g2aEveningBody(1, 0)).toBe("1 task left today.");
+    expect(g2aWindowBody("Read", "12:00 pm", 0)).toBe("Read window closes at 12:00 pm.");
+    expect(g2aWindowBody("Read", "12:00 pm", 1)).toBe("Read window closes at 12:00 pm. Your streak is 1 day.");
+  });
+
+  it("morning with streak 0 names Day 1 and the task", () => {
+    expect(g2aMorningBody({ streak: 0, taskName: "Read" })).toBe(
+      "Day 1 is today. Finish Read to secure it.",
+    );
+    expect(g2aMorningBody({ streak: 4, taskName: "Read" })).toBe("Secure today and it's 5.");
   });
 });
 

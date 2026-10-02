@@ -3,6 +3,8 @@
  * Max two identifiers per calendar day. Empty when that day is secured.
  */
 
+import { countNoun } from "@/lib/onboarding-v2-suggest";
+
 export const G2A_PUSH_A = "g2a-day-a";
 export const G2A_PUSH_B = "g2a-day-b";
 export const G2A_NEXT_A = "g2a-next-a";
@@ -244,4 +246,24 @@ function onDay(now: Date, h: number, m: number): Date {
   const d = new Date(now);
   d.setHours(h, m, 0, 0);
   return d;
+}
+
+export function streakClause(streak: number): string {
+  if (streak <= 0) return "";
+  return ` Your streak is ${countNoun(streak, "day", "days")}.`;
+}
+
+export function g2aWindowBody(taskName: string, closeLabel: string, streak: number): string {
+  return `${taskName.trim() || "task"} window closes at ${closeLabel}.${streakClause(streak)}`;
+}
+
+export function g2aEveningBody(remaining: number, streak: number): string {
+  return `${countNoun(Math.max(0, Math.floor(remaining)), "task", "tasks")} left today.${streakClause(streak)}`;
+}
+
+export function g2aMorningBody(args: { streak: number; taskName: string }): string {
+  if (args.streak <= 0) {
+    return `Day 1 is today. Finish ${args.taskName.trim() || "task"} to secure it.`;
+  }
+  return `Secure today and it's ${args.streak + 1}.`;
 }
