@@ -5,7 +5,7 @@
  * Rendered by app/onboarding/index.tsx.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
+import { BackHandler, SafeAreaView, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
@@ -74,6 +74,7 @@ export default function OnboardingFlowV2() {
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
   const [stepReady, setStepReady] = useState(false);
+  const [completeError, setCompleteError] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -275,12 +276,22 @@ export default function OnboardingFlowV2() {
   }, []);
 
   const handleFinish = useCallback(async () => {
-    await completeOnboardingV2();
+    setCompleteError("");
+    const result = await completeOnboardingV2();
+    if (!result.ok) {
+      setCompleteError(result.message);
+      return;
+    }
     router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
   const handleSkip = useCallback(async () => {
-    await skipOnboardingV2();
+    setCompleteError("");
+    const result = await skipOnboardingV2();
+    if (!result.ok) {
+      setCompleteError(result.message);
+      return;
+    }
     router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
@@ -375,6 +386,7 @@ export default function OnboardingFlowV2() {
           onBack={browseOpen ? handleBrowseBack : goBack}
         />
       ) : null}
+      {completeError ? <Text style={styles.completeError}>{completeError}</Text> : null}
       <StepFade
         stepKey={
           signInOpen ? "signin" : browseOpen ? "browse-all" : step
@@ -389,4 +401,11 @@ export default function OnboardingFlowV2() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: OBV2_COLOR.screen },
   welcome: { backgroundColor: DS_V3.color.canvas },
+  completeError: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    color: DS_V3.color.danger,
+    fontSize: DS_V3.type.caption.fontSize,
+    textAlign: "center",
+  },
 });
