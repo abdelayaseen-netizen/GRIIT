@@ -1456,23 +1456,30 @@ export const checkinsRouter = createTRPCRouter({
       const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
       let totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
       if (row.secured && !alreadySecured) {
-        const nextDays = totalDaysSecured + 1;
         const svc = getSupabaseServer();
         if (!svc) {
-          logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not incremented");
+          logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not recounted");
         } else {
-          const { error: daysErr } = await svc
-            .from("profiles")
-            .update({
-              total_days_secured: nextDays,
-              tier: profileTierForSecuredDays(nextDays),
-              updated_at: new Date().toISOString(),
-            } as never)
+          const { count, error: countErr } = await svc
+            .from("day_secures")
+            .select("id", { count: "exact", head: true })
             .eq("user_id", ctx.userId);
-          if (daysErr) {
-            logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
+          if (countErr || typeof count !== "number") {
+            logger.error({ err: countErr, userId: ctx.userId }, "[checkins.secureDay] day_secures count failed");
           } else {
-            totalDaysSecured = nextDays;
+            const { error: daysErr } = await svc
+              .from("profiles")
+              .update({
+                total_days_secured: count,
+                tier: profileTierForSecuredDays(count),
+                updated_at: new Date().toISOString(),
+              } as never)
+              .eq("user_id", ctx.userId);
+            if (daysErr) {
+              logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
+            } else {
+              totalDaysSecured = count;
+            }
           }
         }
       }
