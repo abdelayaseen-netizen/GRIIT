@@ -364,7 +364,7 @@ export const profilesSocialProcedures = {
       const { getSupabaseServer } = await import("../../lib/supabase-server");
       const server = getSupabaseServer() ?? ctx.supabase;
       if (!(await canViewerSeeAccountContent(server, ctx.userId, input.userId))) {
-        return { followers: 0, following: 0 };
+        return { followers: 0, following: 0, friends: 0 };
       }
       const { count: followers, error: fErr } = await server
         .from("user_follows")
@@ -382,7 +382,27 @@ export const profilesSocialProcedures = {
       if (gErr) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: gErr.message });
       }
-      return { followers: followers ?? 0, following: following ?? 0 };
+      const [{ data: inbound }, { data: outbound }] = await Promise.all([
+        server
+          .from("user_follows")
+          .select("follower_id")
+          .eq("following_id", input.userId)
+          .eq("status", "accepted")
+          .limit(500),
+        server
+          .from("user_follows")
+          .select("following_id")
+          .eq("follower_id", input.userId)
+          .eq("status", "accepted")
+          .limit(500),
+      ]);
+      const out = new Set(
+        ((outbound ?? []) as { following_id: string }[]).map((r) => r.following_id),
+      );
+      const friends = ((inbound ?? []) as { follower_id: string }[]).filter((r) =>
+        out.has(r.follower_id),
+      ).length;
+      return { followers: followers ?? 0, following: following ?? 0, friends };
     }),
 
   /**

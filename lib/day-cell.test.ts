@@ -42,9 +42,9 @@ describe("shared day-cell", () => {
     expect(week).toContain("DayCell");
     expect(cal).toContain("DayCell");
     expect(cal).toContain("header.secured");
-    expect(own).toContain("ProofsCalendar");
+    expect(own).toContain("ProfileProofs");
     expect(own).not.toContain("ProofDaysGrid");
-    expect(visitor).toContain('viewer={isSelf ? "owner" : "visitor"}');
+    expect(visitor).toContain("ProfileProofs");
     expect(visitor).not.toContain("ProofDaysGrid");
     expect(cal).toContain("lock={viewer === \"owner\" && model.lock}");
   });

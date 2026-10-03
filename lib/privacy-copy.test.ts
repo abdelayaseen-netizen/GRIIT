@@ -40,14 +40,14 @@ describe("v42.1 privacy copy", () => {
   it("settings and visitor profile bind the shared copy", () => {
     const settings = readFileSync(resolve(__dirname, "../app/settings/privacy.tsx"), "utf8");
     const visitor = readFileSync(resolve(__dirname, "../app/profile/[username].tsx"), "utf8");
-    expect(settings).toContain("PROFILE_COPY");
-    expect(settings).toContain("CHALLENGE_COPY");
-    expect(settings).toContain("ACTIVITY_COPY");
-    expect(settings).toContain("PRIVACY_HONESTY_TITLE");
-    expect(settings).toContain("PRIVACY_HONESTY_BODY");
+    expect(settings).toContain("SEE_STRANGER");
+    expect(settings).toContain("SWITCH_NEVER_SHARES_KEPT");
+    expect(settings).toContain("PHOTOS_STAY_PRIVATE");
+    expect(settings).toContain("visibilitiesForPrivateSwitch");
     expect(settings).not.toContain("365-day");
     expect(settings).not.toContain("verified the day");
-    expect(visitor).toContain("visitorFriendsLockBody");
+    expect(visitor).toContain("ACCOUNT_PRIVATE");
+    expect(visitor).toContain("STRANGER_BANNER");
     expect(visitor).not.toContain("people they have accepted");
   });
 

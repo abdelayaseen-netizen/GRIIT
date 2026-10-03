@@ -56,13 +56,19 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import ProfileProofs from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
 import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import {
+  joinedBioLine,
+  nextUnearnedBadge,
+  showJoinedBioPlaceholder,
+  weekdayFromCreatedAt,
+} from "@/lib/g3-profile";
 
 type ProfileTab = "challenges" | "proofs" | "badges";
 
@@ -106,6 +112,7 @@ export default function ProfileScreen() {
       trpcQuery(TRPC.profiles.getFollowCounts, { userId: user!.id }) as Promise<{
         followers: number;
         following: number;
+        friends?: number;
       }>,
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
@@ -204,6 +211,9 @@ export default function ProfileScreen() {
   const following =
     bootstrapFollows?.following ??
     (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
+  const friends =
+    bootstrapFollows?.friends ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0));
   const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
   const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
   const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
@@ -227,6 +237,19 @@ export default function ProfileScreen() {
     todaySecured,
     formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
   });
+  const tasksLeft = challengeRows
+    .filter((r) => r.status === "active")
+    .reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
+  const todayOpen = !todaySecured && (record?.runs.length ?? 0) > 0;
+  const bioPlaceholder = showJoinedBioPlaceholder({
+    bio,
+    createdAt: profile.created_at,
+  })
+    ? joinedBioLine(
+        weekdayFromCreatedAt(profile.created_at ?? "", homeTimeZone),
+        record?.runs[0]?.name ?? "",
+      )
+    : null;
 
   return (
     <ErrorBoundary>
@@ -247,7 +270,9 @@ export default function ProfileScreen() {
             avatarUrl={profile.avatar_url}
             followers={followers}
             following={following}
+            friends={friends}
             bio={bio}
+            bioPlaceholder={bioPlaceholder}
             streak={streakFromArray}
             best={best}
             todaySecured={todaySecured}
@@ -287,6 +312,7 @@ export default function ProfileScreen() {
             onShare={() => void handleShare()}
             onSettings={() => router.push(ROUTES.SETTINGS as never)}
             onEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}
+            onFindFriends={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onInvite={() => void handleInvite()}
             onFollowers={() =>
               router.push(ROUTES.FOLLOW_LIST(user.id, "followers", handle) as never)
@@ -323,14 +349,31 @@ export default function ProfileScreen() {
             )
           ) : null}
           {v3Tab === "Proofs" ? (
-            <ProofsCalendar
+            <ProfileProofs
+              proofs={proofs.map((p, i) => ({
+                id: p.eventId ?? `${p.dateKey}-${i}`,
+                dateKey: p.dateKey,
+                imageUrl: p.imageUrl,
+                taskName: p.taskName ?? p.challengeName,
+                shared: p.shared,
+                shareState: p.shareState,
+                bytes: p.bytes,
+              }))}
+              isOwner
+              todayOpen={todayOpen}
+              tasksLeft={tasksLeft}
               monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
               days={record?.days ?? []}
               header={header}
-              viewer="owner"
-              onDay={(dateKey) =>
+              onOpenDay={(dateKey) =>
                 router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
               }
+              onToday={() => router.push(ROUTES.TABS_HOME as never)}
+              nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
+              onNextBadge={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setTab("badges");
+              }}
             />
           ) : null}
           </>

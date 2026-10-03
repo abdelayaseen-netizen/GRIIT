@@ -11,10 +11,15 @@ import {
 import { DS_V3 } from "@/lib/design-system";
 import Sheet from "@/components/ds/Sheet";
 import {
-  badgesEarnedLine,
   earnedOnLine,
   type V42BadgeState,
 } from "@/lib/v42-badges";
+import {
+  EARNED_HEADING,
+  badgesMoreFooter,
+  nextBadgeRemainLine,
+  nextUnearnedBadge,
+} from "@/lib/g3-profile";
 
 function Mark({ badge }: { badge: V42BadgeState }) {
   const ink = badge.earned ? DS_V3.color.onBrand : DS_V3.color.textSecondary;
@@ -29,6 +34,42 @@ function Mark({ badge }: { badge: V42BadgeState }) {
   );
 }
 
+export function NextBadgeCard({
+  badge,
+  onPress,
+}: {
+  badge: V42BadgeState;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Next: ${badge.name}`}
+      style={styles.next}
+    >
+      <View style={[styles.disc, styles.discOff]}>
+        <Mark badge={badge} />
+      </View>
+      <View style={styles.nextCopy}>
+        <Text style={styles.nextTitle}>Next: {badge.name}</Text>
+        <Text style={styles.prog}>{badge.have} of {badge.target}</Text>
+        <View style={styles.bar}>
+          <View
+            style={[
+              styles.barFill,
+              {
+                width: `${Math.min(100, Math.round((badge.have / Math.max(1, badge.target)) * 100))}%`,
+              },
+            ]}
+          />
+        </View>
+        <Text style={styles.prog}>{nextBadgeRemainLine(badge)}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export function BadgeGrid({
   badges,
   onShare,
@@ -37,11 +78,15 @@ export function BadgeGrid({
   onShare?: (badge: V42BadgeState) => void;
 }) {
   const [open, setOpen] = useState<V42BadgeState | null>(null);
+  const next = nextUnearnedBadge(badges);
+  const earned = badges.filter((b) => b.earned);
+  const unearned = badges.length - earned.length;
   return (
     <View style={styles.wrap}>
-      <Text style={styles.count}>{badgesEarnedLine(badges)}</Text>
+      {next ? <NextBadgeCard badge={next} onPress={() => setOpen(next)} /> : null}
+      <Text style={styles.count}>{EARNED_HEADING(earned.length)}</Text>
       <View style={styles.grid}>
-        {badges.map((b) => (
+        {earned.map((b) => (
           <Pressable
             key={b.id}
             onPress={() => setOpen(b)}
@@ -59,6 +104,7 @@ export function BadgeGrid({
           </Pressable>
         ))}
       </View>
+      <Text style={styles.foot}>{badgesMoreFooter(unearned)}</Text>
       <Sheet
         visible={!!open}
         onDismiss={() => setOpen(null)}
@@ -87,6 +133,20 @@ export function BadgeGrid({
 
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: DS_V3.space.gutter, gap: DS_V3.space.lg },
+  next: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    padding: DS_V3.space.md,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+  },
+  nextCopy: { flex: 1, gap: 4 },
+  nextTitle: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
+  bar: { height: 6, borderRadius: 3, backgroundColor: DS_V3.color.border, overflow: "hidden" },
+  barFill: { height: 6, backgroundColor: DS_V3.color.brand },
+  foot: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   count: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   cell: { width: "30%", alignItems: "center", gap: 6, minHeight: 88 },
