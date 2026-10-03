@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT build 61 · with the Chunk R density pass</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">Proofs grid revision</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#A39E95;max-width:660px;">Frames 83 to 86. The tile label carries the task rather than the challenge, a lock mark makes private photos legible as private, a failed image gets a surface placeholder instead of a black square, and the footer stops doing arithmetic.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT Chunk T.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 79 to 82</a>
+      <a href="#f83" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">83 Tile states</a><a href="#f84" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">84 Groups</a><a href="#f85" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">85 Empty</a><a href="#f86" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">86 One photo</a>
+    </div>
+  </div>
+
+  <div id="f83" data-screen-label="83 Tile states" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">83 The tile: four states, three grounds, and truncation</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">The label sits on a scrim that fades from nothing at 42% to 78% ink at the base, so it reads white on a bright photo and on a near-black one without a box around it. The lock is a 16pt ink disc at 72%, not a bare glyph: a bare white lock disappears on a white photo and a bare dark one disappears on a dark photo, and the disc carries its own ground either way. A failed image is surface with a 1pt border and an image-off glyph — never a black square, which is indistinguishable from a photo taken in the dark. Loading is the same box filled flat with border, no label, no pulse.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Shared · private · failed · loading · bright · dark · truncated</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;"></div></div><div style="padding:12px 16px 0;display:flex;gap:8px;"><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:4px 16px 3px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · four states, over a mid photo</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;">
+    
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><i data-lucide="image-off" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+    
+    
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#A39E95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div></div></div>
+    <div style="padding:4px 16px 3px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Loading</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;">
+    
+    
+    <div style="position:absolute;inset:0;background:#2E2B27;"></div>
+    
+    
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;">
+    
+    
+    <div style="position:absolute;inset:0;background:#2E2B27;"></div>
+    
+    
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;">
+    
+    
+    <div style="position:absolute;inset:0;background:#2E2B27;"></div>
+    
+    
+    
+    
+  </div></div></div>
+    <div style="padding:4px 16px 3px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · the same label over a bright photo</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Cold shower</div>
+    
+    
+  </div></div></div>
+    <div style="padding:4px 16px 3px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">And over a near-black photo</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Progress photo</div>
+    
+    
+  </div></div></div>
+    <div style="padding:4px 16px 3px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">G · truncation at ~24 characters</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Workout, outdoors</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Evening mobility routine</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Read</div>
+    
+    
+  </div></div></div></div></div>
+  </div>
+
+  <div id="f84" data-screen-label="84 Groups" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">84 Date groups, mixed states, and a two-challenge day</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:860px;">The header stays "19 September · 3 proofs" and carries no private count: the lock marks are already in view, and a count sends the reader off to reconcile two numbers, which is the exact habit the footer fix is removing. When a day holds proofs from more than one challenge the challenge becomes a sub-header inside the group rather than a second line on every tile — a second line costs 13pt of a 116pt tile and repeats itself three times to say what one line above the row says once.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Mixed, multi-challenge, and a failed tile</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;"></div></div><div style="padding:12px 16px 0;display:flex;gap:8px;"><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:14px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">19 September · 3 proofs</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Cold shower</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Progress photo</div>
+    
+    
+  </div></div></div>
+    <div style="padding:14px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">18 September · 4 proofs</div>
+    <div style="padding:2px 16px 4px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">Iron man</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#EDEAE3 0%,#C9C4B8 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Cold shower</div>
+    
+    
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Progress photo</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div></div></div>
+    <div style="padding:10px 16px 4px;font-size:11px;line-height:14px;font-weight:400;color:#A39E95;">Daily Gratitude</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#241F1A 0%,#0B0B0A 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Morning pages</div>
+    
+    
+  </div></div></div>
+    <div style="padding:14px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">17 September · 2 proofs</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#1A1917;border:1px solid #2E2B27;">
+    
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"><i data-lucide="image-off" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+    
+    
+    <div style="position:absolute;left:6px;right:6px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#A39E95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Cold shower</div>
+    
+    
+  </div></div></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 26px;background:#0F0F0F;border-top:1px solid #2E2B27;">
+      <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">9 photos</div></div></div></div>
+  </div>
+
+  <div id="f85" data-screen-label="85 Empty"><div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">85 · no photos yet</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;"></div></div><div style="padding:12px 16px 0;display:flex;gap:8px;"><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:70px 16px 0;display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;"><i data-lucide="camera" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div>
+      <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;text-align:center;">No photos yet</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;max-width:270px;">A task with the Camera gate puts its photo here. Nothing can be added from your library.</div>
+    </div></div></div></div>
+  <div id="f86" data-screen-label="86 One photo"><div style="display:flex;flex-direction:column;gap:9px;width:393px;"><div style="font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">86 · a single tile, and the private promise stated once</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;line-height:18px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:15px;height:15px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:19px;height:19px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;"><div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:22px;height:22px;color:#F5F3EE;flex:none;"></i></div><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">yaseen</div><div style="width:44px;"></div></div><div style="padding:12px 16px 0;display:flex;gap:8px;"><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Challenges</div><div style="flex:1;min-height:44px;border-radius:10px;background:#3A1F10;border:1px solid #DC5401;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">Proofs</div><div style="flex:1;min-height:44px;border-radius:10px;background:transparent;border:1px solid #2E2B27;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Badges</div></div>
+    <div style="padding:14px 16px 4px;font-size:11px;line-height:14px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">19 September · 1 proof</div>
+    <div style="padding:2px 16px 0;"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:transparent;border:1px solid transparent;">
+    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#6B5B4A 0%,#2A2320 100%);"></div>
+    
+    
+    <div style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(to bottom, rgba(15,15,15,0) 42%, rgba(15,15,15,0.78) 100%);"></div>
+    <div style="position:absolute;left:6px;right:24px;bottom:5px;font-size:11px;line-height:14px;font-weight:500;color:#F5F3EE;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Run</div>
+    
+    <div style="position:absolute;right:5px;bottom:4px;width:16px;height:16px;border-radius:999px;background:rgba(15,15,15,0.72);display:flex;align-items:center;justify-content:center;"><i data-lucide="lock" style="width:9px;height:9px;color:#F5F3EE;flex:none;"></i></div>
+  </div></div></div>
+    <div style="padding:14px 16px 0;font-size:12px;line-height:16px;font-weight:400;color:#A39E95;">Your first proof. Photos stay private until you share one.</div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 16px 26px;background:#0F0F0F;border-top:1px solid #2E2B27;">
+      <div style="font-size:12px;line-height:16px;font-weight:400;color:#A39E95;text-align:center;">1 photo</div></div></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount(){this.icons();}
+  componentDidUpdate(){this.icons();}
+  icons(){try{window.lucide&&window.lucide.createIcons();}catch(e){}}
+  renderVals(){return {};}
+}
+</script>
+</body>
+</html>

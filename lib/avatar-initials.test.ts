@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { avatarTint, initialsFrom } from "@/lib/avatar-initials";
+import { avatarShowsPhoto, avatarTint, initialsFrom } from "@/lib/avatar-initials";
 import { DS_V3 } from "@/lib/design-system";
 import { getDisplayInitials } from "@/lib/utils";
 
@@ -50,5 +50,25 @@ describe("initialsFrom", () => {
     expect(src).toContain("DS_V3.color.canvas");
     expect(src).toContain('from "@/components/ds/Avatar"');
     expect(src).toContain("displayName={item.display_name}");
+  });
+});
+
+describe("avatar photo fallback", () => {
+  it("drops a broken uri so initials render, not an empty circle", () => {
+    expect(avatarShowsPhoto(null, null)).toBe(false);
+    expect(avatarShowsPhoto("", null)).toBe(false);
+    expect(avatarShowsPhoto("https://cdn.example/soul.jpg", null)).toBe(true);
+    expect(avatarShowsPhoto("https://cdn.example/broken.jpg", "https://cdn.example/broken.jpg")).toBe(
+      false,
+    );
+    expect(avatarShowsPhoto("https://cdn.example/next.jpg", "https://cdn.example/broken.jpg")).toBe(
+      true,
+    );
+    const avatar = readFileSync(resolve(__dirname, "../components/ds/Avatar.tsx"), "utf8");
+    expect(avatar).toContain("onError");
+    expect(avatar).toContain("failedUri");
+    expect(avatar).toContain("initialsFrom");
+    expect(avatar).toContain("{initials}");
+    expect(avatar).not.toContain("backgroundColor: \"#000\"");
   });
 });

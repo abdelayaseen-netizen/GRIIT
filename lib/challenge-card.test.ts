@@ -79,7 +79,7 @@ describe("ProgressStrip cap", () => {
     expect(header).toContain("compact(");
     expect(header).toContain("Add a bio");
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
-    expect(v3).toContain("CalendarDays");
+    expect(v3).toContain("LayoutGrid");
     expect(v3).toContain("ProfileHeader");
     const list = readFileSync(resolve(__dirname, "../components/profile/ProfileChallenges.tsx"), "utf8");
     expect(list).toContain("ChallengeCard");

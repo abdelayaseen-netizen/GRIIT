@@ -5,10 +5,13 @@
 
 import type { TaskConfig } from "./task-config";
 import {
+  applyPhotoModeToConfig,
   gateTimeFor,
   gatesFor,
   isTaskModelType,
   overlayTaskModel,
+  photoModeFor,
+  photoModeFromWrite,
   type TaskGate,
   verificationMethodFor,
 } from "./task-model";
@@ -116,6 +119,7 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
     min_words: config.min_words ?? null,
     photo_required: config.photo_required ?? false,
     require_photo_proof: config.require_photo_proof ?? false,
+    photo_mode: photoModeFor(r),
     verification_method: verificationMethodFor(gatesFor(r)),
     verification_rule_json: (config.verification_rule_json as VerificationRuleStrava) ?? null,
     order_index: row.order_index ?? null,
@@ -312,10 +316,16 @@ function buildTaskConfigFromInput(task: {
   if (type === "counter" && typeof task.unit === "string" && task.unit.trim()) {
     config.unit_label = task.unit.trim();
   }
-  if (task.photoRequired === true || task.requirePhotoProof === true || type === "photo" || taskHasGate(task, "camera")) {
-    config.photo_required = true;
-    config.require_photo_proof = true;
-  }
+  applyPhotoModeToConfig(
+    config,
+    photoModeFromWrite({
+      photo_mode: task.photo_mode ?? task.photoMode,
+      photoRequired: task.photoRequired,
+      requirePhotoProof: task.requirePhotoProof,
+      type,
+      gates: task.gates,
+    }),
+  );
   if (task.verificationMethod) {
     config.verification_method = task.verificationMethod;
   }
@@ -443,6 +453,7 @@ export function buildTaskInsertPayload(
     strava_min_distance_meters: typeof t.strava_min_distance_meters === "number" ? t.strava_min_distance_meters : undefined,
     strava_activity_type: typeof t.strava_activity_type === "string" ? t.strava_activity_type : undefined,
     gates: t.gates,
+    photo_mode: t.photo_mode ?? t.photoMode,
   });
   if (t.config && typeof t.config === "object" && !Array.isArray(t.config)) {
     const extra = t.config as Record<string, unknown>;
@@ -455,11 +466,15 @@ export function buildTaskInsertPayload(
     if (typeof extra.target_value === "number") config.target_value = extra.target_value;
     if (typeof extra.target_count === "number") config.target_count = extra.target_count;
   }
-  const camera =
-    task.photoRequired === true ||
-    task.requirePhotoProof === true ||
-    task.type === "photo" ||
-    taskHasGate(t, "camera");
+  const photoMode = photoModeFromWrite({
+    photo_mode: task.photo_mode ?? task.photoMode ?? t.photo_mode,
+    photoRequired: task.photoRequired,
+    requirePhotoProof: task.requirePhotoProof,
+    type: task.type,
+    gates: t.gates ?? task.gates,
+  });
+  applyPhotoModeToConfig(config, photoMode);
+  const camera = photoMode === "required";
   const location = t.require_location === true || taskHasGate(t, "location");
   if (location) config.require_location = true;
   const read = readGateTime(t);

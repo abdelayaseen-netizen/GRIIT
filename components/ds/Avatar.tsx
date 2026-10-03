@@ -1,17 +1,17 @@
 /**
  * G2. Never a blank circle. Two initials from display_name (one if a single
  * word), else username. Tint from a hash of user_id.
- * Sizes: 24 rows, 32 feed and comments, 40 sheets, 80 profile header.
+ * Sizes: 24 rows, 28 grouped events, 32 feed and comments, 40 sheets, 80 profile.
  */
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { DS_V3 } from "@/lib/design-system";
-import { initialsFrom, avatarTint } from "@/lib/avatar-initials";
+import { initialsFrom, avatarTint, avatarShowsPhoto } from "@/lib/avatar-initials";
 
 export { initialsFrom };
 
-export type AvatarSize = 24 | 32 | 40 | 56 | 80 | 96;
+export type AvatarSize = 24 | 28 | 32 | 40 | 56 | 80 | 96;
 
 export type AvatarProps = {
   userId?: string | null;
@@ -31,6 +31,7 @@ function typeForSize(size: AvatarSize) {
   return DS_V3.type.title;
 }
 
+
 export default function Avatar({
   userId,
   size = 32,
@@ -39,9 +40,12 @@ export default function Avatar({
   username,
   ring,
 }: AvatarProps) {
+  const [failedUri, setFailedUri] = useState<string | null>(null);
   const initials = initialsFrom(displayName, username);
   const type = typeForSize(size);
   const tint = avatarTint(userId);
+  const trimmed = (uri ?? "").trim();
+  const showPhoto = avatarShowsPhoto(trimmed, failedUri);
   const frame = [
     styles.frame,
     {
@@ -52,31 +56,38 @@ export default function Avatar({
     },
   ];
 
-  if (uri) {
+  const letters = (
+    <Text
+      style={{
+        fontSize: Math.round(size * 0.38),
+        lineHeight: type.lineHeight,
+        fontWeight: DS_V3.type.bodyStrong.fontWeight,
+        color: tint.fg,
+      }}
+    >
+      {initials}
+    </Text>
+  );
+
+  if (!showPhoto) {
     return (
-      <Image
-        source={{ uri }}
-        style={frame}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        recyclingKey={uri}
-        accessibilityLabel={displayName || username || "Avatar"}
-      />
+      <View style={frame} accessibilityLabel={displayName || username || "Profile"}>
+        {letters}
+      </View>
     );
   }
 
   return (
-    <View style={frame} accessibilityLabel={displayName || username || "Profile"}>
-      <Text
-        style={{
-          fontSize: Math.round(size * 0.38),
-          lineHeight: type.lineHeight,
-          fontWeight: DS_V3.type.bodyStrong.fontWeight,
-          color: tint.fg,
-        }}
-      >
-        {initials}
-      </Text>
+    <View style={frame} accessibilityLabel={displayName || username || "Avatar"}>
+      {letters}
+      <Image
+        source={{ uri: trimmed }}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: 999 }]}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={trimmed}
+        onError={() => setFailedUri(trimmed)}
+      />
     </View>
   );
 }

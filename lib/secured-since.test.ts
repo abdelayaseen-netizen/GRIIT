@@ -82,17 +82,18 @@ describe("one secured header", () => {
     expect(grid).toContain("calendarHeaderLine(header)");
   });
 
-  it("Following is capped at 3 and the full feed lives in Activity", () => {
+  it("Home owns the live feed; Activity is Notifications and Leaderboard", () => {
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     const homeV3 = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     const activity = readFileSync(resolve(__dirname, "../app/(tabs)/activity.tsx"), "utf8");
-    expect(home).not.toContain("LiveFeedSection");
-    expect(home).toContain('scope: "following"');
-    expect(home).toContain("limit: 3");
-    expect(homeV3).toContain("SEE_ALL_IN_ACTIVITY");
-    expect(homeV3).toContain("Following");
-    expect(activity).toContain("LiveFeedSection");
-    expect(activity).toContain('"feed"');
+    expect(home).toContain("LiveFeedSection");
+    expect(home).toContain("showInvite");
+    expect(homeV3).not.toContain("SEE_ALL_IN_ACTIVITY");
+    expect(homeV3).toContain("NO_CHALLENGE_YET");
+    expect(activity).not.toContain("LiveFeedSection");
+    expect(activity).not.toContain('"feed"');
+    expect(activity).toContain("Notifications");
+    expect(activity).toContain("Leaderboard");
   });
 
   it("hides the freeze chip at 0 and on Hard / No Days Off", () => {

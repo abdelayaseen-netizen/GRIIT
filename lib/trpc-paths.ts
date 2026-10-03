@@ -56,6 +56,7 @@ export const TRPC = {
     getDiscoverGrid: 'challenges.getDiscoverGrid',
     getDiscoverHabits: 'challenges.getDiscoverHabits',
     getRecommended: 'challenges.getRecommended',
+    getDiscoverHome: 'challenges.getDiscoverHome',
     getCategoryCounts: 'challenges.getCategoryCounts',
     getStarterPack: 'challenges.getStarterPack',
     getById: 'challenges.getById',

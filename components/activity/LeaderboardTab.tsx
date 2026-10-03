@@ -16,6 +16,7 @@ import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { consistencyScore } from "@/lib/scoring";
 import { ROUTES } from "@/lib/routes";
+import { inviteToChallenge } from "@/lib/share";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
 import Chip from "@/components/ds/Chip";
@@ -227,9 +228,33 @@ function LeaderboardBody({
           {slices.split ? <Text style={styles.caption}>{ranksBelowLine(slices.lowestShown)}</Text> : null}
         </View>
       ) : null}
-      {emptyCopy && showEmpty ? (
+      {scope === "challenge" && slices.memberCount <= 1 && !loading && !err && selectedChallengeId ? (
+        <View style={styles.extraChips}>
+          <Chip label="Just you" selected />
+        </View>
+      ) : null}
+      {emptyCopy && scope === "challenge" && selectedChallengeId && activeList.length > 0 && !loading && !err ? (
         <View style={styles.emptyPad}>
-          <EmptyState heading={emptyCopy.heading} body={emptyCopy.body} actionLabel="Find a challenge" onAction={() => undefined} />
+          <EmptyState
+            heading={emptyCopy.heading}
+            body={emptyCopy.body}
+            actionLabel={emptyCopy.cta ?? "Invite"}
+            onAction={() => {
+              void inviteToChallenge({
+                name: challengeBoard.data?.challengeTitle ?? "this challenge",
+                id: selectedChallengeId,
+              });
+            }}
+          />
+        </View>
+      ) : emptyCopy && showEmpty ? (
+        <View style={styles.emptyPad}>
+          <EmptyState
+            heading={emptyCopy.heading}
+            body={emptyCopy.body}
+            actionLabel={emptyCopy.cta ?? "Invite"}
+            onAction={() => undefined}
+          />
         </View>
       ) : null}
 
@@ -260,7 +285,7 @@ function LeaderboardBody({
         </View>
       ) : null}
 
-      {!loading && !err && showEmpty ? empty : null}
+      {!loading && !err && showEmpty && !(scope === "challenge" && selectedChallengeId && activeList.length > 0 && emptyCopy) ? empty : null}
       {showBoard ? <View style={styles.board} /> : null}
     </>
   );

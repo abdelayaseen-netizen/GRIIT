@@ -16,6 +16,7 @@ export type HomeBootstrapFreezeStatus = {
 export type HomeBootstrapFollowCounts = {
   followers: number;
   following: number;
+  friends?: number;
 };
 
 export type HomeBootstrap = {

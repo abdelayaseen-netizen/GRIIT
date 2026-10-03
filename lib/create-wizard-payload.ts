@@ -3,7 +3,7 @@
  * targetValue, locationName, and radiusMeters must already live on the task.
  */
 
-import type { GateTime, TaskGate } from "@/backend/lib/task-model";
+import type { GateTime, PhotoMode, TaskGate } from "@/backend/lib/task-model";
 
 export type WizardTaskPayloadSource = {
   name: string;
@@ -11,6 +11,7 @@ export type WizardTaskPayloadSource = {
   durationMinutes?: number;
   minWords?: number;
   requirePhoto?: boolean;
+  photoMode?: PhotoMode;
   targetValue?: number;
   locationName?: string;
   radiusMeters?: number;
@@ -24,12 +25,17 @@ export function mapWizardTaskToCreateInput(
   t: WizardTaskPayloadSource,
   opts: { requirePhoto: boolean; allowPhoto: boolean },
 ) {
+  const rawMode = String(t.photoMode ?? t.config?.photo_mode ?? "").toLowerCase();
+  const photoMode: PhotoMode | undefined =
+    rawMode === "required" || rawMode === "optional" || rawMode === "none" ? rawMode : undefined;
   const cameraFromTask = t.gates?.includes("camera") === true || t.requirePhoto === true;
-  const camera = opts.requirePhoto || (opts.allowPhoto && cameraFromTask);
+  const camera =
+    photoMode === "required" ||
+    (photoMode !== "optional" && photoMode !== "none" && (opts.requirePhoto || (opts.allowPhoto && cameraFromTask)));
   const gates: TaskGate[] | undefined = t.gates
     ? camera && !t.gates.includes("camera")
       ? ["camera", ...t.gates]
-      : t.gates
+      : t.gates.filter((g) => g !== "camera" || camera)
     : camera
       ? ["camera"]
       : undefined;
@@ -39,6 +45,7 @@ export function mapWizardTaskToCreateInput(
     type: t.type,
     required: true,
     requirePhotoProof: camera,
+    photo_mode: photoMode ?? (camera ? "required" : "none"),
     strictTimerMode: false,
     durationMinutes: t.durationMinutes,
     minWords: t.minWords,

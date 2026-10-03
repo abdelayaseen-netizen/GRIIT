@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Award, CalendarDays, Flag, Settings, Share2 } from "lucide-react-native";
+import { Award, Flag, LayoutGrid, Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { type BadgeItem } from "@/components/ds/Badges";
 import { BadgeGrid } from "@/components/profile/BadgeGrid";
@@ -56,7 +56,9 @@ export type ProfileV3Props = {
   avatarUrl?: string | null;
   followers: number;
   following: number;
+  friends?: number;
   bio: string;
+  bioPlaceholder?: string | null;
   streak: number;
   best: number;
   todaySecured: boolean;
@@ -85,6 +87,9 @@ export type ProfileV3Props = {
   followDisabled?: boolean;
   showRootHeader?: boolean;
   locked?: { heading: string; body: string } | null;
+  isFriend?: boolean;
+  onFindFriends?: () => void;
+  onMessage?: () => void;
   /** Parent FlatList owns the proofs grid + footnote when the list can grow. */
   proofsInParent?: boolean;
   /** Parent owns Running / Finished (Chunk T). */
@@ -98,7 +103,9 @@ export function ProfileV3({
   avatarUrl,
   followers,
   following,
+  friends,
   bio,
+  bioPlaceholder,
   streak,
   totalDaysSecured,
   consistency,
@@ -125,6 +132,9 @@ export function ProfileV3({
   followDisabled,
   showRootHeader = true,
   locked,
+  isFriend,
+  onFindFriends,
+  onMessage,
   proofsInParent = false,
   challengesInParent = false,
 }: ProfileV3Props) {
@@ -136,7 +146,7 @@ export function ProfileV3({
     <View>
       {showRootHeader ? (
         <RootHeader
-          title="Profile"
+          title={handle ? `@${handle}` : "Profile"}
           actions={
             <View style={styles.actionsRow}>
               <HeaderIcon accessibilityLabel="Share" onPress={onShare}>
@@ -158,19 +168,26 @@ export function ProfileV3({
         displayName={title}
         username={handle}
         bio={bio}
-        streakDays={locked ? 0 : streak}
+        streakDays={streak}
         securedDays={locked ? 0 : (totalDaysSecured ?? 0)}
+        friends={friends ?? 0}
         followers={followers}
         following={following}
         isOwner={!onFollow}
+        isFriend={isFriend}
         isFollowing={followLabel === "Following"}
         followLabel={followLabel}
+        locked={Boolean(locked)}
+        bioPlaceholder={bioPlaceholder}
         onEdit={onEditProfile ?? (() => undefined)}
         onFollow={followDisabled ? () => undefined : (onFollow ?? (() => undefined))}
         onShare={onShare}
+        onFindFriends={onFindFriends}
+        onMessage={onMessage}
         onEditBio={onEditProfile ?? (() => undefined)}
         onFollowers={onFollowers}
         onFollowing={onFollowing}
+        onFriends={onFollowers}
       />
 
       {locked ? (
@@ -183,7 +200,7 @@ export function ProfileV3({
       <View style={styles.seg}>
         <View style={styles.iconTabs}>
           {TABS.map((item) => {
-            const Icon = item === "Proofs" ? CalendarDays : item === "Challenges" ? Flag : Award;
+            const Icon = item === "Proofs" ? LayoutGrid : item === "Challenges" ? Flag : Award;
             const on = tab === item;
             return (
               <Pressable
@@ -194,7 +211,8 @@ export function ProfileV3({
                 accessibilityLabel={item}
                 style={styles.iconTab}
               >
-                <Icon size={22} color={on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary} />
+                <Icon size={18} color={on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary} />
+                <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{item}</Text>
                 {on ? <View style={styles.iconUnderline} /> : <View style={styles.iconGap} />}
               </Pressable>
             );
@@ -380,7 +398,9 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.section,
   },
   iconTabs: { flexDirection: "row", justifyContent: "space-around" },
-  iconTab: { minHeight: 44, minWidth: 44, alignItems: "center", justifyContent: "flex-end", gap: 6 },
+  iconTab: { minHeight: 44, minWidth: 64, alignItems: "center", justifyContent: "flex-end", gap: 4 },
+  tabLabel: { fontSize: 13, lineHeight: 18, fontWeight: "500", color: DS_V3.color.textSecondary },
+  tabLabelOn: { color: DS_V3.color.textPrimary },
   iconUnderline: { width: 22, height: 1.5, backgroundColor: DS_V3.color.textPrimary },
   iconGap: { width: 22, height: 1.5 },
   tabBody: {

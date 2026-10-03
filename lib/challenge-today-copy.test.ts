@@ -22,8 +22,11 @@ describe("challenge today copy (frame 145)", () => {
 
   it("uses the gate that was used, not Self-reported for a camera task", () => {
     expect(
-      challengeStickerProof({ done: true, requirePhoto: true, gates: ["camera"] }),
+      challengeStickerProof({ done: true, hasCameraProof: true, requirePhoto: true, gates: ["camera"] }),
     ).toBe("camera");
+    expect(
+      challengeStickerProof({ done: true, requirePhoto: true, gates: ["camera"] }),
+    ).toBe("self");
     expect(
       challengeStickerProofFromTasks([
         { completed_today: true, require_photo: true, gates: ["camera"], hasCameraProof: true },

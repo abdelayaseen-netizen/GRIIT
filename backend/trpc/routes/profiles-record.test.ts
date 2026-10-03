@@ -1,7 +1,21 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { lastStandDaysAllTime } from "./profiles-record";
+import { lastStandDaysAllTime, recordAccountVisible } from "./profiles-record";
+
+const PUBLIC = {
+  user_id: "owner",
+  profile_visibility: "public",
+  challenge_visibility: "public",
+  activity_visibility: "public",
+};
+const PRIVATE = {
+  user_id: "owner",
+  profile_visibility: "private",
+  challenge_visibility: "public",
+  activity_visibility: "public",
+};
+
 
 describe("getRecord lastStandDays", () => {
   it("is the all-time last_stand_uses count helper still exported", () => {
@@ -24,5 +38,29 @@ describe("getRecord proofs days", () => {
     expect(src).toContain("checkInHasCameraProof");
     expect(src).toContain("fullHouseAtFromRoster");
     expect(src).toContain("fullHouseAt");
+  });
+});
+
+describe("stranger preview gate", () => {
+  it("public owner previewing sees the public view", () => {
+    expect(
+      recordAccountVisible({
+        previewStranger: true,
+        viewerId: "owner",
+        owner: PUBLIC,
+        isMutual: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("private owner previewing sees the lock", () => {
+    expect(
+      recordAccountVisible({
+        previewStranger: true,
+        viewerId: "owner",
+        owner: PRIVATE,
+        isMutual: false,
+      }),
+    ).toBe(false);
   });
 });

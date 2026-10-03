@@ -15,6 +15,14 @@ import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
+import { mutualFriendIds } from "../../lib/is-friend";
+import {
+  DISCOVER_V43_CATEGORY_IDS,
+  DISCOVER_V43_CHALLENGE_SELECT,
+  matchesDiscoverV43Category,
+  rankChallengeIdsByJoins,
+  weekAgoIso,
+} from "../../lib/discover-v43";
 
 /** Discover v3 category chips → DB `challenges.category` values. */
 const DISCOVER_CATEGORY_VALUES = ["all", "body", "mind", "faith", "focus"] as const;
@@ -638,13 +646,173 @@ export const challengesDiscoverProcedures = {
         category: String(c.category ?? "discipline"),
         cover_url: null,
         participantCount: pc,
-        completionRate: Math.min(96, 42 + Math.round(Math.log10(pc + 1) * 22)),
         previewUsers,
       };
     });
 
     return { challenges };
   }),
+
+  getDiscoverHome: publicProcedure
+    .input(
+      z
+        .object({
+          q: z.string().max(100).optional(),
+          category: z.enum(["all", ...DISCOVER_V43_CATEGORY_IDS] as [string, ...string[]]).optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const q = input?.q?.trim() ?? "";
+      const category = (input?.category ?? "all").toLowerCase();
+      const safeQ = q ? escapeLikeWildcards(q) : "";
+
+      const applyFilters = <T extends { title?: string | null; category?: string | null }>(rows: T[]): T[] =>
+        rows.filter((row) => {
+          if (!matchesDiscoverV43Category(row.category, category)) return false;
+          if (safeQ && !String(row.title ?? "").toLowerCase().includes(q.toLowerCase())) return false;
+          return true;
+        });
+
+      type Row = {
+        id: string;
+        title?: string | null;
+        duration_days?: number | null;
+        category?: string | null;
+        participants_count?: number | null;
+        creator_id?: string | null;
+        challenge_tasks?: unknown;
+      };
+
+      const toCard = (
+        row: Row,
+        extra: { creator_name?: string | null; friend_names?: string[]; joined_week?: number } = {},
+      ) => ({
+        id: row.id,
+        title: row.title ?? "Challenge",
+        duration_days: row.duration_days ?? 7,
+        category: String(row.category ?? "").toLowerCase(),
+        participants_count: Number(row.participants_count) || 0,
+        proof_type: deriveProofType((row.challenge_tasks ?? []) as Parameters<typeof deriveProofType>[0]),
+        creator_id: row.creator_id ?? null,
+        creator_name: extra.creator_name ?? null,
+        friend_names: extra.friend_names ?? [],
+        joined_week: extra.joined_week ?? 0,
+      });
+
+      const { data: joinRows, error: joinErr } = await server
+        .from("active_challenges")
+        .select("challenge_id, created_at")
+        .gte("created_at", weekAgoIso())
+        .limit(2000);
+      requireNoError(joinErr, "Failed to load weekly joins.");
+      const joinCounts = new Map<string, number>();
+      for (const r of (joinRows ?? []) as { challenge_id: string }[]) {
+        joinCounts.set(r.challenge_id, (joinCounts.get(r.challenge_id) ?? 0) + 1);
+      }
+      const popularIds = rankChallengeIdsByJoins((joinRows ?? []) as { challenge_id: string }[]).slice(0, 20);
+
+      const [{ data: popularRows, error: popErr }, { data: communityRows, error: newErr }] = await Promise.all([
+        popularIds.length
+          ? server.from("challenges").select(DISCOVER_V43_CHALLENGE_SELECT).in("id", popularIds).eq("status", "published").eq("visibility", "PUBLIC")
+          : Promise.resolve({ data: [], error: null }),
+        server
+          .from("challenges")
+          .select(DISCOVER_V43_CHALLENGE_SELECT)
+          .eq("status", "published")
+          .eq("visibility", "PUBLIC")
+          .not("creator_id", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(40),
+      ]);
+      requireNoError(popErr, "Failed to load popular challenges.");
+      requireNoError(newErr, "Failed to load community challenges.");
+
+      const popularMap = new Map(((popularRows ?? []) as Row[]).map((r) => [r.id, r]));
+      const popularThisWeek = applyFilters(
+        popularIds.map((id) => popularMap.get(id)).filter((r): r is Row => Boolean(r)),
+      )
+        .slice(0, 8)
+        .map((r) => toCard(r, { joined_week: joinCounts.get(r.id) ?? 0 }));
+
+      const community = applyFilters((communityRows ?? []) as Row[]).slice(0, 12);
+      const creatorIds = [...new Set(community.map((r) => r.creator_id).filter((id): id is string => Boolean(id)))];
+      const { data: creators } = creatorIds.length
+        ? await server.from("profiles").select("user_id, display_name, username").in("user_id", creatorIds).limit(50)
+        : { data: [] as { user_id: string; display_name?: string | null; username?: string | null }[] };
+      const creatorMap = new Map(
+        (creators ?? []).map((p) => [
+          p.user_id,
+          (p.display_name ?? p.username ?? "").trim() || null,
+        ]),
+      );
+      const newFromCommunity = community.map((r) =>
+        toCard(r, { creator_name: r.creator_id ? creatorMap.get(r.creator_id) ?? null : null }),
+      );
+
+      let friendsDoing: ReturnType<typeof toCard>[] = [];
+      if (ctx.userId) {
+        const friends = await mutualFriendIds(ctx.supabase, ctx.userId);
+        if (friends.size > 0) {
+          const { data: friendAc } = await server
+            .from("active_challenges")
+            .select("challenge_id, user_id")
+            .in("user_id", [...friends])
+            .eq("status", "active")
+            .limit(400);
+          const byChallenge = new Map<string, string[]>();
+          for (const r of (friendAc ?? []) as { challenge_id: string; user_id: string }[]) {
+            const arr = byChallenge.get(r.challenge_id) ?? [];
+            if (!arr.includes(r.user_id)) arr.push(r.user_id);
+            byChallenge.set(r.challenge_id, arr);
+          }
+          const friendChallengeIds = [...byChallenge.keys()].slice(0, 20);
+          if (friendChallengeIds.length > 0) {
+            const { data: friendCh } = await server
+              .from("challenges")
+              .select(DISCOVER_V43_CHALLENGE_SELECT)
+              .in("id", friendChallengeIds)
+              .eq("status", "published")
+              .eq("visibility", "PUBLIC");
+            const friendIds = [...new Set([...byChallenge.values()].flat())];
+            const { data: friendProfs } = friendIds.length
+              ? await server.from("profiles").select("user_id, display_name, username").in("user_id", friendIds).limit(80)
+              : { data: [] as { user_id: string; display_name?: string | null; username?: string | null }[] };
+            const nameMap = new Map(
+              (friendProfs ?? []).map((p) => [
+                p.user_id,
+                (p.display_name ?? p.username ?? "").trim() || "Friend",
+              ]),
+            );
+            friendsDoing = applyFilters((friendCh ?? []) as Row[])
+              .slice(0, 8)
+              .map((r) =>
+                toCard(r, {
+                  friend_names: (byChallenge.get(r.id) ?? [])
+                    .map((uid) => nameMap.get(uid))
+                    .filter((n): n is string => Boolean(n)),
+                }),
+              );
+          }
+        }
+      }
+
+      let results: ReturnType<typeof toCard>[] = [];
+      if (safeQ) {
+        const { data: searchRows, error: searchErr } = await server
+          .from("challenges")
+          .select(DISCOVER_V43_CHALLENGE_SELECT)
+          .eq("status", "published")
+          .eq("visibility", "PUBLIC")
+          .ilike("title", `%${safeQ}%`)
+          .limit(40);
+        requireNoError(searchErr, "Failed to search challenges.");
+        results = applyFilters((searchRows ?? []) as Row[]).slice(0, 20).map((r) => toCard(r));
+      }
+
+      return { friendsDoing, popularThisWeek, newFromCommunity, results };
+    }),
 
   /** Count published public challenges per Discover category label (includes Team = duo/team runs). */
   getCategoryCounts: publicProcedure.query(async ({ ctx }) => {

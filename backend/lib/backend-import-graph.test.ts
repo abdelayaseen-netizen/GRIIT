@@ -84,6 +84,7 @@ describe("backend import graph (Railway tsx)", () => {
       .filter((f) => f.startsWith("lib/"))
       .sort();
     expect(appLib).toEqual([
+      "lib/challenge-category.ts",
       "lib/challenge-day.ts",
       "lib/consistency.ts",
       "lib/date-utils.ts",
@@ -91,6 +92,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/free-challenge-limit.ts",
       "lib/home-day-total.ts",
       "lib/iana-timezone-core.ts",
+      "lib/profile-privacy.ts",
       "lib/profile-update-schema.ts",
       "lib/profile-v2-badges.ts",
       "lib/profile-v2-proof-photo.ts",

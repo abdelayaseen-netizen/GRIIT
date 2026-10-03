@@ -8,7 +8,13 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
     const cfg =
       typeof t.config === "object" && t.config !== null ? (t.config as Record<string, unknown>) : {};
     const requireLoc = t.require_location === true || cfg.require_location === true;
+    const photoModeRaw = String(cfg.photo_mode ?? t.photo_mode ?? "").toLowerCase();
+    const photo_mode =
+      photoModeRaw === "required" || photoModeRaw === "optional" || photoModeRaw === "none"
+        ? photoModeRaw
+        : undefined;
     return JSON.stringify({
+      photo_mode,
       require_photo:
         t.require_photo === true ||
         t.require_photo_proof === true ||

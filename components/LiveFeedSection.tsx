@@ -11,11 +11,12 @@ import {
   Modal,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -25,25 +26,37 @@ import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system
 import { captureError } from "@/lib/sentry";
 import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
-import DiscoverCTA from "@/components/home/DiscoverCTA";
-import { useProStatus } from "@/hooks/useProStatus";
-import FeedPostV3 from "@/components/feed/FeedPostV3";
-import { FeedJoinLine } from "@/components/feed/FeedCompactRow";
+import ProofPost from "@/components/feed/ProofPost";
+import FeedEvent from "@/components/feed/FeedEvent";
+import InviteCard from "@/components/feed/InviteCard";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
-import { groupFeedJoins, isJoinGroup, joinLine, type FeedListItem } from "@/lib/feed-join";
+import { groupFeedJoins, isJoinGroup, type FeedListItem } from "@/lib/feed-join";
 import EmptyState from "@/components/ds/EmptyState";
 import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
-import { Users, Ban } from "lucide-react-native";
+import { Users, Ban, CheckCheck } from "lucide-react-native";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
-import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
+import {
+  caughtUpLine,
+  EVERYONE_SCOPE,
+  EVERYONE_UNTIL_THREE,
+  FEED_HEADING,
+  FOLLOWING_SCOPE,
+  weekdayFromIso,
+} from "@/lib/g2b-home";
+import { inviteToChallenge } from "@/lib/share";
 
-type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
+type LiveFeedResponse = {
+  movingCount: number;
+  posts: LiveFeedPost[];
+  following_count?: number;
+  nextCursor?: string | null;
+};
 
 const RESPECT_DEBOUNCE_MS = 300;
 
@@ -69,6 +82,8 @@ type LiveFeedSectionProps = {
   activeChallengesCount?: number;
   /** Own posts: feed Y uses homeDayTotal(duration_days, target_streak). */
   viewerTargetStreak?: number | null;
+  inviteChallenge?: { id: string; name: string } | null;
+  showInvite?: boolean;
 };
 
 function FriendsEmptyState({
@@ -113,9 +128,10 @@ function LiveFeedSection({
   hideHeaderToggle,
   activeChallengesCount = 0,
   viewerTargetStreak,
+  inviteChallenge,
+  showInvite,
 }: LiveFeedSectionProps) {
   const insets = useSafeAreaInsets();
-  const { isPro } = useProStatus();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -149,12 +165,24 @@ function LiveFeedSection({
     return () => loop.stop();
   }, [dotOpacity]);
 
-  const feedQuery = useQuery({
+  const feedQuery = useInfiniteQuery({
     queryKey: ["liveFeed", scope, user?.id ?? ""],
-    queryFn: () => trpcQuery(TRPC.feed.getLiveFeed, { scope, limit: 20 }) as Promise<LiveFeedResponse>,
+    queryFn: ({ pageParam }) =>
+      trpcQuery(TRPC.feed.getLiveFeed, {
+        scope,
+        limit: 20,
+        ...(typeof pageParam === "string" && pageParam ? { cursor: pageParam } : {}),
+      }) as Promise<LiveFeedResponse>,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: !!user?.id,
     staleTime: 60 * 1000,
   });
+  const pagePosts = useMemo(
+    () => (feedQuery.data?.pages ?? []).flatMap((page) => page.posts ?? []),
+    [feedQuery.data?.pages],
+  );
+  const followingCount = feedQuery.data?.pages?.[0]?.following_count ?? 0;
 
   const followingQuery = useQuery({
     queryKey: ["profiles", "getFollowing", user?.id ?? ""],
@@ -170,25 +198,25 @@ function LiveFeedSection({
     [followingQuery.data],
   );
 
-  const awayCount = countFriendsPostedAway(feedQuery.data?.posts ?? [], user?.id, followedIds);
+  const awayCount = countFriendsPostedAway(pagePosts, user?.id, followedIds);
 
-  const posts = (feedQuery.data?.posts ?? []).filter((post) => {
+  const posts = pagePosts.filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;
   });
 
-  const finalFeed = keepLiveFeedPosts(posts).slice(0, 20);
+  const finalFeed = keepLiveFeedPosts(posts);
   const listItems = useMemo(() => groupFeedJoins(finalFeed), [finalFeed]);
   const feedViewTracked = useRef(false);
 
   useEffect(() => {
-    const postCount = feedQuery.data?.posts?.length ?? 0;
+    const postCount = pagePosts.length;
     if (postCount > 0 && !feedViewTracked.current) {
       feedViewTracked.current = true;
       trackEvent("feed_viewed", { post_count: postCount });
     }
-  }, [feedQuery.data?.posts?.length]);
+  }, [pagePosts.length]);
   const postsWithComments = useMemo(() => finalFeed.filter((p) => p.commentCount > 0), [finalFeed]);
 
   const commentPreviewResults = useQueries({
@@ -352,7 +380,7 @@ function LiveFeedSection({
     if (!post?.userId) return;
     // Optimistically remove all of this author's posts from the current feed.
     setHiddenPostIds((prev) => {
-      const toHide = (feedQuery.data?.posts ?? [])
+      const toHide = pagePosts
         .filter((p) => p.userId === post.userId)
         .map((p) => p.id);
       return [...new Set([...prev, ...toHide])];
@@ -367,7 +395,7 @@ function LiveFeedSection({
       setFeedSnack("Couldn't block. Try again.");
       setTimeout(() => setFeedSnack(null), 2500);
     }
-  }, [blockTarget, feedQuery.data?.posts, queryClient]);
+  }, [blockTarget, pagePosts, queryClient]);
 
   const openPostMenu = useCallback(
     (post: LiveFeedPost) => {
@@ -410,24 +438,31 @@ function LiveFeedSection({
     [user?.id, handleDeletePost]
   );
 
+  const maybeFetchMore = useCallback(
+    (index: number) => {
+      if (index < listItems.length - 5) return;
+      if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage) return;
+      void feedQuery.fetchNextPage();
+    },
+    [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, listItems.length],
+  );
+
   const renderItem = useCallback(
-    ({ item }: { item: FeedListItem }) => {
+    ({ item, index }: { item: FeedListItem; index: number }) => {
       void previewByPostId;
       void submitComment;
       void openPostMenu;
+      maybeFetchMore(index);
       if (isJoinGroup(item)) {
         return (
           <View style={styles.v3Item}>
-            <FeedJoinLine
-              text={joinLine(item.names, item.others, item.challengeName)}
-              ago={formatTimeAgoCompact(item.createdAt)}
-            />
+            <FeedEvent group={item} />
           </View>
         );
       }
       return (
         <View style={styles.v3Item}>
-          <FeedPostV3
+          <ProofPost
             post={item}
             viewerUserId={user?.id}
             viewerTargetStreak={viewerTargetStreak}
@@ -457,7 +492,7 @@ function LiveFeedSection({
         </View>
       );
     },
-    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
+    [maybeFetchMore, navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {
@@ -522,10 +557,11 @@ function LiveFeedSection({
     <>
       {header}
       {hideHeaderToggle ? null : (
+        <View>
         <View style={styles.feedHeader}>
           <View style={styles.feedHeaderLeft}>
             <View style={styles.feedTitleRow}>
-              <Text style={styles.feedTitle}>Feed</Text>
+              <Text style={styles.feedTitle}>{FEED_HEADING}</Text>
               <View style={styles.liveRow}>
                 <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
                 <Text style={styles.liveCountMeta}>{activeChallengesCount} live</Text>
@@ -537,10 +573,10 @@ function LiveFeedSection({
               onPress={() => setScope("following")}
               style={[styles.togglePill, scope === "following" && styles.togglePillActive]}
               accessibilityRole="button"
-              accessibilityLabel="Show feed from friends you follow"
+              accessibilityLabel="Show feed from people you follow"
               accessibilityState={{ selected: scope === "following" }}
             >
-              <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>Friends</Text>
+              <Text style={[styles.toggleText, scope === "following" && styles.toggleTextActive]}>{FOLLOWING_SCOPE}</Text>
             </Pressable>
             <Pressable
               onPress={() => setScope("everyone")}
@@ -549,9 +585,13 @@ function LiveFeedSection({
               accessibilityLabel="Show feed from everyone"
               accessibilityState={{ selected: scope === "everyone" }}
             >
-              <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>Everyone</Text>
+              <Text style={[styles.toggleText, scope === "everyone" && styles.toggleTextActive]}>{EVERYONE_SCOPE}</Text>
             </Pressable>
           </View>
+        </View>
+          {followingCount < 3 ? (
+            <Text style={styles.untilThree}>{EVERYONE_UNTIL_THREE}</Text>
+          ) : null}
         </View>
       )}
 
@@ -599,12 +639,53 @@ function LiveFeedSection({
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
+        onEndReached={() => {
+          if (feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
+            void feedQuery.fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.4}
         ListFooterComponent={
-          <DiscoverCTA
-            running={activeChallengesCount}
-            isPro={isPro}
-            onPress={goToDiscover}
-          />
+          <View style={styles.feedFooter}>
+            {feedQuery.isFetchingNextPage ? (
+              <ActivityIndicator size={24} color={DS_V3.color.brand} />
+            ) : null}
+            {!feedQuery.isPending && !feedQuery.isError && !feedQuery.hasNextPage ? (
+              <View style={styles.caughtUp} accessibilityLabel={caughtUpLine(
+                finalFeed.length,
+                weekdayFromIso(
+                  finalFeed.reduce<string | null>((min, post) => {
+                    if (!min || post.createdAt < min) return post.createdAt;
+                    return min;
+                  }, null) ?? "",
+                ),
+              )}>
+                <CheckCheck size={18} color={DS_V3.color.textSecondary} />
+                <Text style={styles.caughtUpText}>
+                  {caughtUpLine(
+                    finalFeed.length,
+                    weekdayFromIso(
+                      finalFeed.reduce<string | null>((min, post) => {
+                        if (!min || post.createdAt < min) return post.createdAt;
+                        return min;
+                      }, null) ?? "",
+                    ),
+                  )}
+                </Text>
+              </View>
+            ) : null}
+            {showInvite && inviteChallenge ? (
+              <InviteCard
+                challenge={inviteChallenge.name}
+                onInvite={() => {
+                  void inviteToChallenge(
+                    { name: inviteChallenge.name, id: inviteChallenge.id },
+                    user.id,
+                  );
+                }}
+              />
+            ) : null}
+          </View>
         }
         refreshControl={
           <RefreshControl
@@ -761,6 +842,32 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.brand,
   },
   liveCountMeta: { fontSize: 11, color: DS_V3.color.textSecondary, fontWeight: "500" },
+  untilThree: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.md,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.textSecondary,
+  },
+  feedFooter: {
+    paddingBottom: DS_V3.space.lg,
+    gap: DS_V3.space.md,
+    alignItems: "center",
+  },
+  caughtUp: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    alignSelf: "stretch",
+  },
+  caughtUpText: {
+    flex: 1,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textSecondary,
+  },
   feedToggle: {
     flexDirection: "row",
     backgroundColor: DS_V3.color.surface,

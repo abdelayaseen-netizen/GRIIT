@@ -36,10 +36,10 @@ import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import ProofsCalendar from "@/components/profile/ProofsCalendar";
+import ProfileProofs from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
-import { badgeRowsFromProgress, formatDayMonthYear } from "@/lib/profile-v2-badges";
+import { formatDayMonthYear } from "@/lib/profile-v2-badges";
 import {
   consistencyHeadline,
 } from "@/lib/consistency";
@@ -48,7 +48,7 @@ import {
   consistencyFromHeader,
   type ProofsHeader,
 } from "@/lib/secured-since";
-import { visitorFriendsLockBody } from "@/lib/privacy-copy";
+import { ACCOUNT_PRIVATE, STRANGER_BANNER, accountPrivateBody } from "@/lib/g3-profile";
 import {
   consistencyDenominatorLine,
   daysFromSource,
@@ -148,6 +148,7 @@ export default function VisitorProfileScreen() {
       trpcQuery(TRPC.profiles.getFollowCounts, { userId: ownerId }) as Promise<{
         followers: number;
         following: number;
+        friends?: number;
       }>,
     staleTime: 60 * 1000,
     enabled: !!ownerId && !!user?.id,
@@ -248,12 +249,10 @@ export default function VisitorProfileScreen() {
     }
   };
 
-  const lockTitle =
-    vis === "private" ? "This profile is private" : "Visible to their circle";
-  const lockBody =
-    vis === "private"
-      ? `${name} keeps this record private. Nothing is shown, and requests are not accepted automatically.`
-      : visitorFriendsLockBody(name);
+  const lockTitle = ACCOUNT_PRIVATE;
+  const lockBody = accountPrivateBody(name);
+  const isFriend = rec?.viewer.relationship === "accepted";
+  const locked = gate.profile ? null : { heading: lockTitle, body: lockBody };
 
   const proofs = rec?.proofs ?? [];
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
@@ -270,7 +269,7 @@ export default function VisitorProfileScreen() {
       <ScreenChrome>
       <SafeAreaView style={styles.safe} edges={["top"]}>
         <PushedHeader
-          title={name || handle}
+          title={handle ? `@${handle}` : name}
           onBack={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
           trailing={
             <HeaderIcon accessibilityLabel="More" onPress={onMore}>
@@ -288,7 +287,7 @@ export default function VisitorProfileScreen() {
             ListHeaderComponent={
             <>
             {previewStranger ? (
-              <Text style={styles.previewNote}>Preview · how a stranger sees this profile</Text>
+              <Text style={styles.previewNote}>{STRANGER_BANNER}</Text>
             ) : null}
             <InlineError message={followError} onDismiss={clearFollowError} />
             <ProfileV3
@@ -298,6 +297,7 @@ export default function VisitorProfileScreen() {
               avatarUrl={avatar}
               followers={followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0)}
               following={followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0)}
+              friends={followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0)}
               bio={bio}
               streak={streakFromArray}
               best={rec?.streak.best ?? 0}
@@ -317,13 +317,7 @@ export default function VisitorProfileScreen() {
               }))}
               proofs={proofs}
               badgeGrid={rec?.badgeGrid}
-              badges={badgeItemsFromRows(
-                rec?.badges ??
-                  badgeRowsFromProgress({
-                    bestStreak: rec?.streak.best ?? 0,
-                    verifiedDays: rec?.detail.totalVerified ?? 0,
-                  }),
-              )}
+              badges={badgeItemsFromRows(rec?.badges ?? [])}
               onShare={() =>
                 void shareProfile({
                   username: handle,
@@ -356,15 +350,14 @@ export default function VisitorProfileScreen() {
                   params: { dateKey: p.dateKey, userId: ownerId },
                 } as never);
               }}
-              followLabel={isSelf ? undefined : followCtrl.label}
-              onFollow={isSelf ? undefined : () => void onFollow()}
-              followDisabled={followBusy || followCtrl.action === "idle"}
-              showRootHeader={false}
-              locked={
-                gate.profile
-                  ? null
-                  : { heading: lockTitle, body: lockBody }
+              followLabel={isSelf && !previewStranger ? undefined : followCtrl.label}
+              onFollow={isSelf && !previewStranger ? undefined : () => void onFollow()}
+              followDisabled={
+                previewStranger || followBusy || followCtrl.action === "idle"
               }
+              isFriend={isFriend && !previewStranger}
+              showRootHeader={false}
+              locked={locked}
               proofsInParent
               challengesInParent
             />
@@ -388,13 +381,22 @@ export default function VisitorProfileScreen() {
             }
             renderItem={() => null}
             ListFooterComponent={
-              tab === "Proofs" ? (
-                <ProofsCalendar
+              tab === "Proofs" && !locked ? (
+                <ProfileProofs
+                  proofs={proofs.map((p, i) => ({
+                    id: p.eventId ?? `${p.dateKey}-${i}`,
+                    dateKey: p.dateKey,
+                    imageUrl: p.imageUrl,
+                    taskName: p.taskName ?? p.challengeName,
+                    shared: p.shared,
+                    shareState: p.shareState,
+                    bytes: p.bytes,
+                  }))}
+                  isOwner={false}
                   monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
                   days={rec?.days ?? []}
                   header={header}
-                  viewer={isSelf ? "owner" : "visitor"}
-                  onDay={(dateKey) =>
+                  onOpenDay={(dateKey) =>
                     router.push({
                       pathname: ROUTES.PROFILE_DAY as never,
                       params: { dateKey, userId: isSelf ? undefined : ownerId },

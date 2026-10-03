@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  RefreshControl,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,9 +18,18 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
+import {
+  closeTimeLabel,
+  pickStartTask,
+  startCtaLabel,
+  todayDay2Hero,
+  todayFirstDayLine,
+  windowClosesBanner,
+} from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
@@ -33,18 +41,19 @@ import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } fr
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
-import { runHomePullRefresh } from "@/lib/home-pull-refresh";
-import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
-import { excludeOwnFollowingPosts, keepLiveFeedPosts } from "@/lib/live-feed-list";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import {
   EMPTY_SECURED_HEADER,
-  activeChallengesAreHard,
-  homeFollowingLine,
   securedSinceLine,
-  showHomeFreezeChip,
   type ProofsHeader,
 } from "@/lib/secured-since";
+import {
+  HOME_FEED_SCOPE_KEY,
+  defaultHomeFeedScope,
+  pickHomeInviteChallenge,
+  showHomeInviteCard,
+  type HomeFeedScope,
+} from "@/lib/g2b-home";
+import { countActiveEnrollments } from "@/lib/free-challenge-limit";
 import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import {
@@ -132,7 +141,6 @@ export default function HomeScreen() {
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
-  const [isPulling, setIsPulling] = React.useState(false);
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
   const recordQuery = useQuery({
@@ -153,15 +161,7 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
-  const followingQuery = useQuery({
-    queryKey: ["liveFeed", "following", user?.id ?? "", 3],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getLiveFeed, { scope: "following", limit: 3 }) as Promise<{
-        posts: LiveFeedPost[];
-      }>,
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
+  const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
   const statsFailed = bootstrap.data?.failed.includes("stats") === true;
@@ -176,6 +176,16 @@ export default function HomeScreen() {
   );
   const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
   const todayKey = useMemo(() => getTodayDateKey(homeTimeZone), [homeTimeZone]);
+
+  React.useEffect(() => {
+    if (!user?.id) {
+      setStoredFeedScope(null);
+      return;
+    }
+    void AsyncStorage.getItem(HOME_FEED_SCOPE_KEY(user.id)).then((raw) => {
+      if (raw === "following" || raw === "everyone") setStoredFeedScope(raw);
+    });
+  }, [user?.id]);
 
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
@@ -301,26 +311,18 @@ export default function HomeScreen() {
   const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys ?? [];
   const header = recordQuery.data?.header ?? EMPTY_SECURED_HEADER;
   const streakLine = securedSinceLine(header);
-  const hardMode = activeChallengesAreHard(
-    (Array.isArray(bootstrap.data?.activeChallenges)
-      ? bootstrap.data.activeChallenges
-      : []) as { challenges?: { is_hard_mode?: boolean; difficulty?: string; title?: string } }[],
+  const feedScope = defaultHomeFeedScope(
+    bootstrap.data?.followCounts?.following ?? 0,
+    storedFeedScope,
   );
-  const showFreeze = showHomeFreezeChip(freezeStatus?.remaining ?? 0, hardMode);
-  const followingItems = excludeOwnFollowingPosts(
-    keepLiveFeedPosts(followingQuery.data?.posts ?? []),
-    user?.id,
-  )
-    .slice(0, 3)
-    .map((post) => ({
-      id: post.id,
-      userId: post.userId,
-      username: post.username,
-      displayName: post.displayName,
-      avatarUrl: post.avatarUrl,
-      when: formatTimeAgoCompact(post.createdAt),
-      line: homeFollowingLine(post),
-    }));
+  const onFeedScopeChange = useCallback(
+    (next: HomeFeedScope) => {
+      setStoredFeedScope(next);
+      if (!user?.id) return;
+      void AsyncStorage.setItem(HOME_FEED_SCOPE_KEY(user.id), next);
+    },
+    [user?.id],
+  );
 
   const todaySecured = useMemo(
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
@@ -505,6 +507,24 @@ export default function HomeScreen() {
     [router],
   );
 
+  const startTask = useMemo(
+    () =>
+      pickStartTask(
+        heroTasks.map((t) => ({
+          id: t.id,
+          name: t.name,
+          minutesLeft: t.minutesLeft,
+          gateTime: t.gateTime,
+          done: t.done,
+          closed: t.windowState === "closed",
+          challengeName: t.challengeName,
+          currentDay: t.currentDay,
+          durationDays: t.durationDays,
+        })),
+      ),
+    [heroTasks],
+  );
+
   const onPressPrimaryCTA = useCallback(() => {
     if (heroTasks.length === 0) {
       track({ name: 'discover_challenge_tapped' });
@@ -512,15 +532,16 @@ export default function HomeScreen() {
       return;
     }
     if (heroMetrics.tasksRemaining > 0) {
-      const next = heroTasks.find((t) => !t.done);
+      const next = startTask
+        ? heroTasks.find((t) => t.id === startTask.id)
+        : heroTasks.find((t) => !t.done);
       if (next) {
         track({ name: 'task_completed' });
         onPressTask(next);
       }
       return;
     }
-    // tasksRemaining === 0 and on home — no-op; "Come back tomorrow" is shown.
-  }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router]);
+  }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router, startTask]);
 
   const onPressBell = useCallback(() => {
     router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
@@ -547,6 +568,16 @@ export default function HomeScreen() {
     !statsFailed &&
     (resolvedStats?.totalDaysSecured ?? 0) === 0 &&
     securedDateKeys.length === 0;
+  const inviteTarget = pickHomeInviteChallenge(
+    (Array.isArray(bootstrap.data?.activeChallenges) ? bootstrap.data.activeChallenges : []) as {
+      challenge_id?: string | null;
+      challenges?: { id?: string | null; title?: string | null; participants_count?: number | null } | null;
+    }[],
+  );
+  const showInvite = showHomeInviteCard({
+    soleMember: inviteTarget?.soleMember === true,
+    firstDaySecured: !firstProofEver,
+  });
 
   const proof = useMemo(
     () =>
@@ -648,21 +679,18 @@ export default function HomeScreen() {
     <ErrorBoundary>
       <ScreenChrome>
       <SafeAreaView style={s.container} edges={["left", "right"]}>
-        <FlashList
-          data={[{ key: "home" }]}
-          keyExtractor={(item) => item.key}
-          renderItem={() => null}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: tabBarContentPad(insets.bottom) }}
-          refreshControl={
-            <RefreshControl
-              refreshing={isPulling}
-              onRefresh={() => {
-                void runHomePullRefresh(refresh, setIsPulling);
-              }}
-              tintColor={DS_V3.color.brand}
-            />
-          }
+        <LiveFeedSection
+          onRefresh={refresh}
+          scope={feedScope}
+          onScopeChange={onFeedScopeChange}
+          activeChallengesCount={countActiveEnrollments(
+            (Array.isArray(bootstrap.data?.activeChallenges)
+              ? bootstrap.data.activeChallenges
+              : []) as { status?: string }[],
+          )}
+          viewerTargetStreak={bootstrap.data?.profile?.target_streak ?? null}
+          inviteChallenge={inviteTarget ? { id: inviteTarget.id, name: inviteTarget.name } : null}
+          showInvite={showInvite}
           ListHeaderComponent={
             <HomeV3
               title={greetingTitle(profile ?? {})}
@@ -674,9 +702,8 @@ export default function HomeScreen() {
               weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}
-              following={followingItems}
-              onSeeAllActivity={() => router.push(`${ROUTES.ACTIVITY}?tab=feed` as never)}
-              onPressFollowing={(id) => router.push(ROUTES.POST_ID(id) as never)}
+              onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
               onPressBell={onPressBell}
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
@@ -689,8 +716,28 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
-              showFreezeChip={showFreeze}
               loading={bootstrap.isPending && !bootstrap.data}
+              firstDayLine={
+                !todaySecured && proof.sections.some((s) => s.day === 1)
+                  ? todayFirstDayLine(proof.totalCount)
+                  : null
+              }
+              day2Hero={
+                !todaySecured &&
+                proof.sections.some((s) => s.day >= 2) &&
+                typeof streak === "number"
+                  ? todayDay2Hero(streak)
+                  : null
+              }
+              windowBanner={
+                startTask && closeTimeLabel(startTask.gateTime)
+                  ? windowClosesBanner(startTask.name, closeTimeLabel(startTask.gateTime))
+                  : null
+              }
+              startLabel={
+                !todaySecured && startTask ? startCtaLabel(startTask.name) : null
+              }
+              showFirstProofSlot={firstProofEver && !todaySecured}
             />
           }
         />

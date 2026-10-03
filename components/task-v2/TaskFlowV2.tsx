@@ -7,6 +7,7 @@ import { TaskChrome } from "./TaskChrome";
 import { styles } from "./taskFlowStyles";
 import { useTaskFlowV2 } from "./useTaskFlowV2";
 import { AskStep } from "./steps/AskStep";
+import { OptionalPhotoSheet } from "./steps/OptionalPhotoSheet";
 import { BlockedStep } from "./steps/BlockedStep";
 import { CaptureStep } from "./steps/CaptureStep";
 import { CheckinEntryStep } from "./steps/CheckinEntryStep";
@@ -214,7 +215,16 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "ask" ? (
+      {f.step === "ask" && f.photoMode === "optional" ? (
+        <OptionalPhotoSheet
+          taskName={f.taskName}
+          loading={f.saving}
+          onAddPhoto={f.onAttachPhoto}
+          onDoneWithoutPhoto={f.onDidIt}
+        />
+      ) : null}
+
+      {f.step === "ask" && f.photoMode !== "optional" ? (
         <AskStep
           taskName={f.taskName}
           loading={f.saving}

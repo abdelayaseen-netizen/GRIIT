@@ -27,7 +27,7 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "GRIIT needs camera access to take photos as proof of challenge completion.",
-        "NSLocationWhenInUseUsageDescription": "GRIIT uses your location to verify outdoor activities like runs and walks.",
+        "NSLocationWhenInUseUsageDescription": "GRIIT checks you're at the place you set for a task.",
         "NSUserTrackingUsageDescription": "GRIIT uses anonymized usage data to improve your experience.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true,

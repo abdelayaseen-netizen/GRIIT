@@ -1,7 +1,8 @@
 import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
-import { closedWindowCaption, gateLabel } from "@/lib/task-ui";
+import { SELF_REPORTED, closedWindowCaption, gateLabel } from "@/lib/task-ui";
+import { countdownSuffix } from "@/lib/g2a-home";
 import {
   shareTodayCaption,
   shareTodayChallenges,
@@ -104,6 +105,7 @@ export type HomeProofTask = {
   gates?: TaskGate[];
   gateTime?: GateTime | null;
   windowState?: WindowState;
+  minutesLeft?: number | null;
   hasCameraProof?: boolean;
   taskConfig?: string;
 };
@@ -181,13 +183,15 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
       requirePhoto: task.requirePhoto,
     }),
     type: task.type ?? task.taskType ?? "check_off",
-    caption: closed
+    caption: (closed
       ? closedWindowCaption(task.gateTime)
-      : gateLabel({
-          gates: rowGates(task),
-          gateTime: task.gateTime,
-          requirePhoto: task.requirePhoto,
-        }),
+      : task.done && task.hasCameraProof !== true
+        ? SELF_REPORTED
+        : gateLabel({
+            gates: rowGates(task),
+            gateTime: task.gateTime,
+            requirePhoto: task.requirePhoto,
+          })) + (!closed && !task.done ? countdownSuffix(task.minutesLeft) : ""),
     done: task.done,
     closed,
     hasCameraProof: task.hasCameraProof === true,
@@ -236,9 +240,7 @@ function sectionFromTasks(
     securedToday: first.challengeSecuredToday === true,
     startDateKey: first.startDateKey ?? null,
     photoCount: rows.filter((r) => r.hasCameraProof).length,
-    proof: rows.some((r) => r.hasCameraProof) || tasks.some((t) => t.requirePhoto || (t.gates ?? []).includes("camera"))
-      ? "camera"
-      : "self",
+    proof: rows.some((r) => r.hasCameraProof) ? "camera" : "self",
   };
 }
 

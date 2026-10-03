@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  /* html too: the runtime paints a non-transparent cream on the root, so ink on body
+     alone cannot propagate to the canvas and everything past the first viewport sits
+     on cream. Covering html is the fix; body's height is one viewport. */
+  html, body { margin:0; background:#0F0F0F; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#E8600F; text-decoration:none; }
+  a:hover { color:#F5F3EE; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.446.0/dist/umd/lucide.js"></script>
+</helmet>
+
+<div style="font-family:-apple-system,'SF Pro Text','Helvetica Neue',Helvetica,sans-serif;color:#F5F3EE;padding:48px;display:flex;flex-direction:column;gap:56px;">
+
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:900px;">
+    <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">GRIIT consistency pass, chunk P</div>
+    <div style="font-size:34px;line-height:41px;font-weight:500;letter-spacing:-0.5px;">The miss</div>
+    <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;max-width:660px;">Frames 52 to 57. Every chunk so far designed the success path. This one says what happened when the number changed overnight, what it cost, and what cushion was spent — from the rules the code actually enforces, which are narrower than the brief assumed.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;">
+      <a href="GRIIT System.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 1 to 30</a>
+      <a href="GRIIT Completion Loop.dc.html" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">← 47 to 51</a>
+      <a href="#f52" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">52 The morning after</a>
+      <a href="#f53" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">53 Two zeros</a>
+      <a href="#f54" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">54 The freeze</a>
+      <a href="#f55" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">55 Partial miss</a>
+      <a href="#f56" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">56 Roster yesterday</a>
+      <a href="#f57" style="font-size:13px;line-height:18px;font-weight:400;padding:8px 14px;border-radius:12px;background:#1A1917;border:1px solid #2E2B27;color:#F5F3EE;">57 The evening before</a>
+    </div>
+  </div>
+
+  <div id="f52" data-screen-label="52 The morning after" style="display:flex;flex-direction:column;gap:16px;width:1280px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">52 The morning after, first open following an unsecured day</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">One block between the streak hero and Today, dismissible once read. Fact, then cost, then cushion, in that order. No red, no consolation, no exclamation. Every line comes from something the server already computes: reconcileStreak returns streak_broken, previous_streak and lastStandUsedThisSession, and today throws all three into an analytics event and renders none of them.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · streak reset, no cushion</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak reset. Post today to start again.</div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yesterday wasn't secured.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">4 of 6 tasks. Cold shower and progress photo were missed.</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your streak reset to 0. Your longest was 12 days.</div>
+            </div>
+            <div style="width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+          
+        </div></div>
+      <div style="padding:16px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 4</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Workout, outdoors</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink 64 oz</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+        </div></div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · a Last Stand covered it</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">13</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Post today to keep it.</div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yesterday wasn't secured.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">4 of 6 tasks. Cold shower and progress photo were missed.</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">A Last Stand covered it, so the streak continues. 1 left.</div>
+            </div>
+            <div style="width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+          
+        </div></div>
+      <div style="padding:16px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 4</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Workout, outdoors</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink 64 oz</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+        </div></div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">C · a freeze is available, and needs a tap</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak reset. Post today to start again.</div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yesterday wasn't secured.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">4 of 6 tasks. Cold shower and progress photo were missed.</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your streak reset to 0. A freeze can undo that for yesterday.</div>
+            </div>
+            <div style="width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Use a freeze for yesterday</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:center;">1 left. It refills 30 days after you use it.</div>
+          </div>
+        </div></div>
+      <div style="padding:16px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Today</div>
+            <div style="flex:none;padding:6px 12px;border-radius:12px;background:#3A1F10;font-size:13px;line-height:18px;font-weight:500;color:#E8600F;">0 / 4</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Workout, outdoors</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · By 7:00 am</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Cold shower</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Camera · Location</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Read 10 pages</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+            <div style="display:flex;align-items:center;gap:12px;min-height:44px;"><div style="width:20px;height:20px;border-radius:999px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid #A39E95;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Drink 64 oz</div>
+              <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Self-reported</div>
+            </div><i data-lucide="chevron-right" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+        </div></div></div></div>
+    </div>
+  </div>
+
+  <div id="f53" data-screen-label="53 Two zeros" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">53 The streak hero at zero, two different zeros</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">"Post today to start." is copy for someone who has never posted. After a reset it is wrong twice over: it hides what happened and it flatters. The field that tells them apart is profiles.total_days_secured, already returned by getStats as totalDaysSecured.</div>
+    </div>
+    <div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:20px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Never secured a day · total_days_secured = 0</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div></div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Post today to start.</div>
+          </div>
+        </div>
+        <div style="height:1px;background:#2E2B27;"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Has secured before · total_days_secured &gt; 0</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+            <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div></div>
+            <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak reset. Post today to start again.</div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <div id="f54" data-screen-label="54 The freeze" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">54 The freeze offer, and the refusal</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">The code requires a tap: streaks.useFreeze validates yesterday, exactly one missed day and an active streak, and nothing calls it. So this is an offer, not a receipt. It is stated as a trade with a cost named, never as a rescue, and "No, let it reset" is a real answer sitting at the same weight as any tertiary in the system. Nothing here celebrates.</div>
+    </div>
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">A · one freeze left</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak reset. Post today to start again.</div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yesterday wasn't secured.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">4 of 6 tasks. Cold shower and progress photo were missed.</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your streak reset to 0. A freeze can undo that for yesterday.</div>
+            </div>
+            <div style="width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+          
+        </div></div>
+      <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(15,15,15,0.6);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#1A1917;border-top:1px solid #2E2B27;border-radius:24px 24px 0 0;padding:28px 20px 34px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">Use a freeze for yesterday?</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your 12-day streak comes back. 1 left, and it refills 30 days after you use it.</div>
+        <div style="height:14px;"></div>
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">Use the freeze</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">No, let it reset</div>
+      </div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">B · none left</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Current streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div>
+          <div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div>
+        </div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Streak reset. Post today to start again.</div>
+      </div>
+      <div style="padding:24px 20px 0;"><div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yesterday wasn't secured.</div>
+              <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">4 of 6 tasks. Cold shower and progress photo were missed.</div><div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Your streak reset to 0. A freeze can undo that for yesterday.</div>
+            </div>
+            <div style="width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;"><i data-lucide="x" style="width:20px;height:20px;color:#A39E95;flex:none;"></i></div>
+          </div>
+          
+        </div></div>
+      <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:rgba(15,15,15,0.6);"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;background:#1A1917;border-top:1px solid #2E2B27;border-radius:24px 24px 0 0;padding:28px 20px 34px;display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:20px;line-height:25px;font-weight:500;color:#F5F3EE;">No freezes left</div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Yours refills on 12 October. Pro carries four a month instead of one.</div>
+        <div style="height:14px;"></div>
+        <div style="height:52px;border-radius:999px;background:#BB471D;color:#F5F3EE;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;line-height:22px;font-weight:500;">See Pro</div>
+        <div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Close</div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div id="f55" data-screen-label="55 Partial miss" style="display:flex;flex-direction:column;gap:16px;width:420px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">55 Consistency, a day-by-day that admits the partial</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">A part-done day earns nothing — a day is secured or it is not, and no total on this screen moves for a 4 of 6. But the record shows the 4, and names which tasks were missing. A Last Stand day is its own third state: not camera proof, not self-reported, not a normal secured day, and it says so both in the split and in the row.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;width:393px;"><div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Day 13, one miss and one Last Stand</div><div style="position:relative;width:393px;height:852px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:40px;overflow:hidden;"><div style="height:44px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><i data-lucide="signal" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="wifi" style="width:16px;height:16px;color:#F5F3EE;flex:none;"></i><i data-lucide="battery-full" style="width:20px;height:20px;color:#F5F3EE;flex:none;"></i></span></div><div style="height:44px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="width:44px;height:44px;display:flex;align-items:center;"><i data-lucide="chevron-left" style="width:24px;height:24px;color:#F5F3EE;flex:none;"></i></div>
+        <div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Consistency</div><div style="width:44px;"></div>
+      </div>
+      <div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Days secured</div>
+        <div style="display:flex;align-items:baseline;gap:10px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">9</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">of 13</div></div>
+        <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Day 13 of 75.</div>
+      </div>
+      <div style="padding:20px 20px 0;">
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;"><i data-lucide="camera" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Camera proof</div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">6 days</div></div>
+            <div style="display:flex;align-items:center;gap:10px;"><i data-lucide="shield-off" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Self-reported</div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">3 days</div></div>
+            <div style="display:flex;align-items:center;gap:10px;"><i data-lucide="shield" style="width:16px;height:16px;color:#A39E95;flex:none;"></i><div style="flex:1;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Held by a Last Stand</div><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">1 day</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">By month</div>
+      <div style="padding:0 20px;"><div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:44px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">Sep</div>
+          <div style="flex:1;height:6px;border-radius:999px;background:#2E2B27;overflow:hidden;"><div style="height:6px;width:69%;background:#DC5401;"></div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;width:56px;text-align:right;">9 of 13</div>
+        </div></div>
+      <div style="padding:18px 20px 4px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">September, day by day</div>
+      <div style="padding:0 20px;">
+        <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:52px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">17 Sep</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Secured</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6 of 6 · 4 camera proof</div></div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:52px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">16 Sep</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Not secured</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">4 of 6 · cold shower, progress photo</div></div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:52px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">15 Sep</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#A39E95;">Held by a Last Stand</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">0 of 6 · nothing was checked</div></div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+        <div style="padding:12px 0;display:flex;align-items:center;gap:16px;min-height:44px;">
+          <div style="width:52px;font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">14 Sep</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">Secured</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6 of 6 · 4 camera proof</div></div>
+        </div>
+      </div>
+      <div style="padding:18px 20px 28px;font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">A day is secured or it is not. A part-done day counts for nothing, and the count is here so the record is not shorter than the truth.</div></div></div>
+  </div>
+
+  <div id="f56" data-screen-label="56 Roster yesterday" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">56 Group roster, the yesterday state</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">"Missed yesterday" in textSecondary, the same caption slot as "Secured today". No colour, no icon, no red: the words carry it, and a shaming treatment would make the roster a place people avoid. The group streak line already breaks on it, so it names who — a group number that drops without a reason is the same honesty gap as a personal one.</div>
+    </div>
+    <div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">Group streak</div>
+          <div style="display:flex;align-items:baseline;gap:8px;"><div style="font-family:'Barlow Condensed','SF Pro Display',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;color:#F5F3EE;font-size:64px;line-height:56px;">0</div><div style="font-size:17px;line-height:22px;font-weight:400;color:#F5F3EE;color:#A39E95;">days</div></div>
+          <div style="font-size:15px;line-height:20px;font-weight:400;color:#A39E95;">2 of 4 secured today</div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;padding-top:2px;">Broke yesterday, when Sami missed. Counts only days every member secured.</div>
+        </div>
+        <div style="padding-top:20px;">
+          <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;padding-bottom:4px;">In this group · 4 of 10</div>
+          <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">Y</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Yaseen</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">12 day streak</div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;text-align:right;">Secured today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+          <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">A</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Amir</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">12 day streak</div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;color:#E8600F;text-align:right;">Secured today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+          <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">K</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Khalid</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">6 day streak</div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Not yet today</div>
+        </div><div style="height:1px;background:#2E2B27;"></div>
+          <div style="padding:12px 0;display:flex;align-items:center;gap:12px;min-height:44px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#2E2B27;display:flex;align-items:center;justify-content:center;flex:none;"><div style="font-size:14px;font-weight:500;color:#A39E95;">S</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:17px;line-height:22px;font-weight:500;color:#F5F3EE;">Sami</div><div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">No streak</div></div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;text-align:right;">Missed yesterday</div>
+        </div>
+        </div>
+      </div>
+  </div>
+
+  <div id="f57" data-screen-label="57 The evening before" style="display:flex;flex-direction:column;gap:16px;width:850px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">57 The evening before, the last honest moment</div>
+      <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;max-width:900px;">Two notifications, not four. The count is the message: the shipped reminder hardcodes tasks to 0 and so can never name it. No exclamation marks, and the streak is mentioned only when there is one to lose.</div>
+    </div>
+    <div style="width:393px;background:#0F0F0F;border:1px solid #2E2B27;border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8:00 pm · nothing done</div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Iron man: 6 tasks left today. Four hours to secure.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">8:00 pm</div>
+        </div>
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8:00 pm · partial</div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Iron man: 2 of 6 left today. Four hours to secure.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">8:00 pm</div>
+        </div>
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">8:00 pm · only camera tasks left</div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">Iron man: 2 left, both need a photo. Four hours to secure.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">8:00 pm</div>
+        </div>
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">10:00 pm · last call, streak at stake</div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2 left. A 12-day streak ends at midnight.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">10:00 pm</div>
+        </div>
+        <div style="font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:#A39E95;">10:00 pm · last call, no streak yet</div>
+        <div style="background:#1A1917;border:1px solid #2E2B27;border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:40px;height:40px;border-radius:11px;background:#3A1F10;display:flex;align-items:center;justify-content:center;flex:none;"><i data-lucide="shield" style="width:20px;height:20px;color:#E8600F;flex:none;"></i></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:15px;line-height:20px;font-weight:500;color:#F5F3EE;">GRIIT</div>
+            <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">2 left. Two hours to secure today.</div>
+          </div>
+          <div style="font-size:13px;line-height:18px;font-weight:400;color:#A39E95;">10:00 pm</div>
+        </div>
+      </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.icons(); }
+  componentDidUpdate() { this.icons(); }
+  icons() { try { window.lucide && window.lucide.createIcons(); } catch (e) {} }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

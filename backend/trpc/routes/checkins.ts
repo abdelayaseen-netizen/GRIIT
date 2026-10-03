@@ -250,12 +250,8 @@ export const checkinsRouter = createTRPCRouter({
       );
       const requirePhoto = !isMinimumDay && gatesFor(task).includes("camera");
       const photoUrl = ownedProofWrite(input.photo_url ?? input.proofUrl, ctx.userId);
-      // DB maps UI "photo" → task_type "manual"; detect photo proof via flags/payload.
-      const isPhotoProof =
-        requirePhoto ||
-        !!input.proof_payload_json ||
-        cfg.require_photo_proof === true ||
-        taskType === "photo";
+      // Optional/none without a photo is self-reported. A photo on disk is the only camera proof.
+      const isPhotoProof = Boolean(photoUrl);
       // Run vs workout: duration_min/entry_mode are shared inputs — gate by type / distance / kind.
       const isRunProof = taskType === "run" || input.distance_km != null;
       const isWorkoutProof =

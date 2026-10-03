@@ -2,13 +2,12 @@
  * Add-task sheet draft (frame 42). Builds { type, config, gates, gateTime }.
  */
 
-import type { GateTime, TaskGate, TaskModelType } from "@/backend/lib/task-model";
-import { SELF_REPORTED, gateLine } from "@/lib/task-ui";
+import type { GateTime, PhotoMode, TaskGate, TaskModelType } from "@/backend/lib/task-model";
+import { SELF_REPORTED } from "@/lib/task-ui";
 import {
   DEFAULT_BETWEEN_END_HHMM,
   DEFAULT_BETWEEN_START_HHMM,
   DEFAULT_BY_HHMM,
-  TIME_WINDOW_NOT_SET,
   betweenEndAfterStart,
   fmt12,
   fmtWindow,
@@ -16,10 +15,22 @@ import {
 
 export const ADD_TASK_HEADING = "Add a task";
 export const ADD_TASK_NAME_LABEL = "Task name";
-export const ADD_TASK_NAME_PLACEHOLDER = "Name it";
+export const ADD_TASK_NAME_PLACEHOLDER = "e.g. Read 10 pages";
 export const ADD_TASK_WHAT_YOU_DO = "What you do";
 export const ADD_TASK_WHAT_PROVES = "How it's proven";
+export const ADD_TASK_PHOTO = "Photo";
+export const ADD_TASK_LIMITS = "Limits";
 export const ADD_TASK_ON_HOME = "On Home";
+export const ADD_TASK_PHOTO_SEGMENTS = ["Required", "Optional", "None"] as const;
+export const ADD_TASK_PHOTO_CAPTIONS: Record<PhotoMode, string> = {
+  required: "Only counts with a photo taken in the app.",
+  optional: "Add a photo or mark it done. With no photo it posts as self-reported.",
+  none: "Mark it done. Posts as self-reported.",
+};
+export const OPTIONAL_PHOTO_BODY =
+  "Photo optional. With a photo it shows the camera seal. Without one it posts as self-reported.";
+export const OPTIONAL_PHOTO_ADD = "Add a photo";
+export const OPTIONAL_PHOTO_DONE = "Done without photo";
 
 export type AddTaskProof = "self" | "self_time" | "photo" | "photo_time" | "photo_place";
 
@@ -92,11 +103,11 @@ export type AddTaskStarter = {
 
 export const ADD_TASK_STARTERS: AddTaskStarter[] = [
   { label: "Pray", name: "Pray", type: "check_off" },
-  { label: "Run", name: "Run", type: "run", runDistance: "5" },
   { label: "Read", name: "Read", type: "counter", counterTarget: "10", counterUnit: "pages" },
   { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "oz" },
   { label: "Journal", name: "Journal", type: "text", minWords: "30" },
   { label: "Workout", name: "Workout", type: "check_off" },
+  { label: "Stretch", name: "Stretch", type: "check_off" },
 ];
 
 export type AddTaskDraft = {
@@ -109,6 +120,7 @@ export type AddTaskDraft = {
   minWords: string;
   runDistance: string;
   runUnit: "km" | "mi";
+  photoMode: PhotoMode;
   camera: boolean;
   time: boolean;
   location: boolean;
@@ -132,6 +144,7 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   minWords: "",
   runDistance: "",
   runUnit: "km",
+  photoMode: "none",
   camera: false,
   time: false,
   location: false,
@@ -155,21 +168,41 @@ export function proofFromDraft(draft: Pick<AddTaskDraft, "camera" | "time" | "lo
 export function applyProof(draft: AddTaskDraft, proof: AddTaskProof): AddTaskDraft {
   switch (proof) {
     case "self":
-      return { ...draft, camera: false, time: false, location: false };
+      return { ...draft, photoMode: "none", camera: false, time: false, location: false };
     case "self_time":
-      return { ...draft, camera: false, time: true, location: false };
+      return { ...draft, photoMode: "none", camera: false, time: true, location: false };
     case "photo":
-      return { ...draft, camera: true, time: false, location: false };
+      return { ...draft, photoMode: "required", camera: true, time: false, location: false };
     case "photo_time":
-      return { ...draft, camera: true, time: true, location: false };
+      return { ...draft, photoMode: "required", camera: true, time: true, location: false };
     case "photo_place":
-      return { ...draft, camera: true, time: false, location: true };
+      return { ...draft, photoMode: "required", camera: true, time: false, location: true };
   }
+}
+
+export function photoModeFromDraft(draft: Pick<AddTaskDraft, "photoMode" | "camera">): PhotoMode {
+  if (draft.photoMode === "required" || draft.photoMode === "optional" || draft.photoMode === "none") {
+    return draft.photoMode;
+  }
+  return draft.camera ? "required" : "none";
+}
+
+export function photoPreviewLabel(mode: PhotoMode): string {
+  if (mode === "required") return "Camera";
+  if (mode === "optional") return "Photo optional";
+  return SELF_REPORTED;
+}
+
+export function placePreviewLine(draft: Pick<AddTaskDraft, "placeName" | "placeRadius">): string {
+  const name = draft.placeName.trim() || "Place";
+  const chip = PLACE_RADIUS_CHIPS.find((c) => c.meters === draft.placeRadius);
+  const radius = chip?.label ?? `${draft.placeRadius} m`;
+  return `${name} · Within ${radius}`;
 }
 
 export function gatesFromDraft(draft: AddTaskDraft): TaskGate[] {
   const gates: TaskGate[] = [];
-  if (draft.camera) gates.push("camera");
+  if (photoModeFromDraft(draft) === "required") gates.push("camera");
   if (draft.time) gates.push("time");
   if (draft.location) gates.push("location");
   return gates;
@@ -224,6 +257,7 @@ export function configFromDraft(draft: AddTaskDraft): Record<string, unknown> {
       location_radius_meters: draft.placeRadius,
     };
   }
+  config = { ...config, photo_mode: photoModeFromDraft(draft) };
   return config;
 }
 
@@ -241,28 +275,20 @@ export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
 
 export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
   const title = draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER;
+  const mode = photoModeFromDraft(draft);
+  const parts: string[] = [photoPreviewLabel(mode)];
   if (
     draft.time &&
     draft.timeMode === "between" &&
     !betweenEndAfterStart(draft.fromTime, draft.toTime)
   ) {
-    return {
-      title,
-      caption: draft.camera ? TIME_WINDOW_NOT_SET : `${SELF_REPORTED} · Time window not set`,
-    };
+    parts.push("Time window not set");
+    return { title, caption: parts.join(" · ") };
   }
-  if (draft.time && draft.timeMode === "by") {
-    const time = `By ${fmt12(draft.byTime)}`;
-    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
-  }
-  if (draft.time && draft.timeMode === "between") {
-    const time = fmtWindow(draft.fromTime, draft.toTime);
-    return { title, caption: draft.camera ? `Camera · ${time}` : `${SELF_REPORTED} · ${time}` };
-  }
-  return {
-    title,
-    caption: gateLine(gatesFromDraft(draft), gateTimeFromDraft(draft) ?? null),
-  };
+  if (draft.time && draft.timeMode === "by") parts.push(`By ${fmt12(draft.byTime)}`);
+  if (draft.time && draft.timeMode === "between") parts.push(fmtWindow(draft.fromTime, draft.toTime));
+  if (draft.location) parts.push(draft.placeName.trim() || "Place");
+  return { title, caption: parts.join(" · ") };
 }
 
 export function placeAccuracyLine(meters: number): string {
@@ -284,6 +310,7 @@ export type AddTaskPayload = {
   minWords?: number;
   targetValue?: number;
   requirePhoto: boolean;
+  photoMode: PhotoMode;
   unit?: string;
 };
 
@@ -308,7 +335,8 @@ export function payloadFromDraft(draft: AddTaskDraft): AddTaskPayload {
     durationMinutes,
     minWords,
     targetValue,
-    requirePhoto: draft.camera,
+    requirePhoto: photoModeFromDraft(draft) === "required",
+    photoMode: photoModeFromDraft(draft),
     unit,
   };
 }
@@ -324,6 +352,7 @@ export function draftFromWizardTask(task: {
   targetValue?: number;
   unit?: string;
   requirePhoto?: boolean;
+  photoMode?: PhotoMode;
 }): AddTaskDraft {
   const type: TaskModelType =
     task.type === "timer" || task.type === "counter" || task.type === "text" || task.type === "run"
@@ -342,7 +371,14 @@ export function draftFromWizardTask(task: {
     typeof task.config?.distance === "number" ? task.config.distance : target;
   const unit =
     task.unit ?? (typeof task.config?.unit === "string" ? task.config.unit : "");
-  const gates = task.gates ?? (task.requirePhoto ? (["camera"] as TaskGate[]) : []);
+  const rawMode = String(task.photoMode ?? task.config?.photo_mode ?? "").toLowerCase();
+  const photoMode: PhotoMode =
+    rawMode === "required" || rawMode === "optional" || rawMode === "none"
+      ? rawMode
+      : task.requirePhoto || (task.gates ?? []).includes("camera")
+        ? "required"
+        : "none";
+  const gates = task.gates ?? (photoMode === "required" ? (["camera"] as TaskGate[]) : []);
   return {
     ...ADD_TASK_DEFAULT,
     name: task.name,
@@ -354,7 +390,8 @@ export function draftFromWizardTask(task: {
     minWords: minWords != null ? String(minWords) : "",
     runDistance: distance != null ? String(distance) : "",
     runUnit: unit === "mi" ? "mi" : "km",
-    camera: gates.includes("camera"),
+    photoMode,
+    camera: photoMode === "required",
     time: gates.includes("time"),
     location: gates.includes("location"),
     timeMode: task.gateTime?.mode === "between" ? "between" : "by",

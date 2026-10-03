@@ -10,6 +10,9 @@ export type TaskModelType = (typeof TASK_MODEL_TYPES)[number];
 export const TASK_GATES = ["camera", "time", "location"] as const;
 export type TaskGate = (typeof TASK_GATES)[number];
 
+export const PHOTO_MODES = ["required", "optional", "none"] as const;
+export type PhotoMode = (typeof PHOTO_MODES)[number];
+
 export type GateTime = {
   mode: "by" | "between" | null;
   start: string | null;
@@ -26,6 +29,7 @@ export type TaskModelRow = {
   gate_time_end?: string | null;
   min_duration_minutes?: number | null;
   config?: {
+    photo_mode?: string | null;
     require_photo_proof?: boolean | null;
     photo_required?: boolean | null;
     require_photo?: boolean | null;
@@ -79,18 +83,59 @@ export function normalizeTaskType(row: TaskModelRow): TaskModelType {
   return "check_off";
 }
 
-/** Ordered camera, then time, then location. routine_anchor is never a gate. */
-export function gatesFor(row: TaskModelRow): TaskGate[] {
-  const gates: TaskGate[] = [];
+
+function legacyPhotoRequired(row: TaskModelRow): boolean {
   const t = rawType(row);
   const cfg = row.config ?? {};
-  const camera =
+  return (
     t === "photo" ||
     row.require_photo === true ||
     cfg.require_photo_proof === true ||
     cfg.photo_required === true ||
-    cfg.require_photo === true;
-  if (camera) gates.push("camera");
+    cfg.require_photo === true
+  );
+}
+
+/** config.photo_mode, else legacy required → required, else none. */
+export function photoModeFor(row: TaskModelRow): PhotoMode {
+  const raw = String(row.config?.photo_mode ?? "").toLowerCase();
+  if (raw === "required" || raw === "optional" || raw === "none") return raw;
+  return legacyPhotoRequired(row) ? "required" : "none";
+}
+
+export function photoModeFromWrite(input: {
+  photo_mode?: unknown;
+  photoMode?: unknown;
+  photoRequired?: boolean;
+  requirePhotoProof?: boolean;
+  type?: string;
+  gates?: unknown;
+}): PhotoMode {
+  const raw = String(input.photo_mode ?? input.photoMode ?? "").toLowerCase();
+  if (raw === "required" || raw === "optional" || raw === "none") return raw;
+  const camera =
+    input.photoRequired === true ||
+    input.requirePhotoProof === true ||
+    input.type === "photo" ||
+    (Array.isArray(input.gates) && input.gates.includes("camera"));
+  return camera ? "required" : "none";
+}
+
+export function applyPhotoModeToConfig(
+  config: { photo_mode?: string; require_photo_proof?: boolean; photo_required?: boolean },
+  mode: PhotoMode,
+): void {
+  config.photo_mode = mode;
+  const required = mode === "required";
+  config.require_photo_proof = required;
+  config.photo_required = required;
+}
+
+/** Ordered camera, then time, then location. routine_anchor is never a gate. */
+export function gatesFor(row: TaskModelRow): TaskGate[] {
+  const gates: TaskGate[] = [];
+  const cfg = row.config ?? {};
+  if (photoModeFor(row) === "required") gates.push("camera");
 
   const mode = typeof row.gate_time_mode === "string" ? row.gate_time_mode.trim() : "";
   if (mode === "by" || mode === "between") gates.push("time");

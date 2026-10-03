@@ -103,6 +103,8 @@ function createFeedMock(opts: {
       order: () => b,
       eq: () => b,
       or: () => b,
+      lt: () => b,
+      lte: () => b,
       limit: (n: number) => Promise.resolve(dataFor(table, n)),
     };
     return b;

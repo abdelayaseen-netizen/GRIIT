@@ -88,9 +88,14 @@ export function boardSlices(
   return { memberCount, top, around, lowestShown, split: true };
 }
 
-export function boardEmptyState(memberCount: number, challenge: string): { heading: string; body: string } | null {
+export function boardEmptyState(memberCount: number, challenge: string): { heading: string; body: string; cta?: string } | null {
   if (memberCount <= 1) {
-    return { heading: NO_BOARD_YET, body: onlyPersonLine(challenge) };
+    const name = challenge.trim() || "this challenge";
+    return {
+      heading: "A board needs two.",
+      body: `Invite someone to ${name}. Their days count here from the day they join.`,
+      cta: `Invite to ${name}`,
+    };
   }
   return null;
 }

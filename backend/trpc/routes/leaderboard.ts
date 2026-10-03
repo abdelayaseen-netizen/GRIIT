@@ -268,6 +268,7 @@ export const leaderboardRouter = createTRPCRouter({
             .map((r: { user_id: string }) => r.user_id),
         ),
       ];
+      // Challenge-board members stay listed. Account privacy does not hide co-members.
       if (vis === "private") {
         userIds = userIds.filter((id) => id === viewerId);
         if (!userIds.includes(viewerId)) userIds = [viewerId];
