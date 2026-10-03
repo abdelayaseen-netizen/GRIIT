@@ -8,6 +8,12 @@ import {
   upgradeAnonymousWithApple,
   upgradeAnonymousWithEmail,
 } from "@/lib/anon-auth";
+import { mapAuthError } from "@/lib/auth-helpers";
+import {
+  isRealNonAnonymousSession,
+  surfaceAccountAuthKind,
+  surfaceCaughtAuthError,
+} from "@/lib/onboarding-v2-account-session";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
@@ -115,7 +121,15 @@ export default function AccountScreen({
           setState("email_taken");
           return;
         }
-        if (upgraded.kind !== "ok" || !upgraded.user?.id) return;
+        const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
+        if (
+          upgraded.kind !== "ok" ||
+          !isRealNonAnonymousSession(upgraded.user, upgraded.session)
+        ) {
+          if (surface.kind === "message") setError(surface.message);
+          else if (upgraded.kind === "ok") setError("Sign in failed. Please try again.");
+          return;
+        }
         track({ name: "signup_completed", method: "apple" });
         track({ name: "account_created", method: "apple" });
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_apple" }));
@@ -127,10 +141,10 @@ export default function AccountScreen({
         token: credential.identityToken,
       });
       if (idError) {
-        setError(idError.message);
+        setError(mapAuthError(idError));
         return;
       }
-      if (!data?.user?.id) {
+      if (!isRealNonAnonymousSession(data?.user, data?.session)) {
         setError("Sign in failed. Please try again.");
         return;
       }
@@ -149,7 +163,7 @@ export default function AccountScreen({
         return;
       }
       captureError(e, "OnboardingV2Apple");
-      setError(e instanceof Error ? e.message : "Sign in failed.");
+      setError(surfaceCaughtAuthError(e));
     } finally {
       setLoading(false);
     }
@@ -172,7 +186,15 @@ export default function AccountScreen({
           setState("email_taken");
           return;
         }
-        if (upgraded.kind !== "ok" || !upgraded.user?.id) return;
+        const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
+        if (
+          upgraded.kind !== "ok" ||
+          !isRealNonAnonymousSession(upgraded.user, upgraded.session)
+        ) {
+          if (surface.kind === "message") setError(surface.message);
+          else if (upgraded.kind === "ok") setError("Please try again or check your email.");
+          return;
+        }
         setProfileSetupHints({ email: trimmed });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
@@ -185,6 +207,7 @@ export default function AccountScreen({
         password,
       });
       if (signUpError) {
+        const mapped = mapAuthError(signUpError);
         if (
           signUpError.message.includes("already registered") ||
           signUpError.message.includes("already been registered") ||
@@ -193,18 +216,21 @@ export default function AccountScreen({
           setState("email_taken");
           return;
         }
+        setError(mapped);
         return;
       }
-      const createdUser = signUpData.session?.user ?? signUpData.user;
-      if (createdUser) {
-        await writeDeviceTimezone();
-        setProfileSetupHints({ email: trimmed });
-        track({ name: "signup_completed", method: "email" });
-        track({ name: "account_created", method: "email" });
-        onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
+      if (!isRealNonAnonymousSession(signUpData.session?.user, signUpData.session)) {
+        setError("Please try again or check your email.");
+        return;
       }
+      await writeDeviceTimezone();
+      setProfileSetupHints({ email: trimmed });
+      track({ name: "signup_completed", method: "email" });
+      track({ name: "account_created", method: "email" });
+      onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
     } catch (e: unknown) {
       captureError(e, "OnboardingV2Email");
+      setError(surfaceCaughtAuthError(e));
     } finally {
       setLoading(false);
     }
@@ -263,6 +289,8 @@ export default function AccountScreen({
             {error ? <Text style={styles.error}>{error}</Text> : null}
           </View>
         ) : null}
+
+        {error && state !== "default" ? <Text style={styles.error}>{error}</Text> : null}
 
         {state === "email_entry" || state === "malformed" ? (
           <View style={styles.auth}>

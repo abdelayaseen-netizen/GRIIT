@@ -91,12 +91,12 @@ describe("account name persist helpers", () => {
 });
 
 describe("AccountScreen Apple errors", () => {
-  it("surfaces signInWithIdToken error.message like SignInScreen", () => {
+  it("surfaces mapped Apple errors and never swallows a failed id token", () => {
     const account = readFileSync(
       resolve(__dirname, "../components/onboarding/v2/screens/AccountScreen.tsx"),
       "utf8",
     );
-    expect(account).toContain("setError(idError.message)");
+    expect(account).toContain("setError(mapAuthError(idError))");
     expect(account).not.toContain("if (idError || !data?.user?.id) return;");
   });
 });
