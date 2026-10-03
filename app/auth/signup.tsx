@@ -30,7 +30,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import * as Haptics from "expo-haptics";
 import { validateDisplayName, validateEmail, validatePassword } from "@/lib/validation";
 
-type UsernameStatus = "idle" | "checking" | "available" | "taken";
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "error";
+
+const USERNAME_CHECK_FAILED = "Couldn't check that username. Try again.";
 
 function getPasswordStrength(password: string): "weak" | "medium" | "strong" {
   if (!password || password.length < 8) return "weak";
@@ -107,7 +109,7 @@ function SignupScreenInner() {
       setUsernameStatus(result ? "taken" : "available");
     } catch (err) {
       captureError(err, "SignupUsernameCheck");
-      setUsernameStatus("idle");
+      setUsernameStatus("error");
     }
   }, []);
 
@@ -303,6 +305,18 @@ function SignupScreenInner() {
                 )}
                 {usernameStatus === "taken" && (
                   <Text style={styles.takenText}>✗ Username taken</Text>
+                )}
+                {usernameStatus === "error" && (
+                  <View style={styles.usernameErrorRow}>
+                    <Text style={styles.takenText}>{USERNAME_CHECK_FAILED}</Text>
+                    <TouchableOpacity
+                      onPress={() => void checkUsername(username)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry username check"
+                    >
+                      <Text style={styles.footerLink}>Retry</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             )}
@@ -504,6 +518,7 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.lg,
   },
   usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -DS_SPACING.sm, marginBottom: DS_SPACING.sm },
+  usernameErrorRow: { flex: 1, flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8 },
   availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.brand, fontWeight: "500" },
   takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.danger, fontWeight: "500" },
   passwordRow: {
