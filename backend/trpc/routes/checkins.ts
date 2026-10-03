@@ -84,6 +84,7 @@ import {
 } from "../../lib/task-model";
 import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { profileTierForSecuredDays } from "../../lib/profile-tier";
 import {
   canFlipShare,
   flipSharePatch,
@@ -1453,7 +1454,28 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
       const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
-      const totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+      let totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+      if (row.secured && !alreadySecured) {
+        const nextDays = totalDaysSecured + 1;
+        const svc = getSupabaseServer();
+        if (!svc) {
+          logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not incremented");
+        } else {
+          const { error: daysErr } = await svc
+            .from("profiles")
+            .update({
+              total_days_secured: nextDays,
+              tier: profileTierForSecuredDays(nextDays),
+              updated_at: new Date().toISOString(),
+            } as never)
+            .eq("user_id", ctx.userId);
+          if (daysErr) {
+            logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
+          } else {
+            totalDaysSecured = nextDays;
+          }
+        }
+      }
       const { data: challengeRow } = await ctx.supabase.from("challenges").select("duration_days, title").eq("id", challengeId ?? "").single();
       const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
