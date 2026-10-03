@@ -55,10 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
         clearTimeout(timeout);
         setLoading(false);
-        // error swallowed — handle in UI
+        captureError(err, "AuthContext.getSession");
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
