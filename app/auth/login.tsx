@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
+import { signInApplePreferringLink } from "@/lib/apple-session";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { DS_V3 } from "@/lib/design-system";
@@ -125,19 +126,18 @@ function LoginScreenInner() {
           setFormError("Apple Sign-In did not return a token.");
           return;
         }
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: "apple",
-          token: credential.identityToken,
+        const apple = await signInApplePreferringLink({
+          identityToken: credential.identityToken,
         });
-        if (error) {
-          setFormError(error.message);
+        if (apple.kind === "cancelled") return;
+        if (apple.kind === "error" || !apple.session || !apple.user) {
+          setFormError(apple.message || "Sign in failed. Please try again.");
           return;
         }
-        if (!data.session) {
-          setFormError("Sign in failed. Please try again.");
-          return;
+        if (apple.kind === "signed_in_existing" && apple.message) {
+          setFormError(apple.message);
         }
-        const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", data.user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", apple.user.id).single();
         if (!profile?.username) {
           try {
             track({ name: "login_completed", method: "apple" });

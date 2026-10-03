@@ -12,6 +12,7 @@ import {
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Apple, ChevronLeft, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
+import { signInApplePreferringLink } from "@/lib/apple-session";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { DS_V3 } from "@/lib/design-system";
@@ -76,17 +77,16 @@ export default function SignInScreen({
         setError("Apple Sign-In did not return a token.");
         return;
       }
-      const { data, error: idError } = await supabase.auth.signInWithIdToken({
-        provider: "apple",
-        token: credential.identityToken,
+      const apple = await signInApplePreferringLink({
+        identityToken: credential.identityToken,
       });
-      if (idError) {
-        setError(idError.message);
+      if (apple.kind === "cancelled") return;
+      if (apple.kind === "error" || !apple.session?.user?.id) {
+        setError(apple.message || "Sign in failed. Please try again.");
         return;
       }
-      if (!data.session?.user?.id) {
-        setError("Sign in failed. Please try again.");
-        return;
+      if (apple.kind === "signed_in_existing" && apple.message) {
+        setError(apple.message);
       }
       track({ name: "login_completed", method: "apple" });
       onSuccess();
