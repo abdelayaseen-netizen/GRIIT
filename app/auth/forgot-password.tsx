@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
+import { AUTH_RESET_REDIRECT } from "@/lib/auth-reset";
 import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -47,7 +48,7 @@ function ForgotPasswordScreenInner() {
       return false;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-      redirectTo: undefined,
+      redirectTo: AUTH_RESET_REDIRECT,
     });
     if (error) {
       setFormError(error.message);

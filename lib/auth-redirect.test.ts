@@ -213,6 +213,22 @@ describe("resolveAuthRedirect matrix (current AuthRedirector)", () => {
     ).toEqual({ action: "replace", href: "/onboarding" });
   });
 
+  it("stays on reset-password even when the account is already onboarded", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: true,
+        username: "yaseen",
+        onResetPassword: true,
+        ...ready,
+        inOnboarding: false,
+        inAuth: true,
+        onCreateProfile: false,
+        inTabs: false,
+      })
+    ).toEqual({ action: "stay" });
+  });
+
   it("session present + profile not checked waits", () => {
     expect(
       resolveAuthRedirect({

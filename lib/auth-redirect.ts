@@ -25,12 +25,14 @@ export function resolveAuthRedirect(input: {
   profileChecked: boolean;
   inOnboarding: boolean;
   inAuth: boolean;
+  onResetPassword?: boolean;
   onCreateProfile: boolean;
   inTabs: boolean;
   exitHref?: string | null;
 }): AuthRedirectDecision {
   if (input.loading) return { action: "wait" };
   if (input.sessionKind !== "none" && !input.profileChecked) return { action: "wait" };
+  if (input.onResetPassword) return { action: "stay" };
 
   const dest = resolveOnboardingLaunch({
     sessionKind: input.sessionKind,

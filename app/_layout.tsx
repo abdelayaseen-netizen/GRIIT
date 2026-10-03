@@ -212,6 +212,7 @@ function AuthRedirector() {
     profileChecked,
     inOnboarding: first === SEGMENTS.ONBOARDING,
     inAuth: first === SEGMENTS.AUTH,
+    onResetPassword: first === SEGMENTS.AUTH && segments[1] === "reset-password",
     onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
     inTabs: first === SEGMENTS.TABS,
     exitHref: peekOnboardingV2Exit(),

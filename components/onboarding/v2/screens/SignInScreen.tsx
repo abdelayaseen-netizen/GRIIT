@@ -14,6 +14,7 @@ import { Apple, ChevronLeft, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
 import { SIGNED_IN_EXISTING_ACCOUNT, signInApplePreferringLink } from "@/lib/apple-session";
 import { mapAuthError } from "@/lib/auth-helpers";
+import { AUTH_RESET_REDIRECT } from "@/lib/auth-reset";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { DS_V3 } from "@/lib/design-system";
@@ -141,8 +142,9 @@ export default function SignInScreen({
     }
     setResetHint("");
     try {
-      // TODO: recovery link opens Supabase default page; in-app reset screen not built.
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed);
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: AUTH_RESET_REDIRECT,
+      });
       if (resetError) {
         setResetHint(mapAuthError(resetError));
         return;
