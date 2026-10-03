@@ -9,6 +9,7 @@ import {
   upgradeAnonymousWithEmail,
 } from "@/lib/anon-auth";
 import { mapAuthError } from "@/lib/auth-helpers";
+import { AUTH_EMAIL_CONFIRM_REDIRECT } from "@/lib/auth-reset";
 import {
   isRealNonAnonymousSession,
   surfaceAccountAuthKind,
@@ -205,6 +206,7 @@ export default function AccountScreen({
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: trimmed,
         password,
+        options: { emailRedirectTo: AUTH_EMAIL_CONFIRM_REDIRECT },
       });
       if (signUpError) {
         const mapped = mapAuthError(signUpError);

@@ -17,6 +17,7 @@ import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
 import { track, trackEvent } from "@/lib/analytics";
 import { mapAuthError } from "@/lib/auth-helpers";
+import { AUTH_EMAIL_CONFIRM_REDIRECT } from "@/lib/auth-reset";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_V3, DS_SPACING, DS_RADIUS, DS_TYPOGRAPHY, DS_BORDERS, DS_SHADOWS } from "@/lib/design-system"
@@ -139,7 +140,7 @@ function SignupScreenInner() {
             display_name: displayName.trim(),
             username: normalizedUsername,
           },
-          emailRedirectTo: undefined,
+          emailRedirectTo: AUTH_EMAIL_CONFIRM_REDIRECT,
         },
       });
 

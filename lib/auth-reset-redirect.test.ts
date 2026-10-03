@@ -13,4 +13,11 @@ describe("password reset redirect", () => {
     expect(signIn).toContain("AUTH_RESET_REDIRECT");
     expect(helper).toContain('export const AUTH_RESET_REDIRECT = "griit://auth/reset-password"');
   });
+
+  it("signUp email confirm returns to griit://auth/login", () => {
+    const signup = readFileSync(resolve(__dirname, "../app/auth/signup.tsx"), "utf8");
+    const helper = readFileSync(resolve(__dirname, "./auth-reset.ts"), "utf8");
+    expect(signup).toContain("AUTH_EMAIL_CONFIRM_REDIRECT");
+    expect(helper).toContain('export const AUTH_EMAIL_CONFIRM_REDIRECT = "griit://auth/login"');
+  });
 });
