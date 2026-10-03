@@ -43,9 +43,10 @@ import {
   peekOnboardingV2Exit,
   sessionKindFromUser,
   setKnownOnboardingCompleted,
+  shouldSelfHealOnboardingFlag,
 } from "@/lib/onboarding-v2-routing";
 import { resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
-import { checkProfile } from "@/lib/check-profile";
+import { checkProfile, selfHealOnboardingCompleted } from "@/lib/check-profile";
 import { recordAppOpen } from "@/lib/app-open-tracking";
 import { initialiseSentry } from "@/lib/sentry";
 import { registerPushTokenIfPermissionGranted } from "@/lib/register-push-token";
@@ -119,16 +120,27 @@ function AuthRedirector() {
   const { setMessage: setSessionExpiredMessage } = useSessionExpired();
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
   const coldStartTrackedRef = useRef(false);
 
-  const runCheckProfile = useCallback(async (userId: string) => {
+  const runCheckProfile = useCallback(async (userId: string, kind: ReturnType<typeof sessionKindFromUser>) => {
     const outcome = await checkProfile(userId);
     setOnboardingCompleted(outcome.onboardingCompleted);
+    setProfileUsername(outcome.username);
     setProfileCreatedAt(outcome.profileCreatedAt);
     if (outcome.cacheCompleted) {
       setKnownOnboardingCompleted(userId, true);
       void cacheOnboardingCompleted();
+    }
+    if (
+      shouldSelfHealOnboardingFlag({
+        sessionKind: kind,
+        dbCompleted: outcome.onboardingCompleted,
+        username: outcome.username,
+      })
+    ) {
+      void selfHealOnboardingCompleted(userId);
     }
     setProfileChecked(true);
   }, []);
@@ -136,11 +148,12 @@ function AuthRedirector() {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      void runCheckProfile(user.id);
+      void runCheckProfile(user.id, sessionKindFromUser(user));
     } else {
       clearKnownOnboardingCompleted();
       setProfileChecked(true);
       setOnboardingCompleted(null);
+      setProfileUsername(null);
       setProfileCreatedAt(null);
     }
   }, [user, loading, runCheckProfile]);
@@ -174,6 +187,7 @@ function AuthRedirector() {
             written: peekKnownOnboardingCompleted(user.id),
           })
         : null,
+      username: profileUsername,
       loading,
       profileChecked,
       inOnboarding: first === SEGMENTS.ONBOARDING,
@@ -185,7 +199,7 @@ function AuthRedirector() {
     if (decision.action === "replace") {
       router.replace(decision.href as never);
     }
-  }, [user, loading, segments, profileChecked, onboardingCompleted, router]);
+  }, [user, loading, segments, profileChecked, onboardingCompleted, profileUsername, router]);
 
   if (
     shouldShowAuthRedirectOverlay({

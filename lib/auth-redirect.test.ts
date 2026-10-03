@@ -124,6 +124,39 @@ describe("resolveAuthRedirect matrix (current AuthRedirector)", () => {
     ).toEqual({ action: "replace", href: "/onboarding" });
   });
 
+  it("Apple login with username + flag false → Home", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "yaseen",
+        ...ready,
+        ...onOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/(tabs)" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "yaseen",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "stay" });
+  });
+
+  it("new guest with username + flag false → onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "guest",
+        onboardingCompleted: false,
+        username: "user_39dc1993",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
   it("session present + profile not checked waits", () => {
     expect(
       resolveAuthRedirect({

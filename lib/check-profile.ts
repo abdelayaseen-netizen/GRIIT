@@ -5,6 +5,8 @@
 
 import { supabase } from "@/lib/supabase";
 import { captureError } from "@/lib/sentry";
+import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
+import { setKnownOnboardingCompleted } from "@/lib/onboarding-v2-routing";
 
 export const PROFILE_CHECK_TIMEOUT_MS = 2500;
 
@@ -18,6 +20,7 @@ export type ProfileCheckRow = {
 export type ProfileCheckOutcome = {
   hasProfile: boolean;
   onboardingCompleted: boolean | null;
+  username: string | null;
   profileCreatedAt: string | null;
   cacheCompleted: boolean;
 };
@@ -46,6 +49,7 @@ export function interpretProfileCheckResult(
     return {
       hasProfile: false,
       onboardingCompleted: null,
+      username: null,
       profileCreatedAt: null,
       cacheCompleted: false,
     };
@@ -54,15 +58,18 @@ export function interpretProfileCheckResult(
     return {
       hasProfile: false,
       onboardingCompleted: false,
+      username: null,
       profileCreatedAt: null,
       cacheCompleted: false,
     };
   }
-  const hasValidProfile = !!result && typeof result.username === "string" && result.username.trim().length > 0;
+  const rawUsername = typeof result.username === "string" ? result.username.trim() : "";
+  const hasValidProfile = rawUsername.length > 0;
   const dbDone = result?.onboarding_completed === true;
   return {
     hasProfile: hasValidProfile,
     onboardingCompleted: dbDone,
+    username: hasValidProfile ? rawUsername : null,
     profileCreatedAt: result?.created_at ?? null,
     cacheCompleted: dbDone,
   };
@@ -97,5 +104,31 @@ export async function checkProfile(
       return checkProfile(userId, retry + 1);
     }
     return interpretProfileCheckResult(timedOut);
+  }
+}
+
+/**
+ * Username already implies onboarded but the flag is false.
+ * Fire-and-forget — routing does not wait on this write.
+ */
+export async function selfHealOnboardingCompleted(userId: string): Promise<void> {
+  if (!userId) return;
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        onboarding_completed: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    if (error) {
+      captureError(error, "selfHealOnboardingCompleted");
+      return;
+    }
+    setKnownOnboardingCompleted(userId, true);
+    void cacheOnboardingCompleted();
+    console.info("[auth] self-healed onboarding_completed", userId);
+  } catch (err) {
+    captureError(err, "selfHealOnboardingCompleted");
   }
 }

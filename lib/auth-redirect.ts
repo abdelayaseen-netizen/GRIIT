@@ -17,6 +17,7 @@ export type AuthRedirectDecision =
 export function resolveAuthRedirect(input: {
   sessionKind: SessionKind;
   onboardingCompleted: boolean | null;
+  username?: string | null;
   loading: boolean;
   profileChecked: boolean;
   inOnboarding: boolean;
@@ -31,6 +32,7 @@ export function resolveAuthRedirect(input: {
   const dest = resolveOnboardingLaunch({
     sessionKind: input.sessionKind,
     dbCompleted: input.onboardingCompleted,
+    username: input.username,
   });
 
   if (dest === "home") {

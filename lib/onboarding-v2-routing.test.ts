@@ -8,6 +8,7 @@ import {
   resolveCompletedLeaveHref,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
+  shouldSelfHealOnboardingFlag,
   chromeStep,
   resolveV2Step,
   sessionKindFromUser,
@@ -104,9 +105,43 @@ function hrefForDest(
 }
 
 describe("resolveOnboardingCompleted", () => {
-  it("real session: dbCompleted is the only gate", () => {
+  it("real session: flag true is completed; flag false without username is not", () => {
     expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: false })).toBe(false);
     expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: true })).toBe(true);
+  });
+
+  it("Apple login with username → home even if the flag is still false", () => {
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe("home");
+  });
+
+  it("new guest → onboarding even when ensure-profile wrote a username", () => {
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe("resume");
   });
 
   it("real session: db not loaded yet is not completed (overlay stays up)", () => {
@@ -122,6 +157,37 @@ describe("resolveOnboardingCompleted", () => {
   it("none is never completed", () => {
     expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: true })).toBe(false);
     expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: null })).toBe(false);
+  });
+
+  it("self-heals only when a real username implies done and the flag is false", () => {
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: true,
+        username: "yaseen",
+      })
+    ).toBe(false);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: null,
+      })
+    ).toBe(false);
   });
 });
 

@@ -68,24 +68,50 @@ export function sessionKindFromUser(user: { is_anonymous?: boolean } | null | un
   return "real";
 }
 
+export function hasUsableOnboardingUsername(
+  username: string | null | undefined
+): boolean {
+  return typeof username === "string" && username.trim().length > 0;
+}
+
 /**
  * Whether this session has finished onboarding.
  *
- * Spec table: session kind × profiles.onboarding_completed.
- * Local ONBOARDING_COMPLETED is a cache write only — never an input.
- * `dbCompleted === null` is not completed (caller waits or resumes).
+ * Real accounts: `profiles.onboarding_completed === true` OR a non-empty
+ * username (Apple / reinstall — ensure-profile writes a handle, not the flag).
+ * Guest auto-usernames do not count — new guests still onboard.
+ * Local ONBOARDING_COMPLETED is a cache write only — never an input here.
+ * `dbCompleted === null` is not completed unless a real username is present.
  */
 export function resolveOnboardingCompleted(input: {
   sessionKind: SessionKind;
   dbCompleted: boolean | null;
+  username?: string | null;
 }): boolean {
   if (input.sessionKind === "none") return false;
-  return input.dbCompleted === true;
+  if (input.dbCompleted === true) return true;
+  return (
+    input.sessionKind === "real" && hasUsableOnboardingUsername(input.username)
+  );
+}
+
+/** True when we should write the flag because username already implies done. */
+export function shouldSelfHealOnboardingFlag(input: {
+  sessionKind: SessionKind;
+  dbCompleted: boolean | null;
+  username?: string | null;
+}): boolean {
+  return (
+    resolveOnboardingCompleted(input) &&
+    input.dbCompleted !== true &&
+    input.sessionKind === "real"
+  );
 }
 
 export function resolveOnboardingLaunch(input: {
   sessionKind: SessionKind;
   dbCompleted: boolean | null;
+  username?: string | null;
 }): OnboardingLaunchDestination {
   if (input.sessionKind === "none") return "welcome";
   if (resolveOnboardingCompleted(input)) return "home";
