@@ -169,17 +169,6 @@ function LoginScreenInner() {
     }
   }, [appleAuthAvailable, router]);
 
-  const handleGoogle = useCallback(async () => {
-    setFormError("");
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
-      if (error) setFormError(mapAuthError(error));
-    } catch (e) {
-      captureError(e, { flow: "login_google_oauth" });
-      setFormError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
-    }
-  }, []);
-
   const handleSignUpLink = useCallback(() => {
     router.push(ROUTES.AUTH_SIGNUP as never);
   }, [router]);
@@ -293,14 +282,6 @@ function LoginScreenInner() {
                 accessibilityLabel="Continue with Apple"
               />
             ) : null}
-
-            <Button
-              label="Sign in with Google"
-              variant="secondary"
-              disabled={loading}
-              onPress={handleGoogle}
-              accessibilityLabel="Continue with Google"
-            />
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don&apos;t have an account? </Text>
