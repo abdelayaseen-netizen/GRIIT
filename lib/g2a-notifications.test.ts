@@ -186,6 +186,80 @@ describe("window close is the anchor for By and Between", () => {
   });
 });
 
+describe("g2a replan", () => {
+  const now = new Date(2026, 9, 2, 8, 0, 0);
+  const tasks = [{ name: "Read", closeHHMM: "18:00" }];
+  function copy(remaining: number) {
+    return {
+      challengeLine: "Crew · Day 1 of 30",
+      windowBody: (close: { name: string; hhmm: string }) => `${close.name} window closes at ${close.hhmm}.`,
+      eveningBody: g2aEveningBody(remaining, 3),
+      morningBody: "Secure today and it's 4.",
+    };
+  }
+
+  it("re-plan after a check-in lowers the remaining count", () => {
+    const before = planG2aAhead({
+      now,
+      securedToday: false,
+      remainingToday: 2,
+      remainingTomorrow: 2,
+      tasks,
+      today: copy(2),
+      tomorrow: copy(2),
+    });
+    const after = planG2aAhead({
+      now,
+      securedToday: false,
+      remainingToday: 1,
+      remainingTomorrow: 2,
+      tasks,
+      today: copy(1),
+      tomorrow: copy(2),
+    });
+    const evening = (plan: { today: { body: string }[] }) => plan.today.find((c) => c.body.includes("left"));
+    expect(evening(before)?.body).toContain("2 tasks");
+    expect(evening(after)?.body).toContain("1 task");
+    expect(evening(after)?.body).not.toContain("2 tasks");
+  });
+
+  it("a secured day leaves today empty", () => {
+    const secured = planG2aAhead({
+      now,
+      securedToday: true,
+      remainingToday: 1,
+      remainingTomorrow: 2,
+      tasks,
+      today: copy(1),
+      tomorrow: copy(2),
+    });
+    expect(secured.today).toEqual([]);
+    expect(secured.tomorrow.length).toBeGreaterThan(0);
+  });
+
+  it("count 0 schedules nothing", () => {
+    const none = planG2aAhead({
+      now,
+      securedToday: false,
+      remainingToday: 0,
+      remainingTomorrow: 0,
+      tasks,
+      today: copy(0),
+      tomorrow: copy(0),
+    });
+    expect(none.today).toEqual([]);
+    expect(none.tomorrow).toEqual([]);
+    const eveningOnly = g2aPushCandidates({
+      now,
+      securedToday: false,
+      challengeLine: "Crew · Day 1 of 30",
+      eveningBody: g2aEveningBody(0, 3),
+      morningBody: "Secure today and it's 4.",
+    });
+    expect(eveningOnly.some((c) => c.body.startsWith("0 task"))).toBe(false);
+  });
+});
+
 describe("legacy daily schedulers", () => {
   it("useNotificationScheduler no longer schedules the old per-day trio", () => {
     const scheduler = readFileSync(resolve(__dirname, "../hooks/useNotificationScheduler.ts"), "utf8");

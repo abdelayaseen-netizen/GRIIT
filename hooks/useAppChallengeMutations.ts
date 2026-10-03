@@ -12,7 +12,7 @@ import {
   fireStreakCelebration,
   isStreakCelebrationMilestone,
 } from "@/lib/notifications";
-import { cancelG2aDayReminders } from "@/lib/g2a-notification-schedule";
+import { scheduleG2aForUser } from "@/lib/g2a-refresh";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { displayDay } from "@/lib/challenge-day";
@@ -223,6 +223,19 @@ export function useAppChallengeMutations({
               /* non-fatal */
             }
           }
+          if (Platform.OS !== "web") {
+            try {
+              await scheduleG2aForUser({
+                timezone: (profile as { timezone?: string | null } | null)?.timezone,
+                lastCompletedDateKey: (stats as StatsFromApi | null)?.lastCompletedDateKey,
+                streakCount: data?.streakDays ?? (stats as StatsFromApi | null)?.activeStreak ?? 0,
+                activeChallengeId: params.activeChallengeId,
+                forceSecuredToday: data?.dayAlreadySecured === true,
+              });
+            } catch (err) {
+              captureError(err, "replanG2aAfterCheckIn");
+            }
+          }
           return {
             firstTaskOfDay,
             completionId: data?.id,
@@ -329,8 +342,16 @@ export function useAppChallengeMutations({
       }
       if (Platform.OS !== "web") {
         const newStreakCount = result?.newStreakCount ?? (stats as StatsFromApi)?.activeStreak ?? 0;
-        if (userDaySecured) {
-          await cancelG2aDayReminders("today");
+        try {
+          await scheduleG2aForUser({
+            timezone: (profile as { timezone?: string | null } | null)?.timezone,
+            lastCompletedDateKey: (stats as StatsFromApi | null)?.lastCompletedDateKey,
+            streakCount: newStreakCount,
+            activeChallengeId,
+            forceSecuredToday: userDaySecured,
+          });
+        } catch (err) {
+          captureError(err, "replanG2aAfterSecure");
         }
         await cancelLapsedUserReminders();
         const challengeName =

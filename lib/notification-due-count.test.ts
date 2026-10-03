@@ -27,8 +27,10 @@ describe("tasksDueTodayAcrossEnrollments", () => {
         streak: 0,
       }).body,
     ).toBe("3 left. Two hours to secure today.");
+    const refresh = readFileSync(resolve(__dirname, "g2a-refresh.ts"), "utf8");
+    expect(refresh).toContain("tasksDueTodayAcrossEnrollments");
+    expect(refresh).toContain("getTodayCheckinsForUser");
     const scheduler = readFileSync(resolve(__dirname, "../hooks/useNotificationScheduler.ts"), "utf8");
-    expect(scheduler).toContain("tasksDueTodayAcrossEnrollments");
-    expect(scheduler).toContain("getTodayCheckinsForUser");
+    expect(scheduler).toContain("scheduleG2aForUser");
   });
 });
