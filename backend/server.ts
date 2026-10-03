@@ -25,6 +25,14 @@ logger.info(
   "[boot] step 1: dotenv + sentry init complete",
 );
 
+const missingServiceEnv = [
+  !process.env.EXPO_PUBLIC_SUPABASE_URL ? "EXPO_PUBLIC_SUPABASE_URL" : null,
+  !process.env.SUPABASE_SERVICE_ROLE_KEY ? "SUPABASE_SERVICE_ROLE_KEY" : null,
+].filter((name): name is string => name != null);
+if (missingServiceEnv.length > 0) {
+  logger.error(`[boot] ERROR missing ${missingServiceEnv.join(", ")}`);
+}
+
 function toError(reason: unknown): Error {
   if (reason instanceof Error) return reason;
   if (typeof reason === "string") return new Error(reason);
