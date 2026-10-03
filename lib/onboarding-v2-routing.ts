@@ -22,7 +22,7 @@ export const ONBOARDING_V2_PROGRESS_SEGMENTS = 8;
 
 export type SessionKind = "none" | "guest" | "real";
 
-export type OnboardingLaunchDestination = "home" | "resume" | "welcome";
+export type OnboardingLaunchDestination = "home" | "resume" | "welcome" | "retry";
 
 const ORDER_SET = new Set<string>(ONBOARDING_V2_ORDER);
 
@@ -115,6 +115,7 @@ export function resolveOnboardingLaunch(input: {
 }): OnboardingLaunchDestination {
   if (input.sessionKind === "none") return "welcome";
   if (resolveOnboardingCompleted(input)) return "home";
+  if (input.dbCompleted === null) return "retry";
   return "resume";
 }
 

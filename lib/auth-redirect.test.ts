@@ -157,6 +157,50 @@ describe("resolveAuthRedirect matrix (current AuthRedirector)", () => {
     ).toEqual({ action: "replace", href: "/onboarding" });
   });
 
+  it("null after timeout → retry, never onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: null,
+        username: null,
+        cacheCompleted: false,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "retry" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "guest",
+        onboardingCompleted: null,
+        cacheCompleted: false,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "retry" });
+  });
+
+  it("null + local cache prefers Home; cache never skips a known-new account", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: null,
+        cacheCompleted: true,
+        ...ready,
+        ...onOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/(tabs)" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: null,
+        cacheCompleted: true,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
   it("session present + profile not checked waits", () => {
     expect(
       resolveAuthRedirect({

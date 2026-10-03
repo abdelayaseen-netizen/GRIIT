@@ -264,8 +264,8 @@ describe("resolveOnboardingLaunch", () => {
     expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true })).toBe("home");
   });
 
-  it("real session, dbCompleted null is not Home", () => {
-    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: null })).toBe("resume");
+  it("real session, dbCompleted null is retry — never onboarding", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: null })).toBe("retry");
   });
 
   it("real account, dbCompleted false → resume", () => {

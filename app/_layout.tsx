@@ -35,7 +35,7 @@ import {
 } from "@/lib/finalize-ended-foreground";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
+import { cacheOnboardingCompleted, readOnboardingCompletedCache } from "@/lib/onboarding-completed-cache";
 import {
   dbCompletedForLaunch,
   clearKnownOnboardingCompleted,
@@ -113,6 +113,22 @@ function AuthRedirectorLoading() {
   );
 }
 
+function AuthRedirectorRetry({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View style={layoutStyles.authLoadingOverlay}>
+      <Text style={layoutStyles.authRetryText}>Couldn&apos;t reach GRIIT. Retry</Text>
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="Retry"
+        style={layoutStyles.authRetryButton}
+      >
+        <Text style={layoutStyles.authRetryButtonText}>Retry</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function AuthRedirector() {
   const { user, loading } = useAuth();
   const segments = useSegments();
@@ -122,13 +138,16 @@ function AuthRedirector() {
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [cacheCompleted, setCacheCompleted] = useState(false);
   const coldStartTrackedRef = useRef(false);
 
   const runCheckProfile = useCallback(async (userId: string, kind: ReturnType<typeof sessionKindFromUser>) => {
     const outcome = await checkProfile(userId);
+    const cached = await readOnboardingCompletedCache();
     setOnboardingCompleted(outcome.onboardingCompleted);
     setProfileUsername(outcome.username);
     setProfileCreatedAt(outcome.profileCreatedAt);
+    setCacheCompleted(cached);
     if (outcome.cacheCompleted) {
       setKnownOnboardingCompleted(userId, true);
       void cacheOnboardingCompleted();
@@ -155,6 +174,7 @@ function AuthRedirector() {
       setOnboardingCompleted(null);
       setProfileUsername(null);
       setProfileCreatedAt(null);
+      setCacheCompleted(false);
     }
   }, [user, loading, runCheckProfile]);
 
@@ -177,29 +197,32 @@ function AuthRedirector() {
     return unsubscribe;
   }, [router, setSessionExpiredMessage]);
 
+  const first = typeof segments[0] === "string" ? segments[0] : "";
+  const decision = resolveAuthRedirect({
+    sessionKind: sessionKindFromUser(user),
+    onboardingCompleted: user
+      ? dbCompletedForLaunch({
+          fetched: onboardingCompleted,
+          written: peekKnownOnboardingCompleted(user.id),
+        })
+      : null,
+    username: profileUsername,
+    cacheCompleted,
+    loading,
+    profileChecked,
+    inOnboarding: first === SEGMENTS.ONBOARDING,
+    inAuth: first === SEGMENTS.AUTH,
+    onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
+    inTabs: first === SEGMENTS.TABS,
+    exitHref: peekOnboardingV2Exit(),
+  });
+
+  const replaceHref = decision.action === "replace" ? decision.href : null;
   useEffect(() => {
-    const first = typeof segments[0] === "string" ? segments[0] : "";
-    const decision = resolveAuthRedirect({
-      sessionKind: sessionKindFromUser(user),
-      onboardingCompleted: user
-        ? dbCompletedForLaunch({
-            fetched: onboardingCompleted,
-            written: peekKnownOnboardingCompleted(user.id),
-          })
-        : null,
-      username: profileUsername,
-      loading,
-      profileChecked,
-      inOnboarding: first === SEGMENTS.ONBOARDING,
-      inAuth: first === SEGMENTS.AUTH,
-      onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
-      inTabs: first === SEGMENTS.TABS,
-      exitHref: peekOnboardingV2Exit(),
-    });
-    if (decision.action === "replace") {
-      router.replace(decision.href as never);
+    if (replaceHref) {
+      router.replace(replaceHref as never);
     }
-  }, [user, loading, segments, profileChecked, onboardingCompleted, profileUsername, router]);
+  }, [replaceHref, router]);
 
   if (
     shouldShowAuthRedirectOverlay({
@@ -209,6 +232,18 @@ function AuthRedirector() {
     })
   ) {
     return <AuthRedirectorLoading />;
+  }
+
+  if (decision.action === "retry") {
+    return (
+      <AuthRedirectorRetry
+        onRetry={() => {
+          if (!user) return;
+          setProfileChecked(false);
+          void runCheckProfile(user.id, sessionKindFromUser(user));
+        }}
+      />
+    );
   }
 
   return null;
@@ -423,6 +458,26 @@ const layoutStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: DS_V3.color.canvas,
     zIndex: 999,
+    gap: 16,
+    paddingHorizontal: 24,
+  },
+  authRetryText: {
+    color: DS_V3.color.textPrimary,
+    fontSize: 16,
+    textAlign: "center",
+  },
+  authRetryButton: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: DS_V3.color.brand,
+    borderRadius: 999,
+  },
+  authRetryButtonText: {
+    color: DS_V3.color.textPrimary,
+    fontSize: 16,
+    fontWeight: "700",
   },
   flex1: { flex: 1 },
   sessionExpiredBanner: {
