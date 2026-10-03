@@ -30,6 +30,23 @@ export async function cancelG2aDayReminders(slot: G2aSlot = "today"): Promise<vo
   }
 }
 
+/** Cancel today's queued G2a pair, then write the fresh plan. An empty day stays empty. */
+export async function applyG2aPlan(plan: {
+  today: readonly G2aPushCandidate[];
+  tomorrow: readonly G2aPushCandidate[];
+}): Promise<void> {
+  if (plan.today.length === 0) {
+    await cancelG2aDayReminders("today");
+  } else {
+    await scheduleG2aDayReminders([...plan.today], "today");
+  }
+  if (plan.tomorrow.length === 0) {
+    await cancelG2aDayReminders("tomorrow");
+  } else {
+    await scheduleG2aDayReminders([...plan.tomorrow], "tomorrow");
+  }
+}
+
 export async function scheduleG2aDayReminders(
   candidates: G2aPushCandidate[],
   slot: "today" | "tomorrow" = "today",

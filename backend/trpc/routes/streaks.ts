@@ -77,7 +77,7 @@ export function restoreStreakCount(input: {
   let n = 0;
   let cursor = start;
   while (secured.has(cursor) || bridge.has(cursor)) {
-    // Live increment: backend/lib/streak.ts:19 — only a secured day adds 1.
+    // Only a secured day adds 1. Covered gaps continue inside secure_day.
     if (secured.has(cursor)) n += 1;
     cursor = addCalendarDaysToDateKey(cursor, -1);
   }

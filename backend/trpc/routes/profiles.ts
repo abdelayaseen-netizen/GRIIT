@@ -307,9 +307,17 @@ export const profilesRouter = createTRPCRouter({
           subscription_product_id: rcEntitlement?.product_identifier ?? null,
         };
 
-        const { error: updateError } = await ctx.supabase
+        const server = getSupabaseServer();
+        if (!server) {
+          if (process.env.NODE_ENV !== "test") {
+            const { logger } = await import("../../lib/logger");
+            logger.warn("[profiles.validateSubscription] no service role; subscription_status not written");
+          }
+          return getCurrentFromDb();
+        }
+        const { error: updateError } = await server
           .from("profiles")
-          .update(updatePayload)
+          .update(updatePayload as never)
           .eq("user_id", appUserId);
 
         if (updateError) {

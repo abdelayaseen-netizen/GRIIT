@@ -7,7 +7,6 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { setSubscriptionState } from "./premium";
-import { supabase } from "./supabase";
 import { trpcMutate } from "./trpc";
 import { TRPC } from "./trpc-paths";
 import { trackEvent } from "./analytics";
@@ -82,7 +81,7 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
     notifySubscriptionChange(premium);
     await syncSubscriptionToSupabase(userId, info);
     void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
-      // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
+      // Best-effort. The server writes subscription_status with the service role.
     });
 
     RC.addCustomerInfoUpdateListener((info) => {
@@ -93,7 +92,7 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
       notifySubscriptionChange(isPremium);
       void syncSubscriptionToSupabase(userId, updatedInfo);
       void trpcMutate(TRPC.profiles.validateSubscription, {}).catch(() => {
-        // Best-effort — DB already has client-side values from syncSubscriptionToSupabase
+        // Best-effort. The server writes subscription_status with the service role.
       });
     });
   } catch (error) {
@@ -101,25 +100,14 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
   }
 }
 
-/** Sync RevenueCat status to Supabase profile (user_id). */
-export async function syncSubscriptionToSupabase(userId: string, customerInfo: CustomerInfo | null): Promise<void> {
-  if (!customerInfo) return;
-  const entitlement = customerInfo.entitlements?.active?.[ENTITLEMENT_ID];
-  const status = entitlement ? "premium" : "free";
-  const expiry = entitlement?.expirationDate ?? null;
-  try {
-    await supabase
-      .from("profiles")
-      .update({
-        subscription_status: status,
-        subscription_expiry: expiry,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-  } catch (error) {
-    captureError(error, "syncSubscriptionToSupabase");
-  }
-}
+/**
+ * Kept so older call sites still compile. subscription_status, subscription_expiry,
+ * and is_premium are server-owned. profiles.validateSubscription writes them.
+ */
+export async function syncSubscriptionToSupabase(
+  _userId: string,
+  _customerInfo: CustomerInfo | null,
+): Promise<void> {}
 
 /** Check if user has active premium entitlement. */
 export async function checkPremiumStatus(): Promise<boolean> {

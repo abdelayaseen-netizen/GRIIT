@@ -137,7 +137,7 @@ export function g2aPushCandidates(args: {
     }
   }
   const eveningAt = onDay(day, evening.h, evening.m);
-  if (eveningAt.getTime() > args.now.getTime()) {
+  if (eveningAt.getTime() > args.now.getTime() && !isZeroRemainingBody(args.eveningBody)) {
     list.push({ at: eveningAt, title: args.challengeLine, body: args.eveningBody });
   }
   const morningAt = onDay(day, morningHour, 0);
@@ -178,32 +178,44 @@ export type G2aDayCopy = {
   morningBody: string;
 };
 
-/** Today’s remaining pair plus tomorrow’s two. Tomorrow is always unsecured. */
+/** Today’s remaining pair plus tomorrow’s two. Tomorrow is always unsecured.
+ * A remaining count of 0 schedules nothing for that day.
+ */
 export function planG2aAhead(args: {
   now: Date;
   securedToday: boolean;
   tasks: readonly G2aTimedTask[];
   today: G2aDayCopy;
   tomorrow: G2aDayCopy;
+  /** When 0, today is left empty. Omitted keeps the prior plan. */
+  remainingToday?: number;
+  /** When 0, tomorrow is left empty. Omitted keeps the prior plan. */
+  remainingTomorrow?: number;
 }): { today: G2aPushCandidate[]; tomorrow: G2aPushCandidate[] } {
-  const today = planG2aDay({
-    now: args.now,
-    securedToday: args.securedToday,
-    tasks: args.tasks,
-    ...args.today,
-  });
+  const today =
+    args.securedToday || args.remainingToday === 0
+      ? []
+      : planG2aDay({
+          now: args.now,
+          securedToday: false,
+          tasks: args.tasks,
+          ...args.today,
+        });
   const tomorrowDay = addLocalDays(args.now, 1);
   const close = earliestWindowClose(args.tasks, tomorrowDay, args.now);
-  const tomorrow = g2aPushCandidates({
-    now: args.now,
-    day: tomorrowDay,
-    securedToday: false,
-    windowCloseAt: close?.at ?? null,
-    windowBody: close ? args.tomorrow.windowBody(close) : null,
-    challengeLine: args.tomorrow.challengeLine,
-    eveningBody: args.tomorrow.eveningBody,
-    morningBody: args.tomorrow.morningBody,
-  });
+  const tomorrow =
+    args.remainingTomorrow === 0
+      ? []
+      : g2aPushCandidates({
+          now: args.now,
+          day: tomorrowDay,
+          securedToday: false,
+          windowCloseAt: close?.at ?? null,
+          windowBody: close ? args.tomorrow.windowBody(close) : null,
+          challengeLine: args.tomorrow.challengeLine,
+          eveningBody: args.tomorrow.eveningBody,
+          morningBody: args.tomorrow.morningBody,
+        });
   return { today, tomorrow };
 }
 
@@ -230,6 +242,10 @@ export function lapsedOffsetsAvoidingG2a(
 ): number[] {
   const blocked = new Set(g2aDateKeys);
   return offsets.filter((n) => !blocked.has(calendarDateKey(addLocalDays(now, n))));
+}
+
+function isZeroRemainingBody(body: string): boolean {
+  return /^0 tasks? left\b/.test(body.trim());
 }
 
 function parseHm(hhmm: string): { h: number; m: number } {
