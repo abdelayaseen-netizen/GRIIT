@@ -124,6 +124,18 @@ describe("resolveAuthRedirect matrix (current AuthRedirector)", () => {
     ).toEqual({ action: "replace", href: "/onboarding" });
   });
 
+  it("brand-new real Apple with auto username + flag false → onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "user_39dc1993",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
   it("Apple login with username + flag false → Home", () => {
     expect(
       resolveAuthRedirect({

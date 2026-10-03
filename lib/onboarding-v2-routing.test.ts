@@ -6,6 +6,7 @@ import {
   dbCompletedForLaunch,
   peekKnownOnboardingCompleted,
   resolveCompletedLeaveHref,
+  hasUsableOnboardingUsername,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
   shouldSelfHealOnboardingFlag,
@@ -110,7 +111,8 @@ describe("resolveOnboardingCompleted", () => {
     expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: true })).toBe(true);
   });
 
-  it("Apple login with username → home even if the flag is still false", () => {
+  it("chosen username + flag false → Home (self-heal)", () => {
+    expect(hasUsableOnboardingUsername("yaseen")).toBe(true);
     expect(
       resolveOnboardingCompleted({
         sessionKind: "real",
@@ -125,6 +127,39 @@ describe("resolveOnboardingCompleted", () => {
         username: "yaseen",
       })
     ).toBe("home");
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+  });
+
+  it("brand-new real Apple with ensure-profile auto username + flag false → onboarding", () => {
+    expect(hasUsableOnboardingUsername("user_39dc1993")).toBe(false);
+    expect(hasUsableOnboardingUsername("user_4a4c5f08")).toBe(false);
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe("resume");
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
   });
 
   it("new guest → onboarding even when ensure-profile wrote a username", () => {
