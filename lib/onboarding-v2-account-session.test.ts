@@ -21,7 +21,7 @@ describe("surfaceAccountAuthKind", () => {
     expect(surfaceAccountAuthKind("identity_taken", "taken")).toEqual({ kind: "email_taken" });
     expect(surfaceAccountAuthKind("offline", "You're offline. Connect and try again.")).toEqual({
       kind: "message",
-      message: "You're offline. Connect and try again.",
+      message: "Network error. Check your connection and try again.",
     });
     expect(surfaceAccountAuthKind("no_anon_session", null).kind).toBe("message");
     expect(surfaceAccountAuthKind("provider_error", "Email not confirmed")).toEqual({

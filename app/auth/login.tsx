@@ -14,7 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
-import { signInApplePreferringLink } from "@/lib/apple-session";
+import { SIGNED_IN_EXISTING_ACCOUNT, signInApplePreferringLink } from "@/lib/apple-session";
+import { mapAuthError } from "@/lib/auth-helpers";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { DS_V3 } from "@/lib/design-system";
@@ -67,7 +68,7 @@ function LoginScreenInner() {
       });
 
       if (error) {
-        setFormError(error.message);
+        setFormError(mapAuthError(error));
         return;
       }
       if (!data.session) {
@@ -101,7 +102,7 @@ function LoginScreenInner() {
       }
     } catch (e) {
       captureError(e, { flow: "login_email" });
-      setFormError(e instanceof Error ? e.message : "Something went wrong.");
+      setFormError(e instanceof Error ? mapAuthError(e) : "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -131,11 +132,11 @@ function LoginScreenInner() {
         });
         if (apple.kind === "cancelled") return;
         if (apple.kind === "error" || !apple.session || !apple.user) {
-          setFormError(apple.message || "Sign in failed. Please try again.");
+          setFormError(apple.message ? mapAuthError({ message: apple.message }) : "Sign in failed. Please try again.");
           return;
         }
-        if (apple.kind === "signed_in_existing" && apple.message) {
-          setFormError(apple.message);
+        if (apple.kind === "signed_in_existing") {
+          setFormError(SIGNED_IN_EXISTING_ACCOUNT);
         }
         const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", apple.user.id).single();
         if (!profile?.username) {
@@ -155,14 +156,14 @@ function LoginScreenInner() {
         }
       } else {
         const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
-        if (error) setFormError(error.message);
+        if (error) setFormError(mapAuthError(error));
       }
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
       captureError(e, { flow: "login_apple" });
-      setFormError(e instanceof Error ? e.message : "Sign in failed.");
+      setFormError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -172,10 +173,10 @@ function LoginScreenInner() {
     setFormError("");
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
-      if (error) setFormError(error.message);
+      if (error) setFormError(mapAuthError(error));
     } catch (e) {
       captureError(e, { flow: "login_google_oauth" });
-      setFormError(e instanceof Error ? e.message : "Sign in failed.");
+      setFormError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
     }
   }, []);
 
