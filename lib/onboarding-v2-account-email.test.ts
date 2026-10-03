@@ -30,7 +30,7 @@ describe("emailFieldState", () => {
 describe("identity copy", () => {
   it("keeps the brief strings", () => {
     expect(EMAIL_TAKEN_NOTICE).toBe(
-      "That email already has a GRIIT account. Log in and today's progress comes with you."
+      "That email already has an account. Sign in to use it — today's guest progress stays on this device's guest account."
     );
     expect(GUEST_PROGRESS_STAYS).toBe("Guest progress stays on this device.");
     expect(EMAIL_TAKEN_PRIMARY).toBe("Log in");

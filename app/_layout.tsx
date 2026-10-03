@@ -35,7 +35,7 @@ import {
 } from "@/lib/finalize-ended-foreground";
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
+import { cacheOnboardingCompleted, readOnboardingCompletedCache } from "@/lib/onboarding-completed-cache";
 import {
   dbCompletedForLaunch,
   clearKnownOnboardingCompleted,
@@ -43,9 +43,10 @@ import {
   peekOnboardingV2Exit,
   sessionKindFromUser,
   setKnownOnboardingCompleted,
+  shouldSelfHealOnboardingFlag,
 } from "@/lib/onboarding-v2-routing";
 import { resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
-import { checkProfile } from "@/lib/check-profile";
+import { checkProfile, selfHealOnboardingCompleted } from "@/lib/check-profile";
 import { recordAppOpen } from "@/lib/app-open-tracking";
 import { initialiseSentry } from "@/lib/sentry";
 import { registerPushTokenIfPermissionGranted } from "@/lib/register-push-token";
@@ -112,6 +113,22 @@ function AuthRedirectorLoading() {
   );
 }
 
+function AuthRedirectorRetry({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View style={layoutStyles.authLoadingOverlay}>
+      <Text style={layoutStyles.authRetryText}>Couldn&apos;t reach GRIIT. Retry</Text>
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="Retry"
+        style={layoutStyles.authRetryButton}
+      >
+        <Text style={layoutStyles.authRetryButtonText}>Retry</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function AuthRedirector() {
   const { user, loading } = useAuth();
   const segments = useSegments();
@@ -119,16 +136,30 @@ function AuthRedirector() {
   const { setMessage: setSessionExpiredMessage } = useSessionExpired();
   const [profileChecked, setProfileChecked] = useState<boolean>(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const [profileCreatedAt, setProfileCreatedAt] = useState<string | null>(null);
+  const [cacheCompleted, setCacheCompleted] = useState(false);
   const coldStartTrackedRef = useRef(false);
 
-  const runCheckProfile = useCallback(async (userId: string) => {
+  const runCheckProfile = useCallback(async (userId: string, kind: ReturnType<typeof sessionKindFromUser>) => {
     const outcome = await checkProfile(userId);
+    const cached = await readOnboardingCompletedCache();
     setOnboardingCompleted(outcome.onboardingCompleted);
+    setProfileUsername(outcome.username);
     setProfileCreatedAt(outcome.profileCreatedAt);
+    setCacheCompleted(cached);
     if (outcome.cacheCompleted) {
       setKnownOnboardingCompleted(userId, true);
       void cacheOnboardingCompleted();
+    }
+    if (
+      shouldSelfHealOnboardingFlag({
+        sessionKind: kind,
+        dbCompleted: outcome.onboardingCompleted,
+        username: outcome.username,
+      })
+    ) {
+      void selfHealOnboardingCompleted(userId);
     }
     setProfileChecked(true);
   }, []);
@@ -136,12 +167,14 @@ function AuthRedirector() {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      void runCheckProfile(user.id);
+      void runCheckProfile(user.id, sessionKindFromUser(user));
     } else {
       clearKnownOnboardingCompleted();
       setProfileChecked(true);
       setOnboardingCompleted(null);
+      setProfileUsername(null);
       setProfileCreatedAt(null);
+      setCacheCompleted(false);
     }
   }, [user, loading, runCheckProfile]);
 
@@ -164,28 +197,33 @@ function AuthRedirector() {
     return unsubscribe;
   }, [router, setSessionExpiredMessage]);
 
+  const first = typeof segments[0] === "string" ? segments[0] : "";
+  const decision = resolveAuthRedirect({
+    sessionKind: sessionKindFromUser(user),
+    onboardingCompleted: user
+      ? dbCompletedForLaunch({
+          fetched: onboardingCompleted,
+          written: peekKnownOnboardingCompleted(user.id),
+        })
+      : null,
+    username: profileUsername,
+    cacheCompleted,
+    loading,
+    profileChecked,
+    inOnboarding: first === SEGMENTS.ONBOARDING,
+    inAuth: first === SEGMENTS.AUTH,
+    onResetPassword: first === SEGMENTS.AUTH && segments[1] === "reset-password",
+    onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
+    inTabs: first === SEGMENTS.TABS,
+    exitHref: peekOnboardingV2Exit(),
+  });
+
+  const replaceHref = decision.action === "replace" ? decision.href : null;
   useEffect(() => {
-    const first = typeof segments[0] === "string" ? segments[0] : "";
-    const decision = resolveAuthRedirect({
-      sessionKind: sessionKindFromUser(user),
-      onboardingCompleted: user
-        ? dbCompletedForLaunch({
-            fetched: onboardingCompleted,
-            written: peekKnownOnboardingCompleted(user.id),
-          })
-        : null,
-      loading,
-      profileChecked,
-      inOnboarding: first === SEGMENTS.ONBOARDING,
-      inAuth: first === SEGMENTS.AUTH,
-      onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
-      inTabs: first === SEGMENTS.TABS,
-      exitHref: peekOnboardingV2Exit(),
-    });
-    if (decision.action === "replace") {
-      router.replace(decision.href as never);
+    if (replaceHref) {
+      router.replace(replaceHref as never);
     }
-  }, [user, loading, segments, profileChecked, onboardingCompleted, router]);
+  }, [replaceHref, router]);
 
   if (
     shouldShowAuthRedirectOverlay({
@@ -195,6 +233,18 @@ function AuthRedirector() {
     })
   ) {
     return <AuthRedirectorLoading />;
+  }
+
+  if (decision.action === "retry") {
+    return (
+      <AuthRedirectorRetry
+        onRetry={() => {
+          if (!user) return;
+          setProfileChecked(false);
+          void runCheckProfile(user.id, sessionKindFromUser(user));
+        }}
+      />
+    );
   }
 
   return null;
@@ -409,6 +459,26 @@ const layoutStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: DS_V3.color.canvas,
     zIndex: 999,
+    gap: 16,
+    paddingHorizontal: 24,
+  },
+  authRetryText: {
+    color: DS_V3.color.textPrimary,
+    fontSize: 16,
+    textAlign: "center",
+  },
+  authRetryButton: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: DS_V3.color.brand,
+    borderRadius: 999,
+  },
+  authRetryButtonText: {
+    color: DS_V3.color.textPrimary,
+    fontSize: 16,
+    fontWeight: "700",
   },
   flex1: { flex: 1 },
   sessionExpiredBanner: {

@@ -12,6 +12,9 @@ import {
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Apple, ChevronLeft, Mail } from "lucide-react-native";
 import { supabase } from "@/lib/supabase";
+import { SIGNED_IN_EXISTING_ACCOUNT, signInApplePreferringLink } from "@/lib/apple-session";
+import { mapAuthError } from "@/lib/auth-helpers";
+import { AUTH_RESET_REDIRECT } from "@/lib/auth-reset";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { DS_V3 } from "@/lib/design-system";
@@ -76,17 +79,16 @@ export default function SignInScreen({
         setError("Apple Sign-In did not return a token.");
         return;
       }
-      const { data, error: idError } = await supabase.auth.signInWithIdToken({
-        provider: "apple",
-        token: credential.identityToken,
+      const apple = await signInApplePreferringLink({
+        identityToken: credential.identityToken,
       });
-      if (idError) {
-        setError(idError.message);
+      if (apple.kind === "cancelled") return;
+      if (apple.kind === "error" || !apple.session?.user?.id) {
+        setError(apple.message ? mapAuthError({ message: apple.message }) : "Sign in failed. Please try again.");
         return;
       }
-      if (!data.session?.user?.id) {
-        setError("Sign in failed. Please try again.");
-        return;
+      if (apple.kind === "signed_in_existing") {
+        setError(SIGNED_IN_EXISTING_ACCOUNT);
       }
       track({ name: "login_completed", method: "apple" });
       onSuccess();
@@ -95,7 +97,7 @@ export default function SignInScreen({
         return;
       }
       captureError(e, "OnboardingV2SignInApple");
-      setError(e instanceof Error ? e.message : "Sign in failed.");
+      setError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -114,7 +116,7 @@ export default function SignInScreen({
         password,
       });
       if (signInError) {
-        setError(signInError.message);
+        setError(mapAuthError(signInError));
         return;
       }
       if (!data.session?.user) {
@@ -125,7 +127,7 @@ export default function SignInScreen({
       onSuccess();
     } catch (e) {
       captureError(e, "OnboardingV2SignInEmail");
-      setError(e instanceof Error ? e.message : "Sign in failed.");
+      setError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -140,16 +142,17 @@ export default function SignInScreen({
     }
     setResetHint("");
     try {
-      // TODO: recovery link opens Supabase default page; in-app reset screen not built.
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed);
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: AUTH_RESET_REDIRECT,
+      });
       if (resetError) {
-        setResetHint(resetError.message);
+        setResetHint(mapAuthError(resetError));
         return;
       }
       setResetSent(true);
     } catch (e) {
       captureError(e, "OnboardingV2ForgotPassword");
-      setResetHint(e instanceof Error ? e.message : "Could not send a reset link.");
+      setResetHint(e instanceof Error ? mapAuthError(e) : "Could not send a reset link.");
     }
   }, [email, resetSent]);
 

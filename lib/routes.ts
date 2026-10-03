@@ -7,6 +7,7 @@ export const ROUTES = {
   AUTH_LOGIN: "/auth/login",
   AUTH_SIGNUP: "/auth/signup",
   AUTH_FORGOT_PASSWORD: "/auth/forgot-password",
+  AUTH_RESET_PASSWORD: "/auth/reset-password",
   CREATE_PROFILE: "/create-profile",
   ONBOARDING: "/onboarding",
   ONBOARDING_STEP4: "/onboarding?step=4",

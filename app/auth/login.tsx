@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
+import { SIGNED_IN_EXISTING_ACCOUNT, signInApplePreferringLink } from "@/lib/apple-session";
+import { mapAuthError } from "@/lib/auth-helpers";
 import { captureError } from "@/lib/sentry";
 import { track } from "@/lib/analytics";
 import { DS_V3 } from "@/lib/design-system";
@@ -66,7 +68,7 @@ function LoginScreenInner() {
       });
 
       if (error) {
-        setFormError(error.message);
+        setFormError(mapAuthError(error));
         return;
       }
       if (!data.session) {
@@ -100,7 +102,7 @@ function LoginScreenInner() {
       }
     } catch (e) {
       captureError(e, { flow: "login_email" });
-      setFormError(e instanceof Error ? e.message : "Something went wrong.");
+      setFormError(e instanceof Error ? mapAuthError(e) : "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -125,19 +127,18 @@ function LoginScreenInner() {
           setFormError("Apple Sign-In did not return a token.");
           return;
         }
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: "apple",
-          token: credential.identityToken,
+        const apple = await signInApplePreferringLink({
+          identityToken: credential.identityToken,
         });
-        if (error) {
-          setFormError(error.message);
+        if (apple.kind === "cancelled") return;
+        if (apple.kind === "error" || !apple.session || !apple.user) {
+          setFormError(apple.message ? mapAuthError({ message: apple.message }) : "Sign in failed. Please try again.");
           return;
         }
-        if (!data.session) {
-          setFormError("Sign in failed. Please try again.");
-          return;
+        if (apple.kind === "signed_in_existing") {
+          setFormError(SIGNED_IN_EXISTING_ACCOUNT);
         }
-        const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", data.user.id).single();
+        const { data: profile } = await supabase.from("profiles").select("user_id, username").eq("user_id", apple.user.id).single();
         if (!profile?.username) {
           try {
             track({ name: "login_completed", method: "apple" });
@@ -155,29 +156,18 @@ function LoginScreenInner() {
         }
       } else {
         const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
-        if (error) setFormError(error.message);
+        if (error) setFormError(mapAuthError(error));
       }
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
       }
       captureError(e, { flow: "login_apple" });
-      setFormError(e instanceof Error ? e.message : "Sign in failed.");
+      setFormError(e instanceof Error ? mapAuthError(e) : "Sign in failed.");
     } finally {
       setLoading(false);
     }
   }, [appleAuthAvailable, router]);
-
-  const handleGoogle = useCallback(async () => {
-    setFormError("");
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
-      if (error) setFormError(error.message);
-    } catch (e) {
-      captureError(e, { flow: "login_google_oauth" });
-      setFormError(e instanceof Error ? e.message : "Sign in failed.");
-    }
-  }, []);
 
   const handleSignUpLink = useCallback(() => {
     router.push(ROUTES.AUTH_SIGNUP as never);
@@ -292,14 +282,6 @@ function LoginScreenInner() {
                 accessibilityLabel="Continue with Apple"
               />
             ) : null}
-
-            <Button
-              label="Sign in with Google"
-              variant="secondary"
-              disabled={loading}
-              onPress={handleGoogle}
-              accessibilityLabel="Continue with Google"
-            />
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don&apos;t have an account? </Text>

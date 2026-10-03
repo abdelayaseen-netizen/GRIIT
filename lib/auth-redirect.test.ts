@@ -124,6 +124,111 @@ describe("resolveAuthRedirect matrix (current AuthRedirector)", () => {
     ).toEqual({ action: "replace", href: "/onboarding" });
   });
 
+  it("brand-new real Apple with auto username + flag false → onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "user_39dc1993",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
+  it("Apple login with username + flag false → Home", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "yaseen",
+        ...ready,
+        ...onOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/(tabs)" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: "yaseen",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "stay" });
+  });
+
+  it("new guest with username + flag false → onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "guest",
+        onboardingCompleted: false,
+        username: "user_39dc1993",
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
+  it("null after timeout → retry, never onboarding", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: null,
+        username: null,
+        cacheCompleted: false,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "retry" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "guest",
+        onboardingCompleted: null,
+        cacheCompleted: false,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "retry" });
+  });
+
+  it("null + local cache prefers Home; cache never skips a known-new account", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: null,
+        cacheCompleted: true,
+        ...ready,
+        ...onOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/(tabs)" });
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: false,
+        username: null,
+        cacheCompleted: true,
+        ...ready,
+        ...offOnboarding,
+      })
+    ).toEqual({ action: "replace", href: "/onboarding" });
+  });
+
+  it("stays on reset-password even when the account is already onboarded", () => {
+    expect(
+      resolveAuthRedirect({
+        sessionKind: "real",
+        onboardingCompleted: true,
+        username: "yaseen",
+        onResetPassword: true,
+        ...ready,
+        inOnboarding: false,
+        inAuth: true,
+        onCreateProfile: false,
+        inTabs: false,
+      })
+    ).toEqual({ action: "stay" });
+  });
+
   it("session present + profile not checked waits", () => {
     expect(
       resolveAuthRedirect({

@@ -1,8 +1,6 @@
-import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
-import { clearOnboardingV2Step } from "@/lib/onboarding-v2-step";
+import { completeOnboardingV2, type CompleteOnboardingResult } from "@/components/onboarding/v2/completeOnboarding";
 
 /** Spec decision 5: any Skip sets onboarding_completed. */
-export async function skipOnboardingV2(): Promise<void> {
-  await clearOnboardingV2Step();
-  await completeOnboardingV2();
+export async function skipOnboardingV2(): Promise<CompleteOnboardingResult> {
+  return completeOnboardingV2();
 }

@@ -6,8 +6,10 @@ import {
   dbCompletedForLaunch,
   peekKnownOnboardingCompleted,
   resolveCompletedLeaveHref,
+  hasUsableOnboardingUsername,
   resolveOnboardingCompleted,
   resolveOnboardingLaunch,
+  shouldSelfHealOnboardingFlag,
   chromeStep,
   resolveV2Step,
   sessionKindFromUser,
@@ -104,9 +106,77 @@ function hrefForDest(
 }
 
 describe("resolveOnboardingCompleted", () => {
-  it("real session: dbCompleted is the only gate", () => {
+  it("real session: flag true is completed; flag false without username is not", () => {
     expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: false })).toBe(false);
     expect(resolveOnboardingCompleted({ sessionKind: "real", dbCompleted: true })).toBe(true);
+  });
+
+  it("chosen username + flag false → Home (self-heal)", () => {
+    expect(hasUsableOnboardingUsername("yaseen")).toBe(true);
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe("home");
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+  });
+
+  it("brand-new real Apple with ensure-profile auto username + flag false → onboarding", () => {
+    expect(hasUsableOnboardingUsername("user_39dc1993")).toBe(false);
+    expect(hasUsableOnboardingUsername("user_4a4c5f08")).toBe(false);
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe("resume");
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+  });
+
+  it("new guest → onboarding even when ensure-profile wrote a username", () => {
+    expect(
+      resolveOnboardingCompleted({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      resolveOnboardingLaunch({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe("resume");
   });
 
   it("real session: db not loaded yet is not completed (overlay stays up)", () => {
@@ -122,6 +192,37 @@ describe("resolveOnboardingCompleted", () => {
   it("none is never completed", () => {
     expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: true })).toBe(false);
     expect(resolveOnboardingCompleted({ sessionKind: "none", dbCompleted: null })).toBe(false);
+  });
+
+  it("self-heals only when a real username implies done and the flag is false", () => {
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: "yaseen",
+      })
+    ).toBe(true);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: true,
+        username: "yaseen",
+      })
+    ).toBe(false);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "guest",
+        dbCompleted: false,
+        username: "user_39dc1993",
+      })
+    ).toBe(false);
+    expect(
+      shouldSelfHealOnboardingFlag({
+        sessionKind: "real",
+        dbCompleted: false,
+        username: null,
+      })
+    ).toBe(false);
   });
 });
 
@@ -198,8 +299,8 @@ describe("resolveOnboardingLaunch", () => {
     expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: true })).toBe("home");
   });
 
-  it("real session, dbCompleted null is not Home", () => {
-    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: null })).toBe("resume");
+  it("real session, dbCompleted null is retry — never onboarding", () => {
+    expect(resolveOnboardingLaunch({ sessionKind: "real", dbCompleted: null })).toBe("retry");
   });
 
   it("real account, dbCompleted false → resume", () => {

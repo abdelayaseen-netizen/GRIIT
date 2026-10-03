@@ -5,7 +5,7 @@
  * Rendered by app/onboarding/index.tsx.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { BackHandler, SafeAreaView, StyleSheet } from "react-native";
+import { BackHandler, SafeAreaView, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
@@ -67,16 +67,19 @@ export default function OnboardingFlowV2() {
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
   const step = resolveV2Step(rawStep);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
+  const [dbUsername, setDbUsername] = useState<string | null>(null);
   const [dbFetchFailed, setDbFetchFailed] = useState(false);
   const [sentHome, setSentHome] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
   const [stepReady, setStepReady] = useState(false);
+  const [completeError, setCompleteError] = useState("");
 
   useEffect(() => {
     if (!user) {
       setDbCompleted(null);
+      setDbUsername(null);
       setDbFetchFailed(false);
       return;
     }
@@ -85,23 +88,31 @@ export default function OnboardingFlowV2() {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("onboarding_completed")
+          .select("onboarding_completed, username")
           .eq("user_id", user.id)
           .maybeSingle();
         if (cancelled) return;
         if (error) {
           setDbCompleted(null);
+          setDbUsername(null);
           setDbFetchFailed(true);
           return;
         }
-        const flag = (data as { onboarding_completed?: boolean } | null)?.onboarding_completed;
+        const row = data as { onboarding_completed?: boolean; username?: string | null } | null;
+        const flag = row?.onboarding_completed;
         const done = flag === true;
+        const handle =
+          typeof row?.username === "string" && row.username.trim().length > 0
+            ? row.username.trim()
+            : null;
         setDbCompleted(done);
+        setDbUsername(handle);
         setDbFetchFailed(false);
         if (done) void cacheOnboardingCompleted();
       } catch {
         if (!cancelled) {
           setDbCompleted(null);
+          setDbUsername(null);
           setDbFetchFailed(true);
         }
       }
@@ -152,6 +163,7 @@ export default function OnboardingFlowV2() {
   const completed = resolveOnboardingCompleted({
     sessionKind: sessionKindFromUser(user),
     dbCompleted: user ? dbCompleted : null,
+    username: user ? dbUsername : null,
   });
 
   useEffect(() => {
@@ -264,12 +276,22 @@ export default function OnboardingFlowV2() {
   }, []);
 
   const handleFinish = useCallback(async () => {
-    await completeOnboardingV2();
+    setCompleteError("");
+    const result = await completeOnboardingV2();
+    if (!result.ok) {
+      setCompleteError(result.message);
+      return;
+    }
     router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
   const handleSkip = useCallback(async () => {
-    await skipOnboardingV2();
+    setCompleteError("");
+    const result = await skipOnboardingV2();
+    if (!result.ok) {
+      setCompleteError(result.message);
+      return;
+    }
     router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
@@ -364,6 +386,7 @@ export default function OnboardingFlowV2() {
           onBack={browseOpen ? handleBrowseBack : goBack}
         />
       ) : null}
+      {completeError ? <Text style={styles.completeError}>{completeError}</Text> : null}
       <StepFade
         stepKey={
           signInOpen ? "signin" : browseOpen ? "browse-all" : step
@@ -378,4 +401,11 @@ export default function OnboardingFlowV2() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: OBV2_COLOR.screen },
   welcome: { backgroundColor: DS_V3.color.canvas },
+  completeError: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    color: DS_V3.color.danger,
+    fontSize: DS_V3.type.caption.fontSize,
+    textAlign: "center",
+  },
 });

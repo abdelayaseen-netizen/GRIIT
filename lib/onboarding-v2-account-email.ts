@@ -6,16 +6,12 @@ export type AccountIdentityState =
   | "email_taken";
 
 export const EMAIL_TAKEN_NOTICE =
-  "That email already has a GRIIT account. Log in and today's progress comes with you.";
+  "That email already has an account. Sign in to use it — today's guest progress stays on this device's guest account.";
 
 export const GUEST_PROGRESS_STAYS = "Guest progress stays on this device.";
 
 /**
- * Brief (`02_screens.md` Account identity states) wants
- * "Log in and bring my progress". That copy is a lie until
- * `lib/anon-auth.ts` can merge an anon session into an existing account
- * (`identity_taken` today cannot merge). Restore EMAIL_TAKEN_PRIMARY_BRIEF
- * when merge lands.
+ * identity_taken cannot merge guest Day 1 into the existing account.
  */
 export const EMAIL_TAKEN_PRIMARY_BRIEF = "Log in and bring my progress";
 export const EMAIL_TAKEN_PRIMARY = "Log in";
