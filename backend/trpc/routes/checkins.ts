@@ -488,10 +488,7 @@ export const checkinsRouter = createTRPCRouter({
           "[checkins.complete] require_location true without location_latitude/longitude"
         );
       }
-      const requireLocation =
-        !isMinimumDay &&
-        hasLocationTarget &&
-        (isCheckinProof || locationFlagSet);
+      const enforceLocation = hasLocationTarget && (isCheckinProof || locationFlagSet);
       const radiusMeters =
         typeof task?.location_radius_meters === "number"
           ? task.location_radius_meters
@@ -499,7 +496,7 @@ export const checkinsRouter = createTRPCRouter({
             ? cfg.location_radius_meters
             : DEFAULT_LOCATION_RADIUS_METERS;
       const locationDecision = decideLiveLocationGate({
-        required: requireLocation,
+        required: enforceLocation,
         live: input.liveLocation,
         targetLat: resolvedLat ?? 0,
         targetLng: resolvedLng ?? 0,
@@ -515,7 +512,7 @@ export const checkinsRouter = createTRPCRouter({
           "[checkins.complete] liveLocation absent; location gate not recorded"
         );
       }
-      const locationGatePassed = locationDecision.kind === "passed";
+      const locationGatePassed = !isMinimumDay && locationDecision.kind === "passed";
       const locationDistanceM = locationGatePassed ? locationDecision.distanceM : undefined;
       const hardModeLocationGate =
         locationGatePassed && cfg.hard_mode === true && cfg.require_location === true;
@@ -744,7 +741,7 @@ export const checkinsRouter = createTRPCRouter({
           distance_meters: Math.round(locationDistanceM),
           location_name: cfg.location_name ?? "the required location",
         };
-      } else if (!isMinimumDay && requireLocation && locationDistanceM != null) {
+      } else if (!isMinimumDay && enforceLocation && locationDistanceM != null) {
         verificationGates.location_gate = {
           status: "passed",
           distance_meters: Math.round(locationDistanceM),
