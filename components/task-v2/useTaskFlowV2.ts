@@ -395,7 +395,51 @@ export function useTaskFlowV2() {
       setStep("window_closed");
       return;
     }
-    lastSubmitRef.current = { payload, kind };
+    const hasTarget =
+      typeof config.location_latitude === "number" && typeof config.location_longitude === "number";
+    const locationGated =
+      hasTarget && (taskType === "checkin" || config.require_location === true);
+    const body: Record<string, unknown> = { ...payload };
+    delete body.location_latitude;
+    delete body.location_longitude;
+    if (locationGated) {
+      try {
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (perm.status !== "granted") {
+          if (mountedRef.current) {
+            setFailNote("Couldn't read your location.");
+            setFailCode(undefined);
+            setStep("failed");
+          }
+          return;
+        }
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const lat = loc.coords.latitude;
+        const lng = loc.coords.longitude;
+        const accuracyM = loc.coords.accuracy;
+        const accuracy = typeof accuracyM === "number" && Number.isFinite(accuracyM) ? accuracyM : 9999;
+        setGps({
+          m: Math.round(
+            haversineDistance(lat, lng, config.location_latitude as number, config.location_longitude as number),
+          ),
+          acc: Math.round(accuracy),
+        });
+        body.liveLocation = {
+          lat,
+          lng,
+          accuracyM: accuracy,
+          capturedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        if (mountedRef.current) {
+          setFailNote(err instanceof Error ? err.message : "Couldn't read your location.");
+          setFailCode(undefined);
+          setStep("failed");
+        }
+        return;
+      }
+    }
+    lastSubmitRef.current = { payload: body, kind };
     submitInFlight.current = true;
     setSaving(true);
     finishShareRef.current = "none";
@@ -420,7 +464,7 @@ export function useTaskFlowV2() {
       const complete = await completeTask({
         activeChallengeId,
         taskId,
-        ...payload,
+        ...body,
         shareChoicePending: true,
       });
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
@@ -574,6 +618,11 @@ export function useTaskFlowV2() {
       submitInFlight.current = false;
       setSaving(false);
       const msg = err instanceof Error ? err.message : "";
+      const code = failureErrorCode(err);
+      if (mountedRef.current) {
+        setFailNote(msg);
+        setFailCode(code === "FORBIDDEN" ? "BAD_REQUEST" : code);
+      }
       if (isWindowClosedError(msg)) {
         if (mountedRef.current) {
           setWindowForbidden(true);
@@ -583,7 +632,6 @@ export function useTaskFlowV2() {
       }
       finishShareRef.current = "none";
       if (mountedRef.current) {
-        setFailCode(failureErrorCode(err));
         setFinishShare("none");
         setFinishSave("failed");
         setStep("finish");
@@ -607,12 +655,6 @@ export function useTaskFlowV2() {
         ...(taskType === "journal" ? { noteText: text } : {}),
         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
           ? { value: count }
-          : {}),
-        ...(taskType === "checkin"
-          ? {
-              location_latitude: config.location_latitude,
-              location_longitude: config.location_longitude,
-            }
           : {}),
       },
       verificationKindFor(taskType, true)
@@ -720,13 +762,7 @@ export function useTaskFlowV2() {
       return;
     }
     if (decision === "submit_checkin") {
-      void finishSubmit(
-        {
-          location_latitude: config.location_latitude,
-          location_longitude: config.location_longitude,
-        },
-        "gps"
-      );
+      void finishSubmit({}, "gps");
       return;
     }
     if (decision === "log") {
@@ -978,14 +1014,7 @@ export function useTaskFlowV2() {
     onAttachPhoto: () => setStep("capture"),
     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
     onDidIt: () => void submitWithoutPhoto({}, "self_report"),
-    onHere: () =>
-      void submitWithoutPhoto(
-        {
-          location_latitude: config.location_latitude,
-          location_longitude: config.location_longitude,
-        },
-        "gps"
-      ),
+    onHere: () => void submitWithoutPhoto({}, "gps"),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
     goNextTask,
     openDayOpenTask,

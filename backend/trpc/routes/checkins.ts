@@ -31,9 +31,9 @@ import { logger } from "../../lib/logger";
 import {
   assertHardModeScheduleWindow,
   assertHardModeCameraOnly,
-  evaluateTaskLocation,
   assertChallengeQueryOk,
 } from "../../lib/checkin-complete-gates";
+import { haversineDistance } from "../../lib/geo";
 import { photoProofPayloadSchema } from "../../lib/proof-payload";
 import { parseSecureDayRpcRow } from "../../lib/secure-day-rpc";
 import {
@@ -112,6 +112,51 @@ type TaskRowWithVerification = ChallengeTaskRowRaw & {
   gate_time_end?: string | null;
 };
 
+/** Task/config radius when location_radius_meters is null. Same default as evaluateTaskLocation. */
+export const DEFAULT_LOCATION_RADIUS_METERS = 200;
+export const LIVE_LOCATION_MAX_ACCURACY_M = 100;
+export const LIVE_LOCATION_MAX_AGE_MS = 60_000;
+export const NOT_AT_LOCATION = "Not at the location.";
+
+export type LiveLocationFix = {
+  lat: number;
+  lng: number;
+  accuracyM: number;
+  capturedAt: string;
+};
+
+export type LiveLocationDecision =
+  | { kind: "not_required" }
+  | { kind: "legacy_unclaimed" }
+  | { kind: "passed"; distanceM: number }
+  | { kind: "rejected" };
+
+/**
+ * Location gate against a fresh fix. Missing fix is the pre-66 client:
+ * accept the check-in and do not record the gate as passed.
+ */
+export function decideLiveLocationGate(args: {
+  required: boolean;
+  live: LiveLocationFix | null | undefined;
+  targetLat: number;
+  targetLng: number;
+  radiusMeters: number | null | undefined;
+  nowMs: number;
+}): LiveLocationDecision {
+  if (!args.required) return { kind: "not_required" };
+  if (!args.live) return { kind: "legacy_unclaimed" };
+  const capturedMs = Date.parse(args.live.capturedAt);
+  if (!Number.isFinite(capturedMs) || args.nowMs - capturedMs > LIVE_LOCATION_MAX_AGE_MS) {
+    return { kind: "rejected" };
+  }
+  if (args.live.accuracyM > LIVE_LOCATION_MAX_ACCURACY_M) return { kind: "rejected" };
+  const radius =
+    typeof args.radiusMeters === "number" ? args.radiusMeters : DEFAULT_LOCATION_RADIUS_METERS;
+  const distanceM = haversineDistance(args.targetLat, args.targetLng, args.live.lat, args.live.lng);
+  if (distanceM > radius) return { kind: "rejected" };
+  return { kind: "passed", distanceM };
+}
+
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
     .input(
@@ -126,6 +171,15 @@ export const checkinsRouter = createTRPCRouter({
         heart_rate_peak: z.number().int().min(0).optional(),
         location_latitude: z.number().optional(),
         location_longitude: z.number().optional(),
+        /** Build 66+. Absent on build 65 and earlier — accept, do not claim the location gate. */
+        liveLocation: z
+          .object({
+            lat: z.number().gte(-90).lte(90),
+            lng: z.number().gte(-180).lte(180),
+            accuracyM: z.number().nonnegative(),
+            capturedAt: z.string().datetime(),
+          })
+          .optional(),
         timer_seconds_on_screen: z.number().int().min(0).optional(),
         clocked_in_at: z.string().datetime().optional(),
         task_mode: z.enum(["full", "minimum"]).default("full"),
@@ -434,32 +488,37 @@ export const checkinsRouter = createTRPCRouter({
           "[checkins.complete] require_location true without location_latitude/longitude"
         );
       }
-      // Checkin: gate only on coords. Non-checkin: pass task/cfg unchanged (flag behaviour).
-      const { locationDistanceM, hardModeLocationGate } = evaluateTaskLocation(
-        isCheckinProof
-          ? hasLocationTarget
-            ? {
-                ...task,
-                require_location: true,
-                location_latitude: resolvedLat,
-                location_longitude: resolvedLng,
-              }
-            : { ...task, require_location: false }
-          : task,
-        isCheckinProof
-          ? hasLocationTarget
-            ? { ...cfg, require_location: true }
-            : { ...cfg, require_location: false }
-          : cfg,
-        input
-      );
       const requireLocation =
         !isMinimumDay &&
-        (isCheckinProof
-          ? hasLocationTarget
-          : hasLocationTarget ||
-            task?.require_location === true ||
-            cfg.require_location === true);
+        hasLocationTarget &&
+        (isCheckinProof || locationFlagSet);
+      const radiusMeters =
+        typeof task?.location_radius_meters === "number"
+          ? task.location_radius_meters
+          : typeof cfg.location_radius_meters === "number"
+            ? cfg.location_radius_meters
+            : DEFAULT_LOCATION_RADIUS_METERS;
+      const locationDecision = decideLiveLocationGate({
+        required: requireLocation,
+        live: input.liveLocation,
+        targetLat: resolvedLat ?? 0,
+        targetLng: resolvedLng ?? 0,
+        radiusMeters,
+        nowMs: Date.now(),
+      });
+      if (locationDecision.kind === "rejected") {
+        throw new TRPCError({ code: "FORBIDDEN", message: NOT_AT_LOCATION });
+      }
+      if (locationDecision.kind === "legacy_unclaimed") {
+        logger.warn(
+          { userId: ctx.userId },
+          "[checkins.complete] liveLocation absent; location gate not recorded"
+        );
+      }
+      const locationGatePassed = locationDecision.kind === "passed";
+      const locationDistanceM = locationGatePassed ? locationDecision.distanceM : undefined;
+      const hardModeLocationGate =
+        locationGatePassed && cfg.hard_mode === true && cfg.require_location === true;
 
       const minDurationMinutes =
         dailyTargets.durationMinutes ??
@@ -784,8 +843,10 @@ export const checkinsRouter = createTRPCRouter({
       if (photoUrl) payload.photo_url = photoUrl;
       if (input.heart_rate_avg != null) payload.heart_rate_avg = input.heart_rate_avg;
       if (input.heart_rate_peak != null) payload.heart_rate_peak = input.heart_rate_peak;
-      if (input.location_latitude != null) payload.location_latitude = input.location_latitude;
-      if (input.location_longitude != null) payload.location_longitude = input.location_longitude;
+      if (locationGatePassed && input.liveLocation) {
+        payload.location_latitude = input.liveLocation.lat;
+        payload.location_longitude = input.liveLocation.lng;
+      }
       if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
       if (input.clocked_in_at != null) payload.clocked_in_at = input.clocked_in_at;
       if (input.proof_payload_json != null) payload.proof_payload_json = input.proof_payload_json;
@@ -847,7 +908,7 @@ export const checkinsRouter = createTRPCRouter({
           is_hard_mode: cfg.hard_mode === true,
           task_mode: input.task_mode,
           heart_rate_verified: false,
-          location_verified: !!(input.location_latitude != null && input.location_longitude != null && requireLocation),
+          location_verified: locationGatePassed,
         },
       };
       const { error: taskCompletedEventError } = await ctx.supabase
@@ -914,7 +975,7 @@ export const checkinsRouter = createTRPCRouter({
         ? "live_photo"
         : isTimer
           ? "timer"
-          : isCheckinProof
+          : isCheckinProof && locationGatePassed
             ? "gps"
             : isJournalProof
               ? "word_count"
