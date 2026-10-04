@@ -1,4 +1,5 @@
 import type { DayState } from "@/lib/profile-v2-record";
+import { formatOfDays } from "@/lib/format-days";
 
 export type Seg = "secured" | "held" | "missed" | "today" | "future";
 
@@ -24,6 +25,7 @@ export function challengeLine(c: {
   status: string;
   dayN: number;
   durationDays: number;
+  elapsedDays?: number;
   secured: number;
   range: string;
   startsTomorrow?: boolean;
@@ -33,8 +35,7 @@ export function challengeLine(c: {
   if (c.startsTomorrow) return `Day 1 is ${c.startDate ?? ""}${tail}`.replace(/\s+/g, " ").trim();
   if (c.status === "active") return `Day ${c.dayN} of ${c.durationDays}${tail}`;
   if (c.status === "completed") {
-    const unit = c.durationDays === 1 ? "day" : "days";
-    return `Finished · ${c.secured} of ${c.durationDays} ${unit}${tail}`;
+    return `Finished · ${formatOfDays(c.secured, c.elapsedDays ?? c.durationDays)}${tail}`;
   }
   if (c.status === "failed") return `Ended on day ${c.dayN}${tail}`;
   return `Left on day ${c.dayN}${tail}`;

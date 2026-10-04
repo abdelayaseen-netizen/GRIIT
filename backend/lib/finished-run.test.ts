@@ -60,6 +60,7 @@ describe("finishedRunScore — one reduction", () => {
     });
     expect(rec.completed[0]?.value).toBe("7 of 7");
     expect(rec.completed[0]?.verified).toBe(7);
+    expect(rec.completed[0]?.elapsed).toBe(7);
 
     const end = endedChallengeFromUnseen(
       {
@@ -126,6 +127,7 @@ describe("finishedRunScore — one reduction", () => {
     });
     expect(rec.completed[0]?.value).toBe("2 of 4");
     expect(rec.completed[0]?.verified).toBe(2);
+    expect(rec.completed[0]?.elapsed).toBe(4);
 
     const end = endedChallengeFromUnseen(
       {
