@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ACHIEVEMENTS } from "./achievement-definitions";
+import { logger } from "./logger";
 
 export async function checkAndUnlockAchievements(
   supabase: SupabaseClient,
@@ -78,12 +79,28 @@ export async function checkAndUnlockAchievements(
       .eq("status", "accepted");
     if ((followerCount ?? 0) >= 10) toUnlock.push(ACHIEVEMENTS.TEN_FOLLOWERS.key);
 
-    const { count: respectCount } = await supabase
-      .from("respects")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", userId);
-    if ((respectCount ?? 0) >= 1) toUnlock.push(ACHIEVEMENTS.FIRST_RESPECT.key);
-    if ((respectCount ?? 0) >= 50) toUnlock.push(ACHIEVEMENTS.FIFTY_RESPECTS.key);
+    const { data: ownEvents, error: eventsErr } = await supabase
+      .from("activity_events")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(500);
+    if (eventsErr) {
+      logger.error({ err: eventsErr, userId }, "[achievements] could not load posts for respect count");
+    } else {
+      const eventIds = ((ownEvents ?? []) as { id: string }[]).map((e) => e.id);
+      if (eventIds.length > 0) {
+        const { count: respectCount, error: respectErr } = await supabase
+          .from("feed_reactions")
+          .select("id", { count: "exact", head: true })
+          .in("event_id", eventIds);
+        if (respectErr) {
+          logger.error({ err: respectErr, userId }, "[achievements] feed_reactions count failed");
+        } else {
+          if ((respectCount ?? 0) >= 1) toUnlock.push(ACHIEVEMENTS.FIRST_RESPECT.key);
+          if ((respectCount ?? 0) >= 50) toUnlock.push(ACHIEVEMENTS.FIFTY_RESPECTS.key);
+        }
+      }
+    }
 
     const { count: commentCount } = await supabase
       .from("feed_comments")
