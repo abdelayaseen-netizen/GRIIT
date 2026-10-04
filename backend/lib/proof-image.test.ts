@@ -176,6 +176,37 @@ describe("signProofPaths", () => {
   });
 });
 
+const LEGACY_PUBLIC_PREFIX =
+  "https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/public/task-proofs/";
+
+describe("legacy public proof URLs", () => {
+  it("signs that public URL as the bare path for the owner and for a shared row", async () => {
+    const path = `${OWNER}/proof.jpg`;
+    const stored = `${LEGACY_PUBLIC_PREFIX}${path}`;
+    const signedUrl = `https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/sign/task-proofs/${path}?token=t`;
+    const signedWith: string[][] = [];
+    const createSignedUrls = async (paths: string[]) => {
+      signedWith.push(paths);
+      return new Map(paths.map((p) => [p, signedUrl]));
+    };
+    const owner = await signProofPair(stored, null, OWNER, {
+      createSignedUrls,
+      loadSharedPaths: async () => new Set(),
+    });
+    expect(toProofPath(stored)).toBe(path);
+    expect(owner).toEqual({ photoUrl: signedUrl, proofPhotoUrl: null });
+    expect(signedWith[0]).toEqual([path]);
+
+    const shared = await signProofPair(stored, null, OTHER, {
+      createSignedUrls,
+      loadSharedPaths: async () => new Set(),
+      sharedPaths: new Set([path]),
+    });
+    expect(shared).toEqual({ photoUrl: signedUrl, proofPhotoUrl: null });
+    expect(signedWith[1]).toEqual([path]);
+  });
+});
+
 describe("unsignable proof values", () => {
   it("returns null for a file URL and a path that is not in the bucket", async () => {
     let signed = 0;
