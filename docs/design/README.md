@@ -1091,3 +1091,16 @@ File: `GRIIT v44-1 Share.dc.html`. Spec: `cursor/02_screens.md` → "v44.1".
 - **177** Show Up 7 "Set your gym" right after Join, 250 m by default, with an honest Skip.
 - **178** Featured "Be the first"; Fajr Before Sunrise is 7 days.
 Contradictions 139–144.
+
+
+## v45 · Groups (frames 179–183)
+
+File: `GRIIT v45 Groups.dc.html`. Spec: `cursor/02_screens.md` → "v45".
+
+- **179 Group space:** a Today roster (secured, not yet with a count, window closed, joined today, plus each streak), ordered you first and then by name. A top-3 board, the challenge's shared posts and the invite row.
+- **180 Nudge:** only for members who can still secure today, once a day per person, with three fixed lines and no free text. "2 hours left." is offered only when it's true. Shows what the recipient sees.
+- **181 Notifications:** joined, you're left, nudged, finished, each as a push, an Activity row and a tap destination. At most 3 pushes a day per person, reminders included.
+- **182 Solo → group:** "Bring someone" converts with one confirmation. You stay on your day; newcomers start at Day 1.
+- **183 Accountability partners removed:** groups replace them, with a one-time migration card.
+
+**Needs your call:** step 3 "Anyone · Shows on Discover" conflicts with invite-only groups (145). The roster shows each member's task count, which goes beyond "whether you finished" (148).
