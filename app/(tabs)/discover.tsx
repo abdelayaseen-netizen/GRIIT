@@ -36,6 +36,11 @@ import {
   DiscoverV3,
   type DiscoverPerson,
 } from "@/components/discover/DiscoverV3";
+import {
+  discoverCategoryMatches,
+  discoverFeaturedChip,
+  discoverPeopleWithoutSelf,
+} from "@/lib/discover-people";
 
 type TrendingResponse = { posts: LiveFeedPost[] };
 type RecommendedResponse = { challenges: RecommendedChallenge[] };
@@ -45,12 +50,7 @@ function categoryMatches(
   challenge: RecommendedChallenge,
   selected: DiscoverCategory,
 ): boolean {
-  if (selected === "all" || selected === "for_you" || selected === "trending") {
-    return true;
-  }
-  const c = (challenge.category ?? "").toLowerCase();
-  if (selected === "body") return c === "body" || c === "fitness";
-  return c === selected;
+  return discoverCategoryMatches(challenge.category, selected);
 }
 
 function personStatus(person: SuggestedPerson): string {
@@ -78,10 +78,7 @@ function DiscoverScreenInner() {
     queryKey: ["discover", "featured", selectedCategory],
     queryFn: () =>
       trpcQuery(TRPC.challenges.getDiscoverFeatured, {
-        category:
-          selectedCategory === "for_you" || selectedCategory === "trending"
-            ? "all"
-            : selectedCategory,
+        category: discoverFeaturedChip(selectedCategory),
       }) as Promise<HeroFeaturedData | null>,
     staleTime: 60 * 1000,
     enabled: signedIn,
@@ -153,7 +150,7 @@ function DiscoverScreenInner() {
   }, [myActiveQuery.data]);
 
   const people: DiscoverPerson[] = useMemo(() => {
-    return (peopleQuery.data ?? []).map((p) => {
+    return discoverPeopleWithoutSelf(peopleQuery.data ?? [], user?.id).map((p) => {
       const state = followById[p.user_id] ?? "none";
       const followLabel =
         state === "following"
@@ -176,7 +173,7 @@ function DiscoverScreenInner() {
         followPending: followPendingId === p.user_id,
       };
     });
-  }, [peopleQuery.data, followById, followPendingId]);
+  }, [peopleQuery.data, followById, followPendingId, user?.id]);
 
   const onRefresh = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["discover"] });

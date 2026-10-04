@@ -1,5 +1,6 @@
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { checkInHasCameraProof } from "@/backend/lib/proof-predicate";
+import { formatOfDays } from "@/lib/format-days";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -78,7 +79,8 @@ export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb
   const who = whoLine(group.names, group.others);
   if (group.verb === "started") return `${who} started ${group.challengeName}`;
   if (group.verb === "finished") {
-    return `${who} finished ${group.challengeName} · ${group.secured} of ${group.dayOf} days`;
+    if (!group.secured) return `${who} ended ${group.challengeName}`;
+    return `${who} finished ${group.challengeName} · ${formatOfDays(group.secured, group.dayOf)}`;
   }
   return `${who} secured Day ${group.dayN} · ${group.challengeName}`;
 }

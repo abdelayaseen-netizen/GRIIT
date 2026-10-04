@@ -1,7 +1,7 @@
 /**
  * Add task sheet — frames 42 and 50.
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
@@ -45,6 +45,7 @@ import {
   applyStarter,
   canSavePlace,
   canSubmitDraft,
+  commitPlace,
   payloadFromDraft,
   placeAccuracyLine,
   previewFromDraft,
@@ -87,14 +88,16 @@ export default function AddTaskSheet({
   const [placeOpen, setPlaceOpen] = useState(false);
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [recent, setRecent] = useState<{ name: string }[]>([]);
+  const wasVisible = useRef(false);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && !wasVisible.current) {
       setDraft(initial ?? ADD_TASK_DEFAULT);
       setPlaceOpen(false);
       setPicking(null);
       setPickRevert(null);
     }
+    wasVisible.current = visible;
   }, [visible, initial]);
 
   const openPicker = useCallback((field: "by" | "from" | "to", current: string) => {
@@ -131,6 +134,8 @@ export default function AddTaskSheet({
       requirePhoto: row.requirePhoto,
       photoMode: row.photoMode,
       unit: row.unit,
+      locationName: draft.location && canSavePlace(draft) ? draft.placeName.trim() || undefined : undefined,
+      radiusMeters: draft.location ? draft.placeRadius : undefined,
     });
     onClose();
   }, [draft, onSave, onClose]);
@@ -163,68 +168,9 @@ export default function AddTaskSheet({
     if (!canSavePlace(draft)) return;
     const name = draft.placeName.trim();
     if (name) setRecent((r) => [ { name }, ...r.filter((x) => x.name !== name) ].slice(0, 3));
+    setDraft((d) => commitPlace(d));
     setPlaceOpen(false);
   }, [draft]);
-
-  if (placeOpen) {
-    return (
-      <Sheet
-        visible={visible}
-        onDismiss={() => setPlaceOpen(false)}
-        heading={ADD_TASK_SET_PLACE}
-        footer={
-          <Button
-            label={ADD_TASK_SAVE_PLACE}
-            disabled={!canSavePlace(draft)}
-            onPress={savePlace}
-          />
-        }
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          <TextField
-            placeholder={ADD_TASK_SEARCH_PLACE}
-            value={draft.placeName}
-            onChangeText={(placeName) => setDraft((d) => ({ ...d, placeName }))}
-            accessibilityLabel={ADD_TASK_SEARCH_PLACE}
-          />
-          <ListRow
-            icon={<LocateFixed size={ICON} color={DS_V3.color.brandText} />}
-            title={ADD_TASK_USE_LOCATION}
-            subtitle={accuracyM != null ? placeAccuracyLine(accuracyM) : undefined}
-            onPress={() => void takeCurrentLocation()}
-            divider={false}
-          />
-          {recent.length > 0
-            ? recent.map((p) => (
-                <ListRow
-                  key={p.name}
-                  title={p.name}
-                  onPress={() => setDraft((d) => ({ ...d, placeName: p.name }))}
-                  divider={false}
-                />
-              ))
-            : null}
-          <Text style={styles.label}>{ADD_TASK_HOW_CLOSE}</Text>
-          <View style={styles.chips}>
-            {PLACE_RADIUS_CHIPS.map((chip) => (
-              <Chip
-                key={chip.meters}
-                label={chip.label}
-                variant="form"
-                selected={draft.placeRadius === chip.meters}
-                onPress={() => setDraft((d) => ({ ...d, placeRadius: chip.meters }))}
-              />
-            ))}
-          </View>
-          <Text style={styles.caption}>{ADD_TASK_PLACE_NO_MAP}</Text>
-        </ScrollView>
-      </Sheet>
-    );
-  }
 
   return (
     <Sheet
@@ -481,7 +427,62 @@ export default function AddTaskSheet({
             divider={false}
           />
         </View>
-      </ScrollView>
+        </ScrollView>
+      <Sheet
+        visible={placeOpen}
+        onDismiss={() => setPlaceOpen(false)}
+        heading={ADD_TASK_SET_PLACE}
+        footer={
+          <Button
+            label={ADD_TASK_SAVE_PLACE}
+            disabled={!canSavePlace(draft)}
+            onPress={savePlace}
+          />
+        }
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          <TextField
+            placeholder={ADD_TASK_SEARCH_PLACE}
+            value={draft.placeName}
+            onChangeText={(placeName) => setDraft((d) => ({ ...d, placeName }))}
+            accessibilityLabel={ADD_TASK_SEARCH_PLACE}
+          />
+          <ListRow
+            icon={<LocateFixed size={ICON} color={DS_V3.color.brandText} />}
+            title={ADD_TASK_USE_LOCATION}
+            subtitle={accuracyM != null ? placeAccuracyLine(accuracyM) : undefined}
+            onPress={() => void takeCurrentLocation()}
+            divider={false}
+          />
+          {recent.length > 0
+            ? recent.map((p) => (
+                <ListRow
+                  key={p.name}
+                  title={p.name}
+                  onPress={() => setDraft((d) => ({ ...d, placeName: p.name }))}
+                  divider={false}
+                />
+              ))
+            : null}
+          <Text style={styles.label}>{ADD_TASK_HOW_CLOSE}</Text>
+          <View style={styles.chips}>
+            {PLACE_RADIUS_CHIPS.map((chip) => (
+              <Chip
+                key={chip.meters}
+                label={chip.label}
+                variant="form"
+                selected={draft.placeRadius === chip.meters}
+                onPress={() => setDraft((d) => ({ ...d, placeRadius: chip.meters }))}
+              />
+            ))}
+          </View>
+          <Text style={styles.caption}>{ADD_TASK_PLACE_NO_MAP}</Text>
+        </ScrollView>
+      </Sheet>
       <Sheet
         visible={picking != null}
         onDismiss={() => closePicker(true)}

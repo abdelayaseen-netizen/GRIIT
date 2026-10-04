@@ -44,9 +44,33 @@ describe("create launched", () => {
     );
     expect(wizard).toContain("setLaunched(");
     expect(wizard).toContain("<LaunchedScreen");
+    expect(wizard).toContain("useFocusEffect");
+    expect(wizard).toContain("resetCreateFlow");
+    expect(wizard).toContain("setState(INITIAL_STATE)");
+    expect(wizard).toContain("setLaunched(null)");
     expect(wizard).not.toContain("onNext=");
     expect(wizard).not.toContain("ROUTES.CHALLENGE_ID(launched.challengeId)");
     expect(wizard).not.toContain("TASK_COMPLETE");
     expect(LAUNCHED_TOMORROW_TITLE).toBe("You're in. Day 1 is tomorrow.");
+  });
+
+  it("starts with no category, 7 days, hint-colored name, and the 7-day tip", () => {
+    const wizard = readFileSync(
+      resolve(__dirname, "../components/create/CreateWizardV2.tsx"),
+      "utf8",
+    );
+    const basics = readFileSync(
+      resolve(__dirname, "../components/create/v2/StepBasics.tsx"),
+      "utf8",
+    );
+    expect(wizard).toContain("durationDays: 7");
+    expect(wizard).toContain("category: null");
+    expect(wizard).not.toMatch(/durationDays: 30/);
+    expect(wizard).not.toMatch(/category: "discipline"/);
+    expect(basics).toContain("7 days is a strong start. You can go again after.");
+    expect(basics).toContain("CREATE_NAME_PLACEHOLDER");
+    expect(basics).toContain("0.7");
+    expect(basics).toContain("CREATE_LENGTH_TIP");
+    expect(basics).not.toContain("30 days is the sweet spot");
   });
 });

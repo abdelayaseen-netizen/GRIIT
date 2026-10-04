@@ -6,16 +6,9 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import {
-  Dumbbell,
-  Brain,
-  BookHeart,
-  Target,
-  Sparkles,
-  TrendingUp,
-  type LucideIcon,
-} from "lucide-react-native";
+import { Sparkles, type LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { CREATE_CATEGORIES, type WizardCategory } from "@/lib/challenge-category";
 
 /**
  * `all` is kept as an alias for legacy callers; new code should use `for_you`
@@ -26,9 +19,8 @@ export type DiscoverCategory =
   | "trending"
   | "all"
   | "body"
-  | "mind"
-  | "faith"
-  | "focus";
+  | "focus"
+  | WizardCategory;
 
 export interface CategoryChipsProps {
   selected: DiscoverCategory;
@@ -43,11 +35,7 @@ interface ChipDef {
 
 const CHIPS: ChipDef[] = [
   { id: "for_you", label: "For you", Icon: Sparkles },
-  { id: "trending", label: "Trending", Icon: TrendingUp },
-  { id: "body", label: "Body", Icon: Dumbbell },
-  { id: "mind", label: "Mind", Icon: Brain },
-  { id: "faith", label: "Faith", Icon: BookHeart },
-  { id: "focus", label: "Focus", Icon: Target },
+  ...CREATE_CATEGORIES.map((c) => ({ id: c.id, label: c.label, Icon: null })),
 ];
 
 const ICON_SIZE = 13;

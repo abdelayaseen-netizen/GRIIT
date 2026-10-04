@@ -26,13 +26,15 @@ import {
   closeTimeLabel,
   pickStartTask,
   startCtaLabel,
+  remainingWindowsClosed,
   todayDay2Hero,
   todayFirstDayLine,
   windowClosesBanner,
 } from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
-import { hasCameraProof } from "@/lib/active-challenge-ui";
+import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
+import { canOfferYesterdayFreeze } from "@/lib/freeze-recovery";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { buildWeekStripDays } from "@/lib/week-strip-days";
@@ -116,6 +118,8 @@ type ActiveRow = {
     id?: string;
     title?: string;
     duration_days?: number;
+    difficulty?: string | null;
+    is_hard_mode?: boolean | null;
     challenge_tasks?: TaskRow[];
   };
 };
@@ -292,6 +296,35 @@ export default function HomeScreen() {
   }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey]);
 
   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
+  const offerYesterdayFreeze = useMemo(() => {
+    const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
+      ? bootstrap.data.activeChallenges
+      : []) as ActiveRow[];
+    const hardOnly =
+      activeList.length > 0 &&
+      activeList.every(
+        (row) =>
+          mapDifficulty({
+            isHardMode: row.challenges?.is_hard_mode,
+            difficulty: row.challenges?.difficulty,
+          }) === "hard",
+      );
+    return canOfferYesterdayFreeze({
+      hardMode: hardOnly,
+      freezesRemaining: freezeStatus?.remaining ?? 0,
+      missDateKey: yesterdayKey,
+      todayKey,
+      securedDateKeys,
+      frozenDateKeys: (resolvedStats as StatsFromApi | null)?.frozenDateKeys ?? [],
+    });
+  }, [
+    bootstrap.data?.activeChallenges,
+    freezeStatus?.remaining,
+    resolvedStats,
+    securedDateKeys,
+    todayKey,
+    yesterdayKey,
+  ]);
   const statsReady = resolveHomeStatsReady({
     queryFetched: bootstrap.isFetched,
     queryData: bootstrap.data?.stats,
@@ -705,6 +738,14 @@ export default function HomeScreen() {
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
               onPressBell={onPressBell}
+              onPressStreak={
+                offerYesterdayFreeze
+                  ? () => {
+                      setFreezeError(null);
+                      setShowFreezeSheet(true);
+                    }
+                  : undefined
+              }
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
                 const next = heroTasks.find((h) => h.id === id);
@@ -726,7 +767,10 @@ export default function HomeScreen() {
                 !todaySecured &&
                 proof.sections.some((s) => s.day >= 2) &&
                 typeof streak === "number"
-                  ? todayDay2Hero(streak)
+                  ? todayDay2Hero(
+                      streak,
+                      remainingWindowsClosed(proof.sections.flatMap((s) => s.rows)),
+                    )
                   : null
               }
               windowBanner={

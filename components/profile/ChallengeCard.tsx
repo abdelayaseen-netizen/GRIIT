@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import { stripSegments, type Seg } from "@/lib/challenge-card";
+import { formatOfDays } from "@/lib/format-days";
 
 export function ProgressStrip({
   days,
@@ -14,7 +15,7 @@ export function ProgressStrip({
   due?: number;
 }) {
   const shown = stripSegments(days);
-  const label = secured != null && due ? `${secured} of ${due}${due === 1 ? " day" : " days"}` : null;
+  const label = secured != null && due ? formatOfDays(secured, due) : null;
   return (
     <View style={styles.strip} accessibilityLabel={label ? `${label} secured` : undefined}>
       <View style={styles.bars}>

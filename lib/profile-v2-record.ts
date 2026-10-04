@@ -156,6 +156,7 @@ export type ProfileRecord = {
     name: string;
     verified: number;
     length: number;
+    elapsed: number;
     value: string;
     status: string;
     startDateKey: string;
@@ -380,6 +381,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
       name: range.name,
       verified: score.secured,
       length: range.durationDays,
+      elapsed: score.elapsed,
       value: `${score.secured} of ${score.elapsed}`,
       status: range.status,
       startDateKey: range.startDateKey,

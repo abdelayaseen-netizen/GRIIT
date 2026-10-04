@@ -22,6 +22,7 @@ import EmptyState from "@/components/ds/EmptyState";
 import ChallengeCard from "@/components/discover/ChallengeCard";
 import PersonCard from "@/components/discover/PersonCard";
 import type { DiscoverCategory } from "@/components/discover/CategoryChips";
+import { CREATE_CATEGORIES } from "@/lib/challenge-category";
 import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
 import { catalogCoverLabel, catalogCoverUri } from "@/lib/catalog-cover";
@@ -61,9 +62,7 @@ export type DiscoverV3Props = {
 
 const CHIPS: { id: DiscoverCategory; label: string }[] = [
   { id: "for_you", label: "For you" },
-  { id: "trending", label: "Trending" },
-  { id: "body", label: "Body" },
-  { id: "mind", label: "Mind" },
+  ...CREATE_CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
 ];
 
 function difficultyLabel(d: RecommendedChallenge["difficulty"]): string {

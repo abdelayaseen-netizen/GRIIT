@@ -26,16 +26,17 @@ export function catalogCoverUri(row: ChallengeCoverRow | null | undefined): stri
   return null;
 }
 
-/** Surface label when there is no https cover. lib/cover.ts does not exist. */
+/** Surface label when there is no https cover. Always the challenge title. */
 export function catalogCoverLabel(row: {
   category?: string | null;
   title?: string | null;
   name?: string | null;
 } | null | undefined): string {
+  const title = (row?.title ?? row?.name ?? "").trim();
+  if (title) return title;
   const cat = (row?.category ?? "").trim();
   if (cat) return cat.charAt(0).toUpperCase() + cat.slice(1);
-  const title = (row?.title ?? row?.name ?? "").trim();
-  return title || "Challenge";
+  return "Challenge";
 }
 
 /** Shared feed / owner-only. Catalog covers never call this. */

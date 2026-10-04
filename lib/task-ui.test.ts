@@ -92,12 +92,26 @@ describe("gateLine", () => {
 
 describe("wizardGateLine", () => {
   it("prefers gates over requirePhoto", () => {
-    expect(wizardGateLine({ gates: ["location"], requirePhoto: true })).toBe("Location");
+    expect(wizardGateLine({ gates: ["location"], requirePhoto: true })).toBe("Camera · Place");
   });
 
   it("camera from requirePhoto when gates are missing", () => {
     expect(wizardGateLine({ requirePhoto: true })).toBe("Camera");
     expect(wizardGateLine({ requirePhoto: false })).toBe("Self-reported");
+  });
+
+  it("task rows show quantity · camera · time · place name", () => {
+    expect(
+      wizardGateLine({
+        type: "counter",
+        targetValue: 30,
+        unit: "pages",
+        gates: ["camera", "time", "location"],
+        gateTime: { mode: "by", start: "07:00", end: null },
+        requirePhoto: true,
+        locationName: "Gym",
+      }),
+    ).toBe("30 pages · Camera · By 7:00 am · Gym");
   });
 });
 

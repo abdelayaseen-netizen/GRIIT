@@ -62,9 +62,34 @@ describe("v42 badges", () => {
     expect(ach).not.toContain("ACHIEVEMENTS.STREAK_100");
     const rec = readFileSync(resolve(__dirname, "../backend/trpc/routes/profiles-record.ts"), "utf8");
     expect(rec).toContain("evaluateV42Badges");
+    expect(rec).toContain("currentStreak: record.streak.current");
     expect(rec).toContain("proof_photo_url");
     expect(rec).toContain("fullHouseAt");
     expect(rec).toContain('=== "team"');
     expect(rec).not.toMatch(/participation_type === ["']group["']/);
+  });
+
+  it("next streak badge counts the current streak, not the best run", () => {
+    const rows = evaluateV42Badges({
+      securedKeys: [
+        "2026-08-01",
+        "2026-08-02",
+        "2026-08-03",
+        "2026-08-04",
+        "2026-08-05",
+        "2026-09-20",
+      ],
+      dueKeys: [],
+      holdKeys: [],
+      completedEndedKeys: [],
+      timeGateSecuredKeys: [],
+      cameraProofKeys: [],
+      currentStreak: 1,
+    });
+    expect(rows.find((r) => r.id === "streak_3")?.earned).toBe(true);
+    const next = rows.find((r) => r.id === "streak_7");
+    expect(next?.earned).toBe(false);
+    expect(next?.have).toBe(1);
+    expect(next?.progress).toContain("Your streak is 1 days.");
   });
 });

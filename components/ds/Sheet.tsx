@@ -1,6 +1,7 @@
 /**
  * Sheet — frame 42 / 46 bottom sheet.
  * 60% ink scrim, surface ground, radius.card×1.2 top corners, 34pt bottom inset.
+ * Scrim stays full-screen so the dim is even; only the panel lifts with the keyboard.
  */
 import React from "react";
 import {
@@ -39,22 +40,25 @@ export default function Sheet({
       animationType="fade"
       onRequestClose={onDismiss}
     >
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <View style={styles.root}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"
           onPress={onDismiss}
           style={styles.scrim}
         />
-        <View style={styles.panel} pointerEvents="box-none">
-          <Text style={styles.heading}>{heading}</Text>
-          {children}
-          {footer ? <View style={styles.footer}>{footer}</View> : null}
-        </View>
-      </KeyboardAvoidingView>
+        <KeyboardAvoidingView
+          style={styles.lift}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          pointerEvents="box-none"
+        >
+          <View style={styles.panel} pointerEvents="box-none">
+            <Text style={styles.heading}>{heading}</Text>
+            {children}
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -69,6 +73,11 @@ const styles = StyleSheet.create({
     zIndex: 0,
     backgroundColor: DS_V3.color.canvas,
     opacity: 0.6,
+  },
+  lift: {
+    flex: 1,
+    justifyContent: "flex-end",
+    zIndex: 1,
   },
   panel: {
     zIndex: 1,

@@ -40,6 +40,42 @@ describe("joinLine", () => {
     expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex, Bina and 3 others started Iron man");
     expect(systemLine("Alex", 3, 75, "Iron man")).toBe("Alex secured Day 3 of 75 · Iron man");
   });
+
+  it("finished with 0 secured says ended; 1 day is singular", () => {
+    expect(
+      eventLine({
+        names: ["Alex"],
+        others: 0,
+        verb: "finished",
+        challengeName: "Iron man",
+        dayN: 7,
+        dayOf: 7,
+        secured: 0,
+      }),
+    ).toBe("Alex ended Iron man");
+    expect(
+      eventLine({
+        names: ["Alex"],
+        others: 0,
+        verb: "finished",
+        challengeName: "Iron man",
+        dayN: 1,
+        dayOf: 1,
+        secured: 1,
+      }),
+    ).toBe("Alex finished Iron man · 1 of 1 day");
+    expect(
+      eventLine({
+        names: ["Alex"],
+        others: 0,
+        verb: "finished",
+        challengeName: "Iron man",
+        dayN: 3,
+        dayOf: 7,
+        secured: 3,
+      }),
+    ).toBe("Alex finished Iron man · 3 of 7 days");
+  });
 });
 
 describe("groupFeedJoins", () => {
@@ -118,6 +154,8 @@ describe("CameraSeal and DoubleTapRespect", () => {
     const feed = readFileSync(resolve(__dirname, "../components/LiveFeedSection.tsx"), "utf8");
     expect(feed).toContain("groupFeedJoins");
     expect(feed).toContain("FeedEvent");
+    expect(feed).not.toMatch(/\} live</);
+    expect(feed).not.toContain("liveCountMeta");
     const route = readFileSync(resolve(__dirname, "../backend/trpc/routes/feed.ts"), "utf8");
     expect(route).toContain("anonymousIds.has(ev.user_id)");
     expect(route).toContain("joined_challenge");

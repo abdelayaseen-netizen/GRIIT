@@ -619,6 +619,7 @@ export const profilesRecordProcedures = {
               fullHouseAt,
               timeGateSecuredKeys,
               cameraProofKeys,
+              currentStreak: record.streak.current,
             })
           : [];
 

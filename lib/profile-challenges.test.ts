@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  cardLine,
   countSecuredInRange,
   detailLine,
   finishedDateRangeLine,
@@ -38,7 +39,7 @@ describe("statusLine", () => {
         secured_days: 68,
         started_at: "2026-09-01",
       }),
-    ).toBe("68 of 75");
+    ).toBe("68 of 75 days");
     expect(
       statusLine({
         id: "1",
@@ -78,6 +79,36 @@ describe("finished catalog header", () => {
         current_day: 30,
       }),
     ).toBe("12 of 30 days");
+    expect(
+      finishedHeaderLine({
+        status: "completed",
+        secured_days: 6,
+        duration_days: 75,
+        elapsed_days: 8,
+        current_day: 8,
+      }),
+    ).toBe("6 of 8 days");
+    expect(
+      cardLine({
+        id: "1",
+        challengeId: "c",
+        title: "A",
+        status: "completed",
+        duration_days: 75,
+        elapsed_days: 8,
+        current_day: 8,
+        secured_days: 6,
+        started_at: "2026-09-01",
+      }),
+    ).toBe(
+      `Finished · ${finishedHeaderLine({
+        status: "completed",
+        secured_days: 6,
+        duration_days: 75,
+        elapsed_days: 8,
+        current_day: 8,
+      })}`,
+    );
   });
 
   it("picks the latest ended_at among completed, failed, and abandoned", () => {
@@ -226,7 +257,7 @@ describe("rowsFromProfileRecord", () => {
     });
     const rows = rowsFromProfileRecord(rec);
     expect(rows).toHaveLength(1);
-    expect(statusLine(rows[0]!)).toBe("1 of 1");
+    expect(statusLine(rows[0]!)).toBe("1 of 1 day");
     expect(rows[0]?.status).toBe("completed");
   });
 
@@ -251,7 +282,7 @@ describe("rowsFromProfileRecord", () => {
       ],
     });
     const rows = rowsFromProfileRecord(rec);
-    expect(statusLine(rows[0]!)).toBe("1 of 1");
+    expect(statusLine(rows[0]!)).toBe("1 of 1 day");
     expect(rows[0]?.secured_days).toBe(1);
   });
 

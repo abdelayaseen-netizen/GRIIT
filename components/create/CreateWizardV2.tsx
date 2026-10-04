@@ -11,6 +11,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -83,7 +84,7 @@ export type WizardState = {
 const INITIAL_STATE: WizardState = {
   step: 1,
   title: "",
-  durationDays: 30,
+  durationDays: 7,
   customDuration: "",
   who: "solo",
   pack: null,
@@ -91,7 +92,7 @@ const INITIAL_STATE: WizardState = {
   useCustom: false,
   difficulty: "standard",
   visibility: "PRIVATE",
-  category: "discipline",
+  category: null,
 };
 
 function canAdvanceStep1(s: WizardState): boolean {
@@ -141,6 +142,23 @@ export function CreateWizardV2() {
     startAt?: string | null;
     tasks: WizardTask[];
   } | null>(null);
+
+  const resetCreateFlow = useCallback(() => {
+    setState(INITIAL_STATE);
+    setReviewing(false);
+    setCancelOpen(false);
+    setNewTaskOpen(false);
+    setEditingIndex(null);
+    setLaunchBusy(false);
+    setLaunchError("");
+    setLaunched(null);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetCreateFlow();
+    }, [resetCreateFlow]),
+  );
 
   const isDirty = useMemo(() => {
     return (
@@ -257,7 +275,7 @@ export function CreateWizardV2() {
         title: state.title.trim(),
         description: "",
         type: "standard",
-        durationDays: state.durationDays ?? 30,
+        durationDays: state.durationDays ?? 7,
         difficulty: state.difficulty,
         isHardMode: state.difficulty === "hard",
         status: "published",
@@ -288,7 +306,7 @@ export function CreateWizardV2() {
         challenge_id: result.id,
         source: state.useCustom ? "custom" : "pack",
         pack_id: state.useCustom ? undefined : state.pack?.id,
-        length_days: state.durationDays ?? 30,
+        length_days: state.durationDays ?? 7,
         mode: state.who === "group" ? "group" : "solo",
         strictness: state.difficulty,
         task_count: tasksForApi.length,
@@ -304,7 +322,7 @@ export function CreateWizardV2() {
         null;
       setLaunched({
         title: state.title.trim(),
-        days: state.durationDays ?? 30,
+        days: state.durationDays ?? 7,
         group: state.who === "group",
         challengeId: result.id,
         startAt,
@@ -321,6 +339,12 @@ export function CreateWizardV2() {
 
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
   const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
+  const editingDraft = useMemo(() => {
+    if (editingIndex == null) return null;
+    return draftFromWizardTask(
+      state.customTasks[editingIndex] ?? { name: "", type: "check_off" },
+    );
+  }, [editingIndex, state.customTasks]);
   const timeZone = resolveHomeTimeZone(
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
@@ -371,7 +395,7 @@ export function CreateWizardV2() {
         <StepReview
           title={state.title}
           category={state.category}
-          days={state.durationDays ?? 30}
+          days={state.durationDays ?? 7}
           who={state.who}
           difficulty={state.difficulty}
           visibility={state.visibility}
@@ -491,9 +515,7 @@ export function CreateWizardV2() {
 
         <AddTaskSheet
           visible={newTaskOpen}
-          initial={
-            editingIndex != null ? draftFromWizardTask(state.customTasks[editingIndex] ?? { name: "", type: "check_off" }) : null
-          }
+          initial={editingDraft}
           onClose={() => {
             setEditingIndex(null);
             setNewTaskOpen(false);

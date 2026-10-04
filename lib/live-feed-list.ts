@@ -6,6 +6,8 @@ export type LiveFeedListPost = {
   eventType: string;
   challengeId?: string | null;
   challengeName?: string | null;
+  taskName?: string | null;
+  currentDay?: number | null;
   photoUrl?: string | null;
   proofPhotoUrl?: string | null;
   avatarUrl?: string | null;
@@ -30,21 +32,39 @@ export function feedAvatarUri(
   return a;
 }
 
+export function liveFeedDedupeKey(post: LiveFeedListPost): string {
+  const dayKey =
+    post.currentDay != null && Number.isFinite(post.currentDay)
+      ? `d${Math.floor(post.currentDay)}`
+      : new Date(post.createdAt).toDateString();
+  const task = (post.taskName ?? "").trim().toLowerCase();
+  if (task) return `${post.userId}|${task}|${dayKey}`;
+  const challengeKey = post.challengeId ?? post.challengeName ?? "unknown";
+  return `${post.userId}|${challengeKey}|${post.eventType}|${dayKey}`;
+}
+
 /**
- * Keep every camera proof. Do not let secured_day (newest, no photo)
- * replace task_completed rows for the same user/challenge/day.
+ * One row per user + task + day. Prefer the camera proof when duplicates exist.
+ * Events without a task name still collapse only with the same event type.
  */
 export function keepLiveFeedPosts<T extends LiveFeedListPost>(posts: readonly T[]): T[] {
-  const seenNoProof = new Set<string>();
-  return posts.filter((post) => {
-    if (liveFeedProofUrl(post)) return true;
-    const dayKey = new Date(post.createdAt).toDateString();
-    const challengeKey = post.challengeId ?? post.challengeName ?? "unknown";
-    const key = `${post.userId}-${challengeKey}-${dayKey}-${post.eventType}`;
-    if (seenNoProof.has(key)) return false;
-    seenNoProof.add(key);
-    return true;
-  });
+  const groups = new Map<string, T[]>();
+  for (const post of posts) {
+    const key = liveFeedDedupeKey(post);
+    const list = groups.get(key);
+    if (list) list.push(post);
+    else groups.set(key, [post]);
+  }
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const post of posts) {
+    const key = liveFeedDedupeKey(post);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const group = groups.get(key) ?? [post];
+    out.push(group.find((row) => liveFeedProofUrl(row)) ?? group[0]!);
+  }
+  return out;
 }
 
 /** Home Following is people you follow. Own posts stay in Activity. */

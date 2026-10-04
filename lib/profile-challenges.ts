@@ -4,6 +4,7 @@
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { inclusiveLastDateKey } from "../backend/lib/record-days";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { formatOfDays } from "@/lib/format-days";
 import {
   challengeLine,
   dueForStrip,
@@ -20,6 +21,7 @@ export type ChallengeRow = {
   title: string;
   status: ChallengeStatus;
   duration_days: number;
+  elapsed_days?: number;
   current_day: number;
   secured_days: number;
   ended_on_day?: number;
@@ -39,6 +41,7 @@ export function cardLine(c: ChallengeRow): string {
     status: c.status,
     dayN: Math.max(1, c.ended_on_day ?? c.current_day),
     durationDays: c.duration_days,
+    elapsedDays: c.elapsed_days,
     secured: c.secured_days,
     range: c.range ?? "",
     startsTomorrow: c.startsTomorrow,
@@ -65,7 +68,7 @@ export function statusLine(c: ChallengeRow): string {
       // current_day on the row is calendar Day n (r.day), not the DB column.
       return `Day ${Math.max(1, c.current_day)} of ${c.duration_days}`;
     case "completed":
-      return `${c.secured_days} of ${c.duration_days}`;
+      return formatOfDays(c.secured_days, c.elapsed_days ?? c.duration_days);
     case "abandoned":
       return `Left on day ${c.ended_on_day}`;
     // solo hard-mode failure deferred, see Chunk T ruling
@@ -79,19 +82,27 @@ export function leftRecordLine(day: number, secured: number, duration: number): 
 }
 
 /** Catalog finished header: "{secured} of {N} days" via statusLine. */
-export function finishedHeaderLine(c: Pick<ChallengeRow, "status" | "secured_days" | "duration_days" | "ended_on_day" | "current_day">): string {
+export function daysOfLine(secured: number, due: number): string {
+  return formatOfDays(secured, due);
+}
+
+export function finishedHeaderLine(c: Pick<ChallengeRow, "status" | "secured_days" | "duration_days" | "elapsed_days" | "ended_on_day" | "current_day">): string {
+  if (c.status === "completed") {
+    return daysOfLine(c.secured_days, c.elapsed_days ?? c.duration_days);
+  }
   const line = statusLine({
     id: "",
     challengeId: "",
     title: "",
     status: c.status,
     duration_days: c.duration_days,
+    elapsed_days: c.elapsed_days,
     current_day: c.current_day,
     secured_days: c.secured_days,
     ended_on_day: c.ended_on_day,
     started_at: "",
   });
-  return c.status === "completed" ? `${line} days` : line;
+  return line;
 }
 
 export type EndedEnrollmentRow = {
@@ -181,6 +192,7 @@ export function rowsFromProfileRecord(
     title: c.name,
     status: asStatus(c.status),
     duration_days: c.length,
+    elapsed_days: c.elapsed,
     current_day: c.endedOnDay,
     secured_days: c.verified,
     ended_on_day: c.endedOnDay,

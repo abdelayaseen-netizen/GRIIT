@@ -189,7 +189,9 @@ function PostThreadScreenInner() {
               challenge: displayPost.challengeName,
             })}
           </Text>
-          <Text style={styles.count}>{commentsCountLabel(displayPost.commentCount)}</Text>
+          {commentsCountLabel(displayPost.commentCount) ? (
+            <Text style={styles.count}>{commentsCountLabel(displayPost.commentCount)}</Text>
+          ) : null}
         </View>
         {section === "loading" ? (
           <View style={styles.commentSkeletons}>

@@ -20,26 +20,37 @@ function post(
 }
 
 describe("keepLiveFeedPosts", () => {
-  it("keeps three camera proofs plus secured_day instead of collapsing to the newest", () => {
+  it("keeps one row per user + task + day and prefers the camera proof", () => {
     const rows = [
-      post({ id: "secure", eventType: "secured_day", createdAt: "2026-09-18T18:10:00.000Z" }),
       post({
-        id: "p3",
+        id: "secure",
+        eventType: "secured_day",
+        taskName: "Read",
+        currentDay: 3,
+        createdAt: "2026-09-18T18:10:00.000Z",
+      }),
+      post({
+        id: "dup",
+        taskName: "Read",
+        currentDay: 3,
+        createdAt: "2026-09-18T18:09:00.000Z",
+      }),
+      post({
+        id: "photo",
+        taskName: "Read",
+        currentDay: 3,
         photoUrl: "https://cdn.example/3.jpg",
         createdAt: "2026-09-18T18:08:00.000Z",
       }),
       post({
-        id: "p2",
-        photoUrl: "https://cdn.example/2.jpg",
+        id: "other",
+        taskName: "Journal",
+        currentDay: 3,
+        photoUrl: "https://cdn.example/j.jpg",
         createdAt: "2026-09-18T18:06:00.000Z",
       }),
-      post({
-        id: "p1",
-        photoUrl: "https://cdn.example/1.jpg",
-        createdAt: "2026-09-18T18:04:00.000Z",
-      }),
     ];
-    expect(keepLiveFeedPosts(rows).map((p) => p.id)).toEqual(["secure", "p3", "p2", "p1"]);
+    expect(keepLiveFeedPosts(rows).map((p) => p.id)).toEqual(["photo", "other"]);
     expect(feedAvatarUri(null, "https://cdn.example/3.jpg")).toBeUndefined();
     expect(feedAvatarUri("https://cdn.example/3.jpg", "https://cdn.example/3.jpg")).toBeUndefined();
     expect(feedAvatarUri("https://cdn.example/avatar.jpg", "https://cdn.example/3.jpg")).toBe(

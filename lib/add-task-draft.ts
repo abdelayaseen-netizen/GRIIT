@@ -3,14 +3,12 @@
  */
 
 import type { GateTime, PhotoMode, TaskGate, TaskModelType } from "@/backend/lib/task-model";
-import { SELF_REPORTED } from "@/lib/task-ui";
+import { SELF_REPORTED, taskQuantityLine, wizardGateLine } from "@/lib/task-ui";
 import {
   DEFAULT_BETWEEN_END_HHMM,
   DEFAULT_BETWEEN_START_HHMM,
   DEFAULT_BY_HHMM,
   betweenEndAfterStart,
-  fmt12,
-  fmtWindow,
 } from "@/lib/time-gate-picker";
 
 export const ADD_TASK_HEADING = "Add a task";
@@ -276,19 +274,32 @@ export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
 export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
   const title = draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER;
   const mode = photoModeFromDraft(draft);
-  const parts: string[] = [photoPreviewLabel(mode)];
+  const task = {
+    type: draft.type,
+    gates: gatesFromDraft(draft),
+    gateTime: gateTimeFromDraft(draft),
+    requirePhoto: mode === "required",
+    photoMode: mode,
+    targetValue: parseInt(draft.counterTarget, 10) || undefined,
+    unit: draft.type === "run" ? draft.runUnit : draft.counterUnit,
+    durationMinutes: timerMinutesFromDraft(draft),
+    minWords: parseInt(draft.minWords, 10) || undefined,
+    locationName: draft.location ? draft.placeName.trim() || "Place" : undefined,
+    config: configFromDraft(draft),
+  };
   if (
     draft.time &&
     draft.timeMode === "between" &&
     !betweenEndAfterStart(draft.fromTime, draft.toTime)
   ) {
-    parts.push("Time window not set");
-    return { title, caption: parts.join(" · ") };
+    return {
+      title,
+      caption: [taskQuantityLine(task), photoPreviewLabel(mode), "Time window not set"]
+        .filter(Boolean)
+        .join(" · "),
+    };
   }
-  if (draft.time && draft.timeMode === "by") parts.push(`By ${fmt12(draft.byTime)}`);
-  if (draft.time && draft.timeMode === "between") parts.push(fmtWindow(draft.fromTime, draft.toTime));
-  if (draft.location) parts.push(draft.placeName.trim() || "Place");
-  return { title, caption: parts.join(" · ") };
+  return { title, caption: wizardGateLine(task) };
 }
 
 export function placeAccuracyLine(meters: number): string {
@@ -298,6 +309,11 @@ export function placeAccuracyLine(meters: number): string {
 export function canSavePlace(draft: Pick<AddTaskDraft, "placeName" | "placeLat" | "placeLng">): boolean {
   if (draft.placeName.trim()) return true;
   return draft.placeLat != null && draft.placeLng != null;
+}
+
+/** Place sheet save: keep Time window and turn Place on. Never clears other limits. */
+export function commitPlace(draft: AddTaskDraft): AddTaskDraft {
+  return { ...draft, location: true };
 }
 
 export type AddTaskPayload = {
@@ -353,6 +369,8 @@ export function draftFromWizardTask(task: {
   unit?: string;
   requirePhoto?: boolean;
   photoMode?: PhotoMode;
+  locationName?: string;
+  radiusMeters?: number;
 }): AddTaskDraft {
   const type: TaskModelType =
     task.type === "timer" || task.type === "counter" || task.type === "text" || task.type === "run"
@@ -379,6 +397,19 @@ export function draftFromWizardTask(task: {
         ? "required"
         : "none";
   const gates = task.gates ?? (photoMode === "required" ? (["camera"] as TaskGate[]) : []);
+  const cfg = task.config ?? {};
+  const placeName =
+    (typeof task.locationName === "string" && task.locationName.trim()) ||
+    (typeof cfg.location_name === "string" ? cfg.location_name : "") ||
+    "";
+  const placeLat = typeof cfg.location_latitude === "number" ? cfg.location_latitude : null;
+  const placeLng = typeof cfg.location_longitude === "number" ? cfg.location_longitude : null;
+  const placeRadius =
+    (typeof task.radiusMeters === "number" && task.radiusMeters > 0
+      ? task.radiusMeters
+      : typeof cfg.location_radius_meters === "number"
+        ? cfg.location_radius_meters
+        : ADD_TASK_DEFAULT.placeRadius);
   return {
     ...ADD_TASK_DEFAULT,
     name: task.name,
@@ -398,6 +429,10 @@ export function draftFromWizardTask(task: {
     byTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.byTime,
     fromTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.fromTime,
     toTime: task.gateTime?.end ?? ADD_TASK_DEFAULT.toTime,
+    placeName,
+    placeLat,
+    placeLng,
+    placeRadius,
   };
 }
 

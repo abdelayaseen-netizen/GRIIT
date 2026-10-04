@@ -1,5 +1,5 @@
 /**
- * Create + display taxonomy. Discover chips stay on their own list this chunk.
+ * Create + display taxonomy. Discover chips reuse this list.
  *
  * Distinct stored values (run by hand, read-only):
  *   SELECT DISTINCT category FROM challenges WHERE category IS NOT NULL ORDER BY 1;

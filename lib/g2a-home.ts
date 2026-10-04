@@ -14,13 +14,25 @@ export function todayFirstDayLine(taskCount: number): string {
   return `Day 1 is today. Finish ${finish} tasks to secure it.`;
 }
 
-export function todayDay2Hero(streak: number): { hero: string; line: string } {
+export const TODAY_WINDOW_CLOSED = "Today's window closed. Back tomorrow.";
+
+export function remainingWindowsClosed(
+  tasks: readonly { done?: boolean; closed?: boolean }[],
+): boolean {
+  const remaining = tasks.filter((t) => t.done !== true);
+  return remaining.length > 0 && remaining.every((t) => t.closed === true);
+}
+
+export function todayDay2Hero(
+  streak: number,
+  remainingClosed = false,
+): { hero: string; line: string } {
   const n = Math.max(0, Math.floor(streak));
   const next = n + 1;
   const unit = n === 1 ? "day" : "days";
   return {
     hero: String(n),
-    line: `${unit}. Secure today and it's ${next}.`,
+    line: remainingClosed ? TODAY_WINDOW_CLOSED : `${unit}. Secure today and it's ${next}.`,
   };
 }
 
