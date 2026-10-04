@@ -386,6 +386,7 @@ export default function ActiveChallengeDetailScreen() {
           currentDay: String(shownDay),
           durationDays: String(durationDays),
           challengeName: title,
+          originTab: "home",
         },
       } as never);
     },
