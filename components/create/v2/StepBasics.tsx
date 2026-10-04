@@ -41,6 +41,12 @@ const PRESETS: readonly { days: number; label: string }[] = [
   { days: 75, label: "75 days" },
 ] as const;
 
+export const CREATE_LENGTH_TIP = "7 days is a strong start. You can go again after.";
+export const CREATE_NAME_PLACEHOLDER = "Read 30 min before phone";
+const NAME_PLACEHOLDER_COLOR = `${DS_V3.color.textSecondary}${Math.round(0.7 * 255)
+  .toString(16)
+  .padStart(2, "0")}`;
+
 const TITLE_LIMIT = 60;
 const ICON = DS_V3.space.xs * 6;
 const STROKE = (DS_V3.space.xs * 3) / 8;
@@ -83,8 +89,8 @@ export function StepBasics({
             accessibilityLabel="Challenge title"
             value={title}
             onChangeText={onChangeTitle}
-            placeholder="Read 30 min before phone"
-            placeholderTextColor={DS_V3.color.textSecondary}
+            placeholder={CREATE_NAME_PLACEHOLDER}
+            placeholderTextColor={NAME_PLACEHOLDER_COLOR}
             style={styles.input}
           />
           <View style={styles.inputFoot}>
@@ -195,7 +201,7 @@ export function StepBasics({
       </View>
 
       <View style={styles.hintWrap}>
-        <HintBox>30 days is the sweet spot. Build the habit, prove you can.</HintBox>
+        <HintBox>{CREATE_LENGTH_TIP}</HintBox>
       </View>
     </View>
   );
