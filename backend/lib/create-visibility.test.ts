@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   REVIEW_PHOTOS_LINE,
+  VISIBILITY_INVITE_CAPTION,
   VISIBILITY_INVITE_LABEL,
+  VISIBILITY_INVITE_TITLE,
+  VISIBILITY_PUBLIC_CAPTION,
   VISIBILITY_PUBLIC_LABEL,
+  VISIBILITY_PUBLIC_TITLE,
   createVisibility,
   soloCreateVisibility,
   visibilityLabel,
@@ -26,5 +30,14 @@ describe("createVisibility", () => {
     expect(visibilityLabel("PRIVATE")).toBe(VISIBILITY_INVITE_LABEL);
     expect(REVIEW_PHOTOS_LINE).toBe("You choose Share or Keep for each one");
     expect(soloCreateVisibility("solo", "PUBLIC")).toBe("PUBLIC");
+  });
+
+  it("create options use Anyone / Invite with caption under each", () => {
+    expect(VISIBILITY_PUBLIC_TITLE).toBe("Anyone");
+    expect(VISIBILITY_PUBLIC_CAPTION).toBe("Shows on Discover. Anyone can join.");
+    expect(VISIBILITY_INVITE_TITLE).toBe("Invite");
+    expect(VISIBILITY_INVITE_CAPTION).toBe(
+      "Only people with your link can join. Check-ins show only to members.",
+    );
   });
 });

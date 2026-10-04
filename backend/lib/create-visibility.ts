@@ -2,6 +2,11 @@
 
 export const VISIBILITY_PUBLIC_LABEL = "Anyone can find and join";
 export const VISIBILITY_INVITE_LABEL = "Only people you invite";
+export const VISIBILITY_PUBLIC_TITLE = "Anyone";
+export const VISIBILITY_INVITE_TITLE = "Invite";
+export const VISIBILITY_PUBLIC_CAPTION = "Shows on Discover. Anyone can join.";
+export const VISIBILITY_INVITE_CAPTION =
+  "Only people with your link can join. Check-ins show only to members.";
 export const REVIEW_PHOTOS_LINE = "You choose Share or Keep for each one";
 
 export type CreateVisibility = "PUBLIC" | "PRIVATE";

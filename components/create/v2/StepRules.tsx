@@ -6,8 +6,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ShieldAlert, ShieldCheck } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
-  VISIBILITY_INVITE_LABEL,
-  VISIBILITY_PUBLIC_LABEL,
+  VISIBILITY_INVITE_CAPTION,
+  VISIBILITY_INVITE_TITLE,
+  VISIBILITY_PUBLIC_CAPTION,
+  VISIBILITY_PUBLIC_TITLE,
   type CreateVisibility,
 } from "@/backend/lib/create-visibility";
 import {
@@ -42,9 +44,13 @@ const MODES = [
   },
 ] as const;
 
-const SOLO_VISIBILITY: readonly { id: CreateVisibility; label: string }[] = [
-  { id: "PUBLIC", label: VISIBILITY_PUBLIC_LABEL },
-  { id: "PRIVATE", label: VISIBILITY_INVITE_LABEL },
+const SOLO_VISIBILITY: readonly {
+  id: CreateVisibility;
+  title: string;
+  caption: string;
+}[] = [
+  { id: "PUBLIC", title: VISIBILITY_PUBLIC_TITLE, caption: VISIBILITY_PUBLIC_CAPTION },
+  { id: "PRIVATE", title: VISIBILITY_INVITE_TITLE, caption: VISIBILITY_INVITE_CAPTION },
 ] as const;
 
 const ICON = DS_V3.space.xs * 6;
@@ -95,7 +101,10 @@ export function StepRules({
       <View style={styles.section}>
         <Text style={styles.heading}>Visibility</Text>
         {group ? (
-          <Text style={styles.secondary}>{VISIBILITY_INVITE_LABEL}</Text>
+          <View style={styles.visCopy}>
+            <Text style={styles.bodyStrong}>{VISIBILITY_INVITE_TITLE}</Text>
+            <Text style={styles.secondary}>{VISIBILITY_INVITE_CAPTION}</Text>
+          </View>
         ) : (
           <View style={styles.visList}>
             {SOLO_VISIBILITY.map((row) => {
@@ -105,12 +114,15 @@ export function StepRules({
                   key={row.id}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: on }}
-                  accessibilityLabel={row.label}
+                  accessibilityLabel={`${row.title}. ${row.caption}`}
                   onPress={() => onChangeVisibility(row.id)}
                   style={styles.visRow}
                 >
                   <View style={[styles.radio, on ? styles.radioOn : null]} />
-                  <Text style={styles.bodyStrong}>{row.label}</Text>
+                  <View style={styles.visCopy}>
+                    <Text style={styles.bodyStrong}>{row.title}</Text>
+                    <Text style={styles.secondary}>{row.caption}</Text>
+                  </View>
                 </Pressable>
               );
             })}
@@ -186,9 +198,13 @@ const styles = StyleSheet.create({
   visList: { gap: DS_V3.space.sm },
   visRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: DS_V3.space.md,
     minHeight: DS_V3.size.tap,
+  },
+  visCopy: {
+    flex: 1,
+    gap: DS_V3.space.xs / 2,
   },
   radio: {
     width: ICON,
@@ -196,6 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_V3.radius.pill,
     borderWidth: STROKE,
     borderColor: DS_V3.color.textSecondary,
+    marginTop: DS_V3.space.xs,
   },
   radioOn: {
     backgroundColor: DS_V3.color.brand,
