@@ -2,9 +2,12 @@
  * Frame 52 morning-after block. Fact → cost → cushion. No color.danger.
  * Dismiss persists miss_ack_date_key (decision 10).
  */
+import { FREEZE } from "@/lib/copy";
+
 export const MISS_ACK_STORAGE_KEY = "miss_ack_date_key";
-export const YESTERDAY_WASNT_SECURED = "Yesterday wasn't secured.";
-export const USE_FREEZE_FOR_YESTERDAY = "Use a freeze for yesterday";
+
+export const YESTERDAY_WASNT_SECURED = FREEZE.title("Yesterday");
+export const USE_FREEZE_FOR_YESTERDAY = FREEZE.button;
 
 export type MorningAfterVariant = "reset" | "last_stand" | "freeze";
 

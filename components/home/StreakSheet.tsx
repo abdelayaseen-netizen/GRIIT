@@ -7,12 +7,12 @@ import Sheet from "@/components/ds/Sheet";
 import Button from "@/components/ds/Button";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { DS_V3 } from "@/lib/design-system";
+import { FREEZE } from "@/lib/copy";
 import {
   HELD_DONE,
   NOT_NOW,
   streakSheetFreezeLeft,
   streakSheetMissBody,
-  useFreezeForWeekday,
   weekdayHeldBody,
   weekdayHeldTitle,
 } from "@/lib/v44-detail";
@@ -71,14 +71,14 @@ export function StreakSheet({
       heading={String(streak)}
       footer={
         <>
-          <Button label={useFreezeForWeekday(weekday)} onPress={onUse} submitting={submitting} />
+          <Button label={FREEZE.button} onPress={onUse} submitting={submitting} />
           <Button label={NOT_NOW} variant="tertiary" onPress={onNotNow} />
         </>
       }
     >
       <WeekStrip days={week} todayIndex={todayIndex} />
       <View style={styles.block}>
-        <Text style={styles.title}>{weekday} wasn't secured.</Text>
+        <Text style={styles.title}>{FREEZE.title(weekday)}</Text>
         <Text style={styles.body}>
           {streakSheetMissBody({ done, total, missed, weekday, streak })}
         </Text>

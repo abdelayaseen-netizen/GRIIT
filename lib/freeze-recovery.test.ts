@@ -25,8 +25,8 @@ describe("freeze recovery after dismiss", () => {
     });
     expect(row).toEqual({
       actionable: true,
-      title: "Friday wasn't secured.",
-      caption: "Use a freeze to cover it, until midnight. 2 left.",
+      title: "Friday wasn’t secured.",
+      caption: "A freeze can hold it until midnight. 2 left.",
       actionLabel: USE_FREEZE_ACTION,
     });
     expect(canOfferYesterdayFreeze({
@@ -72,9 +72,9 @@ describe("freeze recovery after dismiss", () => {
         securedDateKeys: [],
       }),
     ).toBeNull();
-    expect(USE_FREEZE_ACTION).toBe("Use freeze");
-    expect(freezeRecoveryTitle(MISS, "UTC")).toBe("Friday wasn't secured.");
-    expect(freezeRecoveryCaption(1)).toBe("Use a freeze to cover it, until midnight. 1 left.");
+    expect(USE_FREEZE_ACTION).toBe("Use a freeze");
+    expect(freezeRecoveryTitle(MISS, "UTC")).toBe("Friday wasn’t secured.");
+    expect(freezeRecoveryCaption(1)).toBe("A freeze can hold it until midnight. 1 left.");
     const detail = readFileSync(
       resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"),
       "utf8",
