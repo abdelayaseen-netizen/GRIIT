@@ -226,7 +226,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 <RotateCcw size={ICON} color={DS_V3.color.textPrimary} />
                 <View style={styles.resetCopy}>
                   <Text style={styles.resetTitle}>The run restarted</Text>
-                  <Text style={styles.resetBody}>{resetBody(p.durationDays)}</Text>
+                  <Text style={styles.resetBody}>{resetBody()}</Text>
                 </View>
               </View>
             </Card>

@@ -11,7 +11,7 @@ export const A_BOARD_NEEDS_TWO = "A board needs two.";
 export const JUST_YOU_SO_FAR = "Just you so far";
 export const PRIVATE_ONLY_YOU = "Private. Only you.";
 export const NO_FREEZES = "No freezes";
-export const NO_DAYS_OFF_CAPTION = "No Days Off. A missed day goes back to Day 1.";
+export const NO_DAYS_OFF_CAPTION = "A missed day resets your streak to 0. No freezes.";
 export const FREEZE_COVERS_YESTERDAY =
   "A freeze covers yesterday only. Use it from the morning-after card.";
 export const ANYONE_WITH_THE_LINK =

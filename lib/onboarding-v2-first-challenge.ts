@@ -4,7 +4,7 @@ import { todayCardGateLabel } from "@/lib/today-card";
 import { GOAL_LABELS } from "@/lib/goal-challenge-map";
 import type { OnboardingGoal } from "@/store/onboardingStore";
 
-export const HARD_MODE_LINE = "Hard mode. Gates are enforced; a failed gate fails the day.";
+export const HARD_MODE_LINE = "A missed day resets your streak to 0. No freezes.";
 export const STANDARD_MODE_LINE = "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it.";
 
 export type SuggestionTask = {

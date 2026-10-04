@@ -6,7 +6,7 @@ export const MODE_STANDARD_BODY =
 
 export const MODE_HARD_TITLE = "No Days Off";
 export const MODE_HARD_BODY =
-  "Every gate blocks. No freezes. A missed day goes back to Day 1.";
+  "A missed day resets your streak to 0. No freezes.";
 
 export const CREATE_PRIVACY_LINE =
   "Photos stay private until each person shares them, whichever you pick.";
