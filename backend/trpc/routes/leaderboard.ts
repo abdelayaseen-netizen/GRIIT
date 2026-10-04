@@ -3,7 +3,10 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 import { mutualFriendIds } from "../../lib/is-friend";
 import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db";
-import { getTodayDateKey, getRollingWeekStartDateKey, getWeekStartDateKey, elapsedWeekEnded, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { addCalendarDaysToDateKey, dateKeyFromIsoInTimeZone, getTodayDateKey, getRollingWeekStartDateKey, getWeekStartDateKey, elapsedWeekEnded, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { dueKeysForRange } from "../../lib/due-keys";
+import { exclusiveEndDateKey } from "../../lib/record-days";
+import { challengeBoardWeekCount } from "../../lib/secured-elapsed";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
@@ -268,7 +271,7 @@ export const leaderboardRouter = createTRPCRouter({
 
       const { data: participants, error: pErr } = await server
         .from("active_challenges")
-        .select("user_id, board_opt_in")
+        .select("user_id, board_opt_in, start_at, end_at, ended_at, status")
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")
         .limit(500);
@@ -296,17 +299,58 @@ export const leaderboardRouter = createTRPCRouter({
         return { leaderPoints: 1, challengeTitle: (ch as { title?: string }).title ?? "Challenge", visibility: vis, entries: [] };
       }
 
+      const dueByUser = new Map<string, string[]>();
+      for (const row of (participants ?? []) as {
+        user_id: string;
+        start_at?: string | null;
+        end_at?: string | null;
+        ended_at?: string | null;
+        status?: string | null;
+      }[]) {
+        if (!userIds.includes(row.user_id)) continue;
+        const start = dateKeyFromIsoInTimeZone(row.start_at, tz);
+        if (!start) {
+          dueByUser.set(row.user_id, []);
+          continue;
+        }
+        const end = row.end_at
+          ? exclusiveEndDateKey(
+              { status: row.status ?? "active", end_at: row.end_at, ended_at: row.ended_at ?? null },
+              start,
+              tz,
+            )
+          : addCalendarDaysToDateKey(start, 1);
+        dueByUser.set(
+          row.user_id,
+          dueKeysForRange(
+            { status: row.status ?? "active", startDateKey: start, endDateKey: end },
+            todayKey,
+          ),
+        );
+      }
+
       const { data: secures } = await server
         .from("day_secures")
-        .select("user_id")
+        .select("user_id, date_key")
         .in("user_id", userIds)
         .gte("date_key", weekStartKey)
         .lte("date_key", todayKey)
         .limit(5000);
+      const keysByUser = new Map<string, string[]>();
+      for (const row of (secures ?? []) as { user_id: string; date_key: string }[]) {
+        const list = keysByUser.get(row.user_id) ?? [];
+        list.push(row.date_key);
+        keysByUser.set(row.user_id, list);
+      }
       const checkInCount = new Map<string, number>();
-      for (const row of secures ?? []) {
-        const uid = (row as { user_id: string }).user_id;
-        checkInCount.set(uid, (checkInCount.get(uid) ?? 0) + 1);
+      for (const uid of userIds) {
+        const n = challengeBoardWeekCount({
+          securedDateKeys: keysByUser.get(uid) ?? [],
+          dueDateKeys: dueByUser.get(uid) ?? [],
+          weekStartKey,
+          todayKey,
+        });
+        if (n > 0) checkInCount.set(uid, n);
       }
 
       const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds).limit(200);

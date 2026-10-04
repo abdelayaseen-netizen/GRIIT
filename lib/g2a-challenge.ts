@@ -2,6 +2,8 @@
  * v43.1 frames 157 + 161 — challenge week, freeze row, people / board copy.
  */
 
+import { dueKeysForRange } from "@/backend/lib/due-keys";
+import { enrollmentSecuredDateKeys } from "@/backend/lib/secured-elapsed";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { FREEZE_REFILL_DAYS, freezeRefillDateLabel } from "@/lib/freeze-sheet";
 import { countNoun } from "@/lib/onboarding-v2-suggest";
@@ -43,8 +45,18 @@ export function weekSecuredOfDue(args: {
   todaySecured: boolean;
 }): { secured: number; due: number; line: string } {
   const last = addCalendarDaysToDateKey(args.startDateKey, Math.max(0, args.durationDays - 1));
-  const secured = new Set(args.securedDateKeys);
-  if (args.todaySecured) secured.add(args.todayKey);
+  const exclusiveEnd = addCalendarDaysToDateKey(args.startDateKey, Math.max(0, args.durationDays));
+  const dueKeys = dueKeysForRange(
+    { status: "active", startDateKey: args.startDateKey, endDateKey: exclusiveEnd },
+    args.todayKey,
+  );
+  const secured = new Set(
+    enrollmentSecuredDateKeys({
+      securedDateKeys: args.securedDateKeys,
+      dueDateKeys: dueKeys,
+    }),
+  );
+  if (args.todaySecured && dueKeys.includes(args.todayKey)) secured.add(args.todayKey);
   let due = 0;
   let n = 0;
   for (const key of args.weekKeys) {
