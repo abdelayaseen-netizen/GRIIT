@@ -328,3 +328,17 @@ describe("social row", () => {
     expect(participantsLine(3)).toBe("3 in this challenge");
   });
 });
+
+describe("week strip and freeze card", () => {
+  it("spaces the week strip from the freeze card and drops the clipped chips", () => {
+    const screen = readFileSync(
+      resolve(__dirname, "../components/challenge/ActiveChallengeV3.tsx"),
+      "utf8",
+    );
+    expect(screen).toContain("paddingBottom: DS_V3.space.lg");
+    expect(screen).toContain("styles.freezeRow");
+    expect(screen).not.toContain("styles.metaRow");
+    expect(screen).not.toContain("difficultyLine(");
+    expect(screen).not.toContain("streakCaption(");
+  });
+});

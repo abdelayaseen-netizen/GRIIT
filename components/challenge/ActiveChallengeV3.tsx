@@ -13,12 +13,10 @@ import {
   Dumbbell,
   Droplet,
   Ellipsis,
-  Flame,
   Hash,
   MapPin,
   NotebookPen,
   RotateCcw,
-  Shield,
   ShieldOff,
   Timer,
   Users,
@@ -28,7 +26,6 @@ import {
 } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { dayWord, formatDays } from "@/lib/format-days";
 import PushedHeader from "@/components/ds/PushedHeader";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import WeekStrip from "@/components/ds/WeekStrip";
@@ -39,7 +36,6 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import {
   RESET_NOTICE,
-  difficultyLine,
   doneGate,
   footerAction,
   hasCameraProof,
@@ -48,7 +44,6 @@ import {
   resetBody,
   enrollmentTodayProgress,
   statusLine,
-  streakCaption,
   taskVerb,
   type ActiveChallengeTask,
   type ActiveTaskType,
@@ -122,7 +117,6 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
     filled: p.weekSecured[i] === true,
   }));
   const about = (p.description ?? "").trim();
-  const hard = p.difficulty === "hard";
 
   if (p.error) {
     return (
@@ -243,28 +237,6 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             </View>
           </View>
         ) : null}
-
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            {hard ? (
-              <ShieldOff size={META_ICON} color={DS_V3.color.textSecondary} />
-            ) : (
-              <Shield size={META_ICON} color={DS_V3.color.textSecondary} />
-            )}
-            <Text style={styles.caption}>{difficultyLine(p.difficulty)}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Flame size={META_ICON} color={DS_V3.color.textSecondary} />
-            {p.streakDays > 0 ? (
-              <View style={styles.streakNum} accessibilityLabel={formatDays(p.streakDays)}>
-                <DisplayNumber value={p.streakDays} size="inline" />
-                <Text style={styles.caption}>{dayWord(p.streakDays)}</Text>
-              </View>
-            ) : (
-              <Text style={styles.caption}>{streakCaption(0)}</Text>
-            )}
-          </View>
-        </View>
 
         <Text style={styles.heading}>Today</Text>
         {p.loading ? (
@@ -500,6 +472,7 @@ const styles = StyleSheet.create({
   },
   weekWrap: {
     paddingTop: DS_V3.space.lg + DS_V3.space.sm,
+    paddingBottom: DS_V3.space.lg,
     paddingHorizontal: DS_V3.space.gutter,
   },
   weekSkelRow: {
@@ -515,23 +488,6 @@ const styles = StyleSheet.create({
     height: DS_V3.size.tap,
     borderRadius: DS_V3.radius.input,
     backgroundColor: DS_V3.color.border,
-  },
-  metaRow: {
-    paddingTop: DS_V3.space.lg,
-    paddingHorizontal: DS_V3.space.gutter,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.gutter,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  streakNum: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 5,
   },
   caption: {
     fontSize: DS_V3.type.caption.fontSize,
@@ -613,6 +569,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: DS_V3.space.md,
     marginHorizontal: DS_V3.space.gutter,
+    marginTop: DS_V3.space.sm,
     marginBottom: DS_V3.space.lg,
     padding: DS_V3.space.lg,
     borderWidth: PT,
