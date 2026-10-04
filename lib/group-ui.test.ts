@@ -162,10 +162,8 @@ describe("invite picker", () => {
     expect(pickerRowState({ enrolled: true, invited: false })).toBe("in");
   });
 
-  it("share message is {title} on GRIIT. Join me: {url}", () => {
-    expect(groupInviteShareMessage("Morning run", "https://griit.fit/invite/abc")).toBe(
-      "Morning run on GRIIT. Join me: https://griit.fit/invite/abc",
-    );
+  it("share message is Join me on GRIIT · code {code}", () => {
+    expect(groupInviteShareMessage("Morning run", "abc")).toBe("Join me on GRIIT · code abc");
   });
 
   it("openLink routes by state", () => {
