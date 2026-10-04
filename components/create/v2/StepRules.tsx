@@ -18,6 +18,7 @@ import {
   MODE_STANDARD_BODY,
   MODE_STANDARD_TITLE,
   CREATE_PRIVACY_LINE,
+  GROUP_TASK_PRIVACY,
 } from "@/lib/create-mode-copy";
 import type { WizardWho } from "@/components/create/v2/StepBasics";
 
@@ -131,6 +132,7 @@ export function StepRules({
         )}
       </View>
       <Text style={styles.privacy}>{CREATE_PRIVACY_LINE}</Text>
+      {group ? <Text style={styles.privacy}>{GROUP_TASK_PRIVACY}</Text> : null}
     </View>
   );
 }

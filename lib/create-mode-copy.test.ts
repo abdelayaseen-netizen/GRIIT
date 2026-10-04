@@ -5,6 +5,7 @@ import {
   MODE_STANDARD_BODY,
   MODE_STANDARD_TITLE,
   CREATE_PRIVACY_LINE,
+  GROUP_TASK_PRIVACY,
 } from "@/lib/create-mode-copy";
 
 describe("123 mode copy", () => {
@@ -18,5 +19,8 @@ describe("123 mode copy", () => {
       "Every gate blocks. No freezes. A missed day goes back to Day 1.",
     );
     expect(CREATE_PRIVACY_LINE).toContain("Photos stay private");
+    expect(GROUP_TASK_PRIVACY).toBe(
+      "People in a challenge with you see how many of today's tasks you've done.",
+    );
   });
 });
