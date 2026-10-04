@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
+import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -30,6 +31,7 @@ import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
+import { publishTaskToast, taskDoneTitle, taskLeftBody } from "@/lib/task-complete-toast";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -453,7 +455,6 @@ export function useTaskFlowV2() {
     setFinishSave("saving");
     setAlsoToday([]);
     setShareFailed(false);
-    setStep("finish");
     const slowTimer = setTimeout(() => {
       if (mountedRef.current && submitInFlight.current) setFinishSave("slow");
     }, FINISH_SLOW_MS);
@@ -545,6 +546,7 @@ export function useTaskFlowV2() {
       await postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
         const tasks = await loadAlsoToday();
+        const left = alsoTodayFromTasks(tasks, taskId);
         if (mountedRef.current) {
           setShareEventId(eventId);
           setFinishSave("saved");
@@ -556,7 +558,15 @@ export function useTaskFlowV2() {
               targetStreak: profile?.target_streak,
             }),
           );
-          setStep("finish");
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          publishTaskToast({
+            taskId,
+            title: taskDoneTitle(taskName, hasCameraProof),
+            body: taskLeftBody(left.length, hasCameraProof),
+            photoUri: photoUri ?? proofUrl ?? null,
+            cameraSeal: hasCameraProof,
+          });
+          exit();
         }
         submitInFlight.current = false;
         return;

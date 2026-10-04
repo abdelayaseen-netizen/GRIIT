@@ -18,6 +18,7 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -146,6 +147,7 @@ export default function HomeScreen() {
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
+  const highlightTaskId = useTaskCompleteFlash();
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
   const recordQuery = useQuery({
@@ -771,6 +773,7 @@ export default function HomeScreen() {
                   ? bootstrap.data.activeChallenges
                   : []) as Parameters<typeof activeChallengesAreHard>[0],
               )}
+              highlightTaskId={highlightTaskId}
               loading={bootstrap.isPending && !bootstrap.data}
               firstDayLine={
                 !todaySecured && proof.sections.some((s) => s.day === 1)

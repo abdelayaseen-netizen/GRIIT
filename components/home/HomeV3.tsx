@@ -135,6 +135,7 @@ export type HomeV3Props = {
   showFirstProofSlot?: boolean;
   bellUnread?: boolean;
   noDaysOff?: boolean;
+  highlightTaskId?: string | null;
 };
 
 export function HomeV3({
@@ -173,6 +174,7 @@ export function HomeV3({
   showFirstProofSlot,
   bellUnread,
   noDaysOff = false,
+  highlightTaskId,
 }: HomeV3Props) {
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const headerTitle = title ?? weekday;
@@ -232,7 +234,7 @@ export function HomeV3({
     );
     if (!pending) {
       return (
-        <View key={row.id} style={styles.proofRow}>
+        <View key={row.id} style={[styles.proofRow, highlightTaskId === row.id ? styles.rowFlash : null]}>
           {inner}
         </View>
       );
@@ -243,7 +245,7 @@ export function HomeV3({
         accessibilityRole="button"
         accessibilityLabel={row.name}
         onPress={() => onPressTask?.(row.id)}
-        style={styles.proofRow}
+        style={[styles.proofRow, highlightTaskId === row.id ? styles.rowFlash : null]}
       >
         {inner}
       </Pressable>
@@ -661,6 +663,10 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
     minHeight: 48,
     marginBottom: DS_V3.space.md,
+  },
+  rowFlash: {
+    backgroundColor: DS_V3.color.brandTint,
+    borderRadius: 12,
   },
   ring: {
     width: RING,

@@ -6,6 +6,10 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
 import TabBar, { type TabBarTab } from "@/components/ds/TabBar";
 import { ROUTES } from "@/lib/routes";
+import TaskCompleteToast from "@/components/task-v2/TaskCompleteToast";
+import ShareSystemSheet from "@/components/share/ShareSystemSheet";
+import { useApp } from "@/contexts/AppContext";
+import type { TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
 
 function routeToTab(name: string | undefined): TabBarTab {
   if (name === "discover") return "discover";
@@ -33,6 +37,8 @@ function GritTabBar({ state }: BottomTabBarProps) {
 }
 
 export default function TabLayout() {
+  const { profile } = useApp();
+  const [shareToast, setShareToast] = React.useState<TaskToast | null>(null);
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -52,6 +58,7 @@ export default function TabLayout() {
         </View>
       )}
     >
+    <View style={styles.tabs}>
     <Tabs
       tabBar={(props) => <GritTabBar {...props} />}
       screenOptions={{
@@ -107,11 +114,26 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    <TaskCompleteToast onShare={setShareToast} />
+    <ShareSystemSheet
+      visible={shareToast != null}
+      onDismiss={() => setShareToast(null)}
+      moment={shareToast?.photoUri ? "photo_proof" : "self_reported"}
+      card={{
+        challenge: "",
+        task: shareToast?.title.replace(/ (done|saved)\.$/, "") ?? "",
+        username: profile?.username,
+        photoUri: shareToast?.photoUri,
+        cameraSeal: shareToast?.cameraSeal === true,
+      }}
+    />
+    </View>
     </Sentry.ErrorBoundary>
   );
 }
 
 const styles = StyleSheet.create({
+  tabs: { flex: 1 },
   errorBoundaryRoot: {
     flex: 1,
     alignItems: "center",
