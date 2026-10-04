@@ -59,6 +59,7 @@ import "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
 import { PostHogProvider } from "posthog-react-native";
 import { posthog } from "@/lib/posthog";
+import { readMinSupportedBuild } from "@/lib/remote-config";
 
 const COLD_START_AT = Date.now();
 
@@ -261,6 +262,10 @@ function RootLayoutNav() {
     const next = sessionExpiredMessageForAuthState(!!user, sessionExpiredMessage);
     if (next !== sessionExpiredMessage) setSessionExpiredMessage(next);
   }, [user, sessionExpiredMessage, setSessionExpiredMessage]);
+
+  useEffect(() => {
+    void readMinSupportedBuild();
+  }, []);
 
   return (
     <View style={layoutStyles.flex1}>

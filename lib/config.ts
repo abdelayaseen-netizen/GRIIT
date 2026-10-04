@@ -19,6 +19,9 @@ function readDeepLinkBase(): string | null {
 /** https origin when EXPO_PUBLIC_DEEP_LINK_BASE_URL is set. Otherwise null. */
 export const DEEP_LINK_BASE_URL = readDeepLinkBase();
 
+/** Web origin for invite links. Null until a domain is set. Never griit.app. */
+export const INVITE_BASE = DEEP_LINK_BASE_URL;
+
 /** Meta App ID for Instagram Stories. Set EXPO_PUBLIC_FACEBOOK_APP_ID. Never a hardcoded id. */
 export function facebookAppId(): string {
   return facebookAppIdFromEnv();

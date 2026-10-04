@@ -14,7 +14,7 @@ describe("group invite link", () => {
     expect(active).toContain("inviteToChallenge");
     expect(invite).not.toContain("griit.app");
     expect(active).not.toContain("griit.app");
-    expect(inviteDeepLink("abc")).toBe("griit://invite/abc");
+    expect(inviteDeepLink("abc")).toBe("griit://i/abc");
     expect(inviteDeepLink("abc")).not.toContain("griit.app");
   });
 });

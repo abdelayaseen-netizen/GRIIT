@@ -72,6 +72,14 @@ function livenessJson(c: Context) {
 app.get("/api/health", livenessJson);
 app.get("/health", livenessJson);
 
+/** Remote config. MIN_SUPPORTED_BUILD is an env value, not a schema change. */
+app.get("/api/config", (c) => {
+  const n = Number(process.env.MIN_SUPPORTED_BUILD ?? "");
+  return c.json({
+    min_supported_build: Number.isFinite(n) && n > 0 ? Math.floor(n) : null,
+  });
+});
+
 /** Deep health: live Supabase query. For monitoring, not for Railway liveness. */
 async function healthDeepJson(c: Context) {
   const checks: Record<string, "ok" | "error"> = {};

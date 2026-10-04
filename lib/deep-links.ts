@@ -3,7 +3,7 @@
  * Otherwise the app scheme. Never default to griit.app.
  */
 
-import { APP_SCHEME, DEEP_LINK_BASE_URL } from "@/lib/config";
+import { APP_SCHEME, DEEP_LINK_BASE_URL, INVITE_BASE } from "@/lib/config";
 
 export function joinMeOnGriitCode(code: string): string {
   return `Join me on GRIIT · code ${code.trim()}`;
@@ -26,7 +26,10 @@ export function challengeDeepLink(challengeId: string, refUserId?: string | null
 }
 
 export function inviteDeepLink(inviteCode: string, refUserId?: string | null): string {
-  return withRef(appOrWebPath(`/invite/${encodeURIComponent(inviteCode)}`), refUserId);
+  const code = encodeURIComponent(inviteCode.trim());
+  const path = `/i/${code}`;
+  if (INVITE_BASE) return withRef(`${INVITE_BASE}${path}`, refUserId);
+  return withRef(`${APP_SCHEME}://i/${code}`, refUserId);
 }
 
 export function profileDeepLink(username: string): string {
