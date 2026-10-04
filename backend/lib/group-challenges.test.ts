@@ -3,6 +3,7 @@ import {
   GROUP_MAX_MEMBERS,
   computeGroupStreak,
   groupStreakBrokeBy,
+  memberSecuredFromCheckIns,
   memberYesterdayState,
   shouldEvaluateTeamDay,
 } from "./group-challenges";
@@ -120,5 +121,17 @@ describe("memberYesterdayState", () => {
   it("is secured or missed from day_secures at the yesterday key", () => {
     expect(memberYesterdayState(keys("2026-09-15"), "2026-09-15")).toBe("secured");
     expect(memberYesterdayState(keys("2026-09-14"), "2026-09-15")).toBe("missed");
+  });
+
+  it("marks today secured only when this challenge's required check-ins are done", () => {
+    expect(
+      memberSecuredFromCheckIns({ requiredTaskIds: ["t1", "t2"], completedTaskIds: ["t1"] }),
+    ).toEqual({ secured: false, done: 1, total: 2 });
+    expect(
+      memberSecuredFromCheckIns({ requiredTaskIds: ["t1"], completedTaskIds: ["t1", "other"] }),
+    ).toEqual({ secured: true, done: 1, total: 1 });
+    expect(memberSecuredFromCheckIns({ requiredTaskIds: [], completedTaskIds: ["t1"] }).secured).toBe(
+      false,
+    );
   });
 });

@@ -16,7 +16,6 @@ import {
   groupSecuredTodayLine,
   groupStreakUnit,
   rosterTrailing,
-  memberStreakCaption,
   membersInGroupLabel,
   pendingTrailing,
   showInvitedSection,
@@ -88,7 +87,7 @@ export default function ChallengeMembersScreen() {
   }, [membersQuery.data?.members, user?.id]);
 
   const roster = useMemo(
-    () => sortRoster(membersQuery.data?.members ?? []),
+    () => sortRoster(membersQuery.data?.members ?? [], user?.id),
     [membersQuery.data?.members],
   );
 
@@ -162,9 +161,13 @@ export default function ChallengeMembersScreen() {
                     <MemberRow
                       key={m.userId}
                       displayName={m.displayName}
-                      caption={memberStreakCaption(m.currentStreak)}
+                      caption={
+                        m.securedToday
+                          ? "Secured"
+                          : `Not yet · ${(m as { tasksDone?: number }).tasksDone ?? 0} of ${(m as { tasksTotal?: number }).tasksTotal ?? 0}`
+                      }
                       avatarUri={(m as { avatar?: string | null }).avatar}
-                      nameAside={m.role === "creator" ? "Creator" : undefined}
+                      nameAside={m.userId === user?.id ? "You" : m.role === "creator" ? "Creator" : undefined}
                       trailing={rosterTrailing({
                         securedToday: m.securedToday,
                         yesterdayState: m.yesterdayState,

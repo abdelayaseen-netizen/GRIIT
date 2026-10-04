@@ -41,6 +41,10 @@ const serviceClient = {
       return chain;
     };
     chain.limit = () => chain;
+    chain.in = () => chain;
+    chain.order = () => chain;
+    chain.then = (resolve: (v: unknown) => unknown) =>
+      Promise.resolve({ data: [] as unknown[], error: null }).then(resolve);
     chain.update = () => chain;
     chain.insert = (row: unknown) => {
       serviceInserts.push({ table, row });

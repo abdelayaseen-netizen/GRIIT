@@ -62,6 +62,18 @@ export function memberYesterdayState(
   return securedKeys?.has(yesterdayKey) === true ? "secured" : "missed";
 }
 
+/** Today's roster "secured" is this challenge's completed check-ins, never day_secures. */
+export function memberSecuredFromCheckIns(args: {
+  requiredTaskIds: readonly string[];
+  completedTaskIds: readonly string[];
+}): { secured: boolean; done: number; total: number } {
+  const required = args.requiredTaskIds.filter(Boolean);
+  const doneIds = new Set(args.completedTaskIds);
+  const done = required.filter((id) => doneIds.has(id)).length;
+  const total = required.length;
+  return { secured: total > 0 && done >= total, done, total };
+}
+
 /**
  * Name of the first enrolled member who missed yesterday after a qualifying
  * day-before. Null when the group streak is still live or never existed.

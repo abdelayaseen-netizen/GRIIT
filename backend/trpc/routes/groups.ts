@@ -12,6 +12,7 @@ import {
   computeGroupStreak,
   dateKeyFromJoinedAt,
   groupStreakBrokeBy,
+  memberSecuredFromCheckIns,
   memberYesterdayState,
 } from "../../lib/group-challenges";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
@@ -570,7 +571,7 @@ export const groupsRouter = createTRPCRouter({
         securedKeysByUser.get(row.user_id)!.add(row.date_key);
       }
 
-      const enrolled = members.map((m) => {
+      const enrolledBase = members.map((m) => {
         const p = profileMap.get(m.user_id);
         const tz = p?.timezone ?? p?.reminder_timezone ?? "UTC";
         const todayKey = getTodayDateKey(tz);
@@ -580,16 +581,74 @@ export const groupsRouter = createTRPCRouter({
           avatar: p?.avatar_url ?? null,
           role: m.role,
           currentStreak: streakMap.get(m.user_id) ?? 0,
-          securedToday: securedKeysByUser.get(m.user_id)?.has(todayKey) === true,
+          todayKey,
           joinedAt: m.joined_at,
           joinedDateKey: dateKeyFromJoinedAt(m.joined_at, tz),
         };
       });
 
+      const reader = challengeReader(ctx.supabase);
+      const { data: taskRows } = await reader
+        .from("challenge_tasks")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .limit(50);
+      const requiredTaskIds = ((taskRows ?? []) as { id: string }[]).map((t) => t.id);
+      const { data: enrollmentRows } = await reader
+        .from("active_challenges")
+        .select("id, user_id")
+        .eq("challenge_id", input.challengeId)
+        .in("user_id", members.map((m) => m.user_id))
+        .limit(GROUP_MAX_MEMBERS);
+      const enrollmentByUser = new Map(
+        ((enrollmentRows ?? []) as { id: string; user_id: string }[]).map((row) => [row.user_id, row.id]),
+      );
+      const enrollmentIds = [...enrollmentByUser.values()];
+      const { data: checkRows } =
+        enrollmentIds.length > 0
+          ? await reader
+              .from("check_ins")
+              .select("active_challenge_id, task_id, date_key, status")
+              .in("active_challenge_id", enrollmentIds)
+              .eq("status", "completed")
+              .limit(500)
+          : { data: [] };
+      const completedByEnrollment = new Map<string, Map<string, Set<string>>>();
+      for (const row of (checkRows ?? []) as {
+        active_challenge_id: string;
+        task_id: string;
+        date_key: string;
+        status: string;
+      }[]) {
+        if (!completedByEnrollment.has(row.active_challenge_id)) {
+          completedByEnrollment.set(row.active_challenge_id, new Map());
+        }
+        const byDate = completedByEnrollment.get(row.active_challenge_id)!;
+        if (!byDate.has(row.date_key)) byDate.set(row.date_key, new Set());
+        byDate.get(row.date_key)!.add(row.task_id);
+      }
+
+      const enrolled = enrolledBase.map((m) => {
+        const enrollmentId = enrollmentByUser.get(m.userId);
+        const completed = enrollmentId
+          ? [...(completedByEnrollment.get(enrollmentId)?.get(m.todayKey) ?? [])]
+          : [];
+        const progress = memberSecuredFromCheckIns({
+          requiredTaskIds,
+          completedTaskIds: completed,
+        });
+        return {
+          ...m,
+          securedToday: progress.secured,
+          tasksDone: progress.done,
+          tasksTotal: progress.total,
+        };
+      });
+
       enrolled.sort((a, b) => {
-        if (a.role === "creator" && b.role !== "creator") return -1;
-        if (b.role === "creator" && a.role !== "creator") return 1;
-        return b.currentStreak - a.currentStreak;
+        if (a.userId === ctx.userId) return -1;
+        if (b.userId === ctx.userId) return 1;
+        return a.displayName.localeCompare(b.displayName);
       });
 
       const pendingInvites = pending.map((inv) => {
@@ -630,7 +689,7 @@ export const groupsRouter = createTRPCRouter({
           members: groupMembers,
           securedKeysByUser,
         }),
-        members: enrolled.map(({ joinedDateKey: _joinedDateKey, ...rest }) => ({
+        members: enrolled.map(({ joinedDateKey: _joinedDateKey, todayKey: _todayKey, ...rest }) => ({
           ...rest,
           yesterdayState: memberYesterdayState(securedKeysByUser.get(rest.userId), yesterdayKey),
         })),
