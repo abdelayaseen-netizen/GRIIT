@@ -38,6 +38,9 @@ describe("getRecord proofs days", () => {
     expect(src).toContain("checkInHasCameraProof");
     expect(src).toContain("fullHouseAtFromRoster");
     expect(src).toContain("fullHouseAt");
+    expect(src).toContain("captureError(\"check_ins\", cinRes.error, ctx)");
+    expect(src).not.toMatch(/if \(cinRes\.error\) \{/);
+    expect(src).not.toMatch(/throw new TRPCError\(\{ code: "INTERNAL_SERVER_ERROR"/);
   });
 });
 
