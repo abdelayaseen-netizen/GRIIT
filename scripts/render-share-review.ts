@@ -158,7 +158,7 @@ function itemHtml(item: ShareItem, shadow: string): string {
       .join("");
     return `<div style="display:flex;flex-wrap:wrap;gap:${item.gap}px;width:${7 * item.cell + 6 * item.gap}px;">${cells}</div>`;
   }
-  return `<div style="background:${item.plate};border-radius:40px;padding:28px 36px;">${textHtml({ kind: "text", text: item.title, size: 34, line: 42, weight: "500", color: item.sub }, shadow)}<div style="height:8px"></div>${textHtml({ kind: "text", text: item.link, size: 54, line: 64, weight: "500", color: item.fg }, shadow)}</div>`;
+  return `<div style="background:${item.plate};border-radius:40px;padding:28px 36px;">${item.title ? textHtml({ kind: "text", text: item.title, size: 34, line: 42, weight: "500", color: item.sub }, shadow) : ""}${item.link ? textHtml({ kind: "text", text: item.link, size: item.title ? 54 : 34, line: item.title ? 64 : 42, weight: "500", color: item.fg }, shadow) : ""}</div>`;
 }
 
 export function shareCardHtml(input: ShareCardInput): string {

@@ -28,6 +28,7 @@ import {
   shareToInstagramStory,
 } from "@/lib/share";
 import { facebookAppId, savePhotosCopy, showStoryAction } from "@/lib/share-sticker";
+import { readShareColours, writeShareColour } from "@/lib/share-colour";
 import {
   SHARE_CAPTION_PLACEHOLDER,
   SHARE_COLOURS,
@@ -43,7 +44,6 @@ import {
   SHARE_TARGET_STORY,
   SHARE_W,
   colourForStyle,
-  rememberColour,
   shareJoinLine,
   shareMessageBody,
   storyUsesSticker,
@@ -105,6 +105,13 @@ export default function ShareSystemSheet({
     setIndex(0);
     setCaption("");
     setSaveStatus(null);
+    let cancelled = false;
+    void readShareColours().then((loaded) => {
+      if (!cancelled) setMemory(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [visible, moment]);
 
   const onScrollEnd = useCallback(
@@ -129,7 +136,10 @@ export default function ShareSystemSheet({
       try {
         const uri = await capture();
         if (!uri) return;
-        const body = shareMessageBody(caption, shareJoinLine(card.inviteCode));
+        const body = shareMessageBody(
+          caption,
+          shareJoinLine({ username: card.username, inviteId: card.inviteCode }),
+        );
         if (kind === "story") {
           await shareToInstagramStory(uri, {
             asSticker: storyUsesSticker(styleId),
@@ -206,7 +216,9 @@ export default function ShareSystemSheet({
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
                 accessibilityLabel={swatch.label}
-                onPress={() => setMemory((prev) => rememberColour(prev, styleId, id))}
+                onPress={() => {
+                  void writeShareColour(memory, styleId, id).then(setMemory);
+                }}
                 style={styles.colourHit}
               >
                 <View style={[styles.swatchWrap, on ? styles.swatchOn : null]}>

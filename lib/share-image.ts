@@ -4,14 +4,13 @@
  * Caption is never part of the paint.
  *
  * Join line: SHARE_JOIN_WEB_ORIGIN stays empty until a public web domain exists.
- * Empty origin uses "Join me on GRIIT · code {code}".
+ * Empty origin prints "Find me on GRIIT · @{username}". A set origin prints
+ * "Join me · {origin}/invite/{id}".
  *
  * Last-picked colour is per style in memory for the open sheet only.
  * profiles.onboarding_answers is the only profile jsonb and it does not fit
  * a share preference. No column is written.
  */
-import { joinMeOnGriitCode } from "@/lib/deep-links";
-
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
 export const SHARE_PREVIEW_W = 270;
@@ -187,27 +186,21 @@ export function rememberColour(
   return { ...memory, [style]: colour };
 }
 
-export function shareJoinLine(
-  code: string | null | undefined,
-  origin: string = SHARE_JOIN_WEB_ORIGIN,
-): string {
-  const trimmed = code?.trim() ?? "";
-  if (!trimmed) return "";
-  const base = origin.trim().replace(/\/$/, "");
-  if (base) return `Join me · ${base}/invite/${trimmed}`;
-  return joinMeOnGriitCode(trimmed);
-}
-
-/** Link plate body. Same origin constant as the join line. */
-export function shareJoinPlateLink(
-  code: string | null | undefined,
-  origin: string = SHARE_JOIN_WEB_ORIGIN,
-): string {
-  const trimmed = code?.trim() ?? "";
-  if (!trimmed) return "";
-  const base = origin.trim().replace(/\/$/, "");
-  if (!base) return `code ${trimmed}`;
-  return `${base.replace(/^https?:\/\//, "")}/invite/${trimmed}`;
+/** No origin: username line. Origin set: invite URL with the challenge id. */
+export function shareJoinLine(args: {
+  username?: string | null;
+  inviteId?: string | null;
+  origin?: string;
+}): string {
+  const base = (args.origin ?? SHARE_JOIN_WEB_ORIGIN).trim().replace(/\/$/, "");
+  if (base) {
+    const id = args.inviteId?.trim() ?? "";
+    if (!id) return "";
+    return `Join me · ${base}/invite/${id}`;
+  }
+  const name = args.username?.trim().replace(/^@/, "") ?? "";
+  if (!name) return "";
+  return `Find me on GRIIT · @${name}`;
 }
 
 export function shareMessageBody(caption: string, joinLine: string): string {
@@ -313,7 +306,7 @@ function dayRow(day: number, of: number, daySize: number, color: string, restCol
 }
 
 function joinItem(input: ShareCardInput, color: string): ShareItem | null {
-  const line = shareJoinLine(input.inviteCode);
+  const line = shareJoinLine({ username: input.username, inviteId: input.inviteCode });
   if (!line) return null;
   return text(line, 30, 38, color, "500");
 }
@@ -501,11 +494,11 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     if (input.rule?.trim()) push(text(input.rule.trim(), 34, 42, palette.sub));
   }
   if (input.membersLine?.trim()) push(text(input.membersLine.trim(), 36, 44, palette.fg));
-  const link = shareJoinPlateLink(input.inviteCode);
+  const link = shareJoinLine({ username: input.username, inviteId: input.inviteCode });
   if (link) {
     push({
       kind: "link",
-      title: "Join me",
+      title: "",
       link,
       fg: palette.fg,
       sub: palette.sub,
@@ -513,7 +506,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     });
   }
   const from = atUser(input.username);
-  if (from) push(text(`from ${from}`, 34, 42, palette.sub));
+  if (from && link.startsWith("Join me ·")) push(text(`from ${from}`, 34, 42, palette.sub));
   return base;
 }
 
@@ -527,8 +520,8 @@ export function paintStrings(paint: SharePaint): string[] {
     } else if (item.kind === "row") item.items.forEach(walk);
     else if (item.kind === "seal") out.push(item.label);
     else if (item.kind === "link") {
-      out.push(item.title);
-      out.push(item.link);
+      if (item.title) out.push(item.title);
+      if (item.link) out.push(item.link);
     }
   };
   if (paint.wordmark) out.push(paint.wordmark.text);

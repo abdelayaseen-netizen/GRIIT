@@ -145,8 +145,12 @@ function ItemView({ item, shadow }: { item: ShareItem; shadow: { color: string; 
   }
   return (
     <View style={[styles.link, { backgroundColor: item.plate }]}>
-      <TextRun item={{ kind: "text", text: item.title, size: 34, line: 42, weight: "500", color: item.sub }} shadow={shadow} />
-      <TextRun item={{ kind: "text", text: item.link, size: 54, line: 64, weight: "500", color: item.fg }} shadow={shadow} />
+      {item.title ? (
+        <TextRun item={{ kind: "text", text: item.title, size: 34, line: 42, weight: "500", color: item.sub }} shadow={shadow} />
+      ) : null}
+      {item.link ? (
+        <TextRun item={{ kind: "text", text: item.link, size: item.title ? 54 : 34, line: item.title ? 64 : 42, weight: "500", color: item.fg }} shadow={shadow} />
+      ) : null}
     </View>
   );
 }
