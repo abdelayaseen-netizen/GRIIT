@@ -20,6 +20,7 @@ describe("v44 featured catalog", () => {
     expect(featuredMembersLine(3)).toBe("3 people in it");
     expect(needsSetGym(FEATURED_BUILTINS[0]!)).toBe(false);
     expect(needsSetGym(FEATURED_BUILTINS[1]!)).toBe(false);
+    expect(needsSetGym({ placeGate: true })).toBe(false);
     expect(FEATURED_BUILTINS.every((item) => item.placeGate === false)).toBe(true);
     for (const item of FEATURED_BUILTINS) {
       expect(item.config.photo_mode).toBeTruthy();

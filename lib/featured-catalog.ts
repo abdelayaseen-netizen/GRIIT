@@ -5,6 +5,7 @@
  */
 
 import { gatesFor, gateTimeFor, type TaskModelRow } from "@/backend/lib/task-model";
+import { FLAGS } from "@/lib/feature-flags";
 import { buildFeaturedCatalogRows } from "@/lib/featured-catalog-seed";
 import { gateLabel } from "@/lib/task-ui";
 
@@ -70,6 +71,7 @@ export function featuredMembersLine(count: number): string {
 }
 
 export function needsSetGym(item: Pick<FeaturedBuiltin, "placeGate">): boolean {
+  if (!FLAGS.SET_MEMBER_GYM) return false;
   return item.placeGate === true;
 }
 
