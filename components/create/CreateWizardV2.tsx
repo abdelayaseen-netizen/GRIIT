@@ -11,6 +11,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -141,6 +142,23 @@ export function CreateWizardV2() {
     startAt?: string | null;
     tasks: WizardTask[];
   } | null>(null);
+
+  const resetCreateFlow = useCallback(() => {
+    setState(INITIAL_STATE);
+    setReviewing(false);
+    setCancelOpen(false);
+    setNewTaskOpen(false);
+    setEditingIndex(null);
+    setLaunchBusy(false);
+    setLaunchError("");
+    setLaunched(null);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      resetCreateFlow();
+    }, [resetCreateFlow]),
+  );
 
   const isDirty = useMemo(() => {
     return (

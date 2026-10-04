@@ -44,6 +44,10 @@ describe("create launched", () => {
     );
     expect(wizard).toContain("setLaunched(");
     expect(wizard).toContain("<LaunchedScreen");
+    expect(wizard).toContain("useFocusEffect");
+    expect(wizard).toContain("resetCreateFlow");
+    expect(wizard).toContain("setState(INITIAL_STATE)");
+    expect(wizard).toContain("setLaunched(null)");
     expect(wizard).not.toContain("onNext=");
     expect(wizard).not.toContain("ROUTES.CHALLENGE_ID(launched.challengeId)");
     expect(wizard).not.toContain("TASK_COMPLETE");
