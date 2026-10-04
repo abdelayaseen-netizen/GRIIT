@@ -63,7 +63,8 @@ describe("v42 badges", () => {
     const rec = readFileSync(resolve(__dirname, "../backend/trpc/routes/profiles-record.ts"), "utf8");
     expect(rec).toContain("evaluateV42Badges");
     expect(rec).toContain("currentStreak: record.streak.current");
-    expect(rec).toContain("proof_photo_url");
+    expect(rec).toContain("checkInHasCameraProof");
+    expect(rec).not.toMatch(/\.select\([^)]*proof_photo_url/);
     expect(rec).toContain("fullHouseAt");
     expect(rec).toContain('=== "team"');
     expect(rec).not.toMatch(/participation_type === ["']group["']/);
