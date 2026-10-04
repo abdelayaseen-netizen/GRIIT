@@ -47,6 +47,26 @@ import {
   type ProfileRelationship,
 } from "../../../lib/profile-v2-visibility";
 import { canSeeProfileContent, isPrivateAccount, type PrivacyProfileFields } from "../../../lib/profile-privacy";
+import * as Sentry from "@sentry/node";
+import { reportError } from "../../lib/error-reporting";
+
+function captureError(
+  queryName: string,
+  error: { message?: string } | null | undefined,
+  ctx: { requestId: string; userId: string | null },
+): void {
+  if (!error) return;
+  const err = new Error(error.message || `${queryName} failed`);
+  Sentry.captureException(err, { tags: { path: `profiles.getRecord.${queryName}` } });
+  reportError({
+    requestId: ctx.requestId,
+    path: `profiles.getRecord.${queryName}`,
+    userId: ctx.userId,
+    code: "QUERY_FAILED",
+    message: err.message,
+    ts: new Date().toISOString(),
+  });
+}
 
 /** Owner "see as stranger": public account → public view; private → lock. */
 export function recordAccountVisible(opts: {
@@ -168,9 +188,7 @@ export const profilesRecordProcedures = {
         )
         .eq("user_id", ownerId)
         .maybeSingle();
-      if (profileErr) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: profileErr.message });
-      }
+      captureError("profiles", profileErr, ctx);
       if (!profileRow) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found." });
       }
@@ -253,11 +271,12 @@ export const profilesRecordProcedures = {
       };
 
       if (!gate.profile) {
-        const { data: streakRow } = await db
+        const { data: streakRow, error: lockedStreakErr } = await db
           .from("streaks")
           .select("active_streak_count")
           .eq("user_id", ownerId)
           .maybeSingle();
+        captureError("streaks.locked", lockedStreakErr, ctx);
         const locked = emptyRecord();
         locked.streak.current =
           (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
@@ -296,15 +315,12 @@ export const profilesRecordProcedures = {
         db.from("last_stand_uses").select("date_key").eq("user_id", ownerId).limit(365),
       ]);
 
-      if (streakRes.error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: streakRes.error.message });
-      }
-      if (historyRes.error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: historyRes.error.message });
-      }
-      if (securesRes.error) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: securesRes.error.message });
-      }
+      captureError("streaks", streakRes.error, ctx);
+      captureError("active_challenges", historyRes.error, ctx);
+      captureError("day_secures", securesRes.error, ctx);
+      captureError("user_achievements", unlocksRes.error, ctx);
+      captureError("freeze_uses", freezeRes.error, ctx);
+      captureError("last_stand_uses", standRes.error, ctx);
 
       const acRows = (historyRes.data ?? []) as ActiveRow[];
       const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
@@ -327,13 +343,13 @@ export const profilesRecordProcedures = {
             : Promise.resolve({ data: [], error: null }),
           db
             .from("check_ins")
-            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, proof_photo_url, created_at")
+            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, created_at")
             .eq("user_id", ownerId)
             .limit(800),
         ]);
-        if (chRes.error) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: chRes.error.message });
-        }
+        captureError("challenges", chRes.error, ctx);
+        captureError("challenge_tasks", taskRes.error, ctx);
+        captureError("check_ins", cinRes.error, ctx);
         challenges = (chRes.data ?? []) as ChallengeRow[];
         taskRows = (taskRes.data ?? []) as TaskCountRow[];
         checkInRows = (cinRes.data ?? []) as CheckInProofRow[];
@@ -385,12 +401,13 @@ export const profilesRecordProcedures = {
         targetStreak: p.target_streak ?? null,
       });
 
-      const { data: proofEvents } = await db
+      const { data: proofEvents, error: proofEventsErr } = await db
         .from("activity_events")
         .select("id, metadata, created_at, shared")
         .eq("user_id", ownerId)
         .eq("event_type", "task_completed")
         .limit(800);
+      captureError("activity_events", proofEventsErr, ctx);
       const proofs = cameraProofTiles({
         checkIns: checkInRows,
         securedDateKeys,
@@ -572,7 +589,7 @@ export const profilesRecordProcedures = {
         .filter((r) => r.task_id && timeTaskIds.has(r.task_id) && securedSet.has(r.date_key))
         .map((r) => r.date_key);
       const cameraProofKeys = checkInRows
-        .filter((r) => Boolean(r.proof_photo_url))
+        .filter((r) => checkInHasCameraProof(r))
         .map((r) => r.date_key);
       const holdKeys = [
         ...((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
@@ -597,9 +614,8 @@ export const profilesRecordProcedures = {
           .select("challenge_id, user_id, status, ended_at")
           .in("challenge_id", teamCompletedIds)
           .limit(200);
-        if (rosterRes.error) {
-          logger.error({ err: rosterRes.error }, "[getRecord] full-house roster");
-        } else {
+        captureError("active_challenges.roster", rosterRes.error, ctx);
+        if (!rosterRes.error) {
           fullHouseAt = fullHouseAtFromRoster(
             ownerId,
             ((rosterRes.data ?? []) as { challenge_id: string; user_id: string; status: string; ended_at?: string | null }[]).map(
