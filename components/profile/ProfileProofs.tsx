@@ -3,7 +3,6 @@
  */
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Image } from "expo-image";
 import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import { CalendarDays, ImageOff, LayoutGrid, Lock, Plus } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
