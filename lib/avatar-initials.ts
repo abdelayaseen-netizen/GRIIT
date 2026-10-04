@@ -21,9 +21,19 @@ export function avatarTint(userId?: string | null): { bg: string; fg: string } {
   if (!userId) return { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
   let h = 0;
   for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) | 0;
-  return Math.abs(h) % 2 === 0
-    ? { bg: DS_V3.color.brandTint, fg: DS_V3.color.brandText }
-    : { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
+  const pair =
+    Math.abs(h) % 2 === 0
+      ? { bg: DS_V3.color.brandTint, fg: DS_V3.color.brandText }
+      : { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
+  if ((pair.bg as string) === (DS_V3.color.canvas as string)) {
+    return { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
+  }
+  return pair;
+}
+
+/** Tiny / empty bitmaps load without error and paint a black circle. */
+export function avatarPhotoLooksValid(width?: number | null, height?: number | null): boolean {
+  return (width ?? 0) >= 8 && (height ?? 0) >= 8;
 }
 
 /** Photo only while this uri has not failed. A new uri retries. */

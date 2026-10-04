@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { avatarShowsPhoto, avatarTint, initialsFrom } from "@/lib/avatar-initials";
+import { avatarPhotoLooksValid, avatarShowsPhoto, avatarTint, initialsFrom } from "@/lib/avatar-initials";
 import { DS_V3 } from "@/lib/design-system";
 import { getDisplayInitials } from "@/lib/utils";
 
@@ -70,5 +70,11 @@ describe("avatar photo fallback", () => {
     expect(avatar).toContain("initialsFrom");
     expect(avatar).toContain("{initials}");
     expect(avatar).not.toContain("backgroundColor: \"#000\"");
+    expect(avatarPhotoLooksValid(1, 1)).toBe(false);
+    expect(avatarPhotoLooksValid(8, 8)).toBe(true);
+    expect(avatarTint("user-a").bg).not.toBe(DS_V3.color.canvas);
+    expect(avatar).toContain("avatarPhotoLooksValid");
+    expect(avatar).toContain("photoReady");
+    expect(avatar).toContain("backgroundColor: \"transparent\"");
   });
 });

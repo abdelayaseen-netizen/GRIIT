@@ -7,7 +7,12 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { DS_V3 } from "@/lib/design-system";
-import { initialsFrom, avatarTint, avatarShowsPhoto } from "@/lib/avatar-initials";
+import {
+  initialsFrom,
+  avatarTint,
+  avatarShowsPhoto,
+  avatarPhotoLooksValid,
+} from "@/lib/avatar-initials";
 
 export { initialsFrom };
 
@@ -41,11 +46,13 @@ export default function Avatar({
   ring,
 }: AvatarProps) {
   const [failedUri, setFailedUri] = useState<string | null>(null);
+  const [readyUri, setReadyUri] = useState<string | null>(null);
   const initials = initialsFrom(displayName, username);
   const type = typeForSize(size);
   const tint = avatarTint(userId);
   const trimmed = (uri ?? "").trim();
   const showPhoto = avatarShowsPhoto(trimmed, failedUri);
+  const photoReady = readyUri === trimmed;
   const frame = [
     styles.frame,
     {
@@ -82,11 +89,30 @@ export default function Avatar({
       {letters}
       <Image
         source={{ uri: trimmed }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: 999 }]}
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            borderRadius: 999,
+            backgroundColor: "transparent",
+            opacity: photoReady ? 1 : 0,
+          },
+        ]}
         contentFit="cover"
         cachePolicy="memory-disk"
         recyclingKey={trimmed}
-        onError={() => setFailedUri(trimmed)}
+        onLoad={(e) => {
+          const src = (e as { source?: { width?: number; height?: number } }).source;
+          if (!avatarPhotoLooksValid(src?.width, src?.height)) {
+            setFailedUri(trimmed);
+            setReadyUri(null);
+            return;
+          }
+          setReadyUri(trimmed);
+        }}
+        onError={() => {
+          setFailedUri(trimmed);
+          setReadyUri(null);
+        }}
       />
     </View>
   );
