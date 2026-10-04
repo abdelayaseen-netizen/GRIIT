@@ -102,6 +102,7 @@ function createFeedMock(opts: {
       in: () => b,
       order: () => b,
       eq: () => b,
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
       or: () => b,
       lt: () => b,
       lte: () => b,

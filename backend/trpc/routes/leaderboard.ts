@@ -12,6 +12,7 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { consistencyScore } from "../../lib/scoring";
 import { respectCountsByOwner } from "../../lib/feed-respect-counts";
+import { dropTestAuthors, testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
 
 const LEADERBOARD_MAX = 100;
 
@@ -60,10 +61,13 @@ export const leaderboardRouter = createTRPCRouter({
         countByUser.set(uid, (countByUser.get(uid) ?? 0) + 1);
       }
 
-      const sortedUserIds = Array.from(countByUser.entries())
+      const rankedIds = Array.from(countByUser.entries())
         .sort((a, b) => b[1] - a[1])
-        .map(([uid]) => uid)
-        .slice(safeOffset, safeOffset + limit);
+        .map(([uid]) => uid);
+      const viewerIsTest = userId ? await viewerIsTestAccount(server, userId) : false;
+      const testIds = await testAuthorIdSet(server, rankedIds);
+      const visibleIds = dropTestAuthors(rankedIds, testIds, viewerIsTest);
+      const sortedUserIds = visibleIds.slice(safeOffset, safeOffset + limit);
 
       // Filter blocked users from leaderboard entries (two-way: I don't see them, they don't see me).
       const blockedLbIds = userId ? await getBlockedUserIds(ctx.supabase, userId) : new Set<string>();
@@ -147,7 +151,7 @@ export const leaderboardRouter = createTRPCRouter({
         };
       });
 
-      const allSorted = Array.from(countByUser.entries()).sort((a, b) => b[1] - a[1]).map(([uid]) => uid);
+      const allSorted = visibleIds;
       const currentUserRank = userId ? allSorted.indexOf(userId) + 1 || null : null;
       const hasMore = safeOffset + entries.length < allSorted.length;
       const nextCursor = hasMore ? String(safeOffset + limit) : undefined;
@@ -170,7 +174,11 @@ export const leaderboardRouter = createTRPCRouter({
     const todayKey = getTodayDateKey(tz);
 
     const mutual = await mutualFriendIds(ctx.supabase, viewerId);
-    const candidateIds = [...new Set([viewerId, ...mutual])];
+    const candidateIds = dropTestAuthors(
+      [...new Set([viewerId, ...mutual])],
+      await testAuthorIdSet(server, [viewerId, ...mutual]),
+      await viewerIsTestAccount(server, viewerId),
+    );
 
     const { data: secures, error: sErr } = await server
       .from("day_secures")
@@ -294,6 +302,12 @@ export const leaderboardRouter = createTRPCRouter({
         const mutual = await mutualFriendIds(ctx.supabase, viewerId);
         userIds = userIds.filter((id) => id === viewerId || mutual.has(id));
       }
+
+      userIds = dropTestAuthors(
+        userIds,
+        await testAuthorIdSet(server, userIds),
+        await viewerIsTestAccount(server, viewerId),
+      );
 
       if (userIds.length === 0) {
         return { leaderPoints: 1, challengeTitle: (ch as { title?: string }).title ?? "Challenge", visibility: vis, entries: [] };
