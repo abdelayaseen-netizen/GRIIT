@@ -35,7 +35,9 @@ import {
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
-import { canOfferYesterdayFreeze } from "@/lib/freeze-recovery";
+import { StreakSheet } from "@/components/home/StreakSheet";
+import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
+import { canOfferYesterdayFreeze, weekdayLongForDateKey } from "@/lib/freeze-recovery";
 import { activeChallengesAreHard } from "@/lib/secured-since";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
@@ -141,6 +143,8 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [showStreakSheet, setShowStreakSheet] = React.useState(false);
+  const [streakHeld, setStreakHeld] = React.useState(false);
   const [freezeError, setFreezeError] = React.useState<string | null>(null);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
@@ -492,6 +496,7 @@ export default function HomeScreen() {
       }),
     onSuccess: () => {
       setFreezeSpent(true);
+      setStreakHeld(true);
       setShowFreezeSheet(false);
       setFreezeError(null);
       if (user?.id) {
@@ -752,7 +757,8 @@ export default function HomeScreen() {
                 offerYesterdayFreeze
                   ? () => {
                       setFreezeError(null);
-                      setShowFreezeSheet(true);
+                      setStreakHeld(false);
+                      setShowStreakSheet(true);
                     }
                   : undefined
               }
@@ -810,6 +816,37 @@ export default function HomeScreen() {
           streak={streak ?? undefined}
           longestStreak={resolvedStats?.longestStreak}
           activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
+        />
+        <StreakSheet
+          visible={showStreakSheet}
+          held={streakHeld}
+          weekday={weekdayLongForDateKey(yesterdayKey, homeTimeZone)}
+          streak={streak ?? 0}
+          done={proof.doneCount}
+          total={proof.totalCount}
+          missed={(recon.result?.missedTaskNames ?? []).join(", ")}
+          freezesLeft={freezeStatus?.remaining ?? 0}
+          refill={freezeRefillDateLabel(freezeStatus?.lastFreezeUsedAt ?? null, homeTimeZone)}
+          week={["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
+            letter,
+            filled: weekStates[i] === "secured" || weekStates[i] === "frozen",
+            state: weekStates[i],
+          }))}
+          todayIndex={todayWeekIndex}
+          submitting={useFreeze.isPending}
+          error={freezeError}
+          onUse={() => {
+            setFreezeError(null);
+            useFreeze.mutate();
+          }}
+          onNotNow={() => {
+            setShowStreakSheet(false);
+            setFreezeError(null);
+          }}
+          onDone={() => {
+            setShowStreakSheet(false);
+            setStreakHeld(false);
+          }}
         />
         <FreezeSheet
           visible={showFreezeSheet}

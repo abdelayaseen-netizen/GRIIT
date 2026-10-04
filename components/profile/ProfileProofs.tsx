@@ -20,6 +20,7 @@ import {
   todayTileCaption,
 } from "@/lib/g3-profile";
 import { proofsDateLabel } from "@/lib/proofs-grid";
+import { KEPT_PROOFS_BODY } from "@/lib/v44-detail";
 import { NextBadgeCard } from "@/components/profile/BadgeGrid";
 import type { V42BadgeState } from "@/lib/v42-badges";
 import { showNextBadgeUnderGrid } from "@/lib/g3-profile";
@@ -105,7 +106,7 @@ export default function ProfileProofs({
       ) : empty ? (
         <View style={styles.empty}>
           <Text style={styles.emptyH}>{proofsEmptyHeading(secured)}</Text>
-          <Text style={styles.emptyB}>{NO_PROOFS_BODY}</Text>
+          <Text style={styles.emptyB}>{secured > 0 ? KEPT_PROOFS_BODY : NO_PROOFS_BODY}</Text>
         </View>
       ) : (
         <View style={styles.grid}>
