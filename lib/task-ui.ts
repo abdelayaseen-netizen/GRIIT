@@ -109,8 +109,98 @@ export function typeCaption(type: TaskModelType | string): string {
   return TYPE_CAPTION.check_off;
 }
 
-/** Wizard / pack rows: use stored gates, else camera from requirePhoto. */
+export function taskQuantityLine(task: {
+  type?: string;
+  targetValue?: number;
+  unit?: string;
+  durationMinutes?: number;
+  minWords?: number;
+  config?: Record<string, unknown>;
+}): string {
+  const cfg = task.config ?? {};
+  const type = task.type;
+  if (type === "counter") {
+    const n =
+      task.targetValue ?? (typeof cfg.targetValue === "number" ? cfg.targetValue : undefined);
+    const unit = (task.unit ?? (typeof cfg.unit === "string" ? cfg.unit : "")).trim();
+    if (n != null && n > 0) return unit ? `${n} ${unit}` : String(n);
+  }
+  if (type === "timer") {
+    const n =
+      task.durationMinutes ??
+      (typeof cfg.durationMinutes === "number" ? cfg.durationMinutes : undefined);
+    if (n != null && n > 0) return `${n} min`;
+  }
+  if (type === "text") {
+    const n = task.minWords ?? (typeof cfg.minWords === "number" ? cfg.minWords : undefined);
+    if (n != null && n > 0) return `${n} words`;
+  }
+  if (type === "run") {
+    const n =
+      typeof cfg.distance === "number"
+        ? cfg.distance
+        : task.targetValue;
+    const unit = (task.unit ?? (typeof cfg.unit === "string" ? cfg.unit : "km")).trim() || "km";
+    if (n != null && n > 0) return `${n} ${unit}`;
+  }
+  return "";
+}
+
+function photoPreviewPart(task: {
+  gates?: readonly TaskGate[] | null;
+  requirePhoto?: boolean;
+  photoMode?: string;
+  config?: Record<string, unknown>;
+}): string {
+  const raw = String(task.photoMode ?? task.config?.photo_mode ?? "").toLowerCase();
+  if (raw === "optional") return "Photo optional";
+  if (raw === "none") return SELF_REPORTED;
+  if (raw === "required" || task.requirePhoto || task.gates?.includes("camera")) return GATE_CAMERA;
+  return SELF_REPORTED;
+}
+
+function placePreviewPart(task: {
+  gates?: readonly TaskGate[] | null;
+  locationName?: string;
+  config?: Record<string, unknown>;
+}): string {
+  if (!task.gates?.includes("location")) return "";
+  const name = (
+    task.locationName ??
+    (typeof task.config?.location_name === "string" ? task.config.location_name : "")
+  ).trim();
+  return name || "Place";
+}
+
+/** Wizard / pack rows: quantity · photo · time · place name. */
 export function wizardGateLine(task: {
+  type?: string;
+  gates?: readonly TaskGate[] | null;
+  gateTime?: GateTime | null;
+  requirePhoto?: boolean;
+  photoMode?: string;
+  targetValue?: number;
+  unit?: string;
+  durationMinutes?: number;
+  minWords?: number;
+  locationName?: string;
+  config?: Record<string, unknown>;
+}): string {
+  const parts: string[] = [];
+  const qty = taskQuantityLine(task);
+  if (qty) parts.push(qty);
+  parts.push(photoPreviewPart(task));
+  if (task.gates?.includes("time")) {
+    const time = formatGateTime(task.gateTime);
+    if (time) parts.push(time);
+  }
+  const place = placePreviewPart(task);
+  if (place) parts.push(place);
+  return parts.join(" · ");
+}
+
+/** Home / detail compact proof line: camera · time · location. */
+export function gateLabel(task: {
   gates?: readonly TaskGate[] | null;
   gateTime?: GateTime | null;
   requirePhoto?: boolean;
@@ -118,15 +208,6 @@ export function wizardGateLine(task: {
   if (task.gates && task.gates.length > 0) return gateLine(task.gates, task.gateTime);
   if (task.requirePhoto) return gateLine(["camera"], task.gateTime);
   return gateLine(task.gates ?? [], task.gateTime);
-}
-
-/** Review / detail / feed requirement line. Same as wizardGateLine. */
-export function gateLabel(task: {
-  gates?: readonly TaskGate[] | null;
-  gateTime?: GateTime | null;
-  requirePhoto?: boolean;
-}): string {
-  return wizardGateLine(task);
 }
 
 export function minutesLeftCaption(minutes: number): string {

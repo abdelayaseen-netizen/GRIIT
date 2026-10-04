@@ -3,14 +3,12 @@
  */
 
 import type { GateTime, PhotoMode, TaskGate, TaskModelType } from "@/backend/lib/task-model";
-import { SELF_REPORTED } from "@/lib/task-ui";
+import { SELF_REPORTED, taskQuantityLine, wizardGateLine } from "@/lib/task-ui";
 import {
   DEFAULT_BETWEEN_END_HHMM,
   DEFAULT_BETWEEN_START_HHMM,
   DEFAULT_BY_HHMM,
   betweenEndAfterStart,
-  fmt12,
-  fmtWindow,
 } from "@/lib/time-gate-picker";
 
 export const ADD_TASK_HEADING = "Add a task";
@@ -276,19 +274,32 @@ export function applyStarter(starter: AddTaskStarter): AddTaskDraft {
 export function previewFromDraft(draft: AddTaskDraft): { title: string; caption: string } {
   const title = draft.name.trim() || ADD_TASK_NAME_PLACEHOLDER;
   const mode = photoModeFromDraft(draft);
-  const parts: string[] = [photoPreviewLabel(mode)];
+  const task = {
+    type: draft.type,
+    gates: gatesFromDraft(draft),
+    gateTime: gateTimeFromDraft(draft),
+    requirePhoto: mode === "required",
+    photoMode: mode,
+    targetValue: parseInt(draft.counterTarget, 10) || undefined,
+    unit: draft.type === "run" ? draft.runUnit : draft.counterUnit,
+    durationMinutes: timerMinutesFromDraft(draft),
+    minWords: parseInt(draft.minWords, 10) || undefined,
+    locationName: draft.location ? draft.placeName.trim() || "Place" : undefined,
+    config: configFromDraft(draft),
+  };
   if (
     draft.time &&
     draft.timeMode === "between" &&
     !betweenEndAfterStart(draft.fromTime, draft.toTime)
   ) {
-    parts.push("Time window not set");
-    return { title, caption: parts.join(" · ") };
+    return {
+      title,
+      caption: [taskQuantityLine(task), photoPreviewLabel(mode), "Time window not set"]
+        .filter(Boolean)
+        .join(" · "),
+    };
   }
-  if (draft.time && draft.timeMode === "by") parts.push(`By ${fmt12(draft.byTime)}`);
-  if (draft.time && draft.timeMode === "between") parts.push(fmtWindow(draft.fromTime, draft.toTime));
-  if (draft.location) parts.push(draft.placeName.trim() || "Place");
-  return { title, caption: parts.join(" · ") };
+  return { title, caption: wizardGateLine(task) };
 }
 
 export function placeAccuracyLine(meters: number): string {

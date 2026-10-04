@@ -199,7 +199,7 @@ describe("add-task draft", () => {
         fromTime: "05:00",
         toTime: "06:30",
       }).caption,
-    ).toBe("Self-reported · 5:00–6:30 am");
+    ).toBe("Self-reported · Between 5:00 and 6:30 am");
   });
 
   it("invalid Between window disables Add task and marks the preview", () => {
@@ -226,7 +226,7 @@ describe("add-task draft", () => {
           toTime: "06:30",
         }),
       ).caption,
-    ).toBe("Camera · 5:00–6:30 am");
+    ).toBe("Camera · Between 5:00 and 6:30 am");
   });
 
   it("editing loads saved By / Between values and photo_mode", () => {
@@ -291,7 +291,7 @@ describe("add-task draft", () => {
       location_longitude: -74,
       location_radius_meters: 250,
     });
-    expect(previewFromDraft(after).caption).toBe("Camera · By 7:00 am · Gym");
+    expect(previewFromDraft(after).caption).toBe("30 pages · Camera · By 7:00 am · Gym");
     const opened = draftFromWizardTask(row);
     expect(opened.time).toBe(true);
     expect(opened.location).toBe(true);
