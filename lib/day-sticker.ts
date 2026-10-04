@@ -19,6 +19,8 @@ export type ShareTodayChallenge = {
   photoCount: number;
   proof?: "camera" | "camera_place" | "self";
   stickerKind?: "day" | "challenge";
+  /** Challenge id used as the invite code. Existing column, already on the home section. */
+  inviteCode?: string | null;
 };
 
 function isDateKey(value: string): boolean {
@@ -76,6 +78,7 @@ export function shareTodayChallenges(
     doneCount?: number;
     totalCount?: number;
     proof?: "camera" | "camera_place" | "self";
+    challengeId?: string | null;
   }[],
 ): ShareTodayChallenge[] {
   return sections
@@ -93,6 +96,7 @@ export function shareTodayChallenges(
       photoCount: Math.max(0, Math.floor(s.photoCount ?? 0)),
       proof: s.proof,
       stickerKind: "day" as const,
+      inviteCode: s.challengeId ?? null,
     }));
 }
 

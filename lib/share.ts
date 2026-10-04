@@ -153,17 +153,80 @@ export async function saveStickerToPhotos(imageUri: string): Promise<SavePhotosR
  * Instagram Stories via pasteboard (stickerImage / backgroundImage).
  * App ID from config only. Does not put the image in a URL.
  */
+/** Caption text only. Never drawn into the share image. */
+export async function copyShareCaption(caption: string): Promise<void> {
+  const text = caption.trim();
+  if (!text) return;
+  await Clipboard.setStringAsync(text);
+}
+
+/** System share sheet with the PNG and the caption (or join line) as text. */
+export async function shareImageAndCaption(imageUri: string, message: string): Promise<void> {
+  if (Platform.OS === "web") {
+    await shareOrCopy(message, "GRIIT");
+    return;
+  }
+  try {
+    await Share.share(
+      Platform.OS === "ios"
+        ? { url: imageUri, message }
+        : { message, title: "GRIIT", url: imageUri },
+    );
+  } catch {
+    await shareProgressImage(imageUri, message);
+  }
+}
+
+/** Messages composer: PNG attachment plus caption, or the join line when the caption is empty. */
+export async function shareStickerToMessages(imageUri: string, body: string): Promise<void> {
+  if (Platform.OS === "web") {
+    await shareOrCopy(body, "GRIIT");
+    return;
+  }
+  try {
+    const SMS = await import("expo-sms");
+    const available = await SMS.isAvailableAsync();
+    if (!available) {
+      await shareImageAndCaption(imageUri, body);
+      return;
+    }
+    let uri = imageUri;
+    if (Platform.OS === "android") {
+      try {
+        uri = await FileSystem.getContentUriAsync(imageUri);
+      } catch {
+        uri = imageUri;
+      }
+    }
+    await SMS.sendSMSAsync([], body, {
+      attachments: { uri, mimeType: "image/png", filename: "griit-share.png" },
+    });
+  } catch {
+    await shareImageAndCaption(imageUri, body);
+  }
+}
+
 export async function shareToInstagramStory(
   imageUri: string,
-  opts?: { asSticker?: boolean },
+  opts?: {
+    asSticker?: boolean;
+    backgroundTopColor?: string;
+    backgroundBottomColor?: string;
+    caption?: string;
+  },
 ): Promise<void> {
   if (Platform.OS === "web") {
     return;
+  }
+  if (opts?.caption?.trim()) {
+    await copyShareCaption(opts.caption);
   }
   const input = instagramStoriesShareInput({
     imageUri,
     asSticker: opts?.asSticker === true,
     appId: facebookAppId(),
+    backgroundTopColor: opts?.asSticker ? opts.backgroundTopColor : undefined,
+    backgroundBottomColor: opts?.asSticker ? opts.backgroundBottomColor : undefined,
   });
   if (!input) return;
   try {
@@ -172,6 +235,8 @@ export async function shareToInstagramStory(
       appId: input.appId,
       stickerImage: input.stickerImage,
       backgroundImage: input.backgroundImage,
+      backgroundTopColor: input.backgroundTopColor,
+      backgroundBottomColor: input.backgroundBottomColor,
     });
     try {
       trackEvent("share_completed", { content_type: "instagram_story" });

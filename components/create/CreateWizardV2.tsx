@@ -98,6 +98,7 @@ const INITIAL_STATE: WizardState = {
 function canAdvanceStep1(s: WizardState): boolean {
   if (s.title.trim().length < 3) return false;
   if (s.title.length > 60) return false;
+  if (!s.category) return false;
   if (s.durationDays == null || s.durationDays < 1) return false;
   return true;
 }
@@ -384,6 +385,7 @@ export function CreateWizardV2() {
               }
             : undefined
         }
+        onStartToday={() => router.replace(ROUTES.TABS_HOME as never)}
       />
     );
   }
@@ -477,8 +479,8 @@ export function CreateWizardV2() {
           ) : null}
           <Button
             label={
-              state.step === 1 && state.title.trim().length < 3
-                ? "Name the challenge to continue."
+              state.step === 1 && (!state.title.trim() || !state.category)
+                ? "Add a name and a category to continue."
                 : state.step === 3
                   ? "Review"
                   : "Continue"

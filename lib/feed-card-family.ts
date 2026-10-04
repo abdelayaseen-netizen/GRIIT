@@ -55,6 +55,12 @@ export function feedCardSubject(p: FeedCardInput, variant: FeedCardVariant): str
   return (p.taskName ?? "").trim() || "Task";
 }
 
+export function feedProofSubject(day: number, total: number, challenge: string): string {
+  const name = challenge.trim();
+  const dayLine = `Day ${Math.max(0, Math.floor(day))} of ${Math.max(0, Math.floor(total))}`;
+  return name ? `${dayLine} · ${name}` : dayLine;
+}
+
 export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string {
   if (variant === "task_camera") return "Camera · Taken in the app";
   if (variant === "task_self") {

@@ -3,15 +3,20 @@
  */
 import React from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ArrowUpRight, ShieldOff, X } from "lucide-react-native";
+import ViewShot from "react-native-view-shot";
+import { Download, Flame, Instagram, ShieldOff, X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
-import DisplayNumber from "@/components/ds/DisplayNumber";
+import ShareImage from "@/components/share/ShareImage";
+import { saveStickerToPhotos, shareToInstagramStory } from "@/lib/share";
+import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
+import type { ShareCardInput } from "@/lib/share-image";
+import { securedMomentTitle, streakInARow } from "@/lib/task-complete-toast";
 import EmptyState from "@/components/ds/EmptyState";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
-import { SECURED_DONE, SECURED_STREAK_LABEL } from "@/lib/simple-log";
+import { SECURED_DONE } from "@/lib/simple-log";
 import {
   PROOF_KEEP,
   PROOF_SHARE,
@@ -24,7 +29,6 @@ import {
   SECURED_SELF,
   SECURED_TILE,
   SECURED_TILE_MAX,
-  SECURED_TODAY,
   securedChallengeLine,
   securedDayCaption,
   securedOverflowLabel,
@@ -55,6 +59,7 @@ export default function SecuredDayScreen({
   onShare,
   onKeep,
   onDone,
+  username,
 }: {
   streak: number;
   proofs: SecuredProof[];
@@ -73,6 +78,7 @@ export default function SecuredDayScreen({
   onShare?: () => void;
   onKeep?: () => void;
   onDone: () => void;
+  username?: string | null;
 }) {
   const insets = useSafeAreaInsets();
   const n = proofs.length;
@@ -87,6 +93,34 @@ export default function SecuredDayScreen({
           allSelfReported,
         });
   const names = [...new Set(proofs.map((p) => p.challengeName))].join(", ");
+  const day = proofs[0]?.day ?? selfReported[0]?.day ?? null;
+  const title = securedMomentTitle(challengeCount, day);
+  const lines =
+    challengeCount === 1
+      ? []
+      : [
+          ...proofs.map((p) => securedChallengeLine(p.challengeName, p.day, p.length)),
+          ...selfReported.map((row) => securedChallengeLine(row.name, row.day, row.length)),
+        ];
+  const previewPhoto = proofs[0]?.uri ?? null;
+  const previewChallenge = proofs[0]?.challengeName ?? selfReported[0]?.name ?? "";
+  const preview: ShareCardInput = {
+    style: previewPhoto ? "A" : "C",
+    colour: "ink",
+    challenge: previewChallenge,
+    day: day ?? undefined,
+    photoUri: previewPhoto,
+    cameraSeal: Boolean(previewPhoto),
+    username,
+    streak,
+  };
+  const showStory = showStoryAction(facebookAppId());
+  const shot = React.useRef<ViewShot>(null);
+
+  const capture = async () => {
+    const uri = await shot.current?.capture?.();
+    return typeof uri === "string" ? uri : null;
+  };
 
   return (
     <View style={styles.root}>
@@ -105,12 +139,15 @@ export default function SecuredDayScreen({
           <X size={DS_V3.space.lg + DS_V3.space.sm} color={DS_V3.color.textSecondary} />
         </Pressable>
         <View style={styles.hero}>
-          <Text style={styles.label}>{SECURED_STREAK_LABEL}</Text>
-          <DisplayNumber value={streak} size="moment" />
-          <Text style={styles.unit}>{streak === 1 ? "day" : "days"}</Text>
+          <Flame size={28} color={DS_V3.color.brand} />
+          <Text style={styles.hero88}>{streak}</Text>
+          <Text style={styles.unit}>{streakInARow(streak)}</Text>
         </View>
         <View style={styles.center}>
-          <Text style={styles.today}>{SECURED_TODAY}</Text>
+          <Text style={styles.today}>{title}</Text>
+          {lines.map((line) => (
+            <Text key={line} style={styles.caption}>{line}</Text>
+          ))}
           {loadError ? (
             <EmptyState
               heading={SECURED_LOAD_ERROR}
@@ -122,6 +159,16 @@ export default function SecuredDayScreen({
           ) : caption ? (
             <Text style={styles.caption}>{caption}</Text>
           ) : null}
+        </View>
+        <View style={styles.previewClip}>
+          <View style={styles.previewScale}>
+            <ShareImage input={preview} />
+          </View>
+        </View>
+        <View style={styles.offscreen} pointerEvents="none">
+          <ViewShot ref={shot} options={{ format: "png", quality: 1, result: "tmpfile" }}>
+            <ShareImage input={preview} />
+          </ViewShot>
         </View>
         <WeekStrip days={week} todayIndex={todayIndex} fillToday={fillToday} />
         {n === 0 && selfReported.length > 0 ? (
@@ -170,10 +217,31 @@ export default function SecuredDayScreen({
             <Button
               label={PROOF_SHARE}
               submitting={sharing}
-              icon={<ArrowUpRight size={DS_V3.space.gutter} color={DS_V3.color.onBrand} />}
               onPress={onShare}
             />
-            <Button label={PROOF_KEEP} variant="secondary" onPress={onKeep} />
+            {showStory ? (
+              <Button
+                label="Instagram Story"
+                variant="secondary"
+                icon={<Instagram size={18} color={DS_V3.color.textPrimary} />}
+                onPress={() => {
+                  void capture().then((uri) => {
+                    if (uri) void shareToInstagramStory(uri);
+                  });
+                }}
+              />
+            ) : null}
+            <Button
+              label="Save"
+              variant="secondary"
+              icon={<Download size={18} color={DS_V3.color.textPrimary} />}
+              onPress={() => {
+                void capture().then((uri) => {
+                  if (uri) void saveStickerToPhotos(uri);
+                });
+              }}
+            />
+            <Button label={PROOF_KEEP} variant="tertiary" onPress={onKeep} />
           </>
         ) : (
           <Button label={SECURED_DONE} onPress={onDone} />
@@ -202,6 +270,33 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: 2,
+  },
+  hero88: {
+    fontSize: 88,
+    lineHeight: 88,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  previewClip: {
+    width: 170,
+    height: 302,
+    alignSelf: "center",
+    overflow: "hidden",
+    borderRadius: 16,
+  },
+  previewScale: {
+    position: "absolute",
+    width: 1080,
+    height: 1920,
+    left: (170 - 1080) / 2,
+    top: (302 - 1920) / 2,
+    transform: [{ scale: 170 / 1080 }],
+  },
+  offscreen: {
+    position: "absolute",
+    left: -4000,
+    top: 0,
   },
   label: {
     fontSize: DS_V3.type.label.fontSize,

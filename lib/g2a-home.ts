@@ -15,6 +15,29 @@ export function todayFirstDayLine(taskCount: number): string {
 }
 
 export const TODAY_WINDOW_CLOSED = "Today's window closed. Back tomorrow.";
+export const WINDOW_CLOSED_RESET = "Tomorrow your run goes back to Day 1.";
+export const SECTION_DONE = "Done for today";
+
+export function windowClosedFreezeLine(freezesLeft: number): string {
+  const n = Math.max(0, Math.floor(freezesLeft));
+  return `Today can't be secured. Tomorrow you can use a freeze to cover it. ${n} left.`;
+}
+
+/** Second sentence under the closed block. Null when Standard has no freezes. */
+export function windowClosedFollowup(args: { noDaysOff: boolean; freezesLeft: number }): string | null {
+  if (args.noDaysOff) return WINDOW_CLOSED_RESET;
+  if (args.freezesLeft > 0) return windowClosedFreezeLine(args.freezesLeft);
+  return null;
+}
+
+export function showTodayStreakLine(streak: number | null | undefined, closed: boolean): boolean {
+  return !closed && typeof streak === "number" && streak >= 1;
+}
+
+export function daysInARow(streak: number): string {
+  const n = Math.max(0, Math.floor(streak));
+  return n === 1 ? "1 day in a row." : `${n} days in a row.`;
+}
 
 export function remainingWindowsClosed(
   tasks: readonly { done?: boolean; closed?: boolean }[],

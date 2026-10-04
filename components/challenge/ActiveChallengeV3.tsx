@@ -19,7 +19,6 @@ import {
   RotateCcw,
   ShieldOff,
   Timer,
-  Users,
   ChevronRight,
   Share,
   Snowflake,
@@ -39,7 +38,6 @@ import {
   doneGate,
   footerAction,
   hasCameraProof,
-  participantsLine,
   pendingGate,
   resetBody,
   enrollmentTodayProgress,
@@ -52,6 +50,17 @@ import { homeWindowClosed } from "@/lib/home-proof-card";
 import { SHARE_TODAY, UNTIL_MIDNIGHT } from "@/lib/day-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 import { THIS_WEEK } from "@/lib/g2a-challenge";
+import {
+  BOARD_LINK,
+  COPY_LINK,
+  FULL_RECORD,
+  INVITE_MEMBERS,
+  INVITE_TO,
+  NO_SHARED_PROOFS_IN_CHALLENGE,
+  PEOPLE_SOLO,
+  detailMetaLine,
+  recordOfDue,
+} from "@/lib/v44-detail";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -110,6 +119,11 @@ export type ActiveChallengeV3Props = {
   onInvite?: () => void;
   todaySub?: string | null;
   prestartCard?: string | null;
+  securedCount?: number;
+  dueCount?: number;
+  onCopyInvite?: () => void;
+  onOpenBoard?: () => void;
+  onOpenRecord?: () => void;
 };
 
 export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
@@ -172,6 +186,14 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : null}
 
         <View style={styles.dayBlock}>
+          <Text style={styles.metaLine}>
+            {detailMetaLine({
+              day: p.currentDay,
+              total: p.durationDays,
+              group: p.participationType === "team" || p.participantsCount > 1,
+              hard: p.difficulty === "hard",
+            })}
+          </Text>
           <Text style={styles.dayLabel}>Day</Text>
           {p.loading ? (
             <View style={styles.daySkel} />
@@ -322,22 +344,37 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 ) : null}
               </View>
             ) : p.participationType === "team" || p.participantsCount > 1 ? (
-              <>
-                <View style={styles.divider} />
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={participantsLine(p.participantsCount, p.participationType)}
-                  onPress={p.onParticipants}
-                  style={styles.taskRow}
-                >
-                  <Users size={ICON} color={DS_V3.color.textSecondary} />
-                  <Text style={styles.taskTitle}>
-                    {participantsLine(p.participantsCount, p.participationType)}
-                  </Text>
-                  <ChevronRight size={ICON} color={DS_V3.color.textSecondary} />
-                </Pressable>
-              </>
-            ) : null}
+              <View style={styles.peopleCard}>
+                <View style={styles.sectionHead}>
+                  <Text style={styles.taskTitle}>This week board</Text>
+                  <Pressable accessibilityRole="button" accessibilityLabel={BOARD_LINK} onPress={p.onOpenBoard}>
+                    <Text style={styles.link}>{BOARD_LINK}</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.caption}>Top 3, plus your row.</Text>
+              </View>
+            ) : (
+              <View style={styles.peopleCard}>
+                <Text style={styles.taskTitle}>{PEOPLE_SOLO}</Text>
+                <Button label="Invite" onPress={p.onInvite} />
+              </View>
+            )}
+            <View style={styles.peopleCard}>
+              <Text style={styles.taskTitle}>Recent proofs</Text>
+              <Text style={styles.caption}>{NO_SHARED_PROOFS_IN_CHALLENGE}</Text>
+            </View>
+            <View style={styles.peopleCard}>
+              <Text style={styles.hero24}>{p.securedCount ?? 0}</Text>
+              <Text style={styles.caption}>{recordOfDue(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel={FULL_RECORD} onPress={p.onOpenRecord}>
+                <Text style={styles.link}>{FULL_RECORD}</Text>
+              </Pressable>
+            </View>
+            <View style={styles.peopleCard}>
+              <Text style={styles.taskTitle}>{INVITE_TO(p.title)}</Text>
+              <Text style={styles.caption}>{INVITE_MEMBERS(p.participantsCount)}</Text>
+              <Button label={COPY_LINK} variant="secondary" onPress={p.onCopyInvite ?? p.onInvite} />
+            </View>
           </View>
         )}
 
@@ -393,11 +430,33 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
   },
   dayBlock: {
-    paddingTop: DS_V3.space.lg + DS_V3.space.sm,
+    alignItems: "flex-start",
+    gap: 2,
     paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+  },
+  metaLine: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: DS_V3.color.textSecondary,
+  },
+  sectionHead: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: DS_V3.space.sm + 2,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  link: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: DS_V3.color.brandText,
+  },
+  hero24: {
+    fontSize: 24,
+    lineHeight: 28,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
   },
   dayLabel: {
     fontSize: DS_V3.type.secondary.fontSize,

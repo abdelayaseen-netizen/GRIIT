@@ -160,7 +160,7 @@ describe("empty id → no Story action rendered", () => {
     expect(showStoryAction(facebookAppId({}))).toBe(false);
     expect(showStoryAction(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: undefined }))).toBe(false);
     const sheet = readFileSync(
-      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      resolve(__dirname, "../components/share/ShareSystemSheet.tsx"),
       "utf8",
     );
     const finish = readFileSync(
@@ -168,13 +168,14 @@ describe("empty id → no Story action rendered", () => {
       "utf8",
     );
     expect(sheet).toContain("showStoryAction(facebookAppId())");
-    expect(sheet).toContain("{showStory ? (");
+    expect(sheet).toContain("showStory ?");
     expect(finish).toContain("showStoryAction(facebookAppId())");
     expect(finish).toContain("storyAvailable={showStory}");
-    expect(sheet).toContain("SHARE_STORY");
-    expect(sheet).toContain("SHARE_COPY");
-    expect(sheet).toContain("SHARE_SAVE");
-    expect(sheet).toContain("SHARE_MORE");
+    expect(sheet).toContain("SHARE_TARGET_STORY");
+    expect(sheet).toContain("SHARE_TARGET_SAVE");
+    expect(sheet).toContain("SHARE_TARGET_MESSAGES");
+    expect(sheet).toContain("SHARE_TARGET_MORE");
+    expect(sheet).not.toContain("SHARE_COPY");
     expect(finish).toContain("ShareActions");
   });
 });
@@ -185,35 +186,27 @@ describe("Share to the feed stays on one line", () => {
       resolve(__dirname, "../components/task-v2/FinishMomentV3.tsx"),
       "utf8",
     );
-    const sheet = readFileSync(
-      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
-      "utf8",
-    );
     const button = readFileSync(resolve(__dirname, "../components/ds/Button.tsx"), "utf8");
     expect(finish).toContain("shareCol");
     expect(finish).toContain("ShareActions");
     expect(finish).not.toContain("shareRow");
-    expect(sheet).toContain('labelType="secondary"');
-    expect(sheet).not.toContain("hitLabel");
     expect(button).toContain("labelSecondary");
     expect(button).toContain("DS_V3.type.secondary");
   });
 });
 
-describe("Copy puts the PNG on the pasteboard", () => {
-  it("writes the captured image and never a caption", () => {
+describe("Caption is text, never baked into the image", () => {
+  it("puts the caption on the pasteboard and does not copy the PNG as the share action", () => {
     const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
     const sheet = readFileSync(
-      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      resolve(__dirname, "../components/share/ShareSystemSheet.tsx"),
       "utf8",
     );
-    expect(share).toContain("copyStickerPngToPasteboard");
-    expect(share).toContain("setImageAsync");
-    expect(share).not.toMatch(/copyStickerPngToPasteboard[\s\S]*setStringAsync/);
-    expect(share).not.toMatch(/copyStickerPngToPasteboard[\s\S]*writeText/);
-    expect(sheet).toContain("copyStickerPngToPasteboard(uri)");
-    expect(sheet).not.toContain("sharePlainMessage(copyLine");
-    expect(sheet).toContain('kind === "copy"');
+    expect(share).toContain("copyShareCaption");
+    expect(share).toContain("setStringAsync");
+    expect(sheet).toContain("caption: caption.trim()");
+    expect(sheet).not.toContain("copyStickerPngToPasteboard");
+    expect(sheet).not.toContain('kind === "copy"');
   });
 });
 
@@ -223,7 +216,7 @@ describe("Save writes the PNG to Photos", () => {
     expect(savePhotosCopy("denied")).toBe("Allow Photos access in Settings to save.");
     const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
     const sheet = readFileSync(
-      resolve(__dirname, "../components/share/ShareStickerSheet.tsx"),
+      resolve(__dirname, "../components/share/ShareSystemSheet.tsx"),
       "utf8",
     );
     expect(share).toContain("requestPermissionsAsync(true)");
@@ -231,7 +224,8 @@ describe("Save writes the PNG to Photos", () => {
     expect(share).toContain("saveStickerToPhotos");
     expect(sheet).toContain("saveStickerToPhotos");
     expect(sheet).toContain('kind === "save"');
-    expect(sheet).toContain("shareProgressImage");
-    expect(sheet).toContain("SHARE_MORE");
+    expect(sheet).toContain("shareImageAndCaption");
+    expect(sheet).toContain("shareStickerToMessages");
+    expect(sheet).toContain("SHARE_TARGET_MORE");
   });
 });

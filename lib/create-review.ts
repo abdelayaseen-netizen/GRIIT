@@ -4,6 +4,7 @@ import { displayCategory } from "@/lib/challenge-category";
 import { gateLabel } from "@/lib/task-ui";
 
 export const START_THE_CHALLENGE = "Start the challenge";
+export const REVIEW_LOCK = "You can't change the tasks after Day 1.";
 export const REVIEW_STARTS_TODAY = "Today";
 export const REVIEW_EACH_DAY = "Each day";
 export const REVIEW_SETTINGS = "Settings";

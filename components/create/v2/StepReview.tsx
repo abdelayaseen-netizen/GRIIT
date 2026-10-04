@@ -9,6 +9,7 @@ import EmptyState from "@/components/ds/EmptyState";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import {
   REVIEW_EACH_DAY,
+  REVIEW_LOCK,
   REVIEW_SETTINGS,
   START_THE_CHALLENGE,
   reviewSettingsRows,
@@ -93,6 +94,7 @@ export function StepReview({
       </View>
       <WizardFooter>
         {lateJoinLine ? <Text style={styles.lateJoin}>{lateJoinLine}</Text> : null}
+        <Text style={styles.lateJoin}>{REVIEW_LOCK}</Text>
         <Button
           label={launchState === "loading" ? "Starting" : START_THE_CHALLENGE}
           submitting={launchState === "loading"}

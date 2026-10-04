@@ -66,6 +66,7 @@
     "expo-router": "~6.0.24",
     "expo-server-sdk": "^3.15.0",
     "expo-sharing": "~14.0.8",
+    "expo-sms": "~14.0.8",
     "expo-splash-screen": "~31.0.12",
     "expo-store-review": "~9.0.9",
     "expo-updates": "~29.0.20",

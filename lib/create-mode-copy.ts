@@ -1,9 +1,12 @@
 /** 123 Create deltas — locked Standard / No Days Off strings. Do not paraphrase. */
 
-export const MODE_STANDARD_TITLE = "Standard · Freezes on";
+export const MODE_STANDARD_TITLE = "Standard";
 export const MODE_STANDARD_BODY =
-  "A missed day resets your streak. The next day, you can spend a freeze to cover it. One freeze covers yesterday only. Free accounts get 1 every 30 days, Pro gets 4.";
+  "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro.";
 
-export const MODE_HARD_TITLE = "No Days Off · No freezes";
+export const MODE_HARD_TITLE = "No Days Off";
 export const MODE_HARD_BODY =
-  "A missed day sends the run back to Day 1. Freezes can't be used.";
+  "Every gate blocks. No freezes. A missed day goes back to Day 1.";
+
+export const CREATE_PRIVACY_LINE =
+  "Photos stay private until each person shares them, whichever you pick.";

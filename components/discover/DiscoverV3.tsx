@@ -5,6 +5,7 @@
 import React from "react";
 import {
   FlatList,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -27,6 +28,15 @@ import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard"
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
 import { catalogCoverLabel, catalogCoverUri } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
+import {
+  DISCOVER_LOAD_ERROR,
+  FEATURED_BUILTINS,
+  featuredCardLine,
+  featuredMembersLine,
+  needsSetGym,
+  type FeaturedBuiltin,
+} from "@/lib/featured-catalog";
+import { ChallengePreviewSheet } from "@/components/discover/ChallengePreviewSheet";
 
 export type DiscoverPerson = {
   user_id: string;
@@ -58,6 +68,7 @@ export type DiscoverV3Props = {
   onFollowPerson: (userId: string) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
+  onJoinBuiltin?: (item: FeaturedBuiltin) => void;
 };
 
 const CHIPS: { id: DiscoverCategory; label: string }[] = [
@@ -101,10 +112,12 @@ export function DiscoverV3({
   onFollowPerson,
   refreshing,
   onRefresh,
+  onJoinBuiltin,
 }: DiscoverV3Props) {
   const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
   const gridData = challengesLoading ? [] : challenges;
+  const [preview, setPreview] = React.useState<FeaturedBuiltin | null>(null);
 
   const header = (
     <>
@@ -120,6 +133,24 @@ export function DiscoverV3({
             selected={category === c.id}
             onPress={() => onCategory(c.id)}
           />
+        ))}
+      </ScrollView>
+
+      <Text style={styles.heading}>Featured</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        {FEATURED_BUILTINS.map((item) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            onPress={() => setPreview(item)}
+            style={styles.builtin}
+          >
+            <View style={styles.builtinCover} />
+            <Text style={styles.builtinTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.caption}>{featuredCardLine(item)}</Text>
+            <Text style={styles.beFirst}>{featuredMembersLine(0)}</Text>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -205,12 +236,13 @@ export function DiscoverV3({
   );
 
   return (
+    <>
     <View style={styles.root}>
       <RootHeader title="Discover" />
       {error ? (
         <View style={styles.errorPad}>
           <EmptyState
-            heading="Challenges did not load"
+            heading={DISCOVER_LOAD_ERROR}
             body="Check your connection and try again."
             actionLabel="Retry"
             variant="error"
@@ -252,6 +284,18 @@ export function DiscoverV3({
         />
       )}
     </View>
+    <ChallengePreviewSheet
+      item={preview}
+      members={0}
+      onClose={() => setPreview(null)}
+      onJoin={(item) => {
+        setPreview(null);
+        if (onJoinBuiltin) onJoinBuiltin(item);
+        else onOpenChallenge(item.id);
+        if (needsSetGym(item) && onJoinBuiltin) return;
+      }}
+    />
+    </>
   );
 }
 
@@ -267,9 +311,33 @@ const styles = StyleSheet.create({
   },
   chips: {
     flexDirection: "row",
-    gap: DS_V3.space.sm,
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
+    paddingBottom: DS_V3.space.md,
+  },
+  builtin: {
+    width: 164,
+    gap: 4,
+  },
+  builtinCover: {
+    height: 110,
+    borderRadius: 16,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+  },
+  builtinTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  beFirst: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+    color: DS_V3.color.brandText,
   },
   featuredPad: {
     paddingHorizontal: DS_V3.space.gutter,

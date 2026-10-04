@@ -1,7 +1,7 @@
 /** 116 Late join copy. Do not paraphrase. */
 
 export const LAUNCHED_TOMORROW_TITLE = "You're in. Day 1 is tomorrow.";
-export const LAUNCHED_TODAY_TITLE = "You're in.";
+export const LAUNCHED_TODAY_TITLE = "You're in. Day 1 is today.";
 export const LAUNCHED_BACK_TODAY = "Back to today";
 export const LAUNCHED_BACK_HOME = "Back to Home";
 export const LAUNCHED_REMINDER_CAPTION = "15 minutes before the window opens.";

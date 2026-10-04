@@ -217,6 +217,7 @@ function TaskSecuredInner() {
       }}
       onKeep={done}
       onDone={done}
+      username={profile?.username}
     />
   );
 }

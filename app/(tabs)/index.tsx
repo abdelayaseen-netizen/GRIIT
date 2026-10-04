@@ -18,6 +18,7 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -34,7 +35,10 @@ import {
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
-import { canOfferYesterdayFreeze } from "@/lib/freeze-recovery";
+import { StreakSheet } from "@/components/home/StreakSheet";
+import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
+import { canOfferYesterdayFreeze, weekdayLongForDateKey } from "@/lib/freeze-recovery";
+import { activeChallengesAreHard } from "@/lib/secured-since";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { buildWeekStripDays } from "@/lib/week-strip-days";
@@ -139,12 +143,15 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [showStreakSheet, setShowStreakSheet] = React.useState(false);
+  const [streakHeld, setStreakHeld] = React.useState(false);
   const [freezeError, setFreezeError] = React.useState<string | null>(null);
   const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
+  const highlightTaskId = useTaskCompleteFlash();
 
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
   const recordQuery = useQuery({
@@ -165,6 +172,13 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
+  const unreadQuery = useQuery({
+    queryKey: ["notifications", "unread-dot", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: unknown[] }>,
+    staleTime: 30 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const bellUnread = (unreadQuery.data?.unread.length ?? 0) > 0;
   const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
@@ -482,6 +496,7 @@ export default function HomeScreen() {
       }),
     onSuccess: () => {
       setFreezeSpent(true);
+      setStreakHeld(true);
       setShowFreezeSheet(false);
       setFreezeError(null);
       if (user?.id) {
@@ -742,7 +757,8 @@ export default function HomeScreen() {
                 offerYesterdayFreeze
                   ? () => {
                       setFreezeError(null);
-                      setShowFreezeSheet(true);
+                      setStreakHeld(false);
+                      setShowStreakSheet(true);
                     }
                   : undefined
               }
@@ -757,6 +773,13 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
+              bellUnread={bellUnread}
+              noDaysOff={activeChallengesAreHard(
+                (Array.isArray(bootstrap.data?.activeChallenges)
+                  ? bootstrap.data.activeChallenges
+                  : []) as Parameters<typeof activeChallengesAreHard>[0],
+              )}
+              highlightTaskId={highlightTaskId}
               loading={bootstrap.isPending && !bootstrap.data}
               firstDayLine={
                 !todaySecured && proof.sections.some((s) => s.day === 1)
@@ -789,6 +812,41 @@ export default function HomeScreen() {
           visible={shareTodayOpen}
           onDismiss={() => setShareTodayOpen(false)}
           challenges={proof.shareTodayChallenges}
+          username={profile?.username}
+          streak={streak ?? undefined}
+          longestStreak={resolvedStats?.longestStreak}
+          activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
+        />
+        <StreakSheet
+          visible={showStreakSheet}
+          held={streakHeld}
+          weekday={weekdayLongForDateKey(yesterdayKey, homeTimeZone)}
+          streak={streak ?? 0}
+          done={proof.doneCount}
+          total={proof.totalCount}
+          missed={(recon.result?.missedTaskNames ?? []).join(", ")}
+          freezesLeft={freezeStatus?.remaining ?? 0}
+          refill={freezeRefillDateLabel(freezeStatus?.lastFreezeUsedAt ?? null, homeTimeZone)}
+          week={["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
+            letter,
+            filled: weekStates[i] === "secured" || weekStates[i] === "frozen",
+            state: weekStates[i],
+          }))}
+          todayIndex={todayWeekIndex}
+          submitting={useFreeze.isPending}
+          error={freezeError}
+          onUse={() => {
+            setFreezeError(null);
+            useFreeze.mutate();
+          }}
+          onNotNow={() => {
+            setShowStreakSheet(false);
+            setFreezeError(null);
+          }}
+          onDone={() => {
+            setShowStreakSheet(false);
+            setStreakHeld(false);
+          }}
         />
         <FreezeSheet
           visible={showFreezeSheet}

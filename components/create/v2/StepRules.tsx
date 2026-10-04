@@ -17,6 +17,7 @@ import {
   MODE_HARD_TITLE,
   MODE_STANDARD_BODY,
   MODE_STANDARD_TITLE,
+  CREATE_PRIVACY_LINE,
 } from "@/lib/create-mode-copy";
 import type { WizardWho } from "@/components/create/v2/StepBasics";
 
@@ -129,6 +130,7 @@ export function StepRules({
           </View>
         )}
       </View>
+      <Text style={styles.privacy}>{CREATE_PRIVACY_LINE}</Text>
     </View>
   );
 }
@@ -161,6 +163,13 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.heading.lineHeight,
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textPrimary,
+  },
+  privacy: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    fontSize: 13,
+    lineHeight: 18,
+    color: DS_V3.color.textSecondary,
   },
   secondary: {
     fontSize: DS_V3.type.secondary.fontSize,

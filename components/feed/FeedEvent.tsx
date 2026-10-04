@@ -16,7 +16,7 @@ export default function FeedEvent({
 }) {
   const faces = group.avatars.slice(0, 3);
   const stacked = faces.length > 1;
-  const size = stacked ? 28 : 32;
+  const size = stacked ? 24 : 32;
   return (
     <View style={styles.row} accessibilityLabel={eventLine(group)}>
       <View style={styles.stack}>
@@ -58,14 +58,14 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "500",
     color: DS_V3.color.textPrimary,
   },
   time: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
+    fontSize: 12,
+    lineHeight: 16,
     color: DS_V3.color.textSecondary,
   },
 });

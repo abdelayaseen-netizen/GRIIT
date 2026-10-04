@@ -1060,3 +1060,34 @@ Spec sync: Following | Everyone (Friends = mutual); privacy writes the existing 
 3. **Invites:** does anyone copy the challenge link? One person bringing a second is the test.
 4. **Self-report ratio:** on Photo: Optional tasks, nearly all done without a photo means the photo isn't worth its friction.
 5. **Dead feed:** Home sessions under 10 s that reach "You're caught up".
+
+
+## v44 · Finished pass (frames 164–172)
+
+File: `GRIIT v44 Finished.dc.html`. Spec: `cursor/02_screens.md` → "v44".
+
+- **164 Feed:** one family. Photo and self-reported panels share inset and radius, with the task title at the same size in both. Events keep the avatar column. Counts are hidden at 0.
+- **165 Today card:** open, partly done, all done, window closed and no challenge. The streak number shows only when it is about to move or just moved.
+- **166 Challenge detail:** this week's board, recent proofs, your record and the invite fill the bottom half. A freeze can be used from the detail row or the Home streak sheet until midnight.
+- **167–168 Discover:** the 8 built-ins as Featured, generated covers, real counts, sparse merge, loading, error and empty states, and a preview sheet before joining.
+- **169 Create:** three steps, then Review and Launched. Every task row shows its full rule; the add-task sheet is one screen.
+- **170 Profile:** a new profile filled with true, actionable items. Three stats with one rule each.
+- **171 Task complete:** a toast for each task, and one Secured screen for the last.
+
+**Open questions**
+1. ~~Lengths for 7K Steps, Fajr Before Sunrise and 3 Good Things?~~ Confirmed in v44.1: all 7.
+2. Launched for a group challenge: should Invite be primary instead of Start today? *Kept Start today primary; the invite link sits above it.*
+3. Freeze from the challenge detail covers the whole day for every challenge. Is that the intended model? *Yes per v28; flagged because the row lives on one challenge.*
+
+
+## v44.1 · Share system (frames 173–178)
+
+File: `GRIIT v44-1 Share.dc.html`. Spec: `cursor/02_screens.md` → "v44.1".
+
+- **173 Share sheet:** a full-screen preview you swipe between styles, an Ink / Orange / White colour row, an optional caption (sent as text), and four targets: Instagram Story, Save, Messages, More.
+- **174 Seven styles at 1080 × 1920** with the Instagram safe areas: Photo, Sticker (transparent), Card, Grid, Big number, Finish, Invite. Every style ends with "Join me · griit.app/invite/{code}".
+- **175** Saved to Photos for A, B and C: the same bitmap as the preview.
+- **176** Moment → styles, and the pixel spec.
+- **177** Show Up 7 "Set your gym" right after Join, 250 m by default, with an honest Skip.
+- **178** Featured "Be the first"; Fajr Before Sunrise is 7 days.
+Contradictions 139–144.

@@ -45,6 +45,8 @@ export type FinishMomentV3Props = {
   share: ShareIntent;
   alsoToday: AlsoTodayRow[];
   photoShared?: boolean;
+  username?: string | null;
+  inviteCode?: string | null;
   onRetry: () => void;
   onShareFeed: () => void;
   onCopy?: () => void;
@@ -60,6 +62,8 @@ export default function FinishMomentV3({
   share,
   alsoToday,
   photoShared = false,
+  username,
+  inviteCode,
   onRetry,
   onShareFeed,
   onCopy,
@@ -187,15 +191,20 @@ export default function FinishMomentV3({
         visible={sheetOpen}
         onDismiss={() => setSheetOpen(false)}
         variant={camera ? "day" : "text"}
+        username={username}
+        inviteCode={inviteCode}
+        moment={camera ? "photo_proof" : "self_reported"}
         day={
           camera
             ? {
                 challenge: task.challengeTitle,
+                task: task.title,
                 day: task.dayN,
                 durationDays: task.durationDays,
                 proof: task.proofKind === "camera_place" ? "camera_place" : "camera",
                 photoUri: task.proofUri,
                 photoShared,
+                cameraSeal: true,
               }
             : undefined
         }

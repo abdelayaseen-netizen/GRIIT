@@ -6031,3 +6031,141 @@ Render rule everywhere (sticker, proof viewer, feed, profile grid, badges): **pr
 **127.** v43 hid "See all in Activity" and the invite from Home. 155 brings back one invite card, conditional on being alone in a challenge. It is not a general invite block.
 **128.** v43 removed the week strip from Home, and 160's streak line goes in the Today card. That is one number in one sentence, not the strip.
 **129.** The pushes in 160 replace any earlier reminder copy that names percentages or the "secure reminder" time. `SECURE_REMINDER_TIME` stays at 8:00 pm for the evening push.
+
+
+# v44 · Finished pass
+
+Frames 164–172 in `GRIIT v44 Finished.dc.html`. iPhone 16 Pro. No new tokens, no new fields.
+
+## 164 Feed: one family
+| part | spec |
+|---|---|
+| header | pad 12/16/10 · avatar 32 · name 14/18 500 · time 12 · subject "Day {n} of {N} · {challenge}" 12 textSecondary, one line, ellipsis |
+| photo panel | inset 16, radius 20, 4:5 (370 × 462). Task title 22/28 500 on a bottom scrim (transparent → ink 75%). Seal 28 top-right, inset 12, only when `proof_photo_url` came from the in-app camera |
+| self-reported panel | inset 16, radius 20, surface + 1pt border, pad 18/16/16, gap 14. Top row: brand-tint circle 40 with check 22 brandText · gate line 12 right. Task 22/28 500 |
+| actions | heart 22 · comment 22 · send 20, each 44 hit. **Counts hidden at 0.** Liked: brand fill + count |
+| comments | none at 0. Show 1–2; at 3+ show the first two + "View all {n} comments" |
+| event | min 44 · avatar column 32 (single) or 2 stacked 24s (group) · 14/19 with names 500 · time 12. Verbs: started, secured (day), finished (challenge) |
+| end | check-check 18 + "You're caught up. {n} posts since {yesterday|weekday}." |
+Avatar is always present; the v42 initials fallback applies.
+
+## 165 Home Today card
+Header: 56 high. Date "Saturday 3 October" at 17/22 500, the name at 13 under it. The streak chip shows only when `streak_days ≥ 1`. Bell 44 with an unread dot.
+| state | content |
+|---|---|
+| open | streak line when streak ≥ 1: HERO 28 "{n}" + "days. Secure today and it's {n+1}." · sections with "{done} / {total}" · rows 48, ring 22 |
+| partly | same; done rows in textSecondary with a filled ring |
+| all done | each section shows "Done for today" (check 14 + 12/500 brandText). Footer: HERO 28 "{streak}" · "Day secured." · "{n} days in a row." · Share today pill 36 |
+| window closed | bordered block: clock 18 · "Today's window closed. Back tomorrow." · "Today can't be secured. Tomorrow you can use a freeze to cover it. {n} left." (the second sentence only in Standard with freezes > 0; No Days Off: "Tomorrow your run goes back to Day 1.") |
+| no challenge | "No challenge yet. Your tasks show here once you join one." · Find a challenge (primary 40) · Create (40) |
+The streak line never shows at 0, and never in the closed state.
+
+## 166 Challenge detail
+Order: header ("{title}", "Day {n} of {N} · {Solo|Group} · {Standard|No Days Off}") → This week strip + "{secured} of {due} days" → freeze row → Each day → This week board (top 3 + your row, "Board" link; hidden when solo) → Recent proofs (last 3 **shared** proofs from members, avatar 18 + day; "No shared proofs in this challenge yet.") → Your record (HERO 24 "{secured}" + "of {due} days secured", a 14-segment strip, "Full record") → Invite card ("Invite to {challenge}", "{members} of 10. They start at Day 1.", Copy link). Solo: the People card replaces the board ("Just you so far · 1 of 10" + primary Invite).
+**Freeze, after dismissing the morning-after card.** Two entry points, both live until local midnight while yesterday is unsecured, freezes > 0 and mode is Standard:
+1. The challenge detail freeze row becomes actionable: brand border, "{Weekday} wasn't secured." / "Use a freeze to cover it, until midnight. {n} left." / "Use freeze" (36, primary).
+2. The Home streak chip opens a streak sheet: HERO 40 streak, this week's strip, a "{Weekday} wasn't secured." block ("{done} of {total} tasks. {missed}. A freeze counts {Weekday} as held, so your streak stays at {n} and today makes it {n+1}."), "{n} freeze left. Next one on {date}. Available until midnight tonight.", primary "Use a freeze for {Weekday}", tertiary "Not now".
+Confirmation sheet: "{Weekday} is held." / "Your streak is {n} days. Secure today and it's {n+1}. {m} freezes left until {date}." / Done. Freezes are day-level, so using one from any challenge covers the day for all of them.
+
+## 167 Discover
+Search 44 → chips All + six categories → **Featured** (the 8 built-ins, horizontal, card 164 wide, cover 110, title 15/500, "{N} days · {proof icon} {Camera|Photo optional|Self-reported}", "{n} people in it", or "Be the first" (12/500 brandText) at 0) → **Friends are doing** (hidden if none) → **Popular this week** (joins in the last 7 days) → **From the community** ("by {creator}").
+Sparse rule (from v43.1): below 5 public community challenges, Popular and Community merge into one "Challenges" list sorted by `active_members`. Featured always shows.
+| built-in | category | length | tasks / proof |
+|---|---|---|---|
+| Show Up 7 | Fitness | 7 | Go to the gym · Camera · Gym (place set at join) |
+| 7K Steps | Health | 7 | 7,000 steps · Self-reported |
+| Early Riser 7 | Discipline | 7 | Out of bed photo · Camera · By 6:30 am |
+| Fajr Before Sunrise | Faith | 7 | Pray Fajr · Photo optional · By 7:00 am |
+| 3 Good Things | Mind | 7 | Write 3 gratitudes · Self-reported |
+| 10 Pages a Day | Learning | 14 | Read 10 pages · Self-reported |
+| Quran Daily | Faith | 30 | Read Quran · Self-reported |
+| 30-Second Cold Finish | Discipline | 14 | Cold shower, 30 seconds · Camera |
+* Length not given in the brief; assumed (open question). No completion rate anywhere.
+States: loading (3 card + 4 row skeletons), error ("Challenges didn't load." / "Check your connection and try again." / Try again), empty search ("Nothing for "{q}" in {category}." / "Try All, or make it yourself." / Create this challenge).
+
+## 168 Preview sheet
+The sheet is 780 high: cover 140, title 22/28, "{N} days · {category} · {mode}", **Each day** (rows with full rules), **Limits** (one line per gate: "A photo taken in the app. Not from your camera roll." · "A photo is optional. Without one it counts as self-reported." · "Only counts by {time}, your time." · "At your gym, within {r}. You set it after joining." · "No photo, no window, no place. You mark it done."), **Who's in it** (stack + names, or "Nobody yet. You'd be the first."), then a pinned Join with "Day 1 is today." or "Today's {window} window has passed. Day 1 is tomorrow." (v41 F3).
+
+## 169 Create
+1 · "Name your challenge": name field 52 with the hint "e.g. Gym before work" (textSecondary at 70% opacity, behind the caret); Category chips with **none preselected**; Length 7 / 14 / 30 / 75 / Custom, **default 7**, caption "{N} days. Day 1 is today."; Who: Solo ("Just you. Private.") / Group ("Up to 10. Each keeps their own streak."). Continue is disabled until there is a name and a category, with "Add a name and a category to continue."
+2 · "What do you do each day?": pack chips; a task list card where every row reads "{task}" / "{rule}" (e.g. "Camera · By 7:00 am · Gym", "30 pages · Photo optional", "64 oz · Self-reported"); "Add a task"; caption "Every task is required. The day is secured when all of them are done."
+Add-task sheet, one screen: name 48 · type chips in a single scrolling row · Photo Required / Optional / None with its one-line caption · Limits: Time (toggle → By | Between + picker) and Place (toggle → "{place} · within {r}" + Change), both allowed · dashed Home preview · Add task.
+3 · "How strict, and who can join": Standard "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro." / No Days Off "Every gate blocks. No freezes. A missed day goes back to Day 1." · Anyone "Shows on Discover. Anyone can join." / Invite "Only people with your link can join. Check-ins show only to members." · caption "Photos stay private until each person shares them, whichever you pick." Solo challenges skip "Who can join" (always private).
+Review: cover, title, "{category} · {N} days · {Solo|Group}", rows for Strictness / Who can join / Day 1, the task list, Launch, and "You can't change the tasks after Day 1."
+Launched: "You're in. Day 1 is today." (or "Day 1 is tomorrow."), "{title} · {N} days · {n} tasks", Bring someone card (link + Copy + Invite; group only), primary "Start today: {first task}", tertiary "Back to Home".
+
+## 170 Profile, own
+Stats: **streak** = consecutive secured days ending today if secured, else yesterday (held days keep it, add nothing); **secured** = count(`day_secures`), always ≥ streak; **friends** = mutual follows, the same number as the list. Singular "friend".
+New account: Today tile (dashed brand, "Today", "{n} tasks left"), kept proofs with a lock (owner only), "No shared proofs yet. Kept proofs show only to you, with a lock.", then the current challenge card ("Day {n} of {N} · {secured} of {due} days secured" + today chip), the next-badge card and Find friends ("Friends are people you follow who follow you back."). The second button reads "Find friends" at 0 friends, otherwise "Share profile". The bio placeholder is "Joined {weekday}. Running {challenge}." under 7 days.
+
+## 171 Task complete
+Not the last task: the ring fills over 240 ms, the row tints brand for 600 ms, a success haptic plays, and a toast appears 12 above the tab bar (radius 16, 4 s, swipe to dismiss): thumbnail (a check 40, or the photo 40 with seal 18) · "{task} done." or "{task} saved." · "{n} left to secure today" or "Private until you share it · {n} left" · Share pill. No modal, no route change.
+Last task of the day: one Secured screen. Flame + HERO 88 streak, "{days|day} in a row", title "Day {n} secured." when exactly one challenge is active (frame 171 C: 10 Pages a Day, Day 3 of 14, streak 3 — not Noah), else "Day secured." with one line per challenge ("{challenge} · Day {n} of {N}"). Sticker preview 170 × 302: Card style for self-reported, Photo style with seal for camera. Primary Share to the feed · Instagram Story · Save · tertiary Keep it to the record. Shown once; never stacked on another sheet.
+
+## Contradictions
+**130.** v41 F1 offered a full share moment after every task. v44 makes that a toast with Share for non-last tasks, and keeps the full moment only for the last task. The share choice stays available on every task, so R7 still holds.
+**131.** "Day N secured" is ambiguous with more than one challenge. Rule: "Day {n} secured." for exactly one active challenge, otherwise "Day secured." plus per-challenge lines.
+**132.** v43 put photos edge to edge. v44 insets them to 16 at radius 20, so photo and text proofs share one geometry.
+**133.** v43 showed the streak chip at 0. v44 hides it at 0.
+**134.** v43 set the header date at caption size. v44 makes it the 17/22 header with the name under it.
+**135.** Freeze use was morning-after only (v28.2). Now there are also the challenge detail row and the Home streak sheet, both until midnight.
+**136.** The challenge detail board shows the top 3 plus you; v35 said "bottom ranks never shown". This holds, because only the top slice and your row appear.
+**137.** 7K Steps has no step source until Chunk S (Apple Health) ships, so it is self-reported. Its proof icon must not imply verification.
+**138.** Lengths for 7K Steps, Fajr Before Sunrise and 3 Good Things were not given; 7, 30 and 7 are assumed.
+
+
+# v44.1 · Share system
+
+Frames 173–178 in `GRIIT v44-1 Share.dc.html`. No new tokens, no new fields, no new domain.
+
+## 173 Share sheet
+Full screen. Header: X 44 · "Share" (Invite: "Invite"). Preview: the chosen style at 25% (270 × 480), radius 16, 1pt border, shadow 0 10 30 ink 60%. Swipe left/right between the moment's styles; dots (6 × 6, current 18 × 6). Colour row: Ink / Orange / White swatches 28 with a label 13 (selected: 2pt ring + 4pt halo). Caption field 44 "Add a caption (optional)". Targets pinned 34 from the bottom, 4 columns, 52 circles + label 11: **Instagram Story** (primary fill) · Save · Messages · More.
+- The image is rendered once, at 1080 × 1920, from the same component as the preview (`react-native-view-shot`, PNG). That one file goes to every target.
+- Instagram Story: `instagram-stories://share` with `backgroundImage` (A, C, D, E, F, G) or `stickerImage` + `backgroundTopColor/BottomColor` set to the palette bg (B). Caption → pasteboard text. Hidden when no Meta App ID (v42).
+- Save: `MediaLibrary.saveToLibraryAsync`; toast "Saved to Photos."
+- Messages: `SMS.sendSMSAsync` with the PNG attachment + caption (+ the join link when there is no caption).
+- More: the system share sheet with the PNG and the caption text.
+- Privacy unchanged: opening this sheet never flips `shared`. Only "Share to the feed" on the finish moment does.
+
+## 174 Styles at 1080 × 1920
+Content box 888 × 1330 at (96, 250). The top 250 and bottom 340 are background only.
+| style | content | numbers |
+|---|---|---|
+| A Photo | photo cover-fit · bottom scrim 1100 · plate (radius 40, pad 48) in the colour: challenge caps 36, task 56/66, "Day {n}" + "of {N}", seal 72 + "Camera", @user · wordmark at (96, 270) white · join line white | Day 150 · of 60 |
+| B Sticker | transparent · block: challenge caps 40, "Day {n} of {N}", flame 64 + streak + "days in a row", seal 72 if camera, wordmark 44 + join line | Day 170 · streak 60 |
+| C Card | check disc 140 · challenge caps 40 · task 96/108 · "Day {n} of {N}" · "Self-reported" 38 · @user · rule · join line | Day 150 |
+| D Grid | challenge caps · "{secured}" + "of {N} days" · grid of the run (7 columns, cell 104, gap 14) · "Day {n} of {N}" · @user · join line | secured 170 |
+| E Big number | flame 140 · streak 520/470 · "days in a row" 72/84 · active challenges 38 · date + @user · join line | streak 520 |
+| F Finish | "Finished" caps accent · challenge 96/108 · "{secured}" + "of {N} days secured" · flame + "Longest streak {n} days" 44 · grid · date range + @user · join line | secured 200 |
+| G Invite | "Join my challenge" caps 44 accent · challenge 120/128 · "{N} days · {proof}" 48 · task rows 48 + rule 34 · "{names} are in it" / "Be the first" · link plate (radius 40, "Join me" 34 + link 54/64) · "from @user" | — |
+Palettes: **Ink** bg #0F0F0F, fg #F5F3EE, sub #A39E95, accent #DC5401, line #2E2B27 · **Orange** bg #DC5401, fg #0F0F0F, sub #3A1405, accent #0F0F0F, line ink 25% · **White** bg #F5F3EE, fg #0F0F0F, sub #5E5A54, accent #DC5401, line #D9D5CC.
+Sticker colour = text colour: Ink #0F0F0F + 18px glow #F5F3EE 55% · White #F5F3EE + 18px shadow #0F0F0F 60% · Orange #DC5401 + shadow 50%.
+Join line on every style: "Join me · griit.app/invite/{code}" 30/38 500, built by `inviteDeepLink(inviteCode)` in `lib/deep-links.ts`. No new domain.
+Seal only when the completion's `proof_photo_url` came from the in-app camera; self-reported never gets it (C, B without seal).
+
+## 175 Saved result
+A, B, C as they appear in Photos: identical bitmaps. B is RGBA; Photos shows its transparent pixels on its own background.
+
+## 176 Moments
+| moment | styles (first is the default) |
+|---|---|
+| photo proof | A · B · D |
+| self-reported proof | C · B · D |
+| day secured | E · D · B |
+| challenge finished | F · D |
+| invite | G |
+Default colour Ink; the last picked colour is remembered per style (local storage).
+
+## 177 Show Up 7: set your gym
+Shown straight after Join for any challenge whose task has a place gate with no place yet. Header "Set your gym" (no back), "Show Up 7 only counts when your photo is taken here." Search 44 ("Search a gym or address", `expo-location` geocoding, results sorted by distance), "Use my current location" with live accuracy, result rows 56 (name, address, distance, a check when selected), radius chips 100 m / **250 m (default)** / 1 km + "250 m covers the car park and the building. Bigger is easier to pass." Footer: "Save" disabled → "Save · {place}", tertiary "Skip — no place limit", caption "Skipping means it counts anywhere. You can set it later in the challenge." Skip writes no place, so the location gate is off for that member.
+
+## 178 Featured
+At 0 members: "Be the first" 12/500 brandText. Fajr Before Sunrise is 7 days (Photo optional · By 7:00 am); 7K Steps and 3 Good Things 7. Frames 164–168 updated.
+
+## Contradictions
+**139.** The invite link in v43.1 and v44 frames read `griit.app/c/{slug}`; the app builds `griit.app/invite/{code}` (`lib/deep-links.ts`, `inviteDeepLink`). The share styles use the real format. Update 157, 166 and 169 copy to `/invite/{code}`.
+**140.** v42 143's Story sheet (Clear / Card / Photo + Copy) is replaced by 173's swipe styles + colour row. Copy moves under More; "Copy: paste it as a sticker in Instagram." is retired, since Instagram Story takes the sticker directly.
+**141.** v37 stickers carried the GRIIT mark small and no link; every style now ends with the join line.
+**142.** The caption was never specified before; it is text only and never rendered into the image.
+**143.** 7K Steps, 3 Good Things and Fajr Before Sunrise lengths were assumed in v44; they are now confirmed at 7. Fajr changed from 30.
+**144.** "New" at 0 members (v44) → "Be the first".
