@@ -1,6 +1,7 @@
 /**
  * v44 frames 166 + 170 — challenge detail order and the streak-chip sheet.
  */
+import { formatOfDays } from "@/lib/format-days";
 
 export function detailMetaLine(args: {
   day: number;
@@ -22,8 +23,8 @@ export const INVITE_MEMBERS = (n: number) =>
 export const COPY_LINK = "Copy link";
 export const PEOPLE_SOLO = "Just you so far · 1 of 10";
 
-export function recordOfDue(_secured: number, due: number): string {
-  return `of ${Math.max(0, Math.floor(due))} days secured`;
+export function recordOfDue(secured: number, due: number): string {
+  return `${formatOfDays(Math.max(0, Math.floor(secured)), Math.max(0, Math.floor(due)))} secured`;
 }
 
 export function streakSheetMissBody(args: {

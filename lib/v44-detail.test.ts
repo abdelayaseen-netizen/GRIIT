@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { rangeSecuredElapsed } from "@/lib/profile-v2-record";
 import {
   COPY_LINK,
   INVITE_MEMBERS,
@@ -26,8 +27,18 @@ describe("v44 challenge detail", () => {
     expect(INVITE_MEMBERS(4)).toBe("4 of 10. They start at Day 1.");
     expect(COPY_LINK).toBe("Copy link");
     expect(NO_SHARED_PROOFS_IN_CHALLENGE).toContain("No shared proofs");
-    expect(recordOfDue(8, 12)).toBe("of 12 days secured");
+    expect(recordOfDue(8, 12)).toBe("8 of 12 days secured");
     expect(KEPT_PROOFS_BODY).toContain("with a lock");
+  });
+
+  it("enrollment with 2 secured due days renders 2 of N", () => {
+    const window = rangeSecuredElapsed(
+      { status: "active", startDateKey: "2026-10-01", endDateKey: "2026-10-31" },
+      ["2026-09-29", "2026-10-01", "2026-10-02"],
+      "2026-10-04",
+    );
+    expect(window.secured).toBe(2);
+    expect(recordOfDue(window.secured, window.elapsed)).toMatch(/^2 of \d+ days secured$/);
   });
 
   it("writes the streak sheet and the held confirmation", () => {
