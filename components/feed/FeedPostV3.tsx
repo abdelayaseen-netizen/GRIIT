@@ -8,6 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
+import { ProofFallbackTile } from "@/components/ds/ProofFallbackTile";
 import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraSeal";
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
 import { FeedCompactRow, FeedSystemLine } from "@/components/feed/FeedCompactRow";
@@ -165,15 +166,23 @@ export default function FeedPostV3({
         </Pressable>
         <Text style={styles.when}>{when}</Text>
       </View>
-      {variant === "task_camera" && photo ? (
+      {variant === "task_camera" ? (
         <View style={styles.photoFrame}>
-          <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
-          <LinearGradient
-            colors={["rgba(15,15,15,0)", "rgba(15,15,15,0.75)"] as const}
-            style={styles.scrim}
-          />
-          <Text style={styles.photoTitle} numberOfLines={2}>{subject}</Text>
-          {seal ? (
+          {photo ? (
+            <ProofImage uri={photo} size="feed" recyclingKey={post.id} title={subject} />
+          ) : (
+            <ProofFallbackTile taskName={subject} />
+          )}
+          {photo ? (
+            <LinearGradient
+              colors={["rgba(15,15,15,0)", "rgba(15,15,15,0.75)"] as const}
+              style={styles.scrim}
+            />
+          ) : null}
+          {photo ? (
+            <Text style={styles.photoTitle} numberOfLines={2}>{subject}</Text>
+          ) : null}
+          {photo && seal ? (
             <View style={styles.seal}>
               <CameraSeal onPress={() => setSealOpen(true)} size={28} />
             </View>

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   PROOF_SIGN_TTL_SEC,
+  signProofPair,
   SHARED_PATH_BATCH,
   canSignProofPath,
   loadSharedPathsForCandidates,
@@ -172,6 +173,21 @@ describe("signProofPaths", () => {
     expect(loaded.has(`${OTHER}/batch-10.jpg`)).toBe(true);
     expect(loaded.has(`${OTHER}/batch-20.jpg`)).toBe(true);
     expect(loaded.has(`${OTHER}/batch-30.jpg`)).toBe(true);
+  });
+});
+
+describe("unsignable proof values", () => {
+  it("returns null for a file URL and a path that is not in the bucket", async () => {
+    let signed = 0;
+    const pair = await signProofPair("file:///var/mobile/proof.jpg", "not a storage path", OWNER, {
+      createSignedUrls: async () => {
+        signed += 1;
+        return new Map();
+      },
+      loadSharedPaths: async () => new Set(),
+    });
+    expect(pair).toEqual({ photoUrl: null, proofPhotoUrl: null });
+    expect(signed).toBe(0);
   });
 });
 

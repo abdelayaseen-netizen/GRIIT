@@ -4,6 +4,7 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import { CalendarDays, ImageOff, LayoutGrid, Lock, Plus } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ProofsCalendar from "@/components/profile/ProofsCalendar";
@@ -136,7 +137,7 @@ export default function ProfileProofs({
               >
                 {kind === "photo" ? (
                   <>
-                    <Image source={{ uri: p.imageUrl! }} style={styles.img} contentFit="cover" />
+                    <ProofPhoto uri={p.imageUrl} taskName={p.taskName} style={styles.img} />
                     <Text style={styles.dateBurn}>{date}</Text>
                   </>
                 ) : kind === "missing" ? (

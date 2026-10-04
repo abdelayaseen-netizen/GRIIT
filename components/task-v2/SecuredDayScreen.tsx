@@ -2,7 +2,7 @@
  * Frame 59 — streak is the hero; image area follows proof count; never an empty card.
  */
 import React from "react";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { Download, Flame, Instagram, ShieldOff, X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,6 +15,7 @@ import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
 import type { ShareCardInput } from "@/lib/share-image";
 import { securedMomentTitle, streakInARow } from "@/lib/task-complete-toast";
 import EmptyState from "@/components/ds/EmptyState";
+import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { SECURED_DONE } from "@/lib/simple-log";
 import {
@@ -183,7 +184,7 @@ export default function SecuredDayScreen({
           </Card>
         ) : n === 1 && proofs[0] ? (
           <>
-            <Image source={{ uri: proofs[0].uri }} style={styles.photo} resizeMode="cover" />
+            <ProofPhoto uri={proofs[0].uri} taskName={proofs[0].challengeName} style={styles.photo} />
             <Text style={styles.photoCap}>
               {securedChallengeLine(proofs[0].challengeName, proofs[0].day, proofs[0].length)}
             </Text>
@@ -195,7 +196,7 @@ export default function SecuredDayScreen({
                 const last = i === SECURED_TILE_MAX - 1 && overflow;
                 return (
                   <View key={`${pr.uri}-${i}`} style={styles.tile}>
-                    <Image source={{ uri: pr.uri }} style={styles.tileImg} resizeMode="cover" />
+                    <ProofPhoto uri={pr.uri} taskName={pr.challengeName} style={styles.tileImg} />
                     {last ? (
                       <View style={styles.scrim} pointerEvents="none">
                         <View style={styles.scrimFill} />
