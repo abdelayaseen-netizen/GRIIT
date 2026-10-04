@@ -7,6 +7,7 @@ import {
   feedCardShowsVerified,
   feedCardSubject,
   feedCardVariant,
+  feedProofSubject,
   inlineCommentsState,
   viewAllComments,
 } from "@/lib/feed-card-family";
@@ -37,6 +38,8 @@ describe("Chunk U feed card family", () => {
     expect(feedCardSubject({ ...base, eventType: "secured_day" }, "day_secured")).toBe("Day secured");
     expect(feedCardSubject({ ...base, eventType: "joined_challenge" }, "challenge_started")).toBe("Started the challenge");
     expect(feedCardSubject({ ...base, eventType: "completed_challenge" }, "challenge_finished")).toBe("Finished the challenge");
+    expect(feedProofSubject(7, 30, "Show Up")).toBe("Day 7 of 30 · Show Up");
+    expect(feedProofSubject(7, 30, "  ")).toBe("Day 7 of 30");
     expect(feedCardMeta({ ...base, eventType: "task_completed" }, "task_self")).toBe("Self-reported");
     expect(feedCardMeta({ ...base, eventType: "completed_challenge", securedDays: 62 }, "challenge_finished")).toBe(
       "62 of 75 days secured",
@@ -92,7 +95,7 @@ describe("Chunk U challenge board", () => {
     expect(board).toContain('typeof challengeBoard.data?.elapsedEnded === "number"');
     expect(feed).toContain("feedCardVariant");
     expect(feed).toContain("InlineComments");
-    expect(feed).toContain("ArrowUpRight");
+    expect(feed).toContain("Send");
     expect(home).toContain("weekStripFromDays");
     expect(home).toContain("streakFromDays");
   });

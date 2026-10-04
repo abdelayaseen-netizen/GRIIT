@@ -3,10 +3,10 @@
  */
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { ArrowUpRight, Heart, MessageCircle } from "lucide-react-native";
+import { Check, Heart, MessageCircle, Send } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
-import Card from "@/components/ds/Card";
 import ProofImage from "@/components/ds/ProofImage";
 import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraSeal";
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
@@ -19,15 +19,18 @@ import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
 import {
-  feedCardEyebrow,
   feedCardMeta,
   feedCardSubject,
   feedCardVariant,
+  feedProofSubject,
 } from "@/lib/feed-card-family";
 import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
-const ICON = DS_V3.space.xs * 6;
-const CARD_R = 14;
+const HEART = 22;
+const COMMENT = 22;
+const SEND = 20;
+const PHOTO_INSET = 16;
+const PHOTO_RADIUS = 20;
 
 export type FeedPostV3Props = {
   post: LiveFeedPost;
@@ -76,10 +79,6 @@ export default function FeedPostV3({
   const name = post.displayName || post.username;
   const when = formatTimeAgoCompact(post.createdAt);
   const avatarUri = feedAvatarUri(post.avatarUrl, photo);
-  const eyebrow = feedCardEyebrow(
-    { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof },
-    variant,
-  );
   const subject = feedCardSubject(
     { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof },
     variant,
@@ -106,7 +105,10 @@ export default function FeedPostV3({
     );
   }
 
-  if (variant !== "task_camera" || !photo) {
+  const proofPost = variant === "task_self" || (variant === "task_camera" && Boolean(photo));
+  const daySubject = feedProofSubject(post.currentDay, post.totalDays, post.challengeName);
+
+  if (!proofPost) {
     return (
       <DoubleTapRespect
         respected={post.reactedByMe}
@@ -141,7 +143,7 @@ export default function FeedPostV3({
   return (
     <>
     <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
-    <Card style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.header}>
         <Pressable
           onPress={onProfilePress}
@@ -159,40 +161,35 @@ export default function FeedPostV3({
           style={styles.flex}
         >
           <Text style={styles.name}>{name}</Text>
+          <Text style={styles.subject} numberOfLines={1}>{daySubject}</Text>
         </Pressable>
         <Text style={styles.when}>{when}</Text>
       </View>
       {variant === "task_camera" && photo ? (
-        <View style={styles.photoWrap}>
-          <ProofImage
-            uri={photo}
-            size="feed"
-            title={post.challengeName}
-            caption={post.caption ?? undefined}
-            scrim
-            recyclingKey={post.id}
+        <View style={styles.photoFrame}>
+          <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
+          <LinearGradient
+            colors={["rgba(15,15,15,0)", "rgba(15,15,15,0.75)"] as const}
+            style={styles.scrim}
           />
+          <Text style={styles.photoTitle} numberOfLines={2}>{subject}</Text>
           {seal ? (
             <View style={styles.seal}>
-              <CameraSeal onPress={() => setSealOpen(true)} />
+              <CameraSeal onPress={() => setSealOpen(true)} size={28} />
             </View>
           ) : null}
         </View>
-      ) : null}
-      {onChallengePress ? (
-        <Pressable
-          onPress={onChallengePress}
-          accessibilityRole="button"
-          accessibilityLabel={`${post.challengeName} challenge`}
-          hitSlop={FEED_TAP_HIT_SLOP}
-        >
-          <Text style={styles.eyebrow}>{eyebrow}</Text>
-        </Pressable>
       ) : (
-        <Text style={styles.eyebrow}>{eyebrow}</Text>
+        <View style={styles.selfPanel}>
+          <View style={styles.selfTop}>
+            <View style={styles.checkDisc}>
+              <Check size={22} color={DS_V3.color.brandText} />
+            </View>
+            <Text style={styles.gate}>{meta || "Self-reported"}</Text>
+          </View>
+          <Text style={styles.taskTitle}>{subject}</Text>
+        </View>
       )}
-      {subject ? <Text style={styles.subject}>{subject}</Text> : null}
-      {meta ? <Text style={styles.meta}>{meta}</Text> : null}
       <ActionRow
         liked={post.reactedByMe}
         respectCount={post.respectCount}
@@ -208,7 +205,7 @@ export default function FeedPostV3({
         onOpen={onComment}
         onAuthorPress={onCommentAuthorPress}
       />
-    </Card>
+    </View>
     </DoubleTapRespect>
     <SealSheet visible={sealOpen} onDismiss={() => setSealOpen(false)} gates={{}} />
     </>
@@ -250,38 +247,94 @@ function ActionRow({
           style={styles.hit}
         >
           <Animated.View style={{ transform: [{ scale: bounce }] }}>
-            <Heart size={ICON} color={heart.color} fill={heart.fill} />
+            <Heart size={HEART} color={heart.color} fill={heart.fill} />
           </Animated.View>
         </Pressable>
         {respectCount > 0 ? <Text style={[styles.count, { color: heart.countColor }]}>{respectCount}</Text> : null}
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
-        <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
+        <MessageCircle size={COMMENT} color={DS_V3.color.textPrimary} />
       </Pressable>
       {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
       <View style={styles.flex} />
       <Pressable accessibilityRole="button" accessibilityLabel="Share" onPress={onShare} style={styles.hit}>
-        <ArrowUpRight size={ICON} color={DS_V3.color.textPrimary} />
+        <Send size={SEND} color={DS_V3.color.textPrimary} />
       </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: CARD_R, overflow: "hidden" },
-  photoWrap: { position: "relative" },
-  seal: { position: "absolute", top: DS_V3.space.md, right: DS_V3.space.md, zIndex: 2 },
-  header: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.md, marginBottom: DS_V3.space.sm },
+  card: { backgroundColor: DS_V3.color.canvas },
+  photoFrame: {
+    marginHorizontal: PHOTO_INSET,
+    borderRadius: PHOTO_RADIUS,
+    overflow: "hidden",
+    aspectRatio: 4 / 5,
+  },
+  scrim: { position: "absolute", left: 0, right: 0, bottom: 0, height: "42%" },
+  photoTitle: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 16,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  selfPanel: {
+    marginHorizontal: PHOTO_INSET,
+    borderRadius: PHOTO_RADIUS,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 14,
+  },
+  selfTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+  checkDisc: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: DS_V3.color.brandTint,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gate: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    color: DS_V3.color.textSecondary,
+    textAlign: "right",
+  },
+  taskTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  seal: { position: "absolute", top: 12, right: 12, zIndex: 2 },
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+  },
   flex: { flex: 1 },
-  name: { fontSize: 14, lineHeight: 19, fontWeight: "500", color: DS_V3.color.textPrimary },
-  when: { ...DS_V3.type.label, color: DS_V3.color.textSecondary, letterSpacing: 0, textTransform: "none" },
-  eyebrow: { ...DS_V3.type.label, color: DS_V3.color.textSecondary, marginTop: DS_V3.space.sm },
-  subject: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary, marginTop: 2 },
-  meta: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary, marginTop: 2 },
-  seeDay: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: DS_V3.space.sm },
-  seeDayTxt: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.brandText },
-  actions: { flexDirection: "row", alignItems: "center", marginTop: DS_V3.space.md },
+  name: { fontSize: 14, lineHeight: 18, fontWeight: "500", color: DS_V3.color.textPrimary },
+  when: { fontSize: 12, lineHeight: 16, color: DS_V3.color.textSecondary, marginTop: 1 },
+  subject: { fontSize: 12, lineHeight: 16, color: DS_V3.color.textSecondary },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
   respect: { flexDirection: "row", alignItems: "center" },
   count: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
-  hit: { width: DS_V3.size.tap, height: DS_V3.size.tap, alignItems: "center", justifyContent: "center" },
+  hit: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
 });
