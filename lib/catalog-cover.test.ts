@@ -22,7 +22,7 @@ describe("catalogCoverUri", () => {
       "https://cdn.example/covers/bed.jpg",
     );
     expect(catalogCoverUri(null)).toBeNull();
-    expect(catalogCoverLabel({ category: "mind", title: "Read" })).toBe("Mind");
+    expect(catalogCoverLabel({ category: "mind", title: "Read" })).toBe("Read");
     expect(catalogCoverLabel({ title: "Read" })).toBe("Read");
   });
 

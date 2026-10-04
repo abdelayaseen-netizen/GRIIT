@@ -48,7 +48,7 @@ export default function ChallengeCard({
   const featuredMeta = proofType ? `${dayPhrase(days)} · ${proofType}` : gridMeta;
   const size = featured ? "feed" : "card";
   const cover = httpsCover(coverUri);
-  const fallbackTitle = coverLabel?.trim() || title;
+  const fallbackTitle = title.trim() || coverLabel?.trim() || "Challenge";
 
   return (
     <Pressable
@@ -62,7 +62,7 @@ export default function ChallengeCard({
           uri={cover}
           size={size}
           scrim
-          title={cover && featured ? undefined : fallbackTitle}
+          title={featured ? undefined : fallbackTitle}
           recyclingKey={cover ?? fallbackTitle}
         />
         {featured ? (
