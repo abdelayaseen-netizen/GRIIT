@@ -922,6 +922,7 @@ export function useTaskFlowV2() {
     hideChrome,
     currentDay,
     taskType,
+    gates,
     taskName,
     challengeName,
     windowEval,

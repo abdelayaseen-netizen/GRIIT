@@ -199,6 +199,18 @@ export function wizardGateLine(task: {
   return parts.join(" · ");
 }
 
+const COUNTER_TYPES = new Set(["counter", "water", "reading", "count"]);
+
+/** Home gate line for a counter that also requires a photo. */
+export function counterCameraGateLine(
+  type: string | null | undefined,
+  gates: readonly TaskGate[] | null | undefined,
+): string | null {
+  if (!type || !COUNTER_TYPES.has(type)) return null;
+  if (!gates?.includes("camera")) return null;
+  return "Counter · Camera";
+}
+
 /** Home / detail compact proof line: camera · time · location. */
 export function gateLabel(task: {
   gates?: readonly TaskGate[] | null;

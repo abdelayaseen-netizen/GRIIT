@@ -203,8 +203,7 @@ export function TaskFlowV2() {
           taskName={f.taskName}
           headerTitle={f.headerTitle}
           headerLabel={f.chromeTitle}
-          footerCaption={f.footerCaption}
-          footerBrand={f.footerBrand}
+          hasCamera={f.gates.includes("camera")}
           keypadOpen={f.keypad?.field === "count"}
           onTypeCount={f.onTypeCount}
           onAddOne={f.onAddOne}

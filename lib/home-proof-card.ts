@@ -1,7 +1,7 @@
 import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
-import { SELF_REPORTED, closedWindowCaption, gateLabel } from "@/lib/task-ui";
+import { SELF_REPORTED, closedWindowCaption, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
 import { countdownSuffix } from "@/lib/g2a-home";
 import {
   shareTodayCaption,
@@ -174,6 +174,21 @@ export function homeWindowClosed(task: {
 
 export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const closed = homeWindowClosed(task);
+  const gates = rowGates(task);
+  const counterLine = !closed && !task.done
+    ? counterCameraGateLine(task.type ?? task.taskType, gates)
+    : null;
+  const proofLine = closed
+    ? closedWindowCaption(task.gateTime)
+    : counterLine
+      ? counterLine
+      : task.done && task.hasCameraProof !== true
+        ? SELF_REPORTED
+        : gateLabel({
+            gates,
+            gateTime: task.gateTime,
+            requirePhoto: task.requirePhoto,
+          });
   return {
     id: task.id ?? `${task.name}-${index}`,
     name: taskDisplayName({
@@ -183,15 +198,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
       requirePhoto: task.requirePhoto,
     }),
     type: task.type ?? task.taskType ?? "check_off",
-    caption: (closed
-      ? closedWindowCaption(task.gateTime)
-      : task.done && task.hasCameraProof !== true
-        ? SELF_REPORTED
-        : gateLabel({
-            gates: rowGates(task),
-            gateTime: task.gateTime,
-            requirePhoto: task.requirePhoto,
-          })) + (!closed && !task.done ? countdownSuffix(task.minutesLeft) : ""),
+    caption: proofLine + (!closed && !task.done ? countdownSuffix(task.minutesLeft) : ""),
     done: task.done,
     closed,
     hasCameraProof: task.hasCameraProof === true,

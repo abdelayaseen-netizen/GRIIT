@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flow-state";
 import {
   COUNT_HONESTY,
+  counterSubline,
   COUNT_POST,
   COUNT_TYPE,
   RUN_HONESTY_GPS,
@@ -45,6 +46,8 @@ describe("work step CTA labels", () => {
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
     expect(COUNT_HONESTY).toBe("Self-entered count. Nothing is checked.");
+    expect(counterSubline(true)).toBe("Count, then a photo.");
+    expect(counterSubline(false)).toBe("Self-reported.");
   });
 
   it("timer Start {mm:ss}; Post stays closed until zero", () => {

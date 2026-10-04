@@ -12,6 +12,12 @@ import { fmtMmSs, type TaskFlowStep } from "@/lib/task-flow-state";
 export const WORK_SECURED_CAPTION = SIMPLE_ASK_CAPTION;
 
 export const COUNT_HONESTY = "Self-entered count. Nothing is checked.";
+export const COUNT_THEN_PHOTO = "Count, then a photo.";
+export const COUNT_SELF_REPORTED = "Self-reported.";
+
+export function counterSubline(hasCamera: boolean): string {
+  return hasCamera ? COUNT_THEN_PHOTO : COUNT_SELF_REPORTED;
+}
 export const COUNT_ADD = "Add one";
 export const COUNT_REMOVE = "Remove one";
 export const COUNT_TYPE = "Type it";
