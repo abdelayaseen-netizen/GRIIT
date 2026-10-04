@@ -29,7 +29,7 @@ describe("v44 featured catalog", () => {
 
   it("keeps the seed out of supabase/migrations", () => {
     const sql = readFileSync(resolve(__dirname, "../docs/drafts/v44-featured-catalog.sql"), "utf8");
-    expect(sql).toContain("DO NOT APPLY");
+    expect(sql).toContain("APPLIED 2026-10-04");
     expect(sql).toContain("SELECT id, title");
     expect(sql).toContain("creator_id");
     expect(sql).toContain("photo_mode");

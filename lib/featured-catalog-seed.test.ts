@@ -4,8 +4,10 @@ import { describe, expect, it } from "vitest";
 import { gateTimeFor, gatesFor, photoModeFor, type TaskModelRow } from "@/backend/lib/task-model";
 import { gateLabel } from "@/lib/task-ui";
 import {
+  assertTypedValuesCells,
   buildFeaturedCatalogRows,
   renderFeaturedCatalogSql,
+  sqlTypedNull,
 } from "@/lib/featured-catalog-seed";
 
 function asModel(row: ReturnType<typeof buildFeaturedCatalogRows>[number]["task"]): TaskModelRow {
@@ -20,13 +22,30 @@ function asModel(row: ReturnType<typeof buildFeaturedCatalogRows>[number]["task"
   };
 }
 
+describe("typed NULL in a VALUES list", () => {
+  it("casts NULL and rejects a bare NULL", () => {
+    expect(sqlTypedNull("numeric")).toBe("NULL::numeric");
+    expect(sqlTypedNull("integer")).toBe("NULL::integer");
+    expect(() => assertTypedValuesCells(["NULL"])).toThrow(/Untyped NULL/);
+    expect(() => assertTypedValuesCells([sqlTypedNull("numeric")])).not.toThrow();
+  });
+
+  it("does not put a bare NULL in the task VALUES list", () => {
+    const sql = renderFeaturedCatalogSql();
+    const values = sql.slice(sql.indexOf("FROM (VALUES\n"), sql.indexOf(") AS v("));
+    expect(values).not.toMatch(/(^|[\s,(])NULL([\s,)]|$)/);
+    expect(sql).toContain("gate_time_start = '06:30'");
+    expect(sql).toContain("gate_time_start = '07:00'");
+  });
+});
+
 describe("featured catalog seed matches the create-route readers", () => {
   const rows = buildFeaturedCatalogRows();
 
   it("emits the eight tasks the draft SQL file contains", () => {
     const sql = readFileSync(resolve(__dirname, "../docs/drafts/v44-featured-catalog.sql"), "utf8");
     expect(sql).toBe(renderFeaturedCatalogSql(rows));
-    expect(sql.startsWith("-- DRAFT. DO NOT APPLY.")).toBe(true);
+    expect(sql).toContain("APPLIED 2026-10-04");
   });
 
   it("Show Up 7 is check_off, photo required, no place, no window", () => {
@@ -115,5 +134,96 @@ describe("featured catalog seed matches the create-route readers", () => {
     expect(rows.find((r) => r.spec.title === "30-Second Cold Finish")!.task.title).toBe(
       "End your shower with 30 seconds cold",
     );
+  });
+});
+
+const CATALOG_TYPES = `
+CREATE TABLE public.challenges (
+  id uuid PRIMARY KEY,
+  creator_id uuid,
+  title text NOT NULL,
+  description text,
+  duration_days integer NOT NULL,
+  duration_type text NOT NULL,
+  visibility text,
+  difficulty text,
+  category text,
+  status text,
+  is_featured boolean,
+  participants_count integer,
+  participation_type text,
+  team_size integer,
+  run_status text,
+  is_hard_mode boolean NOT NULL DEFAULT false,
+  live_date timestamptz,
+  replay_policy text,
+  require_same_rules boolean,
+  show_replay_label boolean
+);
+CREATE TABLE public.challenge_tasks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  challenge_id uuid NOT NULL REFERENCES public.challenges(id),
+  title text NOT NULL,
+  task_type text NOT NULL,
+  order_index integer,
+  require_photo boolean DEFAULT false,
+  config jsonb,
+  target_mode text,
+  require_location boolean DEFAULT false,
+  start_value numeric,
+  start_duration_minutes integer,
+  location_latitude numeric,
+  location_longitude numeric,
+  location_radius_meters integer,
+  gate_time_mode text,
+  gate_time_start text,
+  gate_time_end text
+);
+`;
+
+describe("catalog SQL against column types", () => {
+  it("runs the applied seed, and rejects an untyped NULL for start_value", async () => {
+    const { PGlite } = await import("@electric-sql/pglite");
+    const db = new PGlite();
+    await db.exec(CATALOG_TYPES);
+    await db.exec(renderFeaturedCatalogSql());
+    const challenges = await db.query<{ n: number }>("SELECT count(*)::int AS n FROM public.challenges");
+    const tasks = await db.query<{ n: number }>("SELECT count(*)::int AS n FROM public.challenge_tasks");
+    expect(challenges.rows[0]?.n).toBe(8);
+    expect(tasks.rows[0]?.n).toBe(8);
+    const windows = await db.query<{ title: string; gate_time_mode: string; gate_time_start: string }>(
+      `SELECT title, gate_time_mode, gate_time_start
+       FROM public.challenge_tasks
+       WHERE gate_time_mode IS NOT NULL
+       ORDER BY gate_time_start`,
+    );
+    expect(windows.rows).toEqual([
+      { title: "Up and out of bed", gate_time_mode: "by", gate_time_start: "06:30" },
+      { title: "Pray Fajr", gate_time_mode: "by", gate_time_start: "07:00" },
+    ]);
+
+    const untyped = `
+      INSERT INTO public.challenge_tasks (challenge_id, title, task_type, start_value)
+      SELECT v.challenge_id, v.title, v.task_type, v.start_value
+      FROM (VALUES (
+        'e44f0001-4000-4000-8000-000000000001'::uuid,
+        'bad',
+        'check_off',
+        NULL
+      )) AS v(challenge_id, title, task_type, start_value)
+    `;
+    await expect(db.exec(untyped)).rejects.toThrow(/numeric but expression is of type text/);
+
+    await db.exec(`
+      INSERT INTO public.challenge_tasks (challenge_id, title, task_type, start_value)
+      SELECT v.challenge_id, v.title, v.task_type, v.start_value
+      FROM (VALUES (
+        'e44f0001-4000-4000-8000-000000000001'::uuid,
+        'typed',
+        'check_off',
+        NULL::numeric
+      )) AS v(challenge_id, title, task_type, start_value)
+    `);
+    await db.close();
   });
 });
