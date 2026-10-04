@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Platform, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
-import { getTodayDateKey } from "@/lib/date-utils";
+import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
@@ -52,6 +52,9 @@ import {
   weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
+import { freezeRecoveryRow } from "@/lib/freeze-recovery";
+import { FreezeSheet } from "@/components/home/FreezeSheet";
+import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { inviteToChallenge } from "@/lib/share";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -125,6 +128,7 @@ export default function ActiveChallengeDetailScreen() {
   const bootstrap = useHomeBootstrap(user?.id);
   const profileTz = (profile as { timezone?: string | null })?.timezone;
   const todayKey = getTodayDateKey(profileTz);
+  const yesterdayKey = getYesterdayDateKey(profileTz);
 
   const {
     data: activeChallenge,
@@ -331,6 +335,8 @@ export default function ActiveChallengeDetailScreen() {
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [shareTodayOpen, setShareTodayOpen] = useState(false);
+  const [showFreezeSheet, setShowFreezeSheet] = useState(false);
+  const [freezeError, setFreezeError] = useState<string | null>(null);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =
     useInlineError();
 
@@ -419,12 +425,30 @@ export default function ActiveChallengeDetailScreen() {
     durationDays,
     todaySecured: securedToday,
   });
-  const freezeRow = freezeDetailCopy({
-    remaining: bootstrap.data?.freezeStatus?.remaining ?? 0,
+  const freezeRemaining = bootstrap.data?.freezeStatus?.remaining ?? 0;
+  const idleFreeze = freezeDetailCopy({
+    remaining: freezeRemaining,
     lastFreezeUsedAt: bootstrap.data?.freezeStatus?.lastFreezeUsedAt,
     hardMode: difficulty === "hard",
     timeZone: profileTz ?? "UTC",
   });
+  const recovery = freezeRecoveryRow({
+    hardMode: difficulty === "hard",
+    freezesRemaining: freezeRemaining,
+    missDateKey: yesterdayKey,
+    todayKey,
+    securedDateKeys: keys,
+    frozenDateKeys: (stats as { frozenDateKeys?: string[] } | null)?.frozenDateKeys,
+    timeZone: profileTz ?? "UTC",
+  });
+  const freezeRow = recovery
+    ? {
+        title: recovery.title,
+        caption: recovery.caption,
+        icon: "snowflake" as const,
+        actionLabel: recovery.actionLabel,
+      }
+    : idleFreeze;
   const vis = String((challenge as { visibility?: string | null } | undefined)?.visibility ?? "").toLowerCase();
   const people = peopleCardCopy({
     memberCount: participantsCount,
@@ -435,6 +459,26 @@ export default function ActiveChallengeDetailScreen() {
     letter: weekdayLetterForDateKey(key),
     filled: weekSecured[i] === true,
   }));
+
+  const useFreeze = useMutation({
+    mutationKey: ["streaks", "useFreeze", user?.id ?? "", "detail"],
+    mutationFn: () =>
+      trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
+        dateKeyToFreeze: yesterdayKey,
+      }),
+    onSuccess: () => {
+      setShowFreezeSheet(false);
+      setFreezeError(null);
+      for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
+        void queryClient.invalidateQueries({ queryKey: [...queryKey] });
+      }
+      void queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
+    },
+    onError: (err) => {
+      captureError(err, "useFreeze.detail");
+      setFreezeError(inlineServerError(err));
+    },
+  });
 
   const handleInvite = useCallback(() => {
     void inviteToChallenge({ name: title, id: challengeId || title });
@@ -512,6 +556,10 @@ export default function ActiveChallengeDetailScreen() {
           weekLine={weekMeta.line}
           weekDaysOverride={weekDaysOverride}
           freezeRow={freezeRow}
+          onUseFreeze={recovery ? () => {
+            setFreezeError(null);
+            setShowFreezeSheet(true);
+          } : undefined}
           people={people}
           onInvite={people.showInvite ? handleInvite : undefined}
         />
@@ -535,6 +583,32 @@ export default function ActiveChallengeDetailScreen() {
           }
           preselectedId={id ?? title}
           proofUri={todayProofUri}
+        />
+        <FreezeSheet
+          visible={showFreezeSheet}
+          remaining={freezeRemaining}
+          lastFreezeUsedAt={bootstrap.data?.freezeStatus?.lastFreezeUsedAt ?? null}
+          timeZone={profileTz ?? "UTC"}
+          subscriptionStatus={(profile as { subscription_status?: string | null } | null)?.subscription_status}
+          submitting={useFreeze.isPending}
+          error={freezeError}
+          onUseFreeze={() => {
+            setFreezeError(null);
+            useFreeze.mutate();
+          }}
+          onRefuse={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+          }}
+          onSeePro={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+            router.push(ROUTES.PAYWALL as never);
+          }}
+          onClose={() => {
+            setShowFreezeSheet(false);
+            setFreezeError(null);
+          }}
         />
         <Sheet
           visible={leaveConfirmVisible}

@@ -99,7 +99,13 @@ export type ActiveChallengeV3Props = {
   todayStatus?: string | null;
   weekLine?: string | null;
   weekDaysOverride?: { letter: string; filled: boolean }[];
-  freezeRow?: { title: string; caption: string; icon: "snowflake" | "shield-off" } | null;
+  freezeRow?: {
+    title: string;
+    caption: string;
+    icon: "snowflake" | "shield-off";
+    actionLabel?: string | null;
+  } | null;
+  onUseFreeze?: () => void;
   people?: { heading: string; body: string; showInvite: boolean; inviteLabel: string } | null;
   onInvite?: () => void;
   todaySub?: string | null;
@@ -226,15 +232,20 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         </View>
         {p.freezeRow ? (
           <View style={styles.freezeRow}>
-            {p.freezeRow.icon === "shield-off" ? (
-              <ShieldOff size={META_ICON} color={DS_V3.color.textSecondary} />
-            ) : (
-              <Snowflake size={META_ICON} color={DS_V3.color.textSecondary} />
-            )}
-            <View style={styles.resetCopy}>
-              <Text style={styles.taskTitle}>{p.freezeRow.title}</Text>
-              <Text style={styles.caption}>{p.freezeRow.caption}</Text>
+            <View style={styles.freezeTop}>
+              {p.freezeRow.icon === "shield-off" ? (
+                <ShieldOff size={META_ICON} color={DS_V3.color.textSecondary} />
+              ) : (
+                <Snowflake size={META_ICON} color={DS_V3.color.textSecondary} />
+              )}
+              <View style={styles.resetCopy}>
+                <Text style={styles.taskTitle}>{p.freezeRow.title}</Text>
+                <Text style={styles.caption}>{p.freezeRow.caption}</Text>
+              </View>
             </View>
+            {p.freezeRow.actionLabel && p.onUseFreeze ? (
+              <Button label={p.freezeRow.actionLabel} onPress={p.onUseFreeze} />
+            ) : null}
           </View>
         ) : null}
 
@@ -565,8 +576,6 @@ const styles = StyleSheet.create({
     marginBottom: DS_V3.space.xs,
   },
   freezeRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
     gap: DS_V3.space.md,
     marginHorizontal: DS_V3.space.gutter,
     marginTop: DS_V3.space.sm,
@@ -575,6 +584,11 @@ const styles = StyleSheet.create({
     borderWidth: PT,
     borderColor: DS_V3.color.border,
     borderRadius: DS_V3.radius.card,
+  },
+  freezeTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
   },
   peopleCard: {
     gap: DS_V3.space.sm,

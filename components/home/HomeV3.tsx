@@ -111,6 +111,7 @@ export type HomeV3Props = {
   onFindChallenge?: () => void;
   onCreateChallenge?: () => void;
   onPressBell: () => void;
+  onPressStreak?: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
   onPressChallenge?: (challengeId: string) => void;
@@ -146,6 +147,7 @@ export function HomeV3({
   onFindChallenge,
   onCreateChallenge,
   onPressBell,
+  onPressStreak,
   onPressProof: _onPressProof,
   onPressTask,
   onPressChallenge,
@@ -235,7 +237,17 @@ export function HomeV3({
           <Text style={styles.dateCaption}>{dateCaption}</Text>
           <Text style={styles.homeName}>{headerTitle}</Text>
         </View>
-        {streak == null ? null : (
+        {streak == null ? null : onPressStreak ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={formatDays(streak)}
+            onPress={onPressStreak}
+            style={styles.streakChip}
+          >
+            <Flame size={16} color={DS_V3.color.brand} />
+            <Text style={styles.streakChipNum}>{streak}</Text>
+          </Pressable>
+        ) : (
           <View
             style={styles.streakChip}
             accessibilityLabel={formatDays(streak)}
