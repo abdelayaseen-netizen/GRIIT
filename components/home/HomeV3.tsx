@@ -40,8 +40,9 @@ import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
   SECTION_DONE,
-  TODAY_WINDOW_CLOSED,
+  closedTaskStatus,
   daysInARow,
+  firstClosedUndoneTask,
   remainingWindowsClosed,
   showTodayStreakLine,
   windowClosedFollowup,
@@ -206,8 +207,11 @@ export function HomeV3({
     );
   }
 
+  const homeRows = proof?.sections.flatMap((s) => s.rows) ?? [];
+  const closedUndone = firstClosedUndoneTask(homeRows);
+  const todayBlocked = Boolean(proof?.hasChallenge && closedUndone);
   const windowsClosed = Boolean(
-    proof?.hasChallenge && remainingWindowsClosed(proof.sections.flatMap((s) => s.rows)),
+    proof?.hasChallenge && remainingWindowsClosed(homeRows),
   );
   const allDone = Boolean(
     proof?.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount,
@@ -218,8 +222,6 @@ export function HomeV3({
     : null;
 
   const renderRow = (row: HomeProofRow) => {
-    const closed = row.closed;
-    const pending = !row.done && !closed;
     const inner = (
       <>
         <StatusRing row={row} />
@@ -227,12 +229,12 @@ export function HomeV3({
           <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
           <Text style={styles.caption}>{row.caption}</Text>
         </View>
-        {pending ? (
+        {!row.done ? (
           <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
         ) : null}
       </>
     );
-    if (!pending) {
+    if (row.done) {
       return (
         <View key={row.id} style={[styles.proofRow, highlightTaskId === row.id ? styles.rowFlash : null]}>
           {inner}
@@ -324,24 +326,28 @@ export function HomeV3({
                 {proof.doneCount} / {proof.totalCount}
               </Text>
             </View>
-            {showStreakHero && day2Hero ? (
+            {showStreakHero && day2Hero && !todayBlocked ? (
               <View style={styles.day2Hero}>
                 <Text style={styles.hero28}>{day2Hero.hero}</Text>
                 <Text style={styles.secondary}>{day2Hero.line}</Text>
               </View>
-            ) : firstDayLine && !windowsClosed ? (
+            ) : firstDayLine && !windowsClosed && !todayBlocked ? (
               <Text style={[styles.secondary, styles.sectionFirst]}>{firstDayLine}</Text>
             ) : null}
-            {windowsClosed ? (
+            {todayBlocked && closedUndone ? (
               <View style={styles.closedBlock}>
                 <Clock size={18} color={DS_V3.color.textSecondary} />
                 <View style={styles.flex}>
-                  <Text style={styles.closedTitle}>{TODAY_WINDOW_CLOSED}</Text>
-                  {closedFollow ? <Text style={styles.secondary}>{closedFollow}</Text> : null}
+                  <Text style={styles.closedTitle}>{closedTaskStatus(closedUndone.name)}</Text>
+                  {windowsClosed && closedFollow ? (
+                    <Text style={styles.secondary}>{closedFollow}</Text>
+                  ) : null}
                 </View>
               </View>
             ) : null}
-            {windowBanner && !windowsClosed ? <Text style={styles.caption}>{windowBanner}</Text> : null}
+            {windowBanner && !windowsClosed && !todayBlocked ? (
+              <Text style={styles.caption}>{windowBanner}</Text>
+            ) : null}
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
                 const expanded = todaySectionExpanded(
@@ -445,7 +451,7 @@ export function HomeV3({
               </View>
             ) : null}
           </Card>
-          {startLabel ? (
+          {startLabel && !todayBlocked ? (
             <View style={styles.startWrap}>
               <Button label={startLabel} onPress={_onPressProof} />
             </View>

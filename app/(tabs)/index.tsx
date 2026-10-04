@@ -765,7 +765,7 @@ export default function HomeScreen() {
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
                 const next = heroTasks.find((h) => h.id === id);
-                if (!next || next.windowState === "closed") return;
+                if (!next || next.done) return;
                 onPressTask(next);
               }}
               onPressChallenge={onPressChallenge}
