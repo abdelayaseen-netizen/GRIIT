@@ -16,7 +16,7 @@ describe("123 mode copy", () => {
     );
     expect(MODE_HARD_TITLE).toBe("No Days Off");
     expect(MODE_HARD_BODY).toBe(
-      "Every gate blocks. No freezes. A missed day goes back to Day 1.",
+      "A missed day resets your streak to 0. No freezes.",
     );
     expect(CREATE_PRIVACY_LINE).toContain("Photos stay private");
     expect(GROUP_TASK_PRIVACY).toBe(

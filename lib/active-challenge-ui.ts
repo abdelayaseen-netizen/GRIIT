@@ -207,7 +207,7 @@ export function footerAction(args: {
 
 export function difficultyLine(difficulty: "standard" | "hard"): string {
   return difficulty === "hard"
-    ? "No freezes. Miss a day, restart from day 1."
+    ? "A missed day resets your streak to 0. No freezes."
     : "Freezes on. Use one to cover a missed day.";
 }
 
@@ -235,8 +235,8 @@ export function homeProofGate(
   return "Self-reported";
 }
 
-export function resetBody(durationDays: number): string {
-  return `A day went unsecured. Hard mode has no freezes, so the count went back to Day 1 of ${durationDays}.`;
+export function resetBody(): string {
+  return "A missed day resets your streak to 0. No freezes.";
 }
 
 export function mapDifficulty(args: {

@@ -66,4 +66,28 @@ describe("stranger preview gate", () => {
       }),
     ).toBe(false);
   });
+
+  it("a co-member sees a private account", () => {
+    expect(
+      recordAccountVisible({
+        previewStranger: false,
+        viewerId: "teammate",
+        owner: PRIVATE,
+        isMutual: false,
+        isCoMember: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("a stranger does not see a private account", () => {
+    expect(
+      recordAccountVisible({
+        previewStranger: false,
+        viewerId: "stranger",
+        owner: PRIVATE,
+        isMutual: false,
+        isCoMember: false,
+      }),
+    ).toBe(false);
+  });
 });

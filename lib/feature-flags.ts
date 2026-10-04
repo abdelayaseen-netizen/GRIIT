@@ -65,6 +65,12 @@ export const FLAGS = {
    * simple entry only. Gate here for Phase 5 audit transparency.
    */
   WORKOUT_STRUCTURED: false,
+  /**
+   * Per-member gym after joining a place-gated featured challenge.
+   * Place is stored on the task, not the member, so this step cannot
+   * save anything without new storage. Leave the screen in the tree.
+   */
+  SET_MEMBER_GYM: false,
 } as const;
 
 // ============================================

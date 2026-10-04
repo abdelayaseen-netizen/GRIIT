@@ -94,6 +94,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@electric-sql/pglite": "^0.5.8",
     "@sentry/node": "^10.50.0",
     "@types/react": "~19.1.10",
     "@vitest/coverage-v8": "^2.1.9",

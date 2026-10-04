@@ -3,6 +3,7 @@ import {
   STREAK_FREEZE_PER_MONTH_FREE,
   STREAK_FREEZE_PER_MONTH_PRO,
   effectiveFreezesRemaining,
+  freezeBlockedByHardMode,
   monthlyFreezeLimit,
   restoreStreakCount,
   streaksRouter,
@@ -46,6 +47,7 @@ function createCaller(opts?: {
   onProfileUpdate?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
   onStreakUpdate?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
   onFreezeInsert?: (payload: Record<string, unknown>, via: "user" | "admin") => void;
+  hardMode?: boolean;
 }) {
   const profile = {
     is_premium: opts?.isPremium ?? false,
@@ -142,6 +144,12 @@ function createCaller(opts?: {
               error: null,
             }).then(onFulfilled, onRejected);
           }
+          if (table === "active_challenges" && opts?.hardMode) {
+            return Promise.resolve({
+              data: [{ status: "active", challenges: { is_hard_mode: true } }],
+              error: null,
+            }).then(onFulfilled, onRejected);
+          }
           return Promise.resolve({ data: [], error: null }).then(onFulfilled, onRejected);
         },
       };
@@ -166,6 +174,15 @@ function createCaller(opts?: {
     supabase,
   };
 }
+
+describe("freezeBlockedByHardMode", () => {
+  it("refuses only an active No Days Off enrollment", () => {
+    expect(freezeBlockedByHardMode([])).toBe(false);
+    expect(freezeBlockedByHardMode([{ status: "active", challenges: { is_hard_mode: false } }])).toBe(false);
+    expect(freezeBlockedByHardMode([{ status: "completed", challenges: { is_hard_mode: true } }])).toBe(false);
+    expect(freezeBlockedByHardMode([{ status: "active", challenges: { is_hard_mode: true } }])).toBe(true);
+  });
+});
 
 describe("monthly freeze limit", () => {
   it("is 1 free / 4 pro", () => {
@@ -349,6 +366,27 @@ describe("streaks.useFreeze", () => {
       { payload: { active_streak_count: 3, longest_streak_count: 3 }, via: "admin" },
     ]);
     expect(profileUpdates.map((u) => u.via)).toEqual(["admin"]);
+  });
+
+  it("refuses a freeze while a No Days Off challenge is active", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
+    const lastCompleted = addCalendarDaysToDateKey(yesterday, -1);
+    const inserts: unknown[] = [];
+    const { caller } = createCaller({
+      remaining: 1,
+      lastFreezeUsedAt: null,
+      lastCompletedDateKey: lastCompleted,
+      securedDateKeys: [lastCompleted],
+      hardMode: true,
+      onFreezeInsert: (payload) => inserts.push(payload),
+    });
+    await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "No Days Off challenges do not use freezes.",
+    });
+    expect(inserts).toEqual([]);
   });
 
   it("writes longest_streak_count when restore 3 exceeds longest 2", async () => {

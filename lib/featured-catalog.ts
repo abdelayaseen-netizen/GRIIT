@@ -1,7 +1,13 @@
 /**
  * v44 frames 167 + 178 — the eight built-in challenges.
  * Seed lives in docs/drafts/v44-featured-catalog.sql and is not applied.
+ * Task fields come from the create-route builder in featured-catalog-seed.
  */
+
+import { gatesFor, gateTimeFor, type TaskModelRow } from "@/backend/lib/task-model";
+import { FLAGS } from "@/lib/feature-flags";
+import { buildFeaturedCatalogRows } from "@/lib/featured-catalog-seed";
+import { gateLabel } from "@/lib/task-ui";
 
 export type FeaturedProof = "camera" | "optional" | "self";
 
@@ -18,138 +24,35 @@ export type FeaturedBuiltin = {
   taskType: string;
 };
 
-export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = [
-  {
-    id: "e44f0001-4000-4000-8000-000000000001",
-    title: "Show Up 7",
-    category: "fitness",
-    days: 7,
-    task: "Go to the gym",
-    proof: "camera",
-    rule: "Camera · Gym",
-    placeGate: true,
-    taskType: "checkin",
-    config: {
-      required: true,
-      photo_mode: "required",
-      require_photo_proof: true,
-      require_photo: true,
-      require_location: true,
-      gates: ["camera", "place"],
-    },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000002",
-    title: "7K Steps",
-    category: "health",
-    days: 7,
-    task: "7,000 steps",
-    proof: "self",
-    rule: "Self-reported",
-    placeGate: false,
-    taskType: "counter",
-    config: {
-      required: true,
-      photo_mode: "none",
-      require_photo: false,
-      target_value: 7000,
-      gates: [],
-    },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000003",
-    title: "Early Riser 7",
-    category: "discipline",
-    days: 7,
-    task: "Out of bed photo",
-    proof: "camera",
-    rule: "Camera · By 6:30 am",
-    placeGate: false,
-    taskType: "photo",
-    config: {
-      required: true,
-      photo_mode: "required",
-      require_photo_proof: true,
-      require_photo: true,
-      require_camera_only: true,
-      gates: ["camera", "time"],
-      gateTime: { mode: "by", start: "06:30", end: null },
-    },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000004",
-    title: "Fajr Before Sunrise",
-    category: "faith",
-    days: 7,
-    task: "Pray Fajr",
-    proof: "optional",
-    rule: "Photo optional · By 7:00 am",
-    placeGate: false,
-    taskType: "checkin",
-    config: {
-      required: true,
-      photo_mode: "optional",
-      require_photo: false,
-      gates: ["time"],
-      gateTime: { mode: "by", start: "07:00", end: null },
-    },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000005",
-    title: "3 Good Things",
-    category: "mind",
-    days: 7,
-    task: "Write 3 gratitudes",
-    proof: "self",
-    rule: "Self-reported",
-    placeGate: false,
-    taskType: "journal",
-    config: { required: true, photo_mode: "none", require_photo: false, min_words: 3, gates: [] },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000006",
-    title: "10 Pages a Day",
-    category: "learning",
-    days: 14,
-    task: "Read 10 pages",
-    proof: "self",
-    rule: "Self-reported",
-    placeGate: false,
-    taskType: "reading",
-    config: { required: true, photo_mode: "none", require_photo: false, target_pages: 10, gates: [] },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000007",
-    title: "Quran Daily",
-    category: "faith",
-    days: 30,
-    task: "Read Quran",
-    proof: "self",
-    rule: "Self-reported",
-    placeGate: false,
-    taskType: "reading",
-    config: { required: true, photo_mode: "none", require_photo: false, gates: [] },
-  },
-  {
-    id: "e44f0001-4000-4000-8000-000000000008",
-    title: "30-Second Cold Finish",
-    category: "discipline",
-    days: 14,
-    task: "Cold shower, 30 seconds",
-    proof: "camera",
-    rule: "Camera",
-    placeGate: false,
-    taskType: "photo",
-    config: {
-      required: true,
-      photo_mode: "required",
-      require_photo_proof: true,
-      require_photo: true,
-      require_camera_only: true,
-      gates: ["camera"],
-    },
-  },
-];
+function proofFromMode(mode: unknown): FeaturedProof {
+  if (mode === "required") return "camera";
+  if (mode === "optional") return "optional";
+  return "self";
+}
+
+export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = buildFeaturedCatalogRows().map((row) => {
+  const model: TaskModelRow = {
+    task_type: row.task.task_type,
+    require_photo: row.task.require_photo === true,
+    require_location: row.task.require_location === true,
+    gate_time_mode: row.task.gate_time_mode,
+    gate_time_start: row.task.gate_time_start,
+    gate_time_end: row.task.gate_time_end,
+    config: row.task.config,
+  };
+  return {
+    id: row.spec.id,
+    title: row.spec.title,
+    category: row.spec.category,
+    days: row.spec.days,
+    task: row.task.title,
+    proof: proofFromMode(row.task.config.photo_mode),
+    rule: gateLabel({ gates: gatesFor(model), gateTime: gateTimeFor(model) }),
+    placeGate: row.task.require_location === true,
+    taskType: row.task.task_type,
+    config: row.task.config as Record<string, unknown>,
+  };
+});
 
 export function featuredProofLabel(proof: FeaturedProof): string {
   if (proof === "camera") return "Camera";
@@ -168,6 +71,7 @@ export function featuredMembersLine(count: number): string {
 }
 
 export function needsSetGym(item: Pick<FeaturedBuiltin, "placeGate">): boolean {
+  if (!FLAGS.SET_MEMBER_GYM) return false;
   return item.placeGate === true;
 }
 

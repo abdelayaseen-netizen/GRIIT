@@ -15,7 +15,7 @@ export function todayFirstDayLine(taskCount: number): string {
 }
 
 export const TODAY_WINDOW_CLOSED = "Today's window closed. Back tomorrow.";
-export const WINDOW_CLOSED_RESET = "Tomorrow your run goes back to Day 1.";
+export const WINDOW_CLOSED_RESET = "A missed day resets your streak to 0. No freezes.";
 export const SECTION_DONE = "Done for today";
 
 export function windowClosedFreezeLine(freezesLeft: number): string {

@@ -3,7 +3,7 @@ import {
   canSeeProfileContent,
   type PrivacyProfileFields,
 } from "../../lib/profile-privacy";
-import { isFriend } from "./is-friend";
+import { isFriend, sharesChallenge } from "./is-friend";
 
 export const ACCOUNT_PRIVACY_SELECT =
   "user_id, profile_visibility, challenge_visibility, activity_visibility";
@@ -17,5 +17,6 @@ export async function canViewerSeeAccountContent(
   const { data } = await db.from("profiles").select(ACCOUNT_PRIVACY_SELECT).eq("user_id", ownerId).maybeSingle();
   if (!data) return false;
   const isMutual = viewerId ? await isFriend(db, viewerId, ownerId) : false;
-  return canSeeProfileContent(viewerId, data as PrivacyProfileFields, { isMutual, isCoMember: false });
+  const isCoMember = viewerId ? await sharesChallenge(db, viewerId, ownerId) : false;
+  return canSeeProfileContent(viewerId, data as PrivacyProfileFields, { isMutual, isCoMember });
 }

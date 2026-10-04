@@ -6,6 +6,9 @@ export type TestAppCaller = {
     invite: (input: { partnerId: string }) => Promise<{ success: boolean; status: string; inviteId: string }>;
     respond: (input: { inviteId: string; action: string }) => Promise<unknown>;
   };
+  respects: {
+    give: (input: { recipientId: string }) => Promise<unknown>;
+  };
   nudges: {
     send: (input: { toUserId: string }) => Promise<{ success: boolean; nudgeId: string; message: string }>;
   };

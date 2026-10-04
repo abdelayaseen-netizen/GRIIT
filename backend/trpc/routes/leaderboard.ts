@@ -8,6 +8,7 @@ import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
 import { consistencyScore } from "../../lib/scoring";
+import { respectCountsByOwner } from "../../lib/feed-respect-counts";
 
 const LEADERBOARD_MAX = 100;
 
@@ -74,7 +75,7 @@ export const leaderboardRouter = createTRPCRouter({
         return out;
       }
 
-      const [profilesResult, streaksResult, todaySecuresResult, respectCountsResult] = await Promise.all([
+      const [profilesResult, streaksResult, todaySecuresResult, eventsResult] = await Promise.all([
         server
           .from("profiles")
           .select("user_id, username, display_name, avatar_url")
@@ -91,10 +92,10 @@ export const leaderboardRouter = createTRPCRouter({
           .eq("date_key", todayKey)
           .limit(1000),
         server
-          .from("respects")
-          .select("recipient_id")
-          .in("recipient_id", filteredIds)
-          .limit(10000),
+          .from("activity_events")
+          .select("id, user_id")
+          .in("user_id", filteredIds)
+          .limit(1000),
       ]);
       const profiles = profilesResult.data;
       const streaks = streaksResult.data;
@@ -102,12 +103,24 @@ export const leaderboardRouter = createTRPCRouter({
       const totalSecuredToday = new Set(
         (todaySecures ?? []).map((r: { user_id: string }) => r.user_id)
       ).size;
-      const respectCounts = respectCountsResult.data;
-      const respectByUser = new Map<string, number>();
-      for (const r of respectCounts ?? []) {
-        const id = (r as { recipient_id: string }).recipient_id;
-        respectByUser.set(id, (respectByUser.get(id) ?? 0) + 1);
+      if (eventsResult.error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load respects." });
       }
+      const events = (eventsResult.data ?? []) as { id: string; user_id: string }[];
+      const eventIds = events.map((e) => e.id);
+      let reactions: { event_id: string }[] = [];
+      if (eventIds.length > 0) {
+        const reactionsResult = await server
+          .from("feed_reactions")
+          .select("event_id")
+          .in("event_id", eventIds)
+          .limit(5000);
+        if (reactionsResult.error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load respects." });
+        }
+        reactions = (reactionsResult.data ?? []) as { event_id: string }[];
+      }
+      const respectByUser = respectCountsByOwner(events, reactions);
 
       const profileMap = new Map(
         (profiles ?? []).map((p: LeaderboardProfileRow) => [p.user_id, p])
