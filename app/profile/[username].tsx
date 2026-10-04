@@ -396,6 +396,7 @@ export default function VisitorProfileScreen() {
                   monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
                   days={rec?.days ?? []}
                   header={header}
+                  securedDays={header.secured}
                   onOpenDay={(dateKey) =>
                     router.push({
                       pathname: ROUTES.PROFILE_DAY as never,

@@ -6,6 +6,7 @@ import { proofsTileIsMissing } from "@/lib/proofs-grid";
 import type { V42BadgeState } from "@/lib/v42-badges";
 
 export const NO_PROOFS_YET = "No proofs yet.";
+export const NO_SHARED_PROOFS_YET = "No shared proofs yet";
 export const NO_PROOFS_BODY = "Proofs you share show here. Self-reported days show as text.";
 export const SELF_REPORTED_TILE = "SELF-REPORTED";
 export const PHOTO_NOT_SAVED = "Photo not saved";
@@ -51,9 +52,14 @@ export const PRIVACY_MATRIX: {
   },
 ];
 
-export function proofsNewestLine(count: number): string {
+export function proofsNewestLine(count: number, securedDays = 0): string {
   const n = Math.max(0, Math.floor(count));
+  if (n === 0 && securedDays > 0) return NO_SHARED_PROOFS_YET;
   return `${n} proofs · newest first`;
+}
+
+export function proofsEmptyHeading(securedDays = 0): string {
+  return securedDays > 0 ? NO_SHARED_PROOFS_YET : NO_PROOFS_YET;
 }
 
 export function todayTileCaption(tasksLeft: number): string {

@@ -57,6 +57,8 @@ export type V42BadgeFacts = {
   fullHouseAt?: string | null;
   timeGateSecuredKeys: readonly string[];
   cameraProofKeys: readonly string[];
+  /** Live streak. Unearned streak badges count this, not the best run. */
+  currentStreak?: number;
 };
 
 export type V42BadgeState = V42BadgeDef & {
@@ -124,12 +126,18 @@ export function evaluateV42Badges(facts: V42BadgeFacts): V42BadgeState[] {
   const come = comebackDate(secured, facts.dueKeys, facts.holdKeys);
   const early = uniqSorted(facts.timeGateSecuredKeys);
   const camera = uniqSorted(facts.cameraProofKeys);
+  const bestRun = run.length;
+  const current =
+    facts.currentStreak == null
+      ? bestRun
+      : Math.max(0, Math.floor(facts.currentStreak));
+  const streakHave = (target: number) => (bestRun >= target ? bestRun : current);
   const haveById: Record<V42BadgeId, number> = {
-    streak_3: run.length,
-    streak_7: run.length,
-    streak_14: run.length,
-    streak_30: run.length,
-    streak_75: run.length,
+    streak_3: streakHave(3),
+    streak_7: streakHave(7),
+    streak_14: streakHave(14),
+    streak_30: streakHave(30),
+    streak_75: streakHave(75),
     secured_100: secured.length,
     finish_1: completed.length,
     finish_3: completed.length,

@@ -14,6 +14,7 @@ import {
   nextUnearnedBadge,
   ownerShareLabel,
   profileProofKind,
+  proofsEmptyHeading,
   proofsNewestLine,
   showJoinedBioPlaceholder,
   showNextBadgeUnderGrid,
@@ -26,7 +27,10 @@ describe("g3 profile copy", () => {
     expect(NO_PROOFS_YET).toBe("No proofs yet.");
     expect(NO_PROOFS_BODY).toMatch(/Self-reported days show as text/);
     expect(proofsNewestLine(0)).toBe("0 proofs · newest first");
+    expect(proofsNewestLine(0, 4)).toBe("No shared proofs yet");
     expect(proofsNewestLine(3)).toBe("3 proofs · newest first");
+    expect(proofsEmptyHeading(0)).toBe("No proofs yet.");
+    expect(proofsEmptyHeading(2)).toBe("No shared proofs yet");
     expect(todayTileCaption(1)).toBe("1 task left");
     expect(todayTileCaption(3)).toBe("3 tasks left");
     expect(ownerShareLabel(0)).toBe("Find friends");

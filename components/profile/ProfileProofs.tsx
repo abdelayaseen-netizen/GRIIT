@@ -11,11 +11,11 @@ import type { ProofsDayIn } from "@/lib/day-cell";
 import type { ProofsHeader } from "@/lib/secured-since";
 import {
   NO_PROOFS_BODY,
-  NO_PROOFS_YET,
   PHOTO_NOT_SAVED,
   SELF_REPORTED_TILE,
   TODAY_TILE,
   profileProofKind,
+  proofsEmptyHeading,
   proofsNewestLine,
   todayTileCaption,
 } from "@/lib/g3-profile";
@@ -46,11 +46,13 @@ export default function ProfileProofs({
   onToday,
   nextBadge,
   onNextBadge,
+  securedDays,
 }: {
   proofs: ProfileProofTile[];
   isOwner: boolean;
   todayOpen?: boolean;
   tasksLeft?: number;
+  securedDays?: number;
   monthKey: string;
   days: ProofsDayIn[];
   header: ProofsHeader;
@@ -64,11 +66,12 @@ export default function ProfileProofs({
   const empty = proofs.length === 0 && !showToday;
   const tileCount = proofs.length + (showToday ? 1 : 0);
   const showNext = Boolean(nextBadge && !empty && showNextBadgeUnderGrid(tileCount));
+  const secured = securedDays ?? 0;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.toggleRow}>
-        <Text style={styles.count}>{proofsNewestLine(proofs.length)}</Text>
+        <Text style={styles.count}>{proofsNewestLine(proofs.length, secured)}</Text>
         <View style={styles.toggle}>
           <Pressable
             accessibilityRole="button"
@@ -101,7 +104,7 @@ export default function ProfileProofs({
         />
       ) : empty ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyH}>{NO_PROOFS_YET}</Text>
+          <Text style={styles.emptyH}>{proofsEmptyHeading(secured)}</Text>
           <Text style={styles.emptyB}>{NO_PROOFS_BODY}</Text>
         </View>
       ) : (

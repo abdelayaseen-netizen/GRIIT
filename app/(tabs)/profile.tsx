@@ -370,6 +370,7 @@ export default function ProfileScreen() {
               }
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
+              securedDays={header.secured}
               onNextBadge={() => {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setTab("badges");
