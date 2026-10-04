@@ -154,7 +154,7 @@ export function tileImageSource(row: {
 }
 
 /** Replace stored values with signed URLs, then drop anything that did not sign. */
-export function proofsAfterSign<T extends { imageUrl: string | null }>(
+export function proofsAfterSign<T extends { imageUrl?: string | null }>(
   tiles: readonly T[],
   signed: readonly (string | null)[],
 ): T[] {
