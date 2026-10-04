@@ -10,11 +10,11 @@ export function originTabFromParam(value: string | null | undefined): OriginTab 
   return "home";
 }
 
-/** Named tab route. Home is the index screen, not the tab group root. */
-export function originTabHref(tab: OriginTab): "/(tabs)/index" | "/(tabs)/discover" | "/(tabs)/create" | "/(tabs)/activity" | "/(tabs)/profile" {
+/** Named tab route. Home is the tabs index, `/(tabs)`, which is app/(tabs)/index.tsx. */
+export function originTabHref(tab: OriginTab): "/(tabs)" | "/(tabs)/discover" | "/(tabs)/create" | "/(tabs)/activity" | "/(tabs)/profile" {
   if (tab === "discover") return "/(tabs)/discover";
   if (tab === "create") return "/(tabs)/create";
   if (tab === "activity") return "/(tabs)/activity";
   if (tab === "profile") return "/(tabs)/profile";
-  return "/(tabs)/index";
+  return "/(tabs)";
 }

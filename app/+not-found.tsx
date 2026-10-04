@@ -1,24 +1,23 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Link, Stack } from 'expo-router';
-import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { Link, Stack } from "expo-router";
+import { DS_V3 } from "@/lib/design-system";
 import Screen from "@/components/ds/Screen";
+import { originTabHref } from "@/lib/origin-tab";
 
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen options={{ headerShown: false, title: "" }} />
       <Screen>
-      <View style={styles.container}>
-        <Text style={styles.title}>Page Not Found</Text>
-        <Text style={styles.message}>
-          This screen doesn{"'"}t exist.
-        </Text>
-        <Link href="/" asChild>
-          <Pressable style={styles.button} accessibilityLabel="Go to Home" accessibilityRole="button">
-            <Text style={styles.buttonText}>Go to Home</Text>
-          </Pressable>
-        </Link>
-      </View>
+        <View style={styles.container}>
+          <Text style={styles.title}>Page not found</Text>
+          <Text style={styles.message}>This screen does not exist.</Text>
+          <Link href={originTabHref("home")} asChild>
+            <Pressable style={styles.button} accessibilityLabel="Go to Home" accessibilityRole="button">
+              <Text style={styles.buttonText}>Go to Home</Text>
+            </Pressable>
+          </Link>
+        </View>
       </Screen>
     </>
   );
@@ -27,32 +26,32 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: DS_V3.space.gutter,
     backgroundColor: DS_V3.color.canvas,
+    gap: DS_V3.space.md,
   },
   title: {
-    fontSize: 24,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    ...DS_V3.type.titleL,
     color: DS_V3.color.textPrimary,
-    marginBottom: 12,
   },
   message: {
-    fontSize: 16,
+    ...DS_V3.type.body,
     color: DS_V3.color.textSecondary,
-    textAlign: 'center',
-    marginBottom: 32,
+    textAlign: "center",
   },
   button: {
-    backgroundColor: DS_V3.color.textPrimary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: DS_RADIUS.SM,
+    backgroundColor: DS_V3.color.primary,
+    minHeight: DS_V3.size.button,
+    paddingHorizontal: DS_V3.space.section,
+    borderRadius: DS_V3.radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: DS_V3.space.sm,
   },
   buttonText: {
-    color: DS_V3.color.canvas,
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    ...DS_V3.type.headline,
+    color: DS_V3.color.textPrimary,
   },
 });

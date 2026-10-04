@@ -342,7 +342,7 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
     </Stack>
       <ProofShareOverlay />
     </View>
