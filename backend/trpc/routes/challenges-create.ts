@@ -377,7 +377,6 @@ export const challengesCreateProcedures = {
         return { ...challenge, tasks: [], activeChallenge: activeChallengeNoTasks };
       }
 
-      const forcePhotoProof = input.difficulty === "hard";
       const tasksToInsert = input.tasks.map((task, i) =>
         buildTaskInsertPayload(
           {
@@ -390,9 +389,9 @@ export const challengesCreateProcedures = {
             trackingMode: task.trackingMode,
             durationMinutes: task.durationMinutes,
             mustCompleteInSession: task.mustCompleteInSession,
-            photoRequired: forcePhotoProof ? true : task.photoRequired,
-            requirePhotoProof: forcePhotoProof ? true : (task.requirePhotoProof ?? false),
-            photo_mode: forcePhotoProof ? "required" : task.photo_mode,
+            photoRequired: task.photoRequired,
+            requirePhotoProof: task.requirePhotoProof ?? false,
+            photo_mode: task.photo_mode,
             strictTimerMode: task.strictTimerMode,
             locationName: task.locationName,
             radiusMeters: task.radiusMeters,

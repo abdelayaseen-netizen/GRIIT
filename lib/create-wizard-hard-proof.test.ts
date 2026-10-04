@@ -1,15 +1,12 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  HARD_MODE_PROOF_CAPTION,
-  HARD_MODE_REVIEW_PHOTO,
-  effectivePhotoProof,
-  reviewPhotoLine,
-} from "@/lib/create-wizard-hard-proof";
+import { effectivePhotoProof, reviewPhotoLine } from "@/lib/create-wizard-hard-proof";
 
 describe("effectivePhotoProof", () => {
-  it("forces required on hard even when the stored value is optional or off", () => {
-    expect(effectivePhotoProof("hard", "optional")).toBe("required");
-    expect(effectivePhotoProof("hard", "off")).toBe("required");
+  it("keeps the stored photo mode on No Days Off", () => {
+    expect(effectivePhotoProof("hard", "optional")).toBe("optional");
+    expect(effectivePhotoProof("hard", "off")).toBe("off");
     expect(effectivePhotoProof("hard", "required")).toBe("required");
   });
 
@@ -21,19 +18,24 @@ describe("effectivePhotoProof", () => {
 });
 
 describe("reviewPhotoLine", () => {
-  it("shows feed visibility, never the word Photo", () => {
-    expect(reviewPhotoLine("hard", "optional")).toBe(HARD_MODE_REVIEW_PHOTO);
-    expect(reviewPhotoLine("hard", "off")).toBe("Feed · Required");
+  it("follows the task photo mode, including on No Days Off", () => {
+    expect(reviewPhotoLine("hard", "optional")).toBe("Feed · Optional");
+    expect(reviewPhotoLine("hard", "off")).toBe("Feed · Off");
+    expect(reviewPhotoLine("hard", "required")).toBe("Feed · Required");
     expect(reviewPhotoLine("standard", "off")).toBe("Feed · Off");
     expect(reviewPhotoLine("standard", "optional")).toBe("Feed · Optional");
     expect(reviewPhotoLine("standard", "required")).toBe("Feed · Required");
-    expect(reviewPhotoLine("hard", "required")).not.toMatch(/Photo/i);
-    expect(reviewPhotoLine("standard", "optional")).not.toMatch(/Photo/i);
   });
 });
 
-describe("HARD_MODE_PROOF_CAPTION", () => {
-  it("is the step 3 locked-control caption", () => {
-    expect(HARD_MODE_PROOF_CAPTION).toBe("Hard mode requires photo proof on every task.");
+describe("challenges.create photo fields", () => {
+  it("does not force a photo when difficulty is hard", () => {
+    const src = readFileSync(
+      resolve(__dirname, "../backend/trpc/routes/challenges-create.ts"),
+      "utf8",
+    );
+    expect(src).not.toContain("forcePhotoProof");
+    expect(src).toContain("photo_mode: task.photo_mode");
+    expect(src).toContain("photoRequired: task.photoRequired");
   });
 });
