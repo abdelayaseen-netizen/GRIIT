@@ -451,7 +451,7 @@ export function HomeV3({
               </View>
             ) : null}
           </Card>
-          {startLabel && !todayBlocked ? (
+          {startLabel ? (
             <View style={styles.startWrap}>
               <Button label={startLabel} onPress={_onPressProof} />
             </View>
