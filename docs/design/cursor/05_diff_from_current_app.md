@@ -218,3 +218,23 @@ carries it.
 4. Remove any completion rate from Discover.
 5. Sparse states 155–160 and the challenge detail week/freeze section 161. Optional-photo render rule 162: `proof_photo_url` null means self-reported.
 6. Pushes: morning push 45 minutes before the earliest open window closes, plus the evening push at `SECURE_REMINDER_TIME` (8:00 pm). At most 2 a day, none once secured.
+
+
+## v44
+1. ProofPost: inset photo panel (16, radius 20, 4:5) with the title on a scrim; the self-reported panel matches. Hide counts at 0. FeedEvent uses the 32 avatar column.
+2. Home header: date 17/22, name 13, streak chip hidden at 0. TodayCard states as in 165, including the window-closed block and the secured footer.
+3. ChallengeDetail: add the board (top 3 + you), recent shared proofs, the record card with the 14-segment strip and the invite card. The freeze row becomes actionable. The streak chip opens StreakSheet with "Use a freeze for {weekday}".
+4. Discover: Featured row of the 8 built-ins (seed data; no schema change), generated covers, "{n} people in it" / "New". Preview sheet before Join with the v41 Day 1 rule.
+5. Create: step 1 defaults to 7 days with no category preselected; task rows show the full rule; one-screen add-task sheet; step 3 copy; Review; Launched with Start today + invite link.
+6. Profile: stats rules as in 170; the "Find friends" second button at 0 friends; new-account cards.
+7. Task complete: a toast for non-last tasks (no modal). The Secured screen title is "Day {n} secured." for one challenge, otherwise "Day secured." with per-challenge lines.
+
+
+## v44.1
+1. ShareSheet (173): one `ShareImage` component per style, rendered at 1080 × 1920 with react-native-view-shot; the preview is the same component scaled. Targets Instagram Story / Save / Messages / More; caption as text only.
+2. Styles A–G per the 174 table; palettes Ink / Orange / White; join line from `inviteDeepLink`.
+3. Moment → style lists per 176; remember the last colour per style.
+4. Replace the v42 StickerStyles sheet and the "Copy: paste it as a sticker" caption.
+5. The place-gated join flow opens SetPlace (177) straight after Join; Skip leaves the place unset.
+6. Seed data: Fajr Before Sunrise duration_days 7. Featured "Be the first" at 0 members.
+7. Fix the invite-link copy in Create Launched, Challenge detail and Leaderboard solo to `/invite/{code}`.

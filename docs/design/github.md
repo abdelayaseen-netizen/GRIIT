@@ -3,6 +3,17 @@ branch: main
 
 ## Last sync
 
+date: 2026-10-04T01:16:44Z
+
+### Updated in this project
+
+- Read the invite link format from `lib/deep-links.ts` (`inviteDeepLink` → `/invite/{code}`) and `lib/share.ts`; every v44.1 share style uses it.
+- Corrected the `griit.app/c/{slug}` links in the v43.1 and v44 frames to `/invite/{code}` (contradiction 139).
+
+## Sync history
+
+### Previous sync
+
 date: 2026-09-30T00:32:56Z
 
 ### Updated in this project
@@ -10,7 +21,6 @@ date: 2026-09-30T00:32:56Z
 - Read `app/settings/privacy.tsx` and drew Settings → Privacy as frame 144 B with the five replacement strings.
 - Grepped `365-day` and `verified the day` across app/, components/, lib/ (partial), backend/ and claude/design/; hits listed in `cursor/05_diff_from_current_app.md` item 10.
 
-## Sync history
 
 ### Previous sync
 
@@ -123,5 +133,6 @@ tree: 9e4f1d5897ae
 | 87-92 Profile, proofs, consistency, badges | `app/(tabs)/profile.tsx`, `app/profile/record.tsx`, `components/ds/Badges.tsx` |
 | 93-96 Feed cards, comments, board, week strip | `components/feed/{FeedPostV3,FeedEngagementRow,FeedPostCard}.tsx`, `components/ds/WeekStrip.tsx`, `app/(tabs)/index.tsx` |
 | 144 B Settings → Privacy | `app/settings/privacy.tsx` |
+| 173–176 Share system | `lib/share.ts`, `lib/deep-links.ts` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |
