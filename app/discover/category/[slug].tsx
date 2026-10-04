@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react-native";
@@ -201,7 +201,7 @@ function CategoryScreenInner() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+    <Screen edges={["top"]} style={styles.safeArea}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
         <Pressable
@@ -234,7 +234,7 @@ function CategoryScreenInner() {
           />
         }
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 

@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { DS_V3, DS_SPACING, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { ROUTES } from "@/lib/routes";
@@ -12,7 +12,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 function TeamsTabScreenInner() {
   const router = useRouter();
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <Screen style={styles.container} edges={["top"]}>
       <View style={styles.inner}>
         <Text style={styles.title}>Teams</Text>
         <Text style={styles.body}>
@@ -27,7 +27,7 @@ function TeamsTabScreenInner() {
           <Text style={styles.btnText}>Go to Discover</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

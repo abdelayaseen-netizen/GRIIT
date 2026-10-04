@@ -1,11 +1,13 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import Screen from "@/components/ds/Screen";
 
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Not Found' }} />
+      <Stack.Screen options={{ headerShown: false }} />
+      <Screen>
       <View style={styles.container}>
         <Text style={styles.title}>Page Not Found</Text>
         <Text style={styles.message}>
@@ -17,6 +19,7 @@ export default function NotFoundScreen() {
           </Pressable>
         </Link>
       </View>
+      </Screen>
     </>
   );
 }

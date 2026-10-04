@@ -3,7 +3,7 @@
  */
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -21,7 +21,7 @@ export default function SetGymScreen() {
   const [place, setPlace] = useState("");
 
   return (
-    <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
+    <Screen style={styles.root} edges={["top", "bottom"]}>
       <Text style={styles.title}>Set your gym</Text>
       <Text style={styles.body}>{title} only counts when your photo is taken here.</Text>
       <TextInput
@@ -59,7 +59,7 @@ export default function SetGymScreen() {
         onPress={() => router.replace(ROUTES.TABS_HOME as never)}
       />
       <Text style={styles.caption}>Skipping means it counts anywhere. You can set it later in the challenge.</Text>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

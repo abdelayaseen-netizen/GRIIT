@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -114,7 +114,7 @@ export default function ChallengeMembersScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <Screen style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <PushedHeader title={title} onBack={goBack} />
       {membersQuery.isError ? (
@@ -239,7 +239,7 @@ export default function ChallengeMembersScreen() {
           </View>
         </>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 

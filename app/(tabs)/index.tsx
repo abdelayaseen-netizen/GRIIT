@@ -5,7 +5,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -703,7 +704,7 @@ export default function HomeScreen() {
   if (isGuest) {
     return (
       <ScreenChrome>
-      <SafeAreaView style={s.container} edges={["left", "right"]}>
+      <Screen style={s.container} edges={["left", "right"]}>
         <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={guestKeyExtractor}
@@ -718,7 +719,7 @@ export default function HomeScreen() {
           contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           showsVerticalScrollIndicator={false}
         />
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     );
   }
@@ -726,7 +727,7 @@ export default function HomeScreen() {
   return (
     <ErrorBoundary>
       <ScreenChrome>
-      <SafeAreaView style={s.container} edges={["left", "right"]}>
+      <Screen style={s.container} edges={["left", "right"]}>
         <LiveFeedSection
           onRefresh={refresh}
           scope={feedScope}
@@ -888,7 +889,7 @@ export default function HomeScreen() {
           onPressFreeze={onJeopardyFreeze}
           onDismiss={onJeopardyDismiss}
         />
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     </ErrorBoundary>
   );

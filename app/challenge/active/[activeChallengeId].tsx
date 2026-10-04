@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
@@ -522,7 +522,7 @@ export default function ActiveChallengeDetailScreen() {
 
   if (!id) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <ActiveChallengeV3
           title="Challenge"
@@ -539,13 +539,13 @@ export default function ActiveChallengeDetailScreen() {
           onBack={goBack}
           onRetry={goBack}
         />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         {leaveError ? <InlineError message={leaveError} onDismiss={clearLeaveError} /> : null}
         <ActiveChallengeV3
@@ -664,7 +664,7 @@ export default function ActiveChallengeDetailScreen() {
             It moves to Finished as left on day {shownDay}. Your proofs stay on the record.
           </Text>
         </Sheet>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

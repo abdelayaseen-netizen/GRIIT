@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
@@ -267,7 +267,7 @@ export default function VisitorProfileScreen() {
   return (
     <ErrorBoundary>
       <ScreenChrome>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <PushedHeader
           title={handle ? `@${handle}` : name}
           onBack={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
@@ -436,7 +436,7 @@ export default function VisitorProfileScreen() {
           }}
           onCancel={() => setShowBlock(false)}
         />
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     </ErrorBoundary>
   );

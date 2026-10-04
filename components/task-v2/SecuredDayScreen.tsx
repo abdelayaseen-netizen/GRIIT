@@ -5,7 +5,6 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { Download, Flame, Instagram, ShieldOff, X } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
@@ -81,7 +80,6 @@ export default function SecuredDayScreen({
   onDone: () => void;
   username?: string | null;
 }) {
-  const insets = useSafeAreaInsets();
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
   const caption =
@@ -128,7 +126,7 @@ export default function SecuredDayScreen({
       <ScrollView
         contentContainerStyle={[
           styles.body,
-          { paddingTop: insets.top + DS_V3.space.sm, paddingBottom: insets.bottom + DS_V3.space.section * 4 },
+          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section * 4 },
         ]}
       >
         <Pressable
@@ -212,7 +210,7 @@ export default function SecuredDayScreen({
         ) : null}
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </ScrollView>
-      <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
+      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
         {offerShare ? (
           <>
             <Button

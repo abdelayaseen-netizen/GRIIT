@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import SecuredDayScreen from "@/components/task-v2/SecuredDayScreen";
 import { weekFromSecuredKeys } from "@/components/task-v2/MomentScreenV3";
 import { useApp } from "@/contexts/AppContext";
@@ -226,8 +227,10 @@ function TaskSecuredInner() {
 
 export default function TaskSecuredScreen() {
   return (
-    <ErrorBoundary>
-      <TaskSecuredInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <TaskSecuredInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

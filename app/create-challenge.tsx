@@ -1,5 +1,6 @@
 import { Redirect } from "expo-router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 
 /** Alias route — empty Discover state and deep links use `/create-challenge`. */
 function CreateChallengeRedirectInner() {
@@ -8,8 +9,10 @@ function CreateChallengeRedirectInner() {
 
 export default function CreateChallengeRedirect() {
   return (
-    <ErrorBoundary>
-      <CreateChallengeRedirectInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <CreateChallengeRedirectInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import {
   Bell,
@@ -49,7 +49,7 @@ export default function SettingsScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="Settings" />
         <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -105,7 +105,7 @@ export default function SettingsScreen() {
           <Text style={styles.ver}>GRIIT {APP_VERSION}</Text>
         </ScrollView>
         </GriitFade>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useApp } from "@/contexts/AppContext";
@@ -63,7 +63,7 @@ export default function SettingsPrivacyScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="Privacy" />
         <GriitFade fadeKey={`privacy-${col}`}>
           <ScrollView contentContainerStyle={styles.body}>
@@ -112,7 +112,7 @@ export default function SettingsPrivacyScreen() {
             ) : null}
           </ScrollView>
         </GriitFade>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

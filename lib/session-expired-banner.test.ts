@@ -44,12 +44,10 @@ describe("showSessionExpiredBanner", () => {
 });
 
 describe("task flow top inset", () => {
-  it("pads PushedHeader / TaskChrome with the top safe inset", () => {
-    const src = readFileSync(
-      join(process.cwd(), "components/task-v2/TaskFlowV2.tsx"),
-      "utf8",
-    );
-    expect(src).toContain("useSafeAreaInsets");
-    expect(src).toContain("paddingTop: insets.top");
+  it("puts the task flow on Screen so the top floor is 59", () => {
+    const route = readFileSync(join(process.cwd(), "app/task/complete.tsx"), "utf8");
+    const flow = readFileSync(join(process.cwd(), "components/task-v2/TaskFlowV2.tsx"), "utf8");
+    expect(route).toContain("<Screen");
+    expect(flow).not.toContain("paddingTop: insets.top");
   });
 });

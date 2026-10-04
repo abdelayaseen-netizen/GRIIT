@@ -13,10 +13,11 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { SAFE } from "@/lib/safe-area";
 
 const SHEET_RADIUS = DS_V3.radius.card * 1.2;
-const SHEET_INSET = DS_V3.space.xs * 8.5;
 
 export type SheetProps = {
   visible: boolean;
@@ -33,6 +34,7 @@ export default function Sheet({
   children,
   footer,
 }: SheetProps) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -52,7 +54,7 @@ export default function Sheet({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           pointerEvents="box-none"
         >
-          <View style={styles.panel} pointerEvents="box-none">
+          <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, SAFE.bottom) }]} pointerEvents="box-none">
             <Text style={styles.heading}>{heading}</Text>
             {children}
             {footer ? <View style={styles.footer}>{footer}</View> : null}
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: SHEET_RADIUS,
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
-    paddingBottom: SHEET_INSET,
     maxHeight: "88%",
   },
   heading: {

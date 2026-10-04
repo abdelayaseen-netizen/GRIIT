@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "lucide-react-native";
@@ -123,7 +123,7 @@ export default function ChallengeInviteScreen() {
     (membersQuery.isPending && !membersQuery.data);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <Screen style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <PushedHeader title={`Invite to ${title}`} onBack={goBack} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -185,7 +185,7 @@ export default function ChallengeInviteScreen() {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

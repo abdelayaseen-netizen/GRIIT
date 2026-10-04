@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionSheetIOS, Alert, Platform, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, usePathname, useRouter, Stack } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -471,7 +471,7 @@ export default function ChallengeDetailScreen() {
 
   if (!id) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <ChallengeDetailV3
           title="Challenge"
@@ -485,13 +485,13 @@ export default function ChallengeDetailScreen() {
           onBack={goBack}
           onRetry={goBack}
         />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         {error ? <InlineError message={error} onDismiss={clearError} /> : null}
         <ChallengeDetailV3
@@ -546,7 +546,7 @@ export default function ChallengeDetailScreen() {
         >
           <Text style={styles.sheetBody}>{joinedSheet?.body}</Text>
         </Sheet>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

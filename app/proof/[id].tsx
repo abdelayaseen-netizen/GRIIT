@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import Button from "@/components/ds/Button";
 import { DS_V3 } from "@/lib/design-system";
 import { firstString } from "@/lib/task-helpers";
@@ -21,7 +21,6 @@ import {
 
 function ProofFullViewInner() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ id?: string }>();
   const held = readOpenProof();
   const id = firstString(params.id);
@@ -31,7 +30,7 @@ function ProofFullViewInner() {
 
   if (!item) {
     return (
-      <View style={[styles.root, { paddingTop: insets.top + DS_V3.space.gutter }]}>
+      <View style={[styles.root, { paddingTop: DS_V3.space.gutter }]}>
         <Button label="Done" variant="tertiary" ink onPress={() => router.back()} />
       </View>
     );
@@ -39,7 +38,7 @@ function ProofFullViewInner() {
 
   return (
     <View style={styles.root}>
-      <View style={[styles.top, { paddingTop: insets.top + DS_V3.space.sm }]}>
+      <View style={[styles.top, { paddingTop: DS_V3.space.sm }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"
@@ -70,7 +69,7 @@ function ProofFullViewInner() {
         </View>
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </View>
-      <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
+      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
         <Button
           label={PROOF_SHARE}
           variant="secondary"
@@ -100,9 +99,11 @@ function ProofFullViewInner() {
 
 export default function ProofFullViewScreen() {
   return (
-    <ErrorBoundary>
-      <ProofFullViewInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <ProofFullViewInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }
 

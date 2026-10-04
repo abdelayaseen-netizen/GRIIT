@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
@@ -63,7 +63,7 @@ function InviteLinkScreenInner() {
 
   if (state === "full") {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <View style={styles.wrap}>
           <EmptyState
             heading="This group is full."
@@ -72,13 +72,13 @@ function InviteLinkScreenInner() {
             onAction={goDiscover}
           />
         </View>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   if (state === "ended") {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <View style={styles.wrap}>
           <EmptyState
             heading="This challenge has ended."
@@ -87,16 +87,16 @@ function InviteLinkScreenInner() {
             onAction={goDiscover}
           />
         </View>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <Screen style={styles.safe} edges={["top"]}>
       <View style={styles.wrap}>
         <ActivityIndicator size="large" color={DS_V3.color.brand} />
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

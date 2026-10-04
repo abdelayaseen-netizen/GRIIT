@@ -11,7 +11,7 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
@@ -165,7 +165,7 @@ export default function EditProfileScreen() {
   return (
     <ErrorBoundary>
       <StatusBar barStyle="light-content" />
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <View style={styles.nav}>
           <Pressable onPress={requestClose} accessibilityRole="button" accessibilityLabel="Cancel" style={styles.navBtn}>
             <Text style={styles.cancel}>Cancel</Text>
@@ -276,7 +276,7 @@ export default function EditProfileScreen() {
           }}
           onCancel={() => setDiscardOpen(false)}
         />
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

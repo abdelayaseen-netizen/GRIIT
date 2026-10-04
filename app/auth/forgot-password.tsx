@@ -8,7 +8,7 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { supabase } from "@/lib/supabase";
@@ -100,7 +100,7 @@ function ForgotPasswordScreenInner() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <Screen style={styles.container} edges={["top", "bottom"]}>
       <StatusBar barStyle="light-content" />
       <PushedHeader title="Reset password" onBack={goLogin} />
       {sent ? (
@@ -186,7 +186,7 @@ function ForgotPasswordScreenInner() {
           </ScrollView>
         </KeyboardAvoidingView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 

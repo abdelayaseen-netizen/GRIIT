@@ -4,7 +4,6 @@
  */
 import React, { useCallback, useState } from "react";
 import { AccessibilityInfo, StatusBar, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Camera, ShieldOff } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -138,7 +137,6 @@ export default function MomentScreenV3({
   onDone,
   onNext,
 }: MomentScreenV3Props) {
-  const insets = useSafeAreaInsets();
   const [sheetOpen, setSheetOpen] = useState(false);
   const counts = isSecuredVariant(variant);
   const camera =
@@ -182,7 +180,7 @@ export default function MomentScreenV3({
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
       {counts ? (
-        <View style={[styles.block, { paddingTop: insets.top + DS_V3.space.md }]}>
+        <View style={[styles.block, { paddingTop: DS_V3.space.md }]}>
           <Text style={styles.streakLabel}>{SECURED_STREAK_LABEL}</Text>
           <DisplayNumber
             value={streak}
@@ -220,7 +218,7 @@ export default function MomentScreenV3({
         </View>
       ) : (
         <>
-          <View style={[styles.top, { paddingTop: insets.top + DS_V3.space.md }]}>
+          <View style={[styles.top, { paddingTop: DS_V3.space.md }]}>
             <DisplayNumber
               value={variant === "complete" ? goal : streak}
               size={variant === "complete" ? "moment" : "mid"}
@@ -252,7 +250,7 @@ export default function MomentScreenV3({
           )}
         </>
       )}
-      <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
+      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
         {variant === "complete" ? (
           <>
             <Button label="Start the next one" onPress={onNext} />

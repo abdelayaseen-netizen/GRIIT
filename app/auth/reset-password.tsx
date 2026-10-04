@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { ROUTES } from "@/lib/routes";
@@ -104,7 +104,7 @@ function ResetPasswordScreenInner() {
   }, [password, confirm, router]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <Screen style={styles.container} edges={["top", "bottom"]}>
       <StatusBar barStyle="light-content" />
       <PushedHeader title="New password" onBack={goLogin} />
       {!ready ? (
@@ -168,7 +168,7 @@ function ResetPasswordScreenInner() {
           </ScrollView>
         </KeyboardAvoidingView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 

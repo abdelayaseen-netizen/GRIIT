@@ -4,6 +4,7 @@ import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import MomentScreenV3 from "@/components/task-v2/MomentScreenV3";
 
 function ChallengeCompleteScreenInner() {
@@ -47,8 +48,10 @@ function ChallengeCompleteScreenInner() {
 
 export default function ChallengeCompleteScreen() {
   return (
-    <ErrorBoundary>
-      <ChallengeCompleteScreenInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <ChallengeCompleteScreenInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

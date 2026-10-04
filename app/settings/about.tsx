@@ -1,6 +1,6 @@
 import React from "react";
 import { Linking, ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import { ROUTES } from "@/lib/routes";
@@ -16,7 +16,7 @@ export default function SettingsAboutScreen() {
   const router = useRouter();
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="About" />
         <ScrollView contentContainerStyle={styles.body}>
           <Card style={styles.card}>
@@ -37,7 +37,7 @@ export default function SettingsAboutScreen() {
             />
           </Card>
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

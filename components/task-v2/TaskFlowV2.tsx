@@ -1,6 +1,5 @@
 import React from "react";
 import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { TaskChrome } from "./TaskChrome";
@@ -27,7 +26,6 @@ import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
-  const insets = useSafeAreaInsets();
 
   return (
     <View
@@ -38,7 +36,7 @@ export function TaskFlowV2() {
       ]}
     >
       {!f.hideChrome && !workStepOwnsChrome(f.step, f.taskType) ? (
-        <View style={{ paddingTop: insets.top }}>
+        <View>
           {f.step === "ask" ? (
             <PushedHeader
               title={f.headerTitle}
