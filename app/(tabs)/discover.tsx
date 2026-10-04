@@ -41,6 +41,7 @@ import {
   discoverFeaturedChip,
   discoverPeopleWithoutSelf,
 } from "@/lib/discover-people";
+import { needsSetGym, type FeaturedBuiltin } from "@/lib/featured-catalog";
 
 type TrendingResponse = { posts: LiveFeedPost[] };
 type RecommendedResponse = { challenges: RecommendedChallenge[] };
@@ -286,6 +287,20 @@ function DiscoverScreenInner() {
         }}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        onJoinBuiltin={(item: FeaturedBuiltin) => {
+          void trpcMutate(TRPC.challenges.join, { challengeId: item.id })
+            .then(() => {
+              if (needsSetGym(item)) {
+                router.push({
+                  pathname: "/challenge/set-gym",
+                  params: { title: item.title, challengeId: item.id },
+                } as never);
+                return;
+              }
+              router.push(ROUTES.TABS_HOME as never);
+            })
+            .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
+        }}
       />
     </SafeAreaView>
   );
