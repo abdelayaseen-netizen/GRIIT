@@ -2,8 +2,6 @@
  * v43.1 frames 146 + 155 — Home feed scope, caught-up line, invite card.
  */
 
-import { countNoun } from "@/lib/onboarding-v2-suggest";
-
 export const FEED_HEADING = "Feed";
 export const FOLLOWING_SCOPE = "Following";
 export const EVERYONE_SCOPE = "Everyone";
@@ -22,21 +20,7 @@ export function defaultHomeFeedScope(
   return followingCount >= 3 ? "following" : "everyone";
 }
 
-export function weekdayFromIso(iso: string, timeZone = "UTC"): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "this week";
-  try {
-    return new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone }).format(d);
-  } catch {
-    return "this week";
-  }
-}
-
-export function caughtUpLine(postCount: number, weekday: string): string {
-  const n = Math.max(0, Math.floor(postCount));
-  const day = weekday.trim() || "this week";
-  return `You're caught up. ${countNoun(n, "post", "posts")} since ${day}.`;
-}
+export const CAUGHT_UP = "You're caught up.";
 
 export function inviteCardCopy(challenge: string): {
   heading: string;

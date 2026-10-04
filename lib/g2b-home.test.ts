@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  caughtUpLine,
+  CAUGHT_UP,
   defaultHomeFeedScope,
   homeDateCaption,
   inviteCardCopy,
@@ -18,9 +18,8 @@ describe("g2b home feed", () => {
     expect(defaultHomeFeedScope(3, "everyone")).toBe("everyone");
   });
 
-  it("caught-up line uses post count and weekday", () => {
-    expect(caughtUpLine(1, "Friday")).toBe("You're caught up. 1 post since Friday.");
-    expect(caughtUpLine(4, "Monday")).toBe("You're caught up. 4 posts since Monday.");
+  it("caught-up line is the sentence only", () => {
+    expect(CAUGHT_UP).toBe("You're caught up.");
   });
 
   it("invite card is only for a sole member after the first day is secured", () => {
