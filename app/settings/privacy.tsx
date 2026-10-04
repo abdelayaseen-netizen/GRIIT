@@ -69,7 +69,7 @@ export default function SettingsPrivacyScreen() {
           <ScrollView contentContainerStyle={styles.body}>
             <View style={styles.switchRow}>
               <View style={styles.switchCopy}>
-                <Text style={styles.switchTitle}>{isPrivate ? "Private" : "Public"}</Text>
+                <Text style={styles.switchTitle}>{isPrivate ? "Private account" : "Public account"}</Text>
                 <Text style={styles.switchSub}>
                   {isPrivate
                     ? "Your name, photo and streak. Friends and people in a challenge with you still see what you shared."
