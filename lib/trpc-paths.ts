@@ -78,6 +78,7 @@ export const TRPC = {
     cancel: 'groups.cancel',
     openLink: 'groups.openLink',
     members: 'groups.members',
+    nudge: 'groups.nudge',
   },
   sharedGoal: {
     logProgress: 'sharedGoal.logProgress',

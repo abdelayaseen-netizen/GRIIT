@@ -17,6 +17,12 @@ import {
 } from "../../lib/group-challenges";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
 import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
+import {
+  groupPushAllowed,
+  isNudgeRow,
+  nudgeBlocked,
+  nudgeMessage,
+} from "../../../lib/group-nudge";
 
 type ChallengeInviteRow = {
   id: string;
@@ -695,5 +701,124 @@ export const groupsRouter = createTRPCRouter({
         })),
         pendingInvites,
       };
+    }),
+
+  nudge: protectedProcedure
+    .input(
+      z.object({
+        challengeId: z.string().uuid(),
+        recipientId: z.string().uuid(),
+        messageKey: z.number().int().min(0).max(2),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const message = nudgeMessage(input.messageKey);
+      const reader = challengeReader(ctx.supabase);
+      const { data: memberRows } = await reader
+        .from("challenge_members")
+        .select("user_id")
+        .eq("challenge_id", input.challengeId)
+        .eq("status", "active")
+        .limit(GROUP_MAX_MEMBERS);
+      const memberIds = new Set(((memberRows ?? []) as { user_id: string }[]).map((row) => row.user_id));
+      const { data: recipientProfile } = await reader
+        .from("profiles")
+        .select("timezone, reminder_timezone, display_name, username")
+        .eq("user_id", input.recipientId)
+        .maybeSingle();
+      const recipient = recipientProfile as {
+        timezone?: string | null;
+        reminder_timezone?: string | null;
+      } | null;
+      const dateKey = getTodayDateKey(recipient?.timezone ?? recipient?.reminder_timezone ?? "UTC");
+      const { data: prior } = await reader
+        .from("in_app_notifications")
+        .select("id, actor_id, metadata, created_at")
+        .eq("user_id", input.recipientId)
+        .eq("type", "general")
+        .limit(100);
+      const alreadyNudged = ((prior ?? []) as {
+        actor_id?: string | null;
+        metadata?: { kind?: string; challenge_id?: string; date_key?: string } | null;
+      }[]).some((row) => isNudgeRow(row, ctx.userId, input.challengeId, dateKey));
+      const { data: taskRows } = await reader
+        .from("challenge_tasks")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .limit(50);
+      const requiredTaskIds = ((taskRows ?? []) as { id: string }[]).map((row) => row.id);
+      const { data: enrollment } = await reader
+        .from("active_challenges")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .eq("user_id", input.recipientId)
+        .limit(1);
+      const enrollmentId = ((enrollment ?? []) as { id: string }[])[0]?.id;
+      const { data: checks } = enrollmentId
+        ? await reader
+            .from("check_ins")
+            .select("task_id, date_key, status")
+            .eq("active_challenge_id", enrollmentId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(50)
+        : { data: [] };
+      const progress = memberSecuredFromCheckIns({
+        requiredTaskIds,
+        completedTaskIds: ((checks ?? []) as { task_id: string }[]).map((row) => row.task_id),
+      });
+      const blocked = nudgeBlocked({
+        senderId: ctx.userId,
+        recipientId: input.recipientId,
+        sameChallenge: memberIds.has(ctx.userId) && memberIds.has(input.recipientId),
+        recipientSecured: progress.secured,
+        alreadyNudged,
+        messageKey: input.messageKey,
+      });
+      if (blocked || !message) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: blocked ?? "Pick one of the three lines." });
+      }
+      const { data: challenge } = await reader
+        .from("challenges")
+        .select("title")
+        .eq("id", input.challengeId)
+        .maybeSingle();
+      const title = ((challenge as { title?: string | null } | null)?.title ?? "").trim() || "your challenge";
+      const meta = {
+        kind: "nudge" as const,
+        challenge_id: input.challengeId,
+        message_key: input.messageKey,
+        date_key: dateKey,
+      };
+      const { error } = await reader.from("in_app_notifications").insert({
+        user_id: input.recipientId,
+        type: "general",
+        actor_id: ctx.userId,
+        title: "Nudge",
+        body: `${title}: ${message}`,
+        read: false,
+        metadata: meta,
+        data: meta,
+      });
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't send that nudge." });
+      }
+      const sentToday = ((prior ?? []) as { metadata?: { kind?: string; date_key?: string } | null }[]).filter(
+        (row) =>
+          (row.metadata?.kind === "nudge" || row.metadata?.kind === "joined") &&
+          row.metadata.date_key === dateKey,
+      ).length;
+      if (groupPushAllowed(sentToday)) {
+        try {
+          await sendPushToProfile(reader, input.recipientId, {
+            title: "Nudge",
+            body: `${title}: ${message}`,
+            data: { type: "general", kind: "nudge", challengeId: input.challengeId },
+          });
+        } catch (pushErr) {
+          logger.error({ err: pushErr }, "[groups.nudge] push failed");
+        }
+      }
+      return { ok: true as const, pushed: groupPushAllowed(sentToday) };
     }),
 });
