@@ -327,12 +327,15 @@ export const profilesRecordProcedures = {
             : Promise.resolve({ data: [], error: null }),
           db
             .from("check_ins")
-            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, proof_photo_url, created_at")
+            .select("id, date_key, active_challenge_id, task_id, status, photo_url, proof_url, completion_image_url, created_at")
             .eq("user_id", ownerId)
             .limit(800),
         ]);
         if (chRes.error) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: chRes.error.message });
+        }
+        if (cinRes.error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: cinRes.error.message });
         }
         challenges = (chRes.data ?? []) as ChallengeRow[];
         taskRows = (taskRes.data ?? []) as TaskCountRow[];
@@ -572,7 +575,7 @@ export const profilesRecordProcedures = {
         .filter((r) => r.task_id && timeTaskIds.has(r.task_id) && securedSet.has(r.date_key))
         .map((r) => r.date_key);
       const cameraProofKeys = checkInRows
-        .filter((r) => Boolean(r.proof_photo_url))
+        .filter((r) => checkInHasCameraProof(r))
         .map((r) => r.date_key);
       const holdKeys = [
         ...((freezeRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key),
