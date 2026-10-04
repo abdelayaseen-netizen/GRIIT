@@ -278,6 +278,8 @@ export default function MomentScreenV3({
         visible={sheetOpen}
         onDismiss={() => setSheetOpen(false)}
         variant="day"
+        moment={variant === "complete" ? "challenge_finished" : camera ? "photo_proof" : "self_reported"}
+        streak={streak}
         day={{
           challenge: challengeName?.trim() || copy,
           day,

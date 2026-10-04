@@ -168,8 +168,9 @@ describe("ShareActions idle held shared", () => {
     expect(actions).toContain("FINISH_STORY");
     expect(actions).toContain("height: AUX_H");
     expect(actions).toContain("const AUX_H = 40");
-    expect(sheet).toContain("COPY_CAPTION");
-    expect(sheet).toContain("stickerStyleCaption");
+    expect(sheet).toContain("ShareSystemSheet");
+    expect(sheet).not.toContain("COPY_CAPTION");
+    expect(sheet).not.toContain("stickerStyleCaption");
   });
 });
 

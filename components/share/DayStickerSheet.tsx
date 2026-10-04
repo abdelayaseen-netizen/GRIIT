@@ -22,6 +22,10 @@ export type DayStickerSheetProps = {
   preselectedId?: string | null;
   proofUri?: string;
   photoShared?: boolean;
+  username?: string | null;
+  streak?: number;
+  longestStreak?: number;
+  activeLine?: string;
 };
 
 export default function DayStickerSheet({
@@ -31,6 +35,10 @@ export default function DayStickerSheet({
   preselectedId,
   proofUri,
   photoShared = false,
+  username,
+  streak,
+  longestStreak,
+  activeLine,
 }: DayStickerSheetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null);
   const selected =
@@ -47,6 +55,12 @@ export default function DayStickerSheet({
       visible={visible}
       onDismiss={onDismiss}
       variant="day"
+      moment="day_secured"
+      username={username}
+      inviteCode={selected?.inviteCode}
+      streak={streak}
+      longestStreak={longestStreak}
+      activeLine={activeLine ?? challenges.map((c) => c.name).filter(Boolean).join(" · ")}
       day={
         selected
           ? {
@@ -57,6 +71,8 @@ export default function DayStickerSheet({
               status: selected.stickerKind === "challenge" ? DONE_FOR_TODAY : STICKER_SECURED,
               photoUri: proofUri,
               photoShared,
+              secured: selected.day,
+              cameraSeal: (selected.proof ?? "self") !== "self" && Boolean(proofUri),
             }
           : undefined
       }

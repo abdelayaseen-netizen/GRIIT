@@ -254,6 +254,8 @@ export function TaskFlowV2() {
           share={f.finishShare}
           alsoToday={f.alsoToday}
           photoShared={f.finishFeedPosted}
+          username={f.shareUsername}
+          inviteCode={f.shareInviteCode}
           onRetry={f.onFinishRetry}
           onShareFeed={f.onFinishShare}
           onNextTask={f.openDayOpenTask}

@@ -1,43 +1,14 @@
 /**
- * Frame 99 share sheet. Clear / Card / Photo. Story, Copy, Save, More.
+ * Opens the v44.1 share sheet. The Clear / Card / Photo story sheet is gone.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import ViewShot from "react-native-view-shot";
-import { DS_V3 } from "@/lib/design-system";
-import Button from "@/components/ds/Button";
-import SegmentedControl from "@/components/ds/SegmentedControl";
-import Sheet from "@/components/ds/Sheet";
-import FinishTextCard from "@/components/share/FinishTextCard";
-import { BadgeSticker, ConsistencySticker, DaySticker } from "@/components/share/ShareSticker";
-import { copyStickerPngToPasteboard, saveStickerToPhotos, shareProgressImage, shareToInstagramStory } from "@/lib/share";
+import React from "react";
+import ShareSystemSheet from "@/components/share/ShareSystemSheet";
 import {
-  COPY_CAPTION,
-  SHARE_BG_CLEAR,
-  SHARE_BG_ITEMS,
-  SHARE_BG_PHOTO,
-  SHARE_COPY,
-  SHARE_EMPTY,
-  SHARE_EMPTY_HINT,
-  SHARE_MORE,
-  SHARE_PHOTO_PRIVATE,
-  SHARE_SAVE,
-  SHARE_SHEET,
-  SHARE_STORY,
-  STICKER_W,
-  backgroundFromSegment,
-  dayStickerCaption,
-  defaultStickerBackground,
-  facebookAppId,
-  photoBackgroundAllowed,
-  savePhotosCopy,
-  segmentFromBackground,
-  showStoryAction,
-  stickerStyleCaption,
-  type ProofKind,
-  type StickerBackground,
-  type StickerVariant,
-} from "@/lib/share-sticker";
+  shareDateLabel,
+  type ShareCardInput,
+  type ShareMoment,
+} from "@/lib/share-image";
+import type { ProofKind, StickerVariant } from "@/lib/share-sticker";
 
 export type ShareStickerDay = {
   challenge: string;
@@ -47,6 +18,12 @@ export type ShareStickerDay = {
   status?: string;
   photoUri?: string | null;
   photoShared?: boolean;
+  cameraSeal?: boolean;
+  inviteCode?: string | null;
+  username?: string | null;
+  streak?: number;
+  secured?: number;
+  task?: string;
 };
 
 export type ShareStickerText = {
@@ -55,6 +32,8 @@ export type ShareStickerText = {
   dayN: number;
   durationDays: number;
   gateLine: string;
+  inviteCode?: string | null;
+  username?: string | null;
 };
 
 export type ShareStickerConsistency = {
@@ -79,276 +58,94 @@ export type ShareStickerSheetProps = {
   visible: boolean;
   onDismiss: () => void;
   variant: StickerVariant;
+  moment?: ShareMoment;
   day?: ShareStickerDay;
   text?: ShareStickerText;
   consistency?: ShareStickerConsistency;
   badge?: ShareStickerBadge;
+  username?: string | null;
+  inviteCode?: string | null;
+  streak?: number;
+  longestStreak?: number;
+  activeLine?: string;
+  dateLabel?: string;
   children?: React.ReactNode;
 };
 
-function Checkerboard({ children }: { children: React.ReactNode }) {
-  const cells = Array.from({ length: 64 }, (_, i) => i);
-  return (
-    <View style={styles.board}>
-      <View style={styles.boardGrid} accessibilityElementsHidden>
-        {cells.map((i) => (
-          <View
-            key={i}
-            style={[styles.boardCell, i % 2 === Math.floor(i / 8) % 2 ? styles.boardA : styles.boardB]}
-          />
-        ))}
-      </View>
-      <View style={styles.boardFront}>{children}</View>
-    </View>
-  );
+function inferredMoment(props: ShareStickerSheetProps): ShareMoment {
+  if (props.moment) return props.moment;
+  if (props.variant === "consistency" || props.variant === "badge") return "day_secured";
+  if (props.variant === "text") return "self_reported";
+  if (props.day?.proof === "self" || !props.day?.photoUri) return "self_reported";
+  return "photo_proof";
 }
 
-export default function ShareStickerSheet({
-  visible,
-  onDismiss,
-  variant,
-  day,
-  text,
-  consistency,
-  badge,
-  children,
-}: ShareStickerSheetProps) {
-  const shotRef = useRef<ViewShot>(null);
-  const empty = variant === "day" ? !day : variant === "text" ? !text : variant === "consistency" ? !consistency : !badge;
-  const hasPhoto = Boolean(
-    (variant === "day" && day?.photoUri) ||
-      (variant === "consistency" && consistency?.photoUri) ||
-      (variant === "badge" && badge?.photoUri),
-  );
-  const photoShared = Boolean(
-    (variant === "day" && day?.photoShared) ||
-      (variant === "consistency" && consistency?.photoShared) ||
-      (variant === "badge" && badge?.photoShared),
-  );
-  const photo = variant === "text" ? "absent" : photoBackgroundAllowed({ hasPhoto, photoShared });
-  const [bg, setBg] = useState<StickerBackground>(() => defaultStickerBackground(photo));
-  const [busy, setBusy] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!visible) return;
-    setBg(defaultStickerBackground(photo));
-    setSaveStatus(null);
-  }, [visible, photo]);
-
-  const liveBg: StickerBackground = bg === "photo" && photo !== "ok" ? "card" : bg;
-  const showStory = showStoryAction(facebookAppId());
-  const items = photo === "absent" ? [SHARE_BG_CLEAR, "Card"] : [...SHARE_BG_ITEMS];
-  const caption =
-    bg === "photo" && photo === "private"
-      ? SHARE_PHOTO_PRIVATE
-      : stickerStyleCaption(liveBg);
-  const copyLine =
-    variant === "day" && day
-      ? dayStickerCaption(day)
-      : variant === "text" && text
-        ? `${text.title}. ${text.challengeTitle}.`
-        : SHARE_SHEET;
-
-  const capture = useCallback(async () => {
-    return shotRef.current?.capture?.();
-  }, []);
-
-  const run = useCallback(
-    async (kind: "story" | "copy" | "save" | "more") => {
-      if (empty || busy) return;
-      if (bg === "photo" && photo !== "ok") return;
-      setBusy(true);
-      try {
-        const uri = await capture();
-        if (!uri) return;
-        if (kind === "story") {
-          await shareToInstagramStory(uri, { asSticker: liveBg === "clear" });
-          return;
-        }
-        if (kind === "copy") {
-          await copyStickerPngToPasteboard(uri);
-          return;
-        }
-        if (kind === "save") {
-          const result = await saveStickerToPhotos(uri);
-          setSaveStatus(savePhotosCopy(result));
-          return;
-        }
-        await shareProgressImage(uri, copyLine);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [bg, busy, capture, copyLine, empty, liveBg, photo],
-  );
-
-  const preview = useMemo(() => {
-    if (variant === "text" && text) {
-      return (
-        <View style={{ width: STICKER_W }}>
-          <FinishTextCard
-            challengeTitle={text.challengeTitle}
-            title={text.title}
-            dayN={text.dayN}
-            durationDays={text.durationDays}
-            gateLine={text.gateLine}
-          />
-        </View>
-      );
-    }
-    if (variant === "day" && day) {
-      return (
-        <DaySticker
-          bg={liveBg}
-          challenge={day.challenge}
-          day={day.day}
-          durationDays={day.durationDays}
-          proof={day.proof}
-          status={day.status}
-          photoUri={day.photoUri}
-        />
-      );
-    }
-    if (variant === "consistency" && consistency) {
-      return (
-        <ConsistencySticker
-          bg={liveBg}
-          secured={consistency.secured}
-          closed={consistency.closed}
-          cameraSecured={consistency.cameraSecured}
-          last28={consistency.last28}
-          photoUri={consistency.photoUri}
-        />
-      );
-    }
-    if (variant === "badge" && badge) {
-      return (
-        <BadgeSticker
-          bg={liveBg}
-          count={badge.count}
-          secured={badge.secured}
-          byCamera={badge.byCamera}
-          earnedOn={badge.earnedOn}
-          photoUri={badge.photoUri}
-        />
-      );
-    }
-    return null;
-  }, [badge, consistency, day, liveBg, text, variant]);
-
-  return (
-    <Sheet visible={visible} onDismiss={onDismiss} heading={SHARE_SHEET}>
-      {children}
-      {empty ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>{SHARE_EMPTY}</Text>
-          <Text style={styles.emptyHint}>{SHARE_EMPTY_HINT}</Text>
-        </View>
-      ) : (
-        <>
-          <Checkerboard>
-            <ViewShot
-              ref={shotRef}
-              options={{ format: "png", quality: 1, result: "tmpfile" }}
-              style={liveBg === "clear" ? styles.shotClear : styles.shot}
-            >
-              {preview}
-            </ViewShot>
-          </Checkerboard>
-          <SegmentedControl
-            items={items}
-            value={segmentFromBackground(bg)}
-            onChange={(v) => {
-              const next = backgroundFromSegment(v);
-              if (v === SHARE_BG_PHOTO && photo !== "ok") {
-                setBg("photo");
-                return;
-              }
-              setBg(next);
-            }}
-          />
-          {caption ? <Text style={styles.caption}>{caption}</Text> : null}
-          {saveStatus ? <Text style={styles.caption}>{saveStatus}</Text> : null}
-          <View style={styles.actions}>
-            {showStory ? (
-              <Button
-                label={SHARE_STORY}
-                submitting={busy}
-                disabled={empty || (bg === "photo" && photo !== "ok")}
-                onPress={() => void run("story")}
-              />
-            ) : null}
-            <View style={styles.row}>
-              <View style={styles.auxBtn}>
-                <Button
-                  label={SHARE_COPY}
-                  variant="secondary"
-                  size="small"
-                  fill
-                  labelType="secondary"
-                  onPress={() => void run("copy")}
-                />
-              </View>
-              <View style={styles.auxBtn}>
-                <Button
-                  label={SHARE_SAVE}
-                  variant="secondary"
-                  size="small"
-                  fill
-                  labelType="secondary"
-                  onPress={() => void run("save")}
-                />
-              </View>
-              <View style={styles.auxBtn}>
-                <Button
-                  label={SHARE_MORE}
-                  variant="secondary"
-                  size="small"
-                  fill
-                  labelType="secondary"
-                  onPress={() => void run("more")}
-                />
-              </View>
-            </View>
-            <Text style={styles.caption}>{COPY_CAPTION}</Text>
-          </View>
-        </>
-      )}
-    </Sheet>
-  );
+function cardFromProps(props: ShareStickerSheetProps): Omit<ShareCardInput, "style" | "colour"> {
+  const moment = inferredMoment(props);
+  const username = props.username ?? props.day?.username ?? props.text?.username ?? null;
+  const inviteCode = props.inviteCode ?? props.day?.inviteCode ?? props.text?.inviteCode ?? null;
+  if (props.variant === "text" && props.text) {
+    return {
+      challenge: props.text.challengeTitle,
+      task: props.text.title,
+      day: props.text.dayN,
+      durationDays: props.text.durationDays,
+      rule: props.text.gateLine,
+      username,
+      inviteCode,
+      cameraSeal: false,
+    };
+  }
+  if (props.variant === "consistency" && props.consistency) {
+    return {
+      challenge: "Consistency",
+      secured: props.consistency.secured,
+      durationDays: props.consistency.last28.length || props.consistency.closed,
+      cells: props.consistency.last28.map((on) => (on ? "secured" : "future")),
+      username,
+      inviteCode,
+      streak: props.streak,
+    };
+  }
+  if (props.variant === "badge" && props.badge) {
+    return {
+      challenge: "Badge",
+      streak: props.badge.count,
+      secured: props.badge.secured,
+      username,
+      inviteCode,
+      dateLabel: props.badge.earnedOn,
+    };
+  }
+  const day = props.day;
+  const camera = Boolean(day?.photoUri) && day?.proof !== "self";
+  return {
+    challenge: day?.challenge ?? "",
+    task: day?.task,
+    day: day?.day,
+    durationDays: day?.durationDays,
+    username,
+    inviteCode,
+    streak: props.streak ?? day?.streak,
+    secured: day?.secured,
+    longestStreak: props.longestStreak,
+    activeLine: props.activeLine,
+    dateLabel: props.dateLabel ?? (moment === "day_secured" ? shareDateLabel() : undefined),
+    photoUri: day?.photoUri,
+    cameraSeal: day?.cameraSeal ?? camera,
+    rule: day?.status,
+  };
 }
 
-const CELL = STICKER_W / 8;
-
-const styles = StyleSheet.create({
-  board: {
-    width: STICKER_W,
-    alignSelf: "center",
-    marginBottom: DS_V3.space.md,
-    borderRadius: DS_V3.radius.card,
-    overflow: "hidden",
-  },
-  boardGrid: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  boardCell: { width: CELL, height: CELL },
-  boardA: { backgroundColor: DS_V3.color.border },
-  boardB: { backgroundColor: DS_V3.color.surface },
-  boardFront: { minHeight: 180, alignItems: "center", justifyContent: "center" },
-  shot: { backgroundColor: DS_V3.color.canvas },
-  shotClear: { backgroundColor: "transparent" },
-  caption: {
-    ...DS_V3.type.caption,
-    color: DS_V3.color.textSecondary,
-    marginTop: DS_V3.space.sm,
-  },
-  actions: { gap: DS_V3.space.sm, marginTop: DS_V3.space.md },
-  row: { flexDirection: "row", gap: 8 },
-  auxBtn: { flex: 1 },
-  empty: { paddingVertical: DS_V3.space.section, gap: DS_V3.space.sm },
-  emptyTitle: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
-  emptyHint: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
-});
+export default function ShareStickerSheet(props: ShareStickerSheetProps) {
+  return (
+    <ShareSystemSheet
+      visible={props.visible}
+      onDismiss={props.onDismiss}
+      moment={inferredMoment(props)}
+      card={cardFromProps(props)}
+    >
+      {props.children}
+    </ShareSystemSheet>
+  );
+}

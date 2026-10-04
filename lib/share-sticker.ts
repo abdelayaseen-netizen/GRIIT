@@ -136,18 +136,26 @@ export function instagramStoriesShareInput(args: {
   imageUri: string;
   asSticker: boolean;
   appId: string;
+  backgroundTopColor?: string;
+  backgroundBottomColor?: string;
 }): {
   social: "instagramstories";
   appId: string;
   stickerImage?: string;
   backgroundImage?: string;
+  backgroundTopColor?: string;
+  backgroundBottomColor?: string;
 } | null {
   const appId = args.appId.trim();
   if (!appId) return null;
+  const top = args.backgroundTopColor?.trim();
+  const bottom = args.backgroundBottomColor?.trim();
+  const colors =
+    top && bottom ? { backgroundTopColor: top, backgroundBottomColor: bottom } : {};
   if (args.asSticker) {
-    return { social: "instagramstories", appId, stickerImage: args.imageUri };
+    return { social: "instagramstories", appId, stickerImage: args.imageUri, ...colors };
   }
-  return { social: "instagramstories", appId, backgroundImage: args.imageUri };
+  return { social: "instagramstories", appId, backgroundImage: args.imageUri, ...colors };
 }
 
 /** Empty Meta App ID: do not offer Instagram Story. Copy / Save / More still work. */

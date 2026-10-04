@@ -789,6 +789,10 @@ export default function HomeScreen() {
           visible={shareTodayOpen}
           onDismiss={() => setShareTodayOpen(false)}
           challenges={proof.shareTodayChallenges}
+          username={profile?.username}
+          streak={streak ?? undefined}
+          longestStreak={resolvedStats?.longestStreak}
+          activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
         />
         <FreezeSheet
           visible={showFreezeSheet}

@@ -125,11 +125,16 @@ export function useTaskFlowV2() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("active_challenges")
-        .select("start_at, started_at, created_at")
+        .select("start_at, started_at, created_at, challenge_id")
         .eq("id", activeChallengeId)
         .maybeSingle();
       if (error) throw error;
-      return data as { start_at?: string | null; started_at?: string | null; created_at?: string | null } | null;
+      return data as {
+        start_at?: string | null;
+        started_at?: string | null;
+        created_at?: string | null;
+        challenge_id?: string | null;
+      } | null;
     },
     enabled: !!activeChallengeId,
     staleTime: 60 * 1000,
@@ -946,6 +951,8 @@ export function useTaskFlowV2() {
     finishFeedPosted,
     alsoToday,
     durationDays,
+    shareInviteCode: enrollmentQ.data?.challenge_id ?? null,
+    shareUsername: profile?.username ?? null,
     finishGateLine: gateLine(gates, gateTime),
     fail,
     discardAsk,

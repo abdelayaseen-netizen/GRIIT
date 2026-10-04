@@ -566,6 +566,8 @@ export default function ActiveChallengeDetailScreen() {
         <DayStickerSheet
           visible={shareTodayOpen && thisDone}
           onDismiss={() => setShareTodayOpen(false)}
+          username={profile?.username}
+          streak={streakDays}
           challenges={
             thisDone && stickerProof
               ? [
