@@ -53,9 +53,9 @@ The product surface that matches the latest design (v44 share, Home, Discover ca
 | Create flow | 6 | v44 strings, empty category, invite-only groups, privacy line. | Hard forces photo. “Start today” goes Home, not into the task. |
 | Groups / nudges | 5 | Roster check-ins, three canned lines, cap of 2 pushes. | No window-closed status, no bulk nudge, no sender name, old `nudges` router still mounted. |
 | Profile (own + visitor) | 6 | Record, follow counts, visitor block. | Two badge systems (v42 twelve vs older achievement keys). |
-| Privacy | 6 | One switch writes three visibility columns. Co-members can see a private account. | “Friends” level counts as private. Easy to misunderstand. |
+| Privacy | 5 | One switch writes three visibility columns. Feed can show a co-member’s shared proof. | The profile-record gate always passes `isCoMember: false`, so a private account stays closed to challenge-mates on the profile. |
 | Notifications / reminders | 4 | Local reminders and server cron exist. | Group push cap is 2 and does not include the reminder cron. 8pm “you’re left” was skipped. |
-| Activity / leaderboard | 5 | Activity is `notifications.getAll`. Weekly board is public. | Opt-in exists (`setBoardOptIn`). Ranking formula not re-derived this pass beyond the procedure existing. |
+| Activity / leaderboard | 6 | Weekly board counts `day_secures`. Friends score is days×100 plus streak capped at 99. | `setBoardOptIn` has no screen. The challenge board sorts differently. |
 | Settings / account deletion | 6 | DELETE confirm, then profile row delete, then `auth.admin.deleteUser` if the service key exists. | If the admin key is missing, the profile row is gone and the auth user remains. **[CODE-ONLY]** `profiles.ts:542-546` |
 | Payments / Pro | 5 | RevenueCat key is read. Freeze limit 4 vs 1 uses `is_premium`. | Whether the live offering matches the paywall was not opened in App Store Connect. **[UNKNOWN]** |
 | Backend / API | 6 | One tRPC router, protected by default, additive retirement of accountability. | Dead-ish routers still mounted: `nudges`, `sharedGoal`, `accountability`. |
@@ -163,7 +163,8 @@ States (loading / empty / error) are implemented inside the V3 components, not u
 - Stored image columns on `check_ins`: `proof_url`, `photo_url`, `completion_image_url`. **[VERIFIED]** migrations `20260321150000_check_ins_table_and_rls.sql` and later ALTERs. `proof_photo_url` is not a column. The app still uses that name as a derived field (`backend/lib/proof-predicate.ts:19-26`).
 - Feed and profile show the derived URL. Sharing to the feed is a separate action (`checkins.shareProof` / `feed.shareCompletion`). Opening the share sheet does not flip `shared`. **[CODE-ONLY]** design note matches `02_screens.md:6128`; the code path is the shareProof mutation.
 - Camera 30 badge counts a check-in if `verified` or any of those URLs is set. It does not check an in-app-camera source. **[CODE-ONLY]** `proof-predicate.ts:12-16`, `profiles-record.ts:591-593`
-- `verification_gates` is a production column (operator) and a migration `20261004010000_check_ins_verification_gates.sql`. Keys written into it were not enumerated line by line this pass. **[UNKNOWN]** the key set beyond the column existing.
+- `verification_gates` is a production column (operator) and migration `20261004010000_check_ins_verification_gates.sql`. `checkins.complete` writes these top-level keys: `time_gate`, `run_log`, `workout_log`, `journal_log`, `counter_log`, `checkin_log`, `simple_log`, `location_gate`, `photo_gate`, `strava_gate`. **[CODE-ONLY]** `backend/trpc/routes/checkins.ts` around 635–763. Nothing else reads those keys back out of the row.
+- `checkins.complete` also writes `clocked_in_at` when the client sends it. **[CODE-ONLY]** `checkins.ts:849`. No migration adds that column. If production does not have it, a completion that includes the field fails the insert.
 
 ### e) Share
 
@@ -201,7 +202,7 @@ Settings → type DELETE → `profiles.deleteAccount` deletes the `profiles` row
 
 **Streak (user).** `streaks.active_streak_count`, updated by `secure_day` and by miss reconcile. Client badge math in `longestSecuredRun` is a display copy: secured days add, freeze and Last Stand days hold the run and do not add. **[VERIFIED]** `lib/v42-badges.ts:75-104`, `lib/v42-badges.test.ts`. Server miss path can zero the column without deleting `day_secures`. **[CODE-ONLY]**
 
-**Freezes.** Earn: the window resets the allotment to the limit when never used or when 30 days have passed (`effectiveFreezesRemaining`). Spend: yesterday only, one hole, remaining > 0, inserts `freeze_uses`, decrements remaining. Limits: 1 free, 4 if `profiles.is_premium`. **[VERIFIED]** `streaks.ts:33-102`. No Days Off copy says freezes do not apply. The useFreeze procedure does not check `is_hard_mode`. **[CODE-ONLY]** A hard-mode user can still call `streaks.useFreeze` if the UI shows the button. Whether Home hides it for hard mode is in `windowClosedFollowup` (no freeze sentence when `noDaysOff`). **[VERIFIED]** `lib/g2a-home.test.ts:37-41`. Other entry points may still show it. **[UNKNOWN]** without a device pass.
+**Freezes.** Earn: the window resets the allotment to the limit when never used or when 30 days have passed (`effectiveFreezesRemaining`). Spend: yesterday only, one hole, remaining > 0, inserts `freeze_uses`, decrements remaining. Limits: 1 free, 4 if `profiles.is_premium`. **[VERIFIED]** `streaks.ts:33-102`. The offer helper refuses hard mode. **[VERIFIED]** `canOfferYesterdayFreeze` returns false when `hardMode` is true (`lib/freeze-recovery.ts:47`, `lib/freeze-recovery.test.ts`). The server `useFreeze` procedure still does not read `is_hard_mode`. **[CODE-ONLY]** A client that skips the helper can still spend a freeze on a No Days Off account.
 
 **Last Stand.** Max 2. Earn after 6 of last 7 for premium or trial. Spend automatically on exactly one missed day. **[CODE-ONLY]** `backend/lib/last-stand.ts:1-19`, `miss-reconcile.ts:64-80`. This can protect a No Days Off user who is also Pro. **[INFERRED]**
 
@@ -215,11 +216,11 @@ Settings → type DELETE → `profiles.deleteAccount` deletes the `profiles` row
 
 **Challenge end.** `challenges.finalizeEnded`, `listUnseenEndings`, `markEndSeen`. 24h challenges refuse secure after `ends_at`. **[CODE-ONLY]** `checkins.ts:1415-1417`.
 
-**Privacy.** Private if any of `profile_visibility`, `challenge_visibility`, `activity_visibility` is `private` or `friends`. Owner, mutual follow, or co-member can see content. **[VERIFIED]** `lib/profile-privacy.ts:29-49`, `lib/profile-privacy.test.ts`. The settings switch writes all three to the same value. **[CODE-ONLY]** `visibilitiesForPrivateSwitch` lines 52-64.
+**Privacy.** Private if any of `profile_visibility`, `challenge_visibility`, `activity_visibility` is `private` or `friends`. The pure helper allows the owner, a mutual follow, or a co-member. **[VERIFIED]** `lib/profile-privacy.ts:29-49`, `lib/profile-privacy.test.ts`. The settings switch writes all three to the same value. **[CODE-ONLY]** `visibilitiesForPrivateSwitch` lines 52-64. The account-content gate used by the profile record always passes `isCoMember: false`. **[CODE-ONLY]** `backend/lib/account-privacy.ts:20`. A person in your challenge does not get your private profile through that path. The live feed does pass co-member challenge ids into `canSeeContent` for a shared event. **[CODE-ONLY]** `backend/lib/is-friend.ts` via `feed.ts:88-93`. So a shared proof can show in the feed while the profile stays locked.
 
 **Feed.** `following`: author is you or someone you follow (accepted). `everyone`: also drops private accounts unless mutual or co-member, and drops anonymous users. Shared flag and challenge visibility still apply. **[CODE-ONLY]** `feed.ts:62-108`.
 
-**Leaderboard.** `leaderboard.getWeekly` is public. Friends and per-challenge boards are protected. Opt-in via `setBoardOptIn`. The sort key was not re-read. **[UNKNOWN]** the exact rank expression beyond “a weekly board exists.”
+**Leaderboard.** `leaderboard.getWeekly` is public and ranks by count of `day_secures` in a rolling 7 days. **[CODE-ONLY]** `backend/trpc/routes/leaderboard.ts`. Friends board uses `consistencyScore`: weekly secured days × 100, plus streak capped at 99. **[CODE-ONLY]** `backend/lib/scoring.ts:14-15`. No unit test for that function. The challenge board sorts by check-ins this week, then display name, and does not use `consistencyScore`. Opt-in is `setBoardOptIn` and has no app caller found. **[CODE-ONLY]**
 
 **Badges (the 12).** Defined in `lib/v42-badges.ts:25-38`. Evaluated in `evaluateV42Badges`. Facts come from `profiles.getRecord` (`profiles-record.ts:573-637`).
 
@@ -233,7 +234,7 @@ Settings → type DELETE → `profiles.deleteAccount` deletes the `profiles` row
 | early_10 | Secured days that include a check-in on a time-gated task | `gate_time_*` |
 | camera_30 | Days with a camera-ish check-in | any proof URL or `verified`, not capture source |
 
-Older `ACHIEVEMENTS` in `backend/lib/achievement-definitions.ts` is a second set (streak keys, follows, respects, Battle Buddy, and others). Battle Buddy is no longer awarded. **[VERIFIED]** `backend/lib/achievements.ts` no longer references `ACCOUNTABILITY_PARTNER` (accountability test). The definition row remains at line 37.
+Older `ACHIEVEMENTS` in `backend/lib/achievement-definitions.ts` is a second set of 27 keys. Battle Buddy is defined and never awarded. **[VERIFIED]** the accountability test. `streak_100` and `consistency` are also never pushed onto the unlock list. **[CODE-ONLY]** `backend/lib/achievements.ts`. Awards run from `secureDay` and, for hard-mode-first, from `checkins.complete`.
 
 **Push budget.** Group pushes: max 2 per recipient per local day. A join push leaves one slot until a nudge has used one. Counted only when `metadata.pushed` is true. **[VERIFIED]** `lib/group-nudge.ts` `GROUP_PUSH_CAP` and `groupPushSend`, tests. Reminder cron is separate and not in that cap. **[CODE-ONLY]** `backend/hono.ts:109-112`, `backend/lib/cron-reminders.ts`.
 
@@ -261,7 +262,7 @@ Grouped by what the app uses. “NOT IN MIGRATIONS” means no `CREATE TABLE` wa
 
 - `challenge_tasks.config`: `photo_mode`, `require_photo_proof`, `photo_required`, `hard_mode`, `require_location`, and others. **[CODE-ONLY]** `task-model.ts`
 - `in_app_notifications.metadata` and `.data`: `kind` (`nudge` | `joined`), `challenge_id`, `message_key`, `date_key`, `pushed`, plus invite ids. **[CODE-ONLY]** `groups.ts` insert payloads
-- `check_ins.verification_gates`: column exists. Key list **[UNKNOWN]**
+- `check_ins.verification_gates`: keys listed in section 4d. `clocked_in_at` is written by `checkins.complete` and is **NOT IN MIGRATIONS**.
 
 **Tables in migrations with little or no app use found this pass:** `stories`, `story_views`, `shared_goal_logs` (router exists), `invite_tracking`, `connected_accounts` (Strava). **[INFERRED]** from names plus a router existing for shared goal and Strava. A full unused-table proof was not run.
 
@@ -554,6 +555,9 @@ Ranked by what a person hits.
 10. **Two streak systems** (SQL column vs badge run vs group streak from `day_secures`) will disagree on screen if a freeze was used. Group streak still uses `day_secures`, which a freeze does not write. **[INFERRED]** from `memberYesterdayState` using secure keys and freeze living in `freeze_uses`.
 11. **Accountability routes in `lib/routes.ts` point at deleted files.** A deep link to `/accountability` 404s. The API returns a message. Fine, but the constant is a trap.
 12. **`total_days_secured` can lag** without the service role. Profile stat and badge “100 days” use different inputs (column vs `day_secures` count). They can diverge. **[INFERRED]**
+13. **`clocked_in_at` is not in any migration** and is still assigned on the check-in upsert. Repro: complete a task that sends `clocked_in_at`. If the column is absent in production, the insert errors. `checkins.ts:849`.
+14. **Profile privacy ignores co-membership.** `canViewerSeeAccountContent` hardcodes `isCoMember: false` (`account-privacy.ts:20`). The copy says people in a challenge with you see today’s task count. That is the roster, not the profile. A private profile stays private to those people.
+15. **Dead screens still registered.** Root layout lists `create-team`, `team-invite`, and `join-team` with no files (`app/_layout.tsx`). `/proof/[id]` has no in-app navigation. `/discover/category/[slug]` has no caller. `/(tabs)/teams` is `href: null`. Settings export says “Coming with the next update” (`app/settings/account.tsx`). `checkins.saveProgress`, `respects.give`, and the Strava procedures have no current screen caller. Auth `signUp` / `signIn` on tRPC are unused; the app calls Supabase Auth directly.
 
 ---
 
