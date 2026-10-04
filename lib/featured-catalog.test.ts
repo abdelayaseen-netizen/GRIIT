@@ -15,10 +15,12 @@ describe("v44 featured catalog", () => {
     expect(FEATURED_BUILTINS.find((c) => c.title === "7K Steps")?.proof).toBe("self");
     expect(FEATURED_BUILTINS.find((c) => c.title === "3 Good Things")?.days).toBe(7);
     expect(featuredCardLine(FEATURED_BUILTINS[0]!)).toBe("7 days · Camera");
+    expect(FEATURED_BUILTINS[0]?.task).toBe("Get to the gym");
     expect(featuredMembersLine(0)).toBe("Be the first");
     expect(featuredMembersLine(3)).toBe("3 people in it");
-    expect(needsSetGym(FEATURED_BUILTINS[0]!)).toBe(true);
+    expect(needsSetGym(FEATURED_BUILTINS[0]!)).toBe(false);
     expect(needsSetGym(FEATURED_BUILTINS[1]!)).toBe(false);
+    expect(FEATURED_BUILTINS.every((item) => item.placeGate === false)).toBe(true);
     for (const item of FEATURED_BUILTINS) {
       expect(item.config.photo_mode).toBeTruthy();
     }
