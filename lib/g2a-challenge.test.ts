@@ -7,25 +7,31 @@ import {
   freezeDetailCopy,
   peopleCardCopy,
   soloBoardCopy,
+  weekDayBeforeEnrollment,
+  weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
 
-describe("enrollment week from start_at", () => {
-  it("aligns the 7-day window to start_at, not Monday", () => {
-    expect(enrollmentWeekDateKeys("2026-10-01", "2026-10-02")).toEqual([
+describe("enrollment week is Monday in the profile timezone", () => {
+  it("uses the Monday–Sunday week that contains today", () => {
+    expect(enrollmentWeekDateKeys("2026-10-02")).toEqual([
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
       "2026-10-01",
       "2026-10-02",
       "2026-10-03",
       "2026-10-04",
-      "2026-10-05",
-      "2026-10-06",
-      "2026-10-07",
     ]);
-    expect(enrollmentWeekDateKeys("2026-10-01", "2026-10-09")[0]).toBe("2026-10-08");
+    expect(enrollmentWeekDateKeys("2026-10-09")[0]).toBe("2026-10-05");
+    expect(weekDayBeforeEnrollment("2026-09-29", "2026-10-03")).toBe(true);
+    expect(weekDayBeforeEnrollment("2026-10-03", "2026-10-03")).toBe(false);
+    expect(weekdayLetterForDateKey("2026-10-04", "America/New_York")).toBe("S");
+    expect(weekdayLetterForDateKey("2026-09-28", "America/New_York")).toBe("M");
   });
 
   it("counts today once it is secured", () => {
-    const week = enrollmentWeekDateKeys("2026-10-01", "2026-10-02");
+    const week = enrollmentWeekDateKeys("2026-10-02");
     const open = weekSecuredOfDue({
       weekKeys: week,
       securedDateKeys: ["2026-10-01"],

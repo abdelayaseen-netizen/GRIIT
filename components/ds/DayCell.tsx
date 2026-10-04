@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { ImageOff, Lock, Shield, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { dayCellLabel, type DayCellKind } from "@/lib/day-cell";
+import { dayCellBorderWidth, dayCellLabel, type DayCellKind } from "@/lib/day-cell";
 
 export type DayCellProps = {
   kind: DayCellKind;
@@ -35,7 +35,7 @@ export default function DayCell({
     <View
       style={[
         styles.base,
-        { width: size, height: size, opacity: kind === "future" || kind === "before" ? 0.35 : 1 },
+        { width: size, height: size, opacity: kind === "future" || kind === "before" || kind === "na" ? 0.35 : 1 },
         fillStyle(kind),
       ]}
     >
@@ -114,12 +114,14 @@ function fillStyle(kind: DayCellKind) {
         borderColor: kind === "last_stand" ? DS_V3.color.brand : DS_V3.color.border,
       };
     case "missed":
-      return { borderWidth: 1, borderColor: DS_V3.color.textSecondary };
+      return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.textSecondary };
     case "today":
-      return { borderWidth: 2, borderColor: DS_V3.color.brand };
+      return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.brand };
     case "future":
     case "before":
-      return { borderWidth: 1, borderColor: DS_V3.color.border };
+      return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.border };
+    case "na":
+      return { backgroundColor: "transparent" };
     default:
       return {};
   }

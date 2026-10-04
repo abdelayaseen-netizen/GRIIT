@@ -107,7 +107,7 @@ export type ActiveChallengeV3Props = {
   showShareToday?: boolean;
   todayStatus?: string | null;
   weekLine?: string | null;
-  weekDaysOverride?: { letter: string; filled: boolean }[];
+  weekDaysOverride?: { letter: string; filled: boolean; state?: "secured" | "frozen" | "last_stand" | "missed" | "na" }[];
   freezeRow?: {
     title: string;
     caption: string;

@@ -51,6 +51,7 @@ import {
   enrollmentWeekDateKeys,
   freezeDetailCopy,
   peopleCardCopy,
+  weekDayBeforeEnrollment,
   weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
@@ -228,10 +229,7 @@ export default function ActiveChallengeDetailScreen() {
   const startDateKey = startIso
     ? dateKeyFromIso(String(startIso), profileTz ?? "UTC")
     : todayKey;
-  const weekKeys = useMemo(
-    () => enrollmentWeekDateKeys(startDateKey, todayKey),
-    [startDateKey, todayKey],
-  );
+  const weekKeys = useMemo(() => enrollmentWeekDateKeys(todayKey), [todayKey]);
   const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
   const exclusiveEnd = activeChallenge?.end_at
     ? exclusiveEndDateKey(
@@ -479,10 +477,14 @@ export default function ActiveChallengeDetailScreen() {
     privateOrSolo: participationType === "solo" || vis === "private",
     challengeTitle: title,
   });
-  const weekDaysOverride = weekKeys.map((key, i) => ({
-    letter: weekdayLetterForDateKey(key),
-    filled: weekSecured[i] === true,
-  }));
+  const weekDaysOverride = weekKeys.map((key, i) => {
+    const before = weekDayBeforeEnrollment(key, startDateKey);
+    return {
+      letter: weekdayLetterForDateKey(key, profileTz),
+      filled: !before && weekSecured[i] === true,
+      state: before ? ("na" as const) : undefined,
+    };
+  });
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? "", "detail"],

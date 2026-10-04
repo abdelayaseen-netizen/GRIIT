@@ -1,4 +1,4 @@
-export type WeekStripDayState = "secured" | "frozen" | "last_stand" | "missed";
+export type WeekStripDayState = "secured" | "frozen" | "last_stand" | "missed" | "na";
 
 export const WEEK_STRIP_WEEKDAYS = [
   "Monday",
@@ -70,6 +70,7 @@ export function weekStripAccessibilityLabel(
   state: WeekStripDayState,
   isToday: boolean,
 ): string {
+  if (state === "na") return `${weekday}, not applicable`;
   if (state === "last_stand") return `${weekday}, last stand`;
   if (state === "missed" && isToday) return `${weekday}, open`;
   return `${weekday}, ${state}`;

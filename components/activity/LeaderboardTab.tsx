@@ -28,6 +28,8 @@ import Skeleton from "@/components/ds/Skeleton";
 import {
   AROUND_YOU,
   BOARD_RULE,
+  LAST_7_DAYS,
+  LAST_7_DAYS_RULE,
   JOIN_THE_BOARD,
   LEAVE_IT,
   TOP_OF_CHALLENGE,
@@ -191,8 +193,12 @@ function LeaderboardBody({
   const header = (
     <>
       <View style={styles.week}>
-        <Text style={styles.heading}>This week</Text>
-        <Text style={styles.caption}>{BOARD_RULE}</Text>
+        <Text style={styles.heading}>
+          {scope === "global" || scope === "friends" ? LAST_7_DAYS : "This week"}
+        </Text>
+        <Text style={styles.caption}>
+          {scope === "global" || scope === "friends" ? LAST_7_DAYS_RULE : BOARD_RULE}
+        </Text>
       </View>
 
       {scope === "challenge" && activeList.length > 0 ? (
