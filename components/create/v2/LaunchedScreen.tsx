@@ -34,7 +34,7 @@ export function LaunchedScreen({
   timeZone,
   onHome,
   onInvite,
-  onNext,
+  onStartToday,
 }: {
   title: string;
   days: number;
@@ -44,7 +44,7 @@ export function LaunchedScreen({
   timeZone: string;
   onHome: () => void;
   onInvite?: () => void;
-  onNext?: () => void;
+  onStartToday?: () => void;
 }) {
   const card = launchedFirstCard({ tasks, timeZone });
   const first = card.first;
@@ -104,8 +104,8 @@ export function LaunchedScreen({
         {group && onInvite ? (
           <Button label="Invite friends" variant="secondary" onPress={onInvite} />
         ) : null}
-        {!tomorrow && card.nextLabel && onNext ? (
-          <Button label={card.nextLabel} onPress={onNext} />
+        {!tomorrow && first && onStartToday ? (
+          <Button label={`Start today: ${first.name}`} onPress={onStartToday} />
         ) : null}
         <Button
           label={tomorrow ? LAUNCHED_BACK_TODAY : LAUNCHED_BACK_HOME}

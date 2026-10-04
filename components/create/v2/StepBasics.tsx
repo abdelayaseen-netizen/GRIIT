@@ -42,7 +42,7 @@ const PRESETS: readonly { days: number; label: string }[] = [
 ] as const;
 
 export const CREATE_LENGTH_TIP = "7 days is a strong start. You can go again after.";
-export const CREATE_NAME_PLACEHOLDER = "Read 30 min before phone";
+export const CREATE_NAME_PLACEHOLDER = "e.g. Gym before work";
 const NAME_PLACEHOLDER_COLOR = `${DS_V3.color.textSecondary}${Math.round(0.7 * 255)
   .toString(16)
   .padStart(2, "0")}`;
@@ -131,6 +131,9 @@ export function StepBasics({
 
       <View style={styles.section}>
         <Text style={styles.heading}>How long?</Text>
+        <Text style={styles.secondary}>
+          {`${durationDays ?? 7} days. Day 1 is today.`}
+        </Text>
         {customOpen ? (
           <TextInput
             accessibilityLabel="Custom duration in days"

@@ -4,17 +4,19 @@ import {
   MODE_HARD_TITLE,
   MODE_STANDARD_BODY,
   MODE_STANDARD_TITLE,
+  CREATE_PRIVACY_LINE,
 } from "@/lib/create-mode-copy";
 
 describe("123 mode copy", () => {
   it("uses the locked titles and bodies", () => {
-    expect(MODE_STANDARD_TITLE).toBe("Standard · Freezes on");
+    expect(MODE_STANDARD_TITLE).toBe("Standard");
     expect(MODE_STANDARD_BODY).toBe(
-      "A missed day resets your streak. The next day, you can spend a freeze to cover it. One freeze covers yesterday only. Free accounts get 1 every 30 days, Pro gets 4.",
+      "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro.",
     );
-    expect(MODE_HARD_TITLE).toBe("No Days Off · No freezes");
+    expect(MODE_HARD_TITLE).toBe("No Days Off");
     expect(MODE_HARD_BODY).toBe(
-      "A missed day sends the run back to Day 1. Freezes can't be used.",
+      "Every gate blocks. No freezes. A missed day goes back to Day 1.",
     );
+    expect(CREATE_PRIVACY_LINE).toContain("Photos stay private");
   });
 });
