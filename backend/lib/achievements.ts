@@ -90,13 +90,6 @@ export async function checkAndUnlockAchievements(
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId);
     if ((commentCount ?? 0) >= 1) toUnlock.push(ACHIEVEMENTS.FIRST_COMMENT.key);
-
-    const { count: partnerCount } = await supabase
-      .from("accountability_pairs")
-      .select("id", { count: "exact", head: true })
-      .or(`user_id.eq.${userId},partner_id.eq.${userId}`)
-      .eq("status", "accepted");
-    if ((partnerCount ?? 0) >= 1) toUnlock.push(ACHIEVEMENTS.ACCOUNTABILITY_PARTNER.key);
   } catch {
     /* non-fatal */
   }
