@@ -132,8 +132,8 @@ describe("roster", () => {
     joinedAt: "2026-01-03",
   };
 
-  it("orders creator first, then streak descending", () => {
-    expect(sortRoster([a, b, creator]).map((m) => m.userId)).toEqual(["c", "b", "a"]);
+  it("orders you first, then display name", () => {
+    expect(sortRoster([a, b, creator], "b").map((m) => m.userId)).toEqual(["b", "a", "c"]);
   });
 
   it("selects streak captions", () => {

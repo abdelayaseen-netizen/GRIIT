@@ -3,6 +3,16 @@ branch: main
 
 ## Last sync
 
+date: 2026-10-04T01:47:00Z
+
+### Updated in this project
+
+- Searched the repo for the accountability-partner feature (`app/accountability.tsx`, `app/accountability/add.tsx`, `backend/trpc/routes/accountability.ts`, the Battle Buddy achievement) and specified its removal in v45 frame 183.
+
+## Sync history
+
+### Previous sync
+
 date: 2026-10-04T01:16:44Z
 
 ### Updated in this project
@@ -10,7 +20,6 @@ date: 2026-10-04T01:16:44Z
 - Read the invite link format from `lib/deep-links.ts` (`inviteDeepLink` → `/invite/{code}`) and `lib/share.ts`; every v44.1 share style uses it.
 - Corrected the `griit.app/c/{slug}` links in the v43.1 and v44 frames to `/invite/{code}` (contradiction 139).
 
-## Sync history
 
 ### Previous sync
 
@@ -134,5 +143,6 @@ tree: 9e4f1d5897ae
 | 93-96 Feed cards, comments, board, week strip | `components/feed/{FeedPostV3,FeedEngagementRow,FeedPostCard}.tsx`, `components/ds/WeekStrip.tsx`, `app/(tabs)/index.tsx` |
 | 144 B Settings → Privacy | `app/settings/privacy.tsx` |
 | 173–176 Share system | `lib/share.ts`, `lib/deep-links.ts` |
+| 183 Partners removed | `app/accountability.tsx`, `backend/trpc/routes/accountability.ts`, `backend/lib/achievement-definitions.ts` |
 | Tokens throughout | `lib/design-system.ts` (DS_V3) |
 | Flow order and routing | `components/onboarding/v2/OnboardingFlowV2.tsx`, `app/_layout.tsx` |

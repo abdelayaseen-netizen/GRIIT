@@ -10,3 +10,6 @@ export const MODE_HARD_BODY =
 
 export const CREATE_PRIVACY_LINE =
   "Photos stay private until each person shares them, whichever you pick.";
+
+export const GROUP_TASK_PRIVACY =
+  "People in a challenge with you see how many of today's tasks you've done.";

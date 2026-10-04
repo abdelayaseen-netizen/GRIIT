@@ -12,10 +12,18 @@ import {
   computeGroupStreak,
   dateKeyFromJoinedAt,
   groupStreakBrokeBy,
+  memberSecuredFromCheckIns,
   memberYesterdayState,
 } from "../../lib/group-challenges";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
 import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
+import {
+  groupPushSend,
+  isNudgeRow,
+  nudgeBlocked,
+  nudgeMessage,
+  pushedCounts,
+} from "../../../lib/group-nudge";
 
 type ChallengeInviteRow = {
   id: string;
@@ -105,21 +113,29 @@ async function insertInviteNotification(
     challengeId: string;
     challengeTitle: string;
     inviteId: string;
+    dateKey: string;
+    pushed: boolean;
   }
 ): Promise<void> {
   const body = `${input.inviterName} invited you to ${input.challengeTitle}`;
+  const meta = {
+    kind: "joined" as const,
+    challenge_id: input.challengeId,
+    date_key: input.dateKey,
+    pushed: input.pushed,
+    type: "challenge_invite",
+    challengeId: input.challengeId,
+    inviteId: input.inviteId,
+    inviterId: input.inviterId,
+  };
   const payload = {
     user_id: input.inviteeId,
     type: "challenge_invite",
     title: "Group invite",
     body,
     read: false,
-    data: {
-      type: "challenge_invite",
-      challengeId: input.challengeId,
-      inviteId: input.inviteId,
-      inviterId: input.inviterId,
-    },
+    metadata: meta,
+    data: meta,
   };
   const { error } = await supabase.from("in_app_notifications").insert(payload);
   if (error) {
@@ -193,12 +209,16 @@ export const groupsRouter = createTRPCRouter({
 
       const { data: inviteeRow } = await ctx.supabase
         .from("profiles")
-        .select("user_id")
+        .select("user_id, timezone, reminder_timezone")
         .eq("user_id", input.userId)
         .maybeSingle();
       if (!inviteeRow) {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found." });
       }
+      const invitee = inviteeRow as {
+        timezone?: string | null;
+        reminder_timezone?: string | null;
+      };
 
       const { data: existingInvite } = await ctx.supabase
         .from("challenge_invites")
@@ -259,6 +279,21 @@ export const groupsRouter = createTRPCRouter({
       const inviter = inviterRow as { display_name?: string | null; username?: string | null } | null;
       const inviterName = inviter?.display_name ?? inviter?.username ?? "Someone";
       const title = challenge.title?.trim() || "a group challenge";
+      const dateKey = getTodayDateKey(invitee.timezone ?? invitee.reminder_timezone ?? "UTC");
+      const reader = challengeReader(ctx.supabase);
+      const { data: priorPushes } = await reader
+        .from("in_app_notifications")
+        .select("metadata")
+        .eq("user_id", input.userId)
+        .in("type", ["general", "challenge_invite"])
+        .limit(100);
+      const pushed = groupPushSend(
+        "joined",
+        pushedCounts(
+          (priorPushes ?? []) as { metadata?: { kind?: string; date_key?: string; pushed?: boolean } | null }[],
+          dateKey,
+        ),
+      );
       await insertInviteNotification(ctx.supabase, {
         inviteeId: input.userId,
         inviterId: ctx.userId,
@@ -266,15 +301,19 @@ export const groupsRouter = createTRPCRouter({
         challengeId: input.challengeId,
         challengeTitle: title,
         inviteId: invite.id,
+        dateKey,
+        pushed,
       });
-      try {
-        await sendPushToProfile(ctx.supabase, input.userId, {
-          title: "GRIIT",
-          body: `${inviterName} invited you to ${title}`,
-          data: { type: "challenge_invite", challengeId: input.challengeId, inviteId: invite.id },
-        });
-      } catch (pushErr) {
-        logger.error({ err: pushErr }, "[groups.invite] push failed");
+      if (pushed) {
+        try {
+          await sendPushToProfile(ctx.supabase, input.userId, {
+            title: "GRIIT",
+            body: `${inviterName} invited you to ${title}`,
+            data: { type: "challenge_invite", challengeId: input.challengeId, inviteId: invite.id },
+          });
+        } catch (pushErr) {
+          logger.error({ err: pushErr }, "[groups.invite] push failed");
+        }
       }
 
       return { inviteId: invite.id, status: "pending" as const };
@@ -570,7 +609,7 @@ export const groupsRouter = createTRPCRouter({
         securedKeysByUser.get(row.user_id)!.add(row.date_key);
       }
 
-      const enrolled = members.map((m) => {
+      const enrolledBase = members.map((m) => {
         const p = profileMap.get(m.user_id);
         const tz = p?.timezone ?? p?.reminder_timezone ?? "UTC";
         const todayKey = getTodayDateKey(tz);
@@ -580,16 +619,74 @@ export const groupsRouter = createTRPCRouter({
           avatar: p?.avatar_url ?? null,
           role: m.role,
           currentStreak: streakMap.get(m.user_id) ?? 0,
-          securedToday: securedKeysByUser.get(m.user_id)?.has(todayKey) === true,
+          todayKey,
           joinedAt: m.joined_at,
           joinedDateKey: dateKeyFromJoinedAt(m.joined_at, tz),
         };
       });
 
+      const reader = challengeReader(ctx.supabase);
+      const { data: taskRows } = await reader
+        .from("challenge_tasks")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .limit(50);
+      const requiredTaskIds = ((taskRows ?? []) as { id: string }[]).map((t) => t.id);
+      const { data: enrollmentRows } = await reader
+        .from("active_challenges")
+        .select("id, user_id")
+        .eq("challenge_id", input.challengeId)
+        .in("user_id", members.map((m) => m.user_id))
+        .limit(GROUP_MAX_MEMBERS);
+      const enrollmentByUser = new Map(
+        ((enrollmentRows ?? []) as { id: string; user_id: string }[]).map((row) => [row.user_id, row.id]),
+      );
+      const enrollmentIds = [...enrollmentByUser.values()];
+      const { data: checkRows } =
+        enrollmentIds.length > 0
+          ? await reader
+              .from("check_ins")
+              .select("active_challenge_id, task_id, date_key, status")
+              .in("active_challenge_id", enrollmentIds)
+              .eq("status", "completed")
+              .limit(500)
+          : { data: [] };
+      const completedByEnrollment = new Map<string, Map<string, Set<string>>>();
+      for (const row of (checkRows ?? []) as {
+        active_challenge_id: string;
+        task_id: string;
+        date_key: string;
+        status: string;
+      }[]) {
+        if (!completedByEnrollment.has(row.active_challenge_id)) {
+          completedByEnrollment.set(row.active_challenge_id, new Map());
+        }
+        const byDate = completedByEnrollment.get(row.active_challenge_id)!;
+        if (!byDate.has(row.date_key)) byDate.set(row.date_key, new Set());
+        byDate.get(row.date_key)!.add(row.task_id);
+      }
+
+      const enrolled = enrolledBase.map((m) => {
+        const enrollmentId = enrollmentByUser.get(m.userId);
+        const completed = enrollmentId
+          ? [...(completedByEnrollment.get(enrollmentId)?.get(m.todayKey) ?? [])]
+          : [];
+        const progress = memberSecuredFromCheckIns({
+          requiredTaskIds,
+          completedTaskIds: completed,
+        });
+        return {
+          ...m,
+          securedToday: progress.secured,
+          tasksDone: progress.done,
+          tasksTotal: progress.total,
+        };
+      });
+
       enrolled.sort((a, b) => {
-        if (a.role === "creator" && b.role !== "creator") return -1;
-        if (b.role === "creator" && a.role !== "creator") return 1;
-        return b.currentStreak - a.currentStreak;
+        if (a.userId === ctx.userId) return -1;
+        if (b.userId === ctx.userId) return 1;
+        return a.displayName.localeCompare(b.displayName);
       });
 
       const pendingInvites = pending.map((inv) => {
@@ -630,11 +727,133 @@ export const groupsRouter = createTRPCRouter({
           members: groupMembers,
           securedKeysByUser,
         }),
-        members: enrolled.map(({ joinedDateKey: _joinedDateKey, ...rest }) => ({
+        members: enrolled.map(({ joinedDateKey: _joinedDateKey, todayKey: _todayKey, ...rest }) => ({
           ...rest,
           yesterdayState: memberYesterdayState(securedKeysByUser.get(rest.userId), yesterdayKey),
         })),
         pendingInvites,
       };
+    }),
+
+  nudge: protectedProcedure
+    .input(
+      z.object({
+        challengeId: z.string().uuid(),
+        recipientId: z.string().uuid(),
+        messageKey: z.number().int().min(0).max(2),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const message = nudgeMessage(input.messageKey);
+      const reader = challengeReader(ctx.supabase);
+      const { data: memberRows } = await reader
+        .from("challenge_members")
+        .select("user_id")
+        .eq("challenge_id", input.challengeId)
+        .eq("status", "active")
+        .limit(GROUP_MAX_MEMBERS);
+      const memberIds = new Set(((memberRows ?? []) as { user_id: string }[]).map((row) => row.user_id));
+      const { data: recipientProfile } = await reader
+        .from("profiles")
+        .select("timezone, reminder_timezone, display_name, username")
+        .eq("user_id", input.recipientId)
+        .maybeSingle();
+      const recipient = recipientProfile as {
+        timezone?: string | null;
+        reminder_timezone?: string | null;
+      } | null;
+      const dateKey = getTodayDateKey(recipient?.timezone ?? recipient?.reminder_timezone ?? "UTC");
+      const { data: prior } = await reader
+        .from("in_app_notifications")
+        .select("id, actor_id, metadata, created_at")
+        .eq("user_id", input.recipientId)
+        .in("type", ["general", "challenge_invite"])
+        .limit(100);
+      const alreadyNudged = ((prior ?? []) as {
+        actor_id?: string | null;
+        metadata?: { kind?: string; challenge_id?: string; date_key?: string } | null;
+      }[]).some((row) => isNudgeRow(row, ctx.userId, input.challengeId, dateKey));
+      const { data: taskRows } = await reader
+        .from("challenge_tasks")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .limit(50);
+      const requiredTaskIds = ((taskRows ?? []) as { id: string }[]).map((row) => row.id);
+      const { data: enrollment } = await reader
+        .from("active_challenges")
+        .select("id")
+        .eq("challenge_id", input.challengeId)
+        .eq("user_id", input.recipientId)
+        .limit(1);
+      const enrollmentId = ((enrollment ?? []) as { id: string }[])[0]?.id;
+      const { data: checks } = enrollmentId
+        ? await reader
+            .from("check_ins")
+            .select("task_id, date_key, status")
+            .eq("active_challenge_id", enrollmentId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(50)
+        : { data: [] };
+      const progress = memberSecuredFromCheckIns({
+        requiredTaskIds,
+        completedTaskIds: ((checks ?? []) as { task_id: string }[]).map((row) => row.task_id),
+      });
+      const blocked = nudgeBlocked({
+        senderId: ctx.userId,
+        recipientId: input.recipientId,
+        sameChallenge: memberIds.has(ctx.userId) && memberIds.has(input.recipientId),
+        recipientSecured: progress.secured,
+        alreadyNudged,
+        messageKey: input.messageKey,
+      });
+      if (blocked || !message) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: blocked ?? "Pick one of the three lines." });
+      }
+      const { data: challenge } = await reader
+        .from("challenges")
+        .select("title")
+        .eq("id", input.challengeId)
+        .maybeSingle();
+      const title = ((challenge as { title?: string | null } | null)?.title ?? "").trim() || "your challenge";
+      const pushed = groupPushSend(
+        "nudge",
+        pushedCounts(
+          (prior ?? []) as { metadata?: { kind?: string; date_key?: string; pushed?: boolean } | null }[],
+          dateKey,
+        ),
+      );
+      const meta = {
+        kind: "nudge" as const,
+        challenge_id: input.challengeId,
+        message_key: input.messageKey,
+        date_key: dateKey,
+        pushed,
+      };
+      const { error } = await reader.from("in_app_notifications").insert({
+        user_id: input.recipientId,
+        type: "general",
+        actor_id: ctx.userId,
+        title: "Nudge",
+        body: `${title}: ${message}`,
+        read: false,
+        metadata: meta,
+        data: meta,
+      });
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't send that nudge." });
+      }
+      if (pushed) {
+        try {
+          await sendPushToProfile(reader, input.recipientId, {
+            title: "Nudge",
+            body: `${title}: ${message}`,
+            data: { type: "general", kind: "nudge", challengeId: input.challengeId },
+          });
+        } catch (pushErr) {
+          logger.error({ err: pushErr }, "[groups.nudge] push failed");
+        }
+      }
+      return { ok: true as const, pushed };
     }),
 });

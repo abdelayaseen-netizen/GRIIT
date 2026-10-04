@@ -238,3 +238,11 @@ carries it.
 5. The place-gated join flow opens SetPlace (177) straight after Join; Skip leaves the place unset.
 6. Seed data: Fajr Before Sunrise duration_days 7. Featured "Be the first" at 0 members.
 7. Fix the invite-link copy in Create Launched, Challenge detail and Leaderboard solo to `/invite/{code}`.
+
+
+## v45
+1. Challenge detail (group): Today roster, board (top 3 + you, from 3 members), challenge posts, invite row, Bring someone card.
+2. Nudge: eligibility, a server-side once-a-day check on notifications (type nudge), three message keys, "2 hours left." gated by the recipient's deadline, bundling.
+3. Notifications: joined (batched), you're left (8 pm, replaces the reminder in groups), nudged, finished (the morning after). A 3-push daily budget with priority; overflow goes to Activity only.
+4. Solo → group conversion on existing fields; invite via `inviteDeepLink`.
+5. Remove accountability partners: screens, routes, pushes, the Battle Buddy award, the limit. One-time migration card.

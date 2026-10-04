@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { NUDGE_MESSAGES } from "@/lib/group-nudge";
 import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import {
@@ -16,7 +17,6 @@ import {
   groupSecuredTodayLine,
   groupStreakUnit,
   rosterTrailing,
-  memberStreakCaption,
   membersInGroupLabel,
   pendingTrailing,
   showInvitedSection,
@@ -54,6 +54,7 @@ export default function ChallengeMembersScreen() {
   const router = useRouter();
   const qc = useQueryClient();
   const { user } = useAuth();
+  const [nudgeFor, setNudgeFor] = React.useState<string | null>(null);
 
   const challengeQuery = useQuery({
     queryKey: ["challenge", id],
@@ -88,7 +89,7 @@ export default function ChallengeMembersScreen() {
   }, [membersQuery.data?.members, user?.id]);
 
   const roster = useMemo(
-    () => sortRoster(membersQuery.data?.members ?? []),
+    () => sortRoster(membersQuery.data?.members ?? [], user?.id),
     [membersQuery.data?.members],
   );
 
@@ -162,9 +163,13 @@ export default function ChallengeMembersScreen() {
                     <MemberRow
                       key={m.userId}
                       displayName={m.displayName}
-                      caption={memberStreakCaption(m.currentStreak)}
+                      caption={
+                        m.securedToday
+                          ? "Secured"
+                          : `Not yet · ${(m as { tasksDone?: number }).tasksDone ?? 0} of ${(m as { tasksTotal?: number }).tasksTotal ?? 0}`
+                      }
                       avatarUri={(m as { avatar?: string | null }).avatar}
-                      nameAside={m.role === "creator" ? "Creator" : undefined}
+                      nameAside={m.userId === user?.id ? "You" : m.role === "creator" ? "Creator" : undefined}
                       trailing={rosterTrailing({
                         securedToday: m.securedToday,
                         yesterdayState: m.yesterdayState,
@@ -173,6 +178,35 @@ export default function ChallengeMembersScreen() {
                     />
                   ))
                 )}
+                {nudgeFor && id ? (
+                  <View style={styles.emptyCard}>
+                    {NUDGE_MESSAGES.map((line, key) => (
+                      <Pressable
+                        key={line}
+                        accessibilityRole="button"
+                        onPress={() => {
+                          void trpcMutate(TRPC.groups.nudge, {
+                            challengeId: id,
+                            recipientId: nudgeFor,
+                            messageKey: key,
+                          }).finally(() => setNudgeFor(null));
+                        }}
+                      >
+                        <Text style={styles.emptyBody}>{line}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+                {roster.some((m) => m.userId !== user?.id && !m.securedToday) ? (
+                  <Button
+                    label="Nudge"
+                    variant="secondary"
+                    onPress={() => {
+                      const next = roster.find((m) => m.userId !== user?.id && !m.securedToday);
+                      if (next) setNudgeFor(next.userId);
+                    }}
+                  />
+                ) : null}
                 {showInvitedSection(pending.length) ? (
                   <>
                     <Text style={styles.section}>Invited</Text>

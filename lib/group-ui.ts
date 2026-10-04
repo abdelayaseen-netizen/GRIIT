@@ -159,11 +159,13 @@ export type RosterMember = {
   joinedAt: string;
 };
 
-export function sortRoster(members: RosterMember[]): RosterMember[] {
+export function sortRoster(members: RosterMember[], viewerId?: string | null): RosterMember[] {
   return [...members].sort((a, b) => {
-    if (a.role === "creator" && b.role !== "creator") return -1;
-    if (b.role === "creator" && a.role !== "creator") return 1;
-    return b.currentStreak - a.currentStreak;
+    if (viewerId) {
+      if (a.userId === viewerId && b.userId !== viewerId) return -1;
+      if (b.userId === viewerId && a.userId !== viewerId) return 1;
+    }
+    return a.displayName.localeCompare(b.displayName);
   });
 }
 

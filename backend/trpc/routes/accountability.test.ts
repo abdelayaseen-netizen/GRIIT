@@ -1,197 +1,28 @@
-import { describe, it, expect, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 import { createTestCaller } from "../create-test-caller";
-
-vi.mock("../../lib/push", () => ({ sendExpoPush: vi.fn().mockResolvedValue(undefined) }));
 
 const USER_A = "11111111-1111-4111-8111-111111111111";
 const USER_B = "22222222-2222-4222-8222-222222222222";
 
-function createMockSupabase(overrides: {
-  acceptedCount?: number;
-  invitesToday?: number;
-  existingPair?: { id: string; user_id: string; partner_id: string; status: string } | null;
-  partnerExists?: boolean;
-  insertResult?: { id: string } | null;
-  insertError?: Error | null;
-} = {}) {
-  const {
-    acceptedCount = 0,
-    invitesToday = 0,
-    existingPair = null,
-    partnerExists = true,
-    insertResult = { id: "pair-1" },
-    insertError = null,
-  } = overrides;
-
-  const selectChain: Record<string, unknown> = {
-    from: () => selectChain,
-    select: () => selectChain,
-    eq: () => selectChain,
-    neq: () => selectChain,
-    or: () => selectChain,
-    gte: () => selectChain,
-    limit: () => selectChain,
-    order: () => selectChain,
-    in: () => selectChain,
-    single: () =>
-      Promise.resolve({
-        data: existingPair,
-        error: existingPair ? null : { code: "PGRST116", message: "No rows" },
-      }),
-    maybeSingle: () =>
-      Promise.resolve({
-        data: existingPair,
-        error: null,
-      }),
-    then: (resolve: (v: unknown) => void) => {
-      if (existingPair) resolve({ data: [existingPair], error: null });
-      else resolve({ data: [], error: null });
-    },
-  };
-
-  let selectReturnData: unknown[] = [];
-  if (overrides.acceptedCount !== undefined) {
-    selectReturnData = Array(acceptedCount).fill({ id: "x" });
-  }
-  if (overrides.invitesToday !== undefined) {
-    selectReturnData = Array(invitesToday).fill({ id: "y" });
-  }
-
-  const chain: Record<string, unknown> = {
-    from: () => chain,
-    select: () => chain,
-    eq: () => chain,
-    or: () => chain,
-    gte: () => chain,
-    limit: (_n: number) => {
-      return {
-        maybeSingle: () =>
-          Promise.resolve({
-            data: existingPair,
-            error: null,
-          }),
-      };
-    },
-    insert: () => ({
-      select: () => ({
-        single: () => Promise.resolve({ data: insertResult, error: insertError }),
-      }),
-    }),
-    upsert: () => ({
-      select: () => ({
-        single: () => Promise.resolve({ data: insertResult, error: insertError }),
-      }),
-    }),
-    update: () => ({
-      eq: () => Promise.resolve({ error: null }),
-    }),
-    delete: () => ({
-      eq: () => Promise.resolve({ error: null }),
-    }),
-    single: () =>
-      Promise.resolve({
-        data: partnerExists ? { user_id: USER_B } : null,
-        error: partnerExists ? null : { code: "PGRST116" },
-      }),
-    then: (resolve: (v: unknown) => void) => {
-      resolve({ data: selectReturnData, error: null });
-    },
-  };
-  chain.limit = (n: number) => {
-    if (n === 1)
-      return {
-        maybeSingle: () =>
-          Promise.resolve({
-            data: existingPair,
-            error: null,
-          }),
-      };
-    return Promise.resolve({ data: selectReturnData, error: null });
-  };
-
-  return chain;
-}
-
-describe("accountability.invite", () => {
-  it("rejects self-invite with BAD_REQUEST", async () => {
-    const supabase = createMockSupabase();
-    const caller = createTestCaller({
-      userId: USER_A,
-      supabase,
-      req: {} as Request,
-    });
-    if (!caller) return;
-
-    await expect(caller.accountability.invite({ partnerId: USER_A })).rejects.toMatchObject({
-      code: "BAD_REQUEST",
-      message: "You cannot add yourself as a partner.",
-    });
+describe("accountability is retired", () => {
+  it("does not send partner pushes or read a partners table", () => {
+    const src = readFileSync(resolve(__dirname, "./accountability.ts"), "utf8");
+    expect(src).not.toContain("sendExpoPush");
+    expect(src).not.toContain("accountability_pairs");
+    expect(src).toContain("Accountability partners are now groups.");
+    const awards = readFileSync(resolve(__dirname, "../../lib/achievements.ts"), "utf8");
+    expect(awards).not.toContain("accountability_pairs");
+    expect(awards).not.toContain("ACCOUNTABILITY_PARTNER");
   });
 
-  it("rejects when inviter already has 3 accepted partners", async () => {
-    const supabase = createMockSupabase({ acceptedCount: 3 });
-    const caller = createTestCaller({
-      userId: USER_A,
-      supabase,
-      req: {} as Request,
-    });
+  it("rejects invite without writing a row", async () => {
+    const caller = createTestCaller({ userId: USER_A, supabase: { from: () => { throw new Error("no db"); } } });
     if (!caller) return;
-
     await expect(caller.accountability.invite({ partnerId: USER_B })).rejects.toMatchObject({
       code: "BAD_REQUEST",
-      message: /at most 3 accountability partners/,
+      message: "Accountability partners are now groups.",
     });
-  });
-
-  it("rejects when partner profile does not exist (user not found)", async () => {
-    const supabase = createMockSupabase({ partnerExists: false });
-    const caller = createTestCaller({
-      userId: USER_A,
-      supabase,
-      req: {} as Request,
-    });
-    if (!caller) return;
-
-    await expect(caller.accountability.invite({ partnerId: USER_B })).rejects.toMatchObject({
-      code: "NOT_FOUND",
-      message: "User not found.",
-    });
-  });
-
-  it("creates pending invite when no existing relationship", async () => {
-    const supabase = createMockSupabase({ existingPair: null, partnerExists: true });
-    const caller = createTestCaller({
-      userId: USER_A,
-      supabase,
-      req: {} as Request,
-    });
-    if (!caller) return;
-
-    const result = await caller.accountability.invite({ partnerId: USER_B });
-
-    expect(result.success).toBe(true);
-    expect(result.status).toBe("pending");
-    expect(result.inviteId).toBe("pair-1");
-  });
-});
-
-describe("accountability.respond", () => {
-  it("rejects when invite not found", async () => {
-    const chain: Record<string, unknown> = {
-      from: () => chain,
-      select: () => chain,
-      eq: () => chain,
-      single: () => Promise.resolve({ data: null, error: { message: "Not found" } }),
-    };
-    const caller = createTestCaller({
-      userId: USER_B,
-      supabase: chain,
-      req: {} as Request,
-    });
-    if (!caller) return;
-
-    await expect(
-      caller.accountability.respond({ inviteId: "00000000-0000-0000-0000-000000000000", action: "accept" })
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

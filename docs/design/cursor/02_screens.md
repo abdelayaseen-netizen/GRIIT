@@ -6143,6 +6143,8 @@ Sticker colour = text colour: Ink #0F0F0F + 18px glow #F5F3EE 55% · White #F5F3
 Join line on every style: "Join me · griit.app/invite/{code}" 30/38 500, built by `inviteDeepLink(inviteCode)` in `lib/deep-links.ts`. No new domain.
 Seal only when the completion's `proof_photo_url` came from the in-app camera; self-reported never gets it (C, B without seal).
 
+Mock data: A/B are Noah (@noahb, Show Up 7, Day 2 of 7, streak 1, frame 170). C is Sami (@sami, 10 Pages a Day, Day 3 of 14). F is Yaseen finishing Quick Steps, Sep 16–22. G reads "Amir and Sami are in it": the sender is never listed in their own invite.
+
 ## 175 Saved result
 A, B, C as they appear in Photos: identical bitmaps. B is RGBA; Photos shows its transparent pixels on its own background.
 
@@ -6169,3 +6171,59 @@ At 0 members: "Be the first" 12/500 brandText. Fajr Before Sunrise is 7 days (Ph
 **142.** The caption was never specified before; it is text only and never rendered into the image.
 **143.** 7K Steps, 3 Good Things and Fajr Before Sunrise lengths were assumed in v44; they are now confirmed at 7. Fajr changed from 30.
 **144.** "New" at 0 members (v44) → "Be the first".
+
+
+# v45 · Groups
+
+Frames 179–183 in `GRIIT v45 Groups.dc.html`. No new database fields. Groups stay invite-only, capped at 10 including the creator, and each member has their own streak with Day 1 on the day they join.
+
+## 179 Group space (challenge detail, Group)
+Order: header ("{title}", "Day {n} of {N} · Group · {mode}") → **member row** (stack of 4 avatars at 22 + "{members} of 10" + "Invite only. They start at their own Day 1." + Invite pill 32) → **Today** roster card → This week board (top 3 + you, v44 rule; hidden below 3 members with "A board needs three. Until then, the roster is the board.") → **Posts in {challenge}** (shared proofs from this challenge only; photo 200 high with seal, self-reported row 32 check; counts hidden at 0; empty: "No shared proofs here yet. Proofs you share to the feed from this challenge show here too.") → Bring someone card when members < 10 ("{10 − members} spots left").
+Roster card: header HERO 20 "{secured}" + "of {members} secured today" + "Resets at midnight". Rows 56: avatar 36, name 15/500 (+ "You"), status 12, flame 14 + HERO 15 streak, trailing action.
+| status | string | source |
+|---|---|---|
+| secured | check 13 + "Secured" brandText | `day_secures` for today in the member's timezone |
+| not yet | "Not yet · {done} of {total}" | today's completions for this challenge |
+| window closed | "Window closed" | a required task's window has passed with no completion |
+| new | "Joined today · Day 1" brandText | `start_at` is today |
+**Order: you first, then by display name.** Never by score, so the roster is a roll call, not a ranking (see 147).
+
+## 180 Nudge
+- **Who:** a member of the same challenge who is "not yet" and can still secure today (no closed window on a required task). Never yourself, never "secured" or "window closed".
+- **Limit:** one nudge per sender → recipient → day. Server enforces it; the button then reads "Nudged" (inert, check 13). The recipient can receive several; pushes bundle (181).
+- **Nudge everyone who's left:** "Nudge the {n} who are left" (secondary 44) under the roster, where n counts eligible members you haven't nudged today. After use: "Nudged {n} today" (disabled). Hidden when n = 0.
+- **Sheet:** recipient avatar(s) + "Nudge {name}" / "Nudge {A} and {B}", "{challenge} · {done} of {total} done today". "Add a line (optional)", three radio options, **no free text**:
+  - "2 hours left." Offered only while the recipient has 1 h 30 to 2 h 30 before their deadline: the earliest open window close, else local midnight. Otherwise it is not shown at all.
+  - "Don't break the chain."
+  - "We're waiting on you."
+  Caption "No message sends "{you} nudged you · {challenge}". No free text." Primary "Send nudge" / "Send to {n}".
+- Mock data in 180: at 8:12 pm Amir's deadline is midnight, so "2 hours left." is not offered and is absent from the sheet; the frames use "Don't break the chain."
+- **Recipient:** push title "{sender} nudged you", body "{challenge}: {message}" (or "{challenge}"). In-app: a line at the top of the Today card ("{sender} nudged you: {message}." + time) until they secure the day, then the first open task as the primary.
+- **Storage:** no new fields; reuse the existing notifications table (type `nudge`, actor, challenge_id, message key 0–2). The once-a-day rule is a unique check on (actor, recipient, challenge, local date) over those rows.
+
+## 181 Notifications
+| event | push | Activity row | tap |
+|---|---|---|---|
+| joined | title "{challenge}", body "{name} joined {challenge}." (batched: "{A} and {n} other(s) joined {challenge}.") | avatar 40 + text + "View" | challenge detail, roster, the new row tinted brand for 2 s |
+| you're left | "{challenge}", "{n} of {m} secured today. You're left." | flame disc + text | Home, Today card with that challenge expanded |
+| nudged | "{sender} nudged you", "{challenge}: {message}" | avatar + "{sender} nudged you · {challenge}: {message}" + "Open" | Home, nudge line + first open task |
+| finished | "{challenge}", "{challenge} is done. {n} of {m} finished." | flame disc + text + "Share" | finish recap → Share opens style F |
+**Budget: 3 pushes a day per person, combined with reminders.** Priority: nudge → you're left → window reminder → joined → finished. When the budget is spent, the rest go to Activity only. Activity is never capped. No push to someone whose day is secured, except joined and finished.
+- You're left: 8:00 pm local, only if you are not done and at least one other member has secured. In a group it replaces the plain 8 pm reminder (v43.1).
+- Finished: the morning after the challenge's last day, once.
+**Finish recap:** "Finished" caps brandText · "{challenge} is done." 30/36 · HERO 56 "{n}" + "of {m} finished" · a member card (you first, then by name): "{secured} of {N}" + "Finished" / "Left on day {d}" · primary "Share your finish" · tertiary "Start it again".
+
+## 182 Solo → group
+Solo detail carries a "Bring someone" card: "Turn this into a group of up to 10. They start at Day 1 the day they join. You stay on Day {n}." Confirm sheet "Make {challenge} a group?" with four lines (up to 10 invite only · each starts at their own Day 1, you stay on Day {n} with your {streak}-day streak · past proofs unchanged, kept ones stay private · members see whether you finished each day and the proofs you share), primary "Make it a group", tertiary "Keep it solo". After: "Group", "Just you so far · 1 of 10", invite link (`inviteDeepLink`), Invite. Converting uses the existing group fields (participation type + invite code); no new field.
+
+## 183 Accountability partners removed
+Remove `app/accountability.tsx`, `app/accountability/add.tsx` and their entry points; stop the two partner pushes (`backend/trpc/routes/accountability.ts:152, :292`); retire the "Battle Buddy" achievement (`backend/lib/achievement-definitions.ts:37`) with no new awards, keeping earned ones as history; drop `MAX_ACCEPTED_PARTNERS`. Keep the partner table readable for one release for the migration card, then drop it.
+Migration card in Activity, once per former pair, dismissible: "Accountability partners are now groups" / "You and {name} were partners. Start a group with them and you'll both see who's done each day." / primary "Start a group with {name}" (opens Create with Group preselected and {name} queued for invite) / "Or invite them to {challenge}, where you already are." (only when you share a challenge).
+
+## Contradictions
+**145.** v44 step 3 offered "Anyone · Shows on Discover. Anyone can join." Groups are invite-only. Recommendation: Group challenges are always Invite; "Anyone" applies only to public community challenges with no roster. Step 3 hides "Who can join" for groups. Needs your call.
+**146.** v43.1 allowed 2 reminder pushes a day. The new combined cap is 3 a day including group events, with the priority above.
+**147.** v35: "bottom ranks never shown". The roster shows every member's status and streak, but ordered you-then-name, with no rank numbers, so it reads as a roll call. The board keeps the top-3-plus-you rule.
+**148.** v42.1 said challenge members see whether you finished the day. The roster's "Not yet · {done} of {total}" also shows the count. Recommendation: keep it, since it's what makes a nudge useful, and add it to the Privacy copy: "People in a challenge with you see how many of today's tasks you've done."
+**149.** Solo challenges are private (v41). Converting makes the challenge an invite-only group. Past proofs keep their own privacy; only proofs shared after the conversion appear in group posts.
+**150.** Accountability partners (max 3) and the Battle Buddy badge are retired; groups replace them.
