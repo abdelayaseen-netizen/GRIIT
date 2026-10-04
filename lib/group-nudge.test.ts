@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   groupPushAllowed,
+  groupPushSend,
   isNudgeRow,
   nudgeBlocked,
   nudgeMessage,
@@ -65,6 +66,11 @@ describe("group nudge", () => {
   it("caps group pushes at two and matches a stored nudge row", () => {
     expect(groupPushAllowed(0)).toBe(true);
     expect(groupPushAllowed(2)).toBe(false);
+    expect(groupPushSend("joined", { nudges: 0, joined: 0 })).toBe(true);
+    expect(groupPushSend("joined", { nudges: 0, joined: 1 })).toBe(false);
+    expect(groupPushSend("nudge", { nudges: 0, joined: 1 })).toBe(true);
+    expect(groupPushSend("joined", { nudges: 1, joined: 0 })).toBe(true);
+    expect(groupPushSend("nudge", { nudges: 1, joined: 1 })).toBe(false);
     expect(
       isNudgeRow(
         {

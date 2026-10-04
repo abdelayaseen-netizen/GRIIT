@@ -18,10 +18,11 @@ import {
 import { addCalendarDaysToDateKey, getTodayDateKey } from "../../lib/date-utils";
 import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
 import {
-  groupPushAllowed,
+  groupPushSend,
   isNudgeRow,
   nudgeBlocked,
   nudgeMessage,
+  pushedCounts,
 } from "../../../lib/group-nudge";
 
 type ChallengeInviteRow = {
@@ -112,21 +113,29 @@ async function insertInviteNotification(
     challengeId: string;
     challengeTitle: string;
     inviteId: string;
+    dateKey: string;
+    pushed: boolean;
   }
 ): Promise<void> {
   const body = `${input.inviterName} invited you to ${input.challengeTitle}`;
+  const meta = {
+    kind: "joined" as const,
+    challenge_id: input.challengeId,
+    date_key: input.dateKey,
+    pushed: input.pushed,
+    type: "challenge_invite",
+    challengeId: input.challengeId,
+    inviteId: input.inviteId,
+    inviterId: input.inviterId,
+  };
   const payload = {
     user_id: input.inviteeId,
     type: "challenge_invite",
     title: "Group invite",
     body,
     read: false,
-    data: {
-      type: "challenge_invite",
-      challengeId: input.challengeId,
-      inviteId: input.inviteId,
-      inviterId: input.inviterId,
-    },
+    metadata: meta,
+    data: meta,
   };
   const { error } = await supabase.from("in_app_notifications").insert(payload);
   if (error) {
@@ -200,12 +209,16 @@ export const groupsRouter = createTRPCRouter({
 
       const { data: inviteeRow } = await ctx.supabase
         .from("profiles")
-        .select("user_id")
+        .select("user_id, timezone, reminder_timezone")
         .eq("user_id", input.userId)
         .maybeSingle();
       if (!inviteeRow) {
         throw new TRPCError({ code: "NOT_FOUND", message: "User not found." });
       }
+      const invitee = inviteeRow as {
+        timezone?: string | null;
+        reminder_timezone?: string | null;
+      };
 
       const { data: existingInvite } = await ctx.supabase
         .from("challenge_invites")
@@ -266,6 +279,21 @@ export const groupsRouter = createTRPCRouter({
       const inviter = inviterRow as { display_name?: string | null; username?: string | null } | null;
       const inviterName = inviter?.display_name ?? inviter?.username ?? "Someone";
       const title = challenge.title?.trim() || "a group challenge";
+      const dateKey = getTodayDateKey(invitee.timezone ?? invitee.reminder_timezone ?? "UTC");
+      const reader = challengeReader(ctx.supabase);
+      const { data: priorPushes } = await reader
+        .from("in_app_notifications")
+        .select("metadata")
+        .eq("user_id", input.userId)
+        .in("type", ["general", "challenge_invite"])
+        .limit(100);
+      const pushed = groupPushSend(
+        "joined",
+        pushedCounts(
+          (priorPushes ?? []) as { metadata?: { kind?: string; date_key?: string; pushed?: boolean } | null }[],
+          dateKey,
+        ),
+      );
       await insertInviteNotification(ctx.supabase, {
         inviteeId: input.userId,
         inviterId: ctx.userId,
@@ -273,15 +301,19 @@ export const groupsRouter = createTRPCRouter({
         challengeId: input.challengeId,
         challengeTitle: title,
         inviteId: invite.id,
+        dateKey,
+        pushed,
       });
-      try {
-        await sendPushToProfile(ctx.supabase, input.userId, {
-          title: "GRIIT",
-          body: `${inviterName} invited you to ${title}`,
-          data: { type: "challenge_invite", challengeId: input.challengeId, inviteId: invite.id },
-        });
-      } catch (pushErr) {
-        logger.error({ err: pushErr }, "[groups.invite] push failed");
+      if (pushed) {
+        try {
+          await sendPushToProfile(ctx.supabase, input.userId, {
+            title: "GRIIT",
+            body: `${inviterName} invited you to ${title}`,
+            data: { type: "challenge_invite", challengeId: input.challengeId, inviteId: invite.id },
+          });
+        } catch (pushErr) {
+          logger.error({ err: pushErr }, "[groups.invite] push failed");
+        }
       }
 
       return { inviteId: invite.id, status: "pending" as const };
@@ -735,7 +767,7 @@ export const groupsRouter = createTRPCRouter({
         .from("in_app_notifications")
         .select("id, actor_id, metadata, created_at")
         .eq("user_id", input.recipientId)
-        .eq("type", "general")
+        .in("type", ["general", "challenge_invite"])
         .limit(100);
       const alreadyNudged = ((prior ?? []) as {
         actor_id?: string | null;
@@ -784,11 +816,19 @@ export const groupsRouter = createTRPCRouter({
         .eq("id", input.challengeId)
         .maybeSingle();
       const title = ((challenge as { title?: string | null } | null)?.title ?? "").trim() || "your challenge";
+      const pushed = groupPushSend(
+        "nudge",
+        pushedCounts(
+          (prior ?? []) as { metadata?: { kind?: string; date_key?: string; pushed?: boolean } | null }[],
+          dateKey,
+        ),
+      );
       const meta = {
         kind: "nudge" as const,
         challenge_id: input.challengeId,
         message_key: input.messageKey,
         date_key: dateKey,
+        pushed,
       };
       const { error } = await reader.from("in_app_notifications").insert({
         user_id: input.recipientId,
@@ -803,12 +843,7 @@ export const groupsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't send that nudge." });
       }
-      const sentToday = ((prior ?? []) as { metadata?: { kind?: string; date_key?: string } | null }[]).filter(
-        (row) =>
-          (row.metadata?.kind === "nudge" || row.metadata?.kind === "joined") &&
-          row.metadata.date_key === dateKey,
-      ).length;
-      if (groupPushAllowed(sentToday)) {
+      if (pushed) {
         try {
           await sendPushToProfile(reader, input.recipientId, {
             title: "Nudge",
@@ -819,6 +854,6 @@ export const groupsRouter = createTRPCRouter({
           logger.error({ err: pushErr }, "[groups.nudge] push failed");
         }
       }
-      return { ok: true as const, pushed: groupPushAllowed(sentToday) };
+      return { ok: true as const, pushed };
     }),
 });
