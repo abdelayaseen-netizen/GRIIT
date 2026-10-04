@@ -84,6 +84,24 @@ export function restoreStreakCount(input: {
   return n;
 }
 
+/** No Days Off is an active enrollment whose challenge has is_hard_mode. */
+export function freezeBlockedByHardMode(
+  rows: readonly {
+    status?: string | null;
+    challenges?:
+      | { is_hard_mode?: boolean | null }
+      | { is_hard_mode?: boolean | null }[]
+      | null;
+  }[],
+): boolean {
+  return rows.some((row) => {
+    if (String(row.status ?? "active").toLowerCase() !== "active") return false;
+    const linked = row.challenges;
+    const list = Array.isArray(linked) ? linked : linked ? [linked] : [];
+    return list.some((challenge) => challenge.is_hard_mode === true);
+  });
+}
+
 export function effectiveFreezesRemaining(input: {
   storedRemaining: number | null | undefined;
   lastFreezeUsedAt: string | null | undefined;
@@ -145,7 +163,7 @@ export const streaksRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used for yesterday." });
       }
 
-      const [streakRes, profileRes, securesRes, standRes, freezeRes] = await Promise.all([
+      const [streakRes, profileRes, securesRes, standRes, freezeRes, hardRes] = await Promise.all([
         ctx.supabase
           .from("streaks")
           .select("last_completed_date_key, active_streak_count, longest_streak_count")
@@ -159,6 +177,12 @@ export const streaksRouter = createTRPCRouter({
         ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(400),
         ctx.supabase.from("last_stand_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
         ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(365),
+        ctx.supabase
+          .from("active_challenges")
+          .select("status, challenges(is_hard_mode)")
+          .eq("user_id", ctx.userId)
+          .eq("status", "active")
+          .limit(50),
       ]);
 
       if (streakRes.error && streakRes.error.code !== "PGRST116") {
@@ -166,6 +190,15 @@ export const streaksRouter = createTRPCRouter({
       }
       if (profileRes.error && profileRes.error.code !== "PGRST116") {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load profile." });
+      }
+      if (hardRes.error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load challenges." });
+      }
+      if (freezeBlockedByHardMode((hardRes.data ?? []) as Parameters<typeof freezeBlockedByHardMode>[0])) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No Days Off challenges do not use freezes.",
+        });
       }
 
       const streak = streakRes.data;
