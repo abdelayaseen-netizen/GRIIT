@@ -107,7 +107,7 @@ export type ActiveChallengeV3Props = {
   showShareToday?: boolean;
   todayStatus?: string | null;
   weekLine?: string | null;
-  weekDaysOverride?: { letter: string; filled: boolean }[];
+  weekDaysOverride?: { letter: string; filled: boolean; state?: "secured" | "frozen" | "last_stand" | "missed" | "na" }[];
   freezeRow?: {
     title: string;
     caption: string;
@@ -479,21 +479,24 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.border,
   },
   status: {
+    alignSelf: "stretch",
+    flexShrink: 1,
     paddingTop: DS_V3.space.sm,
-    paddingHorizontal: DS_V3.space.gutter,
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   statusRow: {
+    alignSelf: "stretch",
     paddingTop: DS_V3.space.sm,
-    paddingHorizontal: DS_V3.space.gutter,
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "baseline",
     gap: 6,
   },
   secured: {
+    flexShrink: 1,
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,

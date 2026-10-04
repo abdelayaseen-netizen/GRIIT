@@ -8,6 +8,7 @@ import {
   type HomeProofRow,
   type HomeProofTask,
 } from "@/lib/home-proof-card";
+import { originTabFromParam } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
 
 export const DAY_OPEN_ALSO = "Also today";
@@ -114,9 +115,10 @@ export function selectDayOpen(input: {
   };
 }
 
-export function dayOpenTaskHref(task: HomeProofTask): string {
+export function dayOpenTaskHref(task: HomeProofTask, originTab?: string | null): string {
   const day = task.currentDay;
   const duration = task.durationDays ?? task.currentDay ?? 1;
-  return `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id ?? "")}&activeChallengeId=${encodeURIComponent(task.activeChallengeId ?? "")}&taskType=${encodeURIComponent(task.taskType ?? task.type ?? "check_off")}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig ?? "")}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(day)}&durationDays=${String(duration)}`;
+  const origin = originTabFromParam(originTab);
+  return `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id ?? "")}&activeChallengeId=${encodeURIComponent(task.activeChallengeId ?? "")}&taskType=${encodeURIComponent(task.taskType ?? task.type ?? "check_off")}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig ?? "")}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(day)}&durationDays=${String(duration)}&originTab=${encodeURIComponent(origin)}`;
 }
 

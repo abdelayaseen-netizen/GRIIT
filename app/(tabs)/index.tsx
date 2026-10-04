@@ -549,7 +549,7 @@ export default function HomeScreen() {
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}` as never,
+        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}&originTab=home` as never,
       );
     },
     [router],
@@ -765,7 +765,7 @@ export default function HomeScreen() {
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
                 const next = heroTasks.find((h) => h.id === id);
-                if (!next || next.windowState === "closed") return;
+                if (!next || next.done) return;
                 onPressTask(next);
               }}
               onPressChallenge={onPressChallenge}

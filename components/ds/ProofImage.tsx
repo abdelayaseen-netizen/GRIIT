@@ -9,12 +9,13 @@
  * so the missing state is surface + 1pt border at the same radius, title
  * bodyStrong textPrimary at the bottom left with space.gutter padding.
  */
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import { isProofImageUrl } from "@/lib/profile-v2-proof-photo";
+import { ProofFallbackTile } from "./ProofFallbackTile";
 import Stamp, { type StampLabel } from "./Stamp";
 
 export type ProofImageSize = "feed" | "card" | "thumb";
@@ -73,9 +74,11 @@ export default function ProofImage({
   scrim,
   stamp,
 }: ProofImageProps) {
+  const [failed, setFailed] = useState(false);
   const resolved = source ?? uri ?? null;
   const request = proofRequestSource(resolved, size);
   const missing =
+    failed ||
     request == null ||
     (typeof request === "string" && !isProofImageUrl(request));
   const inset = missing
@@ -85,7 +88,7 @@ export default function ProofImage({
       : DS_V3.space.md;
   const showScrim = Boolean(scrim || title || caption || stamp);
   const stampLabel: StampLabel | null =
-    stamp === true ? "Verified" : stamp === false || stamp == null ? null : stamp;
+    stamp === true ? "Photo" : stamp === false || stamp == null ? null : stamp;
   const imageSource =
     request == null
       ? null
@@ -113,8 +116,11 @@ export default function ProofImage({
           placeholder={blurhash ? { blurhash } : undefined}
           recyclingKey={recyclingKey ?? (typeof resolved === "string" ? `${resolved}:${size}` : undefined)}
           accessibilityLabel={title ?? "Proof"}
+          onError={() => setFailed(true)}
         />
-      ) : null}
+      ) : (
+        <ProofFallbackTile taskName={title} style={StyleSheet.absoluteFill} />
+      )}
       {imageSource && !missing && showScrim ? (
         <LinearGradient
           colors={[canvasAlpha(0), canvasAlpha(0.6)]}
@@ -123,7 +129,7 @@ export default function ProofImage({
           style={styles.scrim}
         />
       ) : null}
-      {title || caption ? (
+      {!missing && (title || caption) ? (
         <View style={[styles.copy, { left: inset, right: inset, bottom: inset }]}>
           {title ? (
             <Text style={styles.title} numberOfLines={2}>

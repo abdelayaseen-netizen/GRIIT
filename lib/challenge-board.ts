@@ -2,6 +2,8 @@ const WEEK_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven
 
 export const BOARD_RULE =
   "Secured days since Monday. A day counts when every task in this challenge is done.";
+export const LAST_7_DAYS = "Last 7 days";
+export const LAST_7_DAYS_RULE = "Secured days in the last 7 days.";
 export const TOP_OF_CHALLENGE = "Top of the challenge";
 export const AROUND_YOU = "Around you";
 export const YOU_ARE_ON_THIS_BOARD = "You are on this board.";

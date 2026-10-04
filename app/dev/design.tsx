@@ -119,7 +119,7 @@ export default function DesignGallery() {
           <View style={styles.row}>
             {(
               [
-                ["verified", "Verified"],
+                ["verified", "Photo"],
                 ["daySecured", "Day secured"],
                 ["tasksLeft", "Tasks left"],
                 ["selfReported", "Self reported"],
@@ -290,7 +290,7 @@ export default function DesignGallery() {
           <View style={styles.row}>
             <Cell caption="light">
               <View style={styles.lightGround}>
-                <Stamp label="Verified" />
+                <Stamp label="Photo" />
               </View>
             </Cell>
             <Cell caption="ink">
@@ -324,7 +324,7 @@ export default function DesignGallery() {
 
         <Section title="ProofImage">
           <Cell caption="feed + scrim + stamp">
-            <ProofImage source={PROOF} size="feed" title="Morning pages" scrim stamp="Verified" />
+            <ProofImage source={PROOF} size="feed" title="Morning pages" scrim stamp="Photo" />
           </Cell>
           <View style={styles.row}>
             <View style={styles.half}>
@@ -345,7 +345,7 @@ export default function DesignGallery() {
           </View>
           <Cell caption="stamp on scrim">
             <View style={styles.inkGround}>
-              <Stamp label="Verified" onInk />
+              <Stamp label="Photo" onInk />
             </View>
           </Cell>
         </Section>

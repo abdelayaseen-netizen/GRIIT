@@ -7,6 +7,7 @@ import { weekFromSecuredKeys } from "@/components/task-v2/MomentScreenV3";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { firstString } from "@/lib/task-helpers";
+import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -44,6 +45,7 @@ function TaskSecuredInner() {
     closingPhoto?: string;
     challengeDone?: string;
     activeChallengeId?: string;
+    originTab?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -176,7 +178,7 @@ function TaskSecuredInner() {
       } as never);
       return;
     }
-    router.replace(ROUTES.HOME as never);
+    router.replace(originTabHref(originTabFromParam(firstString(params.originTab))) as never);
   };
 
   return (

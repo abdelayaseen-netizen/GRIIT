@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { viewerIsTestAccount } from "../../lib/test-authors";
 import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
@@ -431,12 +432,16 @@ export const profilesSocialProcedures = {
         if (s === "accepted" || s === "pending") exclude.add(r.following_id);
       }
 
-      const { data: rows, error } = await server
+      const viewerIsTest = await viewerIsTestAccount(server, viewerId);
+      let people = server
         .from("profiles")
         .select(
-          "user_id, username, display_name, avatar_url, total_days_secured, profile_visibility, created_at"
+          "user_id, username, display_name, avatar_url, total_days_secured, profile_visibility, created_at, is_test"
         )
         .in("profile_visibility", ["public", "friends"])
+        .neq("user_id", viewerId);
+      if (!viewerIsTest) people = people.eq("is_test", false);
+      const { data: rows, error } = await people
         .order("total_days_secured", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(80);
@@ -447,7 +452,9 @@ export const profilesSocialProcedures = {
         profile_visibility?: string | null;
         created_at?: string | null;
       };
-      const candidates = ((rows ?? []) as SuggestedRow[]).filter((p) => !exclude.has(p.user_id));
+      const candidates = ((rows ?? []) as (SuggestedRow & { is_test?: boolean | null })[]).filter(
+        (p) => !exclude.has(p.user_id) && (viewerIsTest || p.is_test !== true),
+      );
       if (candidates.length === 0) return [];
 
       const ids = candidates.map((p) => p.user_id);

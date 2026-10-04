@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  dayCellBorderWidth,
   dayCellFromProofsDay,
   dayCellFromWeekState,
   leadingBlanksMondayFirst,
@@ -33,6 +34,9 @@ describe("shared day-cell", () => {
     expect(dayCellFromWeekState("frozen", false)).toBe("freeze");
     expect(dayCellFromWeekState("last_stand", false)).toBe("last_stand");
     expect(dayCellFromWeekState("missed", true)).toBe("today");
+    expect(dayCellFromWeekState("na", false)).toBe("na");
+    expect(dayCellBorderWidth("na")).toBe(0);
+    expect(dayCellBorderWidth("missed")).toBe(1);
     expect(monthTitle("2026-09")).toBe("September 2026");
     expect(leadingBlanksMondayFirst("2026-09")).toBe(1);
     const week = readFileSync(resolve(__dirname, "../components/ds/WeekStrip.tsx"), "utf8");

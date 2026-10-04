@@ -28,6 +28,8 @@ import Skeleton from "@/components/ds/Skeleton";
 import {
   AROUND_YOU,
   BOARD_RULE,
+  LAST_7_DAYS,
+  LAST_7_DAYS_RULE,
   JOIN_THE_BOARD,
   LEAVE_IT,
   TOP_OF_CHALLENGE,
@@ -180,6 +182,9 @@ function LeaderboardBody({
   const emptyCopy = boardEmptyState(slices.memberCount, challengeBoard.data?.challengeTitle ?? "this challenge");
   const rows = outOfRange ? entries.filter((e) => e.userId !== userId) : entries;
   const showBoard = !loading && !err && !showEmpty;
+  const soloChallenge =
+    scope === "challenge" && slices.memberCount <= 1 && Boolean(selectedChallengeId);
+  const showRows = showBoard && !soloChallenge;
   const openProfile = useOpenLeaderboardProfile();
   void setScope;
   void setChallengeScope;
@@ -191,8 +196,12 @@ function LeaderboardBody({
   const header = (
     <>
       <View style={styles.week}>
-        <Text style={styles.heading}>This week</Text>
-        <Text style={styles.caption}>{BOARD_RULE}</Text>
+        <Text style={styles.heading}>
+          {scope === "global" || scope === "friends" ? LAST_7_DAYS : "This week"}
+        </Text>
+        <Text style={styles.caption}>
+          {scope === "global" || scope === "friends" ? LAST_7_DAYS_RULE : BOARD_RULE}
+        </Text>
       </View>
 
       {scope === "challenge" && activeList.length > 0 ? (
@@ -217,7 +226,7 @@ function LeaderboardBody({
           </ScrollView>
         </View>
       ) : null}
-      {showBoard ? (
+      {showRows ? (
         <View style={styles.week}>
           {typeof challengeBoard.data?.elapsedEnded === "number" ? (
             <Text style={styles.caption}>{elapsedWeekLine(challengeBoard.data.elapsedEnded)}</Text>
@@ -226,11 +235,6 @@ function LeaderboardBody({
           {slices.split ? <Text style={styles.label}>{TOP_OF_CHALLENGE}</Text> : null}
           {slices.split ? <Text style={styles.label}>{AROUND_YOU}</Text> : null}
           {slices.split ? <Text style={styles.caption}>{ranksBelowLine(slices.lowestShown)}</Text> : null}
-        </View>
-      ) : null}
-      {scope === "challenge" && slices.memberCount <= 1 && !loading && !err && selectedChallengeId ? (
-        <View style={styles.extraChips}>
-          <Chip label="Just you" selected />
         </View>
       ) : null}
       {emptyCopy && scope === "challenge" && selectedChallengeId && activeList.length > 0 && !loading && !err ? (
@@ -286,19 +290,19 @@ function LeaderboardBody({
       ) : null}
 
       {!loading && !err && showEmpty && !(scope === "challenge" && selectedChallengeId && activeList.length > 0 && emptyCopy) ? empty : null}
-      {showBoard ? <View style={styles.board} /> : null}
+      {showRows ? <View style={styles.board} /> : null}
     </>
   );
 
   return (
     <FlatList
-      data={showBoard ? rows : []}
+      data={showRows ? rows : []}
       keyExtractor={(item) => item.userId}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
       ListHeaderComponent={header}
       ListFooterComponent={
-        showBoard && outOfRange && viewer ? (
+        showRows && outOfRange && viewer ? (
           <BoardRow
             entry={viewer}
             viewerId={userId}
@@ -527,12 +531,12 @@ const styles = StyleSheet.create({
   },
   extraChips: {
     paddingTop: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
     gap: DS_V3.space.sm,
   },
   chipRow: {
     flexDirection: "row",
     gap: DS_V3.space.xs,
-    paddingHorizontal: DS_V3.space.gutter,
   },
   skel: {
     paddingHorizontal: DS_V3.space.gutter,

@@ -36,7 +36,7 @@ export function postDetailStamp(post: {
   return hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
   })
-    ? "Verified"
+    ? "Photo"
     : undefined;
 }
 

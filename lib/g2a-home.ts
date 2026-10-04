@@ -46,6 +46,18 @@ export function remainingWindowsClosed(
   return remaining.length > 0 && remaining.every((t) => t.closed === true);
 }
 
+/** Home status when a required task's window has closed and it is not done. */
+export function closedTaskStatus(taskName: string): string {
+  const name = taskName.trim() || "Task";
+  return `${name} closed. Today can't be secured.`;
+}
+
+export function firstClosedUndoneTask<T extends { name: string; done?: boolean; closed?: boolean }>(
+  tasks: readonly T[],
+): T | null {
+  return tasks.find((t) => t.done !== true && t.closed === true) ?? null;
+}
+
 export function todayDay2Hero(
   streak: number,
   remainingClosed = false,

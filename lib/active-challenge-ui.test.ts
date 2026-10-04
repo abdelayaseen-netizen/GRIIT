@@ -258,6 +258,19 @@ describe("gates", () => {
       require_photo: false,
     });
     expect(pendingGate(water)).toBe("1 gallon · Self-reported");
+    expect(
+      pendingGate(
+        task({
+          id: "c",
+          title: "Pages",
+          task_type: "counter",
+          target_value: 10,
+          unit: "pages",
+          gates: ["camera"],
+          require_photo: true,
+        }),
+      ),
+    ).toBe("Counter · Camera");
   });
 
   it("home proof gate is from task_type, never a constant Photo", () => {

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   PROOF_SIGN_TTL_SEC,
+  signProofPair,
   SHARED_PATH_BATCH,
   canSignProofPath,
   loadSharedPathsForCandidates,
@@ -172,6 +173,52 @@ describe("signProofPaths", () => {
     expect(loaded.has(`${OTHER}/batch-10.jpg`)).toBe(true);
     expect(loaded.has(`${OTHER}/batch-20.jpg`)).toBe(true);
     expect(loaded.has(`${OTHER}/batch-30.jpg`)).toBe(true);
+  });
+});
+
+const LEGACY_PUBLIC_PREFIX =
+  "https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/public/task-proofs/";
+
+describe("legacy public proof URLs", () => {
+  it("signs that public URL as the bare path for the owner and for a shared row", async () => {
+    const path = `${OWNER}/proof.jpg`;
+    const stored = `${LEGACY_PUBLIC_PREFIX}${path}`;
+    const signedUrl = `https://iazdfbqwudlodozgoyov.supabase.co/storage/v1/object/sign/task-proofs/${path}?token=t`;
+    const signedWith: string[][] = [];
+    const createSignedUrls = async (paths: string[]) => {
+      signedWith.push(paths);
+      return new Map(paths.map((p) => [p, signedUrl]));
+    };
+    const owner = await signProofPair(stored, null, OWNER, {
+      createSignedUrls,
+      loadSharedPaths: async () => new Set(),
+    });
+    expect(toProofPath(stored)).toBe(path);
+    expect(owner).toEqual({ photoUrl: signedUrl, proofPhotoUrl: null });
+    expect(signedWith[0]).toEqual([path]);
+
+    const shared = await signProofPair(stored, null, OTHER, {
+      createSignedUrls,
+      loadSharedPaths: async () => new Set(),
+      sharedPaths: new Set([path]),
+    });
+    expect(shared).toEqual({ photoUrl: signedUrl, proofPhotoUrl: null });
+    expect(signedWith[1]).toEqual([path]);
+  });
+});
+
+describe("unsignable proof values", () => {
+  it("returns null for a file URL and a path that is not in the bucket", async () => {
+    let signed = 0;
+    const pair = await signProofPair("file:///var/mobile/proof.jpg", "not a storage path", OWNER, {
+      createSignedUrls: async () => {
+        signed += 1;
+        return new Map();
+      },
+      loadSharedPaths: async () => new Set(),
+    });
+    expect(pair).toEqual({ photoUrl: null, proofPhotoUrl: null });
+    expect(signed).toBe(0);
   });
 });
 

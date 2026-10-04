@@ -28,13 +28,13 @@ describe("sendComposerArmed", () => {
 });
 
 describe("postDetailStamp", () => {
-  it("passes Verified when the completion has camera proof", () => {
+  it("passes Photo when the completion has camera proof", () => {
     expect(
       postDetailStamp({ proofPhotoUrl: "https://cdn.example/p.jpg" }),
-    ).toBe("Verified");
+    ).toBe("Photo");
     expect(
       postDetailStamp({ hasProof: true, photoUrl: "https://cdn.example/p.jpg" }),
-    ).toBe("Verified");
+    ).toBe("Photo");
   });
 
   it("passes nothing on self-reported, ignoring verified/require_photo", () => {

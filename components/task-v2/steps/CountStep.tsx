@@ -9,13 +9,12 @@ import TextField from "@/components/ds/TextField";
 import { parseCountInput, sanitizeCountInput } from "@/lib/keypad-masks";
 import {
   COUNT_ADD,
-  COUNT_HONESTY,
   COUNT_REMOVE,
   COUNT_TYPE,
-  WORK_SECURED_CAPTION,
   countCtaEnabled,
   countCtaLabel,
   countOfLine,
+  counterSubline,
 } from "@/lib/work-step";
 
 type Props = {
@@ -25,8 +24,7 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
-  footerCaption?: string;
-  footerBrand?: boolean;
+  hasCamera?: boolean;
   keypadOpen: boolean;
   onTypeCount: (v: number) => void;
   onAddOne: () => void;
@@ -46,8 +44,7 @@ export function CountStep({
   taskName,
   headerTitle,
   headerLabel,
-  footerCaption = WORK_SECURED_CAPTION,
-  footerBrand,
+  hasCamera = false,
   keypadOpen,
   onTypeCount,
   onAddOne,
@@ -69,7 +66,7 @@ export function CountStep({
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
-        <Text style={styles.honesty}>{COUNT_HONESTY}</Text>
+        <Text style={styles.honesty}>{counterSubline(hasCamera)}</Text>
         <View style={styles.countLine}>
           <Text style={styles.figure}>{line.n}</Text>
           <Text style={styles.rest}>{line.rest}</Text>
@@ -124,7 +121,6 @@ export function CountStep({
           disabled={!enabled}
           onPress={onSubmit}
         />
-        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
       </View>
     </View>
   );

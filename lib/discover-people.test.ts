@@ -5,6 +5,7 @@ import { CREATE_CATEGORIES } from "@/lib/challenge-category";
 import {
   discoverCategoryMatches,
   discoverFeaturedChip,
+  discoverGridWithoutHero,
   discoverPeopleWithoutSelf,
 } from "@/lib/discover-people";
 
@@ -45,6 +46,25 @@ describe("discover people and chips", () => {
     expect(card).toContain("featured ? undefined : fallbackTitle");
     expect(card).toContain("title.trim()");
     const route = readFileSync(resolve(__dirname, "../app/(tabs)/discover.tsx"), "utf8");
+    const suggested = readFileSync(
+      resolve(__dirname, "../backend/trpc/routes/profiles-social.ts"),
+      "utf8",
+    );
     expect(route).toContain("discoverPeopleWithoutSelf");
+    expect(route).toContain("discoverGridWithoutHero");
+    expect(suggested).toContain('.neq("user_id", viewerId)');
+  });
+
+  it("keeps the hero challenge out of the grid", () => {
+    expect(
+      discoverGridWithoutHero(
+        [
+          { id: "hero", title: "Drink Water" },
+          { id: "other", title: "Read" },
+        ],
+        "hero",
+      ).map((c) => c.id),
+    ).toEqual(["other"]);
+    expect(discoverGridWithoutHero([{ id: "other", title: "Read" }], null)).toHaveLength(1);
   });
 });

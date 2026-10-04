@@ -33,6 +33,7 @@ import {
 } from "../../lib/live-feed-page";
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
+import { testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 /**
@@ -79,12 +80,19 @@ export const feedRouter = createTRPCRouter({
     let moreRemain = false;
     const authorProfiles = new Map<string, PrivacyProfileFields>();
     const challengeMap = new Map<string, { id: string; title?: string; visibility?: string; duration_days?: number }>();
+    const viewerIsTest = await viewerIsTestAccount(server, viewerId);
+    const testAuthorIds = new Set<string>();
     const moverIds = [...new Set((recentMovers ?? []).map((r: { user_id: string }) => r.user_id))];
+    if (!viewerIsTest && moverIds.length > 0) {
+      (await testAuthorIdSet(server, moverIds)).forEach((id) => testAuthorIds.add(id));
+    }
     let anonymousIds = new Set<string>();
     if (hasSupabaseAdmin()) {
       anonymousIds = await anonymousUserIdSet(getSupabaseAdmin(), moverIds);
     }
-    const movingUserCount = new Set(moverIds.filter((id) => !anonymousIds.has(id))).size;
+    const movingUserCount = new Set(
+      moverIds.filter((id) => !anonymousIds.has(id) && (viewerIsTest || !testAuthorIds.has(id))),
+    ).size;
     const passesVisibility = (ev: EvRow, vis: "public" | "friends" | "private"): boolean =>
       canSeeContent(viewerId, ev.user_id, vis, friendIds, {
         challengeId: ev.challenge_id,
@@ -93,6 +101,7 @@ export const feedRouter = createTRPCRouter({
       });
     const keepEvent = (ev: EvRow): boolean => {
       if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) return false;
+      if (!viewerIsTest && testAuthorIds.has(ev.user_id)) return false;
       if (anonymousIds.has(ev.user_id)) {
         if (input.scope === "everyone") return false;
         if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") return false;
@@ -135,14 +144,15 @@ export const feedRouter = createTRPCRouter({
       ];
       const [visResult, chResult] = await Promise.all([
         eventUserIds.length > 0
-          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility").in("user_id", eventUserIds).limit(200)
+          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility, is_test").in("user_id", eventUserIds).limit(200)
           : Promise.resolve({ data: [] }),
         challengeIds.length > 0
           ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
           : Promise.resolve({ data: [] }),
       ]);
-      for (const r of ((visResult.data ?? []) as PrivacyProfileFields[])) {
+      for (const r of ((visResult.data ?? []) as (PrivacyProfileFields & { is_test?: boolean })[])) {
         if (r.user_id) authorProfiles.set(r.user_id, r);
+        if (r.user_id && r.is_test === true) testAuthorIds.add(r.user_id);
       }
       for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
         challengeMap.set(c.id, c);

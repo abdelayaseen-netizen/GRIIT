@@ -42,12 +42,11 @@ import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-c
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
-  caughtUpLine,
+  CAUGHT_UP,
   EVERYONE_SCOPE,
   EVERYONE_UNTIL_THREE,
   FEED_HEADING,
   FOLLOWING_SCOPE,
-  weekdayFromIso,
 } from "@/lib/g2b-home";
 import { inviteToChallenge } from "@/lib/share";
 
@@ -651,27 +650,9 @@ function LiveFeedSection({
               <ActivityIndicator size={24} color={DS_V3.color.brand} />
             ) : null}
             {!feedQuery.isPending && !feedQuery.isError && !feedQuery.hasNextPage ? (
-              <View style={styles.caughtUp} accessibilityLabel={caughtUpLine(
-                finalFeed.length,
-                weekdayFromIso(
-                  finalFeed.reduce<string | null>((min, post) => {
-                    if (!min || post.createdAt < min) return post.createdAt;
-                    return min;
-                  }, null) ?? "",
-                ),
-              )}>
+              <View style={styles.caughtUp} accessibilityLabel={CAUGHT_UP}>
                 <CheckCheck size={18} color={DS_V3.color.textSecondary} />
-                <Text style={styles.caughtUpText}>
-                  {caughtUpLine(
-                    finalFeed.length,
-                    weekdayFromIso(
-                      finalFeed.reduce<string | null>((min, post) => {
-                        if (!min || post.createdAt < min) return post.createdAt;
-                        return min;
-                      }, null) ?? "",
-                    ),
-                  )}
-                </Text>
+                <Text style={styles.caughtUpText}>{CAUGHT_UP}</Text>
               </View>
             ) : null}
             {showInvite && inviteChallenge ? (

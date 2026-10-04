@@ -29,7 +29,11 @@ export default function PushedHeader({ title, label, onBack, trailing }: PushedH
         <ChevronLeft size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
       <View style={styles.center}>
-        {label ? <Text style={styles.label}>{label}</Text> : null}
+        {label ? (
+          <Text style={styles.label} numberOfLines={1}>
+            {label}
+          </Text>
+        ) : null}
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
       </View>
       <View style={styles.side}>{trailing}</View>

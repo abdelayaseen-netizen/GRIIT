@@ -10,7 +10,8 @@ export type DayCellKind =
   | "missed"
   | "today"
   | "future"
-  | "before";
+  | "before"
+  | "na";
 
 export type ProofsDayIn = {
   date: string;
@@ -37,6 +38,7 @@ const LABELS: Record<DayCellKind, string> = {
   today: "today, open",
   future: "not yet",
   before: "before you joined",
+  na: "not applicable",
 };
 
 export function dayCellLabel(kind: DayCellKind): string {
@@ -77,14 +79,31 @@ export function dayCellFromProofsDay(
 }
 
 export function dayCellFromWeekState(
-  state: "secured" | "frozen" | "last_stand" | "missed",
+  state: "secured" | "frozen" | "last_stand" | "missed" | "na",
   isToday: boolean,
 ): DayCellKind {
+  if (state === "na") return "na";
   if (state === "secured") return "self";
   if (state === "frozen") return "freeze";
   if (state === "last_stand") return "last_stand";
   if (isToday) return "today";
   return "missed";
+}
+
+/** Outline width. Days before enrollment (`na`) have none. */
+export function dayCellBorderWidth(kind: DayCellKind): number {
+  if (kind === "today") return 2;
+  if (kind === "last_stand") return 1.5;
+  if (
+    kind === "missed" ||
+    kind === "future" ||
+    kind === "before" ||
+    kind === "photo_missing" ||
+    kind === "freeze"
+  ) {
+    return 1;
+  }
+  return 0;
 }
 
 export function monthTitle(monthKey: string): string {

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flow-state";
 import {
   COUNT_HONESTY,
+  counterHeaderLines,
+  counterSubline,
   COUNT_POST,
   COUNT_TYPE,
   RUN_HONESTY_GPS,
@@ -45,6 +47,8 @@ describe("work step CTA labels", () => {
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
     expect(COUNT_HONESTY).toBe("Self-entered count. Nothing is checked.");
+    expect(counterSubline(true)).toBe("Count, then a photo.");
+    expect(counterSubline(false)).toBe("Self-reported.");
   });
 
   it("timer Start {mm:ss}; Post stays closed until zero", () => {
@@ -71,6 +75,10 @@ describe("gate-last ordering", () => {
 
 describe("header title", () => {
   it("names the type; gates stay on the gate line", () => {
+    expect(counterHeaderLines("5am crew", 2, 30)).toEqual({
+      label: "5am crew",
+      title: "Day 2 of 30",
+    });
     expect(workStepHeader("5am crew", 12, 30)).toBe("5am crew · Day 12 of 30");
     expect(workStepHeader("Read 30 min", 1, 7)).toBe("Read 30 min · Day 1 of 7");
     expect(chromeTitle("timer", ["camera"])).toBe("Timer");

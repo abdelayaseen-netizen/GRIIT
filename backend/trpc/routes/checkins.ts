@@ -1299,7 +1299,7 @@ export const checkinsRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("check_ins")
       .select(
-        "id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
+        "id, task_id, date_key, status, value, note_text, photo_url, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
       )
       .eq("active_challenge_id", input.activeChallengeId)
       .in("date_key", [...dateKeys])

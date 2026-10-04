@@ -10,6 +10,7 @@ import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
 import { firstString, parseConfig } from "@/lib/task-helpers";
 import { counterDisplayUnit } from "@/lib/counter-log";
@@ -108,6 +109,7 @@ export function useTaskFlowV2() {
     challengeName?: string;
     currentDay?: string;
     durationDays?: string;
+    originTab?: string;
   }>();
   const { user } = useAuth();
   const { completeTask, secureDay, profile } = useApp();
@@ -119,6 +121,7 @@ export function useTaskFlowV2() {
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
   const challengeName = firstString(params.challengeName) || "Challenge";
   const durationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
+  const originTab = originTabFromParam(firstString(params.originTab));
   const userId = user?.id ?? "";
   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
   const timeZone = profile?.timezone?.trim() || "UTC";
@@ -275,22 +278,27 @@ export function useTaskFlowV2() {
     pausedRemaining,
   });
 
+  const returnToOrigin = useCallback(() => {
+    void endLiveActivity();
+    router.replace(originTabHref(originTab) as never);
+  }, [originTab, router]);
+
   const exit = useCallback(() => {
     void endLiveActivity();
     if (router.canGoBack()) router.back();
-    else router.replace(ROUTES.TABS_HOME as never);
-  }, [router]);
+    else returnToOrigin();
+  }, [returnToOrigin, router]);
 
   const openDayOpenTask = useCallback(
     (id: string) => {
       const t = dayOpen?.tasks.find((row) => (row.id ?? "") === id);
       if (!t) {
-        exit();
+        returnToOrigin();
         return;
       }
-      router.replace(dayOpenTaskHref(t) as never);
+      router.replace(dayOpenTaskHref(t, originTab) as never);
     },
-    [dayOpen, exit, router],
+    [dayOpen, originTab, returnToOrigin, router],
   );
 
   const goNextTask = useCallback(() => {
@@ -303,8 +311,8 @@ export function useTaskFlowV2() {
       openDayOpenTask(dayOpen.nextId);
       return;
     }
-    exit();
-  }, [alsoToday, dayOpen, exit, openDayOpenTask]);
+    returnToOrigin();
+  }, [alsoToday, dayOpen, openDayOpenTask, returnToOrigin]);
 
   const persistUnit = useCallback((next: DistanceUnit) => {
     setUnit(next);
@@ -566,7 +574,7 @@ export function useTaskFlowV2() {
             photoUri: photoUri ?? proofUrl ?? null,
             cameraSeal: hasCameraProof,
           });
-          exit();
+          returnToOrigin();
         }
         submitInFlight.current = false;
         return;
@@ -624,6 +632,7 @@ export function useTaskFlowV2() {
           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
             shareEventId: eventId,
             closingHasPhoto: hasCameraProof,
+            originTab,
           }) as never,
         );
       }
@@ -729,7 +738,7 @@ export function useTaskFlowV2() {
       at: ends,
       durationLabel: fmtMmSs(requiredSeconds),
       sound: soundOn,
-      route: `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(taskId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=timer&taskName=${encodeURIComponent(taskName)}&taskConfig=${encodeURIComponent(firstString(params.taskConfig))}&challengeName=${encodeURIComponent(challengeName)}&currentDay=${currentDay}&durationDays=${durationDays}`,
+      route: `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(taskId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=timer&taskName=${encodeURIComponent(taskName)}&taskConfig=${encodeURIComponent(firstString(params.taskConfig))}&challengeName=${encodeURIComponent(challengeName)}&currentDay=${currentDay}&durationDays=${durationDays}&originTab=${encodeURIComponent(originTab)}`,
     });
     startLiveActivity({
       taskId,
@@ -922,6 +931,7 @@ export function useTaskFlowV2() {
     hideChrome,
     currentDay,
     taskType,
+    gates,
     taskName,
     challengeName,
     windowEval,
@@ -1051,7 +1061,7 @@ export function useTaskFlowV2() {
       void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
         .then(() => {
           setSharing(false);
-          exit();
+          returnToOrigin();
         })
         .catch(() => {
           setSharing(false);
@@ -1093,7 +1103,7 @@ export function useTaskFlowV2() {
       void finishSubmit(last.payload, last.kind);
     },
     onKeepProof: () => {
-      exit();
+      returnToOrigin();
     },
     onShare: (uri: string) => {
       if (!result) return;

@@ -3,7 +3,7 @@ import type { WindowState } from "@/backend/lib/task-time-gate";
 import { securedElapsed } from "@/lib/consistency";
 import { homeWindowClosed } from "@/lib/home-proof-card";
 import { flowOpensCamera } from "@/lib/task-flow-state";
-import { closedWindowCaption, gateLabel } from "@/lib/task-ui";
+import { closedWindowCaption, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
 
 /**
  * Active challenge (frame 28) binding. Server fields only.
@@ -91,6 +91,8 @@ export function pendingGate(t: ActiveChallengeTask): string {
   if (homeWindowClosed({ windowState: t.windowState, done: t.completed_today })) {
     return closedWindowCaption(t.gateTime);
   }
+  const counterLine = counterCameraGateLine(t.task_type, t.gates);
+  if (counterLine) return counterLine;
   return [
     sizePart(t),
     gateLabel({

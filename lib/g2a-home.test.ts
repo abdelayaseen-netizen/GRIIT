@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  closedTaskStatus,
   countdownSuffix,
+  firstClosedUndoneTask,
   pickStartTask,
   remainingWindowsClosed,
   startCtaLabel,
@@ -41,6 +45,29 @@ describe("g2a home copy", () => {
     expect(windowClosedFollowup({ noDaysOff: false, freezesLeft: 0 })).toBeNull();
     expect(daysInARow(1)).toBe("1 day in a row.");
     expect(daysInARow(3)).toBe("3 days in a row.");
+  });
+
+  it("names the closed required task and says today cannot be secured", () => {
+    expect(closedTaskStatus("Drink water")).toBe(
+      "Drink water closed. Today can't be secured.",
+    );
+    const blocked = firstClosedUndoneTask([
+      { name: "Read", done: true, closed: false },
+      { name: "Drink water", done: false, closed: true },
+      { name: "Walk", done: false, closed: false },
+    ]);
+    expect(blocked?.name).toBe("Drink water");
+    expect(firstClosedUndoneTask([{ name: "Walk", done: false, closed: false }])).toBeNull();
+    const next = pickStartTask([
+      { id: "water", name: "Drink water", done: false, closed: true },
+      { id: "walk", name: "Walk", done: false, closed: false },
+    ]);
+    expect(next?.name).toBe("Walk");
+    expect(startCtaLabel(next?.name ?? "")).toBe("Start: Walk");
+    const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    expect(home).toContain("closedTaskStatus(closedUndone.name)");
+    expect(home).not.toContain("startLabel && !todayBlocked");
+    expect(home).toContain("{startLabel ? (");
   });
 
   it("Start label and window banner", () => {

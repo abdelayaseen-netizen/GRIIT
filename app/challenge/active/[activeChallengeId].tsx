@@ -5,7 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
-import { getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
+import { addCalendarDaysToDateKey, getTodayDateKey, getYesterdayDateKey } from "@/lib/date-utils";
 import { ROUTES } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { useApp } from "@/contexts/AppContext";
@@ -44,11 +44,14 @@ import {
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
 import { dateKeyFromIso } from "@/lib/challenge-end";
+import { rangeSecuredElapsed } from "@/lib/profile-v2-record";
+import { exclusiveEndDateKey } from "@/backend/lib/record-days";
 import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
 import {
   enrollmentWeekDateKeys,
   freezeDetailCopy,
   peopleCardCopy,
+  weekDayBeforeEnrollment,
   weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
@@ -97,6 +100,8 @@ type ActiveChallengeRow = {
   start_at?: string | null;
   started_at?: string | null;
   created_at?: string | null;
+  end_at?: string | null;
+  ended_at?: string | null;
   challenges?: ChallengeRow | null;
 };
 
@@ -143,7 +148,7 @@ export default function ActiveChallengeDetailScreen() {
         .from("active_challenges")
         .select(
           `
-          id, challenge_id, status, current_day, start_at, started_at, created_at,
+          id, challenge_id, status, current_day, start_at, started_at, created_at, end_at, ended_at,
           challenges (
             id, title, description, duration_days, difficulty, is_hard_mode, participants_count, participation_type,
             challenge_tasks (
@@ -224,11 +229,28 @@ export default function ActiveChallengeDetailScreen() {
   const startDateKey = startIso
     ? dateKeyFromIso(String(startIso), profileTz ?? "UTC")
     : todayKey;
-  const weekKeys = useMemo(
-    () => enrollmentWeekDateKeys(startDateKey, todayKey),
-    [startDateKey, todayKey],
-  );
+  const weekKeys = useMemo(() => enrollmentWeekDateKeys(todayKey), [todayKey]);
   const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
+  const exclusiveEnd = activeChallenge?.end_at
+    ? exclusiveEndDateKey(
+        {
+          status: activeChallenge.status ?? "active",
+          end_at: activeChallenge.end_at,
+          ended_at: activeChallenge.ended_at,
+        },
+        startDateKey,
+        profileTz ?? "UTC",
+      )
+    : addCalendarDaysToDateKey(startDateKey, durationDays);
+  const enrollmentRecord = rangeSecuredElapsed(
+    {
+      status: activeChallenge?.status ?? "active",
+      startDateKey,
+      endDateKey: exclusiveEnd,
+    },
+    keys,
+    todayKey,
+  );
   const securedToday =
     todayKey >= startDateKey && securedTodayFromKeys(keys, todayKey);
   const weekSecured = weekStripFilledForEnrollment({
@@ -364,6 +386,7 @@ export default function ActiveChallengeDetailScreen() {
           currentDay: String(shownDay),
           durationDays: String(durationDays),
           challengeName: title,
+          originTab: "home",
         },
       } as never);
     },
@@ -455,10 +478,14 @@ export default function ActiveChallengeDetailScreen() {
     privateOrSolo: participationType === "solo" || vis === "private",
     challengeTitle: title,
   });
-  const weekDaysOverride = weekKeys.map((key, i) => ({
-    letter: weekdayLetterForDateKey(key),
-    filled: weekSecured[i] === true,
-  }));
+  const weekDaysOverride = weekKeys.map((key, i) => {
+    const before = weekDayBeforeEnrollment(key, startDateKey);
+    return {
+      letter: weekdayLetterForDateKey(key, profileTz),
+      filled: !before && weekSecured[i] === true,
+      state: before ? ("na" as const) : undefined,
+    };
+  });
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? "", "detail"],
@@ -554,6 +581,8 @@ export default function ActiveChallengeDetailScreen() {
           todayStatus={todayCopy.status}
           todaySub={todayCopy.sub}
           weekLine={weekMeta.line}
+          securedCount={enrollmentRecord.secured}
+          dueCount={enrollmentRecord.elapsed}
           weekDaysOverride={weekDaysOverride}
           freezeRow={freezeRow}
           onUseFreeze={recovery ? () => {

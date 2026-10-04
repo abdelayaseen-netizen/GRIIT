@@ -12,6 +12,12 @@ import { fmtMmSs, type TaskFlowStep } from "@/lib/task-flow-state";
 export const WORK_SECURED_CAPTION = SIMPLE_ASK_CAPTION;
 
 export const COUNT_HONESTY = "Self-entered count. Nothing is checked.";
+export const COUNT_THEN_PHOTO = "Count, then a photo.";
+export const COUNT_SELF_REPORTED = "Self-reported.";
+
+export function counterSubline(hasCamera: boolean): string {
+  return hasCamera ? COUNT_THEN_PHOTO : COUNT_SELF_REPORTED;
+}
 export const COUNT_ADD = "Add one";
 export const COUNT_REMOVE = "Remove one";
 export const COUNT_TYPE = "Type it";
@@ -70,6 +76,18 @@ export function workStepDay(
 /** Same as the task-flow header. Type is a label, not this string. */
 export function workStepHeader(challenge: string, day: number, durationDays: number): string {
   return flowHeaderTitle(challenge, day, durationDays);
+}
+
+/** Counter header: challenge name on the label line, day on the title line. */
+export function counterHeaderLines(
+  challenge: string,
+  day: number,
+  durationDays: number,
+): { label: string; title: string } {
+  const name = challenge.trim() || "Challenge";
+  const n = Math.max(1, Math.floor(day));
+  const total = Math.max(n, Math.floor(durationDays) || n);
+  return { label: name, title: `Day ${n} of ${total}` };
 }
 
 export function workThenCamera(type: string, gates: readonly TaskGate[]): boolean {

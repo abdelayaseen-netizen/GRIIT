@@ -7,6 +7,7 @@ import {
   format12h,
   formatGateTime,
   formatWindowRange,
+  counterCameraGateLine,
   gateLine,
   windowClosedAtLine,
   typeCaption,
@@ -43,6 +44,15 @@ describe("formatGateTime", () => {
 
   it("keeps both meridiems when they differ", () => {
     expect(formatGateTime(betweenCross)).toBe("Between 11:30 am and 12:30 pm");
+  });
+});
+
+describe("counter camera gate", () => {
+  it("reads Counter · Camera on Home", () => {
+    expect(counterCameraGateLine("counter", ["camera"])).toBe("Counter · Camera");
+    expect(counterCameraGateLine("water", ["camera"])).toBe("Counter · Camera");
+    expect(counterCameraGateLine("counter", [])).toBeNull();
+    expect(counterCameraGateLine("check_off", ["camera"])).toBeNull();
   });
 });
 

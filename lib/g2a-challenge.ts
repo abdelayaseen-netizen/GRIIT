@@ -2,7 +2,9 @@
  * v43.1 frames 157 + 161 — challenge week, freeze row, people / board copy.
  */
 
-import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { dueKeysForRange } from "@/backend/lib/due-keys";
+import { enrollmentSecuredDateKeys } from "@/backend/lib/secured-elapsed";
+import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "@/lib/date-utils";
 import { FREEZE_REFILL_DAYS, freezeRefillDateLabel } from "@/lib/freeze-sheet";
 import { countNoun } from "@/lib/onboarding-v2-suggest";
 
@@ -17,21 +19,20 @@ export const FREEZE_COVERS_YESTERDAY =
 export const ANYONE_WITH_THE_LINK =
   "Anyone with the link can join. They start at Day 1 the day they join, with their own streak.";
 
-export function enrollmentWeekDateKeys(startDateKey: string, todayKey: string): string[] {
-  const start = startDateKey.trim();
+/**
+ * Monday–Sunday containing `todayKey`.
+ * `todayKey` is the profile-timezone calendar date, so this is the same Monday the challenge board uses.
+ */
+export function enrollmentWeekDateKeys(todayKey: string): string[] {
   const today = todayKey.trim();
-  if (!start || !today) return [];
-  let offset = 0;
-  if (today >= start) {
-    const [ys, ms, ds] = start.split("-").map(Number);
-    const [yt, mt, dt] = today.split("-").map(Number);
-    const a = Date.UTC(ys ?? 0, (ms ?? 1) - 1, ds ?? 1);
-    const b = Date.UTC(yt ?? 0, (mt ?? 1) - 1, dt ?? 1);
-    offset = Math.max(0, Math.round((b - a) / 86400000));
-  }
-  const week = Math.floor(offset / 7);
-  const weekStart = addCalendarDaysToDateKey(start, week * 7);
-  return Array.from({ length: 7 }, (_, i) => addCalendarDaysToDateKey(weekStart, i));
+  if (!today) return [];
+  const monday = addCalendarDaysToDateKey(today, -mondayFirstIndexForDateKey(today));
+  return Array.from({ length: 7 }, (_, i) => addCalendarDaysToDateKey(monday, i));
+}
+
+/** Days before the enrollment start are not part of this challenge's week. */
+export function weekDayBeforeEnrollment(dateKey: string, startDateKey: string): boolean {
+  return Boolean(dateKey) && Boolean(startDateKey) && dateKey < startDateKey;
 }
 
 export function weekSecuredOfDue(args: {
@@ -43,8 +44,18 @@ export function weekSecuredOfDue(args: {
   todaySecured: boolean;
 }): { secured: number; due: number; line: string } {
   const last = addCalendarDaysToDateKey(args.startDateKey, Math.max(0, args.durationDays - 1));
-  const secured = new Set(args.securedDateKeys);
-  if (args.todaySecured) secured.add(args.todayKey);
+  const exclusiveEnd = addCalendarDaysToDateKey(args.startDateKey, Math.max(0, args.durationDays));
+  const dueKeys = dueKeysForRange(
+    { status: "active", startDateKey: args.startDateKey, endDateKey: exclusiveEnd },
+    args.todayKey,
+  );
+  const secured = new Set(
+    enrollmentSecuredDateKeys({
+      securedDateKeys: args.securedDateKeys,
+      dueDateKeys: dueKeys,
+    }),
+  );
+  if (args.todaySecured && dueKeys.includes(args.todayKey)) secured.add(args.todayKey);
   let due = 0;
   let n = 0;
   for (const key of args.weekKeys) {
@@ -157,8 +168,26 @@ export function soloBoardCopy(challengeTitle: string): {
 }
 
 
-export function weekdayLetterForDateKey(dateKey: string): string {
+const WEEKDAY_LETTER: Record<string, string> = {
+  Sun: "S",
+  Mon: "M",
+  Tue: "T",
+  Wed: "W",
+  Thu: "T",
+  Fri: "F",
+  Sat: "S",
+};
+
+/** Weekday letter of a civil date in the profile timezone. Noon UTC stays on that date from UTC−12 to UTC+12. */
+export function weekdayLetterForDateKey(dateKey: string, timeZone?: string | null): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   if (!y || !m || !d) return "";
-  return ["S", "M", "T", "W", "T", "F", "S"][new Date(Date.UTC(y, m - 1, d)).getUTCDay()] ?? "";
+  const tz = timeZone?.trim() || "UTC";
+  const instant = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  try {
+    const wd = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(instant);
+    return WEEKDAY_LETTER[wd] ?? "";
+  } catch {
+    return "";
+  }
 }
