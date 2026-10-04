@@ -25,8 +25,8 @@ export async function handleStravaCallback(query: URLSearchParams): Promise<Call
   const state = query.get("state");
   const error = query.get("error");
 
-  const successRedirect = process.env.STRAVA_SUCCESS_REDIRECT_URI || "https://griit.app/profile?strava=connected";
-  const errorRedirect = process.env.STRAVA_ERROR_REDIRECT_URI || "https://griit.app/profile?strava=error";
+  const successRedirect = process.env.STRAVA_SUCCESS_REDIRECT_URI || "griit://profile?strava=connected";
+  const errorRedirect = process.env.STRAVA_ERROR_REDIRECT_URI || "griit://profile?strava=error";
 
   if (error) {
     log("Strava OAuth error from provider", { error, description: query.get("error_description") ?? undefined });

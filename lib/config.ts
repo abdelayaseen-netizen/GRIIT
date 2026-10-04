@@ -1,15 +1,23 @@
 /**
- * App config: deep link base URL.
- * Swap DEEP_LINK_BASE_URL when production domain is ready.
+ * App config: optional web deep-link base. griit.app is not ours — never default to it.
  */
 import { facebookAppId as facebookAppIdFromEnv } from "@/lib/share-sticker";
 
-/** Base URL for deep links and web fallback. Set EXPO_PUBLIC_DEEP_LINK_BASE_URL to override. */
-const DEEP_LINK_BASE_URL =
-  (typeof process !== "undefined" && (process.env as Record<string, string | undefined>)?.EXPO_PUBLIC_DEEP_LINK_BASE_URL) ||
-  "https://griit.app";
+export const APP_SCHEME = "griit";
 
-export { DEEP_LINK_BASE_URL };
+function readDeepLinkBase(): string | null {
+  const raw =
+    typeof process !== "undefined"
+      ? (process.env as Record<string, string | undefined>)?.EXPO_PUBLIC_DEEP_LINK_BASE_URL
+      : undefined;
+  const trimmed = (raw ?? "").trim().replace(/\/$/, "");
+  if (!trimmed) return null;
+  if (!/^https:\/\//i.test(trimmed)) return null;
+  return trimmed;
+}
+
+/** https origin when EXPO_PUBLIC_DEEP_LINK_BASE_URL is set. Otherwise null. */
+export const DEEP_LINK_BASE_URL = readDeepLinkBase();
 
 /** Meta App ID for Instagram Stories. Set EXPO_PUBLIC_FACEBOOK_APP_ID. Never a hardcoded id. */
 export function facebookAppId(): string {

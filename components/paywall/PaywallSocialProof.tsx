@@ -5,7 +5,6 @@ import React from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -13,8 +12,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { Flame, X } from "lucide-react-native";
 import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
+import { ROUTES } from "@/lib/routes";
 import type { PaywallBodyProps } from "./types";
 
 const TESTIMONIALS = [
@@ -47,6 +48,7 @@ export default function PaywallSocialProof({
   cancelNote,
   insetsBottom,
 }: PaywallBodyProps) {
+  const router = useRouter();
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close paywall">
@@ -128,11 +130,11 @@ export default function PaywallSocialProof({
 
         <Text style={styles.legalLine}>
           By continuing you agree to our{" "}
-          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://griit.app/terms")}>
+          <Text style={styles.legalLink} onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}>
             Terms
           </Text>{" "}
           &{" "}
-          <Text style={styles.legalLink} onPress={() => Linking.openURL("https://griit.app/privacy")}>
+          <Text style={styles.legalLink} onPress={() => router.push(ROUTES.LEGAL_PRIVACY as never)}>
             Privacy Policy
           </Text>
         </Text>

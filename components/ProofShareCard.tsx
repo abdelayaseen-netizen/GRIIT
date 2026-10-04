@@ -94,7 +94,6 @@ export default function ProofShareCard({
             </View>
 
             <Text style={styles.cta}>Join me on GRIIT</Text>
-            <Text style={styles.ctaSub}>griit.fit</Text>
           </View>
         </ViewShot>
 
@@ -215,11 +214,6 @@ const styles = StyleSheet.create({
   cta: {
     fontSize: 14,
     color: DS_V3.color.textSecondary,
-  },
-  ctaSub: {
-    fontSize: 12,
-    color: GRIIT_COLORS.primaryAccent,
-    marginTop: 2,
   },
   error: {
     color: DS_V3.color.danger,

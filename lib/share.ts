@@ -5,17 +5,26 @@ import * as Haptics from "expo-haptics";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import RNShare, { Social } from "react-native-share";
-import {
-  challengeDeepLink,
-  inviteDeepLink,
-  profileDeepLink,
-} from "@/lib/deep-links";
-import { DEEP_LINK_BASE_URL, facebookAppId } from "@/lib/config";
+import { challengeDeepLink, inviteDeepLink, profileDeepLink } from "@/lib/deep-links";
+import { facebookAppId } from "@/lib/config";
 import { instagramStoriesShareInput, type SavePhotosResult } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import { groupInviteShareMessage } from "@/lib/group-ui";
+import {
+  challengeCompleteShareText,
+  challengeShareText,
+  defaultInviteShareText,
+  profileShareText,
+} from "@/lib/share-copy";
 
-async function shareOrCopy(message: string, title?: string): Promise<void> {
+export {
+  challengeCompleteShareText,
+  challengeShareText,
+  defaultInviteShareText,
+  profileShareText,
+} from "@/lib/share-copy";
+
+async function shareOrCopy(message: string, title?: string, url?: string): Promise<void> {
   if (Platform.OS === "web") {
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -33,14 +42,12 @@ async function shareOrCopy(message: string, title?: string): Promise<void> {
     }
     return;
   }
-  await Share.share({ message, title: title ?? "GRIIT" });
+  await Share.share(url ? { message, title: title ?? "GRIIT", url } : { message, title: title ?? "GRIIT" });
 }
 
 /** Invite-style share for leaderboards and similar (web + native). */
 export async function shareInvite(message?: string, title?: string): Promise<void> {
-  const text =
-    message ?? "Join me on GRIIT — the discipline challenge app. https://griit.fit";
-  await shareOrCopy(text, title ?? "Join GRIIT");
+  await shareOrCopy(message ?? defaultInviteShareText(), title ?? "Join GRIIT");
 }
 
 /** Arbitrary share text via the same path as other GRIIT shares. */
@@ -58,9 +65,7 @@ export async function shareChallenge(
   refUserId?: string | null
 ): Promise<void> {
   const url = challengeDeepLink(challenge.id, refUserId);
-  const tasksLine = challenge.tasksPerDay ? `${challenge.tasksPerDay} tasks per day. ` : "";
-  const message = `I'm doing "${challenge.name}" — a ${challenge.duration}-day discipline challenge on GRIIT. ${tasksLine}Think you can keep up?\n\n${url}`;
-  await shareOrCopy(message, challenge.name);
+  await shareOrCopy(challengeShareText(challenge), challenge.name, url);
 }
 
 export async function inviteToChallenge(
@@ -73,8 +78,7 @@ export async function inviteToChallenge(
 ): Promise<void> {
   const inviteCode = challenge.inviteCode ?? challenge.id;
   const url = inviteDeepLink(inviteCode, refUserId);
-  const message = groupInviteShareMessage(challenge.name, url);
-  await shareOrCopy(message, "Join my challenge");
+  await shareOrCopy(groupInviteShareMessage(challenge.name, inviteCode), "Join my challenge", url);
 }
 
 export async function shareProfile(
@@ -86,13 +90,7 @@ export async function shareProfile(
   }
 ): Promise<void> {
   const url = profileDeepLink(profile.username);
-  let message: string;
-  if (profile.streak > 0) {
-    message = `${profile.streak}-day discipline streak on GRIIT. ${profile.totalDaysSecured} total days secured. ${profile.tier} tier. No excuses.\n\n${url}`;
-  } else {
-    message = `Building discipline one day at a time on GRIIT. ${profile.totalDaysSecured} days secured so far.\n\n${url}`;
-  }
-  await shareOrCopy(message, "My discipline stats");
+  await shareOrCopy(profileShareText(profile), "My discipline stats", url);
 }
 
 /**
@@ -191,8 +189,5 @@ export async function shareChallengeComplete(data: {
   daysCompleted: number;
   isHardMode?: boolean;
 }): Promise<void> {
-  const url = DEEP_LINK_BASE_URL;
-  const hardLine = data.isHardMode ? " Hard Mode." : "";
-  const message = `I completed "${data.name}" on GRIIT. ${data.daysCompleted} of ${data.duration} days secured.${hardLine}\n\n${url}`;
-  await shareOrCopy(message, "Challenge Complete");
+  await shareOrCopy(challengeCompleteShareText(data), "Challenge Complete");
 }

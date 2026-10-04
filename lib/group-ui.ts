@@ -1,5 +1,7 @@
 /** Group challenges copy and row state. Tables in 02_screens.md frames 34–38. */
 
+import { joinMeOnGriitCode } from "@/lib/deep-links";
+
 export const GROUP_CAP = 10;
 
 export const GROUP_INVITE_ONLY_CAPTION = "Invite only. Ask a member for an invite.";
@@ -205,8 +207,8 @@ export function pickerCaption(n: number): string {
   return `People you follow, and people who follow you. ${ofTen(n)} in the group.`;
 }
 
-export function groupInviteShareMessage(title: string, url: string): string {
-  return `${title} on GRIIT. Join me: ${url}`;
+export function groupInviteShareMessage(_title: string, inviteCode: string): string {
+  return joinMeOnGriitCode(inviteCode);
 }
 
 export type OpenLinkRoute =

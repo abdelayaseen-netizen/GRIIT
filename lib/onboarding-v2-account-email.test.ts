@@ -12,7 +12,7 @@ import {
 
 describe("isCompleteEmail", () => {
   it("accepts a complete address and rejects malformed", () => {
-    expect(isCompleteEmail("you@griit.app")).toBe(true);
+    expect(isCompleteEmail("you@example.com")).toBe(true);
     expect(isCompleteEmail("not-an-email")).toBe(false);
     expect(isCompleteEmail("you@x")).toBe(false);
     expect(isCompleteEmail("")).toBe(false);
@@ -23,7 +23,7 @@ describe("emailFieldState", () => {
   it("marks malformed only after blur", () => {
     expect(emailFieldState("you@", false)).toBe("empty");
     expect(emailFieldState("you@", true)).toBe("malformed");
-    expect(emailFieldState("you@griit.app", true)).toBe("ok");
+    expect(emailFieldState("you@example.com", true)).toBe("ok");
   });
 });
 
