@@ -1514,54 +1514,117 @@ export const DS_DAYLIGHT = {
   },
 } as const;
 
-// Design of record, Sept 6 2026. Source: design/handoff/src/tokens.ts and cursor/00_READ_FIRST.md.
-// Every text pair measured with the WCAG formula; ratios in comments.
+// v48. Port of design/handoff/v48/src/tokens.v46.ts. Hex lives in this file.
+// Weight 600 is Title L, Title, and Headline only. Display numerals are SF Pro 800.
+const typeTitleL = { fontSize: 28, lineHeight: 34, fontWeight: '600' as const };
+const typeTitle = { fontSize: 20, lineHeight: 25, fontWeight: '600' as const };
+const typeHeadline = { fontSize: 15, lineHeight: 20, fontWeight: '600' as const };
+
+/** Apple text styles for the v46 roles. `number` stays fixed. */
+export const dynamicType = {
+  titleL: 'title1',
+  title: 'title3',
+  headline: 'subheadline',
+  body: 'subheadline',
+  secondary: 'footnote',
+  caption: 'caption1',
+  label: 'caption2',
+  number: null,
+  display: 'title1',
+  heading: 'title3',
+  bodyStrong: 'headline',
+  stamp: 'caption1',
+} as const;
+
+export const categoryTint = {
+  Fitness: '#2F4A66',
+  Faith: '#4A3A6B',
+  Mind: '#2F5A4C',
+  Health: '#1F5560',
+  Discipline: '#5E4A30',
+  Learning: '#5A5420',
+} as const;
+
+export const avatarTints = [
+  ['#3B3F4A', '#C9CEDA'],
+  ['#3E3A48', '#D3CBE0'],
+  ['#34413C', '#C6D8CF'],
+  ['#44403A', '#DDD3C4'],
+  ['#3A4144', '#C4D3D8'],
+  ['#463B3B', '#E0CACA'],
+] as const;
+
 export const DS_V3 = {
   color: {
-    canvas: '#0F0F0F',          // tokens.ts:7
-    surface: '#1A1917',         // tokens.ts:8
-    border: '#2E2B27',          // tokens.ts:9
-    textPrimary: '#F5F3EE',     // 17.3:1 on canvas, 15.8:1 on surface — tokens.ts:10
-    textSecondary: '#A39E95',   // 7.2:1 on canvas, 6.6:1 on surface — tokens.ts:11
-    primary: '#BB471D',         // primary button fill; textPrimary label — tokens.ts:12
-    brand: '#DC5401',           // fills, week strip, active outlines — tokens.ts:13
-    brandText: '#E8600F',       // orange as text: 5.6:1 canvas, 5.1:1 surface — tokens.ts:13
-    brandTint: '#3A1F10',       // hint grounds, selected chips, own row — tokens.ts:14
-    onBrand: '#0F0F0F',         // label on a brand fill: 4.9:1 — tokens.ts:15
-    danger: '#E5533D',          // 5.1:1 on canvas — tokens.ts:16
+    canvas: '#0F0F0F',
+    surface: '#1A1918',
+    raised: '#242322',
+    hairline: '#2A2928',
+    border: '#2A2928',
+    textPrimary: '#F2F0EB',
+    textSecondary: 'rgba(242,240,235,0.64)',
+    textTertiary: 'rgba(242,240,235,0.44)',
+    primary: '#BB471D',
+    brand: '#DC5401',
+    selectedBg: '#F2F0EB',
+    selectedText: '#0F0F0F',
+    onBrand: '#0F0F0F',
+    danger: '#E5533D',
+    /** Retired. Orange text is not a colour role. Call sites are listed, not new. */
+    brandText: '#E8600F',
+    /** Retired. Selected states use selectedBg / selectedText. */
+    brandTint: '#3A1F10',
   },
   type: {
-    display:    { fontSize: 34, lineHeight: 41, fontWeight: '500' as const, letterSpacing: -0.5 },
-    number:     { fontSize: 64, lineHeight: 64, fontWeight: '800' as const, fontFamily: undefined, fontVariant: ['tabular-nums'] as const, letterSpacing: -0.64 },
-    title:      { fontSize: 28, lineHeight: 34, fontWeight: '500' as const },
-    heading:    { fontSize: 20, lineHeight: 25, fontWeight: '500' as const },
-    body:       { fontSize: 17, lineHeight: 22, fontWeight: '400' as const },
-    bodyStrong: { fontSize: 17, lineHeight: 22, fontWeight: '500' as const },
-    secondary:  { fontSize: 15, lineHeight: 20, fontWeight: '400' as const },
-    caption:    { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
-    label:      { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, letterSpacing: 0.72, textTransform: 'uppercase' as const },
-    stamp:      { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, fontFamily: undefined, letterSpacing: 0.96, textTransform: 'uppercase' as const },
+    titleL: typeTitleL,
+    title: typeTitle,
+    headline: typeHeadline,
+    body: { fontSize: 15, lineHeight: 20, fontWeight: '400' as const },
+    secondary: { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
+    caption: { fontSize: 12, lineHeight: 16, fontWeight: '500' as const },
+    label: { fontSize: 11, lineHeight: 13, fontWeight: '500' as const, letterSpacing: 0.66, textTransform: 'uppercase' as const },
+    number: { fontSize: 64, lineHeight: 64, fontWeight: '800' as const, fontFamily: undefined, fontVariant: ['tabular-nums'] as const, letterSpacing: -1.28 },
+    display: typeTitleL,
+    heading: typeTitle,
+    bodyStrong: typeHeadline,
+    stamp: { fontSize: 12, lineHeight: 16, fontWeight: '500' as const, fontFamily: undefined, letterSpacing: 0.96, textTransform: 'uppercase' as const },
   },
-  space: { xs: 4, sm: 8, md: 12, lg: 16, gutter: 20, section: 32 },
+  space: { xs: 4, sm: 8, md: 12, lg: 16, gutter: 16, section: 32 },
   radius: {
     input: 12,
-    card: 20,
+    card: 16,
     pill: 999,
-    thumb: 4,                  // tokens.ts:83 contactSheet.radius; 03_media.md:62
+    thumb: 4,
   },
   size: {
     tap: 44,
-    button: 52,
+    button: 48,
     buttonSmall: 44,
     shutter: 72,
     avatar: { xs: 32, sm: 40, md: 56, lg: 96 },
   },
-  numberSize: { inline: 17, home: 64, moment: 96, mid: 160, share: 220 },
+  numberSize: { inline: 17, home: 64, moment: 96, mid: 160, share: 220, L: 56, M: 40, S: 28 },
   displayFace: undefined as undefined,
   displayWeight: '800' as const,
+  categoryTint,
+  avatarTints,
+  component: {
+    headerIconButton: 36,
+    gutter: 16,
+    taskRow: 52,
+    cardRadius: 16,
+    segmentHeight: 32,
+    chipHeight: 34,
+    buttonPrimary: 48,
+    buttonSecondary: 44,
+    counterButton: 116,
+    featuredCover: { w: 160, h: 200 },
+    gridCoverAspect: 4 / 5,
+    weekDot: 12,
+  },
   contactSheet: { cols: 6, rows: 5, gap: 4, radius: 4, revealMs: 600, dimmed: 0.4 },
   motion: {
-    count: 400,                // tokens.ts:74 motion.daySecuredMs; 00_READ_FIRST.md:81
-    sheet: 600,                // tokens.ts:83 contactSheet.revealMs; 00_READ_FIRST.md:80
+    count: 400,
+    sheet: 600,
   },
 } as const;
