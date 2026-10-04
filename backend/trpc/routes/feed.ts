@@ -24,7 +24,7 @@ import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
-import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds } from "../../lib/is-friend";
+import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds, sharesChallenge } from "../../lib/is-friend";
 import { canSeeProfileContent, type PrivacyProfileFields } from "../../../lib/profile-privacy";
 import {
   eventAfterCursor,
@@ -191,7 +191,8 @@ export const feedRouter = createTRPCRouter({
     if (!targetRow) return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     const friendIds = new Set<string>();
     if (input.userId !== viewerId && (await isFriend(ctx.supabase, viewerId, input.userId))) friendIds.add(input.userId);
-    if (!canSeeProfileContent(viewerId, targetRow as PrivacyProfileFields, { isMutual: friendIds.has(input.userId), isCoMember: false })) {
+    const isCoMember = input.userId !== viewerId && (await sharesChallenge(ctx.supabase, viewerId, input.userId));
+    if (!canSeeProfileContent(viewerId, targetRow as PrivacyProfileFields, { isMutual: friendIds.has(input.userId), isCoMember })) {
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
     const coMemberIds = await coMemberChallengeIds(ctx.supabase, viewerId);

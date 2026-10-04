@@ -28,7 +28,7 @@ import {
 import { isTaskRequired, type ChallengeTaskRowRaw } from "../../lib/challenge-tasks";
 import { logger } from "../../lib/logger";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { isFriend } from "../../lib/is-friend";
+import { isFriend, sharesChallenge } from "../../lib/is-friend";
 import { buildProfileRecord, rangeSecuredElapsed, type ChallengeRangeInput, type ProfileRecord } from "../../../lib/profile-v2-record";
 import {
   buildProofsDays,
@@ -74,12 +74,13 @@ export function recordAccountVisible(opts: {
   viewerId: string;
   owner: PrivacyProfileFields;
   isMutual: boolean;
+  isCoMember?: boolean;
 }): boolean {
   return opts.previewStranger
     ? !isPrivateAccount(opts.owner)
     : canSeeProfileContent(opts.viewerId, opts.owner, {
         isMutual: opts.isMutual,
-        isCoMember: false,
+        isCoMember: opts.isCoMember === true,
       });
 }
 
@@ -220,11 +221,16 @@ export const profilesRecordProcedures = {
         relationship = (await isFriend(db, ctx.userId, ownerId)) ? "accepted" : "none";
       }
 
+      const isCoMember =
+        !previewStranger && ownerId !== ctx.userId
+          ? await sharesChallenge(db, ctx.userId, ownerId)
+          : false;
       const canSeeAccount = recordAccountVisible({
         previewStranger,
         viewerId: ctx.userId,
         owner: p,
         isMutual: relationship === "accepted",
+        isCoMember,
       });
       const gate = canSeeAccount
         ? { profile: true, challenges: true, activity: true }

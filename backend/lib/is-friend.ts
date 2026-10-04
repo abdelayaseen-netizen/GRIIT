@@ -85,6 +85,27 @@ function memberCounts(status: string | null | undefined): boolean {
  * Challenge ids where the viewer is an active member or has an active/finished enrollment.
  * Loaded once per request. Two bounded reads because members and enrollments are different tables.
  */
+export function challengeIdSetsOverlap(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  for (const id of a) {
+    if (b.has(id)) return true;
+  }
+  return false;
+}
+
+/** True when both people are on the same challenge (member or active/finished enrollment). */
+export async function sharesChallenge(
+  supabase: SupabaseClient,
+  viewerId: string,
+  ownerId: string,
+): Promise<boolean> {
+  if (!viewerId || !ownerId || viewerId === ownerId) return false;
+  const [viewer, owner] = await Promise.all([
+    coMemberChallengeIds(supabase, viewerId),
+    coMemberChallengeIds(supabase, ownerId),
+  ]);
+  return challengeIdSetsOverlap(viewer, owner);
+}
+
 export async function coMemberChallengeIds(supabase: SupabaseClient, viewerId: string): Promise<Set<string>> {
   const [members, enrollments] = await Promise.all([
     supabase

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { canSeeContent, coMemberChallengeIds, isFriend, mutualFriendIds, viewerCanSee } from "./is-friend";
+import { canSeeContent, challengeIdSetsOverlap, coMemberChallengeIds, isFriend, mutualFriendIds, viewerCanSee } from "./is-friend";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -31,6 +31,14 @@ function followsClient(follows: Follow[]): SupabaseClient {
     },
   } as unknown as SupabaseClient;
 }
+
+describe("challengeIdSetsOverlap", () => {
+  it("is true only when both sets share an id", () => {
+    expect(challengeIdSetsOverlap(new Set(["c1"]), new Set(["c1", "c2"]))).toBe(true);
+    expect(challengeIdSetsOverlap(new Set(["c1"]), new Set(["c2"]))).toBe(false);
+    expect(challengeIdSetsOverlap(new Set(), new Set(["c1"]))).toBe(false);
+  });
+});
 
 describe("canSeeContent", () => {
   it("hides a friends-only post when A follows B only", () => {

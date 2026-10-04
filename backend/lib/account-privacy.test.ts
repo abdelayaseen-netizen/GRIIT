@@ -12,6 +12,7 @@ describe("account privacy enforcement", () => {
     expect(record).toContain("canSeeProfileContent");
     expect(record).toContain("active_streak_count");
     expect(record).toContain("locked.streak.current");
+    expect(record).toContain("sharesChallenge");
 
     const feed = read("../trpc/routes/feed.ts");
     expect(feed).toContain("canSeeProfileContent");
@@ -27,6 +28,10 @@ describe("account privacy enforcement", () => {
     const visitor = read("../../app/profile/[username].tsx");
     expect(visitor).toContain("badgeItemsFromRows(rec?.badges ?? [])");
     expect(visitor).not.toContain("badgeRowsFromProgress");
+
+    const account = read("./account-privacy.ts");
+    expect(account).toContain("sharesChallenge");
+    expect(account).not.toContain("isCoMember: false");
 
     const board = read("../trpc/routes/leaderboard.ts");
     expect(board).toContain("Account privacy does not hide co-members");
