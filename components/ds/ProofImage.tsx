@@ -85,7 +85,7 @@ export default function ProofImage({
       : DS_V3.space.md;
   const showScrim = Boolean(scrim || title || caption || stamp);
   const stampLabel: StampLabel | null =
-    stamp === true ? "Verified" : stamp === false || stamp == null ? null : stamp;
+    stamp === true ? "Photo" : stamp === false || stamp == null ? null : stamp;
   const imageSource =
     request == null
       ? null

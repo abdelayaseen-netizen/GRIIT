@@ -210,7 +210,7 @@ export default function MomentScreenV3({
                 uri={proofUri}
                 source={proofSource}
                 size="feed"
-                stamp={stampOn ? "Verified" : false}
+                stamp={stampOn ? "Photo" : false}
                 scrim={stampOn}
               />
             </View>

@@ -141,7 +141,7 @@ describe("secured screen wiring", () => {
     expect(screen).not.toContain("formatSecuredStateLine");
     expect(moment).toContain("ShareStickerSheet");
     expect(moment).toContain("camera && hasPhoto");
-    expect(moment).toContain('stamp={stampOn ? "Verified"');
+    expect(moment).toContain('stamp={stampOn ? "Photo"');
   });
 
   it("fetch failure shows Couldn't load. Try again. and Retry, never a blank ready caption", () => {
