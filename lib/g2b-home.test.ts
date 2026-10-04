@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   caughtUpLine,
@@ -34,6 +36,8 @@ describe("g2b home feed", () => {
 
   it("date caption is Weekday d Month", () => {
     expect(homeDateCaption(new Date(2026, 9, 2))).toMatch(/Friday 2 October/);
+    const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
+    expect(home).toMatch(/dateCaption:\s*\{\s*fontSize:\s*DS_V3\.type\.body\.fontSize/);
   });
 
   it("picks the first active challenge and treats missing count as sole", () => {

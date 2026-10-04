@@ -26,6 +26,7 @@ import {
   closeTimeLabel,
   pickStartTask,
   startCtaLabel,
+  remainingWindowsClosed,
   todayDay2Hero,
   todayFirstDayLine,
   windowClosesBanner,
@@ -726,7 +727,10 @@ export default function HomeScreen() {
                 !todaySecured &&
                 proof.sections.some((s) => s.day >= 2) &&
                 typeof streak === "number"
-                  ? todayDay2Hero(streak)
+                  ? todayDay2Hero(
+                      streak,
+                      remainingWindowsClosed(proof.sections.flatMap((s) => s.rows)),
+                    )
                   : null
               }
               windowBanner={

@@ -432,9 +432,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   dateCaption: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: DS_V3.type.body.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   homeName: {

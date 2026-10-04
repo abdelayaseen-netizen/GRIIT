@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   countdownSuffix,
   pickStartTask,
+  remainingWindowsClosed,
   startCtaLabel,
+  TODAY_WINDOW_CLOSED,
   todayDay2Hero,
   todayFirstDayLine,
   windowClosesBanner,
@@ -18,6 +20,13 @@ describe("g2a home copy", () => {
   it("day 2 hero pluralises", () => {
     expect(todayDay2Hero(1)).toEqual({ hero: "1", line: "day. Secure today and it's 2." });
     expect(todayDay2Hero(5)).toEqual({ hero: "5", line: "days. Secure today and it's 6." });
+    expect(remainingWindowsClosed([
+      { done: true, closed: false },
+      { done: false, closed: true },
+      { done: false, closed: true },
+    ])).toBe(true);
+    expect(remainingWindowsClosed([{ done: false, closed: false }])).toBe(false);
+    expect(todayDay2Hero(5, true)).toEqual({ hero: "5", line: TODAY_WINDOW_CLOSED });
   });
 
   it("Start label and window banner", () => {
