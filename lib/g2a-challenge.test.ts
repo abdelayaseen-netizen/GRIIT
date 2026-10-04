@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ANYONE_WITH_THE_LINK,
@@ -82,5 +84,16 @@ describe("freeze and people copy", () => {
       picker: "Just you",
       cta: "Invite to Crew",
     });
+  });
+
+  it("a solo challenge board is only the invite empty state", () => {
+    const tab = readFileSync(
+      resolve(__dirname, "../components/activity/LeaderboardTab.tsx"),
+      "utf8",
+    );
+    expect(tab).toContain("soloChallenge");
+    expect(tab).toContain("showRows");
+    expect(tab).not.toContain('label="Just you"');
+    expect(tab).toContain("boardEmptyState");
   });
 });

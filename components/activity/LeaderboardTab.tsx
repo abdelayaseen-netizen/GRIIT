@@ -182,6 +182,9 @@ function LeaderboardBody({
   const emptyCopy = boardEmptyState(slices.memberCount, challengeBoard.data?.challengeTitle ?? "this challenge");
   const rows = outOfRange ? entries.filter((e) => e.userId !== userId) : entries;
   const showBoard = !loading && !err && !showEmpty;
+  const soloChallenge =
+    scope === "challenge" && slices.memberCount <= 1 && Boolean(selectedChallengeId);
+  const showRows = showBoard && !soloChallenge;
   const openProfile = useOpenLeaderboardProfile();
   void setScope;
   void setChallengeScope;
@@ -223,7 +226,7 @@ function LeaderboardBody({
           </ScrollView>
         </View>
       ) : null}
-      {showBoard ? (
+      {showRows ? (
         <View style={styles.week}>
           {typeof challengeBoard.data?.elapsedEnded === "number" ? (
             <Text style={styles.caption}>{elapsedWeekLine(challengeBoard.data.elapsedEnded)}</Text>
@@ -232,11 +235,6 @@ function LeaderboardBody({
           {slices.split ? <Text style={styles.label}>{TOP_OF_CHALLENGE}</Text> : null}
           {slices.split ? <Text style={styles.label}>{AROUND_YOU}</Text> : null}
           {slices.split ? <Text style={styles.caption}>{ranksBelowLine(slices.lowestShown)}</Text> : null}
-        </View>
-      ) : null}
-      {scope === "challenge" && slices.memberCount <= 1 && !loading && !err && selectedChallengeId ? (
-        <View style={styles.extraChips}>
-          <Chip label="Just you" selected />
         </View>
       ) : null}
       {emptyCopy && scope === "challenge" && selectedChallengeId && activeList.length > 0 && !loading && !err ? (
@@ -292,19 +290,19 @@ function LeaderboardBody({
       ) : null}
 
       {!loading && !err && showEmpty && !(scope === "challenge" && selectedChallengeId && activeList.length > 0 && emptyCopy) ? empty : null}
-      {showBoard ? <View style={styles.board} /> : null}
+      {showRows ? <View style={styles.board} /> : null}
     </>
   );
 
   return (
     <FlatList
-      data={showBoard ? rows : []}
+      data={showRows ? rows : []}
       keyExtractor={(item) => item.userId}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
       ListHeaderComponent={header}
       ListFooterComponent={
-        showBoard && outOfRange && viewer ? (
+        showRows && outOfRange && viewer ? (
           <BoardRow
             entry={viewer}
             viewerId={userId}
