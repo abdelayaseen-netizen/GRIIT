@@ -7,6 +7,7 @@ export const COMMENT_PLACEHOLDER = "Add a comment";
 export const COMMENTS_EMPTY = "No comments yet.";
 
 export function commentsCountLabel(n: number): string {
+  if (n <= 0) return "";
   return `${n} comments`;
 }
 

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Heart, MessageCircle, Users } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
+import { showFeedCount } from "@/lib/feed-count";
 
 export function FeedCompactRow(p: {
   userId: string;
@@ -48,11 +49,13 @@ export function FeedCompactRow(p: {
               color={p.respected ? DS_V3.color.brand : DS_V3.color.textSecondary}
               fill={p.respected ? DS_V3.color.brand : "transparent"}
             />
-            <Text style={[styles.count, p.respected ? styles.countOn : null]}>{p.respects}</Text>
+            {showFeedCount(p.respects) ? (
+              <Text style={[styles.count, p.respected ? styles.countOn : null]}>{p.respects}</Text>
+            ) : null}
           </Pressable>
           <Pressable onPress={p.onComments} hitSlop={8} style={styles.act} accessibilityRole="button" accessibilityLabel="Comment">
             <MessageCircle size={18} color={DS_V3.color.textSecondary} />
-            <Text style={styles.count}>{p.comments}</Text>
+            {showFeedCount(p.comments) ? <Text style={styles.count}>{p.comments}</Text> : null}
           </Pressable>
         </View>
       </View>
