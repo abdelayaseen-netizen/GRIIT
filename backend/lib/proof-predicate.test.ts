@@ -8,7 +8,9 @@ import {
   hasCameraProof,
   proofCountsForDateKeys,
   proofPhotoUrlFromCheckIn,
+  proofsAfterSign,
   splitSecuredProof,
+  tileImageSource,
 } from "./proof-predicate";
 
 describe("hasCameraProof", () => {
@@ -167,5 +169,55 @@ describe("splitSecuredProof", () => {
     const written = { proof_url: "https://cdn/p.jpg", proof_photo_url: null as string | null, verified: undefined };
     expect(hasCameraProof(written)).toBe(false);
     expect(checkInHasCameraProof({ date_key: "2026-09-17", ...written })).toBe(true);
+  });
+
+  it("keeps a proof on a day that is not secured, including today", () => {
+    const tiles = cameraProofTiles({
+      checkIns: [
+        {
+          date_key: "2026-10-04",
+          task_id: "t1",
+          active_challenge_id: "ac-a",
+          photo_url: "https://cdn/today.jpg",
+        },
+      ],
+      securedDateKeys: [],
+      enrollments: [{ id: "ac-a", challengeId: "ch-a", startDateKey: "2026-09-10" }],
+      challenges: [{ id: "ch-a", title: "Iron man", duration_days: 30 }],
+      tasks: [{ id: "t1", challenge_id: "ch-a", title: "Pages", task_type: "counter" }],
+    });
+    expect(tiles.map((t) => t.dateKey)).toEqual(["2026-10-04"]);
+    expect(tiles[0]?.imageUrl).toBe("https://cdn/today.jpg");
+  });
+
+  it("keeps a bare task-proofs path so it can be signed before the https check", () => {
+    const path = "11111111-1111-4111-8111-111111111111/proof.jpg";
+    expect(tileImageSource({ proof_url: path })).toBe(path);
+    const tiles = cameraProofTiles({
+      checkIns: [
+        {
+          date_key: "2026-09-20",
+          task_id: "t1",
+          active_challenge_id: "ac-a",
+          proof_url: path,
+        },
+      ],
+      enrollments: [{ id: "ac-a", challengeId: "ch-a", startDateKey: "2026-09-10" }],
+      challenges: [{ id: "ch-a", title: "Iron man" }],
+      tasks: [{ id: "t1", challenge_id: "ch-a", title: "Pages" }],
+    });
+    expect(tiles[0]?.imageUrl).toBe(path);
+    const signed = proofsAfterSign(tiles, ["https://signed.example/proof.jpg"]);
+    expect(signed[0]?.imageUrl).toBe("https://signed.example/proof.jpg");
+    expect(proofsAfterSign(tiles, [null])).toEqual([]);
+  });
+
+  it("getTodayCheckins selects photo_url with the other proof columns", () => {
+    const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
+    const start = src.indexOf("getTodayCheckins:");
+    const body = src.slice(start, src.indexOf("getTodayCheckinsForUser:"));
+    expect(body).toContain("photo_url");
+    expect(body).toContain("proof_url");
+    expect(body).toContain("completion_image_url");
   });
 });

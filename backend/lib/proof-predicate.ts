@@ -6,6 +6,7 @@
  */
 
 import { proofImageUrlForCheckIn } from "../../lib/profile-v2-proof-photo";
+import { toProofPath } from "./proof-image";
 import { calendarDay } from "./calendar-day";
 import { gatesFor, type TaskGate, type TaskModelRow } from "./task-model";
 
@@ -137,6 +138,32 @@ function challengeDayOn(startDateKey: string, dateKey: string): number {
   return calendarDay(startDateKey, dateKey, null);
 }
 
+/** https/file URL, or a bare task-proofs path waiting to be signed. */
+export function tileImageSource(row: {
+  photo_url?: string | null;
+  proof_url?: string | null;
+  completion_image_url?: string | null;
+  proof_photo_url?: string | null;
+}): string | null {
+  const http = proofPhotoUrlFromCheckIn(row);
+  if (http) return http;
+  for (const raw of [row.photo_url, row.proof_url, row.completion_image_url]) {
+    if (toProofPath(raw)) return raw!.trim();
+  }
+  return null;
+}
+
+/** Replace stored values with signed URLs, then drop anything that did not sign. */
+export function proofsAfterSign<T extends { imageUrl: string | null }>(
+  tiles: readonly T[],
+  signed: readonly (string | null)[],
+): T[] {
+  return tiles.flatMap((tile, i) => {
+    const imageUrl = signed[i] ?? null;
+    return imageUrl ? [{ ...tile, imageUrl }] : [];
+  });
+}
+
 /** Camera proofs for the grid / Secured — self-reported days emit nothing. */
 export function cameraProofTiles(args: {
   checkIns: ProofCheckIn[];
@@ -147,7 +174,6 @@ export function cameraProofTiles(args: {
   tasks: (TaskModelRow & { id?: string; challenge_id?: string; title?: string | null })[];
   events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string; shared?: boolean }[];
 }): RecordProofTile[] {
-  const secured = args.securedDateKeys ? new Set(args.securedDateKeys) : null;
   const titleByChallenge = new Map(
     args.challenges.map((c) => [c.id, (c.title ?? "").trim() || "Challenge"]),
   );
@@ -157,8 +183,7 @@ export function cameraProofTiles(args: {
   const tiles: RecordProofTile[] = [];
   for (const row of args.checkIns) {
     if (args.dateKey && row.date_key !== args.dateKey) continue;
-    if (secured && !secured.has(row.date_key)) continue;
-    const url = proofPhotoUrlFromCheckIn(row);
+    const url = tileImageSource(row);
     if (!url) continue;
     const enrollment = row.active_challenge_id ? enrollmentById.get(row.active_challenge_id) : undefined;
     const task = row.task_id ? taskById.get(row.task_id) : undefined;

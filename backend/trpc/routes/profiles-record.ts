@@ -37,7 +37,7 @@ import {
   shareEventsFromActivity,
 } from "../../lib/proofs-days";
 import { signProofPaths, toProofPath } from "../../lib/proof-image";
-import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys } from "../../lib/proof-predicate";
+import { cameraProofTiles, checkInHasCameraProof, proofCountsForDateKeys, proofsAfterSign } from "../../lib/proof-predicate";
 import { PROFILE_V2_BADGES } from "../../../lib/profile-v2-badges";
 import { evaluateV42Badges } from "../../../lib/v42-badges";
 import { fullHouseAtFromRoster } from "../../lib/full-house";
@@ -574,7 +574,7 @@ export const profilesRecordProcedures = {
           ),
         },
       );
-      const proofsOut = sliced.proofs.map((p, i) => ({ ...p, imageUrl: signedProofs[i] ?? null }));
+      const proofsOut = proofsAfterSign(sliced.proofs, signedProofs);
 
       const timeTaskIds = new Set(
         taskRows
