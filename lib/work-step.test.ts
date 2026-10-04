@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flow-state";
 import {
   COUNT_HONESTY,
+  counterHeaderLines,
   counterSubline,
   COUNT_POST,
   COUNT_TYPE,
@@ -74,6 +75,10 @@ describe("gate-last ordering", () => {
 
 describe("header title", () => {
   it("names the type; gates stay on the gate line", () => {
+    expect(counterHeaderLines("5am crew", 2, 30)).toEqual({
+      label: "5am crew",
+      title: "Day 2 of 30",
+    });
     expect(workStepHeader("5am crew", 12, 30)).toBe("5am crew · Day 12 of 30");
     expect(workStepHeader("Read 30 min", 1, 7)).toBe("Read 30 min · Day 1 of 7");
     expect(chromeTitle("timer", ["camera"])).toBe("Timer");

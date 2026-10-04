@@ -78,6 +78,18 @@ export function workStepHeader(challenge: string, day: number, durationDays: num
   return flowHeaderTitle(challenge, day, durationDays);
 }
 
+/** Counter header: challenge name on the label line, day on the title line. */
+export function counterHeaderLines(
+  challenge: string,
+  day: number,
+  durationDays: number,
+): { label: string; title: string } {
+  const name = challenge.trim() || "Challenge";
+  const n = Math.max(1, Math.floor(day));
+  const total = Math.max(n, Math.floor(durationDays) || n);
+  return { label: name, title: `Day ${n} of ${total}` };
+}
+
 export function workThenCamera(type: string, gates: readonly TaskGate[]): boolean {
   return (
     (type === "counter" ||

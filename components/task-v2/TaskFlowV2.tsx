@@ -23,7 +23,7 @@ import { SessionStep } from "./steps/SessionStep";
 import { TimerEntryStep } from "./steps/TimerEntryStep";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
-import { workStepOwnsChrome } from "@/lib/work-step";
+import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
@@ -201,8 +201,8 @@ export function TaskFlowV2() {
           counterGoal={f.counterGoal}
           counterUnit={f.counterUnit}
           taskName={f.taskName}
-          headerTitle={f.headerTitle}
-          headerLabel={f.chromeTitle}
+          headerTitle={counterHeaderLines(f.challengeName, f.currentDay, f.durationDays).title}
+          headerLabel={counterHeaderLines(f.challengeName, f.currentDay, f.durationDays).label}
           hasCamera={f.gates.includes("camera")}
           keypadOpen={f.keypad?.field === "count"}
           onTypeCount={f.onTypeCount}

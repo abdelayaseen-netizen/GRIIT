@@ -533,12 +533,12 @@ const styles = StyleSheet.create({
   },
   extraChips: {
     paddingTop: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
     gap: DS_V3.space.sm,
   },
   chipRow: {
     flexDirection: "row",
     gap: DS_V3.space.xs,
-    paddingHorizontal: DS_V3.space.gutter,
   },
   skel: {
     paddingHorizontal: DS_V3.space.gutter,

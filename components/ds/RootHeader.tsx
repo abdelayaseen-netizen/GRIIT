@@ -17,7 +17,9 @@ export default function RootHeader({ title, kicker, actions }: RootHeaderProps) 
     <View style={styles.wrap}>
       <View style={styles.copy}>
         {kicker ? <Text style={styles.kicker}>{kicker}</Text> : null}
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          {title}
+        </Text>
       </View>
       {actions ? <View style={styles.actions}>{actions}</View> : null}
     </View>
