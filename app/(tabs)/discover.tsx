@@ -39,6 +39,7 @@ import {
 import {
   discoverCategoryMatches,
   discoverFeaturedChip,
+  discoverGridWithoutHero,
   discoverPeopleWithoutSelf,
 } from "@/lib/discover-people";
 import { needsSetGym, type FeaturedBuiltin } from "@/lib/featured-catalog";
@@ -140,8 +141,11 @@ function DiscoverScreenInner() {
 
   const filteredChallenges = useMemo(() => {
     const list = recommendedQuery.data?.challenges ?? [];
-    return list.filter((c) => categoryMatches(c, selectedCategory));
-  }, [recommendedQuery.data, selectedCategory]);
+    return discoverGridWithoutHero(
+      list.filter((c) => categoryMatches(c, selectedCategory)),
+      featuredQuery.data?.id,
+    );
+  }, [recommendedQuery.data, selectedCategory, featuredQuery.data?.id]);
 
   const joinedIds = useMemo(() => {
     const rows = myActiveQuery.data ?? [];

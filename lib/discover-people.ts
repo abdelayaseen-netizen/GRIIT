@@ -31,3 +31,12 @@ export function discoverPeopleWithoutSelf<T extends { user_id: string }>(
   if (!selfId) return [...people];
   return people.filter((p) => p.user_id !== selfId);
 }
+
+/** The featured card already shows this challenge. The grid must not repeat it. */
+export function discoverGridWithoutHero<T extends { id: string }>(
+  challenges: readonly T[],
+  heroId?: string | null,
+): T[] {
+  if (!heroId) return [...challenges];
+  return challenges.filter((c) => c.id !== heroId);
+}

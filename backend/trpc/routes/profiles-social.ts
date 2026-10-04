@@ -437,6 +437,7 @@ export const profilesSocialProcedures = {
           "user_id, username, display_name, avatar_url, total_days_secured, profile_visibility, created_at"
         )
         .in("profile_visibility", ["public", "friends"])
+        .neq("user_id", viewerId)
         .order("total_days_secured", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(80);
