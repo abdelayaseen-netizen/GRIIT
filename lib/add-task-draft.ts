@@ -300,6 +300,11 @@ export function canSavePlace(draft: Pick<AddTaskDraft, "placeName" | "placeLat" 
   return draft.placeLat != null && draft.placeLng != null;
 }
 
+/** Place sheet save: keep Time window and turn Place on. Never clears other limits. */
+export function commitPlace(draft: AddTaskDraft): AddTaskDraft {
+  return { ...draft, location: true };
+}
+
 export type AddTaskPayload = {
   name: string;
   type: TaskModelType;
@@ -353,6 +358,8 @@ export function draftFromWizardTask(task: {
   unit?: string;
   requirePhoto?: boolean;
   photoMode?: PhotoMode;
+  locationName?: string;
+  radiusMeters?: number;
 }): AddTaskDraft {
   const type: TaskModelType =
     task.type === "timer" || task.type === "counter" || task.type === "text" || task.type === "run"
@@ -379,6 +386,19 @@ export function draftFromWizardTask(task: {
         ? "required"
         : "none";
   const gates = task.gates ?? (photoMode === "required" ? (["camera"] as TaskGate[]) : []);
+  const cfg = task.config ?? {};
+  const placeName =
+    (typeof task.locationName === "string" && task.locationName.trim()) ||
+    (typeof cfg.location_name === "string" ? cfg.location_name : "") ||
+    "";
+  const placeLat = typeof cfg.location_latitude === "number" ? cfg.location_latitude : null;
+  const placeLng = typeof cfg.location_longitude === "number" ? cfg.location_longitude : null;
+  const placeRadius =
+    (typeof task.radiusMeters === "number" && task.radiusMeters > 0
+      ? task.radiusMeters
+      : typeof cfg.location_radius_meters === "number"
+        ? cfg.location_radius_meters
+        : ADD_TASK_DEFAULT.placeRadius);
   return {
     ...ADD_TASK_DEFAULT,
     name: task.name,
@@ -398,6 +418,10 @@ export function draftFromWizardTask(task: {
     byTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.byTime,
     fromTime: task.gateTime?.start ?? ADD_TASK_DEFAULT.fromTime,
     toTime: task.gateTime?.end ?? ADD_TASK_DEFAULT.toTime,
+    placeName,
+    placeLat,
+    placeLng,
+    placeRadius,
   };
 }
 

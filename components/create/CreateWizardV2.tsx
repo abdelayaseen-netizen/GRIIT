@@ -321,6 +321,12 @@ export function CreateWizardV2() {
 
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
   const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
+  const editingDraft = useMemo(() => {
+    if (editingIndex == null) return null;
+    return draftFromWizardTask(
+      state.customTasks[editingIndex] ?? { name: "", type: "check_off" },
+    );
+  }, [editingIndex, state.customTasks]);
   const timeZone = resolveHomeTimeZone(
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
@@ -491,9 +497,7 @@ export function CreateWizardV2() {
 
         <AddTaskSheet
           visible={newTaskOpen}
-          initial={
-            editingIndex != null ? draftFromWizardTask(state.customTasks[editingIndex] ?? { name: "", type: "check_off" }) : null
-          }
+          initial={editingDraft}
           onClose={() => {
             setEditingIndex(null);
             setNewTaskOpen(false);

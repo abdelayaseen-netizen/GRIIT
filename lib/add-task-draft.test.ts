@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ADD_TASK_DEFAULT,
@@ -15,6 +17,7 @@ import {
   applyProof,
   applyStarter,
   canSubmitDraft,
+  commitPlace,
   draftFromWizardTask,
   gatesFromDraft,
   payloadFromDraft,
@@ -255,6 +258,51 @@ describe("add-task draft", () => {
     expect(by.byTime).toBe("07:00");
   });
 
+  it("saving a place keeps Time window and Place on", () => {
+    const before = draft({
+      name: "Read",
+      type: "counter",
+      counterTarget: "30",
+      counterUnit: "pages",
+      photoMode: "required",
+      camera: true,
+      time: true,
+      location: true,
+      timeMode: "by",
+      byTime: "07:00",
+    });
+    const after = commitPlace({
+      ...before,
+      placeName: "Gym",
+      placeLat: 40.7,
+      placeLng: -74,
+      placeRadius: 250,
+    });
+    expect(after.time).toBe(true);
+    expect(after.location).toBe(true);
+    expect(after.camera).toBe(true);
+    expect(after.byTime).toBe("07:00");
+    const row = payloadFromDraft(after);
+    expect(row.gates).toEqual(["camera", "time", "location"]);
+    expect(row.gateTime).toEqual({ mode: "by", start: "07:00", end: null });
+    expect(row.config).toMatchObject({
+      location_name: "Gym",
+      location_latitude: 40.7,
+      location_longitude: -74,
+      location_radius_meters: 250,
+    });
+    expect(previewFromDraft(after).caption).toBe("Camera · By 7:00 am · Gym");
+    const opened = draftFromWizardTask(row);
+    expect(opened.time).toBe(true);
+    expect(opened.location).toBe(true);
+    expect(opened.placeName).toBe("Gym");
+    expect(opened.placeLat).toBe(40.7);
+    expect(opened.placeLng).toBe(-74);
+    expect(opened.placeRadius).toBe(250);
+    expect(commitPlace(opened).time).toBe(true);
+    expect(commitPlace(opened).location).toBe(true);
+  });
+
   it("preview caption uses Camera / Photo optional / Self-reported", () => {
     expect(previewFromDraft(draft({ name: "Journal" })).caption).toBe("Self-reported");
     expect(previewFromDraft(draft({ name: "Journal", photoMode: "required" })).caption).toBe("Camera");
@@ -274,5 +322,17 @@ describe("add-task draft", () => {
       ).caption,
     ).toBe("Camera · By 7:00 am");
     expect(previewFromDraft(draft({ name: "" })).title).toBe(ADD_TASK_NAME_PLACEHOLDER);
+  });
+
+  it("place sheet stays nested so opening Set place cannot wipe the draft", () => {
+    const sheet = readFileSync(
+      resolve(__dirname, "../components/create/AddTaskSheet.tsx"),
+      "utf8",
+    );
+    expect(sheet).toContain("commitPlace");
+    expect(sheet).toContain("visible && !wasVisible.current");
+    expect(sheet).toContain("visible={placeOpen}");
+    expect(sheet).not.toContain("if (placeOpen)");
+    expect(sheet).not.toContain("applyProof");
   });
 });
