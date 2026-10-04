@@ -131,6 +131,7 @@ function LiveFeedSection({
   inviteChallenge,
   showInvite,
 }: LiveFeedSectionProps) {
+  void activeChallengesCount;
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const router = useRouter();
@@ -564,7 +565,6 @@ function LiveFeedSection({
               <Text style={styles.feedTitle}>{FEED_HEADING}</Text>
               <View style={styles.liveRow}>
                 <Animated.View style={[styles.liveDot, { opacity: dotOpacity }]} />
-                <Text style={styles.liveCountMeta}>{activeChallengesCount} live</Text>
               </View>
             </View>
           </View>
@@ -841,7 +841,6 @@ const styles = StyleSheet.create({
     borderRadius: DS_RADIUS.SM,
     backgroundColor: DS_V3.color.brand,
   },
-  liveCountMeta: { fontSize: 11, color: DS_V3.color.textSecondary, fontWeight: "500" },
   untilThree: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingBottom: DS_V3.space.md,
