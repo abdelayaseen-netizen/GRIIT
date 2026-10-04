@@ -5,8 +5,12 @@ import {
   remainingWindowsClosed,
   startCtaLabel,
   TODAY_WINDOW_CLOSED,
+  WINDOW_CLOSED_RESET,
+  daysInARow,
+  showTodayStreakLine,
   todayDay2Hero,
   todayFirstDayLine,
+  windowClosedFollowup,
   windowClosesBanner,
 } from "@/lib/g2a-home";
 
@@ -27,6 +31,16 @@ describe("g2a home copy", () => {
     ])).toBe(true);
     expect(remainingWindowsClosed([{ done: false, closed: false }])).toBe(false);
     expect(todayDay2Hero(5, true)).toEqual({ hero: "5", line: TODAY_WINDOW_CLOSED });
+    expect(showTodayStreakLine(0, false)).toBe(false);
+    expect(showTodayStreakLine(5, true)).toBe(false);
+    expect(showTodayStreakLine(5, false)).toBe(true);
+    expect(windowClosedFollowup({ noDaysOff: true, freezesLeft: 2 })).toBe(WINDOW_CLOSED_RESET);
+    expect(windowClosedFollowup({ noDaysOff: false, freezesLeft: 2 })).toBe(
+      "Today can't be secured. Tomorrow you can use a freeze to cover it. 2 left.",
+    );
+    expect(windowClosedFollowup({ noDaysOff: false, freezesLeft: 0 })).toBeNull();
+    expect(daysInARow(1)).toBe("1 day in a row.");
+    expect(daysInARow(3)).toBe("3 days in a row.");
   });
 
   it("Start label and window banner", () => {

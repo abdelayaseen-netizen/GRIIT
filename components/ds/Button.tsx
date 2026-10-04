@@ -44,6 +44,8 @@ export type ButtonProps = {
   singleLine?: boolean;
   /** Label uses DS secondary type (15/20) instead of bodyStrong. */
   labelType?: "secondary";
+  /** Overrides the size height. Home empty actions are 40. */
+  boxHeight?: number;
 };
 
 export default function Button({
@@ -62,8 +64,9 @@ export default function Button({
   fill,
   singleLine,
   labelType,
+  boxHeight,
 }: ButtonProps) {
-  const height = size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button;
+  const height = boxHeight ?? (size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button);
   const spinning = Boolean(submitting || loading);
   const blocked = Boolean(disabled || spinning);
   const pad = Math.max(0, (DS_V3.size.tap - height) / 2);

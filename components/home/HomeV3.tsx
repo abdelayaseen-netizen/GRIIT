@@ -4,11 +4,10 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame, Share, X } from "lucide-react-native";
+import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Flame, Share, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
 import HeaderIcon from "@/components/ds/HeaderIcon";
-import DisplayNumber from "@/components/ds/DisplayNumber";
 import Card from "@/components/ds/Card";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
@@ -40,10 +39,16 @@ import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow
 import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
+  SECTION_DONE,
+  TODAY_WINDOW_CLOSED,
+  daysInARow,
+  remainingWindowsClosed,
+  showTodayStreakLine,
+  windowClosedFollowup,
 } from "@/lib/g2a-home";
 
-const ICON = DS_V3.space.xs * 6;
-const RING = DS_V3.space.gutter;
+const ICON = 22;
+const RING = 22;
 const RING_CHECK = DS_V3.space.md;
 const META = DS_V3.space.lg;
 const STROKE = (DS_V3.space.xs * 3) / 8;
@@ -128,6 +133,8 @@ export type HomeV3Props = {
   windowBanner?: string | null;
   startLabel?: string | null;
   showFirstProofSlot?: boolean;
+  bellUnread?: boolean;
+  noDaysOff?: boolean;
 };
 
 export function HomeV3({
@@ -154,7 +161,7 @@ export function HomeV3({
   onPressShareToday,
   sectionChoices,
   onToggleSection,
-  freezesLeft: _freezesLeft,
+  freezesLeft,
   showFreezeChip: _showFreezeChip = false,
   loading,
   error,
@@ -164,6 +171,8 @@ export function HomeV3({
   windowBanner,
   startLabel,
   showFirstProofSlot,
+  bellUnread,
+  noDaysOff = false,
 }: HomeV3Props) {
   const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
   const headerTitle = title ?? weekday;
@@ -194,6 +203,17 @@ export function HomeV3({
       </View>
     );
   }
+
+  const windowsClosed = Boolean(
+    proof?.hasChallenge && remainingWindowsClosed(proof.sections.flatMap((s) => s.rows)),
+  );
+  const allDone = Boolean(
+    proof?.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount,
+  );
+  const showStreakHero = showTodayStreakLine(streak, windowsClosed || allDone) && Boolean(day2Hero);
+  const closedFollow = windowsClosed
+    ? windowClosedFollowup({ noDaysOff, freezesLeft })
+    : null;
 
   const renderRow = (row: HomeProofRow) => {
     const closed = row.closed;
@@ -237,28 +257,30 @@ export function HomeV3({
           <Text style={styles.dateCaption}>{dateCaption}</Text>
           <Text style={styles.homeName}>{headerTitle}</Text>
         </View>
-        {streak == null ? null : onPressStreak ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={formatDays(streak)}
-            onPress={onPressStreak}
-            style={styles.streakChip}
-          >
-            <Flame size={16} color={DS_V3.color.brand} />
-            <Text style={styles.streakChipNum}>{streak}</Text>
-          </Pressable>
-        ) : (
-          <View
-            style={styles.streakChip}
-            accessibilityLabel={formatDays(streak)}
-          >
-            <Flame size={16} color={DS_V3.color.brand} />
-            <Text style={styles.streakChipNum}>{streak}</Text>
-          </View>
-        )}
-        <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
-          <Bell size={ICON} color={DS_V3.color.textPrimary} />
-        </HeaderIcon>
+        {streak != null && streak >= 1 ? (
+          onPressStreak ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={formatDays(streak)}
+              onPress={onPressStreak}
+              style={styles.streakChip}
+            >
+              <Flame size={16} color={DS_V3.color.brand} />
+              <Text style={styles.streakChipNum}>{streak}</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.streakChip} accessibilityLabel={formatDays(streak)}>
+              <Flame size={16} color={DS_V3.color.brand} />
+              <Text style={styles.streakChipNum}>{streak}</Text>
+            </View>
+          )
+        ) : null}
+        <View>
+          <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
+            <Bell size={ICON} color={DS_V3.color.textPrimary} />
+          </HeaderIcon>
+          {bellUnread ? <View style={styles.bellDot} accessibilityLabel="Unread notifications" /> : null}
+        </View>
       </View>
 
       {morningAfter ? (
@@ -300,15 +322,24 @@ export function HomeV3({
                 {proof.doneCount} / {proof.totalCount}
               </Text>
             </View>
-            {day2Hero ? (
+            {showStreakHero && day2Hero ? (
               <View style={styles.day2Hero}>
-                <DisplayNumber value={Number(day2Hero.hero)} size="home" />
+                <Text style={styles.hero28}>{day2Hero.hero}</Text>
                 <Text style={styles.secondary}>{day2Hero.line}</Text>
               </View>
-            ) : firstDayLine ? (
+            ) : firstDayLine && !windowsClosed ? (
               <Text style={[styles.secondary, styles.sectionFirst]}>{firstDayLine}</Text>
             ) : null}
-            {windowBanner ? <Text style={styles.caption}>{windowBanner}</Text> : null}
+            {windowsClosed ? (
+              <View style={styles.closedBlock}>
+                <Clock size={18} color={DS_V3.color.textSecondary} />
+                <View style={styles.flex}>
+                  <Text style={styles.closedTitle}>{TODAY_WINDOW_CLOSED}</Text>
+                  {closedFollow ? <Text style={styles.secondary}>{closedFollow}</Text> : null}
+                </View>
+              </View>
+            ) : null}
+            {windowBanner && !windowsClosed ? <Text style={styles.caption}>{windowBanner}</Text> : null}
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
                 const expanded = todaySectionExpanded(
@@ -335,9 +366,16 @@ export function HomeV3({
                         )}
                         <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
                       </View>
-                      <Text style={styles.countTxt}>
-                        {section.doneCount} / {section.totalCount}
-                      </Text>
+                      {section.doneCount === section.totalCount && section.totalCount > 0 ? (
+                        <View style={styles.sectionDone}>
+                          <Check size={14} color={DS_V3.color.brandText} />
+                          <Text style={styles.sectionDoneTxt}>{SECTION_DONE}</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.countTxt}>
+                          {section.doneCount} / {section.totalCount}
+                        </Text>
+                      )}
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={homeSectionToggleA11y(expanded, section.challenge)}
@@ -360,12 +398,32 @@ export function HomeV3({
               <View style={styles.emptyChallenge}>
                 <Text style={styles.secondary}>{NO_CHALLENGE_YET}</Text>
                 <View style={styles.emptyActions}>
-                  <Button label={FIND_A_CHALLENGE} onPress={onFindChallenge} />
-                  <Button label={CREATE_CHALLENGE} variant="secondary" onPress={onCreateChallenge} />
+                  <Button label={FIND_A_CHALLENGE} onPress={onFindChallenge} boxHeight={40} />
+                  <Button label={CREATE_CHALLENGE} variant="secondary" onPress={onCreateChallenge} boxHeight={40} />
                 </View>
               </View>
             )}
-            {proof.showShareToday ? (
+            {allDone ? (
+              <View style={styles.shareTodayBlock}>
+                {showTodayStreakLine(streak, false) ? (
+                  <Text style={styles.hero28}>{streak}</Text>
+                ) : null}
+                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
+                {showTodayStreakLine(streak, false) ? (
+                  <Text style={styles.secondary}>{daysInARow(streak ?? 0)}</Text>
+                ) : null}
+                {proof.showShareToday ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={SHARE_TODAY}
+                    onPress={onPressShareToday}
+                    style={styles.sharePill}
+                  >
+                    <Text style={styles.sharePillTxt}>{SHARE_TODAY}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : proof.showShareToday ? (
               <View style={styles.shareTodayBlock}>
                 <Text style={styles.daySecured}>{DAY_SECURED}</Text>
                 <Divider />
@@ -433,8 +491,8 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   homeHead: {
+    height: 56,
     paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.sm,
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.md,
@@ -444,16 +502,25 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   dateCaption: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textSecondary,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
   },
   homeName: {
-    fontSize: DS_V3.type.heading.fontSize,
-    lineHeight: DS_V3.type.heading.lineHeight,
-    fontWeight: DS_V3.type.heading.fontWeight,
-    color: DS_V3.color.textPrimary,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "400",
+    color: DS_V3.color.textSecondary,
+  },
+  bellDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: DS_V3.color.brand,
   },
   streakChip: {
     height: 32,
@@ -592,7 +659,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.md,
-    minHeight: DS_V3.size.tap,
+    minHeight: 48,
     marginBottom: DS_V3.space.md,
   },
   ring: {
@@ -703,6 +770,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: DS_V3.space.md,
     minHeight: DS_V3.size.tap,
+  },
+  hero28: {
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  closedBlock: {
+    marginTop: DS_V3.space.lg,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: DS_V3.space.md,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    borderRadius: DS_V3.radius.card,
+    padding: DS_V3.space.md,
+  },
+  closedTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  sectionDone: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  sectionDoneTxt: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500",
+    color: DS_V3.color.brandText,
+  },
+  sharePill: {
+    height: 36,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.brand,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    alignSelf: "flex-start",
+  },
+  sharePillTxt: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: DS_V3.color.onBrand,
   },
   gap20: { height: DS_V3.space.gutter },
   day2Hero: {

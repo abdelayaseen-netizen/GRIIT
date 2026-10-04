@@ -35,6 +35,7 @@ import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
 import { canOfferYesterdayFreeze } from "@/lib/freeze-recovery";
+import { activeChallengesAreHard } from "@/lib/secured-since";
 import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { buildWeekStripDays } from "@/lib/week-strip-days";
@@ -165,6 +166,13 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
+  const unreadQuery = useQuery({
+    queryKey: ["notifications", "unread-dot", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: unknown[] }>,
+    staleTime: 30 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  const bellUnread = (unreadQuery.data?.unread.length ?? 0) > 0;
   const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
@@ -757,6 +765,12 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
+              bellUnread={bellUnread}
+              noDaysOff={activeChallengesAreHard(
+                (Array.isArray(bootstrap.data?.activeChallenges)
+                  ? bootstrap.data.activeChallenges
+                  : []) as Parameters<typeof activeChallengesAreHard>[0],
+              )}
               loading={bootstrap.isPending && !bootstrap.data}
               firstDayLine={
                 !todaySecured && proof.sections.some((s) => s.day === 1)
