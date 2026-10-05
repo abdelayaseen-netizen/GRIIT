@@ -69,7 +69,7 @@ describe("proof moment wiring", () => {
     expect(flow).toContain("TRPC.checkins.shareProof");
     expect(flow).toContain("closingProofEventId");
     expect(screen).toContain("finishFeedState");
-    expect(screen).toContain("ShareActions");
+    expect(screen).toContain("ShareChoice");
     expect(screen).not.toContain("shareProgressImage");
   });
 });

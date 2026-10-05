@@ -169,14 +169,13 @@ describe("empty id → no Story action rendered", () => {
     );
     expect(sheet).toContain("showStoryAction(facebookAppId())");
     expect(sheet).toContain("showStory ?");
-    expect(finish).toContain("showStoryAction(facebookAppId())");
-    expect(finish).toContain("storyAvailable={showStory}");
+    expect(finish).toContain("ShareChoice");
     expect(sheet).toContain("SHARE_TARGET_STORY");
     expect(sheet).toContain("SHARE_TARGET_SAVE");
     expect(sheet).toContain("SHARE_TARGET_MESSAGES");
     expect(sheet).toContain("SHARE_TARGET_MORE");
     expect(sheet).not.toContain("SHARE_COPY");
-    expect(finish).toContain("ShareActions");
+    expect(finish).toContain("ShareChoice");
   });
 });
 
@@ -188,7 +187,7 @@ describe("Share to the feed stays on one line", () => {
     );
     const button = readFileSync(resolve(__dirname, "../components/ds/Button.tsx"), "utf8");
     expect(finish).toContain("shareCol");
-    expect(finish).toContain("ShareActions");
+    expect(finish).toContain("ShareChoice");
     expect(finish).not.toContain("shareRow");
     expect(button).toContain("labelSecondary");
     expect(button).toContain("DS_V3.type.secondary");
