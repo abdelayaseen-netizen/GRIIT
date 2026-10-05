@@ -137,3 +137,11 @@ Commit `a0c3df9b`. tsc 0. Suite 285 files / 1491 tests.
 Blocked step title is `WINDOW.opensAt` from `schedule_window_start`, otherwise `gateTime.start`, formatted 12-hour. It does not say midnight. The closed-window follow-up is "It opens again at the same time tomorrow." Task complete is already inside `Screen`, so the top floor is 59.
 
 Grep: `Tomorrow opens at midnight` is gone from `lib/task-ui.ts`. `BlockedStep.tsx` contains `WINDOW.opensAt` and does not contain midnight.
+
+## C3 Share choice
+
+Commit `ae59b182`. tsc 0. Suite 285 files / 1491 tests.
+
+The finish moment uses `ShareChoice`. A photo offers "Share to the feed". Anything else offers "Share as a card", which opens the sticker sheet. "Keep it to the record" stays on the screen as private. No answer stays private.
+
+Frame match 375+: BLOCKED for the same reason as C1. No iPhone 15 Pro capture and no seeded `is_test` session.
