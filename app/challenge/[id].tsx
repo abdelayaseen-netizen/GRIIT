@@ -28,6 +28,7 @@ import {
 } from "@/lib/profile-challenges";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
+  FREE_ACTIVE_LIMIT_MESSAGE,
   countActiveEnrollments,
 } from "@/lib/free-challenge-limit";
 import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
@@ -112,6 +113,7 @@ export default function ChallengeDetailScreen() {
   const { error, showError, clearError } = useInlineError();
   const [joining, setJoining] = useState(false);
   const [joinedSheet, setJoinedSheet] = useState<{ id: string; body: string } | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
@@ -352,8 +354,7 @@ export default function ChallengeDetailScreen() {
       captureError(err, { flow: "challenge_join", challengeId: id });
       const classified = classifyJoinChallengeError(err);
       if (classified.kind === "limit") {
-        showError(classified.message);
-        goPaywall();
+        setLimitOpen(true);
         return;
       }
       if (classified.kind === "already") {
@@ -545,6 +546,19 @@ export default function ChallengeDetailScreen() {
           }
         >
           <Text style={styles.sheetBody}>{joinedSheet?.body}</Text>
+        </Sheet>
+        <Sheet
+          visible={limitOpen}
+          onDismiss={() => setLimitOpen(false)}
+          heading="3 challenges"
+          footer={
+            <>
+              <Button label="See Pro" onPress={() => { setLimitOpen(false); goPaywall(); }} />
+              <Button label="Leave" variant="secondary" onPress={() => { setLimitOpen(false); router.push(ROUTES.TABS_HOME as never); }} />
+            </>
+          }
+        >
+          <Text style={styles.sheetBody}>{FREE_ACTIVE_LIMIT_MESSAGE}</Text>
         </Sheet>
       </Screen>
     </ErrorBoundary>
