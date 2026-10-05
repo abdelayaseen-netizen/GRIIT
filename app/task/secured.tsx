@@ -47,6 +47,7 @@ function TaskSecuredInner() {
     challengeDone?: string;
     activeChallengeId?: string;
     originTab?: string;
+    counterTarget?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -163,6 +164,7 @@ function TaskSecuredInner() {
       challengeDone: result.challengeDone,
       challengeDay: result.challengeDay,
       challengeLength: result.challengeLength,
+      counterReachedTarget: firstString(params.counterTarget) === "1",
     });
     if (next === "challenge_complete") {
       const enrollmentId = result.activeChallengeId;

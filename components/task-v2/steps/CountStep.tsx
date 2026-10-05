@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import KeyboardDock, { NUMBER_PAD_ACCESSORY_ID, NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -61,6 +62,19 @@ export function CountStep({
 
   return (
     <View style={styles.root}>
+      <NumberPadDoneBar />
+      <KeyboardDock
+        footer={
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+            <Button
+              label={countCtaLabel(count, counterGoal)}
+              variant="primary"
+              disabled={!enabled}
+              onPress={onSubmit}
+            />
+          </View>
+        }
+      >
       <View style={{ paddingTop: insets.top }}>
         <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       </View>
@@ -81,6 +95,7 @@ export function CountStep({
                 onTypeCount(Math.min(counterGoal, parseCountInput(digits)));
               }}
               keyboardType="number-pad"
+              inputAccessoryViewID={NUMBER_PAD_ACCESSORY_ID}
               accessibilityLabel="Count"
             />
           </View>
@@ -114,14 +129,7 @@ export function CountStep({
           </>
         )}
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-        <Button
-          label={countCtaLabel(count, counterGoal)}
-          variant="primary"
-          disabled={!enabled}
-          onPress={onSubmit}
-        />
-      </View>
+      </KeyboardDock>
     </View>
   );
 }

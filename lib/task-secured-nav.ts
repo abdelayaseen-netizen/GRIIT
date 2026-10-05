@@ -38,7 +38,12 @@ export function taskSecuredHref(
   result: SubmitResult,
   proofUri?: string,
   taskName?: string,
-  share?: { shareEventId?: string | null; closingHasPhoto?: boolean; originTab?: string | null },
+  share?: {
+    shareEventId?: string | null;
+    closingHasPhoto?: boolean;
+    originTab?: string | null;
+    counterReachedTarget?: boolean;
+  },
 ) {
   return {
     pathname: ROUTES.TASK_SECURED,
@@ -59,6 +64,7 @@ export function taskSecuredHref(
       shareEventId: share?.shareEventId ?? "",
       closingPhoto: share?.closingHasPhoto ? "1" : "0",
       originTab: share?.originTab ?? "home",
+      counterTarget: share?.counterReachedTarget ? "1" : "0",
     },
   } as const;
 }

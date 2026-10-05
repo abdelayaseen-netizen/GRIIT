@@ -4,6 +4,7 @@
  */
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import KeyboardDock from "@/components/ds/KeyboardDock";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -59,6 +60,19 @@ export function WriteStep({
 
   return (
     <View style={styles.root}>
+      <KeyboardDock
+        footer={
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+            <Button
+              label={writeCtaLabel(written, minWords)}
+              variant="primary"
+              disabled={!enabled}
+              onPress={onPost}
+            />
+            <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+          </View>
+        }
+      >
       <View style={{ paddingTop: insets.top }}>
         <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
       </View>
@@ -84,15 +98,7 @@ export function WriteStep({
           textAlignVertical="top"
         />
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-        <Button
-          label={writeCtaLabel(written, minWords)}
-          variant="primary"
-          disabled={!enabled}
-          onPress={onPost}
-        />
-        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
-      </View>
+      </KeyboardDock>
     </View>
   );
 }

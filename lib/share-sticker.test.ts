@@ -204,8 +204,12 @@ describe("Caption is text, never baked into the image", () => {
     expect(share).toContain("copyShareCaption");
     expect(share).toContain("setStringAsync");
     expect(sheet).toContain("caption: caption.trim()");
-    expect(sheet).not.toContain("copyStickerPngToPasteboard");
-    expect(sheet).not.toContain('kind === "copy"');
+    expect(sheet).toContain("copyStickerPngToPasteboard");
+    expect(sheet).toContain('kind === "copy"');
+    expect(sheet).toContain("STICKER.copied");
+    const copy = readFileSync(resolve(__dirname, "./copy.ts"), "utf8");
+    expect(copy).toContain("Copied. Paste it in your Instagram story.");
+    expect(sheet).not.toContain("copyShareCaption");
   });
 });
 

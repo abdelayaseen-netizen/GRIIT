@@ -20,3 +20,12 @@ export const HOME = {
 export const WINDOW = { opensAt: (start: string) => `Opens at ${start}`, closed: (a: string, b: string) => `Window closed · ${a}–${b}` };
 export const WEEK = { line: (s: number, closed: number) => `This week: ${s} of ${closed} days secured` };  // the only week count (StreakSheet)
 export const FEED = { everyoneHint: (n: number) => `Showing everyone until you follow 3 people. You follow ${n}.` }; // render only when Everyone is selected
+
+const IRREG: Record<string, string> = { person: "people" };
+export const count = (n: number, noun: string) => `${n} ${n === 1 ? noun : (IRREG[noun] ?? noun + "s")}`;
+export const STREAK = {
+  inARow: (n: number) => `${count(n, "day")} in a row`,
+  secured: (n: number) => `${count(n, "day")} secured`,
+  label: (n: number) => `${n}-day streak`,
+};
+export const STICKER = { copied: "Copied. Paste it in your Instagram story." };

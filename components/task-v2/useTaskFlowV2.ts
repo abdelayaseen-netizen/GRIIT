@@ -630,11 +630,13 @@ export function useTaskFlowV2() {
           shareEventId: eventId,
           closingHasPhoto: hasCameraProof,
         });
+        const counterTask = taskType === "counter" || taskType === "water" || taskType === "reading";
         router.replace(
           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
             shareEventId: eventId,
             closingHasPhoto: hasCameraProof,
             originTab,
+            counterReachedTarget: counterTask && count >= counterGoal,
           }) as never,
         );
       }

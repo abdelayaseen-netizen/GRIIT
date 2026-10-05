@@ -18,16 +18,18 @@ import {
 } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Download, Ellipsis, Instagram, MessageCircle, X } from "lucide-react-native";
+import { Copy, Download, Ellipsis, Instagram, MessageCircle, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ShareImage from "@/components/share/ShareImage";
 import {
+  copyStickerPngToPasteboard,
   saveStickerToPhotos,
   shareImageAndCaption,
   shareStickerToMessages,
   shareToInstagramStory,
 } from "@/lib/share";
 import { facebookAppId, savePhotosCopy, showStoryAction } from "@/lib/share-sticker";
+import { STICKER } from "@/lib/copy";
 import { readShareColours, writeShareColour } from "@/lib/share-colour";
 import {
   SHARE_CAPTION_PLACEHOLDER,
@@ -38,6 +40,7 @@ import {
   SHARE_PREVIEW_H,
   SHARE_PREVIEW_W,
   SHARE_SHEET_TITLE,
+  SHARE_TARGET_COPY,
   SHARE_TARGET_MESSAGES,
   SHARE_TARGET_MORE,
   SHARE_TARGET_SAVE,
@@ -129,7 +132,7 @@ export default function ShareSystemSheet({
   }, []);
 
   const run = useCallback(
-    async (kind: "story" | "save" | "messages" | "more") => {
+    async (kind: "story" | "save" | "messages" | "more" | "copy") => {
       if (busy) return;
       setBusy(true);
       setSaveStatus(null);
@@ -140,6 +143,12 @@ export default function ShareSystemSheet({
           caption,
           shareJoinLine({ username: card.username, inviteId: card.inviteCode }),
         );
+        if (kind === "copy") {
+          if (!storyUsesSticker(styleId)) return;
+          await copyStickerPngToPasteboard(uri);
+          setSaveStatus(STICKER.copied);
+          return;
+        }
         if (kind === "story") {
           await shareToInstagramStory(uri, {
             asSticker: storyUsesSticker(styleId),
@@ -167,7 +176,10 @@ export default function ShareSystemSheet({
   );
 
   const targets = [
-    ...(showStory ? [{ id: "story" as const, label: SHARE_TARGET_STORY, icon: Instagram, primary: true }] : []),
+    ...(storyUsesSticker(styleId)
+      ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: true }]
+      : []),
+    ...(showStory ? [{ id: "story" as const, label: SHARE_TARGET_STORY, icon: Instagram, primary: false }] : []),
     { id: "save" as const, label: SHARE_TARGET_SAVE, icon: Download, primary: false },
     { id: "messages" as const, label: SHARE_TARGET_MESSAGES, icon: MessageCircle, primary: false },
     { id: "more" as const, label: SHARE_TARGET_MORE, icon: Ellipsis, primary: false },
@@ -254,7 +266,7 @@ export default function ShareSystemSheet({
                 style={styles.target}
               >
                 <View style={[styles.circle, target.primary ? styles.circleOn : null]}>
-                  <Icon size={22} color={target.primary ? DS_V3.color.textPrimary : DS_V3.color.textPrimary} />
+                  <Icon size={22} color={target.primary ? DS_V3.color.onBrand : DS_V3.color.textPrimary} />
                 </View>
                 <Text style={styles.targetLabel}>{target.label}</Text>
               </Pressable>

@@ -9,6 +9,7 @@
  * ends the enrollment in the same mutation. finalizeEnded then listed it as unseen
  * while pathname was /task/secured, so "Drink Water Today is over" pushed on Secured.
  */
+import { enrollmentFinished } from "@/lib/route-after-save";
 export type MomentSurface =
   | "home"
   | "task_flow"
@@ -37,8 +38,13 @@ export function afterSecuredNext(args: {
   challengeDone?: boolean;
   challengeDay: number;
   challengeLength: number;
+  counterReachedTarget?: boolean;
 }): "challenge_complete" | "home" {
-  if (args.challengeDone === true) return "challenge_complete";
-  if (args.challengeLength > 0 && args.challengeDay >= args.challengeLength) return "challenge_complete";
-  return "home";
+  const finished = enrollmentFinished({
+    challengeDone: args.challengeDone === true,
+    dayIndex: args.challengeDay,
+    durationDays: args.challengeLength,
+    counterReachedTarget: args.counterReachedTarget,
+  });
+  return finished ? "challenge_complete" : "home";
 }

@@ -89,6 +89,17 @@ describe("v44.1 share styles", () => {
       streak: 3,
       inviteCode: code,
     });
+    expect(paintStrings(sticker)).toContain("days in a row");
+    const one = buildSharePaint({
+      style: "E",
+      colour: "orange",
+      challenge: "Show Up 7",
+      day: 1,
+      durationDays: 7,
+      streak: 1,
+    });
+    expect(paintStrings(one)).toContain("day in a row");
+    expect(paintStrings(one)).not.toContain("days in a row");
     expect(sticker.transparent).toBe(true);
     expect(sticker.background).toBe("transparent");
     expect(storyUsesSticker("B")).toBe(true);
