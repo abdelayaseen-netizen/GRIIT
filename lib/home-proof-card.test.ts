@@ -308,6 +308,7 @@ describe("selectHomeProofCard", () => {
     expect(card.sections[0]?.rows[1]).toMatchObject({ done: true, hasCameraProof: false, caption: "Self-reported" });
     expect(card.sections[0]?.rows[2]).toMatchObject({
       closed: true,
+      closedAt: "9:00 am",
       caption: "Window closed · 6:00–9:00 am",
     });
     expect(card.sections[0]?.rows[3]?.caption).toBe("Camera");
@@ -432,7 +433,7 @@ describe("Home Today card", () => {
     expect(src).toContain("ChevronUp");
     expect(src).not.toContain("countChip");
     expect(src).toContain("countTxt");
-    expect(src).toContain("{section.doneCount} / {section.totalCount}");
+    expect(src).toContain("{section.doneCount} of {section.totalCount} done");
   });
 });
 

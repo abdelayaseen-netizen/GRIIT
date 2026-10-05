@@ -1,7 +1,7 @@
 import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
-import { SELF_REPORTED, closedWindowCaption, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
+import { SELF_REPORTED, closedWindowCaption, closedWindowTime, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
 import { countdownSuffix } from "@/lib/g2a-home";
 import {
   shareTodayCaption,
@@ -117,6 +117,8 @@ export type HomeProofRow = {
   caption: string;
   done: boolean;
   closed: boolean;
+  /** Close time for HOME.lost, for example "6:30 am". */
+  closedAt?: string;
   hasCameraProof: boolean;
 };
 
@@ -201,6 +203,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
     caption: proofLine + (!closed && !task.done ? countdownSuffix(task.minutesLeft) : ""),
     done: task.done,
     closed,
+    closedAt: closed ? closedWindowTime(task.gateTime) || undefined : undefined,
     hasCameraProof: task.hasCameraProof === true,
   };
 }

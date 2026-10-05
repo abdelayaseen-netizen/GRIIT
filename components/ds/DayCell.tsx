@@ -123,7 +123,7 @@ function fillStyle(kind: DayCellKind) {
     case "missed":
       return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.textSecondary };
     case "today":
-      return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.brand };
+      return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.textTertiary };
     case "future":
     case "before":
       return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.border };

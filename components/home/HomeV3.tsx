@@ -170,9 +170,9 @@ export function HomeV3({
     return (
       <View style={[styles.root, styles.pad]}>
         <EmptyState
-          heading="Feed did not load"
-          body="Check your connection and try again."
-          actionLabel="Retry"
+          heading="Today didn’t load"
+          body="Your streak and proofs are safe. Check your connection and try again."
+          actionLabel="Try again"
           onAction={onRetry}
         />
       </View>
@@ -198,12 +198,18 @@ export function HomeV3({
     proof?.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount,
   );
   const openRow = homeRows.find((row) => !row.done && !row.closed);
+  const openSection = proof?.sections.find((section) =>
+    section.rows.some((row) => !row.done && !row.closed),
+  );
   const status = homeStatus({
     hasChallenge: Boolean(proof?.hasChallenge),
     secured: allDone,
     left: proof ? Math.max(0, proof.totalCount - proof.doneCount) : 0,
     total: proof?.totalCount ?? 0,
     lostTask: todayBlocked ? closedUndone?.name : null,
+    lostAt: todayBlocked ? closedUndone?.closedAt : null,
+    otherTask: todayBlocked ? openRow?.name : null,
+    otherChallenge: todayBlocked ? openSection?.challenge : null,
     nextTask: openRow?.name,
   });
   const weekDays = ["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
@@ -291,9 +297,6 @@ export function HomeV3({
           <Card>
             <View style={styles.cardHead}>
               <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
-              <Text style={styles.countTxt}>
-                {proof.doneCount} / {proof.totalCount}
-              </Text>
             </View>
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
@@ -329,7 +332,7 @@ export function HomeV3({
                         </View>
                       ) : (
                         <Text style={styles.countTxt}>
-                          {section.doneCount} / {section.totalCount}
+                          {section.doneCount} of {section.totalCount} done
                         </Text>
                       )}
                       <Pressable

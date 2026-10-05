@@ -192,6 +192,6 @@ const styles = StyleSheet.create({
   },
   today: {
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.textTertiary,
   },
 });

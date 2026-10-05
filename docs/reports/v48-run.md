@@ -159,3 +159,13 @@ Joining a fourth challenge opens a sheet headed "3 challenges" with the free-pla
 Commit `74148044`. tsc 0. Suite 286 files / 1496 tests. **needs Railway deploy.**
 
 Grep: `challenges-join.ts` contains `leave_effective_at: endsAt` and `nextLocalMidnightIso`. `daily-reset.ts` contains `ended_at: at`.
+
+## C frame match
+
+Seed account `seedgriit` on iPhone 16, 393×852. Side-by-side images: `docs/frame-match/309.png`, `docs/frame-match/390.png`. Index: `docs/frame-match/INDEX.md`.
+
+Fixes from the frames: the lost-day sentence includes the close time and the task that still counts; the home primary is the task name; the today ring is textTertiary; a section count reads “n of n done”; not-found uses the frame copy on a dark screen.
+
+309 accepted differences are the seed’s streak, challenges, and the feed sitting under those three cards. 390 matches. The other batch-1 frames are logged as state not reachable with seed data.
+
+tsc 0. Suite 286 files / 1496 tests.
