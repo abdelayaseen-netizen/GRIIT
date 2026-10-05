@@ -56,7 +56,7 @@ export default function Sheet({
         >
           <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, SAFE.bottom) }]} pointerEvents="box-none">
             <Text style={styles.heading}>{heading}</Text>
-            {children}
+            <View style={footer ? styles.body : undefined}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
         </KeyboardAvoidingView>
@@ -97,6 +97,9 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textPrimary,
     marginBottom: DS_V3.space.gutter,
+  },
+  body: {
+    paddingBottom: SAFE.stickyGap,
   },
   footer: {
     paddingTop: DS_V3.space.gutter,
