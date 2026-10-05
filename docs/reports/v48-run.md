@@ -118,4 +118,22 @@ Frame match: none in Phase B. These are shared components. Screens land in C–F
 
 ## Phase B tip
 
-`feat/v48-b-components` @ `5051e198`. tsc 0. 284 files, 1488 tests.
+`feat/v48-b-components` @ `ef1e7501` (report on top of `5051e198`). tsc 0. 284 files, 1488 tests.
+
+## C1 Home
+
+Commit `f2fc9c5e`. tsc 0. Suite 285 files / 1490 tests.
+
+Home opens on `StreakStrip`: flame, number, week circles, one `homeStatus` sentence, then the primary. The date and name header and the Home bell are gone. `JeopardyModal` is deleted. The first-day line sits under the first Today section. The week count `WEEK.line` renders only in `StreakSheet`. The Activity tab carries the unread dot in `textPrimary`. The active tab icon is brand. The plus is textPrimary.
+
+Grep: `JeopardyModal` has no callers in `app/`, `components/`, or `lib/`. HomeV3 does not call `homeDateCaption` and does not label Notifications.
+
+Frame match 301–326: BLOCKED. A simulator is booted (GRIIT iPhone 16 Pro, not the required iPhone 15 Pro) and this run has no seeded `is_test` login, so no side-by-side frames were saved.
+
+## C2 Task window
+
+Commit `a0c3df9b`. tsc 0. Suite 285 files / 1491 tests.
+
+Blocked step title is `WINDOW.opensAt` from `schedule_window_start`, otherwise `gateTime.start`, formatted 12-hour. It does not say midnight. The closed-window follow-up is "It opens again at the same time tomorrow." Task complete is already inside `Screen`, so the top floor is 59.
+
+Grep: `Tomorrow opens at midnight` is gone from `lib/task-ui.ts`. `BlockedStep.tsx` contains `WINDOW.opensAt` and does not contain midnight.
