@@ -27,8 +27,8 @@ describe("initialsFrom", () => {
     expect(avatarTint(null)).toEqual({ bg: DS_V3.color.border, fg: DS_V3.color.textPrimary });
     const a = avatarTint("user-a");
     expect(avatarTint("user-a")).toEqual(a);
-    expect([DS_V3.color.brandTint, DS_V3.color.border]).toContain(a.bg);
-    expect([DS_V3.color.brandText, DS_V3.color.textPrimary]).toContain(a.fg);
+    expect(DS_V3.avatarTints.map((pair) => pair[0])).toContain(a.bg);
+    expect(DS_V3.avatarTints.map((pair) => pair[1])).toContain(a.fg);
     const avatar = readFileSync(resolve(__dirname, "../components/ds/Avatar.tsx"), "utf8");
     expect(avatar).not.toMatch(/\bUser\b/);
     expect(avatar).toContain("avatarTint");
