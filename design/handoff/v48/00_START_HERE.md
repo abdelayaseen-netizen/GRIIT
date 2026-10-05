@@ -1,6 +1,6 @@
 # GRIIT v48 · Engineering handoff
 
-The design atlas is complete and approved (Oct 4, 2026). Batch scores: 1R 9.0 · 2 9.0 · 3 9.1 · 4 9.0.
+The design atlas is complete and approved. Scores: 1R 9.0 · 2 9.0 · 3 9.1 · 4 9.0 · patch 4.1 9.2 · patch 4.2 9.3 (Oct 5, 2026).
 
 ## Open first
 1. `atlas/GRIIT v48 Atlas · Complete (offline).html`: double-click; works offline. Opens on the full index of every frame (route · component · state · source · built in 75). Every frame number links to its frame.
@@ -35,3 +35,16 @@ Strict (not "No Days Off") for the mode · Leave takes effect at midnight · a m
 - **Built in 75**: the build 75 screenshots never reached the design project, so that index column reads "pending" where it couldn't be checked. One comparison pass fills it.
 - Items marked **(not built)** in the index are new work: report flows, blocked users, permissions screen, Health import, force update, the Instagram return toast, and others listed there.
 - Proof photos in the atlas are Unsplash stock stand-ins, not user content.
+
+## Patches after the atlas
+**v48.1 (frames 801–822, `atlas/source/GRIIT v48.1 Patch.dc.html`)**, from the build 75 device test:
+- Keyboard-open states for ReviewStep, CountStep (number pad + Done bar, "Log n of N"), WriteStep, CommentsSheet, Create name, Edit profile.
+- Transparent sticker with "Copy sticker" (works without the Meta App ID); Instagram Story target still needs it.
+- Share choice after a camera proof: outlined photo pill, nothing pre-selected, no answer = private; Home feed shows my post first after sharing.
+- `src/components/v48/routeAfterSave.ts`: finished → FinishMoment, day secured → Secured, else toast. A counter target never opens FinishMoment.
+- `count()` in `src/components/v48/copy.ts`: fixes "1 days in a row".
+
+**v48.2 (frames 901–913, `atlas/source/GRIIT v48.2 Home Opening.dc.html`)**: Home "today" band between the streak strip and the primary button.
+- **Ships: option 2c, latest photo (frames 909–912).** The none state (910) is one text line, "No one’s posted today. You’re first.", with no thumbnail and no card.
+- 901–908 (options 2a, 2b) are marked "not chosen" in the index; don't build them.
+- Who counts: follows ∪ active challenge-mates, proofs shared since local midnight, blocked excluded. Tap scrolls Home to today’s first feed post.

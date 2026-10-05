@@ -313,3 +313,11 @@ New components: `v47/WeekStrip`, `v47/StreakStrip`, `v47/TaskRow` (GateLine, Tod
 3. Auth: in-button loading; inline field errors; 60 s resend lock with countdown; expired reset-link screen.
 4. Retire: `create-challenge`, `(tabs)/teams`, `create-profile` (redirect to onboarding Profile), JeopardyModal (already retired), Global board.
 5. System: force update via remote config `min_supported_build` (not built); toasts one at a time at 95pt (tab) / 46pt (no tab).
+
+
+## v48.1 diff (build 75 device test)
+1. Wrap ReviewStep, CountStep (Type it), WriteStep, CommentsSheet, StepBasics and EditProfile in KeyboardAvoidingView (padding) + scroll-to-focused; dock the primary to the keyboard; InputAccessoryView Done bar on every number pad; CountStep button "Log n of N".
+2. ShareSystemSheet: add "Copy sticker" (UIPasteboard image/png of the transparent sticker) and the Soft shadow / Outline variants; keep Instagram Story behind the Meta App ID.
+3. TaskCompleteToast and SecuredDayScreen: replace the two equal buttons with the outlined photo pill + quiet "Keep it to the record"; toast holds 8 s for photo proofs; optimistic insert of the shared post at the top of Home's feed.
+4. Replace ad-hoc post-save navigation with `routeAfterSave()`; stop opening FinishMoment when a counter meets its target; finish card reads server secured_days and longest_streak.
+5. Route every number + noun through `count()`; fixes "1 days in a row".

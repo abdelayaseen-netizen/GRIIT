@@ -1213,3 +1213,11 @@ Scores: 1R 9.0 · Batch 2 9.0 · Batch 3 9.1 · Batch 4 9.0. Final decisions 212
 **Start here (engineering):** `GRIIT v48 Atlas · Complete (batches 1R–4).html` (offline, opens on the full index) or the source files `GRIIT v48 Atlas*.dc.html`. Specs: `cursor/02_screens.md` (copy tables per batch), `cursor/05_diff_from_current_app.md` (build order per batch). Tokens: `src/tokens.v46.ts` (categoryTint updated, flag 199). Components: `src/components/v46`, `v47`, `v48`. Generators: `src/atlas/v48-gen*.js`.
 
 Still open for engineering: 194 offline posting; 213 guest-proof merge; build 75 comparison (the Built in 75 column reads pending until screenshots are compared).
+
+
+## v48.1 patch (Oct 5, 2026)
+From the build 75 device test. `GRIIT v48.1 Patch.dc.html`: keyboard-open states (6), Copy-sticker flow on bright and dark photos (7), share choice after a camera proof + Home feed after sharing (3), the routing rule with one frame per case (5), plurals (1). Frames 801+, all in the full index on `GRIIT v48 Atlas B4.dc.html`. New code: `v48/routeAfterSave.ts`, `count()` + strings in `v48/copy.ts`. Fixed "1 days" in the Flow 1 share frame.
+
+
+## v48.2 approved (9.3)
+Option 2c (latest photo) ships. None state (910) is one text line, no card. 901–908 marked "not chosen" in the index. Handoff zip and the complete offline atlas include v48.1 and v48.2.
