@@ -145,3 +145,13 @@ Commit `ae59b182`. tsc 0. Suite 285 files / 1491 tests.
 The finish moment uses `ShareChoice`. A photo offers "Share to the feed". Anything else offers "Share as a card", which opens the sticker sheet. "Keep it to the record" stays on the screen as private. No answer stays private.
 
 Frame match 375+: BLOCKED for the same reason as C1. No iPhone 15 Pro capture and no seeded `is_test` session.
+
+## C4 Free-tier limit
+
+Commit `43c86ce4`. tsc 0. Suite 285 files / 1491 tests.
+
+Joining a fourth challenge opens a sheet headed "3 challenges" with the free-plan sentence, primary See Pro, and secondary Leave. It no longer toasts the one-line error and jumps straight to the paywall.
+
+## C5 Leave at midnight
+
+BLOCKED: needs a column. Leave currently sets `active_challenges.status` to abandoned and `ended_at` to now. Holding the membership until local midnight needs `leave_effective_at`. SQL is in the run note for Yaseen. Not applied from here.
