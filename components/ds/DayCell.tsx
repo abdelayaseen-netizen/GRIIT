@@ -16,6 +16,7 @@ export type DayCellProps = {
   dateNum?: number;
   onPress?: () => void;
   accessibilityPrefix?: string;
+  shape?: "rounded" | "circle";
 };
 
 export default function DayCell({
@@ -26,6 +27,7 @@ export default function DayCell({
   dateNum,
   onPress,
   accessibilityPrefix,
+  shape = "rounded",
 }: DayCellProps) {
   const label = [accessibilityPrefix, dayCellLabel(kind)].filter(Boolean).join(", ");
   const tappable = Boolean(onPress);
@@ -35,7 +37,12 @@ export default function DayCell({
     <View
       style={[
         styles.base,
-        { width: size, height: size, opacity: kind === "future" || kind === "before" || kind === "na" ? 0.35 : 1 },
+        {
+          width: size,
+          height: size,
+          borderRadius: shape === "circle" ? size / 2 : 8,
+          opacity: kind === "future" || kind === "before" || kind === "na" ? 0.35 : 1,
+        },
         fillStyle(kind),
       ]}
     >

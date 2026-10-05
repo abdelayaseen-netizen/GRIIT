@@ -5,7 +5,7 @@
  * Not tappable. Max seven squares.
  */
 import React, { useEffect } from "react";
-import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -29,33 +29,38 @@ export type WeekStripDay = {
   state?: WeekStripDayState;
 };
 
+/** Frame 192. Home and detail 30, sheet 36, profile 20. */
+export const STRIP_SIZE = { home: 30, detail: 30, sheet: 36, profile: 20 } as const;
+
 export type WeekStripProps = {
   days: WeekStripDay[];
   todayIndex: number;
   fillToday?: boolean;
   /** Today’s square fill. Default 400ms (Home). Secured screen passes 300. */
   fillMs?: number;
+  size?: number;
+  onPress?: () => void;
+  a11yLabel?: string;
 };
 
 function Square({
   letter,
   filled,
   state,
-  weekday,
   isToday,
   animateFill,
   fillMs,
+  cellSize,
 }: {
   letter: string;
   filled: boolean;
   state: WeekStripDayState;
-  weekday: string;
   isToday: boolean;
   animateFill: boolean;
   fillMs: number;
+  cellSize: number;
 }) {
   const fillProgress = useSharedValue(filled && !animateFill ? 1 : 0);
-  const label = weekStripAccessibilityLabel(weekday, state, isToday);
 
   useEffect(() => {
     if (!animateFill) {
@@ -87,7 +92,7 @@ function Square({
   const settled = filled && !animateFill;
 
   return (
-    <View style={styles.cell} accessibilityLabel={label}>
+    <View style={styles.cell} accessibilityElementsHidden>
       <Text style={letterStyle}>{letter}</Text>
       {animateFill ? (
         <Animated.View
@@ -99,7 +104,7 @@ function Square({
           ]}
         />
       ) : (
-        <DayCell kind={kind} size={DS_V3.size.tap} />
+        <DayCell kind={kind} size={cellSize} shape="circle" />
       )}
     </View>
   );
@@ -110,10 +115,26 @@ export default function WeekStrip({
   todayIndex,
   fillToday,
   fillMs = DAY_SECURED_MS,
+  size = STRIP_SIZE.home,
+  onPress,
+  a11yLabel,
 }: WeekStripProps) {
   const seven = days.slice(0, 7);
+  const label =
+    a11yLabel ??
+    seven
+      .map((d, i) => {
+        const state = d.state ?? (d.filled ? "secured" : "missed");
+        return weekStripAccessibilityLabel(WEEK_STRIP_WEEKDAYS[i] ?? "Monday", state, i === todayIndex);
+      })
+      .join(". ");
   return (
-    <View style={styles.row} accessibilityLabel="Week">
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={[styles.row, { minHeight: DS_V3.size.tap }]}
+    >
       {seven.map((d, i) => {
         const state = d.state ?? (d.filled ? "secured" : "missed");
         const brandFilled = state === "secured" || (fillToday === true && i === todayIndex && state === "missed");
@@ -123,14 +144,14 @@ export default function WeekStrip({
             letter={d.letter}
             filled={brandFilled}
             state={state}
-            weekday={WEEK_STRIP_WEEKDAYS[i] ?? "Monday"}
             isToday={i === todayIndex}
             animateFill={fillToday === true && i === todayIndex && state === "missed"}
             fillMs={fillMs}
+            cellSize={size}
           />
         );
       })}
-    </View>
+    </Pressable>
   );
 }
 
