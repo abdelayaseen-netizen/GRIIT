@@ -32,7 +32,7 @@ export default function Chip({
 }: ChipProps) {
   const ghost = variant === "ghost";
   const color = selected
-    ? DS_V3.color.brandText
+    ? DS_V3.color.selectedText
     : ghost
       ? DS_V3.color.textSecondary
       : DS_V3.color.textPrimary;
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   ghostSelected: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.selectedBg,
   },
   form: {
     backgroundColor: DS_V3.color.surface,
@@ -103,9 +103,9 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   formSelected: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.selectedBg,
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.selectedBg,
   },
   pressed: {
     opacity: 0.8,
