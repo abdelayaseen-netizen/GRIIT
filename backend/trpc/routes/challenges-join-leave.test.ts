@@ -25,6 +25,7 @@ type AcRow = {
   created_at: string;
   ended_at?: string | null;
   end_seen_at?: string | null;
+  leave_effective_at?: string | null;
   challenges?: { title: string; duration_days: number; challenge_tasks: [] };
 };
 
@@ -216,15 +217,16 @@ function listCaller(supabase: ReturnType<typeof createLeaveMock>) {
 }
 
 describe("participant leave", () => {
-  it("keeps the row and writes abandoned with ended_at", async () => {
+  it("keeps the row active until local midnight", async () => {
     const supabase = createLeaveMock([liveRow()]);
     const caller = joinCaller(supabase);
     const result = await caller.challenges.leave({ challengeId: CH, activeChallengeId: AC });
-    expect(result).toEqual({ left: true });
+    expect(result.left).toBe(true);
+    expect(result.endsAt).toBeTruthy();
     expect(supabase.ac).toHaveLength(1);
-    expect(supabase.ac[0]?.status).toBe("abandoned");
-    expect(supabase.ac[0]?.ended_at).toBeTruthy();
-    expect(supabase.ac[0]?.end_seen_at).toBe(supabase.ac[0]?.ended_at);
+    expect(supabase.ac[0]?.status).toBe("active");
+    expect(supabase.ac[0]?.leave_effective_at).toBe(result.endsAt);
+    expect(supabase.ac[0]?.ended_at).toBeNull();
     expect(supabase.events.filter((e) => e.table === "active_challenges" && e.op === "delete")).toEqual([]);
     expect(supabase.events.filter((e) => e.table === "check_ins")).toEqual([]);
     expect(supabase.events.filter((e) => e.table === "activity_events")).toEqual([]);
@@ -245,8 +247,9 @@ describe("participant leave", () => {
       challengeId: CH,
       activeChallengeId: tappedId,
     });
-    expect(result).toEqual({ left: true });
-    expect(supabase.ac.find((r) => r.id === tappedId)?.status).toBe("abandoned");
+    expect(result.left).toBe(true);
+    expect(supabase.ac.find((r) => r.id === tappedId)?.status).toBe("active");
+    expect(supabase.ac.find((r) => r.id === tappedId)?.leave_effective_at).toBeTruthy();
     expect(supabase.ac.find((r) => r.id === OTHER_AC)?.status).toBe("active");
   });
 

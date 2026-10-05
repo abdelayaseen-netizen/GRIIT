@@ -64,6 +64,7 @@ function missClient(opts: {
       const inner: Record<string, unknown> = {
         select: () => inner,
         eq: () => inner,
+        not: () => inner,
         in: () => inner,
         limit: () => inner,
         maybeSingle: () => {

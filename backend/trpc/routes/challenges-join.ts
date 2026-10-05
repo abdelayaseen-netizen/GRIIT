@@ -4,7 +4,6 @@ import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import {
   CREATOR_LEAVE_BLOCKED_MESSAGE,
-  SOLO_LEAVE_ACTIVE_STATUS,
   decideLeaveChallenge,
 } from "../../lib/leave-challenge";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -24,6 +23,8 @@ import {
   PRIVATE_CHALLENGE_MESSAGE,
 } from "../../lib/can-view-challenge";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { nextLocalMidnightIso } from "../../lib/leave-effective";
 
 async function syncChallengeParticipantsCount(supabase: SupabaseClient, challengeId: string): Promise<void> {
   const { count: realCount } = await supabase
@@ -241,52 +242,20 @@ export const challengesJoinProcedures = {
         .eq("status", "active")
         .maybeSingle();
 
-      if (decision.action === "end_solo") {
-        if (ac) {
-          const leftAt = new Date().toISOString();
-          const { error: updErr } = await ctx.supabase
-            .from("active_challenges")
-            .update({
-              status: SOLO_LEAVE_ACTIVE_STATUS,
-              ended_at: leftAt,
-              end_seen_at: leftAt,
-            })
-            .eq("id", ac.id);
-          if (updErr) {
-            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
-          }
-        }
-        await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
-        await ctx.supabase
-          .from("profiles")
-          .update({ last_left_at: new Date().toISOString() })
-          .eq("user_id", ctx.userId)
-          .then(() => {});
-        logger.info({ userId: ctx.userId, challengeId: input.challengeId }, "creator ended solo challenge");
-        return { left: true, ended: true };
-      }
-
-      if (ac) {
-        const leftAt = new Date().toISOString();
+      if (ac && (decision.action === "end_solo" || decision.action === "leave_participant")) {
+        const timeZone = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+        const endsAt = nextLocalMidnightIso(new Date(), timeZone);
         const { error: updErr } = await ctx.supabase
           .from("active_challenges")
-          .update({
-            status: SOLO_LEAVE_ACTIVE_STATUS,
-            ended_at: leftAt,
-            end_seen_at: leftAt,
-          })
+          .update({ leave_effective_at: endsAt })
           .eq("id", ac.id);
         if (updErr) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to leave challenge." });
         }
-        await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
-        await ctx.supabase
-          .from("profiles")
-          .update({ last_left_at: new Date().toISOString() })
-          .eq("user_id", ctx.userId)
-          .then(() => {});
-        logger.info({ userId: ctx.userId, challengeId: input.challengeId }, "user left challenge");
-        return { left: true };
+        logger.info({ userId: ctx.userId, challengeId: input.challengeId, endsAt }, "leave scheduled for local midnight");
+        return decision.action === "end_solo"
+          ? { left: true, ended: false, endsAt }
+          : { left: true, endsAt };
       }
 
       const { error: memberErr } = await ctx.supabase
