@@ -154,4 +154,8 @@ Joining a fourth challenge opens a sheet headed "3 challenges" with the free-pla
 
 ## C5 Leave at midnight
 
-BLOCKED: needs a column. Leave currently sets `active_challenges.status` to abandoned and `ended_at` to now. Holding the membership until local midnight needs `leave_effective_at`. SQL is in the run note for Yaseen. Not applied from here.
+`leave_effective_at` is applied in production. Leave writes that timestamp as the next local midnight and leaves `status` active. `runDailyReset` calls `applyScheduledLeaves`, which sets `abandoned` plus `ended_at` only after that instant has arrived in the profile timezone. A UTC-date rollover during the evening in New York does not abandon the row.
+
+Commit `74148044`. tsc 0. Suite 286 files / 1496 tests. **needs Railway deploy.**
+
+Grep: `challenges-join.ts` contains `leave_effective_at: endsAt` and `nextLocalMidnightIso`. `daily-reset.ts` contains `ended_at: at`.
