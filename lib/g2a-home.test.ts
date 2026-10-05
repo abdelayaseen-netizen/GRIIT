@@ -65,9 +65,9 @@ describe("g2a home copy", () => {
     expect(next?.name).toBe("Walk");
     expect(startCtaLabel(next?.name ?? "")).toBe("Start: Walk");
     const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
-    expect(home).toContain("closedTaskStatus(closedUndone.name)");
-    expect(home).not.toContain("startLabel && !todayBlocked");
-    expect(home).toContain("{startLabel ? (");
+    expect(home).toContain("homeStatus(");
+    expect(home).not.toContain("closedTaskStatus(");
+    expect(home).toContain("primary={startLabel ?");
   });
 
   it("Start label and window banner", () => {

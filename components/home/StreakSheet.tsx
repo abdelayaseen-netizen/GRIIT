@@ -8,6 +8,7 @@ import Button from "@/components/ds/Button";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { DS_V3 } from "@/lib/design-system";
 import { FREEZE } from "@/lib/copy";
+import { weekSheetLine } from "@/lib/home-status";
 import {
   HELD_DONE,
   NOT_NOW,
@@ -29,6 +30,7 @@ export function StreakSheet({
   refill,
   week,
   todayIndex,
+  offerFreeze = true,
   submitting,
   error,
   onUse,
@@ -46,6 +48,7 @@ export function StreakSheet({
   refill: string;
   week: WeekStripDay[];
   todayIndex: number;
+  offerFreeze?: boolean;
   submitting?: boolean;
   error?: string | null;
   onUse: () => void;
@@ -64,6 +67,15 @@ export function StreakSheet({
       </Sheet>
     );
   }
+  const line = weekSheetLine(week, todayIndex);
+  if (!offerFreeze) {
+    return (
+      <Sheet visible={visible} onDismiss={onNotNow} heading={String(streak)}>
+        <WeekStrip days={week} todayIndex={todayIndex} size={36} />
+        {line ? <Text style={styles.body}>{line}</Text> : null}
+      </Sheet>
+    );
+  }
   return (
     <Sheet
       visible={visible}
@@ -76,7 +88,8 @@ export function StreakSheet({
         </>
       }
     >
-      <WeekStrip days={week} todayIndex={todayIndex} />
+      <WeekStrip days={week} todayIndex={todayIndex} size={36} />
+      {line ? <Text style={styles.body}>{line}</Text> : null}
       <View style={styles.block}>
         <Text style={styles.title}>{FREEZE.title(weekday)}</Text>
         <Text style={styles.body}>

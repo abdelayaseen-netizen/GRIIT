@@ -1,6 +1,11 @@
 import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsGuest } from "@/contexts/AuthGateContext";
+import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import * as Sentry from "@sentry/react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
@@ -18,13 +23,27 @@ function routeToTab(name: string | undefined): TabBarTab {
   return "home";
 }
 
+function useActivityUnread(): boolean {
+  const { user } = useAuth();
+  const isGuest = useIsGuest();
+  const unreadQuery = useQuery({
+    queryKey: ["notifications", "unread-dot", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: unknown[] }>,
+    staleTime: 30 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  return (unreadQuery.data?.unread.length ?? 0) > 0;
+}
+
 function GritTabBar({ state }: BottomTabBarProps) {
   const router = useRouter();
+  const activityUnread = useActivityUnread();
   const current = state.routes[state.index]?.name;
   if (current === "create") return null;
   return (
     <TabBar
       active={routeToTab(current)}
+      activityUnread={activityUnread}
       onTab={(tab) => {
         if (tab === "home") router.push(ROUTES.TABS_HOME as never);
         else if (tab === "discover") router.push(ROUTES.TABS_DISCOVER as never);

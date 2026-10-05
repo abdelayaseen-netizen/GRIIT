@@ -23,6 +23,7 @@ export type TabBarProps = {
   active: TabBarTab;
   onTab: (tab: TabBarTab) => void;
   onFab: () => void;
+  activityUnread?: boolean;
 };
 
 const TABS: { id: TabBarTab; label: string; Icon: typeof Home }[] = [
@@ -32,7 +33,7 @@ const TABS: { id: TabBarTab; label: string; Icon: typeof Home }[] = [
   { id: "profile", label: "Profile", Icon: User },
 ];
 
-export default function TabBar({ active, onTab, onFab }: TabBarProps) {
+export default function TabBar({ active, onTab, onFab, activityUnread }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const left = TABS.slice(0, 2);
   const right = TABS.slice(2);
@@ -54,10 +55,16 @@ export default function TabBar({ active, onTab, onFab }: TabBarProps) {
           onPress={onFab}
           style={({ pressed }) => [styles.fab, pressed ? styles.pressed : null]}
         >
-          <Plus size={ICON} color={DS_V3.color.brandText} />
+          <Plus size={ICON} color={DS_V3.color.textPrimary} />
         </Pressable>
         {right.map((t) => (
-          <TabItem key={t.id} tab={t} active={active === t.id} onPress={() => onTab(t.id)} />
+          <TabItem
+            key={t.id}
+            tab={t}
+            active={active === t.id}
+            unread={t.id === "activity" && activityUnread === true}
+            onPress={() => onTab(t.id)}
+          />
         ))}
       </View>
     </View>
@@ -67,28 +74,34 @@ export default function TabBar({ active, onTab, onFab }: TabBarProps) {
 function TabItem({
   tab,
   active,
+  unread,
   onPress,
 }: {
   tab: (typeof TABS)[number];
   active: boolean;
+  unread?: boolean;
   onPress: () => void;
 }) {
-  const color = active ? DS_V3.color.brandText : DS_V3.color.textSecondary;
+  const iconColor = active ? DS_V3.color.brand : DS_V3.color.textSecondary;
+  const labelColor = active ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
   const Icon = tab.Icon;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={tab.label}
+      accessibilityLabel={unread ? `${tab.label}, unread` : tab.label}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       style={styles.item}
     >
-      <Icon size={ICON} color={color} />
+      <View>
+        <Icon size={ICON} color={iconColor} />
+        {unread ? <View style={styles.dot} accessibilityLabel="Unread" /> : null}
+      </View>
       <Text
         style={[
           styles.label,
           {
-            color,
+            color: labelColor,
             fontWeight: active ? DS_V3.type.bodyStrong.fontWeight : DS_V3.type.caption.fontWeight,
           },
         ]}
@@ -149,5 +162,14 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  dot: {
+    position: "absolute",
+    top: 0,
+    right: -2,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: DS_V3.color.textPrimary,
   },
 });
