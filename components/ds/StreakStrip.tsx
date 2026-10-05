@@ -12,6 +12,7 @@ export function StreakStrip({
   onOpenSheet,
   notice,
   primary,
+  band,
 }: {
   streak: number;
   days: WeekStripDay[];
@@ -20,6 +21,7 @@ export function StreakStrip({
   onOpenSheet: () => void;
   notice?: React.ReactNode;
   primary?: React.ReactNode;
+  band?: React.ReactNode;
 }) {
   return (
     <View style={styles.wrap}>
@@ -35,6 +37,7 @@ export function StreakStrip({
         <ChevronRight size={20} color={DS_V3.color.textSecondary} />
       </Pressable>
       <WeekStrip days={days} todayIndex={todayIndex} size={STRIP_SIZE.home} onPress={onOpenSheet} />
+      {band}
       {notice}
       <Text style={styles.status}>{status}</Text>
       {primary}

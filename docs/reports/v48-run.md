@@ -175,3 +175,33 @@ tsc 0. Suite 286 files / 1496 tests.
 The difficulty label is Strict. The No Days Off starter pack keeps that name. A freeze on a strict challenge says “Strict challenges do not use freezes.”
 
 tsc 0. Suite 286 files / 1496 tests. Frame match for Discover, Challenge, and Profile is still ahead.
+
+## Step 1 · v48.1 and v48.2 handoff
+
+The newest export is `~/Desktop/AURAPEP/OCT 5 0721.zip` (5 Oct 2026, 19:21). Extracted with `ditto -x -k`. `atlas/source` has `GRIIT v48.1 Patch.dc.html` and `GRIIT v48.2 Home Opening.dc.html`. `atlas/source/assets/proofs` has 20 jpgs. Those photos stay in the handoff. They are not imported into the app.
+
+Committed on main as `6b24fe59` (`design: v48.1 + v48.2 handoff (approved)`) and pushed. Merged into `feat/v48-d-feed-discover-challenge-profile` as `5dc25735`.
+
+## Phase H · routing, keyboard, sticker, plurals
+
+Commit `e8de1da2`. tsc 0. Suite 287 files / 1502 tests.
+
+`routeAfterSave` sends a finished enrollment to FinishMoment, a day that just secured to Secured, and every other save to a Home toast. A counter at its target does not finish the enrollment, and the day index alone does not either. That flag is passed from the counter, water, and reading steps into the secured screen.
+
+The sticker style still paints a transparent PNG. “1 day in a row” replaces “1 days in a row” on the big-number and sticker styles. Copy sticker is on the sticker style only and sets the line “Copied. Paste it in your Instagram story.” Instagram Story stays hidden until a Meta App ID is set.
+
+Caption, write, and the counter type field sit in one `KeyboardDock`. The number pad has a Done bar that only dismisses the pad. “Log n of N” stays in the footer of that dock. Comments, create, and edit profile are not on that wrapper yet.
+
+Not done in this commit: the outlined share pill on the camera toast (814–816), the optimistic Home insert with Undo, and the finish card reading server `secured_days` and `longest_streak`. The secure response still returns the active streak, not those two fields.
+
+## Phase H2 · band copy
+
+The none line is `No one’s posted today. You’re first.` in `lib/today-band.ts`, with the 1 / 2 / 3+ name rules. `StreakStrip` has a slot between the week strip and the day line. The slot is empty until a `today_posters` query exists. Showing the none line without that query would be wrong on a day when someone has posted.
+
+tsc 0. Suite 288 files / 1506 tests.
+
+## Still ahead
+
+Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
+
+QA flows are not scripted. `docs/reports/v48-gaps.md` is not written. Build 76 is not cut. Railway has not been deployed for the daily-reset leave path or the Strict freeze message.
