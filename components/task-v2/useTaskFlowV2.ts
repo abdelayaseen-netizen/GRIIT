@@ -54,7 +54,7 @@ import {
   type ShareIntent,
 } from "@/lib/finish-moment";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { closedWindowTime, formatGateTime, gateLine } from "@/lib/task-ui";
+import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -214,9 +214,11 @@ export function useTaskFlowV2() {
     };
   }, []);
 
+  const windowStartRaw = config.schedule_window_start || gateTime?.start || null;
+  const windowEndRaw = config.schedule_window_end || gateTime?.end || null;
   const windowEval = evaluateScheduleWindow({
-    start: config.schedule_window_start,
-    end: config.schedule_window_end,
+    start: windowStartRaw,
+    end: windowEndRaw,
     timeZone: config.schedule_timezone ?? profile?.timezone,
   });
 
@@ -1006,6 +1008,8 @@ export function useTaskFlowV2() {
           : null
       : null,
     closedAt: closedWindowTime(gateTime),
+    windowStartLabel: format12h(windowStartRaw) || null,
+    windowEndLabel: format12h(windowEndRaw) || null,
     windowForbidden,
     windowState,
     goBack,

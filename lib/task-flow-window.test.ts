@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   flowAllowsSubmit,
@@ -49,5 +51,17 @@ describe("flow footer by windowState", () => {
     expect(flowAllowsSubmit("open")).toBe(true);
     expect(flowAllowsSubmit("closing")).toBe(true);
     expect(isWindowClosedError(WINDOW_CLOSED_FORBIDDEN)).toBe(true);
+  });
+});
+
+describe("window open copy", () => {
+  it("reads the window start and never says midnight", () => {
+    const blocked = readFileSync(resolve(__dirname, "../components/task-v2/steps/BlockedStep.tsx"), "utf8");
+    const closed = readFileSync(resolve(__dirname, "../components/task-v2/steps/WindowClosedStep.tsx"), "utf8");
+    const tomorrow = readFileSync(resolve(__dirname, "./task-ui.ts"), "utf8");
+    expect(blocked).toContain("WINDOW.opensAt");
+    expect(blocked).not.toMatch(/midnight/i);
+    expect(closed).not.toMatch(/midnight/i);
+    expect(tomorrow).not.toMatch(/Tomorrow opens at midnight/);
   });
 });

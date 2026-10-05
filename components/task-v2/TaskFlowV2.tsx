@@ -60,8 +60,8 @@ export function TaskFlowV2() {
       {f.step === "blocked" ? (
         <BlockedStep
           windowStatus={f.windowEval.status}
-          windowStart={f.config.schedule_window_start}
-          windowEnd={f.config.schedule_window_end}
+          windowStart={f.windowStartLabel}
+          windowEnd={f.windowEndLabel}
           place={f.place}
           radius={f.radius}
           gpsMeters={f.gps?.m ?? null}
