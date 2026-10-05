@@ -46,4 +46,76 @@ Commit `05d20f40`. tsc 0. Tests 281 files / 1482 passed.
 
 ## Phase A tip
 
-`feat/v48-a-foundations` @ `05d20f40`. tsc 0. 281 files, 1482 tests.
+`feat/v48-a-foundations` @ `fe1cf1a3` (report on top of `05d20f40`). tsc 0. 281 files, 1482 tests.
+
+## B Week strip
+
+Commit `49878a88`. tsc 0. Suite green at that commit.
+
+`WeekStrip` is one Pressable. Circle sizes: home and detail 30, sheet 36, profile 20. One VoiceOver label. Cells are hidden from accessibility.
+
+## B Avatar tints
+
+Commit `04c1c583`. tsc 0. Tests passed (avatar suite).
+
+`avatarTint` returns one of the six `DS_V3.avatarTints` pairs, hashed from `userId`. A missing id stays border / textPrimary.
+
+## B Task row and gate line
+
+Commit `a62b5fab`. tsc 0. `lib/gate-line.test.ts` 3 tests.
+
+`lib/gate-line.ts` orders Camera, then the time window, then Location. A closed window reads `Window closed · from–to`. A window that is not open reads `Opens at {from}`. Photo mode none with no location inserts `Self-reported`. `TaskRow` done check is brand on a raised circle. `TodaySection` is in the same file.
+
+## B Streak strip
+
+Commit `dcaa06ca`. tsc 0.
+
+Flame is brand. The number uses number size M and weight 800. The strip and the week row share one open target for the streak sheet. Status is body. The primary slot is optional.
+
+## B Share choice
+
+Commit `bfdfa2dd`. tsc 0.
+
+States: unanswered, shared, kept, failed. Unanswered offers share and "Keep it to the record", with caption "No answer keeps it private." Those buttons are raised, not the one orange primary.
+
+## B Cover
+
+Commit `b18bf9b6`. tsc 0.
+
+`Cover` paints `categoryTint` and a day count. It does not take a proof photo.
+
+## B Selection
+
+Commit `a878e4c5`. tsc 0. Suite 283 files / 1486 tests.
+
+Selected chips and segments use `selectedBg` / `selectedText`. No orange fill and no orange label on the selected state.
+
+## B Feed post
+
+Commit `91126726`. tsc 0. `lib/feed-group.test.ts` 2 tests. Suite 284 files / 1488 tests after the sheet commit.
+
+`PhotoPost` is a full-bleed 4:5 carousel with a camera seal. It does not say Verified. `groupActivity` merges consecutive events for one challenge and drops extras inside the cap of one group per four posts. `activityText` reads "A, B, C and 1 other started Dawn".
+
+## B Proof day feed
+
+Commit `62158e03`. tsc 0.
+
+Grid tiles are 4:5. Today is a dashed tile. A tile with no photo shows the task name and Self-reported. Private tiles show a lock. `ProofDayBlock` is the vertical day carousel. The owner sees Shared or Private and "Share this proof".
+
+## B Image fallback
+
+Commit `78054099`. tsc 0.
+
+`ProofFallbackTile` already drew the missing photo. `ImageFallback` is that same component.
+
+## B Sheet
+
+Commit `5051e198`. tsc 0. Suite 284 files / 1488 tests.
+
+When a sheet has a footer, the body keeps `stickyGap` (12) above that footer so the last line is not flush with the button.
+
+Frame match: none in Phase B. These are shared components. Screens land in C–F.
+
+## Phase B tip
+
+`feat/v48-b-components` @ `5051e198`. tsc 0. 284 files, 1488 tests.
