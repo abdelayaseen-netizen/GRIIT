@@ -169,3 +169,9 @@ Fixes from the frames: the lost-day sentence includes the close time and the tas
 309 accepted differences are the seed’s streak, challenges, and the feed sitting under those three cards. 390 matches. The other batch-1 frames are logged as state not reachable with seed data.
 
 tsc 0. Suite 286 files / 1496 tests.
+
+## D6 Strict
+
+The difficulty label is Strict. The No Days Off starter pack keeps that name. A freeze on a strict challenge says “Strict challenges do not use freezes.”
+
+tsc 0. Suite 286 files / 1496 tests. Frame match for Discover, Challenge, and Profile is still ahead.

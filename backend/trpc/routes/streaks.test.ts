@@ -384,7 +384,7 @@ describe("streaks.useFreeze", () => {
     });
     await expect(caller.useFreeze({ dateKeyToFreeze: yesterday })).rejects.toMatchObject({
       code: "BAD_REQUEST",
-      message: "No Days Off challenges do not use freezes.",
+      message: "Strict challenges do not use freezes.",
     });
     expect(inserts).toEqual([]);
   });

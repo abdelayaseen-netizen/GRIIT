@@ -197,7 +197,7 @@ export const streaksRouter = createTRPCRouter({
       if (freezeBlockedByHardMode((hardRes.data ?? []) as Parameters<typeof freezeBlockedByHardMode>[0])) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No Days Off challenges do not use freezes.",
+          message: "Strict challenges do not use freezes.",
         });
       }
 

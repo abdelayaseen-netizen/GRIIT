@@ -14,7 +14,7 @@ describe("123 mode copy", () => {
     expect(MODE_STANDARD_BODY).toBe(
       "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro.",
     );
-    expect(MODE_HARD_TITLE).toBe("No Days Off");
+    expect(MODE_HARD_TITLE).toBe("Strict");
     expect(MODE_HARD_BODY).toBe(
       "A missed day resets your streak to 0. No freezes.",
     );

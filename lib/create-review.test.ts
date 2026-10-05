@@ -26,7 +26,7 @@ describe("create review", () => {
         who: "group",
         difficulty: "hard",
       }),
-    ).toBe("Fitness · 75 days · Group · No Days Off");
+    ).toBe("Fitness · 75 days · Group · Strict");
     expect(START_THE_CHALLENGE).toBe("Start the challenge");
   });
 
@@ -51,6 +51,6 @@ describe("create review", () => {
 
   it("mode labels", () => {
     expect(reviewModeLabel("standard")).toBe("Standard");
-    expect(reviewModeLabel("hard")).toBe("No Days Off");
+    expect(reviewModeLabel("hard")).toBe("Strict");
   });
 });

@@ -1,6 +1,7 @@
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import { visibilityLabel, REVIEW_PHOTOS_LINE } from "@/backend/lib/create-visibility";
 import { displayCategory } from "@/lib/challenge-category";
+import { MODE_HARD_TITLE, MODE_STANDARD_TITLE } from "@/lib/create-mode-copy";
 import { gateLabel } from "@/lib/task-ui";
 
 export const START_THE_CHALLENGE = "Start the challenge";
@@ -10,7 +11,7 @@ export const REVIEW_EACH_DAY = "Each day";
 export const REVIEW_SETTINGS = "Settings";
 
 export function reviewModeLabel(difficulty: "standard" | "hard"): string {
-  return difficulty === "hard" ? "No Days Off" : "Standard";
+  return difficulty === "hard" ? MODE_HARD_TITLE : MODE_STANDARD_TITLE;
 }
 
 export function reviewTitleLine(args: {
