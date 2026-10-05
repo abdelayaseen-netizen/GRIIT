@@ -6492,3 +6492,28 @@ streak ← profiles.current_streak · best ← profiles.best_streak · days secu
 - 213 Guest proofs: engineering confirms they merge on sign-up.
 - 214 Account step: required checkbox "I’m 13 or older".
 - 215 Force update via remote config `min_supported_build`.
+
+
+## v48.1 patch (frames 801+, `GRIIT v48.1 Patch.dc.html`)
+| item | copy / rule |
+|---|---|
+| Keyboard | Focused field and last typed line ≥ 12pt above the keyboard; the one button docks 8pt above; counts sit between field and button; number pad has a Done bar (closes only); sheets shrink to the keyboard, composer docks on it |
+| Count step | Button reads "Log {n} of {N}" above the Done bar |
+| Sticker | Transparent PNG 1080², Soft shadow (default) / Outline. Targets: Copy sticker · Instagram Story · Save · More. Toast "Copied. Paste it in your Instagram story." Instagram Story still needs the Meta App ID |
+| Share choice | Outlined pill with the photo: "Share this photo to the feed". Row: "No answer keeps it private." + text button "Keep it to the record". Nothing pre-selected; 8 s or leaving = private. After sharing, Home feed shows my post first, toast "Shared to the feed." + Undo (6 s) |
+| Routing | 1 challenge_finished → FinishMoment · 2 day_secured_now → Secured · 3 otherwise → toast. Counter target never → FinishMoment. Finish card reads enrollment.secured_days + longest_streak (`v48/routeAfterSave.ts`) |
+| Plurals | `count(n, noun)` in `v48/copy.ts`: "1 day in a row", "1 day secured", "1 task left today", "1 proof", "1 freeze left", "1 person", "1 follower", "1 word to go" |
+
+
+## v48.2 · Home opening band (frames 901+, `GRIIT v48.2 Home Opening.dc.html`)
+Placement: between the streak strip and the day line + primary. Options 2a minimal line · 2b avatar strip · 2c latest photo (pick pending).
+| state | copy |
+|---|---|
+| 0 | "No one’s posted today. You’re first." (not tappable) |
+| 1 | "Khalid posted today." |
+| 2 | "Khalid and Omar posted today." |
+| 3+ | "Khalid, Omar and {n} others posted today." |
+| with me | "You, Khalid and {n} others posted today." |
+Who: follows ∪ active challenge-mates, deduped, blocked excluded. What: proofs shared to the feed since local midnight. Avatars ≤ 3, newest first, me first as "You". Tap scrolls Home to today’s first feed post. Refresh on open, pull, tab return.
+
+**v48.2 decision:** option 2c ships. None state = one text line "No one’s posted today. You’re first." (no thumbnail, no card, not tappable).
