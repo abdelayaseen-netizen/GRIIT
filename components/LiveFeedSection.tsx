@@ -42,6 +42,7 @@ import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { subscribeOptimisticFeedPost } from "@/lib/optimistic-feed";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   CAUGHT_UP,
@@ -155,6 +156,8 @@ function LiveFeedSection({
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
   const listRef = useRef<FlashListRef<FeedListItem> | null>(null);
+  const [optimisticPost, setOptimisticPost] = useState<LiveFeedPost | null>(null);
+  useEffect(() => subscribeOptimisticFeedPost(setOptimisticPost), []);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -221,7 +224,7 @@ function LiveFeedSection({
 
   const awayCount = countFriendsPostedAway(pagePosts, user?.id, followedIds);
 
-  const posts = pagePosts.filter((post) => {
+  const posts = (optimisticPost ? [optimisticPost, ...pagePosts.filter((post) => post.id !== optimisticPost.id)] : pagePosts).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;

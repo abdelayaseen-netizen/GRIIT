@@ -208,6 +208,12 @@ The Home band fills the streak-strip slot. While the query is loading the slot s
 
 tsc 0. Suite 289 files / 1510 tests. **needs Railway deploy.**
 
+## H · camera share pill
+
+A camera proof toast and the secured screen use an outlined pill, “Share this photo to the feed”, with “Keep it to the record” as quiet text. Nothing starts selected. The photo toast stays 8 seconds. Sharing calls `checkins.shareProof` and puts that post at the top of the Home feed immediately. Undo calls `checkins.unshareProof` and removes it. A self-reported toast still opens the card sheet.
+
+tsc 0. Suite 290 files / 1511 tests. **needs Railway deploy** (`unshareProof`).
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.

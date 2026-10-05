@@ -27,6 +27,8 @@ import {
   todayIsSecuredInCache,
 } from "@/lib/task-secured-nav";
 import { afterSecuredNext } from "@/lib/moment-queue";
+import { clearOptimisticFeedPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -109,7 +111,8 @@ function TaskSecuredInner() {
   });
   const [retryTick, setRetryTick] = useState(0);
   const [shareFailed, setShareFailed] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [sharing, setSavingShare] = useState(false);
+  const [sharedNow, setSharedNow] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -209,18 +212,51 @@ function TaskSecuredInner() {
           setShareFailed(true);
           return;
         }
-        setSharing(true);
+        setSavingShare(true);
         void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
           .then(() => {
-            setSharing(false);
-            done();
+            setSavingShare(false);
+            setSharedNow(true);
+            const post: LiveFeedPost = {
+              id: shareEventId,
+              userId,
+              username: profile?.username ?? "",
+              displayName: profile?.display_name ?? "You",
+              avatarUrl: profile?.avatar_url ?? null,
+              streakCount: result.streakDays,
+              challengeId: result.activeChallengeId ?? null,
+              challengeName: result.challengeName,
+              taskName: firstString(params.taskName) || result.challengeName,
+              currentDay: result.challengeDay,
+              totalDays: result.challengeLength,
+              eventType: "task_completed",
+              isCompleted: true,
+              hasProof: true,
+              photoUrl: proofs[0]?.uri ?? proofUri ?? null,
+              proofPhotoUrl: proofs[0]?.uri ?? proofUri ?? null,
+              verified: false,
+              caption: null,
+              createdAt: new Date().toISOString(),
+              respectCount: 0,
+              reactedByMe: false,
+              commentCount: 0,
+              visibility: "public",
+            };
+            publishOptimisticFeedPost(post);
           })
           .catch(() => {
-            setSharing(false);
+            setSavingShare(false);
             setShareFailed(true);
           });
       }}
       onKeep={done}
+      onUndo={() => {
+        if (!shareEventId) return;
+        clearOptimisticFeedPost(shareEventId);
+        setSharedNow(false);
+        void trpcMutate(TRPC.checkins.unshareProof, { eventId: shareEventId }).catch(() => {});
+      }}
+      sharedNow={sharedNow}
       onDone={done}
       username={profile?.username}
     />

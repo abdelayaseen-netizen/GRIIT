@@ -575,6 +575,7 @@ export function useTaskFlowV2() {
             body: taskLeftBody(left.length, hasCameraProof),
             photoUri: photoUri ?? proofUrl ?? null,
             cameraSeal: hasCameraProof,
+            eventId: eventId ?? null,
           });
           returnToOrigin();
         }

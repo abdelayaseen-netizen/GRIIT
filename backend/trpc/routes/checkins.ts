@@ -88,6 +88,7 @@ import { profileTierForSecuredDays } from "../../lib/profile-tier";
 import {
   canFlipShare,
   flipSharePatch,
+  keepSharePatch,
   securedDaySharedOnInsert,
   shareColumns,
   shareColumnsForComplete,
@@ -1632,6 +1633,32 @@ export const checkinsRouter = createTRPCRouter({
       }
     }
     return { ok: true as const, shared: true as const, sharedAt: patch.shared_at };
+  }),
+
+  unshareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+    const svc = getSupabaseServer();
+    if (!svc) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
+    }
+    const { data: row, error } = await svc
+      .from("activity_events")
+      .select("id, user_id")
+      .eq("id", input.eventId)
+      .maybeSingle();
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
+    }
+    if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Proof not found." });
+    const ev = row as { id: string; user_id: string };
+    if (!canFlipShare(ev.user_id, ctx.userId)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "You can only undo your own share." });
+    }
+    const patch = keepSharePatch();
+    const { error: upErr } = await svc.from("activity_events").update(patch as never).eq("id", ev.id);
+    if (upErr) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
+    }
+    return { ok: true as const, shared: false as const };
   }),
 
   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
