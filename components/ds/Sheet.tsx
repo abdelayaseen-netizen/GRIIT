@@ -5,14 +5,13 @@
  */
 import React from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import KeyboardDock from "@/components/ds/KeyboardDock";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { SAFE } from "@/lib/safe-area";
@@ -49,17 +48,13 @@ export default function Sheet({
           onPress={onDismiss}
           style={styles.scrim}
         />
-        <KeyboardAvoidingView
-          style={styles.lift}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          pointerEvents="box-none"
-        >
+        <KeyboardDock style={styles.lift} pointerEvents="box-none">
           <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, SAFE.bottom) }]} pointerEvents="box-none">
             <Text style={styles.heading}>{heading}</Text>
             <View style={footer ? styles.body : undefined}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardDock>
       </View>
     </Modal>
   );

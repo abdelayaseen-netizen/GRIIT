@@ -12,6 +12,7 @@ import {
 import { User, Users } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
+import { NUMBER_PAD_ACCESSORY_ID } from "@/components/ds/KeyboardDock";
 import Chip from "@/components/ds/Chip";
 import HintBox from "@/components/ds/HintBox";
 import {
@@ -146,6 +147,7 @@ export function StepBasics({
               else onChangeDuration(null);
             }}
             keyboardType="number-pad"
+            inputAccessoryViewID={NUMBER_PAD_ACCESSORY_ID}
             placeholder="30"
             placeholderTextColor={DS_V3.color.textSecondary}
             style={styles.customField}

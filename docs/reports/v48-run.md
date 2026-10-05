@@ -214,6 +214,12 @@ A camera proof toast and the secured screen use an outlined pill, “Share this 
 
 tsc 0. Suite 290 files / 1511 tests. **needs Railway deploy** (`unshareProof`).
 
+## H · keyboard dock on comments, create, and edit profile
+
+Comments (the sheet), create, and edit profile use `KeyboardDock`, the same wrapper as the caption, write, and counter steps. Create’s Continue sits in that dock. The custom duration field uses the number-pad Done bar.
+
+tsc 0. Suite 290 files / 1511 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.

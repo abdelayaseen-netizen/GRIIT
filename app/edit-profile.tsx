@@ -6,12 +6,11 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StatusBar,
 } from "react-native";
 import Screen from "@/components/ds/Screen";
+import KeyboardDock from "@/components/ds/KeyboardDock";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
@@ -188,7 +187,7 @@ export default function EditProfileScreen() {
         </View>
 
         <GriitFade fadeKey="edit-profile">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <KeyboardDock>
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             <View style={styles.avatarBlock}>
               <Avatar
@@ -262,7 +261,7 @@ export default function EditProfileScreen() {
 
             {formError ? <Text style={styles.warn}>{formError}</Text> : null}
           </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardDock>
         </GriitFade>
         <ConfirmDialog
           visible={discardOpen}

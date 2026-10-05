@@ -12,6 +12,8 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 
@@ -33,15 +35,20 @@ export function NumberPadDoneBar() {
 export default function KeyboardDock({
   children,
   footer,
+  style,
+  pointerEvents,
 }: {
   children: React.ReactNode;
   footer?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  pointerEvents?: "box-none" | "none" | "box-only" | "auto";
 }) {
   return (
     <KeyboardAvoidingView
-      style={styles.fill}
+      style={[styles.fill, style]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={0}
+      pointerEvents={pointerEvents}
     >
       {children}
       {footer}

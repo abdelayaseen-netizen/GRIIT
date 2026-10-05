@@ -73,9 +73,10 @@ describe("freeze sheet", () => {
     expect(sheet).toContain("zIndex: 1");
     expect(sheet).toContain("pointerEvents=\"box-none\"");
     expect(sheet).toContain("style={styles.scrim}");
-    expect(sheet).toContain("KeyboardAvoidingView");
-    expect(sheet.indexOf("style={styles.scrim}")).toBeLessThan(sheet.indexOf("<KeyboardAvoidingView"));
-    expect(sheet).toContain('behavior={Platform.OS === "ios" ? "padding" : "height"}');
+    expect(sheet).toContain("KeyboardDock");
+    expect(sheet.indexOf("style={styles.scrim}")).toBeLessThan(sheet.indexOf("<KeyboardDock"));
+    const dock = readFileSync(resolve(__dirname, "../components/ds/KeyboardDock.tsx"), "utf8");
+    expect(dock).toContain('behavior={Platform.OS === "ios" ? "padding" : undefined}');
     expect(freezeUi).toContain("error ? <Text style={styles.error}>{error}</Text>");
     expect(morningAfterVisible("freeze", null, "2026-09-17")).toBe(true);
     expect(morningAfterVisible("freeze", "2026-09-17", "2026-09-17")).toBe(false);

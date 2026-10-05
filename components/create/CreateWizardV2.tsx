@@ -4,13 +4,12 @@
  */
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import KeyboardDock, { NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -417,10 +416,29 @@ export function CreateWizardV2() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardDock
+      footer={
+        <WizardFooter>
+          {state.step === 2 &&
+          state.useCustom &&
+          state.customTasks.some((t) => !t.name.trim()) ? (
+            <Text style={styles.secondary}>Name this task.</Text>
+          ) : null}
+          <Button
+            label={
+              state.step === 1 && (!state.title.trim() || !state.category)
+                ? "Add a name and a category to continue."
+                : state.step === 3
+                  ? "Review"
+                  : "Continue"
+            }
+            disabled={primaryDisabled}
+            onPress={handlePrimary}
+          />
+        </WizardFooter>
+      }
     >
+      <NumberPadDoneBar />
       <View style={styles.flex}>
         <WizardHeader step={state.step} total={3} onCancel={handleCancel} />
 
@@ -471,25 +489,6 @@ export function CreateWizardV2() {
           ) : null}
         </ScrollView>
 
-        <WizardFooter>
-          {state.step === 2 &&
-          state.useCustom &&
-          state.customTasks.some((t) => !t.name.trim()) ? (
-            <Text style={styles.secondary}>Name this task.</Text>
-          ) : null}
-          <Button
-            label={
-              state.step === 1 && (!state.title.trim() || !state.category)
-                ? "Add a name and a category to continue."
-                : state.step === 3
-                  ? "Review"
-                  : "Continue"
-            }
-            disabled={primaryDisabled}
-            onPress={handlePrimary}
-          />
-        </WizardFooter>
-
         <Sheet
           visible={cancelOpen}
           onDismiss={() => setCancelOpen(false)}
@@ -530,7 +529,7 @@ export function CreateWizardV2() {
           }}
         />
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardDock>
   );
 }
 
