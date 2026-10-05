@@ -200,6 +200,14 @@ The none line is `No one’s posted today. You’re first.` in `lib/today-band.t
 
 tsc 0. Suite 288 files / 1506 tests.
 
+## H2 · today_posters
+
+`feed.todayPosters` reads shared photo proofs since the viewer’s local midnight. The circle is people they follow plus members of their active challenges, including themselves. Blocked people and `is_test` authors are dropped. One person counts once, newest first. No new table.
+
+The Home band fills the streak-strip slot. While the query is loading the slot stays empty. Zero posters is the one line “No one’s posted today. You’re first.” and it is not tappable. Any poster is a surface row with the newest photo. Tapping it scrolls the Home list to that event, or to the first feed row if the event is not loaded yet. Opening Home and pulling to refresh refetch the query.
+
+tsc 0. Suite 289 files / 1510 tests. **needs Railway deploy.**
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.

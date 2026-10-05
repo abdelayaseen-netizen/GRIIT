@@ -123,6 +123,7 @@ export type HomeV3Props = {
   day2Hero?: { hero: string; line: string } | null;
   windowBanner?: string | null;
   startLabel?: string | null;
+  band?: React.ReactNode;
   showFirstProofSlot?: boolean;
   noDaysOff?: boolean;
   highlightTaskId?: string | null;
@@ -160,6 +161,7 @@ export function HomeV3({
   day2Hero: _day2Hero,
   windowBanner: _windowBanner,
   startLabel,
+  band,
   showFirstProofSlot,
   noDaysOff: _noDaysOff = false,
   highlightTaskId,
@@ -259,6 +261,7 @@ export function HomeV3({
         todayIndex={todayIndex}
         status={status}
         onOpenSheet={() => onPressStreak?.()}
+        band={band}
         primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
       />
 

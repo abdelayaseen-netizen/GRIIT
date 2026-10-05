@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -29,6 +29,8 @@ import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import ProofPost from "@/components/feed/ProofPost";
 import FeedEvent from "@/components/feed/FeedEvent";
 import InviteCard from "@/components/feed/InviteCard";
+import TodaySocialBand from "@/components/home/TodaySocialBand";
+import type { TodayPoster } from "@/lib/today-band";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import { groupFeedJoins, isJoinGroup, type FeedListItem } from "@/lib/feed-join";
 import EmptyState from "@/components/ds/EmptyState";
@@ -62,7 +64,7 @@ const RESPECT_DEBOUNCE_MS = 300;
 type LiveFeedScope = "following" | "everyone";
 
 type LiveFeedSectionProps = {
-  ListHeaderComponent?: React.ReactElement<{ awayCount?: number }> | null;
+  ListHeaderComponent?: React.ReactElement<{ awayCount?: number; band?: React.ReactNode }> | null;
   /** Optional parent-driven refresh (e.g. home tab refetches stats + feed together). Falls back to internal feed refetch. */
   onRefresh?: () => Promise<void> | void;
   /**
@@ -183,6 +185,25 @@ function LiveFeedSection({
     [feedQuery.data?.pages],
   );
   const followingCount = feedQuery.data?.pages?.[0]?.following_count ?? 0;
+
+  const postersQuery = useQuery({
+    queryKey: ["feed", "todayPosters", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.todayPosters) as Promise<{
+        posters: TodayPoster[];
+        firstEventId: string | null;
+      }>,
+    enabled: !!user?.id,
+    staleTime: 30 * 1000,
+  });
+  const todayPosters = postersQuery.data?.posters ?? [];
+  const firstTodayEventId = postersQuery.data?.firstEventId ?? null;
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      void postersQuery.refetch();
+    }, [postersQuery.refetch, user?.id]),
+  );
 
   const followingQuery = useQuery({
     queryKey: ["profiles", "getFollowing", user?.id ?? ""],
@@ -532,25 +553,45 @@ function LiveFeedSection({
   }, [feedQuery, scope, goToDiscover]);
 
   const refetchFeed = feedQuery.refetch;
+  const refetchPosters = postersQuery.refetch;
   const handleRefresh = useCallback(() => {
     return runHomePullRefresh(async () => {
+      await refetchPosters();
       if (onRefresh) {
         await onRefresh();
         return;
       }
       await refetchFeed();
     }, setIsPulling);
-  }, [onRefresh, refetchFeed]);
+  }, [onRefresh, refetchFeed, refetchPosters]);
 
   const scrollToFeed = useCallback(() => {
     if (finalFeed.length === 0) return;
     listRef.current?.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
   }, [finalFeed.length]);
 
+  const scrollToTodayPost = useCallback(() => {
+    const index = listItems.findIndex((item) => !isJoinGroup(item) && item.id === firstTodayEventId);
+    if (index >= 0) {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
+      return;
+    }
+    scrollToFeed();
+  }, [firstTodayEventId, listItems, scrollToFeed]);
+
   if (!user?.id) return null;
 
   const header = ListHeaderComponent
-    ? React.cloneElement(ListHeaderComponent, { awayCount })
+    ? React.cloneElement(ListHeaderComponent, {
+        awayCount,
+        band: (
+          <TodaySocialBand
+            posters={todayPosters}
+            pending={postersQuery.isPending}
+            onPress={scrollToTodayPost}
+          />
+        ),
+      })
     : null;
 
   const composedHeader = (

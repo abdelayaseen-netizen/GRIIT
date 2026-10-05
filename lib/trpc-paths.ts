@@ -151,6 +151,7 @@ export const TRPC = {
     listMine: 'feed.listMine',
     getMySummary: 'feed.getMySummary',
     getLiveFeed: 'feed.getLiveFeed',
+    todayPosters: 'feed.todayPosters',
     react: 'feed.react',
     comment: 'feed.comment',
     deleteComment: 'feed.deleteComment',

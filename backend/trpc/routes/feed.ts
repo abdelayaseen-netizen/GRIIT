@@ -34,6 +34,7 @@ import {
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
+import { localDayStartIso, pickTodayPosters } from "../../lib/today-posters";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
 /**
@@ -1221,4 +1222,83 @@ export const feedRouter = createTRPCRouter({
       const posts = await hydrateActivityEventsToPosts(top, viewerId, friendIds, ctx, server, coMemberIds);
       return { posts };
     }),
+
+  todayPosters: protectedProcedure.query(async ({ ctx }) => {
+    const server = getSupabaseServer() ?? ctx.supabase;
+    const viewerId = ctx.userId;
+    const tz = await getProfileTimeZoneForUser(ctx.supabase, viewerId);
+    const since = localDayStartIso(new Date(), tz);
+    const [{ data: follows }, blockedIds, mine] = await Promise.all([
+      ctx.supabase.from("user_follows").select("following_id, status").eq("follower_id", viewerId).limit(200),
+      getBlockedUserIds(ctx.supabase, viewerId),
+      ctx.supabase.from("active_challenges").select("challenge_id").eq("user_id", viewerId).eq("status", "active").limit(200),
+    ]);
+    const circle = new Set<string>([viewerId]);
+    for (const r of (follows ?? []) as { following_id?: string | null; status?: string | null }[]) {
+      if (r.following_id && followRowAccepted(r)) circle.add(r.following_id);
+    }
+    const challengeIds = ((mine.data ?? []) as { challenge_id?: string | null }[])
+      .map((r) => r.challenge_id)
+      .filter((id): id is string => Boolean(id));
+    if (challengeIds.length > 0) {
+      const { data: mates } = await ctx.supabase
+        .from("active_challenges")
+        .select("user_id")
+        .in("challenge_id", challengeIds)
+        .eq("status", "active")
+        .limit(400);
+      for (const m of (mates ?? []) as { user_id?: string | null }[]) {
+        if (m.user_id) circle.add(m.user_id);
+      }
+    }
+    for (const id of blockedIds) circle.delete(id);
+    const ids = [...circle].slice(0, 200);
+    const { data: events } = await server
+      .from("activity_events")
+      .select("id, user_id, created_at, share_state, metadata")
+      .in("user_id", ids)
+      .eq("share_state", "shared")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    const evRows = (events ?? []) as {
+      id: string;
+      user_id: string;
+      created_at: string;
+      share_state?: string | null;
+      metadata?: Record<string, unknown> | null;
+    }[];
+    const authorIds = [...new Set(evRows.map((e) => e.user_id).filter(Boolean))];
+    const testIds = authorIds.length ? await testAuthorIdSet(server, authorIds) : new Set<string>();
+    const { data: profiles } = authorIds.length
+      ? await server.from("profiles").select("user_id, display_name, username").in("user_id", authorIds).limit(200)
+      : { data: [] as { user_id?: string; display_name?: string | null; username?: string | null }[] };
+    const names = new Map<string, string>();
+    for (const p of (profiles ?? []) as { user_id?: string; display_name?: string | null; username?: string | null }[]) {
+      if (!p.user_id) continue;
+      names.set(p.user_id, (p.display_name || p.username || "").trim());
+    }
+    const picked = pickTodayPosters(
+      evRows.map((e) => {
+        const md = e.metadata ?? {};
+        const photo = typeof md.photo_url === "string" ? md.photo_url : typeof md.proof_photo_url === "string" ? md.proof_photo_url : null;
+        return {
+          eventId: e.id,
+          userId: e.user_id,
+          name: names.get(e.user_id) || "Someone",
+          createdAt: e.created_at,
+          photoUrl: photo,
+          shared: e.share_state === "shared",
+          blocked: blockedIds.has(e.user_id),
+          isTest: testIds.has(e.user_id),
+          inCircle: circle.has(e.user_id),
+        };
+      }),
+      viewerId,
+      since,
+    );
+    const signed = await signProofPaths(picked.map((p) => p.photoUrl), viewerId);
+    const posters = picked.map((p, i) => ({ ...p, photoUrl: signed[i] ?? null }));
+    return { posters, firstEventId: posters[0]?.eventId ?? null };
+  }),
 });
