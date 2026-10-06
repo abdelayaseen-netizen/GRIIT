@@ -4,6 +4,7 @@ import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import {
   Bell,
+  Camera,
   CreditCard,
   Eye,
   Info,
@@ -77,6 +78,12 @@ export default function SettingsScreen() {
               title="Privacy"
               subtitle={settingsPrivacySub(vis)}
               onPress={() => router.push(ROUTES.SETTINGS_PRIVACY as never)}
+            />
+            <ListRow
+              icon={<Camera size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Permissions"
+              subtitle="Camera, location, notifications"
+              onPress={() => router.push(ROUTES.SETTINGS_PERMISSIONS as never)}
             />
             <ListRow
               icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}

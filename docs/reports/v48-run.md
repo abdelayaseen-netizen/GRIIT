@@ -268,6 +268,12 @@ The none line shows only when the query returns zero posters. A missing procedur
 
 tsc 0. Suite 292 files / 1518 tests.
 
+## E · permissions
+
+Settings opens Permissions. Camera, location, and notifications show Allowed, While using, Off, or Not asked. Each row opens iOS Settings. Apple Health stays “Not asked” and is not an import.
+
+tsc 0. Suite 292 files / 1518 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
