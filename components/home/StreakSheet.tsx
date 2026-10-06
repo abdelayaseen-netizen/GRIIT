@@ -8,6 +8,7 @@ import Button from "@/components/ds/Button";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { DS_V3 } from "@/lib/design-system";
 import { FREEZE } from "@/lib/copy";
+import { EARNED_FREEZE, nextEarnStreak } from "@/lib/freeze-earn";
 import { weekSheetLine } from "@/lib/home-status";
 import {
   HELD_DONE,
@@ -27,6 +28,7 @@ export function StreakSheet({
   total,
   missed,
   freezesLeft,
+  freezeCap,
   refill,
   week,
   todayIndex,
@@ -45,6 +47,7 @@ export function StreakSheet({
   total: number;
   missed: string;
   freezesLeft: number;
+  freezeCap?: number;
   refill: string;
   week: WeekStripDay[];
   todayIndex: number;
@@ -96,6 +99,13 @@ export function StreakSheet({
           {streakSheetMissBody({ done, total, missed, weekday, streak })}
         </Text>
         <Text style={styles.body}>{streakSheetFreezeLeft(freezesLeft, refill)}</Text>
+        {freezeCap != null ? (
+          <Text style={styles.body}>
+            {EARNED_FREEZE.ofCap(freezesLeft, freezeCap)}
+            {"\n"}
+            {EARNED_FREEZE.nextAt(nextEarnStreak(streak))}
+          </Text>
+        ) : null}
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </Sheet>

@@ -226,7 +226,7 @@ describe("fixture A — 12 due days", () => {
     expect(rec.consistency.verifiedClosed).toBe(10);
     expect(rec.consistency.rate).toBe("91%");
     expect(rec.consistency.verdict).toBe("Locked in");
-    expect(rec.consistency.line).toBe("10 of 11 days verified. Today still open.");
+    expect(rec.consistency.line).toBe("10 of 11 days secured. Today still open.");
     expect(rec.consistency.strip).toEqual([V, V, V, M, V, V, V, V, V, V, V, T]);
     expect(rec.consistency.showWindowControl).toBe(true);
   });
@@ -307,7 +307,7 @@ describe("fixture D — 30 due days", () => {
     expect(rec.consistency.verifiedClosed).toBe(27);
     expect(rec.consistency.rate).toBe("93%");
     expect(rec.consistency.verdict).toBe("Locked in");
-    expect(rec.consistency.line).toBe("27 of 29 days verified. Today still open.");
+    expect(rec.consistency.line).toBe("27 of 29 days secured. Today still open.");
     expect(rec.consistency.strip).toHaveLength(30);
     expect(rec.consistency.strip[3]).toBe(M);
     expect(rec.consistency.strip[11]).toBe(M);

@@ -19,6 +19,10 @@ export type SubmitResult = {
   verificationKind: VerificationKind;
   challengeDone?: boolean;
   activeChallengeId?: string;
+  freezeGranted?: boolean;
+  freezesHeld?: number;
+  freezeCap?: number;
+  freezeAtCap?: boolean;
 };
 
 export type ConfirmationVariant = "A" | "B" | "C" | "D";
@@ -88,6 +92,10 @@ export function assembleSubmitResult(args: {
     secured?: boolean;
     challenge_done?: boolean;
     remaining_challenges?: number;
+    freezeGranted?: boolean;
+    freezesHeld?: number;
+    freezeCap?: number;
+    freezeAtCap?: boolean;
   } | null;
 }): SubmitResult {
   const alreadyFromSecure = args.secure?.alreadySecured === true;
@@ -107,5 +115,9 @@ export function assembleSubmitResult(args: {
     challengeName: args.challengeName,
     verificationKind: args.verificationKind,
     challengeDone: args.secure?.challenge_done === true,
+    freezeGranted: args.secure?.freezeGranted === true,
+    freezesHeld: args.secure?.freezesHeld,
+    freezeCap: args.secure?.freezeCap,
+    freezeAtCap: args.secure?.freezeAtCap === true,
   };
 }

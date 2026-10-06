@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import { FlashList } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Screen from "@/components/ds/Screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -143,6 +143,10 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const focus = useLocalSearchParams<{ focus?: string }>().focus;
+  useEffect(() => {
+    if (focus === "freeze") setShowFreezeSheet(true);
+  }, [focus]);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
   const [streakHeld, setStreakHeld] = React.useState(false);
   const [freezeError, setFreezeError] = React.useState<string | null>(null);
@@ -774,6 +778,7 @@ export default function HomeScreen() {
           total={proof.totalCount}
           missed={(recon.result?.missedTaskNames ?? []).join(", ")}
           freezesLeft={freezeStatus?.remaining ?? 0}
+          freezeCap={freezeStatus?.limit}
           refill={freezeRefillDateLabel(freezeStatus?.lastFreezeUsedAt ?? null, homeTimeZone)}
           week={["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
             letter,

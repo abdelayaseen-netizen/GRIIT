@@ -90,6 +90,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/date-utils.ts",
       "lib/day-secure-ui.ts",
       "lib/free-challenge-limit.ts",
+      "lib/freeze-earn.ts",
       "lib/group-nudge.ts",
       "lib/home-day-total.ts",
       "lib/iana-timezone-core.ts",

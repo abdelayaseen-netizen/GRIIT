@@ -27,6 +27,7 @@ import {
   todayIsSecuredInCache,
 } from "@/lib/task-secured-nav";
 import { afterSecuredNext } from "@/lib/moment-queue";
+import { freezeEarnedNote } from "@/lib/freeze-earn";
 import { clearOptimisticFeedPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
@@ -50,6 +51,10 @@ function TaskSecuredInner() {
     activeChallengeId?: string;
     originTab?: string;
     counterTarget?: string;
+    freezeGranted?: string;
+    freezesHeld?: string;
+    freezeCap?: string;
+    freezeAtCap?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -68,6 +73,10 @@ function TaskSecuredInner() {
     verificationKind: firstString(params.verificationKind),
     challengeDone: firstString(params.challengeDone),
     activeChallengeId: firstString(params.activeChallengeId),
+    freezeGranted: firstString(params.freezeGranted),
+    freezesHeld: firstString(params.freezesHeld),
+    freezeCap: firstString(params.freezeCap),
+    freezeAtCap: firstString(params.freezeAtCap),
   });
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
@@ -190,6 +199,7 @@ function TaskSecuredInner() {
   return (
     <SecuredDayScreen
       streak={result.streakDays}
+      freezeNote={freezeEarnedNote(result)}
       proofs={proofs}
       selfReported={meta.selfReported}
       taskCount={meta.ready ? meta.taskCount : undefined}

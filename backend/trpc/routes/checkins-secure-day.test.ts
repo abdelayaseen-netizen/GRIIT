@@ -6,6 +6,8 @@ const harness = vi.hoisted(() => ({
   enabled: false,
   count: 0,
   updates: [] as unknown[],
+  inserts: [] as { table: string; payload: unknown }[],
+  grantError: null as { code?: string } | null,
 }));
 
 vi.mock("../../lib/supabase-server", () => ({
@@ -24,6 +26,10 @@ vi.mock("../../lib/supabase-server", () => ({
         const chain: Record<string, unknown> = {};
         chain.select = () => chain;
         chain.eq = () => chain;
+        chain.insert = (payload: unknown) => {
+          harness.inserts.push({ table, payload });
+          return Promise.resolve({ error: harness.grantError });
+        };
         chain.then = (onFulfilled: (value: unknown) => unknown) =>
           Promise.resolve({ count: harness.count, error: null, data: null }).then(onFulfilled);
         return chain;
@@ -38,7 +44,11 @@ const CH = "d0000000-0000-4000-8000-000000000004";
 
 const rpcRow = { streak: 4, secured: false, challenge_done: true, remaining_challenges: 2 };
 
-function createMockSupabase(opts?: { rpc?: typeof rpcRow; daySecure?: { id: string } | null }) {
+function createMockSupabase(opts?: {
+  rpc?: typeof rpcRow;
+  daySecure?: { id: string } | null;
+  profile?: Record<string, unknown>;
+}) {
   const rpc = vi.fn().mockResolvedValue({ data: [opts?.rpc ?? rpcRow], error: null });
   return {
     rpc,
@@ -48,7 +58,7 @@ function createMockSupabase(opts?: { rpc?: typeof rpcRow; daySecure?: { id: stri
           return { id: AC, user_id: USER, challenge_id: CH, current_day: 2 };
         }
         if (table === "profiles") {
-          return { timezone: "UTC", reminder_timezone: "UTC", total_days_secured: 3 };
+          return { timezone: "UTC", reminder_timezone: "UTC", total_days_secured: 3, ...(opts?.profile ?? {}) };
         }
         if (table === "challenges") {
           return {
@@ -93,6 +103,8 @@ describe("checkins.secureDay", () => {
     harness.enabled = false;
     harness.count = 0;
     harness.updates.length = 0;
+    harness.inserts.length = 0;
+    harness.grantError = null;
   });
 
   it("returns rpc {secured:false, challenge_done:true, remaining_challenges:2} unchanged", async () => {
@@ -134,5 +146,57 @@ describe("checkins.secureDay", () => {
     const result = await caller.checkins.secureDay({ activeChallengeId: AC });
     expect(result.alreadySecured).toBe(true);
     expect(harness.updates).toHaveLength(0);
+    expect(result.freezeGranted).toBe(false);
+    expect(harness.inserts).toHaveLength(0);
+  });
+
+  it("grants one freeze when the secured streak is 7 or 14", async () => {
+    harness.enabled = true;
+    for (const streak of [7, 14]) {
+      harness.updates.length = 0;
+      harness.inserts.length = 0;
+      const supabase = createMockSupabase({
+        rpc: { streak, secured: true, challenge_done: false, remaining_challenges: 0 },
+        profile: { is_premium: false, streak_freezes_remaining: 0, last_freeze_used_at: "2026-10-01T00:00:00.000Z" },
+      });
+      const caller = createTestCaller({ userId: USER, supabase });
+      if (!caller) return;
+      const result = await caller.checkins.secureDay({ activeChallengeId: AC });
+      expect(result.freezeGranted).toBe(true);
+      expect(result.freezesHeld).toBe(1);
+      expect(result.freezeCap).toBe(2);
+      expect(result.freezeAtCap).toBe(false);
+      expect(harness.inserts).toHaveLength(1);
+      expect(harness.inserts[0]?.table).toBe("freeze_grants");
+    }
+  });
+
+  it("grants nothing when the hold cap is already full", async () => {
+    harness.enabled = true;
+    const supabase = createMockSupabase({
+      rpc: { streak: 7, secured: true, challenge_done: false, remaining_challenges: 0 },
+      profile: { is_premium: false, streak_freezes_remaining: 2, last_freeze_used_at: "2026-10-01T00:00:00.000Z" },
+    });
+    const caller = createTestCaller({ userId: USER, supabase });
+    if (!caller) return;
+    const result = await caller.checkins.secureDay({ activeChallengeId: AC });
+    expect(result.freezeGranted).toBe(false);
+    expect(result.freezeAtCap).toBe(true);
+    expect(result.freezesHeld).toBe(2);
+    expect(harness.inserts).toHaveLength(0);
+  });
+
+  it("does not grant a second freeze when the insert hits the unique date", async () => {
+    harness.enabled = true;
+    harness.grantError = { code: "23505" };
+    const supabase = createMockSupabase({
+      rpc: { streak: 7, secured: true, challenge_done: false, remaining_challenges: 0 },
+      profile: { is_premium: false, streak_freezes_remaining: 1, last_freeze_used_at: "2026-10-01T00:00:00.000Z" },
+    });
+    const caller = createTestCaller({ userId: USER, supabase });
+    if (!caller) return;
+    const result = await caller.checkins.secureDay({ activeChallengeId: AC });
+    expect(result.freezeGranted).toBe(false);
+    expect(harness.updates.some((row) => (row as { streak_freezes_remaining?: number }).streak_freezes_remaining != null)).toBe(false);
   });
 });

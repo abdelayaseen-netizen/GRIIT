@@ -84,6 +84,8 @@ import {
 } from "../../lib/task-model";
 import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
 import { getSupabaseServer } from "../../lib/supabase-server";
+import { earnedFreezeBlockedByCap, freezeHoldCap, shouldGrantEarnedFreeze } from "../../lib/freeze-grant";
+import { effectiveFreezesRemaining } from "./streaks";
 import { profileTierForSecuredDays } from "../../lib/profile-tier";
 import {
   canFlipShare,
@@ -157,6 +159,89 @@ export function decideLiveLocationGate(args: {
   const distanceM = haversineDistance(args.targetLat, args.targetLng, args.live.lat, args.live.lng);
   if (distanceM > radius) return { kind: "rejected" };
   return { kind: "passed", distanceM };
+}
+
+const NO_FREEZE_GRANT = {
+  freezeGranted: false,
+  freezesHeld: 0,
+  freezeCap: 0,
+  freezeAtCap: false,
+};
+
+async function grantEarnedFreezeOnSecure(args: {
+  supabase: { from(table: string): any };
+  userId: string;
+  streak: number;
+  secured: boolean;
+  alreadySecured: boolean;
+  grantedDateKey: string;
+}): Promise<{ freezeGranted: boolean; freezesHeld: number; freezeCap: number; freezeAtCap: boolean }> {
+  if (!args.secured || args.alreadySecured || args.streak < 7 || args.streak % 7 !== 0) return NO_FREEZE_GRANT;
+  const { data: profile } = await args.supabase
+    .from("profiles")
+    .select("is_premium, streak_freezes_remaining, last_freeze_used_at")
+    .eq("user_id", args.userId)
+    .single();
+  const row = profile as {
+    is_premium?: boolean;
+    streak_freezes_remaining?: number | null;
+    last_freeze_used_at?: string | null;
+  } | null;
+  const isPro = !!row?.is_premium;
+  const cap = freezeHoldCap(isPro);
+  const held = effectiveFreezesRemaining({
+    storedRemaining: row?.streak_freezes_remaining,
+    lastFreezeUsedAt: row?.last_freeze_used_at,
+    isPro,
+  }).remaining;
+  const { data: existing } = await args.supabase
+    .from("freeze_grants")
+    .select("id")
+    .eq("user_id", args.userId)
+    .eq("source", "earned")
+    .eq("granted_date_key", args.grantedDateKey)
+    .maybeSingle();
+  const decision = {
+    streak: args.streak,
+    held,
+    cap,
+    alreadyGrantedForDate: Boolean(existing),
+  };
+  if (!shouldGrantEarnedFreeze(decision)) {
+    return {
+      freezeGranted: false,
+      freezesHeld: held,
+      freezeCap: cap,
+      freezeAtCap: earnedFreezeBlockedByCap(decision),
+    };
+  }
+  const svc = getSupabaseServer();
+  if (!svc) {
+    logger.error({ userId: args.userId }, "[checkins.secureDay] no service role; earned freeze not granted");
+    return { freezeGranted: false, freezesHeld: held, freezeCap: cap, freezeAtCap: false };
+  }
+  const { error: grantErr } = await svc.from("freeze_grants").insert({
+    user_id: args.userId,
+    source: "earned",
+    streak_at_grant: args.streak,
+    granted_date_key: args.grantedDateKey,
+    granted_at: new Date().toISOString(),
+  } as never);
+  if (grantErr) {
+    if ((grantErr as { code?: string }).code !== "23505") {
+      logger.error({ err: grantErr, userId: args.userId }, "[checkins.secureDay] freeze grant insert failed");
+    }
+    return { freezeGranted: false, freezesHeld: held, freezeCap: cap, freezeAtCap: false };
+  }
+  const nextHeld = Math.min(cap, held + 1);
+  const { error: holdErr } = await svc
+    .from("profiles")
+    .update({ streak_freezes_remaining: nextHeld, updated_at: new Date().toISOString() } as never)
+    .eq("user_id", args.userId);
+  if (holdErr) {
+    logger.error({ err: holdErr, userId: args.userId }, "[checkins.secureDay] freeze hold update failed");
+  }
+  return { freezeGranted: true, freezesHeld: nextHeld, freezeCap: cap, freezeAtCap: false };
 }
 
 export const checkinsRouter = createTRPCRouter({
@@ -1406,6 +1491,10 @@ export const checkinsRouter = createTRPCRouter({
         challengeId: z.string().uuid().optional(),
         challengeName: z.string().optional(),
         totalDays: z.number().optional(),
+        freezeGranted: z.boolean(),
+        freezesHeld: z.number(),
+        freezeCap: z.number(),
+        freezeAtCap: z.boolean(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -1539,6 +1628,14 @@ export const checkinsRouter = createTRPCRouter({
           }
         }
       }
+      const freeze = await grantEarnedFreezeOnSecure({
+        supabase: ctx.supabase as { from(table: string): any },
+        userId: ctx.userId,
+        streak: row.streak,
+        secured: row.secured,
+        alreadySecured,
+        grantedDateKey: alreadyDateKey,
+      });
       return {
         success: true,
         alreadySecured,
@@ -1551,6 +1648,10 @@ export const checkinsRouter = createTRPCRouter({
         challengeDay: daySecured,
         challengeCompleted: challengeJustCompleted,
         ...(challengeJustCompleted && { challengeId: challengeId ?? undefined, challengeName, totalDays: durationDays }),
+        freezeGranted: freeze.freezeGranted,
+        freezesHeld: freeze.freezesHeld,
+        freezeCap: freeze.freezeCap,
+        freezeAtCap: freeze.freezeAtCap,
       };
     }
 

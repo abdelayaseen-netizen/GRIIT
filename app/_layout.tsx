@@ -405,6 +405,10 @@ function RootLayout() {
         if (Platform.OS !== "web" && reminderType === "streak_at_risk") {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
+        if (data?.focus === "freeze" || data?.reminder_type === "morning_miss") {
+          router.push({ pathname: "/(tabs)", params: { focus: "freeze" } } as never);
+          return;
+        }
         if (data?.type === "active_task_timer" && typeof data.route === "string") {
           const r = data.route;
           // Allow in-app task (/task/complete) and challenge surfaces through.

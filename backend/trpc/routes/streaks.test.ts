@@ -8,6 +8,7 @@ import {
   restoreStreakCount,
   streaksRouter,
 } from "./streaks";
+import { FREEZE_HOLD_CAP_FREE } from "../../lib/freeze-grant";
 import { addCalendarDaysToDateKey, getTodayDateKey, getYesterdayDateKey } from "../../lib/date-utils";
 import { evaluateMiss } from "../../lib/miss-reconcile";
 import { getSupabaseAdmin } from "../../lib/supabase-admin";
@@ -202,7 +203,7 @@ describe("effectiveFreezesRemaining", () => {
         isPro: false,
         now: new Date("2026-09-14T00:00:00.000Z"),
       })
-    ).toEqual({ remaining: 0, limit: 1 });
+    ).toEqual({ remaining: 0, limit: 2 });
   });
 
   it("uses the monthly limit when last_freeze_used_at is null", () => {
@@ -224,7 +225,18 @@ describe("effectiveFreezesRemaining", () => {
         isPro: false,
         now: new Date("2026-09-14T00:00:00.000Z"),
       })
-    ).toEqual({ remaining: 1, limit: 1 });
+    ).toEqual({ remaining: 1, limit: 2 });
+  });
+
+  it("keeps an earned freeze when the 30-day refill is due", () => {
+    expect(
+      effectiveFreezesRemaining({
+        storedRemaining: 2,
+        lastFreezeUsedAt: new Date("2026-08-01T00:00:00.000Z").toISOString(),
+        isPro: false,
+        now: new Date("2026-09-14T00:00:00.000Z"),
+      })
+    ).toEqual({ remaining: 2, limit: 2 });
   });
 });
 
@@ -289,7 +301,7 @@ describe("streaks.getFreezeStatus", () => {
     const { caller } = createCaller({ remaining: 1, lastFreezeUsedAt: "2026-09-10T00:00:00.000Z" });
     await expect(caller.getFreezeStatus()).resolves.toEqual({
       remaining: 1,
-      limit: STREAK_FREEZE_PER_MONTH_FREE,
+      limit: FREEZE_HOLD_CAP_FREE,
       isPro: false,
       lastFreezeUsedAt: "2026-09-10T00:00:00.000Z",
     });

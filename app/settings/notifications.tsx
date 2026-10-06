@@ -150,7 +150,7 @@ export default function SettingsNotificationsScreen() {
             />
             <Toggle
               label="Weekly summary"
-              sub="Sunday: days verified, days missed, streak state."
+              sub="Sunday: days secured, days missed, streak state."
               value={weekly}
               disabled={osDenied}
               onChange={(v) => {

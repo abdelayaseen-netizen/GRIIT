@@ -65,6 +65,10 @@ export function taskSecuredHref(
       closingPhoto: share?.closingHasPhoto ? "1" : "0",
       originTab: share?.originTab ?? "home",
       counterTarget: share?.counterReachedTarget ? "1" : "0",
+      freezeGranted: result.freezeGranted ? "1" : "0",
+      freezesHeld: String(result.freezesHeld ?? 0),
+      freezeCap: String(result.freezeCap ?? 0),
+      freezeAtCap: result.freezeAtCap ? "1" : "0",
     },
   } as const;
 }
@@ -83,6 +87,10 @@ export function submitResultFromSecuredParams(params: {
   verificationKind?: string;
   challengeDone?: string;
   activeChallengeId?: string;
+  freezeGranted?: string;
+  freezesHeld?: string;
+  freezeCap?: string;
+  freezeAtCap?: string;
 }): SubmitResult {
   const kind = KINDS.includes(params.verificationKind as VerificationKind)
     ? (params.verificationKind as VerificationKind)
@@ -100,5 +108,9 @@ export function submitResultFromSecuredParams(params: {
     verificationKind: kind,
     challengeDone: params.challengeDone === "1",
     activeChallengeId: params.activeChallengeId?.trim() || undefined,
+    freezeGranted: params.freezeGranted === "1",
+    freezesHeld: parseInt(params.freezesHeld ?? "0", 10) || 0,
+    freezeCap: parseInt(params.freezeCap ?? "0", 10) || 0,
+    freezeAtCap: params.freezeAtCap === "1",
   };
 }

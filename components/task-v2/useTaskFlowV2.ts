@@ -501,6 +501,10 @@ export function useTaskFlowV2() {
         secured?: boolean;
         challenge_done?: boolean;
         remaining_challenges?: number;
+        freezeGranted?: boolean;
+        freezesHeld?: number;
+        freezeCap?: number;
+        freezeAtCap?: boolean;
       } | null = null;
       const completeMs = Date.now() - finishStartedAt;
       const secureStartedAt = Date.now();
@@ -524,6 +528,10 @@ export function useTaskFlowV2() {
           secured?: boolean;
           challenge_done?: boolean;
           remaining_challenges?: number;
+          freezeGranted?: boolean;
+          freezesHeld?: number;
+          freezeCap?: number;
+          freezeAtCap?: boolean;
         };
         secure = {
           success: r.success === true,
@@ -532,6 +540,10 @@ export function useTaskFlowV2() {
           secured: r.secured,
           challenge_done: r.challenge_done,
           remaining_challenges: r.remaining_challenges,
+          freezeGranted: r.freezeGranted,
+          freezesHeld: r.freezesHeld,
+          freezeCap: r.freezeCap,
+          freezeAtCap: r.freezeAtCap,
         };
       }
       const securedToday = serverSecuredToday({
@@ -598,6 +610,10 @@ export function useTaskFlowV2() {
               secured: secure.secured,
               challenge_done: secure.challenge_done,
               remaining_challenges: secure.remaining_challenges,
+              freezeGranted: secure.freezeGranted,
+              freezesHeld: secure.freezesHeld,
+              freezeCap: secure.freezeCap,
+              freezeAtCap: secure.freezeAtCap,
             }
           : null,
       });

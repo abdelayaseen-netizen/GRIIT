@@ -445,7 +445,7 @@ export const feedRouter = createTRPCRouter({
   }),
 
   listMine: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
-    let query = ctx.supabase.from("activity_events").select("id, event_type, challenge_id, metadata, created_at").eq("user_id", ctx.userId).order("created_at", { ascending: false }).limit(input.limit);
+    let query = ctx.supabase.from("activity_events").select("id, event_type, challenge_id, metadata, created_at").eq("user_id", ctx.userId).neq("event_type", "morning_miss_push").order("created_at", { ascending: false }).limit(input.limit);
     if (input.cursor) query = query.lt("created_at", input.cursor);
     const { data: events, error } = await query;
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });

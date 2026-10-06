@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
-import { Download, Flame, Instagram, ShieldOff, X } from "lucide-react-native";
+import { Download, Flame, Instagram, ShieldOff, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { ShareChoice } from "@/components/ds/ShareChoice";
@@ -61,6 +61,7 @@ export default function SecuredDayScreen({
   sharedNow,
   onDone,
   username,
+  freezeNote,
 }: {
   streak: number;
   proofs: SecuredProof[];
@@ -82,6 +83,7 @@ export default function SecuredDayScreen({
   sharedNow?: boolean;
   onDone: () => void;
   username?: string | null;
+  freezeNote?: string | null;
 }) {
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
@@ -144,6 +146,12 @@ export default function SecuredDayScreen({
           <Flame size={28} color={DS_V3.color.brand} />
           <Text style={styles.hero88}>{streak}</Text>
           <Text style={styles.unit}>{streakInARow(streak)}</Text>
+          {freezeNote ? (
+            <View style={styles.freezeNote}>
+              <Snowflake size={16} color={DS_V3.color.textSecondary} />
+              <Text style={styles.caption}>{freezeNote}</Text>
+            </View>
+          ) : null}
         </View>
         <View style={styles.center}>
           <Text style={styles.today}>{title}</Text>
@@ -276,6 +284,12 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: 2,
+  },
+  freezeNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
   },
   hero88: {
     fontSize: 88,

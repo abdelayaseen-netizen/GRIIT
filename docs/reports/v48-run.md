@@ -274,8 +274,18 @@ Settings opens Permissions. Camera, location, and notifications show Allowed, Wh
 
 tsc 0. Suite 292 files / 1518 tests.
 
+## I · streak safety net
+
+A secured streak of 7, 14, 21… grants one freeze on `checkins.secureDay`. The row goes into `freeze_grants` with `granted_date_key` equal to that secured date. The unique key blocks a second grant. At the hold cap (Free 2, Pro 4) the response sets `freezeAtCap` and inserts nothing. A freeze-held day bridges the run and does not add a day, so the 7th secured day after a held day still grants. The 30-day refill adds the monthly allotment up to the cap and does not wipe an earned freeze. The repo migration matches the table already in production. It was not run from here.
+
+The secured screen shows “Freeze earned. You hold {n}.” with a snowflake, or “You’re holding the max, {cap} freezes.” No confetti. The streak sheet shows “{n} of {cap}” and “Next at {7k}-day streak”. An unsecured day already reads “{done} of {total}” on the record and in the sheet body. User-facing “days verified” on the profile line, the finish line, and the Sunday note now says secured.
+
+The morning-after push sends only after an uncovered miss, only if a day was ever secured, at the median check-in minute over 14 days (fallback 9:00), once, and only while fewer than 3 push events are already marked today. Copy with a freeze: “Yesterday wasn’t secured. A freeze can hold it until midnight.” Without: “Secure today and you’re back at 1.” The tap opens Home with the freeze sheet. The closed-window line already says the other task still counts for its own challenge.
+
+tsc 0. Suite 295 files / 1536 tests. **needs Railway deploy** (grant path and morning-miss cron).
+
 ## Still ahead
 
-Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
+Phases C through F are not finished. C frame match covers the reachable seed states only. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
 
-QA flows are not scripted. `docs/reports/v48-gaps.md` is not written. Build 76 is not cut. Railway has not been deployed for the daily-reset leave path or the Strict freeze message.
+QA flows are not scripted. `docs/reports/v48-gaps.md` is not written. Build 76 is not cut. Railway has not been deployed.

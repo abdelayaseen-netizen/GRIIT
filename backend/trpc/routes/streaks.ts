@@ -9,6 +9,7 @@ import {
 } from "../../lib/date-utils";
 import { getSupabaseAdmin } from "../../lib/supabase-admin";
 import { logger } from "../../lib/logger";
+import { freezeHoldCap } from "../../lib/freeze-grant";
 
 type FreezeWriteError = {
   code?: string;
@@ -108,16 +109,20 @@ export function effectiveFreezesRemaining(input: {
   isPro: boolean;
   now?: Date;
 }): { remaining: number; limit: number } {
-  const limit = monthlyFreezeLimit(input.isPro);
+  const cap = freezeHoldCap(input.isPro);
+  const refill = monthlyFreezeLimit(input.isPro);
+  const storedRaw = input.storedRemaining;
+  const storedKnown = typeof storedRaw === "number" && Number.isFinite(storedRaw);
+  const stored = storedKnown ? Math.max(0, storedRaw as number) : null;
   const lastUsed = input.lastFreezeUsedAt ? new Date(input.lastFreezeUsedAt) : null;
   const now = input.now ?? new Date();
-  // Never used: DB default remaining is 1, which would hide a Pro allotment of 4.
-  if (!input.lastFreezeUsedAt || freezeWindowExpired(lastUsed, now)) {
-    return { remaining: limit, limit };
+  const windowOpen = !!input.lastFreezeUsedAt && !freezeWindowExpired(lastUsed, now);
+  // A due refill adds the monthly allotment up to the hold cap.
+  // It does not replace an earned freeze with the smaller Free refill.
+  if (!windowOpen) {
+    return { remaining: Math.min(cap, Math.max(stored ?? 0, refill)), limit: cap };
   }
-  const stored = input.storedRemaining;
-  const remaining = typeof stored === "number" && Number.isFinite(stored) ? stored : limit;
-  return { remaining: Math.max(0, remaining), limit };
+  return { remaining: Math.min(cap, stored ?? refill), limit: cap };
 }
 
 export const streaksRouter = createTRPCRouter({
