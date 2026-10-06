@@ -256,6 +256,12 @@ A Pro account sees “Cancel GRIIT Pro first” before the DELETE confirm. Manag
 
 tsc 0. Suite 292 files / 1518 tests.
 
+## D · Discover covers
+
+Featured cards use `Cover` with the category tint. They are not empty tiles and not proof photos. “Be the first” is secondary text, not orange.
+
+tsc 0. Suite 292 files / 1518 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
