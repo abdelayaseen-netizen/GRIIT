@@ -11,13 +11,16 @@ import { TODAY_BAND_NONE, todayBandCopy, type TodayPoster } from "@/lib/today-ba
 export default function TodaySocialBand({
   posters,
   pending,
+  unavailable,
   onPress,
 }: {
   posters: TodayPoster[];
   pending: boolean;
+  /** The query failed or has not returned. That is not a zero result. */
+  unavailable?: boolean;
   onPress: () => void;
 }) {
-  if (pending) return null;
+  if (pending || unavailable) return null;
   if (posters.length === 0) {
     return <Text style={styles.none}>{TODAY_BAND_NONE}</Text>;
   }

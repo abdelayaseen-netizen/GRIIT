@@ -262,6 +262,12 @@ Featured cards use `Cover` with the category tint. They are not empty tiles and 
 
 tsc 0. Suite 292 files / 1518 tests.
 
+## H2 · band stays empty when today_posters fails
+
+The none line shows only when the query returns zero posters. A missing procedure or a failed request leaves the slot empty. Production does not have `feed.todayPosters` until the Railway deploy.
+
+tsc 0. Suite 292 files / 1518 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.

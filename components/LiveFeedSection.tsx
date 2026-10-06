@@ -591,6 +591,7 @@ function LiveFeedSection({
           <TodaySocialBand
             posters={todayPosters}
             pending={postersQuery.isPending}
+            unavailable={postersQuery.isError || postersQuery.data == null}
             onPress={scrollToTodayPost}
           />
         ),
