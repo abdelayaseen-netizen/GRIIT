@@ -385,9 +385,9 @@ function LiveFeedSection({
   const handleDeletePost = useCallback(
     async (post: LiveFeedPost) => {
       try {
-        await trpcMutate(TRPC.feed.deletePost, { eventId: post.id });
+        await trpcMutate(TRPC.checkins.unshareProof, { eventId: post.id });
         await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-        setFeedSnack("Post removed.");
+        setFeedSnack("Removed from the feed.");
         setTimeout(() => setFeedSnack(null), 2500);
       } catch (e) {
         captureError(e, "LiveFeedDeletePost");
@@ -442,7 +442,7 @@ function LiveFeedSection({
 
       if (Platform.OS === "ios") {
         const options = isOwn
-          ? ["Delete post", "Cancel"]
+          ? ["Delete from the feed", "Cancel"]
           : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
         ActionSheetIOS.showActionSheetWithOptions(
           {
@@ -752,9 +752,9 @@ function LiveFeedSection({
                     void handleDeletePost(androidMenuPost);
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel="Delete post"
+                  accessibilityLabel="Delete from the feed"
                 >
-                  <Text style={styles.androidMenuDestructive}>Delete post</Text>
+                  <Text style={styles.androidMenuDestructive}>Delete from the feed</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.androidMenuRow}

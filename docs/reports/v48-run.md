@@ -232,6 +232,12 @@ Leave confirms with “Leave at midnight” and “Stay”. Today still counts. 
 
 tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy** (`/api/config` already in the tree; the screen reads it).
 
+## D · delete from the feed
+
+An own post’s menu says “Delete from the feed” and calls `checkins.unshareProof`. The proof stays on the record as private. It is not deleted.
+
+tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy.**
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
