@@ -54,18 +54,18 @@ describe("freeze and people copy", () => {
       title: "No freezes",
       icon: "shield-off",
     });
-    expect(freezeDetailCopy({ remaining: 2, hardMode: false, timeZone: "UTC" }).title).toBe(
-      "2 freezes left",
-    );
+    expect(freezeDetailCopy({ remaining: 2, hardMode: false, timeZone: "UTC" })).toMatchObject({
+      title: "Use a freeze",
+      caption: "A freeze can hold it until midnight. 2 left.",
+    });
     const used = freezeDetailCopy({
       remaining: 0,
       lastFreezeUsedAt: "2026-09-02T12:00:00.000Z",
       hardMode: false,
       timeZone: "UTC",
     });
-    expect(used.title).toBe("0 freezes left");
-    expect(used.caption).toContain("Next one on");
-    expect(used.caption).toMatch(/October/);
+    expect(used.title).toBe("No freezes left. Your streak resets to 0 at midnight.");
+    expect(used.caption).toBe(used.title);
   });
 
   it("private/solo has no invite; one member is Just you so far", () => {

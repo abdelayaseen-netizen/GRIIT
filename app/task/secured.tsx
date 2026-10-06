@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import SecuredDayScreen from "@/components/task-v2/SecuredDayScreen";
 import { weekFromSecuredKeys } from "@/components/task-v2/MomentScreenV3";
 import { useApp } from "@/contexts/AppContext";
@@ -26,6 +27,9 @@ import {
   todayIsSecuredInCache,
 } from "@/lib/task-secured-nav";
 import { afterSecuredNext } from "@/lib/moment-queue";
+import { freezeEarnedNote } from "@/lib/freeze-earn";
+import { clearOptimisticFeedPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -46,6 +50,11 @@ function TaskSecuredInner() {
     challengeDone?: string;
     activeChallengeId?: string;
     originTab?: string;
+    counterTarget?: string;
+    freezeGranted?: string;
+    freezesHeld?: string;
+    freezeCap?: string;
+    freezeAtCap?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -64,6 +73,10 @@ function TaskSecuredInner() {
     verificationKind: firstString(params.verificationKind),
     challengeDone: firstString(params.challengeDone),
     activeChallengeId: firstString(params.activeChallengeId),
+    freezeGranted: firstString(params.freezeGranted),
+    freezesHeld: firstString(params.freezesHeld),
+    freezeCap: firstString(params.freezeCap),
+    freezeAtCap: firstString(params.freezeAtCap),
   });
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
@@ -107,7 +120,8 @@ function TaskSecuredInner() {
   });
   const [retryTick, setRetryTick] = useState(0);
   const [shareFailed, setShareFailed] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [sharing, setSavingShare] = useState(false);
+  const [sharedNow, setSharedNow] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -162,6 +176,7 @@ function TaskSecuredInner() {
       challengeDone: result.challengeDone,
       challengeDay: result.challengeDay,
       challengeLength: result.challengeLength,
+      counterReachedTarget: firstString(params.counterTarget) === "1",
     });
     if (next === "challenge_complete") {
       const enrollmentId = result.activeChallengeId;
@@ -173,7 +188,7 @@ function TaskSecuredInner() {
         params: {
           challengeName: result.challengeName,
           totalDays: String(result.challengeLength),
-          totalDaysSecured: String(result.streakDays),
+          enrollmentId: enrollmentId ?? "",
         },
       } as never);
       return;
@@ -184,6 +199,7 @@ function TaskSecuredInner() {
   return (
     <SecuredDayScreen
       streak={result.streakDays}
+      freezeNote={freezeEarnedNote(result)}
       proofs={proofs}
       selfReported={meta.selfReported}
       taskCount={meta.ready ? meta.taskCount : undefined}
@@ -206,18 +222,51 @@ function TaskSecuredInner() {
           setShareFailed(true);
           return;
         }
-        setSharing(true);
+        setSavingShare(true);
         void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
           .then(() => {
-            setSharing(false);
-            done();
+            setSavingShare(false);
+            setSharedNow(true);
+            const post: LiveFeedPost = {
+              id: shareEventId,
+              userId,
+              username: profile?.username ?? "",
+              displayName: profile?.display_name ?? "You",
+              avatarUrl: profile?.avatar_url ?? null,
+              streakCount: result.streakDays,
+              challengeId: result.activeChallengeId ?? null,
+              challengeName: result.challengeName,
+              taskName: firstString(params.taskName) || result.challengeName,
+              currentDay: result.challengeDay,
+              totalDays: result.challengeLength,
+              eventType: "task_completed",
+              isCompleted: true,
+              hasProof: true,
+              photoUrl: proofs[0]?.uri ?? proofUri ?? null,
+              proofPhotoUrl: proofs[0]?.uri ?? proofUri ?? null,
+              verified: false,
+              caption: null,
+              createdAt: new Date().toISOString(),
+              respectCount: 0,
+              reactedByMe: false,
+              commentCount: 0,
+              visibility: "public",
+            };
+            publishOptimisticFeedPost(post);
           })
           .catch(() => {
-            setSharing(false);
+            setSavingShare(false);
             setShareFailed(true);
           });
       }}
       onKeep={done}
+      onUndo={() => {
+        if (!shareEventId) return;
+        clearOptimisticFeedPost(shareEventId);
+        setSharedNow(false);
+        void trpcMutate(TRPC.checkins.unshareProof, { eventId: shareEventId }).catch(() => {});
+      }}
+      sharedNow={sharedNow}
       onDone={done}
       username={profile?.username}
     />
@@ -226,8 +275,10 @@ function TaskSecuredInner() {
 
 export default function TaskSecuredScreen() {
   return (
-    <ErrorBoundary>
-      <TaskSecuredInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <TaskSecuredInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

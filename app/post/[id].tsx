@@ -10,7 +10,8 @@ import {
   RefreshControl,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { ArrowUp } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
@@ -259,7 +260,7 @@ function PostThreadScreenInner() {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <Screen style={styles.safe} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <PushedHeader title={POST_DETAIL_TITLE} onBack={() => router.back()} />
       <KeyboardAvoidingView
@@ -324,7 +325,7 @@ function PostThreadScreenInner() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

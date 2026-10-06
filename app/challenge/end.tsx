@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import { ChallengeEnd } from "@/components/challenge/ChallengeEnd";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -141,9 +142,11 @@ function ChallengeEndScreenInner() {
 
 export default function ChallengeEndScreen() {
   return (
-    <ErrorBoundary>
-      <ChallengeEndScreenInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <ChallengeEndScreenInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }
 

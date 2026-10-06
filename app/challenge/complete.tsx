@@ -1,19 +1,35 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { track, trackEvent } from "@/lib/analytics";
 import { maybePromptForReview } from "@/lib/review-prompt";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 import MomentScreenV3 from "@/components/task-v2/MomentScreenV3";
+import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+
+type FinishRecord = {
+  challengeName: string;
+  durationDays: number;
+  securedDays: number;
+  longestStreak: number;
+  heldDays: number;
+  daysDone: number;
+};
+
+function firstParam(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value : Array.isArray(value) ? value[0] ?? "" : "";
+}
 
 function ChallengeCompleteScreenInner() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const challengeIdParam =
-    typeof params.challengeId === "string" ? params.challengeId : undefined;
-  const challengeName = (params.challengeName as string) ?? "Challenge";
-  const totalDays = parseInt((params.totalDays as string) ?? "0", 10);
-  const totalDaysSecured = parseInt((params.totalDaysSecured as string) ?? "0", 10);
+  const challengeIdParam = firstParam(params.challengeId);
+  const enrollmentId = firstParam(params.enrollmentId);
+  const challengeName = firstParam(params.challengeName) || "Challenge";
+  const totalDays = parseInt(firstParam(params.totalDays) || "0", 10);
+  const [record, setRecord] = useState<FinishRecord | null>(null);
 
   useEffect(() => {
     track({
@@ -21,24 +37,36 @@ function ChallengeCompleteScreenInner() {
       challenge_name: challengeName,
       duration: totalDays,
     });
-    trackEvent("challenge_completed", { challenge_id: challengeIdParam, days: totalDays });
+    trackEvent("challenge_completed", { challenge_id: challengeIdParam || undefined, days: totalDays });
   }, [challengeName, totalDays, challengeIdParam]);
 
   useEffect(() => {
-    if (totalDaysSecured > 0) {
-      maybePromptForReview(totalDaysSecured, "challenge_completed").catch(() => {});
-    }
-  }, [totalDaysSecured]);
+    if (!enrollmentId) return;
+    let live = true;
+    void trpcQuery<FinishRecord>(TRPC.challenges.finishRecord, { enrollmentId }).then((row) => {
+      if (!live || !row) return;
+      setRecord(row);
+      if (row.securedDays > 0) {
+        maybePromptForReview(row.securedDays, "challenge_completed").catch(() => {});
+      }
+    }).catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [enrollmentId]);
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <MomentScreenV3
         variant="complete"
-        streak={totalDays}
-        target={totalDays || 30}
-        proofs={[]}
-        onNext={() => router.replace(ROUTES.TABS_DISCOVER as never)}
+        challengeName={record?.challengeName || challengeName}
+        streak={record?.longestStreak ?? 0}
+        securedDays={record?.securedDays ?? 0}
+        longestStreak={record?.longestStreak ?? 0}
+        heldDays={record?.heldDays ?? 0}
+        numbersReady={record != null}
+        target={record?.durationDays || totalDays || 30}
         onDone={() => router.replace(ROUTES.TABS_HOME as never)}
       />
     </>
@@ -47,8 +75,10 @@ function ChallengeCompleteScreenInner() {
 
 export default function ChallengeCompleteScreen() {
   return (
-    <ErrorBoundary>
-      <ChallengeCompleteScreenInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <ChallengeCompleteScreenInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

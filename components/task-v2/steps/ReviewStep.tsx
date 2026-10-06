@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import KeyboardDock from "@/components/ds/KeyboardDock";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
@@ -28,6 +29,25 @@ export function ReviewStep({
   onPost,
 }: Props) {
   return (
+    <KeyboardDock
+      footer={
+        <View style={styles.reviewDeck}>
+          <View style={styles.capRow}>
+            <TextInput
+              value={caption}
+              onChangeText={(t) => onCaption(t.slice(0, 120))}
+              placeholder="Add a caption"
+              placeholderTextColor={DS_V3.color.textSecondary}
+              selectionColor={DS_V3.color.brand}
+              style={styles.capInput}
+              maxLength={120}
+            />
+            <Text style={styles.counter}>{caption.length} / 120</Text>
+          </View>
+          <Button label="Post proof" onPress={onPost} />
+        </View>
+      }
+    >
     <View style={{ flex: 1 }}>
       <View style={styles.finder}>
         <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
@@ -48,21 +68,7 @@ export function ReviewStep({
           ) : null}
         </LinearGradient>
       </View>
-      <View style={styles.reviewDeck}>
-        <View style={styles.capRow}>
-          <TextInput
-            value={caption}
-            onChangeText={(t) => onCaption(t.slice(0, 120))}
-            placeholder="Add a caption"
-            placeholderTextColor={DS_V3.color.textSecondary}
-            selectionColor={DS_V3.color.brand}
-            style={styles.capInput}
-            maxLength={120}
-          />
-          <Text style={styles.counter}>{caption.length} / 120</Text>
-        </View>
-        <Button label="Post proof" onPress={onPost} />
-      </View>
     </View>
+    </KeyboardDock>
   );
 }

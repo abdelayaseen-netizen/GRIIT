@@ -70,6 +70,7 @@ export const TRPC = {
     getTeamMembers: 'challenges.getTeamMembers',
     finalizeEnded: 'challenges.finalizeEnded',
     markEndSeen: 'challenges.markEndSeen',
+    finishRecord: 'challenges.finishRecord',
     listUnseenEndings: 'challenges.listUnseenEndings',
   },
   groups: {
@@ -90,6 +91,7 @@ export const TRPC = {
     getTodayCheckinsForUser: 'checkins.getTodayCheckinsForUser',
     complete: 'checkins.complete',
     shareProof: 'checkins.shareProof',
+    unshareProof: 'checkins.unshareProof',
     startSession: 'checkins.startSession',
     saveProgress: 'checkins.saveProgress',
     secureDay: 'checkins.secureDay',
@@ -151,6 +153,7 @@ export const TRPC = {
     listMine: 'feed.listMine',
     getMySummary: 'feed.getMySummary',
     getLiveFeed: 'feed.getLiveFeed',
+    todayPosters: 'feed.todayPosters',
     react: 'feed.react',
     comment: 'feed.comment',
     deleteComment: 'feed.deleteComment',

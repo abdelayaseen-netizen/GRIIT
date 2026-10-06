@@ -66,3 +66,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
 });
+
+/** Same tile. The handoff name is ImageFallback. */
+export const ImageFallback = ProofFallbackTile;

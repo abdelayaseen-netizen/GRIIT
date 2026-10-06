@@ -71,9 +71,9 @@ export function todayDay2Hero(
   };
 }
 
+/** Home primary is the task name. The frame does not prefix it. */
 export function startCtaLabel(taskName: string): string {
-  const name = taskName.trim() || "task";
-  return `Start: ${name}`;
+  return taskName.trim() || "task";
 }
 
 export function windowClosesBanner(taskName: string, closeTime: string): string {

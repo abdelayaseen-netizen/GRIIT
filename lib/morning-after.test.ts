@@ -78,8 +78,8 @@ describe("morningAfter dismiss", () => {
 
 describe("morningAfter copy", () => {
   it("names missed tasks and keeps table strings", () => {
-    expect(YESTERDAY_WASNT_SECURED).toBe("Yesterday wasn't secured.");
-    expect(USE_FREEZE_FOR_YESTERDAY).toBe("Use a freeze for yesterday");
+    expect(YESTERDAY_WASNT_SECURED).toBe("Yesterday wasn’t secured.");
+    expect(USE_FREEZE_FOR_YESTERDAY).toBe("Use a freeze");
     expect(morningAfterCost(4, 6, ["Run", "Read"])).toBe("4 of 6 tasks. Run, Read.");
     expect(morningAfterCushion("reset", { longest: 12, lastStandsLeft: 0 })).toBe(
       "Your streak reset to 0. Your longest was 12 days.",

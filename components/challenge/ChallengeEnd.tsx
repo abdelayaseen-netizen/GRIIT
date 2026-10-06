@@ -3,7 +3,6 @@
  */
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
@@ -122,14 +121,13 @@ export function ChallengeEnd(p: ChallengeEndProps) {
 }
 
 function Single(p: ChallengeEndProps) {
-  const insets = useSafeAreaInsets();
   const c = p.challenges[0];
   if (!c) return null;
   const secured = c.secured ?? securedCount(c.days);
   const atCap = p.challengeLimit != null && p.activeCount >= p.challengeLimit;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={styles.screen}>
       <View style={styles.topBar}>
         <Pressable
           onPress={p.onClose}
@@ -141,7 +139,7 @@ function Single(p: ChallengeEndProps) {
         </Pressable>
       </View>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
@@ -176,7 +174,7 @@ function Single(p: ChallengeEndProps) {
           </Card>
         </View>
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: 26 + insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: 26 }]}>
         <Button label="Done" onPress={p.onDone} />
         {p.saveError ? <Text style={styles.saveError}>{p.saveError}</Text> : null}
         {showStartAgain(c.duration_days) ? (
@@ -193,13 +191,12 @@ function Single(p: ChallengeEndProps) {
 }
 
 function Combined(p: ChallengeEndProps) {
-  const insets = useSafeAreaInsets();
   const all = p.challenges.flatMap((c) => c.days);
   const n = p.challenges.length;
   const date = p.challenges[0] ? p.formatDate(p.challenges[0].ended_at) : "";
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={styles.screen}>
       <View style={styles.topBar}>
         <Pressable
           onPress={p.onClose}
@@ -211,7 +208,7 @@ function Combined(p: ChallengeEndProps) {
         </Pressable>
       </View>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.combinedHead}>
@@ -238,7 +235,7 @@ function Combined(p: ChallengeEndProps) {
         </View>
         <Legend days={all} />
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: 26 + insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: 26 }]}>
         <Button label="Done" onPress={p.onDone} />
         {p.saveError ? <Text style={styles.saveError}>{p.saveError}</Text> : null}
         <Text style={styles.cap}>{combinedFooter(n)}</Text>

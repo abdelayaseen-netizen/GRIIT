@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useIsGuest } from "@/contexts/AuthGateContext";
@@ -75,7 +75,7 @@ export default function SettingsNotificationsScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="Notifications" />
         <GriitFade fadeKey="notifications">
         <ScrollView contentContainerStyle={styles.body}>
@@ -139,8 +139,8 @@ export default function SettingsNotificationsScreen() {
               }}
             />
             <Toggle
-              label="Circle activity"
-              sub="When someone in your circle verifies a day."
+              label="Group activity"
+              sub="Joins, finishes, invites"
               value={circle}
               disabled={osDenied}
               onChange={(v) => {
@@ -150,7 +150,7 @@ export default function SettingsNotificationsScreen() {
             />
             <Toggle
               label="Weekly summary"
-              sub="Sunday: days verified, days missed, streak state."
+              sub="Sunday: days secured, days missed, streak state."
               value={weekly}
               disabled={osDenied}
               onChange={(v) => {
@@ -165,7 +165,7 @@ export default function SettingsNotificationsScreen() {
           </Text>
         </ScrollView>
         </GriitFade>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

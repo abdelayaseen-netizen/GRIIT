@@ -54,7 +54,7 @@ import {
   type ShareIntent,
 } from "@/lib/finish-moment";
 import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { closedWindowTime, formatGateTime, gateLine } from "@/lib/task-ui";
+import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
@@ -214,9 +214,11 @@ export function useTaskFlowV2() {
     };
   }, []);
 
+  const windowStartRaw = config.schedule_window_start || gateTime?.start || null;
+  const windowEndRaw = config.schedule_window_end || gateTime?.end || null;
   const windowEval = evaluateScheduleWindow({
-    start: config.schedule_window_start,
-    end: config.schedule_window_end,
+    start: windowStartRaw,
+    end: windowEndRaw,
     timeZone: config.schedule_timezone ?? profile?.timezone,
   });
 
@@ -499,6 +501,10 @@ export function useTaskFlowV2() {
         secured?: boolean;
         challenge_done?: boolean;
         remaining_challenges?: number;
+        freezeGranted?: boolean;
+        freezesHeld?: number;
+        freezeCap?: number;
+        freezeAtCap?: boolean;
       } | null = null;
       const completeMs = Date.now() - finishStartedAt;
       const secureStartedAt = Date.now();
@@ -522,6 +528,10 @@ export function useTaskFlowV2() {
           secured?: boolean;
           challenge_done?: boolean;
           remaining_challenges?: number;
+          freezeGranted?: boolean;
+          freezesHeld?: number;
+          freezeCap?: number;
+          freezeAtCap?: boolean;
         };
         secure = {
           success: r.success === true,
@@ -530,6 +540,10 @@ export function useTaskFlowV2() {
           secured: r.secured,
           challenge_done: r.challenge_done,
           remaining_challenges: r.remaining_challenges,
+          freezeGranted: r.freezeGranted,
+          freezesHeld: r.freezesHeld,
+          freezeCap: r.freezeCap,
+          freezeAtCap: r.freezeAtCap,
         };
       }
       const securedToday = serverSecuredToday({
@@ -573,6 +587,7 @@ export function useTaskFlowV2() {
             body: taskLeftBody(left.length, hasCameraProof),
             photoUri: photoUri ?? proofUrl ?? null,
             cameraSeal: hasCameraProof,
+            eventId: eventId ?? null,
           });
           returnToOrigin();
         }
@@ -595,6 +610,10 @@ export function useTaskFlowV2() {
               secured: secure.secured,
               challenge_done: secure.challenge_done,
               remaining_challenges: secure.remaining_challenges,
+              freezeGranted: secure.freezeGranted,
+              freezesHeld: secure.freezesHeld,
+              freezeCap: secure.freezeCap,
+              freezeAtCap: secure.freezeAtCap,
             }
           : null,
       });
@@ -628,11 +647,13 @@ export function useTaskFlowV2() {
           shareEventId: eventId,
           closingHasPhoto: hasCameraProof,
         });
+        const counterTask = taskType === "counter" || taskType === "water" || taskType === "reading";
         router.replace(
           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
             shareEventId: eventId,
             closingHasPhoto: hasCameraProof,
             originTab,
+            counterReachedTarget: counterTask && count >= counterGoal,
           }) as never,
         );
       }
@@ -1006,6 +1027,8 @@ export function useTaskFlowV2() {
           : null
       : null,
     closedAt: closedWindowTime(gateTime),
+    windowStartLabel: format12h(windowStartRaw) || null,
+    windowEndLabel: format12h(windowEndRaw) || null,
     windowForbidden,
     windowState,
     goBack,

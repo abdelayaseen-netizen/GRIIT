@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, StyleSheet, Linking } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { DS_V3 } from "@/lib/design-system";
@@ -13,6 +13,8 @@ import { runClientSignOutCleanup } from "@/lib/signout-cleanup";
 import { InlineError } from "@/components/InlineError";
 import { styles as modalStyles } from "@/components/settings/settings-styles";
 import Button from "@/components/ds/Button";
+import Sheet from "@/components/ds/Sheet";
+import { useApp } from "@/contexts/AppContext";
 
 export interface AccountDangerZoneProps {
   isGuest: boolean;
@@ -40,6 +42,8 @@ export function AccountDangerZone({
   clearDeleteAccountError,
 }: AccountDangerZoneProps) {
   const router = useRouter();
+  const { isPremium } = useApp();
+  const [subOpen, setSubOpen] = useState(false);
 
   return (
     <>
@@ -64,7 +68,10 @@ export function AccountDangerZone({
             label="Delete account"
             variant="tertiary"
             destructive
-            onPress={() => setShowDeleteModal(true)}
+            onPress={() => {
+              if (isPremium) setSubOpen(true);
+              else setShowDeleteModal(true);
+            }}
           />
         )}
       </View>
@@ -149,11 +156,40 @@ export function AccountDangerZone({
         </View>
       </Modal>
 
+      <Sheet
+        visible={subOpen}
+        onDismiss={() => setSubOpen(false)}
+        heading="Cancel GRIIT Pro first"
+        footer={
+          <>
+            <Button
+              label="I’ve cancelled, continue"
+              variant="secondary"
+              onPress={() => {
+                setSubOpen(false);
+                setShowDeleteModal(true);
+              }}
+            />
+            <Button label="Keep my account" variant="tertiary" onPress={() => setSubOpen(false)} />
+          </>
+        }
+      >
+        <Text style={v2.subBody}>
+          Your Pro subscription is billed by Apple. Deleting your account doesn’t stop it. Cancel it in your App Store subscriptions, then come back.
+        </Text>
+        <Button
+          label="Manage subscription"
+          variant="secondary"
+          onPress={() => void Linking.openURL("https://apps.apple.com/account/subscriptions")}
+        />
+      </Sheet>
+
     </>
   );
 }
 
 const v2 = StyleSheet.create({
   wrap: { marginTop: DS_V3.space.section, gap: DS_V3.space.md },
+  subBody: { ...DS_V3.type.body, color: DS_V3.color.textSecondary, marginBottom: 12 },
 });
 

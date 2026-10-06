@@ -1,12 +1,11 @@
 /**
  * Live-feed no-photo headline. "secured" only for secured_day.
  * Finished copy: Y is duration_days unless the viewer's target_streak is longer
- * (own posts). "verified" only when the completion has camera proof.
+ * (own posts). Camera proof carries the seal. Copy never says verified.
  */
 
 import { homeDayTotal } from "@/lib/home-day-total";
 import { dayWord } from "@/lib/format-days";
-import { hasCameraProof } from "@/lib/active-challenge-ui";
 
 export type FeedNoPhotoInput = {
   eventType: string;
@@ -65,9 +64,5 @@ export function feedFinishedCopy(post: {
   const y = feedDisplayTotal(post.totalDays, post.currentDay, post.targetStreak);
   const n = feedDisplayDay(post.currentDay, post.totalDays);
   const base = `Finished. ${n} of ${y} ${dayWord(y)}`;
-  return hasCameraProof({
-    proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
-  })
-    ? `${base} verified.`
-    : `${base}.`;
+  return `${base}.`;
 }

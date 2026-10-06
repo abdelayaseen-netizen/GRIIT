@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -55,7 +55,7 @@ export default function ConsistencyDetailScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <PushedHeader
           title={CONSISTENCY_TITLE}
           onBack={() => (router.canGoBack() ? router.back() : router.replace(ROUTES.TABS_PROFILE as never))}
@@ -79,7 +79,7 @@ export default function ConsistencyDetailScreen() {
             />
           )}
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

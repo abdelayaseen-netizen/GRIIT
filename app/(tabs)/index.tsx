@@ -1,13 +1,14 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
@@ -78,7 +79,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
-import { JeopardyModal } from "@/components/home/JeopardyModal";
 import {
   MISS_ACK_STORAGE_KEY,
   missAckPayload,
@@ -143,10 +143,13 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const focus = useLocalSearchParams<{ focus?: string }>().focus;
+  useEffect(() => {
+    if (focus === "freeze") setShowFreezeSheet(true);
+  }, [focus]);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
   const [streakHeld, setStreakHeld] = React.useState(false);
   const [freezeError, setFreezeError] = React.useState<string | null>(null);
-  const [showJeopardyModal, setShowJeopardyModal] = React.useState(false);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
   const [freezeSpent, setFreezeSpent] = React.useState(false);
   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
@@ -172,13 +175,6 @@ export default function HomeScreen() {
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
   });
-  const unreadQuery = useQuery({
-    queryKey: ["notifications", "unread-dot", user?.id ?? ""],
-    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: unknown[] }>,
-    staleTime: 30 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-  const bellUnread = (unreadQuery.data?.unread.length ?? 0) > 0;
   const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
@@ -514,23 +510,6 @@ export default function HomeScreen() {
     },
   });
 
-  // Jeopardy modal — show once per calendar day when streak is at risk.
-  React.useEffect(() => {
-    if (isGuest || !user?.id) return;
-    if (homeState !== 'streak_at_risk') return;
-    const todayKey = getTodayDateKey(homeTimeZone);
-    const storageKey = `griit_jeopardy_${todayKey}`;
-    AsyncStorage.getItem(storageKey).then((shown) => {
-      if (shown) return;
-      void AsyncStorage.setItem(storageKey, 'true');
-      setShowJeopardyModal(true);
-    }).catch(() => {
-      // non-fatal — show the modal anyway
-      setShowJeopardyModal(true);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- homeState covers all inputs
-  }, [isGuest, user?.id, homeState]);
-
   const refetchBootstrap = bootstrap.refetch;
   useFocusEffect(
     useCallback(() => {
@@ -590,27 +569,6 @@ export default function HomeScreen() {
       return;
     }
   }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router, startTask]);
-
-  const onPressBell = useCallback(() => {
-    router.push(`${ROUTES.ACTIVITY}?tab=notifications` as never);
-  }, [router]);
-
-  // Jeopardy modal handlers
-  const onJeopardyFinish = useCallback(() => {
-    setShowJeopardyModal(false);
-    // Navigate to the first incomplete task
-    const next = heroTasks.find((t) => !t.done);
-    if (next) onPressTask(next);
-    else router.push(ROUTES.TABS_DISCOVER as never);
-  }, [heroTasks, onPressTask, router]);
-
-  const onJeopardyFreeze = useCallback(() => {
-    setShowJeopardyModal(false);
-  }, []);
-
-  const onJeopardyDismiss = useCallback(() => {
-    setShowJeopardyModal(false);
-  }, []);
 
   const firstProofEver =
     !statsFailed &&
@@ -703,7 +661,7 @@ export default function HomeScreen() {
   if (isGuest) {
     return (
       <ScreenChrome>
-      <SafeAreaView style={s.container} edges={["left", "right"]}>
+      <Screen style={s.container} edges={["left", "right"]}>
         <FlashList
           data={[{ key: "guest-home" }]}
           keyExtractor={guestKeyExtractor}
@@ -718,7 +676,7 @@ export default function HomeScreen() {
           contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           showsVerticalScrollIndicator={false}
         />
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     );
   }
@@ -726,7 +684,7 @@ export default function HomeScreen() {
   return (
     <ErrorBoundary>
       <ScreenChrome>
-      <SafeAreaView style={s.container} edges={["left", "right"]}>
+      <Screen style={s.container} edges={["left", "right"]}>
         <LiveFeedSection
           onRefresh={refresh}
           scope={feedScope}
@@ -752,16 +710,11 @@ export default function HomeScreen() {
               fillToday={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
-              onPressBell={onPressBell}
-              onPressStreak={
-                offerYesterdayFreeze
-                  ? () => {
-                      setFreezeError(null);
-                      setStreakHeld(false);
-                      setShowStreakSheet(true);
-                    }
-                  : undefined
-              }
+              onPressStreak={() => {
+                setFreezeError(null);
+                setStreakHeld(false);
+                setShowStreakSheet(true);
+              }}
               onPressProof={onPressPrimaryCTA}
               onPressTask={(id) => {
                 const next = heroTasks.find((h) => h.id === id);
@@ -773,7 +726,6 @@ export default function HomeScreen() {
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
-              bellUnread={bellUnread}
               noDaysOff={activeChallengesAreHard(
                 (Array.isArray(bootstrap.data?.activeChallenges)
                   ? bootstrap.data.activeChallenges
@@ -826,6 +778,7 @@ export default function HomeScreen() {
           total={proof.totalCount}
           missed={(recon.result?.missedTaskNames ?? []).join(", ")}
           freezesLeft={freezeStatus?.remaining ?? 0}
+          freezeCap={freezeStatus?.limit}
           refill={freezeRefillDateLabel(freezeStatus?.lastFreezeUsedAt ?? null, homeTimeZone)}
           week={["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
             letter,
@@ -833,6 +786,7 @@ export default function HomeScreen() {
             state: weekStates[i],
           }))}
           todayIndex={todayWeekIndex}
+          offerFreeze={offerYesterdayFreeze}
           submitting={useFreeze.isPending}
           error={freezeError}
           onUse={() => {
@@ -879,16 +833,7 @@ export default function HomeScreen() {
             setFreezeError(null);
           }}
         />
-        <JeopardyModal
-          visible={showJeopardyModal}
-          streak={streak ?? 0}
-          minutesRemaining={heroMetrics.minutesRemaining}
-          freezesAvailable={freezeStatus?.remaining ?? 0}
-          onPressFinish={onJeopardyFinish}
-          onPressFreeze={onJeopardyFreeze}
-          onDismiss={onJeopardyDismiss}
-        />
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     </ErrorBoundary>
   );

@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,
     fontWeight: DS_V3.type.display.fontWeight,
-    letterSpacing: DS_V3.type.display.letterSpacing,
     color: DS_V3.color.textPrimary,
   },
   actions: {

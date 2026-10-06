@@ -5,7 +5,7 @@
  * Rendered by app/onboarding/index.tsx.
  */
 import React, { useCallback, useEffect, useState } from "react";
-import { BackHandler, SafeAreaView, StyleSheet, Text } from "react-native";
+import { BackHandler, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
 import { track } from "@/lib/analytics";
@@ -363,7 +363,7 @@ export default function OnboardingFlowV2() {
   // Do not blank Account / Profile behind that overlay.
   const holdForDb = waitingOnDb && step === "welcome";
   if (!hydrated || holdForDb || completed) {
-    return <SafeAreaView style={styles.safeArea} />;
+    return <View style={styles.safeArea} />;
   }
 
   const welcome = step === "welcome" && !signInOpen;
@@ -379,7 +379,7 @@ export default function OnboardingFlowV2() {
       step === "account" ||
       step === "profile");
   return (
-    <SafeAreaView style={[styles.safeArea, (welcome || usesChrome || signIn) && styles.welcome]}>
+    <View style={[styles.safeArea, (welcome || usesChrome || signIn) && styles.welcome]}>
       {step !== "welcome" && !signInOpen && !usesChrome ? (
         <FlowChrome
           step={step}
@@ -394,7 +394,7 @@ export default function OnboardingFlowV2() {
       >
         {renderScreen()}
       </StepFade>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -274,7 +274,7 @@ function consistencyLine(input: {
       : `Day ${input.primaryDay} of ${input.primaryLength}.`;
   }
   const todayBit = input.dueToday ? " Today still open." : "";
-  return `${input.verifiedClosed} of ${input.closedDueDays} days verified.${todayBit}`;
+  return `${input.verifiedClosed} of ${input.closedDueDays} days secured.${todayBit}`;
 }
 
 function rateLabel(dueCount: number, closedDueDays: number, verifiedClosed: number, rate: number): string {

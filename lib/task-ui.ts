@@ -230,8 +230,7 @@ export function windowClosedAtLine(time: string): string {
   return `Window closed at ${time}. Today is not secured.`;
 }
 
-export const WINDOW_CLOSED_TOMORROW =
-  "The window is set by the challenge. Tomorrow opens at midnight.";
+export const WINDOW_CLOSED_TOMORROW = "It opens again at the same time tomorrow.";
 
 export const WINDOW_CLOSED_FORBIDDEN = "Window closed.";
 

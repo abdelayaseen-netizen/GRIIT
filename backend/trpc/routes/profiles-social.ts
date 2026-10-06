@@ -165,6 +165,9 @@ export const profilesSocialProcedures = {
       .in("user_id", ids)
       .limit(500);
     const pmap = new Map((profs ?? []).map((p: ProfileRow) => [p.user_id, p]));
+    const created = new Map(
+      (rows ?? []).map((r: { blocked_id: string; created_at?: string | null }) => [r.blocked_id, r.created_at ?? null]),
+    );
     return ids.map((id) => {
       const p = pmap.get(id);
       return {
@@ -172,6 +175,7 @@ export const profilesSocialProcedures = {
         username: p?.username ?? "",
         display_name: p?.display_name ?? p?.username ?? "",
         avatar_url: p?.avatar_url ?? null,
+        created_at: created.get(id) ?? null,
       };
     });
   }),

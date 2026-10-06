@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type { PurchasesPackage } from "react-native-purchases";
 import { DS_V3, DS_RADIUS, DS_TYPOGRAPHY } from "@/lib/design-system";
+import Screen from "@/components/ds/Screen";
 import { getOfferings, purchasePackage, restorePurchases } from "@/lib/revenue-cat";
 import {
   getPaywallVariant,
@@ -196,6 +197,7 @@ export default function PaywallScreen() {
       : "Cancel anytime.";
 
   return (
+    <Screen>
     <ErrorBoundary>
       {variant === "social_proof" ? (
         <PaywallSocialProof
@@ -233,6 +235,7 @@ export default function PaywallScreen() {
         />
       )}
     </ErrorBoundary>
+    </Screen>
   );
 }
 

@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import {
   Bell,
+  Camera,
   CreditCard,
   Eye,
   Info,
   User,
 } from "lucide-react-native";
 import Constants from "expo-constants";
+import * as Application from "expo-application";
+import { aboutVersionLine } from "@/lib/about-line";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useApp } from "@/contexts/AppContext";
@@ -24,7 +27,11 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
-const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+const ABOUT_LINE = aboutVersionLine({
+  version: Constants.expoConfig?.version,
+  build: Application.nativeBuildVersion,
+  commit: (Constants.expoConfig?.extra as { commit?: string } | undefined)?.commit,
+});
 const ICON = DS_V3.space.xs * 6;
 
 function accountSubtitle(email: string | null | undefined): string {
@@ -49,7 +56,7 @@ export default function SettingsScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="Settings" />
         <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -71,6 +78,12 @@ export default function SettingsScreen() {
               title="Privacy"
               subtitle={settingsPrivacySub(vis)}
               onPress={() => router.push(ROUTES.SETTINGS_PRIVACY as never)}
+            />
+            <ListRow
+              icon={<Camera size={ICON} color={DS_V3.color.textPrimary} />}
+              title="Permissions"
+              subtitle="Camera, location, notifications"
+              onPress={() => router.push(ROUTES.SETTINGS_PERMISSIONS as never)}
             />
             <ListRow
               icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}
@@ -102,10 +115,10 @@ export default function SettingsScreen() {
             clearDeleteAccountError={clearDeleteAccountError}
           />
 
-          <Text style={styles.ver}>GRIIT {APP_VERSION}</Text>
+          <Text style={styles.ver}>{ABOUT_LINE}</Text>
         </ScrollView>
         </GriitFade>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

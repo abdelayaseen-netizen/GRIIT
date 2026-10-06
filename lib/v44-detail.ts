@@ -2,6 +2,7 @@
  * v44 frames 166 + 170 — challenge detail order and the streak-chip sheet.
  */
 import { formatOfDays } from "@/lib/format-days";
+import { MODE_HARD_TITLE, MODE_STANDARD_TITLE } from "@/lib/create-mode-copy";
 
 export function detailMetaLine(args: {
   day: number;
@@ -10,7 +11,7 @@ export function detailMetaLine(args: {
   hard: boolean;
 }): string {
   const who = args.group ? "Group" : "Solo";
-  const mode = args.hard ? "No Days Off" : "Standard";
+  const mode = args.hard ? MODE_HARD_TITLE : MODE_STANDARD_TITLE;
   return `Day ${Math.max(0, Math.floor(args.day))} of ${Math.max(1, Math.floor(args.total))} · ${who} · ${mode}`;
 }
 

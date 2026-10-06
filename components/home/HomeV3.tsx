@@ -4,11 +4,11 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Flame, Share, X } from "lucide-react-native";
+import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { formatDays } from "@/lib/format-days";
-import HeaderIcon from "@/components/ds/HeaderIcon";
 import Card from "@/components/ds/Card";
+import { StreakStrip } from "@/components/ds/StreakStrip";
+import { homeStatus } from "@/lib/home-status";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
 import Skeleton from "@/components/ds/Skeleton";
@@ -19,7 +19,6 @@ import {
   CREATE_CHALLENGE,
   FIND_A_CHALLENGE,
   NO_CHALLENGE_YET,
-  homeDateCaption,
 } from "@/lib/g2b-home";
 import {
   HOME_PROOF_HEADING,
@@ -40,21 +39,13 @@ import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
   SECTION_DONE,
-  closedTaskStatus,
-  daysInARow,
   firstClosedUndoneTask,
-  remainingWindowsClosed,
-  showTodayStreakLine,
-  windowClosedFollowup,
 } from "@/lib/g2a-home";
 
-const ICON = 22;
 const RING = 22;
 const RING_CHECK = DS_V3.space.md;
 const META = DS_V3.space.lg;
 const STROKE = (DS_V3.space.xs * 3) / 8;
-const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-
 export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
   if (state === "done") {
@@ -116,7 +107,6 @@ export type HomeV3Props = {
   onPressFollowing?: (id: string) => void;
   onFindChallenge?: () => void;
   onCreateChallenge?: () => void;
-  onPressBell: () => void;
   onPressStreak?: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
@@ -133,29 +123,28 @@ export type HomeV3Props = {
   day2Hero?: { hero: string; line: string } | null;
   windowBanner?: string | null;
   startLabel?: string | null;
+  band?: React.ReactNode;
   showFirstProofSlot?: boolean;
-  bellUnread?: boolean;
   noDaysOff?: boolean;
   highlightTaskId?: string | null;
 };
 
 export function HomeV3({
-  title,
+  title: _title,
   streak,
   streakLine: _streakLine,
   morningAfter,
   proof,
   startsTomorrow,
   weekFilled: _weekFilled,
-  weekStates: _weekStates,
-  todayIndex: _todayIndex,
+  weekStates,
+  todayIndex,
   fillToday: _fillToday,
   following: _following = [],
   onSeeAllActivity: _onSeeAllActivity,
   onPressFollowing: _onPressFollowing,
   onFindChallenge,
   onCreateChallenge,
-  onPressBell,
   onPressStreak,
   onPressProof: _onPressProof,
   onPressTask,
@@ -163,32 +152,29 @@ export function HomeV3({
   onPressShareToday,
   sectionChoices,
   onToggleSection,
-  freezesLeft,
+  freezesLeft: _freezesLeft,
   showFreezeChip: _showFreezeChip = false,
   loading,
   error,
   onRetry,
   firstDayLine,
-  day2Hero,
-  windowBanner,
+  day2Hero: _day2Hero,
+  windowBanner: _windowBanner,
   startLabel,
+  band,
   showFirstProofSlot,
-  bellUnread,
-  noDaysOff = false,
+  noDaysOff: _noDaysOff = false,
   highlightTaskId,
 }: HomeV3Props) {
-  const weekday = WEEKDAYS[new Date().getDay()] ?? "Sunday";
-  const headerTitle = title ?? weekday;
-  const dateCaption = homeDateCaption();
   const insets = useSafeAreaInsets();
 
   if (error) {
     return (
       <View style={[styles.root, styles.pad]}>
         <EmptyState
-          heading="Feed did not load"
-          body="Check your connection and try again."
-          actionLabel="Retry"
+          heading="Today didn’t load"
+          body="Your streak and proofs are safe. Check your connection and try again."
+          actionLabel="Try again"
           onAction={onRetry}
         />
       </View>
@@ -210,16 +196,29 @@ export function HomeV3({
   const homeRows = proof?.sections.flatMap((s) => s.rows) ?? [];
   const closedUndone = firstClosedUndoneTask(homeRows);
   const todayBlocked = Boolean(proof?.hasChallenge && closedUndone);
-  const windowsClosed = Boolean(
-    proof?.hasChallenge && remainingWindowsClosed(homeRows),
-  );
   const allDone = Boolean(
     proof?.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount,
   );
-  const showStreakHero = showTodayStreakLine(streak, windowsClosed || allDone) && Boolean(day2Hero);
-  const closedFollow = windowsClosed
-    ? windowClosedFollowup({ noDaysOff, freezesLeft })
-    : null;
+  const openRow = homeRows.find((row) => !row.done && !row.closed);
+  const openSection = proof?.sections.find((section) =>
+    section.rows.some((row) => !row.done && !row.closed),
+  );
+  const status = homeStatus({
+    hasChallenge: Boolean(proof?.hasChallenge),
+    secured: allDone,
+    left: proof ? Math.max(0, proof.totalCount - proof.doneCount) : 0,
+    total: proof?.totalCount ?? 0,
+    lostTask: todayBlocked ? closedUndone?.name : null,
+    lostAt: todayBlocked ? closedUndone?.closedAt : null,
+    otherTask: todayBlocked ? openRow?.name : null,
+    otherChallenge: todayBlocked ? openSection?.challenge : null,
+    nextTask: openRow?.name,
+  });
+  const weekDays = ["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
+    letter,
+    filled: weekStates?.[i] === "secured" || weekStates?.[i] === "frozen",
+    state: weekStates?.[i],
+  }));
 
   const renderRow = (row: HomeProofRow) => {
     const inner = (
@@ -256,36 +255,15 @@ export function HomeV3({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={styles.homeHead}>
-        <View style={styles.homeHeadCopy}>
-          <Text style={styles.dateCaption}>{dateCaption}</Text>
-          <Text style={styles.homeName}>{headerTitle}</Text>
-        </View>
-        {streak != null && streak >= 1 ? (
-          onPressStreak ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={formatDays(streak)}
-              onPress={onPressStreak}
-              style={styles.streakChip}
-            >
-              <Flame size={16} color={DS_V3.color.brand} />
-              <Text style={styles.streakChipNum}>{streak}</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.streakChip} accessibilityLabel={formatDays(streak)}>
-              <Flame size={16} color={DS_V3.color.brand} />
-              <Text style={styles.streakChipNum}>{streak}</Text>
-            </View>
-          )
-        ) : null}
-        <View>
-          <HeaderIcon accessibilityLabel="Notifications" onPress={onPressBell}>
-            <Bell size={ICON} color={DS_V3.color.textPrimary} />
-          </HeaderIcon>
-          {bellUnread ? <View style={styles.bellDot} accessibilityLabel="Unread notifications" /> : null}
-        </View>
-      </View>
+      <StreakStrip
+        streak={streak ?? 0}
+        days={weekDays}
+        todayIndex={todayIndex}
+        status={status}
+        onOpenSheet={() => onPressStreak?.()}
+        band={band}
+        primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
+      />
 
       {morningAfter ? (
         <View style={styles.gutter}>
@@ -322,32 +300,7 @@ export function HomeV3({
           <Card>
             <View style={styles.cardHead}>
               <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
-              <Text style={styles.countTxt}>
-                {proof.doneCount} / {proof.totalCount}
-              </Text>
             </View>
-            {showStreakHero && day2Hero && !todayBlocked ? (
-              <View style={styles.day2Hero}>
-                <Text style={styles.hero28}>{day2Hero.hero}</Text>
-                <Text style={styles.secondary}>{day2Hero.line}</Text>
-              </View>
-            ) : firstDayLine && !windowsClosed && !todayBlocked ? (
-              <Text style={[styles.secondary, styles.sectionFirst]}>{firstDayLine}</Text>
-            ) : null}
-            {todayBlocked && closedUndone ? (
-              <View style={styles.closedBlock}>
-                <Clock size={18} color={DS_V3.color.textSecondary} />
-                <View style={styles.flex}>
-                  <Text style={styles.closedTitle}>{closedTaskStatus(closedUndone.name)}</Text>
-                  {windowsClosed && closedFollow ? (
-                    <Text style={styles.secondary}>{closedFollow}</Text>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-            {windowBanner && !windowsClosed && !todayBlocked ? (
-              <Text style={styles.caption}>{windowBanner}</Text>
-            ) : null}
             {proof.hasChallenge ? (
               proof.sections.map((section, i) => {
                 const expanded = todaySectionExpanded(
@@ -373,15 +326,16 @@ export function HomeV3({
                           <Text style={styles.task}>{section.challenge}</Text>
                         )}
                         <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
+                        {i === 0 && firstDayLine ? <Text style={styles.caption}>{firstDayLine}</Text> : null}
                       </View>
                       {section.doneCount === section.totalCount && section.totalCount > 0 ? (
                         <View style={styles.sectionDone}>
-                          <Check size={14} color={DS_V3.color.brandText} />
+                          <Check size={14} color={DS_V3.color.brand} />
                           <Text style={styles.sectionDoneTxt}>{SECTION_DONE}</Text>
                         </View>
                       ) : (
                         <Text style={styles.countTxt}>
-                          {section.doneCount} / {section.totalCount}
+                          {section.doneCount} of {section.totalCount} done
                         </Text>
                       )}
                       <Pressable
@@ -413,13 +367,7 @@ export function HomeV3({
             )}
             {allDone ? (
               <View style={styles.shareTodayBlock}>
-                {showTodayStreakLine(streak, false) ? (
-                  <Text style={styles.hero28}>{streak}</Text>
-                ) : null}
                 <Text style={styles.daySecured}>{DAY_SECURED}</Text>
-                {showTodayStreakLine(streak, false) ? (
-                  <Text style={styles.secondary}>{daysInARow(streak ?? 0)}</Text>
-                ) : null}
                 {proof.showShareToday ? (
                   <Pressable
                     accessibilityRole="button"
@@ -441,7 +389,7 @@ export function HomeV3({
                   onPress={onPressShareToday}
                   style={styles.shareTodayRow}
                 >
-                  <Share size={RING} color={DS_V3.color.brandText} />
+                  <Share size={RING} color={DS_V3.color.textSecondary} />
                   <View style={styles.taskCopy}>
                     <Text style={styles.task}>{SHARE_TODAY}</Text>
                     <Text style={styles.caption}>{proof.shareTodayCaption}</Text>
@@ -451,11 +399,6 @@ export function HomeV3({
               </View>
             ) : null}
           </Card>
-          {startLabel ? (
-            <View style={styles.startWrap}>
-              <Button label={startLabel} onPress={_onPressProof} />
-            </View>
-          ) : null}
         </View>
       ) : null}
 

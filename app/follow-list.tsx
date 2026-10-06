@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -195,7 +195,7 @@ export default function FollowListScreen() {
     <ErrorBoundary>
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         {bannerError ? (
           <View style={styles.banner} accessibilityRole="alert">
             <Text style={styles.bannerText}>{bannerError}</Text>
@@ -237,7 +237,7 @@ export default function FollowListScreen() {
             showsVerticalScrollIndicator={false}
           />
         )}
-      </SafeAreaView>
+      </Screen>
       <ConfirmDialog
         visible={unfollowTarget !== null}
         title="Unfollow"

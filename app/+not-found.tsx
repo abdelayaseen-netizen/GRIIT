@@ -1,22 +1,31 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Link, Stack } from 'expo-router';
-import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
+import { View, Text, StyleSheet } from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { File, Home } from "lucide-react-native";
+import { DS_V3 } from "@/lib/design-system";
+import Screen from "@/components/ds/Screen";
+import Button from "@/components/ds/Button";
+import { originTabHref } from "@/lib/origin-tab";
 
 export default function NotFoundScreen() {
+  const router = useRouter();
   return (
     <>
-      <Stack.Screen options={{ title: 'Not Found' }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>Page Not Found</Text>
-        <Text style={styles.message}>
-          This screen doesn{"'"}t exist.
-        </Text>
-        <Link href="/" asChild>
-          <Pressable style={styles.button} accessibilityLabel="Go to Home" accessibilityRole="button">
-            <Text style={styles.buttonText}>Go to Home</Text>
-          </Pressable>
-        </Link>
-      </View>
+      <Stack.Screen options={{ headerShown: false, title: "" }} />
+      <Screen>
+        <View style={styles.container}>
+          <File size={28} color={DS_V3.color.textSecondary} />
+          <Text style={styles.title}>This page isn’t here</Text>
+          <Text style={styles.message}>The link may be old. Your proofs and streak aren’t affected.</Text>
+        </View>
+        <View style={styles.footer}>
+          <Button
+            fill
+            label="Go to Home"
+            icon={<Home size={18} color={DS_V3.color.onBrand} />}
+            onPress={() => router.replace(originTabHref("home") as never)}
+          />
+        </View>
+      </Screen>
     </>
   );
 }
@@ -24,32 +33,24 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+    gap: 8,
     backgroundColor: DS_V3.color.canvas,
   },
   title: {
-    fontSize: 24,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+    ...DS_V3.type.title,
     color: DS_V3.color.textPrimary,
-    marginBottom: 12,
+    textAlign: "center",
   },
   message: {
-    fontSize: 16,
+    ...DS_V3.type.body,
     color: DS_V3.color.textSecondary,
-    textAlign: 'center',
-    marginBottom: 32,
+    textAlign: "center",
   },
-  button: {
-    backgroundColor: DS_V3.color.textPrimary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: DS_RADIUS.SM,
-  },
-  buttonText: {
-    color: DS_V3.color.canvas,
-    fontSize: 16,
-    fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
+  footer: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: 12,
   },
 });

@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -29,6 +29,8 @@ import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import ProofPost from "@/components/feed/ProofPost";
 import FeedEvent from "@/components/feed/FeedEvent";
 import InviteCard from "@/components/feed/InviteCard";
+import TodaySocialBand from "@/components/home/TodaySocialBand";
+import type { TodayPoster } from "@/lib/today-band";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import { groupFeedJoins, isJoinGroup, type FeedListItem } from "@/lib/feed-join";
 import EmptyState from "@/components/ds/EmptyState";
@@ -40,6 +42,7 @@ import { track, trackEvent } from "@/lib/analytics";
 import { runHomePullRefresh } from "@/lib/home-pull-refresh";
 import { countFriendsPostedAway, friendsPostedAwayLine } from "@/lib/home-away-count";
 import { keepLiveFeedPosts } from "@/lib/live-feed-list";
+import { subscribeOptimisticFeedPost } from "@/lib/optimistic-feed";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   CAUGHT_UP,
@@ -62,7 +65,7 @@ const RESPECT_DEBOUNCE_MS = 300;
 type LiveFeedScope = "following" | "everyone";
 
 type LiveFeedSectionProps = {
-  ListHeaderComponent?: React.ReactElement<{ awayCount?: number }> | null;
+  ListHeaderComponent?: React.ReactElement<{ awayCount?: number; band?: React.ReactNode }> | null;
   /** Optional parent-driven refresh (e.g. home tab refetches stats + feed together). Falls back to internal feed refetch. */
   onRefresh?: () => Promise<void> | void;
   /**
@@ -153,6 +156,8 @@ function LiveFeedSection({
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
   const listRef = useRef<FlashListRef<FeedListItem> | null>(null);
+  const [optimisticPost, setOptimisticPost] = useState<LiveFeedPost | null>(null);
+  useEffect(() => subscribeOptimisticFeedPost(setOptimisticPost), []);
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -184,6 +189,25 @@ function LiveFeedSection({
   );
   const followingCount = feedQuery.data?.pages?.[0]?.following_count ?? 0;
 
+  const postersQuery = useQuery({
+    queryKey: ["feed", "todayPosters", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.feed.todayPosters) as Promise<{
+        posters: TodayPoster[];
+        firstEventId: string | null;
+      }>,
+    enabled: !!user?.id,
+    staleTime: 30 * 1000,
+  });
+  const todayPosters = postersQuery.data?.posters ?? [];
+  const firstTodayEventId = postersQuery.data?.firstEventId ?? null;
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      void postersQuery.refetch();
+    }, [postersQuery.refetch, user?.id]),
+  );
+
   const followingQuery = useQuery({
     queryKey: ["profiles", "getFollowing", user?.id ?? ""],
     queryFn: () =>
@@ -200,7 +224,7 @@ function LiveFeedSection({
 
   const awayCount = countFriendsPostedAway(pagePosts, user?.id, followedIds);
 
-  const posts = pagePosts.filter((post) => {
+  const posts = (optimisticPost ? [optimisticPost, ...pagePosts.filter((post) => post.id !== optimisticPost.id)] : pagePosts).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
     return true;
@@ -361,9 +385,9 @@ function LiveFeedSection({
   const handleDeletePost = useCallback(
     async (post: LiveFeedPost) => {
       try {
-        await trpcMutate(TRPC.feed.deletePost, { eventId: post.id });
+        await trpcMutate(TRPC.checkins.unshareProof, { eventId: post.id });
         await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-        setFeedSnack("Post removed.");
+        setFeedSnack("Removed from the feed.");
         setTimeout(() => setFeedSnack(null), 2500);
       } catch (e) {
         captureError(e, "LiveFeedDeletePost");
@@ -418,7 +442,7 @@ function LiveFeedSection({
 
       if (Platform.OS === "ios") {
         const options = isOwn
-          ? ["Delete post", "Cancel"]
+          ? ["Delete from the feed", "Cancel"]
           : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
         ActionSheetIOS.showActionSheetWithOptions(
           {
@@ -532,25 +556,46 @@ function LiveFeedSection({
   }, [feedQuery, scope, goToDiscover]);
 
   const refetchFeed = feedQuery.refetch;
+  const refetchPosters = postersQuery.refetch;
   const handleRefresh = useCallback(() => {
     return runHomePullRefresh(async () => {
+      await refetchPosters();
       if (onRefresh) {
         await onRefresh();
         return;
       }
       await refetchFeed();
     }, setIsPulling);
-  }, [onRefresh, refetchFeed]);
+  }, [onRefresh, refetchFeed, refetchPosters]);
 
   const scrollToFeed = useCallback(() => {
     if (finalFeed.length === 0) return;
     listRef.current?.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
   }, [finalFeed.length]);
 
+  const scrollToTodayPost = useCallback(() => {
+    const index = listItems.findIndex((item) => !isJoinGroup(item) && item.id === firstTodayEventId);
+    if (index >= 0) {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
+      return;
+    }
+    scrollToFeed();
+  }, [firstTodayEventId, listItems, scrollToFeed]);
+
   if (!user?.id) return null;
 
   const header = ListHeaderComponent
-    ? React.cloneElement(ListHeaderComponent, { awayCount })
+    ? React.cloneElement(ListHeaderComponent, {
+        awayCount,
+        band: (
+          <TodaySocialBand
+            posters={todayPosters}
+            pending={postersQuery.isPending}
+            unavailable={postersQuery.isError || postersQuery.data == null}
+            onPress={scrollToTodayPost}
+          />
+        ),
+      })
     : null;
 
   const composedHeader = (
@@ -708,9 +753,9 @@ function LiveFeedSection({
                     void handleDeletePost(androidMenuPost);
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel="Delete post"
+                  accessibilityLabel="Delete from the feed"
                 >
-                  <Text style={styles.androidMenuDestructive}>Delete post</Text>
+                  <Text style={styles.androidMenuDestructive}>Delete from the feed</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.androidMenuRow}

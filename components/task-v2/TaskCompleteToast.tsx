@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { CameraSeal } from "@/components/feed/CameraSeal";
+import { ShareChoice } from "@/components/ds/ShareChoice";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   clearTaskCompleteFlash,
@@ -16,6 +16,8 @@ import {
 } from "@/lib/task-complete-toast";
 
 const LIFE_MS = 4000;
+const PHOTO_LIFE_MS = 8000;
+const UNDO_MS = 6000;
 
 export function useTaskCompleteFlash(): string | null {
   const [id, setId] = React.useState<string | null>(null);
@@ -31,19 +33,32 @@ export function useTaskCompleteFlash(): string | null {
   return id;
 }
 
-export default function TaskCompleteToast({ onShare }: { onShare?: (toast: TaskCompleteToast) => void }) {
+export default function TaskCompleteToast({
+  onShare,
+  onShareFeed,
+  onUndoFeed,
+}: {
+  onShare?: (toast: TaskCompleteToast) => void;
+  onShareFeed?: (toast: TaskCompleteToast) => Promise<void> | void;
+  onUndoFeed?: (toast: TaskCompleteToast) => Promise<void> | void;
+}) {
   const [toast, setToast] = React.useState<TaskCompleteToast | null>(null);
+  const [shared, setShared] = React.useState(false);
   const slide = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => subscribeTaskToast(setToast), []);
+  useEffect(() => subscribeTaskToast((next) => {
+    setShared(false);
+    setToast(next);
+  }), []);
 
   useEffect(() => {
     if (!toast) return;
     slide.setValue(24);
     Animated.spring(slide, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
-    const timer = setTimeout(() => dismissTaskToast(), LIFE_MS);
+    const life = shared ? UNDO_MS : toast.cameraSeal ? PHOTO_LIFE_MS : LIFE_MS;
+    const timer = setTimeout(() => dismissTaskToast(), life);
     return () => clearTimeout(timer);
-  }, [toast, slide]);
+  }, [toast, slide, shared]);
 
   const pan = useRef(
     PanResponder.create({
@@ -63,32 +78,60 @@ export default function TaskCompleteToast({ onShare }: { onShare?: (toast: TaskC
   return (
     <Animated.View
       {...pan.panHandlers}
-      style={[styles.wrap, { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] }]}
+      style={[
+        styles.wrap,
+        toast.cameraSeal ? styles.wrapPhoto : null,
+        { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] },
+      ]}
     >
+      {toast.cameraSeal ? null : (
       <View style={styles.thumb}>
         {toast.photoUri ? (
           <Image source={{ uri: toast.photoUri }} style={styles.thumb} />
         ) : (
           <Check size={22} color={DS_V3.color.brandText} />
         )}
-        {toast.cameraSeal ? (
-          <View style={styles.seal}>
-            <CameraSeal onPress={() => undefined} size={16} />
+      </View>
+      )}
+      {toast.cameraSeal ? (
+        <View style={styles.choice}>
+          <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
+          <Text style={styles.body} numberOfLines={1}>{toast.body}</Text>
+          <ShareChoice
+            state={shared ? "shared" : "unanswered"}
+            isPhoto
+            photoUri={toast.photoUri}
+            onShare={() => {
+              void Promise.resolve(onShareFeed?.(toast)).then(() => setShared(true));
+            }}
+            onKeep={() => dismissTaskToast()}
+            onUndo={() => {
+              void Promise.resolve(onUndoFeed?.(toast)).then(() => {
+                setShared(false);
+                dismissTaskToast();
+              });
+            }}
+            onRetry={() => {
+              void Promise.resolve(onShareFeed?.(toast)).then(() => setShared(true));
+            }}
+          />
+        </View>
+      ) : (
+        <>
+          <View style={styles.copy}>
+            <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
+            <Text style={styles.body} numberOfLines={1}>{toast.body}</Text>
           </View>
-        ) : null}
-      </View>
-      <View style={styles.copy}>
-        <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
-        <Text style={styles.body} numberOfLines={1}>{toast.body}</Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Share"
-        onPress={() => onShare?.(toast)}
-        style={styles.pill}
-      >
-        <Text style={styles.pillTxt}>Share</Text>
-      </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Share as a card"
+            onPress={() => onShare?.(toast)}
+            style={styles.pill}
+          >
+            <Text style={styles.pillTxt}>Share</Text>
+          </Pressable>
+        </>
+      )}
     </Animated.View>
   );
 }
@@ -108,6 +151,11 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 10,
   },
+  wrapPhoto: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  choice: { gap: 8, width: "100%" },
   thumb: {
     width: 40,
     height: 40,

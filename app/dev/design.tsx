@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { Bell, Inbox } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -110,7 +110,7 @@ export default function DesignGallery() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <Screen style={styles.safe} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Design</Text>
         <Text style={styles.kicker}>Chunk B primitives</Text>
@@ -396,7 +396,7 @@ export default function DesignGallery() {
         </Section>
 
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -414,7 +414,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,
     fontWeight: DS_V3.type.display.fontWeight,
-    letterSpacing: DS_V3.type.display.letterSpacing,
     color: DS_V3.color.textPrimary,
     marginTop: DS_V3.space.sm,
   },

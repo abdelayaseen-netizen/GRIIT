@@ -63,15 +63,15 @@ describe("g2a home copy", () => {
       { id: "walk", name: "Walk", done: false, closed: false },
     ]);
     expect(next?.name).toBe("Walk");
-    expect(startCtaLabel(next?.name ?? "")).toBe("Start: Walk");
+    expect(startCtaLabel(next?.name ?? "")).toBe("Walk");
     const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
-    expect(home).toContain("closedTaskStatus(closedUndone.name)");
-    expect(home).not.toContain("startLabel && !todayBlocked");
-    expect(home).toContain("{startLabel ? (");
+    expect(home).toContain("homeStatus(");
+    expect(home).not.toContain("closedTaskStatus(");
+    expect(home).toContain("primary={startLabel ?");
   });
 
   it("Start label and window banner", () => {
-    expect(startCtaLabel("Read")).toBe("Start: Read");
+    expect(startCtaLabel("Read")).toBe("Read");
     expect(windowClosesBanner("Read", "7:00 am")).toBe(
       "The Read window closes at 7:00 am. After that, today can't be secured.",
     );

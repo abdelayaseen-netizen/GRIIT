@@ -169,14 +169,13 @@ describe("empty id → no Story action rendered", () => {
     );
     expect(sheet).toContain("showStoryAction(facebookAppId())");
     expect(sheet).toContain("showStory ?");
-    expect(finish).toContain("showStoryAction(facebookAppId())");
-    expect(finish).toContain("storyAvailable={showStory}");
+    expect(finish).toContain("ShareChoice");
     expect(sheet).toContain("SHARE_TARGET_STORY");
     expect(sheet).toContain("SHARE_TARGET_SAVE");
     expect(sheet).toContain("SHARE_TARGET_MESSAGES");
     expect(sheet).toContain("SHARE_TARGET_MORE");
     expect(sheet).not.toContain("SHARE_COPY");
-    expect(finish).toContain("ShareActions");
+    expect(finish).toContain("ShareChoice");
   });
 });
 
@@ -188,7 +187,7 @@ describe("Share to the feed stays on one line", () => {
     );
     const button = readFileSync(resolve(__dirname, "../components/ds/Button.tsx"), "utf8");
     expect(finish).toContain("shareCol");
-    expect(finish).toContain("ShareActions");
+    expect(finish).toContain("ShareChoice");
     expect(finish).not.toContain("shareRow");
     expect(button).toContain("labelSecondary");
     expect(button).toContain("DS_V3.type.secondary");
@@ -205,8 +204,12 @@ describe("Caption is text, never baked into the image", () => {
     expect(share).toContain("copyShareCaption");
     expect(share).toContain("setStringAsync");
     expect(sheet).toContain("caption: caption.trim()");
-    expect(sheet).not.toContain("copyStickerPngToPasteboard");
-    expect(sheet).not.toContain('kind === "copy"');
+    expect(sheet).toContain("copyStickerPngToPasteboard");
+    expect(sheet).toContain('kind === "copy"');
+    expect(sheet).toContain("STICKER.copied");
+    const copy = readFileSync(resolve(__dirname, "./copy.ts"), "utf8");
+    expect(copy).toContain("Copied. Paste it in your Instagram story.");
+    expect(sheet).not.toContain("copyShareCaption");
   });
 });
 

@@ -29,11 +29,20 @@ describe("moment queue", () => {
     expect(secured).toContain("CHALLENGE_COMPLETE");
   });
 
-  it("task → Finish → Secured → (final day) complete → Home", () => {
+  it("finishes only when the last day was secured, never from the day index or a counter target", () => {
     expect(afterSecuredNext({ challengeDay: 7, challengeLength: 30 })).toBe("home");
-    expect(afterSecuredNext({ challengeDay: 30, challengeLength: 30 })).toBe("challenge_complete");
-    expect(afterSecuredNext({ challengeDone: true, challengeDay: 3, challengeLength: 30 })).toBe(
+    expect(afterSecuredNext({ challengeDay: 30, challengeLength: 30 })).toBe("home");
+    expect(afterSecuredNext({ challengeDone: true, challengeDay: 30, challengeLength: 30 })).toBe(
       "challenge_complete",
     );
+    expect(afterSecuredNext({ challengeDone: true, challengeDay: 3, challengeLength: 30 })).toBe("home");
+    expect(
+      afterSecuredNext({
+        challengeDone: true,
+        challengeDay: 3,
+        challengeLength: 14,
+        counterReachedTarget: true,
+      }),
+    ).toBe("home");
   });
 });

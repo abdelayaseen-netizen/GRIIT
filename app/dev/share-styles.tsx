@@ -5,7 +5,7 @@
 import React, { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { DS_V3 } from "@/lib/design-system";
 import ShareImage from "@/components/share/ShareImage";
 import { saveStickerToPhotos } from "@/lib/share";
@@ -53,7 +53,7 @@ export default function ShareStylesDevScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <Screen style={styles.safe} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Share styles</Text>
         <Text style={styles.kicker}>7 styles × 3 colours · view-shot 1080 × 1920</Text>
@@ -86,7 +86,7 @@ export default function ShareStylesDevScreen() {
           <ShareImage input={current} />
         </ViewShot>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

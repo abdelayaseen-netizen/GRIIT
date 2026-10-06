@@ -5,18 +5,18 @@
  */
 import React from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import KeyboardDock from "@/components/ds/KeyboardDock";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { SAFE } from "@/lib/safe-area";
 
 const SHEET_RADIUS = DS_V3.radius.card * 1.2;
-const SHEET_INSET = DS_V3.space.xs * 8.5;
 
 export type SheetProps = {
   visible: boolean;
@@ -33,6 +33,7 @@ export default function Sheet({
   children,
   footer,
 }: SheetProps) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -47,17 +48,13 @@ export default function Sheet({
           onPress={onDismiss}
           style={styles.scrim}
         />
-        <KeyboardAvoidingView
-          style={styles.lift}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          pointerEvents="box-none"
-        >
-          <View style={styles.panel} pointerEvents="box-none">
+        <KeyboardDock style={styles.lift} pointerEvents="box-none">
+          <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, SAFE.bottom) }]} pointerEvents="box-none">
             <Text style={styles.heading}>{heading}</Text>
-            {children}
+            <View style={footer ? styles.body : undefined}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardDock>
       </View>
     </Modal>
   );
@@ -87,7 +84,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: SHEET_RADIUS,
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
-    paddingBottom: SHEET_INSET,
     maxHeight: "88%",
   },
   heading: {
@@ -96,6 +92,9 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textPrimary,
     marginBottom: DS_V3.space.gutter,
+  },
+  body: {
+    paddingBottom: SAFE.stickyGap,
   },
   footer: {
     paddingTop: DS_V3.space.gutter,

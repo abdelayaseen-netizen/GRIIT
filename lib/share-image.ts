@@ -11,6 +11,7 @@
  * profiles.onboarding_answers is the only profile jsonb and it does not fit
  * a share preference. No column is written.
  */
+import { streakInARow } from "@/lib/task-complete-toast";
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
 export const SHARE_PREVIEW_W = 270;
@@ -25,6 +26,7 @@ export const SHARE_SHEET_TITLE = "Share";
 export const SHARE_INVITE_TITLE = "Invite";
 export const SHARE_CAPTION_PLACEHOLDER = "Add a caption (optional)";
 export const SHARE_TARGET_STORY = "Instagram Story";
+export const SHARE_TARGET_COPY = "Copy sticker";
 export const SHARE_TARGET_SAVE = "Save";
 export const SHARE_TARGET_MESSAGES = "Messages";
 export const SHARE_TARGET_MORE = "More";
@@ -392,7 +394,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       items: [
         { kind: "flame", size: 64, color: "#DC5401" },
         text(String(input.streak ?? 0), 60, 64, color, "800"),
-        text("days in a row", 36, 44, color, "500"),
+        text(streakInARow(input.streak ?? 0), 36, 44, color, "500"),
       ],
     });
     if (input.cameraSeal) push({ kind: "seal", label: "Camera", color });
@@ -472,7 +474,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   if (input.style === "E") {
     push({ kind: "flame", size: 140, color: palette.accent });
     push(text(String(input.streak ?? 0), 520, 470, palette.fg, "800", -0.02 * 520));
-    push(text("days in a row", 72, 84, palette.fg));
+    push(text(streakInARow(input.streak ?? 0), 72, 84, palette.fg));
     if (input.activeLine?.trim()) push(text(input.activeLine.trim(), 38, 46, palette.sub));
     const date = input.dateLabel?.trim() || shareDateLabel();
     const user = atUser(input.username);

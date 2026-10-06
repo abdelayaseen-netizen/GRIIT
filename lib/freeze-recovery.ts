@@ -1,7 +1,7 @@
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { FREEZE } from "@/lib/copy";
 
-export const USE_FREEZE_ACTION = "Use freeze";
-export const FREEZE_UNTIL_MIDNIGHT = "Use a freeze to cover it, until midnight.";
+export const USE_FREEZE_ACTION = FREEZE.button;
 
 export function weekdayLongForDateKey(dateKey: string, timeZone = "UTC"): string {
   const [y, m, d] = dateKey.slice(0, 10).split("-").map(Number);
@@ -55,12 +55,11 @@ export function canOfferYesterdayFreeze(args: {
 }
 
 export function freezeRecoveryTitle(missDateKey: string, timeZone = "UTC"): string {
-  return `${weekdayLongForDateKey(missDateKey, timeZone)} wasn't secured.`;
+  return FREEZE.title(weekdayLongForDateKey(missDateKey, timeZone));
 }
 
 export function freezeRecoveryCaption(remaining: number): string {
-  const n = Math.max(0, Math.floor(remaining));
-  return `${FREEZE_UNTIL_MIDNIGHT} ${n} left.`;
+  return FREEZE.offer(Math.max(0, Math.floor(remaining)));
 }
 
 export function freezeRecoveryRow(args: {

@@ -21,7 +21,7 @@ describe("v44 challenge detail", () => {
       "Day 12 of 30 · Solo · Standard",
     );
     expect(detailMetaLine({ day: 3, total: 14, group: true, hard: true })).toBe(
-      "Day 3 of 14 · Group · No Days Off",
+      "Day 3 of 14 · Group · Strict",
     );
     expect(PEOPLE_SOLO).toBe("Just you so far · 1 of 10");
     expect(INVITE_MEMBERS(4)).toBe("4 of 10. They start at Day 1.");

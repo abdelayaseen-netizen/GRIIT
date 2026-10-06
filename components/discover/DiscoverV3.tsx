@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { Cover, type CoverCategory } from "@/components/ds/Cover";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import RootHeader from "@/components/ds/RootHeader";
 import Chip from "@/components/ds/Chip";
@@ -37,6 +38,15 @@ import {
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
 import { ChallengePreviewSheet } from "@/components/discover/ChallengePreviewSheet";
+
+const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
+  fitness: "Fitness",
+  health: "Health",
+  discipline: "Discipline",
+  faith: "Faith",
+  mind: "Mind",
+  learning: "Learning",
+};
 
 export type DiscoverPerson = {
   user_id: string;
@@ -146,7 +156,7 @@ export function DiscoverV3({
             onPress={() => setPreview(item)}
             style={styles.builtin}
           >
-            <View style={styles.builtinCover} />
+            <Cover category={COVER_CATEGORY[item.category]} days={item.days} width={164} height={110} />
             <Text style={styles.builtinTitle} numberOfLines={2}>{item.title}</Text>
             <Text style={styles.caption}>{featuredCardLine(item)}</Text>
             <Text style={styles.beFirst}>{featuredMembersLine(0)}</Text>
@@ -320,13 +330,6 @@ const styles = StyleSheet.create({
     width: 164,
     gap: 4,
   },
-  builtinCover: {
-    height: 110,
-    borderRadius: 16,
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: 1,
-    borderColor: DS_V3.color.border,
-  },
   builtinTitle: {
     fontSize: 15,
     lineHeight: 20,
@@ -337,7 +340,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textSecondary,
   },
   featuredPad: {
     paddingHorizontal: DS_V3.space.gutter,

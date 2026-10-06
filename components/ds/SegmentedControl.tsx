@@ -42,7 +42,7 @@ export default function SegmentedControl({
               style={[
                 styles.label,
                 {
-                  color: on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary,
+                  color: on ? DS_V3.color.selectedText : DS_V3.color.textSecondary,
                   fontWeight: on ? DS_V3.type.bodyStrong.fontWeight : DS_V3.type.secondary.fontWeight,
                 },
               ]}
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   itemOn: {
-    backgroundColor: DS_V3.color.surface,
+    backgroundColor: DS_V3.color.selectedBg,
   },
   pressed: {
     opacity: 0.8,

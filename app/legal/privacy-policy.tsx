@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { DS_V3, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -16,7 +16,7 @@ const CONTENT = [
 
 function PrivacyPolicyScreenInner() {
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <Screen style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>GRIIT Privacy Policy</Text>
         <Text style={styles.updated}>Last updated: September 2026</Text>
@@ -27,7 +27,7 @@ function PrivacyPolicyScreenInner() {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

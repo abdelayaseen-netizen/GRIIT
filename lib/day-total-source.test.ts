@@ -29,13 +29,13 @@ describe("feedFinishedCopy", () => {
     expect(hasCameraProof({ proof_photo_url: null })).toBe(false);
   });
 
-  it("says verified only when the completion has camera proof", () => {
+  it("does not say verified when the completion has camera proof", () => {
     expect(
       feedFinishedCopy({
         currentDay: 2,
         totalDays: 75,
         proofPhotoUrl: "https://cdn.example/p.jpg",
       }),
-    ).toBe("Finished. 2 of 75 days verified.");
+    ).toBe("Finished. 2 of 75 days.");
   });
 });

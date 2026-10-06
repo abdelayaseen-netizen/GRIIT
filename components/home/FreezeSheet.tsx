@@ -3,17 +3,12 @@ import Sheet from "@/components/ds/Sheet";
 import Button from "@/components/ds/Button";
 import { Text, StyleSheet } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { FREEZE } from "@/lib/copy";
 import {
   CLOSE,
-  NO_FREEZES_LEFT,
   NO_LET_IT_RESET,
   SEE_PRO,
-  USE_A_FREEZE_FOR_YESTERDAY_Q,
-  USE_THE_FREEZE,
-  freezeNoneBody,
   freezeNoneShowsSeePro,
-  freezeOfferBody,
-  freezeRefillDateLabel,
   freezeSheetVariant,
 } from "@/lib/freeze-sheet";
 
@@ -36,8 +31,6 @@ export function FreezeSheet({
   visible,
   remaining,
   restoredStreakDays,
-  lastFreezeUsedAt,
-  timeZone,
   subscriptionStatus,
   submitting,
   onUseFreeze,
@@ -52,7 +45,7 @@ export function FreezeSheet({
       <Sheet
         visible={visible}
         onDismiss={onClose}
-        heading={NO_FREEZES_LEFT}
+        heading={FREEZE.none}
         footer={
           <>
             {freezeNoneShowsSeePro(subscriptionStatus) ? (
@@ -62,7 +55,7 @@ export function FreezeSheet({
           </>
         }
       >
-        <Text style={styles.body}>{freezeNoneBody(freezeRefillDateLabel(lastFreezeUsedAt, timeZone))}</Text>
+        <Text style={styles.body}>{FREEZE.none}</Text>
       </Sheet>
     );
   }
@@ -70,16 +63,18 @@ export function FreezeSheet({
     <Sheet
       visible={visible}
       onDismiss={onClose}
-      heading={USE_A_FREEZE_FOR_YESTERDAY_Q}
+      heading={FREEZE.sheetTitle("yesterday")}
       footer={
         <>
-          <Button label={USE_THE_FREEZE} onPress={onUseFreeze} submitting={submitting} />
+          <Button label={FREEZE.button} onPress={onUseFreeze} submitting={submitting} />
           <Button label={NO_LET_IT_RESET} variant="tertiary" onPress={onRefuse} />
         </>
       }
     >
       <Text style={styles.body}>
-        {typeof restoredStreakDays === "number" ? freezeOfferBody(restoredStreakDays, remaining) : null}
+        {typeof restoredStreakDays === "number"
+          ? FREEZE.sheetBody("yesterday", restoredStreakDays, remaining, "in 30 days")
+          : FREEZE.offer(remaining)}
       </Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </Sheet>

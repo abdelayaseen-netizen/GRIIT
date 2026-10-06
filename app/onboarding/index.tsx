@@ -1,6 +1,7 @@
 import React from "react";
 import OnboardingFlowV2 from "@/components/onboarding/v2/OnboardingFlowV2";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import Screen from "@/components/ds/Screen";
 
 function OnboardingPageInner() {
   return <OnboardingFlowV2 />;
@@ -8,8 +9,10 @@ function OnboardingPageInner() {
 
 export default function OnboardingPage() {
   return (
-    <ErrorBoundary>
-      <OnboardingPageInner />
-    </ErrorBoundary>
+    <Screen>
+      <ErrorBoundary>
+        <OnboardingPageInner />
+      </ErrorBoundary>
+    </Screen>
   );
 }

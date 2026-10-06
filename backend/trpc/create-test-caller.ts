@@ -21,6 +21,10 @@ export type TestAppCaller = {
       success: boolean;
       alreadySecured: boolean;
       newStreakCount: number;
+      freezeGranted: boolean;
+      freezesHeld: number;
+      freezeCap: number;
+      freezeAtCap: boolean;
     }>;
   };
   challenges: {

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionSheetIOS, Alert, Platform, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, usePathname, useRouter, Stack } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import {
 } from "@/lib/profile-challenges";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
+  FREE_ACTIVE_LIMIT_MESSAGE,
   countActiveEnrollments,
 } from "@/lib/free-challenge-limit";
 import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
@@ -112,6 +113,7 @@ export default function ChallengeDetailScreen() {
   const { error, showError, clearError } = useInlineError();
   const [joining, setJoining] = useState(false);
   const [joinedSheet, setJoinedSheet] = useState<{ id: string; body: string } | null>(null);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
@@ -352,8 +354,7 @@ export default function ChallengeDetailScreen() {
       captureError(err, { flow: "challenge_join", challengeId: id });
       const classified = classifyJoinChallengeError(err);
       if (classified.kind === "limit") {
-        showError(classified.message);
-        goPaywall();
+        setLimitOpen(true);
         return;
       }
       if (classified.kind === "already") {
@@ -471,7 +472,7 @@ export default function ChallengeDetailScreen() {
 
   if (!id) {
     return (
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         <ChallengeDetailV3
           title="Challenge"
@@ -485,13 +486,13 @@ export default function ChallengeDetailScreen() {
           onBack={goBack}
           onRetry={goBack}
         />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <Stack.Screen options={{ headerShown: false }} />
         {error ? <InlineError message={error} onDismiss={clearError} /> : null}
         <ChallengeDetailV3
@@ -546,7 +547,20 @@ export default function ChallengeDetailScreen() {
         >
           <Text style={styles.sheetBody}>{joinedSheet?.body}</Text>
         </Sheet>
-      </SafeAreaView>
+        <Sheet
+          visible={limitOpen}
+          onDismiss={() => setLimitOpen(false)}
+          heading="3 challenges"
+          footer={
+            <>
+              <Button label="See Pro" onPress={() => { setLimitOpen(false); goPaywall(); }} />
+              <Button label="Leave" variant="secondary" onPress={() => { setLimitOpen(false); router.push(ROUTES.TABS_HOME as never); }} />
+            </>
+          }
+        >
+          <Text style={styles.sheetBody}>{FREE_ACTIVE_LIMIT_MESSAGE}</Text>
+        </Sheet>
+      </Screen>
     </ErrorBoundary>
   );
 }

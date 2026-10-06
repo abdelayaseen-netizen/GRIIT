@@ -32,6 +32,8 @@ export const ROUTES = {
   SETTINGS_PRIVACY: "/settings/privacy",
   SETTINGS_ACCOUNT: "/settings/account",
   SETTINGS_ABOUT: "/settings/about",
+  SETTINGS_BLOCKED: "/settings/blocked",
+  SETTINGS_PERMISSIONS: "/settings/permissions",
   PROFILE_CONSISTENCY: "/profile/consistency",
   PROFILE_DAY: "/profile/day",
   ACCOUNTABILITY: "/accountability",

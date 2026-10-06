@@ -4,10 +4,10 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
-import { Download, Flame, Instagram, ShieldOff, X } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Download, Flame, Instagram, ShieldOff, Snowflake, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
+import { ShareChoice } from "@/components/ds/ShareChoice";
 import Card from "@/components/ds/Card";
 import ShareImage from "@/components/share/ShareImage";
 import { saveStickerToPhotos, shareToInstagramStory } from "@/lib/share";
@@ -20,7 +20,6 @@ import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { SECURED_DONE } from "@/lib/simple-log";
 import {
   PROOF_KEEP,
-  PROOF_SHARE,
   PROOF_SHARE_FAILED,
 } from "@/lib/proof-moment";
 import {
@@ -56,11 +55,13 @@ export default function SecuredDayScreen({
   fillToday,
   offerShare,
   shareFailed,
-  sharing,
   onShare,
   onKeep,
+  onUndo,
+  sharedNow,
   onDone,
   username,
+  freezeNote,
 }: {
   streak: number;
   proofs: SecuredProof[];
@@ -78,10 +79,12 @@ export default function SecuredDayScreen({
   sharing?: boolean;
   onShare?: () => void;
   onKeep?: () => void;
+  onUndo?: () => void;
+  sharedNow?: boolean;
   onDone: () => void;
   username?: string | null;
+  freezeNote?: string | null;
 }) {
-  const insets = useSafeAreaInsets();
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
   const caption =
@@ -128,7 +131,7 @@ export default function SecuredDayScreen({
       <ScrollView
         contentContainerStyle={[
           styles.body,
-          { paddingTop: insets.top + DS_V3.space.sm, paddingBottom: insets.bottom + DS_V3.space.section * 4 },
+          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section * 4 },
         ]}
       >
         <Pressable
@@ -143,6 +146,12 @@ export default function SecuredDayScreen({
           <Flame size={28} color={DS_V3.color.brand} />
           <Text style={styles.hero88}>{streak}</Text>
           <Text style={styles.unit}>{streakInARow(streak)}</Text>
+          {freezeNote ? (
+            <View style={styles.freezeNote}>
+              <Snowflake size={16} color={DS_V3.color.textSecondary} />
+              <Text style={styles.caption}>{freezeNote}</Text>
+            </View>
+          ) : null}
         </View>
         <View style={styles.center}>
           <Text style={styles.today}>{title}</Text>
@@ -212,13 +221,17 @@ export default function SecuredDayScreen({
         ) : null}
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </ScrollView>
-      <View style={[styles.footer, { bottom: insets.bottom + DS_V3.space.gutter }]}>
+      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
         {offerShare ? (
           <>
-            <Button
-              label={PROOF_SHARE}
-              submitting={sharing}
-              onPress={onShare}
+            <ShareChoice
+              state={sharedNow ? "shared" : shareFailed ? "failed" : "unanswered"}
+              isPhoto
+              photoUri={proofs[0]?.uri}
+              onShare={() => onShare?.()}
+              onKeep={() => onKeep?.()}
+              onUndo={() => onUndo?.()}
+              onRetry={() => onShare?.()}
             />
             {showStory ? (
               <Button
@@ -271,6 +284,12 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: 2,
+  },
+  freezeNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
   },
   hero88: {
     fontSize: 88,

@@ -4,13 +4,12 @@
  */
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import KeyboardDock, { NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -353,7 +352,7 @@ export function CreateWizardV2() {
 
   if (limitBlocked) {
     return (
-      <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+      <View style={styles.flex}>
         <WizardHeader step={1} total={3} onCancel={() => router.replace(ROUTES.TABS_HOME as never)} />
         <Text style={styles.limitCopy}>{FREE_ACTIVE_LIMIT_MESSAGE}</Text>
         <WizardFooter>
@@ -362,7 +361,7 @@ export function CreateWizardV2() {
             onPress={() => router.replace(ROUTES.PAYWALL as never)}
           />
         </WizardFooter>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -393,7 +392,7 @@ export function CreateWizardV2() {
   if (reviewing) {
     const late = reviewLateJoinState(reviewTasks, timeZone);
     return (
-      <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+      <View style={styles.flex}>
         <StepReview
           title={state.title}
           category={state.category}
@@ -412,16 +411,35 @@ export function CreateWizardV2() {
             setStep(step);
           }}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardDock
+      footer={
+        <WizardFooter>
+          {state.step === 2 &&
+          state.useCustom &&
+          state.customTasks.some((t) => !t.name.trim()) ? (
+            <Text style={styles.secondary}>Name this task.</Text>
+          ) : null}
+          <Button
+            label={
+              state.step === 1 && (!state.title.trim() || !state.category)
+                ? "Add a name and a category to continue."
+                : state.step === 3
+                  ? "Review"
+                  : "Continue"
+            }
+            disabled={primaryDisabled}
+            onPress={handlePrimary}
+          />
+        </WizardFooter>
+      }
     >
-      <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+      <NumberPadDoneBar />
+      <View style={styles.flex}>
         <WizardHeader step={state.step} total={3} onCancel={handleCancel} />
 
         <ScrollView
@@ -471,25 +489,6 @@ export function CreateWizardV2() {
           ) : null}
         </ScrollView>
 
-        <WizardFooter>
-          {state.step === 2 &&
-          state.useCustom &&
-          state.customTasks.some((t) => !t.name.trim()) ? (
-            <Text style={styles.secondary}>Name this task.</Text>
-          ) : null}
-          <Button
-            label={
-              state.step === 1 && (!state.title.trim() || !state.category)
-                ? "Add a name and a category to continue."
-                : state.step === 3
-                  ? "Review"
-                  : "Continue"
-            }
-            disabled={primaryDisabled}
-            onPress={handlePrimary}
-          />
-        </WizardFooter>
-
         <Sheet
           visible={cancelOpen}
           onDismiss={() => setCancelOpen(false)}
@@ -529,8 +528,8 @@ export function CreateWizardV2() {
             setNewTaskOpen(false);
           }}
         />
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </View>
+    </KeyboardDock>
   );
 }
 

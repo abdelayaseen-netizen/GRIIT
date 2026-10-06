@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import * as Notifications from "expo-notifications";
 import { blockedEyebrow } from "@/lib/task-flow-state";
+import { WINDOW } from "@/lib/copy";
 import { styles } from "../taskFlowStyles";
 
 type Props = {
@@ -29,7 +30,7 @@ export function BlockedStep({
     <View style={styles.body}>
       <Text style={styles.eyebrowInk}>{blockedEyebrow(windowStatus)}</Text>
       <Text style={styles.title}>
-        {windowStatus === "out_of_window" ? `Opens at ${windowStart ?? ""}` : `You're not at ${place}`}
+        {windowStatus === "out_of_window" ? (windowStart ? WINDOW.opensAt(windowStart) : "Not open yet") : `You're not at ${place}`}
       </Text>
       <Text style={styles.bodyText}>
         {windowStatus === "out_of_window"

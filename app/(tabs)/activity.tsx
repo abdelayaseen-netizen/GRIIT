@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,14 +38,14 @@ export default function ActivityScreen() {
   if (isGuest || !user?.id) {
     return (
       <ScreenChrome>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.guestWrap}>
           <Text style={styles.guestText}>
             Sign in to see notifications and leaderboards.
           </Text>
         </View>
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     );
   }
@@ -55,7 +55,7 @@ export default function ActivityScreen() {
   return (
     <ErrorBoundary>
       <ScreenChrome>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <RootHeader title="Activity" />
         <View style={styles.segment}>
           <SegmentedControl
@@ -71,7 +71,7 @@ export default function ActivityScreen() {
             <LeaderboardTab userId={user.id} />
           )}
         </View>
-      </SafeAreaView>
+      </Screen>
       </ScreenChrome>
     </ErrorBoundary>
   );

@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -147,16 +147,16 @@ function CreateProfileScreenInner() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
+      <Screen style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={DS_V3.color.brand} />
         </View>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
+    <Screen style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -254,7 +254,7 @@ function CreateProfileScreenInner() {
           )}
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

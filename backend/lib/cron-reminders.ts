@@ -11,6 +11,7 @@ import {
   sendSecureReminder,
   sendComebackPush,
 } from "./push-reminder";
+import { sendDueMorningMisses } from "./morning-miss";
 
 interface ProfileRow {
   user_id: string;
@@ -30,6 +31,7 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
   morning: number;
   streakAtRisk: number;
   comeback: number;
+  morningMiss: number;
   errors: string[];
 }> {
   const now = new Date();
@@ -42,7 +44,7 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
 
   if (profileError) {
     errors.push(`profiles: ${profileError.message}`);
-    return { morning: 0, streakAtRisk: 0, comeback: 0, errors };
+    return { morning: 0, streakAtRisk: 0, comeback: 0, morningMiss: 0, errors };
   }
 
   const rows = (profiles ?? []) as ProfileRow[];
@@ -211,5 +213,19 @@ export async function runReminderCron(supabase: SupabaseClient): Promise<{
     errors.push(`comeback unexpected: ${(e as Error).message}`);
   }
 
-  return { morning: morningSent, streakAtRisk: streakAtRiskSent, comeback: comebackSent, errors };
+  let morningMiss = 0;
+  try {
+    const missRows = withToken.map((row) => ({
+      userId: row.user_id,
+      token: row.expo_push_token ?? "",
+      timezone: row.timezone?.trim() || row.reminder_timezone?.trim() || "UTC",
+    }));
+    const miss = await sendDueMorningMisses(supabase, missRows, now);
+    morningMiss = miss.sent;
+    errors.push(...miss.errors);
+  } catch (e) {
+    errors.push(`morning miss unexpected: ${(e as Error).message}`);
+  }
+
+  return { morning: morningSent, streakAtRisk: streakAtRiskSent, comeback: comebackSent, morningMiss, errors };
 }

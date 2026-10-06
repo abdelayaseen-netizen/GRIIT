@@ -10,9 +10,8 @@ import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import FinishTextCard from "@/components/share/FinishTextCard";
-import ShareActions from "@/components/share/ShareActions";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
-import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
+import { ShareChoice, type ShareState } from "@/components/ds/ShareChoice";
 import {
   FINISH_BACK_TODAY,
   FINISH_DONE,
@@ -66,14 +65,15 @@ export default function FinishMomentV3({
   inviteCode,
   onRetry,
   onShareFeed,
-  onCopy,
-  onSave,
-  onMore,
+  onCopy: _onCopy,
+  onSave: _onSave,
+  onMore: _onMore,
   onNextTask,
   onLeave,
 }: FinishMomentV3Props) {
   const insets = useSafeAreaInsets();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [kept, setKept] = useState(false);
   const pending = save === "saving" || save === "slow";
   const failed = save === "failed";
   const next = alsoToday[0];
@@ -81,8 +81,8 @@ export default function FinishMomentV3({
   const shrinkPhoto = save === "saved" && alsoToday.length > 0;
   const photoH = shrinkPhoto ? 170 : 252;
   const camera = Boolean(task.proofUri);
-  const showStory = showStoryAction(facebookAppId());
   const feed = finishFeedState({ share, posted: photoShared });
+  const choice: ShareState = feed === "shared" || feed === "held" ? "shared" : kept ? "kept" : "unanswered";
   const openSheet = () => {
     if (shareDisabled) return;
     setSheetOpen(true);
@@ -131,26 +131,20 @@ export default function FinishMomentV3({
         </View>
 
         <View style={styles.shareCol}>
-          <ShareActions
-            feed={feed}
-            storyAvailable={showStory}
-            disabled={shareDisabled}
-            onFeed={onShareFeed}
-            onStory={openSheet}
-            onCopy={() => {
-              setSheetOpen(true);
-              onCopy?.();
+          <ShareChoice
+            state={choice}
+            isPhoto={camera}
+            onShare={() => {
+              if (shareDisabled) return;
+              if (camera) onShareFeed();
+              else openSheet();
             }}
-            onSave={() => {
-              setSheetOpen(true);
-              onSave?.();
+            onKeep={() => setKept(true)}
+            onUndo={() => setKept(false)}
+            onRetry={() => {
+              if (camera) onShareFeed();
+              else openSheet();
             }}
-            onMore={() => {
-              setSheetOpen(true);
-              onMore?.();
-            }}
-            onKeep={onLeave}
-            onDone={onLeave}
           />
         </View>
 

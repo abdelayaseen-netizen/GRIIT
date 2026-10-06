@@ -6,7 +6,7 @@
  */
 import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
@@ -262,7 +262,7 @@ function DiscoverScreenInner() {
     peopleQuery.isRefetching;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <Screen edges={["top"]} style={styles.safe}>
       <InlineError message={followError} onDismiss={clearFollowError} />
       <DiscoverV3
         category={selectedCategory}
@@ -306,7 +306,7 @@ function DiscoverScreenInner() {
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 

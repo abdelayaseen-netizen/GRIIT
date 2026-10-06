@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Flame, X } from "lucide-react-native";
 import { DS_V3, DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, GRIIT_COLORS } from "@/lib/design-system";
@@ -40,7 +39,7 @@ export default function PaywallControl({
 }: PaywallBodyProps) {
   const router = useRouter();
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <View style={styles.container}>
       <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close paywall">
         <X size={18} color={DS_V3.color.textSecondary} />
       </TouchableOpacity>
@@ -126,7 +125,7 @@ export default function PaywallControl({
           </Text>
         </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

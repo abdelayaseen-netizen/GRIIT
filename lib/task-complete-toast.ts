@@ -8,6 +8,7 @@ export type TaskCompleteToast = {
   body: string;
   photoUri: string | null;
   cameraSeal: boolean;
+  eventId?: string | null;
 };
 
 export function taskDoneTitle(task: string, photo: boolean): string {

@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: false
+- tapOn: "Profile"
+- assertVisible: "@seedgriit"

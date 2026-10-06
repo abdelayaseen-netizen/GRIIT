@@ -126,8 +126,8 @@ describe("next task skips closed windows the way Home does", () => {
     expect(src).toContain("homeWindowClosed");
     expect(ui).toContain("finishPrimaryCta");
     expect(ui).toContain("onLeave");
-    expect(ui).toContain("ShareActions");
-    expect(ui).toContain("onStory={openSheet}");
+    expect(ui).toContain("ShareChoice");
+    expect(ui).toContain("onKeep={() => setKept(true)}");
   });
 });
 

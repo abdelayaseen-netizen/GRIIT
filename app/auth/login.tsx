@@ -10,7 +10,7 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { supabase } from "@/lib/supabase";
@@ -182,7 +182,7 @@ function LoginScreenInner() {
   }, [router]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <Screen style={styles.container} edges={["top", "bottom"]}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <PushedHeader title="" onBack={handleBack} />
@@ -295,7 +295,7 @@ function LoginScreenInner() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

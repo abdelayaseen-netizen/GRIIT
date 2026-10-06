@@ -67,10 +67,13 @@ describe("SOLO_LEAVE_ACTIVE_STATUS", () => {
     expect(SOLO_LEAVE_ACTIVE_STATUS).toBe("abandoned");
   });
 
-  it("leave writes ended_at and end_seen_at", () => {
+  it("leave schedules local midnight and the daily reset writes ended_at", () => {
     const src = readFileSync(resolve(__dirname, "../trpc/routes/challenges-join.ts"), "utf8");
-    expect(src).toContain("ended_at: leftAt");
-    expect(src).toContain("end_seen_at: leftAt");
+    const reset = readFileSync(resolve(__dirname, "../lib/daily-reset.ts"), "utf8");
+    expect(src).toContain("leave_effective_at: endsAt");
+    expect(src).toContain("nextLocalMidnightIso");
+    expect(reset).toContain("ended_at: at");
+    expect(reset).toContain("end_seen_at: at");
     expect(src).toContain('.eq("id", input.activeChallengeId)');
     expect(src).not.toMatch(/from\("active_challenges"\)\s*\.delete\(/);
   });

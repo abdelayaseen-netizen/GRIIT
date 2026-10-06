@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { ROUTES } from "@/lib/routes";
@@ -231,7 +231,7 @@ function SignupScreenInner() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
+    <Screen style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -474,7 +474,7 @@ function SignupScreenInner() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

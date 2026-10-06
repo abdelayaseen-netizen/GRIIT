@@ -21,14 +21,8 @@ export function avatarTint(userId?: string | null): { bg: string; fg: string } {
   if (!userId) return { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
   let h = 0;
   for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) | 0;
-  const pair =
-    Math.abs(h) % 2 === 0
-      ? { bg: DS_V3.color.brandTint, fg: DS_V3.color.brandText }
-      : { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
-  if ((pair.bg as string) === (DS_V3.color.canvas as string)) {
-    return { bg: DS_V3.color.border, fg: DS_V3.color.textPrimary };
-  }
-  return pair;
+  const pair = DS_V3.avatarTints[Math.abs(h) % DS_V3.avatarTints.length] ?? DS_V3.avatarTints[0];
+  return { bg: pair[0], fg: pair[1] };
 }
 
 /** Tiny / empty bitmaps load without error and paint a black circle. */

@@ -1,26 +1,32 @@
 import React from "react";
 import { Linking, ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
+import * as Application from "expo-application";
 import { ROUTES } from "@/lib/routes";
+import { aboutVersionLine } from "@/lib/about-line";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import ListRow from "@/components/ds/ListRow";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+const ABOUT_LINE = aboutVersionLine({
+  version: Constants.expoConfig?.version,
+  build: Application.nativeBuildVersion,
+  commit: (Constants.expoConfig?.extra as { commit?: string } | undefined)?.commit,
+});
 
 export default function SettingsAboutScreen() {
   const router = useRouter();
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="About" />
         <ScrollView contentContainerStyle={styles.body}>
           <Card style={styles.card}>
-            <ListRow title={`GRIIT ${APP_VERSION}`} />
+            <ListRow title={ABOUT_LINE} />
             <ListRow
               title="Terms of Service"
               onPress={() => router.push(ROUTES.LEGAL_TERMS as never)}
@@ -37,7 +43,7 @@ export default function SettingsAboutScreen() {
             />
           </Card>
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

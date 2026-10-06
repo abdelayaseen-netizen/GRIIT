@@ -5,8 +5,7 @@
 import { dueKeysForRange } from "@/backend/lib/due-keys";
 import { enrollmentSecuredDateKeys } from "@/backend/lib/secured-elapsed";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "@/lib/date-utils";
-import { FREEZE_REFILL_DAYS, freezeRefillDateLabel } from "@/lib/freeze-sheet";
-import { countNoun } from "@/lib/onboarding-v2-suggest";
+import { FREEZE } from "@/lib/copy";
 
 export const THIS_WEEK = "This week";
 export const A_BOARD_NEEDS_TWO = "A board needs two.";
@@ -14,8 +13,6 @@ export const JUST_YOU_SO_FAR = "Just you so far";
 export const PRIVATE_ONLY_YOU = "Private. Only you.";
 export const NO_FREEZES = "No freezes";
 export const NO_DAYS_OFF_CAPTION = "A missed day resets your streak to 0. No freezes.";
-export const FREEZE_COVERS_YESTERDAY =
-  "A freeze covers yesterday only. Use it from the morning-after card.";
 export const ANYONE_WITH_THE_LINK =
   "Anyone with the link can join. They start at Day 1 the day they join, with their own streak.";
 
@@ -80,42 +77,16 @@ export function freezeDetailCopy(args: {
   const remaining = Math.max(0, Math.floor(args.remaining));
   if (remaining > 0) {
     return {
-      title: `${countNoun(remaining, "freeze", "freezes")} left`,
-      caption: FREEZE_COVERS_YESTERDAY,
+      title: FREEZE.button,
+      caption: FREEZE.offer(remaining),
       icon: "snowflake",
     };
   }
-  const next = args.lastFreezeUsedAt
-    ? freezeRefillDateLabel(args.lastFreezeUsedAt, args.timeZone, args.now)
-    : "";
-  // used date is last used, next is +FREEZE_REFILL_DAYS — freezeRefillDateLabel already adds the refill.
-  // Show last-used as the used date by formatting without the +30 offset:
-  const usedLabel = formatUsedDate(args.lastFreezeUsedAt, args.timeZone, args.now);
   return {
-    title: "0 freezes left",
-    caption:
-      usedLabel && next
-        ? `You used one on ${usedLabel}. Next one on ${next}.`
-        : `Next one in ${FREEZE_REFILL_DAYS} days.`,
+    title: FREEZE.none,
+    caption: FREEZE.none,
     icon: "snowflake",
   };
-}
-
-function formatUsedDate(
-  lastUsedIso: string | null | undefined,
-  timeZone: string,
-  now = new Date(),
-): string {
-  const tz = timeZone.trim() || "UTC";
-  const d = lastUsedIso ? new Date(lastUsedIso) : now;
-  if (Number.isNaN(d.getTime())) return "";
-  try {
-    const day = new Intl.DateTimeFormat("en-GB", { timeZone: tz, day: "numeric" }).format(d);
-    const month = new Intl.DateTimeFormat("en-GB", { timeZone: tz, month: "long" }).format(d);
-    return `${day} ${month}`;
-  } catch {
-    return "";
-  }
 }
 
 export function peopleCardCopy(args: {

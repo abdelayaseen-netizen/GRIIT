@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Screen from "@/components/ds/Screen";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
@@ -24,7 +24,7 @@ export default function SettingsAccountScreen() {
 
   return (
     <ErrorBoundary>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Screen style={styles.safe} edges={["top"]}>
         <SettingsNav title="Account" />
         <ScrollView contentContainerStyle={styles.body}>
           <Card>
@@ -43,7 +43,7 @@ export default function SettingsAccountScreen() {
             <Text style={styles.hint}>Coming with the next update</Text>
           </Card>
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </ErrorBoundary>
   );
 }

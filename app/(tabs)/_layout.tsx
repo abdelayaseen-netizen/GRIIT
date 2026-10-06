@@ -1,6 +1,14 @@
 import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { trpcMutate } from "@/lib/trpc";
+import { clearOptimisticFeedPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
+import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { useIsGuest } from "@/contexts/AuthGateContext";
+import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import * as Sentry from "@sentry/react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
@@ -18,13 +26,27 @@ function routeToTab(name: string | undefined): TabBarTab {
   return "home";
 }
 
+function useActivityUnread(): boolean {
+  const { user } = useAuth();
+  const isGuest = useIsGuest();
+  const unreadQuery = useQuery({
+    queryKey: ["notifications", "unread-dot", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.notifications.getAll) as Promise<{ unread: unknown[] }>,
+    staleTime: 30 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+  return (unreadQuery.data?.unread.length ?? 0) > 0;
+}
+
 function GritTabBar({ state }: BottomTabBarProps) {
   const router = useRouter();
+  const activityUnread = useActivityUnread();
   const current = state.routes[state.index]?.name;
   if (current === "create") return null;
   return (
     <TabBar
       active={routeToTab(current)}
+      activityUnread={activityUnread}
       onTab={(tab) => {
         if (tab === "home") router.push(ROUTES.TABS_HOME as never);
         else if (tab === "discover") router.push(ROUTES.TABS_DISCOVER as never);
@@ -38,7 +60,43 @@ function GritTabBar({ state }: BottomTabBarProps) {
 
 export default function TabLayout() {
   const { profile } = useApp();
+  const { user } = useAuth();
   const [shareToast, setShareToast] = React.useState<TaskToast | null>(null);
+  const shareFeed = React.useCallback(async (toast: TaskToast) => {
+    if (!toast.eventId || !user?.id) return;
+    await trpcMutate(TRPC.checkins.shareProof, { eventId: toast.eventId });
+    const post: LiveFeedPost = {
+      id: toast.eventId,
+      userId: user.id,
+      username: profile?.username ?? "",
+      displayName: profile?.display_name ?? "You",
+      avatarUrl: profile?.avatar_url ?? null,
+      streakCount: 0,
+      challengeId: null,
+      challengeName: "",
+      taskName: toast.title.replace(/ (done|saved)\.$/, ""),
+      currentDay: 1,
+      totalDays: 1,
+      eventType: "task_completed",
+      isCompleted: true,
+      hasProof: true,
+      photoUrl: toast.photoUri,
+      proofPhotoUrl: toast.photoUri,
+      verified: false,
+      caption: null,
+      createdAt: new Date().toISOString(),
+      respectCount: 0,
+      reactedByMe: false,
+      commentCount: 0,
+      visibility: "public",
+    };
+    publishOptimisticFeedPost(post);
+  }, [profile?.avatar_url, profile?.display_name, profile?.username, user?.id]);
+  const undoFeed = React.useCallback(async (toast: TaskToast) => {
+    if (!toast.eventId) return;
+    clearOptimisticFeedPost(toast.eventId);
+    await trpcMutate(TRPC.checkins.unshareProof, { eventId: toast.eventId });
+  }, []);
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -114,7 +172,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    <TaskCompleteToast onShare={setShareToast} />
+    <TaskCompleteToast onShare={setShareToast} onShareFeed={shareFeed} onUndoFeed={undoFeed} />
     <ShareSystemSheet
       visible={shareToast != null}
       onDismiss={() => setShareToast(null)}
