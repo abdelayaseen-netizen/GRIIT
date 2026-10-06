@@ -648,12 +648,12 @@ export default function ActiveChallengeDetailScreen() {
           footer={
             <>
               <Button
-                label="Leave"
-                destructive
+                label="Leave at midnight"
+                variant="secondary"
                 onPress={() => void confirmLeaveChallenge()}
               />
               <Button
-                label="Cancel"
+                label="Stay"
                 variant="tertiary"
                 onPress={() => setLeaveConfirmVisible(false)}
               />
@@ -661,7 +661,7 @@ export default function ActiveChallengeDetailScreen() {
           }
         >
           <Text style={styles.sheetBody}>
-            It moves to Finished as left on day {shownDay}. Your proofs stay on the record.
+            You leave at midnight. Today still counts {title}. Your days stay in your record.
           </Text>
         </Sheet>
       </Screen>

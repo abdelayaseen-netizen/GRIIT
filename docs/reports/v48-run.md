@@ -220,6 +220,18 @@ Comments (the sheet), create, and edit profile use `KeyboardDock`, the same wrap
 
 tsc 0. Suite 290 files / 1511 tests.
 
+## H · finish card
+
+`challenges.finishRecord` counts `day_secures` on the enrollment’s due dates and the longest run. A freeze holds that run and does not add to it. The finish screen stays blank until the query returns, then shows secured days, longest streak, held days, and days done. The share card gets the same numbers. No new column.
+
+tsc 0. Suite 291 files / 1515 tests. **needs Railway deploy.**
+
+## C–F · leave, group activity, force update
+
+Leave confirms with “Leave at midnight” and “Stay”. Today still counts. Notifications label is “Group activity”. A build below `min_supported_build` shows “Update GRIIT to keep going” and opens the App Store. An unset minimum never blocks.
+
+tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy** (`/api/config` already in the tree; the screen reads it).
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.

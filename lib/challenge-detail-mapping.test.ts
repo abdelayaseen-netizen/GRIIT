@@ -251,6 +251,8 @@ describe("joinCaption", () => {
     );
     expect(active).toContain("components/ds/Sheet");
     expect(active).toContain("Leave ${title}?");
+    expect(active).toContain("Leave at midnight");
+    expect(active).toContain("You leave at midnight.");
     expect(active).not.toContain("ConfirmDialog");
   });
 });

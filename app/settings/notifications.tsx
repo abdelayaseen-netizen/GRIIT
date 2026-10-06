@@ -139,8 +139,8 @@ export default function SettingsNotificationsScreen() {
               }}
             />
             <Toggle
-              label="Circle activity"
-              sub="When someone in your circle verifies a day."
+              label="Group activity"
+              sub="Joins, finishes, invites"
               value={circle}
               disabled={osDenied}
               onChange={(v) => {

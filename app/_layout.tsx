@@ -59,7 +59,9 @@ import "@/lib/notifications";
 import { useScreenTracker } from "@/hooks/useScreenTracker";
 import { PostHogProvider } from "posthog-react-native";
 import { posthog } from "@/lib/posthog";
-import { readMinSupportedBuild } from "@/lib/remote-config";
+import { needsForceUpdate, readMinSupportedBuild } from "@/lib/remote-config";
+import ForceUpdate from "@/components/ds/ForceUpdate";
+import * as Application from "expo-application";
 
 const COLD_START_AT = Date.now();
 
@@ -263,9 +265,16 @@ function RootLayoutNav() {
     if (next !== sessionExpiredMessage) setSessionExpiredMessage(next);
   }, [user, sessionExpiredMessage, setSessionExpiredMessage]);
 
+  const [minBuild, setMinBuild] = useState<number | null>(null);
+
   useEffect(() => {
-    void readMinSupportedBuild();
+    void readMinSupportedBuild().then((n) => setMinBuild(n));
   }, []);
+
+  const nativeBuild = Number(Application.nativeBuildVersion);
+  if (Platform.OS === "ios" && needsForceUpdate(Number.isFinite(nativeBuild) ? nativeBuild : null, minBuild)) {
+    return <ForceUpdate />;
+  }
 
   return (
     <View style={layoutStyles.flex1}>

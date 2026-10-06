@@ -10,6 +10,12 @@ export function getMinSupportedBuild(): number | null {
   return minSupportedBuild;
 }
 
+/** A missing build number or an unset minimum never blocks. */
+export function needsForceUpdate(nativeBuild: number | null, min: number | null): boolean {
+  if (min == null || nativeBuild == null || nativeBuild <= 0) return false;
+  return nativeBuild < min;
+}
+
 export function parseMinSupportedBuild(body: unknown): number | null {
   const raw = (body as { min_supported_build?: unknown } | null)?.min_supported_build;
   const n = typeof raw === "number" ? raw : Number(raw);
