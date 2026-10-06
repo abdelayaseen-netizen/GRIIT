@@ -290,4 +290,4 @@ The hidden Teams route redirects to Home. Activity no longer fetches `leaderboar
 
 ## Gaps
 
-`docs/reports/v48-gaps.md` lists every frame not matched, the Phase I deviations, the unrun QA flows, and the ship blockers. Maestro and Detox are not installed. Build 76 is not cut. Railway has not been deployed.
+`docs/reports/v48-gaps.md` lists every frame not matched, the Phase I deviations, and the ship blockers. Maestro passed the closed-window sentence, opening Discover, and opening Profile. The rest of the scripted flows were not run. Build 76 is not cut. Railway has not been deployed.

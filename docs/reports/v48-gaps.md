@@ -74,14 +74,19 @@ Activity does not offer a Global chip. The weekly global query is no longer fetc
 
 ## QA
 
-Not run. Maestro and Detox are not installed. No recordings in `docs/qa/`.
+Maestro is installed. Detox is not. Java is Homebrew OpenJDK, used only via `JAVA_HOME` for the Maestro process. The installer also appended `~/.maestro/bin` to `~/.zshrc` and `~/.bash_profile`.
 
-These flows have no pass:
+Passed on the seed account, iPhone 16, already signed in:
+
+- Closed window. `.maestro/closed-window.yaml`. Asserts the primary “Walk 7,000 steps”, “2 of 3 tasks. Up and out of bed.”, and the full closed-window sentence including the other task still counting. Screenshot `docs/qa/closed-window/screen.png`. Maestro does not save a video on a passing run.
+- Discover opens and shows “Show Up 7”. `.maestro/discover-open.yaml`. Screenshot `docs/qa/discover-open/screen.png`. This is not the join flow.
+- Profile opens on `@seedgriit`. `.maestro/profile-open.yaml`. Screenshot `docs/qa/profile-open/screen.png`. This is not grid → day feed → share.
+
+Not run, so not a pass:
 
 - onboarding → first proof → share choice → Secured
 - two-challenge day
 - freeze the morning after a miss
-- closed window
 - join from Discover
 - create from a pack
 - free limit → leave
@@ -93,7 +98,7 @@ These flows have no pass:
 - earn a freeze at 7, freeze cap
 - both morning-after push branches
 
-Simulator camera captures have previously written files under the 8KB proof minimum. A camera flow will fail until that file is a real photo.
+Simulator camera captures have previously written files under the 8KB proof minimum. A camera flow will fail until that file is a real photo. Maestro matches the full accessibility label, not a substring.
 
 ## Ship
 
