@@ -10,6 +10,8 @@ import {
   User,
 } from "lucide-react-native";
 import Constants from "expo-constants";
+import * as Application from "expo-application";
+import { aboutVersionLine } from "@/lib/about-line";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useApp } from "@/contexts/AppContext";
@@ -24,7 +26,11 @@ import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 
-const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+const ABOUT_LINE = aboutVersionLine({
+  version: Constants.expoConfig?.version,
+  build: Application.nativeBuildVersion,
+  commit: (Constants.expoConfig?.extra as { commit?: string } | undefined)?.commit,
+});
 const ICON = DS_V3.space.xs * 6;
 
 function accountSubtitle(email: string | null | undefined): string {
@@ -102,7 +108,7 @@ export default function SettingsScreen() {
             clearDeleteAccountError={clearDeleteAccountError}
           />
 
-          <Text style={styles.ver}>GRIIT {APP_VERSION}</Text>
+          <Text style={styles.ver}>{ABOUT_LINE}</Text>
         </ScrollView>
         </GriitFade>
       </Screen>

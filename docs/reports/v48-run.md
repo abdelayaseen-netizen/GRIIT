@@ -244,6 +244,12 @@ Privacy opens Blocked users. The list comes from `profiles.blockedUsers`, includ
 
 tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy** (the list now includes `created_at`).
 
+## G prep · About version line
+
+Settings and About read “Version 1.0.0 (build N) · commit abc1234” from the installed build and the commit baked in at config time (`EAS_BUILD_GIT_COMMIT_HASH`, else `git rev-parse --short HEAD`).
+
+tsc 0. Suite 292 files / 1518 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
