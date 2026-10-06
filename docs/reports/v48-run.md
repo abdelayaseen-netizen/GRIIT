@@ -284,8 +284,10 @@ The morning-after push sends only after an uncovered miss, only if a day was eve
 
 tsc 0. Suite 295 files / 1536 tests. **needs Railway deploy** (grant path and morning-miss cron).
 
-## Still ahead
+## Retire · Teams, and no Global fetch
 
-Phases C through F are not finished. C frame match covers the reachable seed states only. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
+The hidden Teams route redirects to Home. Activity no longer fetches `leaderboard.getWeekly`. The procedure remains on the server. There is no Global chip.
 
-QA flows are not scripted. `docs/reports/v48-gaps.md` is not written. Build 76 is not cut. Railway has not been deployed.
+## Gaps
+
+`docs/reports/v48-gaps.md` lists every frame not matched, the Phase I deviations, the unrun QA flows, and the ship blockers. Maestro and Detox are not installed. Build 76 is not cut. Railway has not been deployed.

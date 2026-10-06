@@ -418,7 +418,7 @@ export function LeaderboardTab({ userId }: LeaderboardTabProps) {
           rank: number;
         }[];
       }>,
-    enabled: !!userId,
+    enabled: false,
     staleTime: 60 * 1000,
     retry: 2,
   });
@@ -463,7 +463,6 @@ export function LeaderboardTab({ userId }: LeaderboardTabProps) {
   const onRefresh = useCallback(async () => {
     await Promise.all([
       friendsBoard.refetch(),
-      globalLeaderboard.refetch(),
       challengeBoard.refetch(),
       myActive.refetch(),
     ]);
