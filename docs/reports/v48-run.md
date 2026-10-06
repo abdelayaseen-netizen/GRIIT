@@ -250,6 +250,12 @@ Settings and About read “Version 1.0.0 (build N) · commit abc1234” from the
 
 tsc 0. Suite 292 files / 1518 tests.
 
+## E · delete account subscription step
+
+A Pro account sees “Cancel GRIIT Pro first” before the DELETE confirm. Manage subscription opens Apple’s subscriptions page. “I’ve cancelled, continue” goes on to delete. A free account skips the step. Deleting still does not cancel the Apple subscription.
+
+tsc 0. Suite 292 files / 1518 tests.
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
