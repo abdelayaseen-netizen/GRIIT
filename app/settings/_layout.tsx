@@ -8,6 +8,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="notifications" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="about" />
+      <Stack.Screen name="blocked" />
     </Stack>
   );
 }

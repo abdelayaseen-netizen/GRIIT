@@ -110,6 +110,14 @@ export default function SettingsPrivacyScreen() {
                 <Text style={styles.previewTxt}>{SEE_STRANGER}</Text>
               </Pressable>
             ) : null}
+            <Pressable
+              onPress={() => router.push(ROUTES.SETTINGS_BLOCKED as never)}
+              accessibilityRole="button"
+              accessibilityLabel="Blocked users"
+              style={styles.previewBtn}
+            >
+              <Text style={styles.previewTxt}>Blocked users</Text>
+            </Pressable>
           </ScrollView>
         </GriitFade>
       </Screen>

@@ -238,6 +238,12 @@ An own post’s menu says “Delete from the feed” and calls `checkins.unshare
 
 tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy.**
 
+## E · blocked users
+
+Privacy opens Blocked users. The list comes from `profiles.blockedUsers`, including the block date already stored on the row. Unblock removes the block and does not restore a follow. Empty state: “No one blocked.”
+
+tsc 0. Suite 291 files / 1516 tests. **needs Railway deploy** (the list now includes `created_at`).
+
 ## Still ahead
 
 Phases C through F are not finished. C frame match covers the reachable seed states only. D6 (Strict) is the only Phase D product commit. Discover, challenge, profile, activity, create, settings, paywall, onboarding, and auth frame match are not done.
