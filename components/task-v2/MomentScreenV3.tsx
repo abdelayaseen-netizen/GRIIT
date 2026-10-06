@@ -25,10 +25,9 @@ import Button from "@/components/ds/Button";
 import Chip from "@/components/ds/Chip";
 import DisplayNumber from "@/components/ds/DisplayNumber";
 import ProofImage from "@/components/ds/ProofImage";
-import Stamp from "@/components/ds/Stamp";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
-import ContactSheet, { type ContactSheetProof } from "./ContactSheet";
+import type { ContactSheetProof } from "./ContactSheet";
 
 const PHOTO_FRAME = DS_V3.space.gutter * 12;
 const CHIP_ICON = DS_V3.space.lg;
@@ -93,7 +92,7 @@ function stateLine(args: {
 }): string {
   if (isSecuredVariant(args.variant)) return formatSecuredStateLine(args.day, args.camera);
   if (args.variant === "tasksLeft") return `${args.remaining} ${taskWord(args.remaining)} left.`;
-  if (args.variant === "complete") return `${args.target} days. Every one witnessed.`;
+  if (args.variant === "complete") return `of ${args.target} days secured`;
   return "Day secured.";
 }
 
@@ -118,6 +117,11 @@ export type MomentScreenV3Props = {
   onShare?: (uri: string) => void;
   onDone?: () => void;
   onNext?: () => void;
+  /** Enrollment record. Absent until challenges.finishRecord returns. */
+  securedDays?: number;
+  longestStreak?: number;
+  heldDays?: number;
+  numbersReady?: boolean;
 };
 
 export default function MomentScreenV3({
@@ -130,12 +134,15 @@ export default function MomentScreenV3({
   challengeName,
   proofUri,
   proofSource,
-  proofs,
   week,
   todayIndex = 0,
   fillToday: fillTodayProp,
   onDone,
   onNext,
+  securedDays = 0,
+  longestStreak = 0,
+  heldDays = 0,
+  numbersReady = false,
 }: MomentScreenV3Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const counts = isSecuredVariant(variant);
@@ -146,7 +153,6 @@ export default function MomentScreenV3({
       (securedHasCameraProof({ proofUri: proofUri ?? null }) || proofSource != null));
   const justMoved = counts && streakBefore != null && streakBefore !== streak;
   const [stampOn, setStampOn] = useState(!justMoved && camera);
-  const [completeStamp, setCompleteStamp] = useState(false);
   const weekToday = week ? todayIndex : weekFromToday().todayIndex;
   const fillToday = fillTodayProp ?? (justMoved && counts);
   const rawDays = week ?? weekFromToday().days;
@@ -168,13 +174,6 @@ export default function MomentScreenV3({
       }
     }
   }, [camera, justMoved]);
-
-  const settleSheet = useCallback(() => {
-    setCompleteStamp(true);
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      if (!reduce) fireSuccessHaptic();
-    });
-  }, []);
 
   return (
     <View style={styles.root}>
@@ -219,32 +218,29 @@ export default function MomentScreenV3({
       ) : (
         <>
           <View style={[styles.top, { paddingTop: DS_V3.space.md }]}>
-            <DisplayNumber
-              value={variant === "complete" ? goal : streak}
-              size={variant === "complete" ? "moment" : "mid"}
-              animateFrom={justMoved ? streakBefore : undefined}
-              onSettled={justMoved ? settleCount : undefined}
-            />
-            <Text style={styles.copy}>{copy}</Text>
+            {variant === "complete" ? (
+              <Text style={styles.finishName}>
+                {(challengeName?.trim() || "Challenge")} · finished
+              </Text>
+            ) : null}
+            {variant !== "complete" || numbersReady ? (
+              <DisplayNumber
+                value={variant === "complete" ? securedDays : streak}
+                size={variant === "complete" ? "moment" : "mid"}
+                animateFrom={justMoved ? streakBefore : undefined}
+                onSettled={justMoved ? settleCount : undefined}
+              />
+            ) : null}
+            {variant !== "complete" || numbersReady ? <Text style={styles.copy}>{copy}</Text> : null}
           </View>
-          {variant === "complete" ? (
-            proofs && proofs.length > 0 ? (
-              <View style={styles.media}>
-                <ContactSheet proofs={proofs} target={goal} onRevealed={settleSheet} />
-                {completeStamp ? (
-                  <View style={styles.completeStamp}>
-                    <Stamp label="Complete" onInk />
-                  </View>
-                ) : null}
-              </View>
-            ) : (
-              <View style={styles.media}>
-                {/* TODO(backend): proofs for contact sheet */}
-                <View style={styles.completeStamp}>
-                  <Stamp label="Complete" onInk />
-                </View>
-              </View>
-            )
+          {variant === "complete" && numbersReady ? (
+            <View style={styles.finishStats}>
+              <FinishStat value={longestStreak} label="Longest streak" />
+              <FinishStat value={heldDays} label="Held" />
+              <FinishStat value={securedDays + heldDays} label="Days done" />
+            </View>
+          ) : variant === "complete" ? (
+            <View style={styles.media} />
           ) : (
             <View style={styles.media} />
           )}
@@ -253,15 +249,8 @@ export default function MomentScreenV3({
       <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
         {variant === "complete" ? (
           <>
-            <Button label="Start the next one" onPress={onNext} />
-            <View style={styles.row}>
-              <View style={styles.flex}>
-                <Button label="Share" variant="secondary" onPress={() => setSheetOpen(true)} />
-              </View>
-              <View style={styles.flex}>
-                <Button label={SECURED_DONE} variant="tertiary" onPress={onDone} />
-              </View>
-            </View>
+            <Button label="Share the finish" onPress={() => setSheetOpen(true)} disabled={!numbersReady} />
+            <Button label="See the record" variant="tertiary" onPress={onDone ?? onNext} />
           </>
         ) : variant === "tasksLeft" ? (
           <>
@@ -277,16 +266,27 @@ export default function MomentScreenV3({
         onDismiss={() => setSheetOpen(false)}
         variant="day"
         moment={variant === "complete" ? "challenge_finished" : camera ? "photo_proof" : "self_reported"}
-        streak={streak}
+        streak={variant === "complete" ? longestStreak : streak}
+        longestStreak={variant === "complete" ? longestStreak : undefined}
         day={{
           challenge: challengeName?.trim() || copy,
           day,
           durationDays: goal,
+          secured: variant === "complete" ? securedDays : undefined,
           proof: camera ? "camera" : "self",
           photoUri: proofUri,
           photoShared: false,
         }}
       />
+    </View>
+  );
+}
+
+function FinishStat({ value, label }: { value: number; label: string }) {
+  return (
+    <View style={styles.finishStat}>
+      <Text style={styles.finishStatValue}>{value}</Text>
+      <Text style={styles.finishStatLabel}>{label}</Text>
     </View>
   );
 }
@@ -305,6 +305,32 @@ const styles = StyleSheet.create({
   top: {
     paddingHorizontal: DS_V3.space.gutter,
     gap: DS_V3.space.xs,
+  },
+  finishName: {
+    ...DS_V3.type.secondary,
+    color: DS_V3.color.textSecondary,
+  },
+  finishStats: {
+    marginHorizontal: DS_V3.space.gutter,
+    marginTop: DS_V3.space.md,
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: DS_V3.radius.card,
+    padding: 14,
+    flexDirection: "row",
+    gap: 8,
+  },
+  finishStat: { flex: 1 },
+  finishStatValue: {
+    fontFamily: DS_V3.type.number.fontFamily,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  finishStatLabel: {
+    ...DS_V3.type.caption,
+    color: DS_V3.color.textSecondary,
   },
   streakLabel: {
     fontSize: DS_V3.type.label.fontSize,
@@ -348,10 +374,6 @@ const styles = StyleSheet.create({
     paddingTop: DS_V3.space.gutter,
     paddingBottom: DS_V3.size.button * 3,
     justifyContent: "flex-start",
-  },
-  completeStamp: {
-    marginTop: DS_V3.space.gutter,
-    alignItems: "center",
   },
   footer: {
     position: "absolute",

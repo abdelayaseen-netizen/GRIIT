@@ -13,6 +13,10 @@ export type FinishTextCardProps = {
   dayN: number;
   durationDays: number;
   gateLine: string;
+  /** From challenges.finishRecord. When set, the card does not show the day index. */
+  securedDays?: number;
+  longestStreak?: number;
+  heldDays?: number;
   height?: number;
 };
 
@@ -22,19 +26,36 @@ export default function FinishTextCard({
   dayN,
   durationDays,
   gateLine,
+  securedDays,
+  longestStreak,
+  heldDays,
   height = FINISH_TEXT_CARD_H,
 }: FinishTextCardProps) {
+  const record = typeof securedDays === "number" && typeof longestStreak === "number";
   return (
     <View style={[styles.card, { height }]}>
-      <Text style={styles.eyebrow}>{challengeTitle}</Text>
-      <View>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.dayRow}>
-          <Text style={styles.dayN}>Day {dayN}</Text>
-          <Text style={styles.of}>of {durationDays}</Text>
+      <Text style={styles.eyebrow}>{record ? `${challengeTitle} · finished` : challengeTitle}</Text>
+      {record ? (
+        <View>
+          <Text style={styles.dayN}>{securedDays}</Text>
+          <Text style={styles.title}>days secured of {durationDays}</Text>
+          <View style={styles.dayRow}>
+            <Text style={styles.of}>{longestStreak} longest streak</Text>
+            {typeof heldDays === "number" ? (
+              <Text style={styles.of}>{heldDays} held by a freeze</Text>
+            ) : null}
+          </View>
         </View>
-      </View>
-      <Text style={styles.caption}>{gateLine}</Text>
+      ) : (
+        <View>
+          <Text style={styles.title}>{title}</Text>
+          <View style={styles.dayRow}>
+            <Text style={styles.dayN}>Day {dayN}</Text>
+            <Text style={styles.of}>of {durationDays}</Text>
+          </View>
+        </View>
+      )}
+      {record ? null : <Text style={styles.caption}>{gateLine}</Text>}
     </View>
   );
 }

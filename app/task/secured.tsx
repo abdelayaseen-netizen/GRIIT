@@ -179,7 +179,7 @@ function TaskSecuredInner() {
         params: {
           challengeName: result.challengeName,
           totalDays: String(result.challengeLength),
-          totalDaysSecured: String(result.streakDays),
+          enrollmentId: enrollmentId ?? "",
         },
       } as never);
       return;

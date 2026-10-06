@@ -11,7 +11,8 @@ import {
 } from "../../lib/challenge-tasks";
 import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
 import { withWindowState } from "../../lib/task-time-gate";
-import { getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { addCalendarDaysToDateKey, dateKeyFromIsoInTimeZone, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { enrollmentFinishNumbers } from "../../lib/enrollment-finish";
 import { applyEnrollmentWindow, applyQueuedEnrollmentWindow } from "../../lib/enrollment-window";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import {
@@ -548,6 +549,61 @@ export const challengesRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Service role unavailable." });
       }
       return applyMarkEndSeen(svc, ctx.userId, input.enrollmentIds);
+    }),
+
+  finishRecord: protectedProcedure
+    .input(z.object({ enrollmentId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from("active_challenges")
+        .select("id, start_at, end_at, challenges(title, duration_days)")
+        .eq("id", input.enrollmentId)
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      if (error || !data) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Enrollment not found." });
+      }
+      const row = data as {
+        start_at: string;
+        end_at: string | null;
+        challenges:
+          | { title?: string | null; duration_days?: number | null }
+          | { title?: string | null; duration_days?: number | null }[]
+          | null;
+      };
+      const challenge = Array.isArray(row.challenges) ? row.challenges[0] : row.challenges;
+      const durationDays = Math.max(1, challenge?.duration_days ?? 1);
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const startKey = dateKeyFromIsoInTimeZone(row.start_at, tz);
+      const exclusive = row.end_at ? dateKeyFromIsoInTimeZone(row.end_at, tz) : "";
+      const dueDateKeys: string[] = [];
+      let cursor = startKey;
+      while (dueDateKeys.length < durationDays && cursor && (!exclusive || cursor < exclusive || dueDateKeys.length === 0)) {
+        if (exclusive && cursor >= exclusive && dueDateKeys.length > 0) break;
+        dueDateKeys.push(cursor);
+        const next = addCalendarDaysToDateKey(cursor, 1);
+        if (next === cursor) break;
+        cursor = next;
+      }
+      const fromKey = dueDateKeys[0];
+      const throughKey = dueDateKeys[dueDateKeys.length - 1];
+      const [secures, freezes] = await Promise.all([
+        ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).gte("date_key", fromKey).lte("date_key", throughKey),
+        ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).gte("date_key", fromKey).lte("date_key", throughKey),
+      ]);
+      if (secures.error || freezes.error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't load the finish record." });
+      }
+      const numbers = enrollmentFinishNumbers({
+        dueDateKeys,
+        securedDateKeys: (secures.data ?? []).map((r: { date_key?: string | null }) => r.date_key ?? "").filter(Boolean),
+        frozenDateKeys: (freezes.data ?? []).map((r: { date_key?: string | null }) => r.date_key ?? "").filter(Boolean),
+      });
+      return {
+        challengeName: challenge?.title?.trim() || "Challenge",
+        durationDays,
+        ...numbers,
+      };
     }),
 
   listUnseenEndings: protectedProcedure.query(async ({ ctx }) => {

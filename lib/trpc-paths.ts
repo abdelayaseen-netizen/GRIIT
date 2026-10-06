@@ -70,6 +70,7 @@ export const TRPC = {
     getTeamMembers: 'challenges.getTeamMembers',
     finalizeEnded: 'challenges.finalizeEnded',
     markEndSeen: 'challenges.markEndSeen',
+    finishRecord: 'challenges.finishRecord',
     listUnseenEndings: 'challenges.listUnseenEndings',
   },
   groups: {
