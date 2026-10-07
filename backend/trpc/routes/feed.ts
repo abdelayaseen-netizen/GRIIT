@@ -1276,7 +1276,7 @@ export const feedRouter = createTRPCRouter({
     const names = new Map<string, string>();
     for (const p of (profiles ?? []) as { user_id?: string; display_name?: string | null; username?: string | null }[]) {
       if (!p.user_id) continue;
-      names.set(p.user_id, (p.display_name || p.username || "").trim());
+      names.set(p.user_id, (p.display_name || p.username || "").trim().replace(/\s+/g, " "));
     }
     const picked = pickTodayPosters(
       evRows.map((e) => {

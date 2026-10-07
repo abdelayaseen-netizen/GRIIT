@@ -6,6 +6,7 @@ describe("profilePrimaryName", () => {
     expect(profilePrimaryName({})).toBe("");
     expect(profilePrimaryName({ username: "user_deadbeef" })).toBe("");
     expect(profilePrimaryName({ display_name: "Yaseen" })).toBe("Yaseen");
+    expect(profilePrimaryName({ display_name: "Younes  Abada" })).toBe("Younes Abada");
     expect(profilePrimaryName({ username: "yaseen" })).toBe("yaseen");
     expect(profilePrimaryName({}, "local")).toBe("");
     expect(profilePrimaryName({ username: "user_280c07a4" }, "yaseen")).toBe("");

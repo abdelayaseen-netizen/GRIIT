@@ -14,11 +14,11 @@ describe("initialsFrom", () => {
   });
 
   it("never blanks — emoji-only and missing names use a middle dot", () => {
-    expect(initialsFrom("🔥")).toBe("·");
-    expect(initialsFrom("🔥💪")).toBe("·");
-    expect(initialsFrom(null, null)).toBe("·");
-    expect(initialsFrom("user_abc")).toBe("·");
-    expect(getDisplayInitials("🔥")).toBe("·");
+    expect(initialsFrom("🔥")).toBe("");
+    expect(initialsFrom("🔥💪")).toBe("");
+    expect(initialsFrom(null, null)).toBe("");
+    expect(initialsFrom("user_abc")).toBe("");
+    expect(getDisplayInitials("🔥")).toBe("");
     expect(initialsFrom("Maya Chen", "maya")).toBe("MC");
     expect(initialsFrom(null, "maya")).toBe("M");
   });

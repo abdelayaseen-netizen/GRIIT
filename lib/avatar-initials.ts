@@ -6,15 +6,15 @@ export function initialsFrom(
   username?: string | null,
 ): string {
   const src = (displayName || username || "").trim();
-  if (!src || /^user_/i.test(src)) return "·";
+  if (!src || /^user_/i.test(src)) return "";
   const parts = src.split(/\s+/).filter(Boolean);
-  if (!parts.length) return "·";
+  if (!parts.length) return "";
   const letters =
     parts.length === 1
       ? parts[0]!.slice(0, 1)
       : `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`;
   const cleaned = letters.replace(/[^\p{L}]/gu, "");
-  return cleaned ? cleaned.toUpperCase() : "·";
+  return cleaned ? cleaned.toUpperCase() : "";
 }
 
 export function avatarTint(userId?: string | null): { bg: string; fg: string } {
