@@ -58,7 +58,9 @@ describe("freeze sheet", () => {
     const freezeUi = readFileSync(resolve(__dirname, "../components/home/FreezeSheet.tsx"), "utf8");
     expect(freezeUi).not.toContain("onDismiss={onRefuse}");
     expect(freezeUi).toContain("onDismiss={onClose}");
-    expect(freezeUi).toContain(`<Button label={NO_LET_IT_RESET} variant="tertiary" onPress={onRefuse} />`);
+    expect(freezeUi).toContain("FREEZE_LINE");
+    expect(freezeUi).toContain("styles.notNow");
+    expect(freezeUi).not.toContain("NO_LET_IT_RESET");
     const closeIdx = home.indexOf("onClose={() => {");
     const refuseIdx = home.indexOf("onRefuse={() => {");
     expect(closeIdx).toBeGreaterThan(-1);
@@ -88,16 +90,16 @@ describe("freeze sheet", () => {
     expect(freezeSheetVariant(0)).toBe("none");
     expect(USE_A_FREEZE_FOR_YESTERDAY_Q).toBe("Use a freeze for yesterday?");
     expect(freezeOfferBody(12, 1)).toBe(
-      "Your 12-day streak comes back. 1 left, and it refills 30 days after you use it.",
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
     );
     expect(freezeOfferBody(0, 1)).toBe(
-      "Your 0-day streak comes back. 1 left, and it refills 30 days after you use it.",
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
     );
     expect(USE_THE_FREEZE).toBe("Use the freeze");
     expect(NO_LET_IT_RESET).toBe("No, let it reset");
     expect(NO_FREEZES_LEFT).toBe("No freezes left");
     expect(freezeNoneBody("16 October")).toBe(
-      "Yours refills on 16 October. Pro carries four a month instead of one.",
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
     );
     expect(SEE_PRO).toBe("See Pro");
     expect(CLOSE).toBe("Close");

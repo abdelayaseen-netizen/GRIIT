@@ -9,6 +9,10 @@ export const FREEZE = {
   used: (day: string) => `${day} is held by a freeze.`,
 } as const;
 
+/** The only freeze explanation. Earned on a 7-day streak, spent on yesterday until midnight. */
+export const FREEZE_LINE =
+  "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.";
+
 export const HOME = {
   left: (n: number, total: number) => (n === total ? `${n} task${n === 1 ? '' : 's'} left today.` : `${n} of ${total} left today.`),
   secured: 'Day secured. Come back tomorrow.',

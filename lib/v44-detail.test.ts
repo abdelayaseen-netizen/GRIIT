@@ -50,12 +50,14 @@ describe("v44 challenge detail", () => {
         weekday: "Friday",
         streak: 6,
       }),
-    ).toContain("today makes it 7");
+    ).toBe("A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.");
     expect(streakSheetFreezeLeft(1, "2 November")).toBe(
-      "1 freeze left. Next one on 2 November. Available until midnight tonight.",
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
     );
     expect(useFreezeForWeekday("Friday")).toBe("Use a freeze for Friday");
     expect(weekdayHeldTitle("Friday")).toBe("Friday is held.");
-    expect(weekdayHeldBody(6, 0, "2 November")).toContain("Secure today and it's 7");
+    expect(weekdayHeldBody(6, 0, "2 November")).toBe(
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
+    );
   });
 });

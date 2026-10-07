@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, X } from "lucide-react-native";
+import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import { StreakStrip } from "@/components/ds/StreakStrip";
@@ -31,7 +31,7 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
-import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
+import { FREEZE, FREEZE_LINE } from "@/lib/copy";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
 import {
@@ -43,7 +43,6 @@ import {
 
 const RING = 22;
 const RING_CHECK = DS_V3.space.md;
-const META = DS_V3.space.lg;
 const STROKE = (DS_V3.space.xs * 3) / 8;
 export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
@@ -264,33 +263,10 @@ export function HomeV3({
         primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
       />
 
-      {morningAfter ? (
-        <View style={styles.gutter}>
-          <Card>
-            <View style={styles.missHead}>
-              <Text style={styles.missFact}>{YESTERDAY_WASNT_SECURED}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                onPress={morningAfter.onDismiss}
-                style={styles.missX}
-              >
-                <X size={META} color={DS_V3.color.textSecondary} strokeWidth={2} />
-              </Pressable>
-            </View>
-            <View style={styles.missBody}>
-              <Text style={styles.secondary}>{morningAfter.cost}</Text>
-              <Text style={styles.secondary}>{morningAfter.cushion}</Text>
-              {morningAfter.onUseFreeze ? (
-                <>
-                  <Button label={USE_FREEZE_FOR_YESTERDAY} onPress={morningAfter.onUseFreeze} />
-                  {morningAfter.freezeCaption ? (
-                    <Text style={styles.missCap}>{morningAfter.freezeCaption}</Text>
-                  ) : null}
-                </>
-              ) : null}
-            </View>
-          </Card>
+      {morningAfter?.onUseFreeze ? (
+        <View style={styles.freezeRow}>
+          <Text style={styles.secondary}>{FREEZE_LINE}</Text>
+          <Button label={FREEZE.button} variant="secondary" onPress={morningAfter.onUseFreeze} />
         </View>
       ) : null}
 
@@ -490,6 +466,11 @@ const styles = StyleSheet.create({
   gutter: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+  },
+  freezeRow: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.md,
+    gap: DS_V3.space.sm,
   },
   prestart: {
     flexDirection: "row",

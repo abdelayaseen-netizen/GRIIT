@@ -5,6 +5,7 @@ import {
   effectiveFreezesRemaining,
   freezeBlockedByHardMode,
   monthlyFreezeLimit,
+  previewStreakAfterFreeze,
   restoreStreakCount,
   streaksRouter,
 } from "./streaks";
@@ -293,6 +294,16 @@ describe("restoreStreakCount", () => {
         securedDateKeys: [],
       }),
     ).toBe(0);
+  });
+
+  it("holding Tuesday keeps Monday and Tuesday one run", () => {
+    expect(
+      previewStreakAfterFreeze({
+        todayKey: "2026-10-07",
+        yesterdayKey: "2026-10-06",
+        securedDateKeys: ["2026-10-05"],
+      }),
+    ).toBe(2);
   });
 });
 

@@ -1,3 +1,5 @@
+import { FREEZE_LINE } from "@/lib/copy";
+
 /** Frame 54 freeze offer. ds/Sheet copy. Refusal is a real answer, not a call. */
 export const USE_A_FREEZE_FOR_YESTERDAY_Q = "Use a freeze for yesterday?";
 export const USE_THE_FREEZE = "Use the freeze";
@@ -25,12 +27,12 @@ export function freezeNoneShowsSeePro(subscriptionStatus: string | null | undefi
   return subscriptionStatus !== "premium" && subscriptionStatus !== "trial";
 }
 
-export function freezeOfferBody(restoredDays: number, remaining: number): string {
-  return `Your ${restoredDays}-day streak comes back. ${remaining} left, and it refills 30 days after you use it.`;
+export function freezeOfferBody(_restoredDays: number, _remaining: number): string {
+  return FREEZE_LINE;
 }
 
-export function freezeNoneBody(date: string): string {
-  return `Yours refills on ${date}. Pro carries four a month instead of one.`;
+export function freezeNoneBody(_date: string): string {
+  return FREEZE_LINE;
 }
 
 const MONTHS = [

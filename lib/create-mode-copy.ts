@@ -2,7 +2,7 @@
 
 export const MODE_STANDARD_TITLE = "Standard";
 export const MODE_STANDARD_BODY =
-  "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro.";
+  "Every gate blocks. A freeze covers yesterday until midnight, earned at a 7-day streak.";
 
 export const MODE_HARD_TITLE = "Strict";
 export const MODE_HARD_BODY =
