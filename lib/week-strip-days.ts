@@ -1,4 +1,11 @@
-export type WeekStripDayState = "secured" | "frozen" | "last_stand" | "missed" | "na";
+export type WeekStripDayState =
+  | "secured"
+  | "frozen"
+  | "last_stand"
+  | "missed"
+  | "future"
+  | "before"
+  | "na";
 
 export const WEEK_STRIP_WEEKDAYS = [
   "Monday",
@@ -37,13 +44,15 @@ export function weekStripDayStates(
   const secured = new Set(input.securedDateKeys);
   const frozen = new Set(input.frozenDateKeys ?? []);
   const stood = new Set(input.lastStandDateKeys ?? []);
-  return weekDateKeys.map((key) =>
-    weekStripDayState({
+  return weekDateKeys.map((key) => {
+    const state = weekStripDayState({
       secured: secured.has(key) || (input.todaySecured && key === input.todayKey),
       frozen: frozen.has(key),
       lastStand: stood.has(key),
-    }),
-  );
+    });
+    if (state === "missed" && key > input.todayKey) return "future";
+    return state;
+  });
 }
 
 /** Home, Secured, and any week strip: one mark list from the same keys. */
@@ -70,7 +79,8 @@ export function weekStripAccessibilityLabel(
   state: WeekStripDayState,
   isToday: boolean,
 ): string {
-  if (state === "na") return `${weekday}, not applicable`;
+  if (state === "na" || state === "before") return `${weekday}, before you joined`;
+  if (state === "future") return `${weekday}, not yet`;
   if (state === "last_stand") return `${weekday}, last stand`;
   if (state === "missed" && isToday) return `${weekday}, open`;
   return `${weekday}, ${state}`;

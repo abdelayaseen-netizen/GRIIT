@@ -5,10 +5,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { Linking, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImageManipulator from "expo-image-manipulator";
 import { SwitchCamera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { cropRectTo45 } from "@/lib/crop-to-45";
+import { captureEditPlan, chooseCaptureFile } from "@/lib/proof-capture";
 import { createCameraCaptureMeta } from "@/lib/photo-capture-meta";
 import { cameraPermissionGate } from "@/lib/camera-permission-gate";
 import Button from "@/components/ds/Button";
@@ -56,15 +57,26 @@ export function TaskCapture({
     try {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8, shutterSound: true });
       if (!photo?.uri) return;
-      const w = photo.width ?? 0;
-      const h = photo.height ?? 0;
-      const rect = cropRectTo45(w, h);
-      const cropped = await ImageManipulator.manipulateAsync(
-        photo.uri,
-        [{ crop: rect }],
-        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
-      );
-      onCaptured(cropped.uri, createCameraCaptureMeta().capturedAt);
+      const plan = captureEditPlan(photo.width ?? 0, photo.height ?? 0);
+      let uri = photo.uri;
+      if (plan) {
+        const actions: ImageManipulator.Action[] = [{ crop: plan.crop }];
+        if (plan.resize) actions.push({ resize: plan.resize });
+        const cropped = await ImageManipulator.manipulateAsync(photo.uri, actions, {
+          compress: 0.8,
+          format: ImageManipulator.SaveFormat.JPEG,
+        });
+        const [croppedInfo, originalInfo] = await Promise.all([
+          FileSystem.getInfoAsync(cropped.uri),
+          FileSystem.getInfoAsync(photo.uri),
+        ]);
+        const croppedBytes = croppedInfo.exists ? croppedInfo.size ?? 0 : 0;
+        const originalBytes = originalInfo.exists ? originalInfo.size ?? 0 : 0;
+        const choice = chooseCaptureFile(croppedBytes, originalBytes);
+        if (choice === "original") uri = photo.uri;
+        else uri = cropped.uri;
+      }
+      onCaptured(uri, createCameraCaptureMeta().capturedAt);
     } finally {
       setBusy(false);
     }

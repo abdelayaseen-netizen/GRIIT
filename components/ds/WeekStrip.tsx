@@ -1,7 +1,7 @@
 /**
  * WeekStrip — 01_components.md "WeekStrip" and Motion
- * Laws: 19 (today square fills over 400ms on the same clock as DisplayNumber),
- * 6 (secured days are brand only). Frozen / Last Stand use surface + icon.
+ * Frame 192: secured is a white fill and an ink check. Future days are dashed.
+ * Days before joining are a dot. Frozen / Last Stand stay surface + icon.
  * Not tappable. Max seven squares.
  */
 import React, { useEffect } from "react";
@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { Check } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import DayCell from "@/components/ds/DayCell";
 import { dayCellFromWeekState } from "@/lib/day-cell";
@@ -76,7 +77,7 @@ function Square({
     backgroundColor: interpolateColor(
       fillProgress.value,
       [0, 1],
-      [DS_V3.color.canvas, DS_V3.color.brand]
+      [DS_V3.color.canvas, DS_V3.color.textPrimary]
     ),
   }));
 
@@ -85,6 +86,7 @@ function Square({
     {
       color: isToday ? DS_V3.color.textPrimary : DS_V3.color.textSecondary,
       fontWeight: isToday ? DS_V3.type.bodyStrong.fontWeight : DS_V3.type.caption.fontWeight,
+      opacity: state === "before" || state === "na" ? 0.3 : 1,
     },
   ];
 
@@ -103,6 +105,34 @@ function Square({
             fillStyle,
           ]}
         />
+      ) : state === "secured" ? (
+        <View
+          style={[
+            styles.mark,
+            {
+              width: cellSize,
+              height: cellSize,
+              borderRadius: cellSize / 2,
+              backgroundColor: DS_V3.color.textPrimary,
+              borderWidth: isToday ? 2 : 0,
+              borderColor: DS_V3.color.textTertiary,
+            },
+          ]}
+        >
+          <Check size={Math.round(cellSize * 0.46)} color={DS_V3.color.canvas} strokeWidth={2.6} />
+        </View>
+      ) : state === "future" ? (
+        <View
+          style={[
+            styles.mark,
+            styles.dashed,
+            { width: cellSize, height: cellSize, borderRadius: cellSize / 2 },
+          ]}
+        />
+      ) : state === "before" || state === "na" ? (
+        <View style={[styles.mark, { width: cellSize, height: cellSize }]}>
+          <View style={styles.dot} />
+        </View>
       ) : (
         <DayCell kind={kind} size={cellSize} shape="circle" />
       )}
@@ -181,7 +211,22 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.canvas,
   },
   squareFilled: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
+  },
+  mark: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dashed: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: DS_V3.color.raised,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: DS_V3.color.textTertiary,
   },
   squareMarked: {
     backgroundColor: DS_V3.color.surface,

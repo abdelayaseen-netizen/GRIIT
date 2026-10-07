@@ -79,10 +79,12 @@ export function dayCellFromProofsDay(
 }
 
 export function dayCellFromWeekState(
-  state: "secured" | "frozen" | "last_stand" | "missed" | "na",
+  state: "secured" | "frozen" | "last_stand" | "missed" | "future" | "before" | "na",
   isToday: boolean,
 ): DayCellKind {
   if (state === "na") return "na";
+  if (state === "before") return "before";
+  if (state === "future") return "future";
   if (state === "secured") return "self";
   if (state === "frozen") return "freeze";
   if (state === "last_stand") return "last_stand";

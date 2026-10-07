@@ -20,6 +20,7 @@ import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
+import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -148,6 +149,15 @@ export default function HomeScreen() {
     if (focus === "freeze") setShowFreezeSheet(true);
   }, [focus]);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
+  const [taskToastUp, setTaskToastUp] = React.useState(false);
+  React.useEffect(
+    () =>
+      subscribeTaskToast((toast) => {
+        setTaskToastUp(toast != null);
+        if (toast) setShowStreakSheet(false);
+      }),
+    [],
+  );
   const [streakHeld, setStreakHeld] = React.useState(false);
   const [freezeError, setFreezeError] = React.useState<string | null>(null);
   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
@@ -711,6 +721,7 @@ export default function HomeScreen() {
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
               onPressStreak={() => {
+                if (currentTaskToast()) return;
                 setFreezeError(null);
                 setStreakHeld(false);
                 setShowStreakSheet(true);
@@ -770,7 +781,7 @@ export default function HomeScreen() {
           activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
         />
         <StreakSheet
-          visible={showStreakSheet}
+          visible={showStreakSheet && !taskToastUp}
           held={streakHeld}
           weekday={weekdayLongForDateKey(yesterdayKey, homeTimeZone)}
           streak={streak ?? 0}

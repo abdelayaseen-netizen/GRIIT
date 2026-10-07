@@ -32,7 +32,7 @@ import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
-import { publishTaskToast, taskDoneTitle, taskLeftBody } from "@/lib/task-complete-toast";
+import { dismissTaskToast, publishTaskToast, taskDoneTitle, taskLeftBody } from "@/lib/task-complete-toast";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -69,7 +69,7 @@ import {
   flowFooterCaption,
   flowHeaderTitle,
   gateTimeFromConfig,
-  gatesFromConfig,
+  withRequiredPhotoGate,
   isWindowClosedError,
   minutesLeftFromConfig,
   windowStateFromConfig,
@@ -152,7 +152,7 @@ export function useTaskFlowV2() {
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
   const gates = useMemo(
-    () => gatesFromConfig(config as Record<string, unknown>),
+    () => withRequiredPhotoGate(config as Record<string, unknown>),
     [config],
   );
   const photoMode = photoModeFor({ config: config as Record<string, unknown> });
@@ -165,7 +165,7 @@ export function useTaskFlowV2() {
   const place = config.location_name || "the saved location";
 
   const [step, setStep] = useState<TaskFlowStep>(() =>
-    windowState === "closed" ? "window_closed" : initialStep(taskType, gatesFromConfig(config as Record<string, unknown>)),
+    windowState === "closed" ? "window_closed" : initialStep(taskType, withRequiredPhotoGate(config as Record<string, unknown>)),
   );
   const [caption, setCaption] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -338,15 +338,22 @@ export function useTaskFlowV2() {
 
   const uploadPhoto = async (): Promise<string | null> => {
     if (!photoUri) return null;
-    const b64 = await FileSystem.readAsStringAsync(photoUri, { encoding: "base64" as never });
-    const uploaded = await uploadProofImageFromBase64(b64, "image/jpeg");
-    if ("error" in uploaded) {
+    try {
+      const b64 = await FileSystem.readAsStringAsync(photoUri, { encoding: "base64" as never });
+      const uploaded = await uploadProofImageFromBase64(b64, "image/jpeg");
+      if ("error" in uploaded) {
+        setFailCode(undefined);
+        setFailNote(uploaded.error);
+        setStep("failed");
+        return null;
+      }
+      return uploaded.url;
+    } catch (err) {
       setFailCode(undefined);
-      setFailNote(uploaded.error);
+      setFailNote(err instanceof Error ? err.message : "Photo did not save. Try the camera again.");
       setStep("failed");
       return null;
     }
-    return uploaded.url;
   };
 
   const postHeldShare = async (eventId: string | undefined) => {
@@ -647,6 +654,7 @@ export function useTaskFlowV2() {
           shareEventId: eventId,
           closingHasPhoto: hasCameraProof,
         });
+        dismissTaskToast();
         const counterTask = taskType === "counter" || taskType === "water" || taskType === "reading";
         router.replace(
           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {

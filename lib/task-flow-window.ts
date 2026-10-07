@@ -1,4 +1,4 @@
-import type { GateTime, TaskGate } from "@/backend/lib/task-model";
+import { photoModeFor, type GateTime, type TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import {
   WINDOW_CLOSED_FORBIDDEN,
@@ -12,6 +12,21 @@ export function gatesFromConfig(config: Record<string, unknown> | null | undefin
   const raw = config?.gates;
   if (!Array.isArray(raw)) return [];
   return raw.filter((g): g is TaskGate => g === "camera" || g === "time" || g === "location");
+}
+
+/**
+ * A required photo is a camera gate even when the route only carried
+ * `photo_mode` / `require_photo` and not the computed `gates` array.
+ * Posting without that gate is the BAD_REQUEST "This task requires a photo."
+ */
+export function withRequiredPhotoGate(
+  config: Record<string, unknown> | null | undefined,
+): TaskGate[] {
+  const gates = gatesFromConfig(config);
+  if (photoModeFor({ config: config ?? {} }) !== "required" || gates.includes("camera")) {
+    return gates;
+  }
+  return ["camera", ...gates];
 }
 
 export function gateTimeFromConfig(config: Record<string, unknown> | null | undefined): GateTime | null {

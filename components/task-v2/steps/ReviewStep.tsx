@@ -48,26 +48,19 @@ export function ReviewStep({
         </View>
       }
     >
-    <View style={{ flex: 1 }}>
-      <View style={styles.finder}>
-        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
-        <Pressable onPress={onRetake} accessibilityRole="button" accessibilityLabel="Retake" style={styles.retake}>
-          <Text style={styles.retakeText}>Retake</Text>
-        </Pressable>
-        <LinearGradient colors={["transparent", "rgba(10,10,10,0.82)"]} style={styles.capOverlay}>
-          <Text style={styles.cap70} numberOfLines={1}>
-            {challengeName}
-          </Text>
-          <Text style={styles.cap92} numberOfLines={1}>
-            {taskName}
-          </Text>
-          {caption ? (
-            <Text style={styles.cap100} numberOfLines={1}>
-              {caption}
-            </Text>
-          ) : null}
-        </LinearGradient>
-      </View>
+    <View style={styles.reviewPhoto}>
+      <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
+      <Pressable onPress={onRetake} accessibilityRole="button" accessibilityLabel="Retake" style={styles.retake}>
+        <Text style={styles.retakeText}>Retake</Text>
+      </Pressable>
+      <LinearGradient colors={["transparent", "rgba(10,10,10,0.82)"]} style={styles.capOverlay}>
+        <Text style={styles.cap70} numberOfLines={1}>
+          {challengeName}
+        </Text>
+        <Text style={styles.cap92} numberOfLines={1}>
+          {taskName}
+        </Text>
+      </LinearGradient>
     </View>
     </KeyboardDock>
   );

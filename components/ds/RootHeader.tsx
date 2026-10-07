@@ -10,14 +10,16 @@ export type RootHeaderProps = {
   title: string;
   kicker?: string;
   actions?: React.ReactNode;
+  /** Profile uses Title (20/25/600). Other roots stay display. */
+  titleSize?: "display" | "title";
 };
 
-export default function RootHeader({ title, kicker, actions }: RootHeaderProps) {
+export default function RootHeader({ title, kicker, actions, titleSize = "display" }: RootHeaderProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.copy}>
         {kicker ? <Text style={styles.kicker}>{kicker}</Text> : null}
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={titleSize === "title" ? styles.titleMd : styles.title} numberOfLines={1} ellipsizeMode="tail">
           {title}
         </Text>
       </View>
@@ -49,6 +51,12 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,
     fontWeight: DS_V3.type.display.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  titleMd: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
   },
   actions: {

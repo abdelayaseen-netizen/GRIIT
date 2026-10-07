@@ -43,8 +43,10 @@ describe("discover people and chips", () => {
     expect(v3).not.toContain('label: "Trending"');
     expect(v3).not.toContain('label: "Body"');
     const card = readFileSync(resolve(__dirname, "../components/discover/ChallengeCard.tsx"), "utf8");
-    expect(card).toContain("featured ? undefined : fallbackTitle");
-    expect(card).toContain("title.trim()");
+    expect(card).toContain("<Cover");
+    expect(card).toContain("{title}");
+    expect(card).not.toContain("ProofFallbackTile");
+    expect(card).not.toContain("featured ? undefined : fallbackTitle");
     const route = readFileSync(resolve(__dirname, "../app/(tabs)/discover.tsx"), "utf8");
     const suggested = readFileSync(
       resolve(__dirname, "../backend/trpc/routes/profiles-social.ts"),
