@@ -1,0 +1,25 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: false
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Cancel"
+    optional: true
+- tapOn: "Home"
+- assertVisible: "Today"
+- tapOn: "Discover"
+- assertVisible: "Featured"
+- tapOn: "Activity"
+- assertVisible: "Activity"
+- tapOn: "Profile"
+- assertVisible: "Proofs"
+- tapOn: "Create"
+- assertVisible: "Step 1 of 3"
+- tapOn: "Cancel"
+- assertVisible: "Today"
