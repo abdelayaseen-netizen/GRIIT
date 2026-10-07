@@ -38,15 +38,15 @@ describe("gatesFromConfig", () => {
 
 describe("flow footer by windowState", () => {
   it("closing uses minutes left in brand", () => {
-    expect(flowFooterCaption("closing", 12, "Nothing is secured until the server says so.")).toBe(
+    expect(flowFooterCaption("closing", 12, "Self-reported.")).toBe(
       "12 minutes left in the window.",
     );
     expect(flowFooterBrand("closing")).toBe(true);
   });
 
   it("open keeps the fallback caption", () => {
-    expect(flowFooterCaption("open", null, "Nothing is secured until the server says so.")).toBe(
-      "Nothing is secured until the server says so.",
+    expect(flowFooterCaption("open", null, "Self-reported.")).toBe(
+      "Self-reported.",
     );
     expect(flowFooterBrand("open")).toBe(false);
   });

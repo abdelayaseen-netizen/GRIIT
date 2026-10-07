@@ -1,6 +1,6 @@
 export const WRITE_PLACEHOLDER = "Write here";
 export const WRITE_WORDS_LABEL = "Words";
-export const WRITE_FOOTER_CAPTION = "Nothing is secured until the server says so.";
+export const WRITE_FOOTER_CAPTION = "Self-reported.";
 
 export function writeStepHeader(day: number): string {
   return `Day ${day} · Write`;

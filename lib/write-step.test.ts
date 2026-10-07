@@ -47,6 +47,6 @@ describe("write copy", () => {
     expect(writeHonestyLine(150)).toBe("150 words. Counted, not read.");
     expect(WRITE_WORDS_LABEL).toBe("Words");
     expect(WRITE_PLACEHOLDER).toBe("Write here");
-    expect(WRITE_FOOTER_CAPTION).toBe("Nothing is secured until the server says so.");
+    expect(WRITE_FOOTER_CAPTION).toBe("Self-reported.");
   });
 });

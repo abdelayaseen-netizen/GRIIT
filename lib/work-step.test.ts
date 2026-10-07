@@ -47,7 +47,7 @@ describe("work step CTA labels", () => {
     expect(countCtaLabel(8, 8)).toBe("Post");
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
-    expect(COUNT_HONESTY).toBe("Self-entered count. Nothing is checked.");
+    expect(COUNT_HONESTY).toBe("Self-reported.");
     expect(counterSubline(true)).toBe("Count, then a photo.");
     expect(counterSubline(false)).toBe("Self-reported.");
   });
@@ -117,7 +117,7 @@ describe("run honesty", () => {
     expect(runHonestyLine(false, false)).toBe(RUN_HONESTY_TYPED_NO_CAMERA);
     expect(RUN_HONESTY_TYPED).toBe("You type the distance and time. The photo is what is checked.");
     expect(RUN_HONESTY_GPS).toBe("Distance and time from GPS. The photo is still required.");
-    expect(RUN_HONESTY_TYPED_NO_CAMERA).toBe("You type the distance and time. Nothing is checked.");
+    expect(RUN_HONESTY_TYPED_NO_CAMERA).toBe("Self-reported.");
   });
 
   it("does not render the no-map sentence on the manual log step", () => {

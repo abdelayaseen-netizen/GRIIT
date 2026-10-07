@@ -28,7 +28,7 @@ export function verificationLine(args: {
     case "checkin":
       return `GPS ${args.gpsMeters ?? 0} m from the saved location · ±${args.accuracyM ?? 0} m accuracy`;
     default:
-      return "Nothing was checked. You said you did it.";
+      return "Self-reported.";
   }
 }
 
