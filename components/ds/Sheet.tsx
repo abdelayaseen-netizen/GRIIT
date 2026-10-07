@@ -50,7 +50,7 @@ export default function Sheet({
         />
         <KeyboardDock style={styles.lift} pointerEvents="box-none">
           <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, SAFE.bottom) }]} pointerEvents="box-none">
-            <Text style={styles.heading}>{heading}</Text>
+            {heading ? <Text style={styles.heading}>{heading}</Text> : null}
             <View style={footer ? styles.body : undefined}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>

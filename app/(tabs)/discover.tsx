@@ -19,6 +19,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
 import { profilePrimaryName } from "@/lib/profile-display";
+import { getTodayDateKey } from "@/lib/date-utils";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { day1StartCopy, JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
 import { runVisitorFollow } from "@/lib/visitor-follow";
 import { invalidateAfterFollow } from "@/lib/follow-invalidate";
 import { useInlineError } from "@/hooks/useInlineError";
@@ -40,7 +43,7 @@ import {
   discoverCategoryMatches,
   discoverFeaturedChip,
   discoverGridWithoutHero,
-  discoverPeopleWithoutSelf,
+  discoverPeopleVisible,
 } from "@/lib/discover-people";
 import { needsSetGym, type FeaturedBuiltin } from "@/lib/featured-catalog";
 
@@ -57,11 +60,8 @@ function categoryMatches(
 
 function personStatus(person: SuggestedPerson): string {
   const streak = person.current_streak;
-  const mutuals = Math.max(0, Number(person.mutuals_count ?? 0));
-  const parts: string[] = [];
-  if (streak > 0) parts.push(`${streak}-day streak`);
-  if (mutuals > 0) parts.push(`${mutuals} mutual${mutuals === 1 ? "" : "s"}`);
-  return parts.length > 0 ? parts.join(" · ") : "New here";
+  if (streak > 0) return `${streak}-day streak`;
+  return "";
 }
 
 function DiscoverScreenInner() {
@@ -107,6 +107,13 @@ function DiscoverScreenInner() {
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<{ challenge_id?: string }[]>,
     staleTime: 60 * 1000,
     enabled: signedIn,
+  });
+
+  const securedQuery = useQuery({
+    queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
+    queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
+    enabled: signedIn,
+    staleTime: 60 * 1000,
   });
 
   const peopleQuery = useQuery({
@@ -155,7 +162,9 @@ function DiscoverScreenInner() {
   }, [myActiveQuery.data]);
 
   const people: DiscoverPerson[] = useMemo(() => {
-    return discoverPeopleWithoutSelf(peopleQuery.data ?? [], user?.id).map((p) => {
+    return discoverPeopleVisible(peopleQuery.data ?? [], user?.id)
+      .filter((p) => personStatus(p).length > 0)
+      .map((p) => {
       const state = followById[p.user_id] ?? "none";
       const followLabel =
         state === "following"
@@ -284,6 +293,21 @@ function DiscoverScreenInner() {
         }}
         onOpenChallenge={handleOpenChallenge}
         onStartFeatured={handleStartFeatured}
+        todaySecured={(securedQuery.data ?? []).includes(getTodayDateKey(getDeviceIanaTimeZone()))}
+        onJoinChallenge={(challengeId) => {
+          void trpcMutate(TRPC.challenges.join, { challengeId })
+            .then((result) => {
+              const startAt = (result as { start_at?: string } | null)?.start_at;
+              const activeId = (result as { id?: string } | null)?.id;
+              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
+                router.push(ROUTES.TABS_HOME as never);
+                return;
+              }
+              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
+              else router.push(ROUTES.TABS_HOME as never);
+            })
+            .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
+        }}
         onBuildOwn={handleBuildYourOwn}
         onOpenPerson={handleOpenPerson}
         onFollowPerson={(id) => {
@@ -293,7 +317,7 @@ function DiscoverScreenInner() {
         onRefresh={onRefresh}
         onJoinBuiltin={(item: FeaturedBuiltin) => {
           void trpcMutate(TRPC.challenges.join, { challengeId: item.id })
-            .then(() => {
+            .then((result) => {
               if (needsSetGym(item)) {
                 router.push({
                   pathname: "/challenge/set-gym",
@@ -301,7 +325,14 @@ function DiscoverScreenInner() {
                 } as never);
                 return;
               }
-              router.push(ROUTES.TABS_HOME as never);
+              const startAt = (result as { start_at?: string } | null)?.start_at;
+              const activeId = (result as { id?: string } | null)?.id;
+              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
+                router.push(ROUTES.TABS_HOME as never);
+                return;
+              }
+              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
+              else router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}

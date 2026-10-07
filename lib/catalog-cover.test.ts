@@ -39,8 +39,8 @@ describe("catalogCoverUri", () => {
     expect(hero).not.toContain("proof_photo_url");
     expect(hero).toContain("featuredProof: null");
     const ui = readFileSync(resolve(__dirname, "../components/discover/DiscoverV3.tsx"), "utf8");
-    expect(ui).toContain("catalogCoverUri");
-    expect(ui).toContain("catalogCoverLabel");
+    expect(ui).toContain("catalogCoverCategory");
+    expect(ui).toContain("title={featured.name}");
     expect(ui).toContain("featuredJoined");
     expect(ui).toContain("{circle ? (");
     expect(ui).not.toContain("featured.featuredProof?.photo_url");

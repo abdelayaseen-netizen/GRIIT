@@ -1,13 +1,11 @@
 /**
- * ChallengeCard — 01_components.md "ChallengeCard", frame 02.
- * Screen component. ds primitives only.
+ * Discover grid card. v49.1 option 1a: title lives on the cover.
+ * Tap opens the preview sheet. No Start button.
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { formatDays } from "@/lib/format-days";
 import { catalogCoverCategory } from "@/lib/catalog-cover";
-import Button from "@/components/ds/Button";
 import { Cover } from "@/components/ds/Cover";
 
 export type ChallengeCardProps = {
@@ -19,37 +17,38 @@ export type ChallengeCardProps = {
   difficulty: string;
   featured?: boolean;
   proofType?: string;
+  people?: number;
   joined?: boolean;
   onStart?: () => void;
   onPress?: () => void;
 };
 
-function dayPhrase(n: number): string {
-  return formatDays(n);
+function caption(people: number | undefined, gate: string): string {
+  const g = gate.trim();
+  if (people == null) return g;
+  const n = Math.max(0, Math.floor(people));
+  const who = n === 1 ? "1 person" : `${n.toLocaleString("en-US")} people`;
+  return g ? `${who} · ${g}` : who;
 }
 
 export default function ChallengeCard({
   title,
-  coverLabel,
   category,
   days,
   difficulty,
-  featured,
   proofType,
-  joined,
-  onStart,
+  people,
   onPress,
 }: ChallengeCardProps) {
-  const gridMeta = `${dayPhrase(days)} · ${difficulty}`;
-  const featuredMeta = proofType ? `${dayPhrase(days)} · ${proofType}` : gridMeta;
-  const meta = featured ? featuredMeta : gridMeta;
   const [width, setWidth] = React.useState(0);
-  const coverH = featured ? 168 : 110;
+  const coverH = width > 0 ? Math.round(width * 1.25) : 0;
+  const gate = (proofType ?? "").trim();
+  const hard = difficulty.trim().toLowerCase() === "hard";
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title || coverLabel || "Challenge"}
+      accessibilityLabel={title || "Challenge"}
       onPress={onPress}
       style={styles.wrap}
       onLayout={(e) => {
@@ -60,24 +59,23 @@ export default function ChallengeCard({
       {width > 0 ? (
         <Cover
           category={catalogCoverCategory(category)}
+          title={title}
           days={days}
           width={width}
           height={coverH}
         />
       ) : (
-        <View style={{ height: coverH }} />
+        <View style={{ aspectRatio: 4 / 5 }} />
       )}
-      <Text style={styles.featuredTitle} numberOfLines={2}>
-        {title}
-      </Text>
-      <Text style={styles.gridMeta}>{meta}</Text>
-      {featured ? (
-        <Button
-          label={joined ? "Joined" : "Start"}
-          variant={joined ? "secondary" : "primary"}
-          size="small"
-          onPress={joined ? onPress : (onStart ?? onPress)}
-        />
+      {caption(people, gate) ? (
+        <Text style={styles.meta} numberOfLines={1}>
+          {caption(people, gate)}
+        </Text>
+      ) : null}
+      {hard ? (
+        <View style={styles.hard}>
+          <Text style={styles.hardText}>Hard</Text>
+        </View>
       ) : null}
     </Pressable>
   );
@@ -85,18 +83,26 @@ export default function ChallengeCard({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: DS_V3.space.sm,
+    gap: 6,
   },
-  featuredTitle: {
-    fontSize: DS_V3.type.bodyStrong.fontSize,
-    lineHeight: DS_V3.type.bodyStrong.lineHeight,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
+  meta: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "400",
+    color: DS_V3.color.textSecondary,
   },
-  gridMeta: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
+  hard: {
+    alignSelf: "flex-start",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.hairline,
+    borderRadius: DS_V3.radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  hardText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "600",
     color: DS_V3.color.textSecondary,
   },
 });
