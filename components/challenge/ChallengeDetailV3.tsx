@@ -28,6 +28,7 @@ import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import {
+  JOIN_CAPTION_TOMORROW,
   joinCaption,
   MODE_STANDARD_DETAIL,
   MODE_STRICT_DETAIL,
@@ -315,6 +316,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
             )}
             {blocked ? (
               <>
+                {deferDay1 ? (
+                  <Text style={styles.joinCaption}>{JOIN_CAPTION_TOMORROW}</Text>
+                ) : null}
                 <Text style={styles.limitCaption}>
                   {`You're in ${p.activeCount} challenges, the Free limit.`}
                 </Text>

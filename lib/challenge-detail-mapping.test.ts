@@ -253,6 +253,12 @@ describe("joinCaption", () => {
     expect(catalog).toContain("day1StartCopy(result.start_at, timeZone)");
     expect(catalog).toContain("JOIN_CAPTION_TOMORROW");
     expect(catalog).not.toContain('heading="You\'re in."');
+    const detail = readFileSync(
+      resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"),
+      "utf8",
+    );
+    expect(detail).toContain("deferDay1 ? (");
+    expect(detail).toContain("JOIN_CAPTION_TOMORROW");
     expect(catalog).not.toContain('Alert.alert(\n          "You\'re in."');
     const active = readFileSync(
       resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),

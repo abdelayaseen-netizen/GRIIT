@@ -1,0 +1,14 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000004"
+- assertVisible: "Fajr Before Sunrise"
+- assertVisible: "Day 1 is tomorrow."
+- assertVisible: "You're in 3 challenges, the Free limit."

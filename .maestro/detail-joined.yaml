@@ -8,5 +8,6 @@ appId: app.griit.challenge-tracker
 - tapOn:
     text: "Not now"
     optional: true
-- tapOn: "Profile"
-- assertVisible: "@seedgriit"
+- openLink: "griit://challenge/active/3349cff3-6a7b-4f7b-82a5-20950bbc3ad1"
+- assertVisible: "Early Riser 7"
+- assertVisible: "of 7"
