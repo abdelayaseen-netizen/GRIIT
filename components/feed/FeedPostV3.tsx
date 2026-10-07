@@ -4,7 +4,6 @@
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check, Heart, MessageCircle, Send } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
@@ -168,19 +167,10 @@ export default function FeedPostV3({
       {variant === "task_camera" ? (
         <View style={styles.photoFrame}>
           {photo ? (
-            <ProofImage uri={photo} size="feed" recyclingKey={post.id} title={subject} />
+            <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
           ) : (
             <ProofFallbackTile taskName={subject} />
           )}
-          {photo ? (
-            <LinearGradient
-              colors={["rgba(15,15,15,0)", "rgba(15,15,15,0.75)"] as const}
-              style={styles.scrim}
-            />
-          ) : null}
-          {photo ? (
-            <Text style={styles.photoTitle} numberOfLines={2}>{subject}</Text>
-          ) : null}
           {photo && seal ? (
             <View style={styles.seal}>
               <CameraSeal onPress={() => setSealOpen(true)} size={28} />
