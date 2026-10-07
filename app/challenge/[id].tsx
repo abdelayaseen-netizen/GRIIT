@@ -54,9 +54,11 @@ import {
   day1StartCopy,
   detailState,
   formatChallengeDate,
+  JOIN_CAPTION_TOMORROW,
   mapParticipationType,
   type DetailTask,
 } from "@/lib/challenge-detail-mapping";
+import { anyTimeWindowClosedToday } from "@/backend/lib/late-join-window";
 import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
 
 type JoinResult = { id?: string; start_at?: string };
@@ -74,6 +76,7 @@ type ChallengeRow = {
   participation_type?: string | null;
   participants_count?: number | null;
   is_hard_mode?: boolean | null;
+  category?: string | null;
   creator_id?: string | null;
   memberCount?: number | null;
   cap?: number | null;
@@ -112,7 +115,6 @@ export default function ChallengeDetailScreen() {
   const queryClient = useQueryClient();
   const { error, showError, clearError } = useInlineError();
   const [joining, setJoining] = useState(false);
-  const [joinedSheet, setJoinedSheet] = useState<{ id: string; body: string } | null>(null);
   const [limitOpen, setLimitOpen] = useState(false);
 
   const myActiveListQuery = useQuery({
@@ -158,7 +160,7 @@ export default function ChallengeDetailScreen() {
   const securedKeysQuery = useQuery({
     queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-    enabled: !!user && !!endedEnrollmentQuery.data,
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -345,10 +347,9 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
       if (result?.id) {
-        setJoinedSheet({
-          id: result.id,
-          body: day1StartCopy(result.start_at, timeZone),
-        });
+        const line = day1StartCopy(result.start_at, timeZone);
+        if (line === JOIN_CAPTION_TOMORROW) router.replace(ROUTES.TABS_HOME as never);
+        else router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
@@ -526,28 +527,16 @@ export default function ChallengeDetailScreen() {
           onUpgrade={goPaywall}
           onRetry={() => void challengeQuery.refetch()}
           todayAlreadySecured={(securedKeysQuery.data ?? []).includes(todayKey)}
+          windowClosed={anyTimeWindowClosedToday(
+            (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[],
+            new Date(),
+            timeZone,
+          )}
+          category={challenge?.category}
+          peopleNames={(challenge?.teamMembers ?? [])
+            .map((m) => (m.profiles?.display_name ?? m.profiles?.username ?? "").trim())
+            .filter((n) => n.length > 0 && !/^user_/i.test(n))}
         />
-        <Sheet
-          visible={joinedSheet != null}
-          onDismiss={() => {
-            const next = joinedSheet?.id;
-            setJoinedSheet(null);
-            if (next) router.replace(ROUTES.CHALLENGE_ACTIVE(next) as never);
-          }}
-          heading="You're in."
-          footer={
-            <Button
-              label="OK"
-              onPress={() => {
-                const next = joinedSheet?.id;
-                setJoinedSheet(null);
-                if (next) router.replace(ROUTES.CHALLENGE_ACTIVE(next) as never);
-              }}
-            />
-          }
-        >
-          <Text style={styles.sheetBody}>{joinedSheet?.body}</Text>
-        </Sheet>
         <Sheet
           visible={limitOpen}
           onDismiss={() => setLimitOpen(false)}
