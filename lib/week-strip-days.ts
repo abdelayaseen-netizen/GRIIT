@@ -1,3 +1,5 @@
+import { addCalendarDaysToDateKey } from "@/backend/lib/date-utils";
+
 export type WeekStripDayState =
   | "secured"
   | "frozen"
@@ -72,6 +74,40 @@ export function buildWeekStripDays(
     filled: states[i] === "secured",
     state: states[i] ?? "missed",
   }));
+}
+
+/** Days 1–7 from the earliest start. Letters are "1"–"7". Days before that start are a dot. */
+export function firstWeekStripDays(
+  startKey: string,
+  input: {
+    securedDateKeys: readonly string[];
+    frozenDateKeys?: readonly string[];
+    lastStandDateKeys?: readonly string[];
+    todayKey: string;
+    todaySecured: boolean;
+  },
+): { letter: string; filled: boolean; state: WeekStripDayState }[] {
+  const secured = new Set(input.securedDateKeys);
+  const frozen = new Set(input.frozenDateKeys ?? []);
+  const stood = new Set(input.lastStandDateKeys ?? []);
+  return Array.from({ length: 7 }, (_, i) => {
+    const key = addCalendarDaysToDateKey(startKey, i);
+    let state: WeekStripDayState;
+    if (key < startKey) state = "before";
+    else if (key > input.todayKey) state = "future";
+    else {
+      state = weekStripDayState({
+        secured: secured.has(key) || (input.todaySecured && key === input.todayKey),
+        frozen: frozen.has(key),
+        lastStand: stood.has(key),
+      });
+    }
+    return {
+      letter: String(i + 1),
+      filled: state === "secured" || state === "frozen",
+      state,
+    };
+  });
 }
 
 export function weekStripAccessibilityLabel(

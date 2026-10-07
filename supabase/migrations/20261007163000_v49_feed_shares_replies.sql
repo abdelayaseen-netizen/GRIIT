@@ -1,8 +1,8 @@
+-- Applied in production on Oct 7, 2026. Do not run again.
 -- v49 Feed. Two stores the app cannot compute from existing rows.
 -- feed_shares: one row per card share or copied link. share_count is COUNT(*)
 -- for the event (decision 218: card shares + copied links).
 -- feed_comments.parent_id: a reply points at the comment it answers.
--- Do not apply this on production from the app build. Review and run it by hand.
 
 ALTER TABLE public.feed_comments
   ADD COLUMN IF NOT EXISTS parent_id uuid REFERENCES public.feed_comments(id) ON DELETE CASCADE;

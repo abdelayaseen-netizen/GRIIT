@@ -18,7 +18,9 @@ import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import { HomeV3, greetingTitle } from "@/components/home/HomeV3";
+import { HomeV3 } from "@/components/home/HomeV3";
+import { firstWeekDay, greeting } from "@/lib/greeting";
+import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
 import LiveFeedSection from "@/components/LiveFeedSection";
@@ -494,6 +496,40 @@ export default function HomeScreen() {
     }).map((d) => d.state);
   }, [uDays, homeTimeZone, recordQuery.data?.todayKey, weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
 
+  const homeStrip = useMemo(() => {
+    const starts = heroTasks
+      .map((task) => task.startDateKey)
+      .filter((key): key is string => typeof key === "string" && key <= todayKey)
+      .sort();
+    const earliest = starts[0] ?? null;
+    const day = firstWeekDay(todayKey, earliest);
+    const statsRow = resolvedStats as StatsFromApi | null;
+    if (day && earliest) {
+      const days = firstWeekStripDays(earliest, {
+        securedDateKeys,
+        frozenDateKeys: statsRow?.frozenDateKeys ?? [],
+        lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
+        todayKey,
+        todaySecured,
+      });
+      return {
+        day,
+        letters: days.map((d) => d.letter),
+        states: days.map((d) => d.state),
+        todayIndex: day - 1,
+      };
+    }
+    return {
+      day: null as number | null,
+      letters: undefined as string[] | undefined,
+      states: weekStates.map((state, i) => {
+        const key = weekDateKeys[i];
+        return earliest && key && key < earliest && state === "missed" ? ("before" as const) : state;
+      }),
+      todayIndex: todayWeekIndex,
+    };
+  }, [heroTasks, todayKey, resolvedStats, securedDateKeys, todaySecured, weekStates, weekDateKeys, todayWeekIndex]);
+
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
     mutationFn: () =>
@@ -709,14 +745,21 @@ export default function HomeScreen() {
           showInvite={showInvite}
           ListHeaderComponent={
             <HomeV3
-              title={greetingTitle(profile ?? {})}
+              title={greeting(
+                new Date(),
+                profile?.display_name,
+                profile?.username ?? "",
+                homeTimeZone,
+              )}
               streak={streak}
               streakLine={streakLine}
               morningAfter={morningAfter}
               proof={proof}
               startsTomorrow={startsTomorrow}
-              weekStates={weekStates}
-              todayIndex={todayWeekIndex}
+              weekStates={homeStrip.states}
+              weekLetters={homeStrip.letters}
+              todayIndex={homeStrip.todayIndex}
+              firstWeekDay={homeStrip.day}
               fillToday={todaySecured}
               daySecured={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}

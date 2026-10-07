@@ -336,10 +336,14 @@ function LiveFeedSection({
   const onShare = useCallback(async (post: LiveFeedPost) => {
     try {
       const handle = post.username || post.displayName || "Someone";
-      await Share.share({
+      const result = await Share.share({
         message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT.`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
+      if (result.action === Share.sharedAction) {
+        await trpcMutate(TRPC.feed.recordShare, { eventId: post.id, kind: "card" });
+        updatePost(post.id, (p) => ({ ...p, shareCount: (p.shareCount ?? 0) + 1 }));
+      }
       try {
         track({ name: "share_completed", content_type: "feed" });
       } catch {
@@ -351,7 +355,7 @@ function LiveFeedSection({
         captureError(err, "LiveFeedShare");
       }
     }
-  }, []);
+  }, [updatePost]);
 
   const submitComment = useCallback(
     async (postId: string, text: string) => {
@@ -512,6 +516,16 @@ function LiveFeedSection({
                 : undefined
             }
             onOpenPost={() => router.push(ROUTES.POST_ID(item.id) as never)}
+            onOpenPhoto={() =>
+              router.push({
+                pathname: ROUTES.POST_PHOTO(item.id),
+                params: {
+                  uri: item.photoUrl ?? item.proofPhotoUrl ?? "",
+                  name: item.displayName ?? "",
+                  context: `${item.challengeName} · Day ${item.currentDay}`,
+                },
+              } as never)
+            }
           />
         </View>
       );

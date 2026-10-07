@@ -8,7 +8,8 @@ describe("Chunk U Profile Part A", () => {
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     const visitor = readFileSync(resolve(__dirname, "../app/profile/[username].tsx"), "utf8");
-    expect(v3).toContain('const TABS = ["Proofs", "Challenges", "Badges"]');
+    expect(v3).toContain('const TABS = ["Proofs", "Your data", "Challenges", "Badges"]');
+    expect(v3).toContain("showDataTab");
     expect(own).toContain('useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "proofs")');
     expect(visitor).toContain('useState<"Challenges" | "Proofs" | "Badges">("Proofs")');
   });

@@ -44,6 +44,7 @@ export type FeedPostV3Props = {
   onCommentAuthorPress?: (comment: FeedCommentPreview) => void;
   onSeeDay?: () => void;
   onOpenPost?: () => void;
+  onOpenPhoto?: () => void;
 };
 
 export default function FeedPostV3({
@@ -58,6 +59,7 @@ export default function FeedPostV3({
   onCommentAuthorPress,
   onSeeDay,
   onOpenPost,
+  onOpenPhoto,
 }: FeedPostV3Props) {
   const [sealOpen, setSealOpen] = React.useState(false);
   const photo = liveFeedProofUrl(post);
@@ -167,7 +169,9 @@ export default function FeedPostV3({
       {variant === "task_camera" ? (
         <View style={styles.photoFrame}>
           {photo ? (
-            <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
+            <Pressable accessibilityRole="image" accessibilityLabel="Open photo" onPress={onOpenPhoto ?? open}>
+              <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
+            </Pressable>
           ) : (
             <ProofFallbackTile taskName={subject} />
           )}
@@ -192,6 +196,7 @@ export default function FeedPostV3({
         liked={post.reactedByMe}
         respectCount={post.respectCount}
         commentCount={post.commentCount}
+        shareCount={post.shareCount ?? 0}
         onLike={onLike}
         onComment={onComment}
         onShare={onShare}
@@ -214,6 +219,7 @@ function ActionRow({
   liked,
   respectCount,
   commentCount,
+  shareCount,
   onLike,
   onComment,
   onShare,
@@ -221,6 +227,7 @@ function ActionRow({
   liked: boolean;
   respectCount: number;
   commentCount: number;
+  shareCount: number;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
@@ -258,6 +265,7 @@ function ActionRow({
       <Pressable accessibilityRole="button" accessibilityLabel="Share" onPress={onShare} style={styles.hit}>
         <Send size={SEND} color={DS_V3.color.textPrimary} />
       </Pressable>
+      {shareCount > 0 ? <Text style={styles.count}>{shareCount}</Text> : null}
     </View>
   );
 }

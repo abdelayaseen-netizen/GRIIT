@@ -17,6 +17,7 @@ export const PURE_BACKEND_ALLOWLIST = [
   "backend/lib/feed-activity-hydrate.ts",
   "backend/lib/finished-run.ts",
   "backend/lib/join-errors.ts",
+  "backend/lib/me-stats.ts",
   "backend/lib/proof-predicate.ts",
   "backend/lib/record-days.ts",
   "backend/lib/secured-elapsed.ts",

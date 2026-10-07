@@ -308,7 +308,10 @@ export default function VisitorProfileScreen() {
               consistency={consistency}
               consistencySub={consistencySub}
               tab={tab}
-              onChangeTab={setTab}
+              onChangeTab={(next) => {
+                if (next === "Your data") return;
+                setTab(next);
+              }}
               runs={(rec?.runs ?? []).map((r) => ({
                 id: r.id,
                 name: r.name,

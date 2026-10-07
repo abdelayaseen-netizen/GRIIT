@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Award, Flag, LayoutGrid, Settings, Share2 } from "lucide-react-native";
+import { Award, BarChart3, Flag, LayoutGrid, Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { type BadgeItem } from "@/components/ds/Badges";
 import { BadgeGrid } from "@/components/profile/BadgeGrid";
@@ -31,7 +31,7 @@ export function badgeItemsFromRows(
 }
 
 const ICON = DS_V3.space.xs * 6;
-const TABS = ["Proofs", "Challenges", "Badges"] as const;
+const TABS = ["Proofs", "Your data", "Challenges", "Badges"] as const;
 export const PROFILE_V3_FOOTNOTE =
   "Five marks, each earned by verified days only. Nothing here can be bought or awarded.";
 const FOOTNOTE = PROFILE_V3_FOOTNOTE;
@@ -67,6 +67,8 @@ export type ProfileV3Props = {
   consistencySub: string;
   tab: (typeof TABS)[number];
   onChangeTab: (tab: (typeof TABS)[number]) => void;
+  /** Your data is the signed-in user's own profile only. */
+  showDataTab?: boolean;
   runs: ProfileV3Run[];
   proofs: ProfileV3Proof[];
   badges: BadgeItem[];
@@ -113,6 +115,7 @@ export function ProfileV3({
   consistencySub,
   tab,
   onChangeTab,
+  showDataTab = false,
   runs,
   proofs,
   badges,
@@ -202,8 +205,9 @@ export function ProfileV3({
         <>
       <View style={styles.seg}>
         <View style={styles.iconTabs}>
-          {TABS.map((item) => {
-            const Icon = item === "Proofs" ? LayoutGrid : item === "Challenges" ? Flag : Award;
+          {(showDataTab ? TABS : TABS.filter((item) => item !== "Your data")).map((item) => {
+            const Icon =
+              item === "Proofs" ? LayoutGrid : item === "Your data" ? BarChart3 : item === "Challenges" ? Flag : Award;
             const on = tab === item;
             return (
               <Pressable

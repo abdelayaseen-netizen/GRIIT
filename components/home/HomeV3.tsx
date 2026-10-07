@@ -9,6 +9,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import { StreakStrip } from "@/components/ds/StreakStrip";
 import { homeStatus } from "@/lib/home-status";
+import { greetingSub } from "@/lib/greeting";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
 import Skeleton from "@/components/ds/Skeleton";
@@ -128,10 +129,14 @@ export type HomeV3Props = {
   highlightTaskId?: string | null;
   /** Server day_secures already includes today. A later join does not clear it. */
   daySecured?: boolean;
+  /** 1–7 while the strip counts days from the first enrollment. */
+  firstWeekDay?: number | null;
+  /** Replaces Mon–Sun letters. First week uses "1"–"7". */
+  weekLetters?: readonly string[];
 };
 
 export function HomeV3({
-  title: _title,
+  title,
   streak,
   streakLine: _streakLine,
   morningAfter,
@@ -167,6 +172,8 @@ export function HomeV3({
   noDaysOff: _noDaysOff = false,
   highlightTaskId,
   daySecured = false,
+  firstWeekDay: firstWeek = null,
+  weekLetters,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
 
@@ -216,11 +223,20 @@ export function HomeV3({
     otherChallenge: todayBlocked ? openSection?.challenge : null,
     nextTask: openRow?.name,
   });
-  const weekDays = ["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
+  const letters = weekLetters ?? ["M", "T", "W", "T", "F", "S", "S"];
+  const weekDays = letters.map((letter, i) => ({
     letter,
     filled: weekStates?.[i] === "secured" || weekStates?.[i] === "frozen",
     state: weekStates?.[i],
   }));
+  const openCount = homeRows.filter((row) => !row.done && !row.closed).length;
+  const sub = greetingSub({
+    secured: daySecured || allDone,
+    nextTask: openRow?.name,
+    openCount,
+    firstWeekDay: firstWeek,
+    blocked: status,
+  });
 
   const renderRow = (row: HomeProofRow) => {
     const inner = (
@@ -257,11 +273,16 @@ export function HomeV3({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
+      {title ? (
+        <Text style={styles.greeting} accessibilityRole="header">
+          {title}
+        </Text>
+      ) : null}
       <StreakStrip
         streak={streak ?? 0}
         days={weekDays}
         todayIndex={todayIndex}
-        status={status}
+        status={sub}
         onOpenSheet={() => onPressStreak?.()}
         band={band}
         primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
@@ -384,6 +405,14 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
+  },
+  greeting: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
   },
   pad: {
     paddingHorizontal: DS_V3.space.gutter,
