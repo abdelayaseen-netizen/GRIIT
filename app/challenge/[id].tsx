@@ -525,6 +525,7 @@ export default function ChallengeDetailScreen() {
           onNotNow={onNotNow}
           onUpgrade={goPaywall}
           onRetry={() => void challengeQuery.refetch()}
+          todayAlreadySecured={(securedKeysQuery.data ?? []).includes(todayKey)}
         />
         <Sheet
           visible={joinedSheet != null}

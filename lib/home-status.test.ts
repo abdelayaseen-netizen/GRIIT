@@ -6,6 +6,7 @@ describe("homeStatus", () => {
   it("uses one sentence for each home state", () => {
     expect(homeStatus({ hasChallenge: false, secured: false, left: 0, total: 0 })).toBe(HOME.noChallenge);
     expect(homeStatus({ hasChallenge: true, secured: true, left: 0, total: 2 })).toBe(HOME.secured);
+    expect(homeStatus({ hasChallenge: true, secured: true, left: 1, total: 3 })).toBe(HOME.secured);
     expect(
       homeStatus({
         hasChallenge: true,

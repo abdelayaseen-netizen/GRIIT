@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import {
+  JOIN_BONUS,
   JOIN_CAPTION_INVITE,
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
@@ -231,6 +232,13 @@ describe("joinCaption", () => {
   it("team and solo also use Day 1 is today until invite step exists", () => {
     expect(joinCaption("team")).toBe(JOIN_CAPTION_TODAY);
     expect(joinCaption("solo")).toBe(JOIN_CAPTION_TODAY);
+  });
+
+  it("a day that is already secured stays secured when Day 1 is today", () => {
+    expect(joinCaption("solo", undefined, undefined, true)).toBe(JOIN_BONUS);
+    expect(JOIN_BONUS).toBe("Day 1 is today. Today's already secured, so this one's a bonus.");
+    const join = readFileSync(resolve(__dirname, "../backend/trpc/routes/challenges-join.ts"), "utf8");
+    expect(join).not.toContain("day_secures");
   });
 
   it("reads start_at local date for Day 1 copy", () => {

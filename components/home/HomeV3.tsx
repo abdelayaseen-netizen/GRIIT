@@ -125,6 +125,8 @@ export type HomeV3Props = {
   showFirstProofSlot?: boolean;
   noDaysOff?: boolean;
   highlightTaskId?: string | null;
+  /** Server day_secures already includes today. A later join does not clear it. */
+  daySecured?: boolean;
 };
 
 export function HomeV3({
@@ -163,6 +165,7 @@ export function HomeV3({
   showFirstProofSlot,
   noDaysOff: _noDaysOff = false,
   highlightTaskId,
+  daySecured = false,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
 
@@ -203,7 +206,7 @@ export function HomeV3({
   );
   const status = homeStatus({
     hasChallenge: Boolean(proof?.hasChallenge),
-    secured: allDone,
+    secured: daySecured || allDone,
     left: proof ? Math.max(0, proof.totalCount - proof.doneCount) : 0,
     total: proof?.totalCount ?? 0,
     lostTask: todayBlocked ? closedUndone?.name : null,

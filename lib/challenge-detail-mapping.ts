@@ -233,6 +233,8 @@ export function detailState(
  * Invite step does not exist yet. Restore JOIN_CAPTION_INVITE when it lands.
  */
 export const JOIN_CAPTION_TODAY = "Day 1 is today.";
+export const JOIN_BONUS =
+  "Day 1 is today. Today's already secured, so this one's a bonus.";
 export const JOIN_CAPTION_TOMORROW = "Day 1 is tomorrow.";
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
@@ -264,9 +266,11 @@ export function joinCaption(
   _participationType: ParticipationType,
   startAtIso?: string | null,
   timeZone?: string,
+  todayAlreadySecured?: boolean,
 ): string {
-  if (startAtIso && timeZone) return day1StartCopy(startAtIso, timeZone);
-  return JOIN_CAPTION_TODAY;
+  const line = startAtIso && timeZone ? day1StartCopy(startAtIso, timeZone) : JOIN_CAPTION_TODAY;
+  if (todayAlreadySecured && line === JOIN_CAPTION_TODAY) return JOIN_BONUS;
+  return line;
 }
 
 export function mapParticipationType(raw: string | null | undefined): ParticipationType {

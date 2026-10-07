@@ -94,6 +94,8 @@ export type ChallengeDetailV3Props = {
   onNotNow?: () => void;
   onUpgrade?: () => void;
   onRetry?: () => void;
+  /** Account day is already in day_secures. Joining does not un-secure it. */
+  todayAlreadySecured?: boolean;
 };
 
 function peopleLabel(n: number): string {
@@ -300,7 +302,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                 </Pressable>
               </>
             ) : (
-              <Text style={styles.joinCaption}>{joinCaption(p.participationType)}</Text>
+              <Text style={styles.joinCaption}>
+                {joinCaption(p.participationType, undefined, undefined, p.todayAlreadySecured)}
+              </Text>
             )}
           </>
         )}
