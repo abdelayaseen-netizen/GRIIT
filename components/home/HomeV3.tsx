@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   sharePill: {
     height: 36,
