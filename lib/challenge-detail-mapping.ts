@@ -233,9 +233,10 @@ export function detailState(
  * Invite step does not exist yet. Restore JOIN_CAPTION_INVITE when it lands.
  */
 export const JOIN_CAPTION_TODAY = "Day 1 is today.";
-export const JOIN_BONUS =
-  "Day 1 is today. Today's already secured, so this one's a bonus.";
 export const JOIN_CAPTION_TOMORROW = "Day 1 is tomorrow.";
+export const MODE_STANDARD_DETAIL = "Standard. A freeze can cover a missed day.";
+export const MODE_STRICT_DETAIL =
+  "Strict. A missed day resets your streak in this challenge to 0. No freezes.";
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
 
@@ -269,7 +270,7 @@ export function joinCaption(
   todayAlreadySecured?: boolean,
 ): string {
   const line = startAtIso && timeZone ? day1StartCopy(startAtIso, timeZone) : JOIN_CAPTION_TODAY;
-  if (todayAlreadySecured && line === JOIN_CAPTION_TODAY) return JOIN_BONUS;
+  if (todayAlreadySecured && line === JOIN_CAPTION_TODAY) return JOIN_CAPTION_TOMORROW;
   return line;
 }
 

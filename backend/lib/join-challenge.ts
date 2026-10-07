@@ -13,12 +13,14 @@ import {
 } from "./join-errors";
 import {
   anyTimeWindowClosedToday,
+  day1Defers,
   enrollmentStartAt,
   type TaskWindowRow,
 } from "./late-join-window";
 
 export {
   anyTimeWindowClosedToday,
+  day1Defers,
   enrollmentStartAt,
   firstHHMM,
   parseHHMMMinutes,
@@ -89,7 +91,17 @@ export async function joinChallengeDirect(
   const taskWindowList = (tasksForWindowCheck ?? []) as TaskWindowRow[];
 
   const userTz = await getProfileTimeZoneForUser(supabase, userId);
-  const defer = anyTimeWindowClosedToday(taskWindowList, now, userTz);
+  const todayKey = getTodayDateKey(userTz);
+  const { data: securedToday } = await supabase
+    .from("day_secures")
+    .select("date_key")
+    .eq("user_id", userId)
+    .eq("date_key", todayKey)
+    .maybeSingle();
+  const defer = day1Defers({
+    windowClosed: anyTimeWindowClosedToday(taskWindowList, now, userTz),
+    todaySecured: Boolean(securedToday),
+  });
   const startAt = enrollmentStartAt(now, userTz, defer);
   const durationType = (challenge as { duration_type?: string }).duration_type;
   const durationDays = (challenge as { duration_days?: number }).duration_days ?? 1;

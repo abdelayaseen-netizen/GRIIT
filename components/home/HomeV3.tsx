@@ -34,6 +34,7 @@ import {
 import { FREEZE, FREEZE_LINE } from "@/lib/copy";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
+import { JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
 import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
@@ -366,7 +367,10 @@ export function HomeV3({
                 style={styles.prestart}
               >
                 <CalendarClock size={RING} color={DS_V3.color.textSecondary} />
-                <Text style={styles.task}>{homePrestartLine(row.name)}</Text>
+                <View style={styles.prestartCopy}>
+                  <Text style={styles.task}>{row.name}</Text>
+                  <Text style={styles.caption}>{JOIN_CAPTION_TOMORROW}</Text>
+                </View>
               </Pressable>
             </View>
           ))
@@ -480,6 +484,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: DS_V3.space.md,
     minHeight: DS_V3.size.tap,
+  },
+  prestartCopy: {
+    flex: 1,
+    gap: 2,
   },
   cardHead: {
     flexDirection: "row",
@@ -735,9 +743,8 @@ const styles = StyleSheet.create({
   },
   firstSlot: {
     minHeight: DS_V3.size.button,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: DS_V3.color.brand,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.hairline,
     borderRadius: DS_V3.radius.card,
     padding: DS_V3.space.gutter,
     gap: DS_V3.space.sm,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dateKeyInTimeZone } from "./date-utils";
 import { enrollmentEndAt } from "./enrollment-end-at";
-import { anyTimeWindowClosedToday, enrollmentStartAt } from "./join-challenge";
+import { anyTimeWindowClosedToday, day1Defers, enrollmentStartAt } from "./join-challenge";
 
 const TZ = "America/New_York";
 
@@ -128,6 +128,13 @@ describe("join deferral", () => {
         TZ,
       ),
     ).toBe(true);
+  });
+
+  it("today already secured defers Day 1 even when the window is still open", () => {
+    expect(day1Defers({ windowClosed: false, todaySecured: true })).toBe(true);
+    expect(day1Defers({ windowClosed: true, todaySecured: false })).toBe(true);
+    expect(day1Defers({ windowClosed: false, todaySecured: false })).toBe(false);
+    expect(dateKeyInTimeZone(enrollmentStartAt(inside, TZ, true), TZ)).toBe("2026-09-28");
   });
 
   it("no time gate starts today", () => {

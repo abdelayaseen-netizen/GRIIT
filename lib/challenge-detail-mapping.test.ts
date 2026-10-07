@@ -3,7 +3,6 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_CHALLENGES_LIMIT } from "@/lib/free-challenge-limit";
 import {
-  JOIN_BONUS,
   JOIN_CAPTION_INVITE,
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
@@ -234,11 +233,12 @@ describe("joinCaption", () => {
     expect(joinCaption("solo")).toBe(JOIN_CAPTION_TODAY);
   });
 
-  it("a day that is already secured stays secured when Day 1 is today", () => {
-    expect(joinCaption("solo", undefined, undefined, true)).toBe(JOIN_BONUS);
-    expect(JOIN_BONUS).toBe("Day 1 is today. Today's already secured, so this one's a bonus.");
-    const join = readFileSync(resolve(__dirname, "../backend/trpc/routes/challenges-join.ts"), "utf8");
-    expect(join).not.toContain("day_secures");
+  it("a secured day or a closed window makes Day 1 tomorrow", () => {
+    expect(joinCaption("solo", undefined, undefined, true)).toBe(JOIN_CAPTION_TOMORROW);
+    const join = readFileSync(resolve(__dirname, "../backend/lib/join-challenge.ts"), "utf8");
+    expect(join).toContain("day1Defers");
+    expect(join).toContain('.from("day_secures")');
+    expect(join).not.toContain('.delete()');
   });
 
   it("reads start_at local date for Day 1 copy", () => {
@@ -251,7 +251,8 @@ describe("joinCaption", () => {
     expect(wizard).toContain("day1StartCopy(");
     const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
     expect(catalog).toContain("day1StartCopy(result.start_at, timeZone)");
-    expect(catalog).toContain('heading="You\'re in."');
+    expect(catalog).toContain("JOIN_CAPTION_TOMORROW");
+    expect(catalog).not.toContain('heading="You\'re in."');
     expect(catalog).not.toContain('Alert.alert(\n          "You\'re in."');
     const active = readFileSync(
       resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
