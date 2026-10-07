@@ -15,6 +15,7 @@ import {
   countCtaEnabled,
   countCtaLabel,
   countOfLine,
+  counterHeaderWhenReady,
   counterSubline,
 } from "@/lib/work-step";
 
@@ -25,10 +26,15 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
+  challengeName?: string;
+  currentDay?: number;
+  durationDays?: number;
+  dayReady?: boolean;
   hasCamera?: boolean;
   keypadOpen: boolean;
   onTypeCount: (v: number) => void;
   onAddOne: () => void;
+  onAddAmount?: (n: number) => void;
   onOpenKeypad: () => void;
   onRemoveOne: () => void;
   onSubmit: () => void;
@@ -45,10 +51,15 @@ export function CountStep({
   taskName,
   headerTitle,
   headerLabel,
+  challengeName,
+  currentDay = 1,
+  durationDays = 1,
+  dayReady = true,
   hasCamera = false,
   keypadOpen,
   onTypeCount,
   onAddOne,
+  onAddAmount,
   onOpenKeypad,
   onRemoveOne,
   onSubmit,
@@ -59,6 +70,12 @@ export function CountStep({
   const holdOpenedKeypad = useRef(false);
   const enabled = countCtaEnabled(count, counterGoal);
   const line = countOfLine(count, counterGoal, counterUnit);
+  const header = counterHeaderWhenReady(
+    dayReady,
+    challengeName ?? headerLabel ?? "",
+    currentDay,
+    durationDays,
+  );
 
   return (
     <View style={styles.root}>
@@ -76,7 +93,14 @@ export function CountStep({
         }
       >
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
+        <PushedHeader
+          title={header?.title ?? headerTitle}
+          label={header?.label ?? headerLabel}
+          titleSlot={
+            dayReady ? undefined : <View style={styles.daySkeleton} accessibilityLabel="Loading day" />
+          }
+          onBack={onBack}
+        />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -101,6 +125,7 @@ export function CountStep({
           </View>
         ) : (
           <>
+            <View style={styles.addRow}>
             <Pressable
               onPress={() => {
                 if (holdOpenedKeypad.current) return;
@@ -122,6 +147,11 @@ export function CountStep({
             >
               <Text style={styles.addOneText}>{COUNT_ADD}</Text>
             </Pressable>
+            <View style={styles.bumps}>
+              <ControlPill label="+5" onPress={() => onAddAmount?.(5)} />
+              <ControlPill label="+10" onPress={() => onAddAmount?.(10)} />
+            </View>
+            </View>
             <ControlPillRow>
               <ControlPill label={COUNT_REMOVE} icon="minus" onPress={onRemoveOne} />
               <ControlPill label={COUNT_TYPE} icon="keyboard" onPress={onOpenKeypad} />
@@ -182,6 +212,18 @@ const styles = StyleSheet.create({
   typeField: {
     alignSelf: "stretch",
   },
+  daySkeleton: {
+    width: 140,
+    height: 22,
+    borderRadius: DS_V3.radius.thumb,
+    backgroundColor: DS_V3.color.surface,
+  },
+  addRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.md,
+  },
+  bumps: { gap: DS_V3.space.sm },
   addOne: {
     width: CIRCLE,
     height: CIRCLE,

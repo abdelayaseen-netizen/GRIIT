@@ -5,6 +5,7 @@ import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flo
 import {
   COUNT_HONESTY,
   counterHeaderLines,
+  counterHeaderWhenReady,
   counterSubline,
   COUNT_POST,
   COUNT_TYPE,
@@ -85,6 +86,19 @@ describe("header title", () => {
     expect(chromeTitle("timer")).toBe("Timer");
     expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("run")).toBe("Run");
+    expect(counterHeaderWhenReady(false, "Read", 5, 30)).toBeNull();
+    expect(counterHeaderWhenReady(true, "Read", 5, 30)).toEqual({
+      label: "Read",
+      title: "Day 5 of 30",
+    });
+  });
+
+  it("offers +5 and +10 beside Add one, and keeps Type it", () => {
+    const step = readFileSync(resolve(__dirname, "../components/task-v2/steps/CountStep.tsx"), "utf8");
+    expect(step).toContain('label="+5"');
+    expect(step).toContain('label="+10"');
+    expect(step).toContain("COUNT_TYPE");
+    expect(step).toContain("daySkeleton");
   });
 });
 

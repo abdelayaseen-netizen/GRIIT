@@ -90,6 +90,17 @@ export function counterHeaderLines(
   return { label: name, title: `Day ${n} of ${total}` };
 }
 
+/** Hide the day line until the enrollment row has loaded. Never flash Day 1. */
+export function counterHeaderWhenReady(
+  ready: boolean,
+  challenge: string,
+  day: number,
+  durationDays: number,
+): { label: string; title: string } | null {
+  if (!ready) return null;
+  return counterHeaderLines(challenge, day, durationDays);
+}
+
 export function workThenCamera(type: string, gates: readonly TaskGate[]): boolean {
   return (
     (type === "counter" ||

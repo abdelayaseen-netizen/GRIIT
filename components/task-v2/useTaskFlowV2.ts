@@ -145,7 +145,8 @@ export function useTaskFlowV2() {
   });
   const startAt =
     enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null;
-  const currentDay = workStepDay(startAt, timeZone, dateKey, durationDays);
+  const dayReady = !activeChallengeId || enrollmentQ.isFetched;
+  const currentDay = dayReady ? workStepDay(startAt, timeZone, dateKey, durationDays) : 0;
   const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
   const minWords = config.min_words ?? 150;
   const counterGoal = resolveConfigCounterTarget(config) || 8;
@@ -1061,6 +1062,8 @@ export function useTaskFlowV2() {
     resetTimer,
     submitTimer,
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
+    onAddAmount: (n: number) => setCount((c) => Math.min(counterGoal, c + Math.max(0, Math.floor(n)))),
+    dayReady,
     onOpenCountKeypad: () => {
       setKeypad({ field: "count" });
     },
