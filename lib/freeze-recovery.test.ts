@@ -90,7 +90,7 @@ describe("freeze recovery after dismiss", () => {
       resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),
       "utf8",
     );
-    expect(screen).toContain("freezeRecoveryRow");
-    expect(screen).toContain("FreezeSheet");
+    expect(screen).not.toContain("freezeRecoveryRow");
+    expect(screen).not.toContain("FreezeSheet");
   });
 });
