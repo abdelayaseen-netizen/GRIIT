@@ -364,7 +364,11 @@ export function daysFromSource(
 
 export function weekStripDaysUi(
   days: readonly DayRecord[],
-): { letter: string; filled: boolean; state: "secured" | "frozen" | "last_stand" | "missed" }[] {
+): {
+  letter: string;
+  filled: boolean;
+  state: "secured" | "frozen" | "last_stand" | "missed" | "future" | "before";
+}[] {
   const letters = ["M", "T", "W", "T", "F", "S", "S"] as const;
   return days.slice(0, 7).map((d, i) => ({
     letter: letters[i] ?? "M",
@@ -376,7 +380,11 @@ export function weekStripDaysUi(
           ? "frozen"
           : d.state === "laststand"
             ? "last_stand"
-            : "missed",
+            : d.state === "beforejoin"
+              ? "before"
+              : d.state === "notdue"
+                ? "future"
+                : "missed",
   }));
 }
 

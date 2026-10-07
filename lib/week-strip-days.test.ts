@@ -32,7 +32,7 @@ describe("weekStripDayState", () => {
         todayKey: "2026-09-18",
         todaySecured: true,
       }),
-    ).toEqual(["missed", "last_stand", "secured", "frozen", "secured", "missed", "missed"]);
+    ).toEqual(["missed", "last_stand", "secured", "frozen", "secured", "future", "future"]);
   });
 
   it("buildWeekStripDays puts a snowflake state on Thursday", () => {

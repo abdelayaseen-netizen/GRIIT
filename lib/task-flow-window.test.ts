@@ -7,6 +7,7 @@ import {
   flowFooterCaption,
   flowHeaderTitle,
   gatesFromConfig,
+  withRequiredPhotoGate,
   isWindowClosedError,
 } from "@/lib/task-flow-window";
 import { WINDOW_CLOSED_FORBIDDEN } from "@/lib/task-ui";
@@ -27,6 +28,10 @@ describe("gatesFromConfig", () => {
       "time",
     ]);
     expect(gatesFromConfig({ require_photo: true })).toEqual([]);
+    expect(withRequiredPhotoGate({ require_photo: true })).toEqual(["camera"]);
+    expect(withRequiredPhotoGate({ photo_mode: "required" })).toEqual(["camera"]);
+    expect(withRequiredPhotoGate({ photo_mode: "optional" })).toEqual([]);
+    expect(withRequiredPhotoGate({ gates: ["camera"], photo_mode: "required" })).toEqual(["camera"]);
     expect(gatesFromConfig({ gates: ["heart_rate", "camera"] })).toEqual(["camera"]);
   });
 });

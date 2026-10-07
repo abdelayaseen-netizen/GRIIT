@@ -26,6 +26,20 @@ export function catalogCoverUri(row: ChallengeCoverRow | null | undefined): stri
   return null;
 }
 
+const COVER_CATEGORIES = ["Fitness", "Faith", "Mind", "Health", "Discipline", "Learning"] as const;
+export type CatalogCoverCategory = (typeof COVER_CATEGORIES)[number];
+
+/** Discover cards use the Cover generator. Unknown categories land on Discipline. */
+export function catalogCoverCategory(raw: string | null | undefined): CatalogCoverCategory {
+  const c = (raw ?? "").trim().toLowerCase();
+  if (c === "fitness" || c === "body") return "Fitness";
+  if (c === "faith") return "Faith";
+  if (c === "mind") return "Mind";
+  if (c === "health") return "Health";
+  if (c === "learning") return "Learning";
+  return "Discipline";
+}
+
 /** Surface label when there is no https cover. Always the challenge title. */
 export function catalogCoverLabel(row: {
   category?: string | null;

@@ -22,6 +22,7 @@ export function ProfileHeader(p: {
   bio?: string | null;
   bioPlaceholder?: string | null;
   streakDays: number;
+  bestDays: number;
   securedDays: number;
   friends: number;
   followers?: number;
@@ -54,18 +55,11 @@ export function ProfileHeader(p: {
           size={80}
         />
         <View style={styles.stats}>
-          <Stat n={p.streakDays} l="streak" earned flame />
+          <Stat n={p.streakDays} l="Streak" earned flame />
           {p.locked ? null : (
             <>
-              <Stat n={p.securedDays} l="secured" earned />
-              <Pressable
-                onPress={p.onFriends ?? p.onFollowers}
-                style={styles.statFlex}
-                accessibilityRole="button"
-                accessibilityLabel={`${p.friends} friends`}
-              >
-                <Stat n={p.friends} l="friends" />
-              </Pressable>
+              <Stat n={p.bestDays} l="Best" earned />
+              <Stat n={p.securedDays} l="Days secured" earned />
             </>
           )}
         </View>

@@ -382,7 +382,11 @@ export default function ActiveChallengeDetailScreen() {
           taskType: row?.task_type ?? task.task_type,
           taskName: task.title,
           taskDescription: "",
-          taskConfig: buildTaskConfigParam((row ?? task) as unknown as Record<string, unknown>),
+          taskConfig: buildTaskConfigParam({
+            ...((row ?? task) as unknown as Record<string, unknown>),
+            gates: task.gates,
+            require_photo: task.require_photo === true || row?.require_photo === true,
+          }),
           currentDay: String(shownDay),
           durationDays: String(durationDays),
           challengeName: title,

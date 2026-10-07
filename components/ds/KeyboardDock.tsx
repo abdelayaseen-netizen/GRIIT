@@ -2,20 +2,23 @@
  * One keyboard-avoiding wrapper. The focused field stays above the keyboard.
  * Number pads share a Done bar that only dismisses the pad.
  */
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   InputAccessoryView,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  type KeyboardEvent,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { SAFE } from "@/lib/safe-area";
 
 export const NUMBER_PAD_ACCESSORY_ID = "griit-number-done";
 
@@ -43,16 +46,36 @@ export default function KeyboardDock({
   style?: StyleProp<ViewStyle>;
   pointerEvents?: "box-none" | "none" | "box-only" | "auto";
 }) {
+  const insets = useSafeAreaInsets();
+  const [keyboardOverlap, setKeyboardOverlap] = useState(0);
+
+  useEffect(() => {
+    const apply = (e: KeyboardEvent) => {
+      const windowHeight = Dimensions.get("window").height;
+      const overlap = Math.max(0, windowHeight - (e.endCoordinates?.screenY ?? windowHeight));
+      setKeyboardOverlap(overlap);
+    };
+    if (Platform.OS === "ios") {
+      const frame = Keyboard.addListener("keyboardWillChangeFrame", apply);
+      return () => frame.remove();
+    }
+    const show = Keyboard.addListener("keyboardDidShow", apply);
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOverlap(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  // Screen already pads the home-indicator inset. Lift only the rest of the keyboard.
+  const covered = Math.max(insets.bottom, SAFE.bottom);
+  const lift = Math.max(0, keyboardOverlap - covered);
+
   return (
-    <KeyboardAvoidingView
-      style={[styles.fill, style]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={0}
-      pointerEvents={pointerEvents}
-    >
+    <View style={[styles.fill, { paddingBottom: lift }, style]} pointerEvents={pointerEvents}>
       {children}
       {footer}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

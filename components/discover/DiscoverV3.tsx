@@ -33,7 +33,6 @@ import {
   DISCOVER_LOAD_ERROR,
   FEATURED_BUILTINS,
   featuredCardLine,
-  featuredMembersLine,
   needsSetGym,
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
@@ -146,8 +145,8 @@ export function DiscoverV3({
         ))}
       </ScrollView>
 
-      <Text style={styles.heading}>Featured</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <Text style={[styles.heading, styles.featuredHeading]}>Featured</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
         {FEATURED_BUILTINS.map((item) => (
           <Pressable
             key={item.id}
@@ -159,7 +158,6 @@ export function DiscoverV3({
             <Cover category={COVER_CATEGORY[item.category]} days={item.days} width={164} height={110} />
             <Text style={styles.builtinTitle} numberOfLines={2}>{item.title}</Text>
             <Text style={styles.caption}>{featuredCardLine(item)}</Text>
-            <Text style={styles.beFirst}>{featuredMembersLine(0)}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -172,6 +170,7 @@ export function DiscoverV3({
             title={featured.name}
             coverUri={catalogCoverUri(featured)}
             coverLabel={catalogCoverLabel(featured)}
+            category={featured.category}
             days={featured.duration_days}
             difficulty={difficultyLabel(featured.difficulty)}
             proofType={discoverProofLabel({
@@ -275,6 +274,7 @@ export function DiscoverV3({
                 title={item.title}
                 coverUri={catalogCoverUri(item)}
                 coverLabel={catalogCoverLabel(item)}
+                category={item.category}
                 days={item.duration}
                 difficulty={difficultyLabel(item.difficulty)}
                 joined={joinedIds?.has(item.id) === true}
@@ -336,11 +336,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DS_V3.color.textPrimary,
   },
-  beFirst: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "500",
-    color: DS_V3.color.textSecondary,
+  featuredHeading: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.sm,
+  },
+  carousel: {
+    flexDirection: "row",
+    paddingHorizontal: DS_V3.space.gutter,
+    gap: DS_V3.space.sm,
+    paddingBottom: DS_V3.space.lg,
+    alignItems: "flex-start",
   },
   featuredPad: {
     paddingHorizontal: DS_V3.space.gutter,

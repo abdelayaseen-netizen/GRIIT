@@ -107,6 +107,7 @@ export function ProfileV3({
   bio,
   bioPlaceholder,
   streak,
+  best,
   totalDaysSecured,
   consistency,
   consistencySub,
@@ -146,6 +147,7 @@ export function ProfileV3({
     <View>
       {showRootHeader ? (
         <RootHeader
+          titleSize="title"
           title={handle ? `@${handle}` : "Profile"}
           actions={
             <View style={styles.actionsRow}>
@@ -169,6 +171,7 @@ export function ProfileV3({
         username={handle}
         bio={bio}
         streakDays={streak}
+        bestDays={best}
         securedDays={locked ? 0 : (totalDaysSecured ?? 0)}
         friends={friends ?? 0}
         followers={followers}

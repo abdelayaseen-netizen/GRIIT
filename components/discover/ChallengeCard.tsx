@@ -6,13 +6,15 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
+import { catalogCoverCategory } from "@/lib/catalog-cover";
 import Button from "@/components/ds/Button";
-import ProofImage from "@/components/ds/ProofImage";
+import { Cover } from "@/components/ds/Cover";
 
 export type ChallengeCardProps = {
   title: string;
   coverUri?: string | null;
   coverLabel?: string | null;
+  category?: string | null;
   days: number;
   difficulty: string;
   featured?: boolean;
@@ -26,16 +28,10 @@ function dayPhrase(n: number): string {
   return formatDays(n);
 }
 
-function httpsCover(uri?: string | null): string | null {
-  if (typeof uri !== "string") return null;
-  const t = uri.trim();
-  return /^https:\/\//i.test(t) ? t : null;
-}
-
 export default function ChallengeCard({
   title,
-  coverUri,
   coverLabel,
+  category,
   days,
   difficulty,
   featured,
@@ -46,43 +42,43 @@ export default function ChallengeCard({
 }: ChallengeCardProps) {
   const gridMeta = `${dayPhrase(days)} · ${difficulty}`;
   const featuredMeta = proofType ? `${dayPhrase(days)} · ${proofType}` : gridMeta;
-  const size = featured ? "feed" : "card";
-  const cover = httpsCover(coverUri);
-  const fallbackTitle = title.trim() || coverLabel?.trim() || "Challenge";
+  const meta = featured ? featuredMeta : gridMeta;
+  const [width, setWidth] = React.useState(0);
+  const coverH = featured ? 168 : 110;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={title || coverLabel || "Challenge"}
       onPress={onPress}
       style={styles.wrap}
+      onLayout={(e) => {
+        const next = Math.round(e.nativeEvent.layout.width);
+        if (next > 0 && next !== width) setWidth(next);
+      }}
     >
-      <View>
-        <ProofImage
-          uri={cover}
-          size={size}
-          scrim
-          title={featured ? undefined : fallbackTitle}
-          recyclingKey={cover ?? fallbackTitle}
+      {width > 0 ? (
+        <Cover
+          category={catalogCoverCategory(category)}
+          days={days}
+          width={width}
+          height={coverH}
         />
-        {featured ? (
-          <View style={styles.featuredRow} pointerEvents="box-none">
-            <View style={styles.featuredCopy}>
-              <Text style={styles.featuredTitle} numberOfLines={2}>
-                {title}
-              </Text>
-              <Text style={styles.featuredMeta}>{featuredMeta}</Text>
-            </View>
-            <Button
-              label={joined ? "Joined" : "Start"}
-              variant={joined ? "secondary" : "primary"}
-              size="small"
-              onPress={joined ? onPress : (onStart ?? onPress)}
-            />
-          </View>
-        ) : null}
-      </View>
-      {featured ? null : <Text style={styles.gridMeta}>{gridMeta}</Text>}
+      ) : (
+        <View style={{ height: coverH }} />
+      )}
+      <Text style={styles.featuredTitle} numberOfLines={2}>
+        {title}
+      </Text>
+      <Text style={styles.gridMeta}>{meta}</Text>
+      {featured ? (
+        <Button
+          label={joined ? "Joined" : "Start"}
+          variant={joined ? "secondary" : "primary"}
+          size="small"
+          onPress={joined ? onPress : (onStart ?? onPress)}
+        />
+      ) : null}
     </Pressable>
   );
 }
@@ -91,30 +87,10 @@ const styles = StyleSheet.create({
   wrap: {
     gap: DS_V3.space.sm,
   },
-  featuredRow: {
-    position: "absolute",
-    left: DS_V3.space.lg,
-    right: DS_V3.space.lg,
-    bottom: DS_V3.space.lg,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: DS_V3.space.md,
-  },
-  featuredCopy: {
-    flex: 1,
-    gap: DS_V3.space.xs,
-  },
   featuredTitle: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  featuredMeta: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textPrimary,
   },
   gridMeta: {
