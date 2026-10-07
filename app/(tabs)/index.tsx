@@ -718,6 +718,7 @@ export default function HomeScreen() {
               weekStates={weekStates}
               todayIndex={todayWeekIndex}
               fillToday={todaySecured}
+              daySecured={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
               onPressStreak={() => {

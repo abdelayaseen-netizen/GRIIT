@@ -5,13 +5,13 @@
 
 export const SIMPLE_ASK_HEADING = "Did you do it today?" as const;
 
-export const SIMPLE_ASK_HONESTY = "Self-reported. Nothing is checked." as const;
+export const SIMPLE_ASK_HONESTY = "Self-reported." as const;
 
 export const SIMPLE_ASK_CTA = "I did it" as const;
 
 export const SIMPLE_ASK_SAVING = "Saving…" as const;
 
-export const SIMPLE_ASK_CAPTION = "Nothing is secured until the server says so." as const;
+export const SIMPLE_ASK_CAPTION = "Self-reported." as const;
 
 export const SIMPLE_ASK_NOT_YET = "Not yet" as const;
 
@@ -29,7 +29,7 @@ export const SAVING_TAKEOVER_HEADING = "Saving your day" as const;
 
 export const SECURED_STREAK_LABEL = "Current streak" as const;
 
-export const SECURED_PILL_SELF = "Self-reported. Nothing was checked." as const;
+export const SECURED_PILL_SELF = "Self-reported." as const;
 
 export const SECURED_PILL_CAMERA = "Camera proof. Checked on the server." as const;
 

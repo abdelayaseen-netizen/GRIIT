@@ -102,7 +102,6 @@ export default function TodayCard({ model, loading, onTask }: TodayCardProps) {
           </View>
         ))}
 
-        {model.day_secured ? <Text style={styles.secured}>Day secured.</Text> : null}
       </View>
     </Card>
   );

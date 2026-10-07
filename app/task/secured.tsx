@@ -240,7 +240,7 @@ function TaskSecuredInner() {
               currentDay: result.challengeDay,
               totalDays: result.challengeLength,
               eventType: "task_completed",
-              isCompleted: true,
+              isCompleted: false,
               hasProof: true,
               photoUrl: proofs[0]?.uri ?? proofUri ?? null,
               proofPhotoUrl: proofs[0]?.uri ?? proofUri ?? null,

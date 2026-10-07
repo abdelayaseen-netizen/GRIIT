@@ -21,6 +21,7 @@ describe("push registration is silent to the user", () => {
     expect(layout.startsWith('import "@/lib/push-registration-logbox"')).toBe(true);
     expect(logbox).toContain("LogBox.ignoreLogs");
     expect(logbox).toContain("Error reading persisted server registration info");
+    expect(logbox).toContain("Error fetching offerings");
     expect(reminders).toContain("Notifications are off for GRIIT");
   });
 });

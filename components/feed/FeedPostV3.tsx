@@ -4,7 +4,6 @@
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check, Heart, MessageCircle, Send } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
@@ -13,7 +12,6 @@ import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraS
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
 import { FeedCompactRow, FeedSystemLine } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
-import { systemLine } from "@/lib/feed-join";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
@@ -92,14 +90,14 @@ export default function FeedPostV3({
   const seal = showCameraSeal(post.proofPhotoUrl ?? null);
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
 
-  if (variant === "day_secured" || variant === "challenge_finished") {
+  if (variant === "challenge_finished") {
     return (
       <FeedSystemLine
         userId={post.userId}
         displayName={name}
         username={post.username}
         avatarUrl={avatarUri}
-        text={systemLine(name, post.currentDay, post.totalDays, post.challengeName)}
+        text={`${name} finished ${post.challengeName}`}
         ago={when}
         onProfile={onProfilePress ?? (() => undefined)}
       />
@@ -169,19 +167,10 @@ export default function FeedPostV3({
       {variant === "task_camera" ? (
         <View style={styles.photoFrame}>
           {photo ? (
-            <ProofImage uri={photo} size="feed" recyclingKey={post.id} title={subject} />
+            <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
           ) : (
             <ProofFallbackTile taskName={subject} />
           )}
-          {photo ? (
-            <LinearGradient
-              colors={["rgba(15,15,15,0)", "rgba(15,15,15,0.75)"] as const}
-              style={styles.scrim}
-            />
-          ) : null}
-          {photo ? (
-            <Text style={styles.photoTitle} numberOfLines={2}>{subject}</Text>
-          ) : null}
           {photo && seal ? (
             <View style={styles.seal}>
               <CameraSeal onPress={() => setSealOpen(true)} size={28} />

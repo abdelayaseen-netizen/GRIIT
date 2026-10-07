@@ -5,6 +5,7 @@ import { chromeTitle, initialStep, submitWithoutPhotoNext } from "@/lib/task-flo
 import {
   COUNT_HONESTY,
   counterHeaderLines,
+  counterHeaderWhenReady,
   counterSubline,
   COUNT_POST,
   COUNT_TYPE,
@@ -46,7 +47,7 @@ describe("work step CTA labels", () => {
     expect(countCtaLabel(8, 8)).toBe("Post");
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
-    expect(COUNT_HONESTY).toBe("Self-entered count. Nothing is checked.");
+    expect(COUNT_HONESTY).toBe("Self-reported.");
     expect(counterSubline(true)).toBe("Count, then a photo.");
     expect(counterSubline(false)).toBe("Self-reported.");
   });
@@ -85,6 +86,19 @@ describe("header title", () => {
     expect(chromeTitle("timer")).toBe("Timer");
     expect(chromeTitle("counter")).toBe("Counter");
     expect(chromeTitle("run")).toBe("Run");
+    expect(counterHeaderWhenReady(false, "Read", 5, 30)).toBeNull();
+    expect(counterHeaderWhenReady(true, "Read", 5, 30)).toEqual({
+      label: "Read",
+      title: "Day 5 of 30",
+    });
+  });
+
+  it("offers +5 and +10 beside Add one, and keeps Type it", () => {
+    const step = readFileSync(resolve(__dirname, "../components/task-v2/steps/CountStep.tsx"), "utf8");
+    expect(step).toContain('label="+5"');
+    expect(step).toContain('label="+10"');
+    expect(step).toContain("COUNT_TYPE");
+    expect(step).toContain("daySkeleton");
   });
 });
 
@@ -103,7 +117,7 @@ describe("run honesty", () => {
     expect(runHonestyLine(false, false)).toBe(RUN_HONESTY_TYPED_NO_CAMERA);
     expect(RUN_HONESTY_TYPED).toBe("You type the distance and time. The photo is what is checked.");
     expect(RUN_HONESTY_GPS).toBe("Distance and time from GPS. The photo is still required.");
-    expect(RUN_HONESTY_TYPED_NO_CAMERA).toBe("You type the distance and time. Nothing is checked.");
+    expect(RUN_HONESTY_TYPED_NO_CAMERA).toBe("Self-reported.");
   });
 
   it("does not render the no-map sentence on the manual log step", () => {

@@ -11,7 +11,7 @@ import { fmtMmSs, type TaskFlowStep } from "@/lib/task-flow-state";
 
 export const WORK_SECURED_CAPTION = SIMPLE_ASK_CAPTION;
 
-export const COUNT_HONESTY = "Self-entered count. Nothing is checked.";
+export const COUNT_HONESTY = "Self-reported.";
 export const COUNT_THEN_PHOTO = "Count, then a photo.";
 export const COUNT_SELF_REPORTED = "Self-reported.";
 
@@ -37,7 +37,7 @@ export const RUN_HONESTY_TYPED =
   "You type the distance and time. The photo is what is checked.";
 export const RUN_HONESTY_GPS = "Distance and time from GPS. The photo is still required.";
 export const RUN_HONESTY_TYPED_NO_CAMERA =
-  "You type the distance and time. Nothing is checked.";
+  "Self-reported.";
 export const RUN_HONESTY = RUN_HONESTY_GPS;
 export const RUN_PHOTO_AFTER = "The photo comes after the numbers";
 export const RUN_TAKE_PHOTO = "Take photo";
@@ -88,6 +88,17 @@ export function counterHeaderLines(
   const n = Math.max(1, Math.floor(day));
   const total = Math.max(n, Math.floor(durationDays) || n);
   return { label: name, title: `Day ${n} of ${total}` };
+}
+
+/** Hide the day line until the enrollment row has loaded. Never flash Day 1. */
+export function counterHeaderWhenReady(
+  ready: boolean,
+  challenge: string,
+  day: number,
+  durationDays: number,
+): { label: string; title: string } | null {
+  if (!ready) return null;
+  return counterHeaderLines(challenge, day, durationDays);
 }
 
 export function workThenCamera(type: string, gates: readonly TaskGate[]): boolean {

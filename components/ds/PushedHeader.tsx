@@ -11,13 +11,15 @@ const ICON = DS_V3.space.xs * 6;
 
 export type PushedHeaderProps = {
   title: string;
+  /** Replaces the title text. Used for a day skeleton while enrollment loads. */
+  titleSlot?: ReactNode;
   /** Small type label above the title (106). */
   label?: string;
   onBack: () => void;
   trailing?: ReactNode;
 };
 
-export default function PushedHeader({ title, label, onBack, trailing }: PushedHeaderProps) {
+export default function PushedHeader({ title, titleSlot, label, onBack, trailing }: PushedHeaderProps) {
   return (
     <View style={[styles.bar, label ? styles.barTall : null]}>
       <Pressable
@@ -34,7 +36,9 @@ export default function PushedHeader({ title, label, onBack, trailing }: PushedH
             {label}
           </Text>
         ) : null}
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        {titleSlot ?? (
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        )}
       </View>
       <View style={styles.side}>{trailing}</View>
     </View>

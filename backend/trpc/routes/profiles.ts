@@ -71,7 +71,7 @@ export const profilesRouter = createTRPCRouter({
         .upsert({
           user_id: ctx.userId,
           username: input.username,
-          display_name: input.display_name || input.username,
+          display_name: (input.display_name || input.username).trim().replace(/\s+/g, " "),
           bio: input.bio || '',
           avatar_url: input.avatar_url,
           cover_url: input.cover_url,
@@ -350,6 +350,9 @@ export const profilesRouter = createTRPCRouter({
       }
       if (typeof updatePayload.timezone === "string") {
         updatePayload.timezone = resolveIanaTimeZone(updatePayload.timezone, "UTC");
+      }
+      if (typeof updatePayload.display_name === "string") {
+        updatePayload.display_name = updatePayload.display_name.trim().replace(/\s+/g, " ");
       }
       if (Object.keys(updatePayload).length === 0) {
         const { data } = await ctx.supabase

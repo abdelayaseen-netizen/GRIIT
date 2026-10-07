@@ -2,7 +2,6 @@ import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import KeyboardDock from "@/components/ds/KeyboardDock";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
@@ -21,8 +20,6 @@ type Props = {
 
 export function ReviewStep({
   photoUri,
-  challengeName,
-  taskName,
   caption,
   onCaption,
   onRetake,
@@ -53,14 +50,6 @@ export function ReviewStep({
       <Pressable onPress={onRetake} accessibilityRole="button" accessibilityLabel="Retake" style={styles.retake}>
         <Text style={styles.retakeText}>Retake</Text>
       </Pressable>
-      <LinearGradient colors={["transparent", "rgba(10,10,10,0.82)"]} style={styles.capOverlay}>
-        <Text style={styles.cap70} numberOfLines={1}>
-          {challengeName}
-        </Text>
-        <Text style={styles.cap92} numberOfLines={1}>
-          {taskName}
-        </Text>
-      </LinearGradient>
     </View>
     </KeyboardDock>
   );

@@ -31,7 +31,10 @@ export default function RootHeader({ title, kicker, actions, titleSize = "displa
 const styles = StyleSheet.create({
   wrap: {
     paddingTop: DS_V3.space.sm,
+    paddingBottom: DS_V3.space.sm,
     paddingHorizontal: DS_V3.space.gutter,
+    backgroundColor: DS_V3.color.canvas,
+    zIndex: 2,
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",

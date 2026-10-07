@@ -12,7 +12,6 @@ export const LIVE_FEED_TYPES = [
   "completed_challenge",
   "joined_challenge",
   "challenge_created",
-  "secured_day",
 ] as const;
 
 export function normalizeChallengeVisibility(raw: string | null | undefined): "public" | "friends" | "private" {
@@ -306,7 +305,7 @@ export async function hydrateActivityEventsToPosts(
     const md = ev.metadata ?? {};
     const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
     const profile = profileMap.get(ev.user_id);
-    const displayName = profile?.display_name ?? profile?.username ?? "Someone";
+    const displayName = (profile?.display_name ?? profile?.username ?? "Someone").trim().replace(/\s+/g, " ");
     const username = profile?.username ?? "?";
     const challengeName = typeof md.challenge_name === "string" && md.challenge_name.trim() ? md.challenge_name : ch?.title ?? "Challenge";
     const durationDays = typeof md.duration_days === "number" ? md.duration_days : ch?.duration_days ?? 14;

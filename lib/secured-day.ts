@@ -3,6 +3,7 @@
  * Day numbers only appear with a challenge name. Zero photos means no image area.
  */
 import type { HomeProofTask } from "@/lib/home-proof-card";
+import { METHOD } from "@/lib/copy";
 import { countNoun } from "@/lib/onboarding-v2-suggest";
 
 export const SECURED_TODAY = "Today is secured.";
@@ -64,10 +65,13 @@ export function securedDayCaption(args: {
   const m = Math.max(0, Math.floor(args.challengeCount));
   const k = Math.max(0, Math.floor(args.cameraProofs));
   const across = m > 1 ? ` across ${m} challenges` : "";
-  if (args.allSelfReported === true) {
-    return `${countNoun(n, "task", "tasks")}${across}, all self-reported. Nothing was checked.`;
+  if (k <= 0 || args.allSelfReported === true) {
+    return `${countNoun(n, "task", "tasks")}${across}. ${METHOD.selfReported}`;
   }
-  return `${countNoun(n, "task", "tasks")}${across}. ${countNoun(k, "camera proof", "camera proofs")}.`;
+  if (k >= n) {
+    return `${countNoun(n, "task", "tasks")}${across}. ${METHOD.camera(k)}`;
+  }
+  return `${countNoun(n, "task", "tasks")}${across}. ${METHOD.camera(k)} ${METHOD.selfReported}`;
 }
 
 export function securedOverflowLabel(total: number): string | null {
@@ -119,7 +123,13 @@ export function selectSecuredDayMeta(args: {
   selfReported: SecuredSelfRow[];
   allSelfReported: boolean;
 } {
-  const done = args.tasks.filter((t) => t.done);
+  const seen = new Set<string>();
+  const done = args.tasks.filter((t) => t.done).filter((t) => {
+    const key = t.id ?? `${t.challengeId ?? t.challengeName}:${t.name}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   const names = [...new Set(done.map((t) => t.challengeName))];
   const selfReported = names
     .filter((name) => done.filter((row) => row.challengeName === name).every(taskProofIsSelfReported))
@@ -128,7 +138,7 @@ export function selectSecuredDayMeta(args: {
       return {
         name,
         day: t.currentDay,
-        length: t.durationDays ?? t.currentDay,
+        length: t.durationDays && t.durationDays > 0 ? t.durationDays : t.currentDay,
       };
     });
   return {

@@ -10,10 +10,8 @@ const base = {
 };
 
 describe("feedNoPhotoCopy", () => {
-  it("secured_day says secured day N", () => {
-    expect(feedNoPhotoCopy({ ...base, eventType: "secured_day" })).toBe(
-      "Maya secured day 12",
-    );
+  it("secured_day is not a feed line", () => {
+    expect(feedNoPhotoCopy({ ...base, eventType: "secured_day" })).toBe("Maya");
   });
 
   it("joined_challenge says started challengeName", () => {

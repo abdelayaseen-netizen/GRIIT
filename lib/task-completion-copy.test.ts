@@ -25,7 +25,7 @@ describe("verificationLine", () => {
     expect(verificationLine({ kind: "checkin", gpsMeters: 24, accuracyM: 8 })).toBe(
       "GPS 24 m from the saved location · ±8 m accuracy"
     );
-    expect(verificationLine({ kind: "manual" })).toBe("Nothing was checked. You said you did it.");
+    expect(verificationLine({ kind: "manual" })).toBe("Self-reported.");
   });
 });
 

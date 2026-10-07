@@ -2,7 +2,7 @@
  * Frame 52 morning-after block. Fact → cost → cushion. No color.danger.
  * Dismiss persists miss_ack_date_key (decision 10).
  */
-import { FREEZE } from "@/lib/copy";
+import { FREEZE, FREEZE_LINE } from "@/lib/copy";
 
 export const MISS_ACK_STORAGE_KEY = "miss_ack_date_key";
 
@@ -103,6 +103,6 @@ export function morningAfterCushion(
   return `Your streak reset to 0. Your longest was ${input.longest} days.`;
 }
 
-export function morningAfterFreezeCaption(remaining: number): string {
-  return `${remaining} left. It refills 30 days after you use it.`;
+export function morningAfterFreezeCaption(_remaining: number): string {
+  return FREEZE_LINE;
 }

@@ -234,6 +234,9 @@ export function detailState(
  */
 export const JOIN_CAPTION_TODAY = "Day 1 is today.";
 export const JOIN_CAPTION_TOMORROW = "Day 1 is tomorrow.";
+export const MODE_STANDARD_DETAIL = "Standard. A freeze can cover a missed day.";
+export const MODE_STRICT_DETAIL =
+  "Strict. A missed day resets your streak in this challenge to 0. No freezes.";
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
 
@@ -264,9 +267,11 @@ export function joinCaption(
   _participationType: ParticipationType,
   startAtIso?: string | null,
   timeZone?: string,
+  todayAlreadySecured?: boolean,
 ): string {
-  if (startAtIso && timeZone) return day1StartCopy(startAtIso, timeZone);
-  return JOIN_CAPTION_TODAY;
+  const line = startAtIso && timeZone ? day1StartCopy(startAtIso, timeZone) : JOIN_CAPTION_TODAY;
+  if (todayAlreadySecured && line === JOIN_CAPTION_TODAY) return JOIN_CAPTION_TOMORROW;
+  return line;
 }
 
 export function mapParticipationType(raw: string | null | undefined): ParticipationType {

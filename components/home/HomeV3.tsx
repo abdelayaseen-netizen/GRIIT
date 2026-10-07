@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, X } from "lucide-react-native";
+import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import { StreakStrip } from "@/components/ds/StreakStrip";
@@ -31,10 +31,10 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
-import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
-import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
+import { FREEZE, FREEZE_LINE } from "@/lib/copy";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
+import { JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
 import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
@@ -44,7 +44,6 @@ import {
 
 const RING = 22;
 const RING_CHECK = DS_V3.space.md;
-const META = DS_V3.space.lg;
 const STROKE = (DS_V3.space.xs * 3) / 8;
 export function StatusRing({ row }: { row: HomeProofRow }) {
   const state = homeProofRingState(row);
@@ -127,6 +126,8 @@ export type HomeV3Props = {
   showFirstProofSlot?: boolean;
   noDaysOff?: boolean;
   highlightTaskId?: string | null;
+  /** Server day_secures already includes today. A later join does not clear it. */
+  daySecured?: boolean;
 };
 
 export function HomeV3({
@@ -149,7 +150,7 @@ export function HomeV3({
   onPressProof: _onPressProof,
   onPressTask,
   onPressChallenge,
-  onPressShareToday,
+  onPressShareToday: _onPressShareToday,
   sectionChoices,
   onToggleSection,
   freezesLeft: _freezesLeft,
@@ -165,6 +166,7 @@ export function HomeV3({
   showFirstProofSlot,
   noDaysOff: _noDaysOff = false,
   highlightTaskId,
+  daySecured = false,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
 
@@ -205,7 +207,7 @@ export function HomeV3({
   );
   const status = homeStatus({
     hasChallenge: Boolean(proof?.hasChallenge),
-    secured: allDone,
+    secured: daySecured || allDone,
     left: proof ? Math.max(0, proof.totalCount - proof.doneCount) : 0,
     total: proof?.totalCount ?? 0,
     lostTask: todayBlocked ? closedUndone?.name : null,
@@ -265,33 +267,10 @@ export function HomeV3({
         primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
       />
 
-      {morningAfter ? (
-        <View style={styles.gutter}>
-          <Card>
-            <View style={styles.missHead}>
-              <Text style={styles.missFact}>{YESTERDAY_WASNT_SECURED}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                onPress={morningAfter.onDismiss}
-                style={styles.missX}
-              >
-                <X size={META} color={DS_V3.color.textSecondary} strokeWidth={2} />
-              </Pressable>
-            </View>
-            <View style={styles.missBody}>
-              <Text style={styles.secondary}>{morningAfter.cost}</Text>
-              <Text style={styles.secondary}>{morningAfter.cushion}</Text>
-              {morningAfter.onUseFreeze ? (
-                <>
-                  <Button label={USE_FREEZE_FOR_YESTERDAY} onPress={morningAfter.onUseFreeze} />
-                  {morningAfter.freezeCaption ? (
-                    <Text style={styles.missCap}>{morningAfter.freezeCaption}</Text>
-                  ) : null}
-                </>
-              ) : null}
-            </View>
-          </Card>
+      {morningAfter?.onUseFreeze ? (
+        <View style={styles.freezeRow}>
+          <Text style={styles.secondary}>{FREEZE_LINE}</Text>
+          <Button label={FREEZE.button} variant="secondary" onPress={morningAfter.onUseFreeze} />
         </View>
       ) : null}
 
@@ -365,39 +344,6 @@ export function HomeV3({
                 </View>
               </View>
             )}
-            {allDone ? (
-              <View style={styles.shareTodayBlock}>
-                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
-                {proof.showShareToday ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={SHARE_TODAY}
-                    onPress={onPressShareToday}
-                    style={styles.sharePill}
-                  >
-                    <Text style={styles.sharePillTxt}>{SHARE_TODAY}</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : proof.showShareToday ? (
-              <View style={styles.shareTodayBlock}>
-                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
-                <Divider />
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={SHARE_TODAY}
-                  onPress={onPressShareToday}
-                  style={styles.shareTodayRow}
-                >
-                  <Share size={RING} color={DS_V3.color.textSecondary} />
-                  <View style={styles.taskCopy}>
-                    <Text style={styles.task}>{SHARE_TODAY}</Text>
-                    <Text style={styles.caption}>{proof.shareTodayCaption}</Text>
-                  </View>
-                  <ChevronRight size={RING} color={DS_V3.color.textSecondary} />
-                </Pressable>
-              </View>
-            ) : null}
           </Card>
         </View>
       ) : null}
@@ -421,7 +367,10 @@ export function HomeV3({
                 style={styles.prestart}
               >
                 <CalendarClock size={RING} color={DS_V3.color.textSecondary} />
-                <Text style={styles.task}>{homePrestartLine(row.name)}</Text>
+                <View style={styles.prestartCopy}>
+                  <Text style={styles.task}>{row.name}</Text>
+                  <Text style={styles.caption}>{JOIN_CAPTION_TOMORROW}</Text>
+                </View>
               </Pressable>
             </View>
           ))
@@ -525,11 +474,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
   },
+  freezeRow: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.md,
+    gap: DS_V3.space.sm,
+  },
   prestart: {
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.md,
     minHeight: DS_V3.size.tap,
+  },
+  prestartCopy: {
+    flex: 1,
+    gap: 2,
   },
   cardHead: {
     flexDirection: "row",
@@ -758,7 +716,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: "500",
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   sharePill: {
     height: 36,
@@ -785,9 +743,8 @@ const styles = StyleSheet.create({
   },
   firstSlot: {
     minHeight: DS_V3.size.button,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: DS_V3.color.brand,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.hairline,
     borderRadius: DS_V3.radius.card,
     padding: DS_V3.space.gutter,
     gap: DS_V3.space.sm,

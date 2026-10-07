@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { doubleTapAction, eventLine, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal, systemLine } from "@/lib/feed-join";
+import { doubleTapAction, eventLine, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal } from "@/lib/feed-join";
 
 function post(partial: Partial<LiveFeedPost> & { id: string }): LiveFeedPost {
   return {
@@ -38,7 +38,6 @@ describe("joinLine", () => {
     expect(joinLine(["Alex", "Bina"], 0, "Iron man")).toBe("Alex and Bina started Iron man");
     expect(joinLine(["Alex", "Bina"], 1, "Iron man")).toBe("Alex, Bina and 1 other started Iron man");
     expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex, Bina and 3 others started Iron man");
-    expect(systemLine("Alex", 3, 75, "Iron man")).toBe("Alex secured Day 3 of 75 · Iron man");
   });
 
   it("finished with 0 secured says ended; 1 day is singular", () => {
@@ -122,17 +121,15 @@ describe("groupFeedJoins", () => {
     expect(items[2] && !isJoinGroup(items[2]) && items[2].id).toBe("task");
   });
 
-  it("groups equal-timestamp secured events once and leaves a photo post alone", () => {
+  it("does not turn secured_day rows into a system line", () => {
     const t = "2026-10-01T12:00:00.000Z";
     const items = groupFeedJoins([
       post({ id: "s1", userId: "a", displayName: "Alex", eventType: "secured_day", createdAt: t, currentDay: 2 }),
       post({ id: "s2", userId: "b", displayName: "Bina", eventType: "secured_day", createdAt: t, currentDay: 2 }),
       post({ id: "photo", eventType: "task_completed", proofPhotoUrl: "https://cdn.example/p.jpg" }),
     ]);
-    expect(isJoinGroup(items[0]!)).toBe(true);
-    expect(isJoinGroup(items[0]!) && items[0].verb).toBe("secured");
-    expect(isJoinGroup(items[0]!) && eventLine(items[0])).toBe("Alex and Bina secured Day 2 · Iron man");
-    expect(items[1] && !isJoinGroup(items[1]) && items[1].id).toBe("photo");
+    expect(items.every((item) => !isJoinGroup(item))).toBe(true);
+    expect(items.map((item) => ("id" in item ? item.id : ""))).toEqual(["s1", "s2", "photo"]);
   });
 });
 

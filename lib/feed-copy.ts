@@ -19,8 +19,6 @@ export type FeedNoPhotoInput = {
 export function feedNoPhotoCopy(post: FeedNoPhotoInput): string {
   const name = post.displayName || post.username;
   switch (post.eventType) {
-    case "secured_day":
-      return `${name} secured day ${post.currentDay}`;
     case "joined_challenge":
     case "challenge_created":
       return `${name} started ${post.challengeName}`;

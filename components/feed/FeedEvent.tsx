@@ -43,7 +43,7 @@ export default function FeedEvent({
 const styles = StyleSheet.create({
   row: {
     minHeight: DS_V3.size.tap,
-    paddingHorizontal: 0,
+    paddingHorizontal: DS_V3.space.gutter,
     paddingVertical: DS_V3.space.md,
     flexDirection: "row",
     alignItems: "center",

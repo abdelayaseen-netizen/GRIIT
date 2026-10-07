@@ -233,6 +233,14 @@ describe("joinCaption", () => {
     expect(joinCaption("solo")).toBe(JOIN_CAPTION_TODAY);
   });
 
+  it("a secured day or a closed window makes Day 1 tomorrow", () => {
+    expect(joinCaption("solo", undefined, undefined, true)).toBe(JOIN_CAPTION_TOMORROW);
+    const join = readFileSync(resolve(__dirname, "../backend/lib/join-challenge.ts"), "utf8");
+    expect(join).toContain("day1Defers");
+    expect(join).toContain('.from("day_secures")');
+    expect(join).not.toContain('.delete()');
+  });
+
   it("reads start_at local date for Day 1 copy", () => {
     const now = new Date("2026-09-22T20:46:00.000Z");
     expect(day1StartCopy("2026-09-22T11:00:00.000Z", "America/New_York", now)).toBe(JOIN_CAPTION_TODAY);
@@ -243,7 +251,14 @@ describe("joinCaption", () => {
     expect(wizard).toContain("day1StartCopy(");
     const catalog = readFileSync(resolve(__dirname, "../app/challenge/[id].tsx"), "utf8");
     expect(catalog).toContain("day1StartCopy(result.start_at, timeZone)");
-    expect(catalog).toContain('heading="You\'re in."');
+    expect(catalog).toContain("JOIN_CAPTION_TOMORROW");
+    expect(catalog).not.toContain('heading="You\'re in."');
+    const detail = readFileSync(
+      resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"),
+      "utf8",
+    );
+    expect(detail).toContain("deferDay1 ? (");
+    expect(detail).toContain("JOIN_CAPTION_TOMORROW");
     expect(catalog).not.toContain('Alert.alert(\n          "You\'re in."');
     const active = readFileSync(
       resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"),

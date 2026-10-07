@@ -91,8 +91,6 @@ import {
   canFlipShare,
   flipSharePatch,
   keepSharePatch,
-  securedDaySharedOnInsert,
-  shareColumns,
   shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
@@ -1577,24 +1575,6 @@ export const checkinsRouter = createTRPCRouter({
       const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
       const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
       const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
-      if (row.secured && !alreadySecured) {
-        const todayKey = getTodayDateKey(tz);
-        const { count: sharedProofs } = await ctx.supabase
-          .from("activity_events")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", ctx.userId)
-          .eq("event_type", "task_completed")
-          .eq("share_state", "shared")
-          .eq("metadata->>date_key", todayKey);
-        const dayShare = shareColumns(securedDaySharedOnInsert(sharedProofs ?? 0) ? "shared" : "kept");
-        await ctx.supabase.from("activity_events").insert({
-          user_id: ctx.userId,
-          event_type: "secured_day",
-          challenge_id: challengeId ?? null,
-          ...dayShare,
-          metadata: { day_number: daySecured, streak_count: row.streak, date_key: todayKey },
-        });
-      }
       if (row.secured) {
         const { newUnlockKeys } = await checkAndUnlockAchievements(
           ctx.supabase,

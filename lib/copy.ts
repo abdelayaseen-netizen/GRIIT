@@ -9,6 +9,10 @@ export const FREEZE = {
   used: (day: string) => `${day} is held by a freeze.`,
 } as const;
 
+/** The only freeze explanation. Earned on a 7-day streak, spent on yesterday until midnight. */
+export const FREEZE_LINE =
+  "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.";
+
 export const HOME = {
   left: (n: number, total: number) => (n === total ? `${n} task${n === 1 ? '' : 's'} left today.` : `${n} of ${total} left today.`),
   secured: 'Day secured. Come back tomorrow.',
@@ -34,4 +38,10 @@ export const SHARE = {
   keep: "Keep it to the record",
   privacy: "No answer keeps it private.",
   shared: "Shared to the feed.",
+};
+export const METHOD = {
+  selfReported: "Self-reported.",
+  camera: (n: number) => (n === 1 ? "1 camera proof." : `${n} camera proofs.`),
+  mixed: (tasks: number, cameras: number) =>
+    `${tasks} ${tasks === 1 ? "task" : "tasks"}. ${METHOD.camera(cameras)} ${METHOD.selfReported}`,
 };

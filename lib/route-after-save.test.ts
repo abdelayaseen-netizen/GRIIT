@@ -49,4 +49,55 @@ describe("routeAfterSave", () => {
       enrollmentFinished({ challengeDone: true, dayIndex: 30, durationDays: 30 }),
     ).toBe(true);
   });
+
+  it("finishes a counter task when that save is the last day", () => {
+    expect(
+      enrollmentFinished({
+        challengeDone: true,
+        dayIndex: 30,
+        durationDays: 30,
+        counterReachedTarget: true,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("one completion surface per task type", () => {
+  const id = "enr-1";
+
+  it("camera proof that does not secure the day returns to the toast", () => {
+    expect(routeAfterSave({ challengeFinished: false, daySecuredNow: false, enrollmentId: id }).screen).toBe("Toast");
+  });
+
+  it("photo-optional proof that does not secure the day returns to the toast", () => {
+    expect(routeAfterSave({ challengeFinished: false, daySecuredNow: false, enrollmentId: id }).screen).toBe("Toast");
+  });
+
+  it("self-reported proof that does not secure the day returns to the toast", () => {
+    expect(routeAfterSave({ challengeFinished: false, daySecuredNow: false, enrollmentId: id }).screen).toBe("Toast");
+  });
+
+  it("counter plus camera that secures a middle day opens Secured once", () => {
+    const finished = enrollmentFinished({
+      challengeDone: false,
+      dayIndex: 5,
+      durationDays: 30,
+      counterReachedTarget: true,
+    });
+    expect(routeAfterSave({ challengeFinished: finished, daySecuredNow: true, enrollmentId: id })).toEqual({
+      screen: "Secured",
+    });
+  });
+
+  it("timer proof that does not secure the day returns to the toast", () => {
+    expect(routeAfterSave({ challengeFinished: false, daySecuredNow: false, enrollmentId: id }).screen).toBe("Toast");
+  });
+
+  it("the save that secures the last day opens FinishMoment only", () => {
+    const finished = enrollmentFinished({ challengeDone: true, dayIndex: 7, durationDays: 7 });
+    expect(routeAfterSave({ challengeFinished: finished, daySecuredNow: true, enrollmentId: id })).toEqual({
+      screen: "FinishMoment",
+      enrollmentId: id,
+    });
+  });
 });

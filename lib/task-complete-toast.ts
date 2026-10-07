@@ -11,15 +11,16 @@ export type TaskCompleteToast = {
   eventId?: string | null;
 };
 
-export function taskDoneTitle(task: string, photo: boolean): string {
+export function taskDoneTitle(task: string, _photo?: boolean): string {
   const name = task.trim() || "Task";
-  return photo ? `${name} saved.` : `${name} done.`;
+  return `${name} saved.`;
 }
 
+/** Photo proofs use the share pill. Self-reported proofs get no second line. */
 export function taskLeftBody(left: number, photo: boolean): string {
-  const n = Math.max(0, Math.floor(left));
-  if (photo) return `Private until you share it · ${n} left`;
-  return n === 1 ? "1 left to secure today" : `${n} left to secure today`;
+  void left;
+  if (photo) return "";
+  return "";
 }
 
 export function securedMomentTitle(activeChallenges: number, day: number | null): string {

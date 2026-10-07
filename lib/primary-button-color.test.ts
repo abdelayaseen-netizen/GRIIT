@@ -9,7 +9,8 @@ describe("primary button labels", () => {
       "utf8",
     );
     expect(review).toContain('label="Post proof"');
-    expect(review).toContain("{taskName}");
+    expect(review).not.toContain("{taskName}");
+    expect(review).not.toContain("{challengeName}");
     expect(review).not.toContain("Day {currentDay}");
     expect(review).toContain('from "@/components/ds/Button"');
     expect(review).not.toContain("styles.btnText");

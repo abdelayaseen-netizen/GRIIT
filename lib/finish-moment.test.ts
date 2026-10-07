@@ -185,7 +185,7 @@ describe("source: takeover symbols gone", () => {
     expect(screen).not.toContain("VerifyingStep");
     expect(screen).not.toContain('step === "verifying"');
     expect(state).not.toContain('| "verifying"');
-    expect(flow).toContain('setStep("finish")');
+    expect(flow).not.toContain('setStep("finish")');
     expect(flow).toContain("shareChoicePending: true");
     expect(flow).not.toContain("hasCameraProof ? { shareChoicePending");
   });

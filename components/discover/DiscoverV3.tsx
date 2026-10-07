@@ -27,16 +27,21 @@ import type { DiscoverCategory } from "@/components/discover/CategoryChips";
 import { CREATE_CATEGORIES } from "@/lib/challenge-category";
 import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard";
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
-import { catalogCoverLabel, catalogCoverUri } from "@/lib/catalog-cover";
+import { catalogCoverCategory } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
+import {
+  JOIN_CAPTION_TODAY,
+  JOIN_CAPTION_TOMORROW,
+  MODE_STANDARD_DETAIL,
+} from "@/lib/challenge-detail-mapping";
 import {
   DISCOVER_LOAD_ERROR,
   FEATURED_BUILTINS,
-  featuredCardLine,
+  featuredProofLabel,
   needsSetGym,
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
-import { ChallengePreviewSheet } from "@/components/discover/ChallengePreviewSheet";
+import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
 
 const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
   fitness: "Fitness",
@@ -72,6 +77,8 @@ export type DiscoverV3Props = {
   onRetry: () => void;
   onOpenChallenge: (id: string, slug?: string | null) => void;
   onStartFeatured: () => void;
+  onJoinChallenge?: (id: string) => void;
+  todaySecured?: boolean;
   onBuildOwn: () => void;
   onOpenPerson: (userId: string) => void;
   onFollowPerson: (userId: string) => void;
@@ -116,6 +123,8 @@ export function DiscoverV3({
   onRetry,
   onOpenChallenge,
   onStartFeatured,
+  onJoinChallenge,
+  todaySecured,
   onBuildOwn,
   onOpenPerson,
   onFollowPerson,
@@ -126,7 +135,38 @@ export function DiscoverV3({
   const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
   const gridData = challengesLoading ? [] : challenges;
-  const [preview, setPreview] = React.useState<FeaturedBuiltin | null>(null);
+  const [preview, setPreview] = React.useState<ChallengePreview | null>(null);
+  const day1Line = todaySecured ? JOIN_CAPTION_TOMORROW : JOIN_CAPTION_TODAY;
+
+  function openBuiltin(item: FeaturedBuiltin) {
+    setPreview({
+      id: item.id,
+      title: item.title,
+      category: COVER_CATEGORY[item.category],
+      days: item.days,
+      taskTitle: item.task,
+      proof: featuredProofLabel(item.proof),
+      window: item.rule,
+      modeLine: MODE_STANDARD_DETAIL,
+      day1Line,
+      builtin: item,
+    });
+  }
+
+  function openGrid(item: RecommendedChallenge) {
+    setPreview({
+      id: item.id,
+      title: item.title,
+      category: catalogCoverCategory(item.category),
+      days: item.duration,
+      people: item.participantCount,
+      proof: item.difficulty === "HARD" ? "Hard" : undefined,
+      modeLine: item.difficulty === "HARD"
+        ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
+        : MODE_STANDARD_DETAIL,
+      day1Line,
+    });
+  }
 
   const header = (
     <>
@@ -147,42 +187,71 @@ export function DiscoverV3({
 
       <Text style={[styles.heading, styles.featuredHeading]}>Featured</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
+        {featuredLoading ? <Skeleton variant="proof" /> : null}
+        {featured && !FEATURED_BUILTINS.some((b) => b.id === featured.id) ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={featured.name}
+            onPress={() => {
+              if (featuredJoined) {
+                onOpenChallenge(featured.id, featured.slug);
+                return;
+              }
+              setPreview({
+                id: featured.id,
+                title: featured.name,
+                category: catalogCoverCategory(featured.category),
+                days: featured.duration_days,
+                people: featured.circleCount,
+                proof: discoverProofLabel({
+                  proofType: featured.proof_type,
+                  taskTypes: featured.task_types,
+                }),
+                modeLine: featured.difficulty === "HARD"
+                  ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
+                  : MODE_STANDARD_DETAIL,
+                day1Line,
+              });
+            }}
+            style={styles.builtin}
+          >
+            <Cover
+              category={catalogCoverCategory(featured.category)}
+              title={featured.name}
+              days={featured.duration_days}
+              width={160}
+              height={200}
+            />
+            <Text style={styles.caption} numberOfLines={1}>
+              {discoverProofLabel({ proofType: featured.proof_type, taskTypes: featured.task_types })}
+            </Text>
+          </Pressable>
+        ) : null}
         {FEATURED_BUILTINS.map((item) => (
           <Pressable
             key={item.id}
             accessibilityRole="button"
             accessibilityLabel={item.title}
-            onPress={() => setPreview(item)}
+            onPress={() => openBuiltin(item)}
             style={styles.builtin}
           >
-            <Cover category={COVER_CATEGORY[item.category]} days={item.days} width={164} height={110} />
-            <Text style={styles.builtinTitle} numberOfLines={2}>{item.title}</Text>
-            <Text style={styles.caption}>{featuredCardLine(item)}</Text>
+            <Cover
+              category={COVER_CATEGORY[item.category]}
+              title={item.title}
+              days={item.days}
+              width={160}
+              height={200}
+            />
+            <Text style={styles.caption} numberOfLines={1}>
+              {item.rule || featuredProofLabel(item.proof)}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
 
-      <View style={styles.featuredPad}>
-        {featuredLoading ? (
-          <Skeleton variant="proof" />
-        ) : featured ? (
-          <ChallengeCard
-            title={featured.name}
-            coverUri={catalogCoverUri(featured)}
-            coverLabel={catalogCoverLabel(featured)}
-            category={featured.category}
-            days={featured.duration_days}
-            difficulty={difficultyLabel(featured.difficulty)}
-            proofType={discoverProofLabel({
-              proofType: featured.proof_type,
-              taskTypes: featured.task_types,
-            })}
-            featured
-            joined={featuredJoined === true}
-            onStart={onStartFeatured}
-            onPress={() => onOpenChallenge(featured.id, featured.slug)}
-          />
-        ) : null}
+      <View style={styles.popularHead}>
+        <Text style={styles.heading}>Popular</Text>
+        <Text style={styles.caption}>this week</Text>
       </View>
 
       {circle ? (
@@ -272,13 +341,12 @@ export function DiscoverV3({
             <View style={styles.col}>
               <ChallengeCard
                 title={item.title}
-                coverUri={catalogCoverUri(item)}
-                coverLabel={catalogCoverLabel(item)}
                 category={item.category}
                 days={item.duration}
                 difficulty={difficultyLabel(item.difficulty)}
+                people={item.participantCount}
                 joined={joinedIds?.has(item.id) === true}
-                onPress={() => onOpenChallenge(item.id)}
+                onPress={() => openGrid(item)}
               />
             </View>
           )}
@@ -296,13 +364,21 @@ export function DiscoverV3({
     </View>
     <ChallengePreviewSheet
       item={preview}
-      members={0}
       onClose={() => setPreview(null)}
+      onDetails={(item) => {
+        setPreview(null);
+        onOpenChallenge(item.id);
+      }}
       onJoin={(item) => {
         setPreview(null);
-        if (onJoinBuiltin) onJoinBuiltin(item);
-        else onOpenChallenge(item.id);
-        if (needsSetGym(item) && onJoinBuiltin) return;
+        if (item.builtin) {
+          if (onJoinBuiltin) onJoinBuiltin(item.builtin);
+          else onOpenChallenge(item.id);
+          if (needsSetGym(item.builtin) && onJoinBuiltin) return;
+          return;
+        }
+        if (onJoinChallenge) onJoinChallenge(item.id);
+        else onStartFeatured();
       }}
     />
     </>
@@ -327,8 +403,8 @@ const styles = StyleSheet.create({
     paddingBottom: DS_V3.space.md,
   },
   builtin: {
-    width: 164,
-    gap: 4,
+    width: 160,
+    gap: 6,
   },
   builtinTitle: {
     fontSize: 15,
@@ -343,9 +419,16 @@ const styles = StyleSheet.create({
   carousel: {
     flexDirection: "row",
     paddingHorizontal: DS_V3.space.gutter,
-    gap: DS_V3.space.sm,
-    paddingBottom: DS_V3.space.lg,
+    gap: 12,
+    paddingBottom: DS_V3.space.section,
     alignItems: "flex-start",
+  },
+  popularHead: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: 10,
   },
   featuredPad: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -381,16 +464,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
   },
   gridRow: {
-    gap: DS_V3.space.md,
+    gap: 12,
     paddingHorizontal: DS_V3.space.gutter,
-    marginBottom: DS_V3.space.md,
+    marginBottom: 24,
   },
   col: {
     flex: 1,
     gap: DS_V3.space.md,
   },
   peopleSection: {
-    paddingTop: DS_V3.space.section,
+    paddingTop: 32,
     gap: DS_V3.space.md,
   },
   peopleHeading: {

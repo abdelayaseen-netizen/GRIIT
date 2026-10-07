@@ -1,7 +1,20 @@
 appId: app.griit.challenge-tracker
 ---
 - launchApp:
-    stopApp: false
-- assertVisible: "Walk 7,000 steps"
-- assertVisible: "2 of 3 tasks. Up and out of bed."
-- assertVisible: "Up and out of bed closed at 6:30 am, so today can’t be secured. Walk 7,000 steps still counts for 7K Steps."
+    stopApp: true
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Cancel"
+    optional: true
+- tapOn: "Home"
+- assertVisible: "Today"
+- tapOn: "Up and out of bed"
+- assertVisible: "Window closed at 6:30 am. Today is not secured."
+- assertVisible: "It opens again at the same time tomorrow."
+- tapOn: "Back"
+- assertVisible: "Today"

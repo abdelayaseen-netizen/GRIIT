@@ -18,12 +18,11 @@ export function doubleTapAction(ownPost: boolean, alreadyRespected: boolean): "n
   return alreadyRespected ? "keep" : "respect";
 }
 
-export type FeedEventVerb = "started" | "secured" | "finished";
+export type FeedEventVerb = "started" | "finished";
 
 export function feedEventVerb(post: Pick<LiveFeedPost, "eventType" | "isCompleted">): FeedEventVerb | null {
   if (post.eventType === "joined_challenge" || post.eventType === "challenge_created") return "started";
-  if (post.eventType === "secured_day") return "secured";
-  if (post.isCompleted || post.eventType === "completed_challenge") return "finished";
+  if (post.eventType === "completed_challenge") return "finished";
   return null;
 }
 
@@ -35,10 +34,6 @@ function whoLine(names: string[], others: number): string {
 
 export function joinLine(names: string[], others: number, challenge: string): string {
   return `${whoLine(names, others)} started ${challenge}`;
-}
-
-export function systemLine(name: string, dayN: number, dayOf: number, challenge: string): string {
-  return `${name} secured Day ${dayN} of ${dayOf} · ${challenge}`;
 }
 
 export type FeedEventAvatar = {
@@ -78,11 +73,8 @@ export function isJoinGroup(item: FeedListItem): item is FeedEventGroup {
 export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb" | "challengeName" | "dayN" | "dayOf" | "secured">): string {
   const who = whoLine(group.names, group.others);
   if (group.verb === "started") return `${who} started ${group.challengeName}`;
-  if (group.verb === "finished") {
-    if (!group.secured) return `${who} ended ${group.challengeName}`;
-    return `${who} finished ${group.challengeName} · ${formatOfDays(group.secured, group.dayOf)}`;
-  }
-  return `${who} secured Day ${group.dayN} · ${group.challengeName}`;
+  if (!group.secured) return `${who} ended ${group.challengeName}`;
+  return `${who} finished ${group.challengeName} · ${formatOfDays(group.secured, group.dayOf)}`;
 }
 
 /** Group consecutive same-verb + challenge events within 60 minutes. */

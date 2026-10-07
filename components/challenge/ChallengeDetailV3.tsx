@@ -3,7 +3,7 @@
  * Copy from griit_brand/briefs/15/cursor/02_screens.md. DS_V3 tokens, no hex.
  */
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BookOpen,
@@ -22,11 +22,16 @@ import {
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
+import { Cover } from "@/components/ds/Cover";
+import { catalogCoverCategory } from "@/lib/catalog-cover";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import {
+  JOIN_CAPTION_TOMORROW,
   joinCaption,
+  MODE_STANDARD_DETAIL,
+  MODE_STRICT_DETAIL,
   type ChallengeDetailTask,
   type DetailState,
   type ParticipationType,
@@ -94,14 +99,31 @@ export type ChallengeDetailV3Props = {
   onNotNow?: () => void;
   onUpgrade?: () => void;
   onRetry?: () => void;
+  /** Account day is already in day_secures, or the task window has closed. Day 1 is tomorrow. */
+  todayAlreadySecured?: boolean;
+  windowClosed?: boolean;
+  category?: string | null;
+  peopleNames?: string[];
 };
 
 function peopleLabel(n: number): string {
   return n === 1 ? "1 person" : `${n} people`;
 }
 
+function peopleInIt(names: string[] | undefined, total: number): string {
+  const shown = (names ?? []).map((n) => n.trim()).filter(Boolean).slice(0, 2);
+  if (shown.length === 0) return total === 1 ? "1 person" : `${total} people`;
+  const rest = Math.max(0, total - shown.length);
+  if (rest <= 0) return shown.join(" and ");
+  if (shown.length === 1) return `${shown[0]} and ${rest} ${rest === 1 ? "other" : "others"}`;
+  return `${shown[0]}, ${shown[1]} and ${rest} others`;
+}
+
 export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const coverW = Math.max(200, Math.round(windowWidth - DS_V3.space.gutter * 2));
+  const deferDay1 = p.todayAlreadySecured === true || p.windowClosed === true;
   const closed = p.state === "ended" || p.state === "not_live";
   const blocked = p.state === "free_limit";
   const invited = !!p.invite;
@@ -162,22 +184,30 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
             <Skeleton />
           </View>
         ) : (
-          <Text style={styles.title}>{p.title}</Text>
+          <View style={styles.coverWrap}>
+            <Cover
+              category={catalogCoverCategory(p.category)}
+              title={p.title}
+              days={p.durationDays}
+              width={coverW}
+              height={200}
+            />
+          </View>
         )}
         {p.finishedLine && !p.loading ? (
           <Text style={styles.finishedLine}>{p.finishedLine}</Text>
         ) : null}
+        <Text style={styles.metaLine}>
+          {[
+            formatDays(p.durationDays),
+            catalogCoverCategory(p.category),
+            PARTICIPATION_LABEL[p.participationType],
+            peopleChip ?? peopleLabel(p.participantsCount),
+          ].join(" · ")}
+        </Text>
         {description ? <Text style={styles.description}>{description}</Text> : null}
 
-        <View style={styles.chips}>
-          <FactChip label={formatDays(p.durationDays)} />
-          <FactChip label={PARTICIPATION_LABEL[p.participationType]} />
-          {peopleChip ? (
-            <FactChip label={peopleChip} muted={invited || p.participationType === "team"} />
-          ) : null}
-        </View>
-
-        <Text style={styles.heading}>{"What you'll post"}</Text>
+        <Text style={styles.heading}>Every day</Text>
         {p.loading ? (
           <View style={styles.taskSkel}>
             <Skeleton />
@@ -201,6 +231,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                       ) : null}
                       <Text style={t.required === false ? styles.gateTextMuted : styles.gateText}>
                         {t.proof}
+                        {t.time_window ? ` · ${t.time_window}` : ""}
                       </Text>
                     </View>
                   </View>
@@ -210,11 +241,9 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           })
         )}
 
-        <Text style={styles.mode}>
-          {p.isHardMode
-            ? "A missed day resets your streak to 0. No freezes."
-            : "Standard. A missed day resets your streak. The next day you can spend a freeze to cover it."}
-        </Text>
+        <Text style={styles.heading}>People in it</Text>
+        <Text style={styles.mode}>{peopleInIt(p.peopleNames, p.participantsCount)}</Text>
+        <Text style={styles.mode}>{p.isHardMode ? MODE_STRICT_DETAIL : MODE_STANDARD_DETAIL}</Text>
         <View style={invited ? styles.footerClearInvited : styles.footerClear} />
       </ScrollView>
 
@@ -277,18 +306,21 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
             ) : (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Join"
+                accessibilityLabel={`Join ${p.title}`}
                 disabled={p.joining}
                 onPress={p.joining ? undefined : p.onJoin}
                 style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
               >
-                <Text style={styles.joinLabel}>Join</Text>
+                <Text style={styles.joinLabel}>{`Join ${p.title}`}</Text>
               </Pressable>
             )}
             {blocked ? (
               <>
+                {deferDay1 ? (
+                  <Text style={styles.joinCaption}>{JOIN_CAPTION_TOMORROW}</Text>
+                ) : null}
                 <Text style={styles.limitCaption}>
-                  You are in {p.activeCount} challenges. Free accounts hold {p.freeLimit} at a time.
+                  {`You're in ${p.activeCount} challenges, the Free limit.`}
                 </Text>
                 <Pressable
                   accessibilityRole="button"
@@ -296,11 +328,13 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
                   onPress={p.onUpgrade}
                   hitSlop={8}
                 >
-                  <Text style={styles.upgrade}>Leave one, or upgrade</Text>
+                  <Text style={styles.upgrade}>Leave one or go Pro</Text>
                 </Pressable>
               </>
             ) : (
-              <Text style={styles.joinCaption}>{joinCaption(p.participationType)}</Text>
+              <Text style={styles.joinCaption}>
+                {joinCaption(p.participationType, undefined, undefined, deferDay1)}
+              </Text>
             )}
           </>
         )}
@@ -332,14 +366,6 @@ function Nav({ onBack, onMore }: { onBack: () => void; onMore?: () => void }) {
   );
 }
 
-function FactChip({ label, muted }: { label: string; muted?: boolean }) {
-  return (
-    <View style={styles.chip}>
-      <Text style={muted ? styles.chipTextMuted : styles.chipText}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   canvas: {
     flex: 1,
@@ -364,6 +390,17 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 0,
+  },
+  coverWrap: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+  },
+  metaLine: {
+    paddingTop: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textSecondary,
   },
   title: {
     paddingTop: 10,
@@ -564,7 +601,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   closedLine: {
     fontSize: DS_V3.type.secondary.fontSize,

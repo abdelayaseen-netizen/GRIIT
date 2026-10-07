@@ -90,7 +90,9 @@ describe("morningAfter copy", () => {
     expect(morningAfterCushion("freeze", { longest: 12, lastStandsLeft: 0 })).toBe(
       "Your streak reset to 0. A freeze can undo that for yesterday.",
     );
-    expect(morningAfterFreezeCaption(1)).toBe("1 left. It refills 30 days after you use it.");
+    expect(morningAfterFreezeCaption(1)).toBe(
+      "A freeze covers yesterday until midnight. The next one is earned at a 7-day streak.",
+    );
   });
 });
 

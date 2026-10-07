@@ -146,6 +146,11 @@ function localMidnightUtc(dateKey: string, timeZone: string): Date {
   return new Date(utc);
 }
 
+/** Day 1 is tomorrow when today is already secured or a required window has closed. */
+export function day1Defers(args: { windowClosed: boolean; todaySecured: boolean }): boolean {
+  return args.windowClosed || args.todaySecured;
+}
+
 /** Defer to tomorrow local 00:00; otherwise start now. */
 export function enrollmentStartAt(now: Date, timeZone: string, defer: boolean): Date {
   if (!defer) return now;

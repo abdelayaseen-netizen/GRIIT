@@ -356,7 +356,7 @@ export const feedRouter = createTRPCRouter({
 
   list: protectedProcedure.input(z.object({ limit: z.number().min(1).max(50).default(20), cursor: z.string().optional() })).query(async ({ ctx, input }) => {
     const visibleUserIds = await getVisibleUserIds(ctx.supabase, ctx.userId);
-    let query = ctx.supabase.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("user_id", visibleUserIds).eq("share_state", "shared").order("created_at", { ascending: false }).limit(input.limit);
+    let query = ctx.supabase.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at").in("user_id", visibleUserIds).in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(input.limit);
     if (input.cursor) query = query.lt("created_at", input.cursor);
     const { data: events, error } = await query;
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message });
@@ -1276,7 +1276,7 @@ export const feedRouter = createTRPCRouter({
     const names = new Map<string, string>();
     for (const p of (profiles ?? []) as { user_id?: string; display_name?: string | null; username?: string | null }[]) {
       if (!p.user_id) continue;
-      names.set(p.user_id, (p.display_name || p.username || "").trim());
+      names.set(p.user_id, (p.display_name || p.username || "").trim().replace(/\s+/g, " "));
     }
     const picked = pickTodayPosters(
       evRows.map((e) => {

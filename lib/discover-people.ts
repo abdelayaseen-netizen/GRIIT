@@ -1,4 +1,5 @@
 import type { DiscoverCategory } from "@/components/discover/CategoryChips";
+import { profilePrimaryName } from "@/lib/profile-display";
 
 /** Backend getDiscoverFeatured still accepts the v3 chip set. */
 export function discoverFeaturedChip(
@@ -30,6 +31,18 @@ export function discoverPeopleWithoutSelf<T extends { user_id: string }>(
 ): T[] {
   if (!selfId) return [...people];
   return people.filter((p) => p.user_id !== selfId);
+}
+
+/** People row: drop the viewer, auto user_ accounts, and anyone with no real name. */
+export function discoverPeopleVisible<
+  T extends { user_id: string; username?: string | null; display_name?: string | null },
+>(people: readonly T[], selfId?: string | null): T[] {
+  return discoverPeopleWithoutSelf(people, selfId).filter((p) => {
+    const username = (p.username ?? "").trim();
+    if (/^user_/i.test(username)) return false;
+    const name = profilePrimaryName({ username: p.username, display_name: p.display_name });
+    return name.length > 0 && !/^user_/i.test(name);
+  });
 }
 
 /** The featured card already shows this challenge. The grid must not repeat it. */

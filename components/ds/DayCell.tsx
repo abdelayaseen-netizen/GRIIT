@@ -74,6 +74,7 @@ export default function DayCell({
           {dateNum}
         </Text>
       ) : null}
+      {kind === "missed" ? <View style={styles.dash} /> : null}
       {kind === "photo_missing" ? (
         <ImageOff size={icon} color={DS_V3.color.textSecondary} strokeWidth={2} />
       ) : null}
@@ -135,6 +136,12 @@ function fillStyle(kind: DayCellKind) {
 }
 
 const styles = StyleSheet.create({
+  dash: {
+    width: "46%",
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: DS_V3.color.textSecondary,
+  },
   base: {
     borderRadius: 8,
     overflow: "hidden",

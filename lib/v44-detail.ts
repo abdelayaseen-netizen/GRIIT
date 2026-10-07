@@ -1,6 +1,7 @@
 /**
  * v44 frames 166 + 170 — challenge detail order and the streak-chip sheet.
  */
+import { FREEZE_LINE } from "@/lib/copy";
 import { formatOfDays } from "@/lib/format-days";
 import { MODE_HARD_TITLE, MODE_STANDARD_TITLE } from "@/lib/create-mode-copy";
 
@@ -35,15 +36,13 @@ export function streakSheetMissBody(args: {
   weekday: string;
   streak: number;
 }): string {
-  const next = Math.max(0, Math.floor(args.streak)) + 1;
-  const missed = args.missed.trim() || "A task was missed";
-  return `${args.done} of ${args.total} tasks. ${missed}. A freeze counts ${args.weekday} as held, so your streak stays at ${args.streak} and today makes it ${next}.`;
+  void args;
+  return FREEZE_LINE;
 }
 
-export function streakSheetFreezeLeft(n: number, refill: string): string {
-  const count = Math.max(0, Math.floor(n));
-  const noun = count === 1 ? "freeze" : "freezes";
-  return `${count} ${noun} left. Next one on ${refill}. Available until midnight tonight.`;
+export function streakSheetFreezeLeft(n: number, _refill: string): string {
+  void n;
+  return FREEZE_LINE;
 }
 
 export function useFreezeForWeekday(weekday: string): string {
@@ -54,10 +53,8 @@ export function weekdayHeldTitle(weekday: string): string {
   return `${weekday.trim() || "Yesterday"} is held.`;
 }
 
-export function weekdayHeldBody(streak: number, freezesLeft: number, refill: string): string {
-  const n = Math.max(0, Math.floor(streak));
-  const m = Math.max(0, Math.floor(freezesLeft));
-  return `Your streak is ${n} days. Secure today and it's ${n + 1}. ${m} freezes left until ${refill}.`;
+export function weekdayHeldBody(_streak: number, _freezesLeft: number, _refill: string): string {
+  return FREEZE_LINE;
 }
 
 export const KEPT_PROOFS_BODY = "Kept proofs show only to you, with a lock.";

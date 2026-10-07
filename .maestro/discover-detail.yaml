@@ -1,0 +1,33 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Cancel"
+    optional: true
+- tapOn: "Discover"
+- assertVisible: "Featured"
+- swipe:
+    direction: UP
+    duration: 800
+- swipe:
+    direction: UP
+    duration: 800
+- swipe:
+    direction: DOWN
+    duration: 600
+- swipe:
+    direction: DOWN
+    duration: 600
+- tapOn: "5-Minute Morning Prayer"
+- assertVisible: "See full details"
+- tapOn: "See full details"
+- assertVisible: "Every day"
+- tapOn: "Go back"
+- assertVisible: "Featured"

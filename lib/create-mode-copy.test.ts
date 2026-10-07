@@ -12,7 +12,7 @@ describe("123 mode copy", () => {
   it("uses the locked titles and bodies", () => {
     expect(MODE_STANDARD_TITLE).toBe("Standard");
     expect(MODE_STANDARD_BODY).toBe(
-      "Every gate blocks. A freeze can cover a missed day: 1 every 30 days, 4 on Pro.",
+      "Every gate blocks. A freeze covers yesterday until midnight, earned at a 7-day streak.",
     );
     expect(MODE_HARD_TITLE).toBe("Strict");
     expect(MODE_HARD_BODY).toBe(

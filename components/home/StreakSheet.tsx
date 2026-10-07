@@ -2,19 +2,18 @@
  * Home streak chip sheet. The morning-after FreezeSheet stays on its own copy.
  */
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Flame } from "lucide-react-native";
 import Sheet from "@/components/ds/Sheet";
 import Button from "@/components/ds/Button";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { DS_V3 } from "@/lib/design-system";
-import { FREEZE } from "@/lib/copy";
+import { FREEZE, FREEZE_LINE } from "@/lib/copy";
 import { EARNED_FREEZE, nextEarnStreak } from "@/lib/freeze-earn";
 import { weekSheetLine } from "@/lib/home-status";
 import {
   HELD_DONE,
   NOT_NOW,
-  streakSheetFreezeLeft,
-  streakSheetMissBody,
   weekdayHeldBody,
   weekdayHeldTitle,
 } from "@/lib/v44-detail";
@@ -24,9 +23,9 @@ export function StreakSheet({
   held,
   weekday,
   streak,
-  done,
-  total,
-  missed,
+  done: _done,
+  total: _total,
+  missed: _missed,
   freezesLeft,
   freezeCap,
   refill,
@@ -86,26 +85,25 @@ export function StreakSheet({
       heading={String(streak)}
       footer={
         <>
-          <Button label={FREEZE.button} onPress={onUse} submitting={submitting} />
-          <Button label={NOT_NOW} variant="tertiary" onPress={onNotNow} />
+          <Button label={FREEZE.button} variant="secondary" onPress={onUse} submitting={submitting} />
+          <Pressable accessibilityRole="button" accessibilityLabel={NOT_NOW} onPress={onNotNow}>
+            <Text style={styles.notNow}>{NOT_NOW}</Text>
+          </Pressable>
         </>
       }
     >
+      <View style={styles.hero}>
+        <Flame size={28} color={DS_V3.color.brand} />
+        <Text style={styles.heroNum}>{streak}</Text>
+      </View>
       <WeekStrip days={week} todayIndex={todayIndex} size={36} />
       {line ? <Text style={styles.body}>{line}</Text> : null}
       <View style={styles.block}>
-        <Text style={styles.title}>{FREEZE.title(weekday)}</Text>
+        <Text style={styles.label}>Freezes</Text>
         <Text style={styles.body}>
-          {streakSheetMissBody({ done, total, missed, weekday, streak })}
+          {EARNED_FREEZE.ofCap(freezesLeft, freezeCap ?? 2)} · {EARNED_FREEZE.nextAt(nextEarnStreak(streak))}
         </Text>
-        <Text style={styles.body}>{streakSheetFreezeLeft(freezesLeft, refill)}</Text>
-        {freezeCap != null ? (
-          <Text style={styles.body}>
-            {EARNED_FREEZE.ofCap(freezesLeft, freezeCap)}
-            {"\n"}
-            {EARNED_FREEZE.nextAt(nextEarnStreak(streak))}
-          </Text>
-        ) : null}
+        <Text style={styles.body}>{FREEZE_LINE}</Text>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </Sheet>
@@ -126,4 +124,24 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textSecondary,
   },
   error: { marginTop: 8, color: DS_V3.color.textPrimary, fontSize: 13 },
+  hero: { flexDirection: "row", alignItems: "center", gap: 8 },
+  heroNum: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: "800",
+    color: DS_V3.color.textPrimary,
+  },
+  label: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: DS_V3.color.textSecondary,
+  },
+  notNow: {
+    minHeight: 44,
+    textAlign: "center",
+    fontSize: 15,
+    lineHeight: 20,
+    color: DS_V3.color.textPrimary,
+  },
 });

@@ -58,7 +58,6 @@ import {
   INVITE_TO,
   NO_SHARED_PROOFS_IN_CHALLENGE,
   PEOPLE_SOLO,
-  detailMetaLine,
   recordOfDue,
 } from "@/lib/v44-detail";
 
@@ -186,14 +185,6 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : null}
 
         <View style={styles.dayBlock}>
-          <Text style={styles.metaLine}>
-            {detailMetaLine({
-              day: p.currentDay,
-              total: p.durationDays,
-              group: p.participationType === "team" || p.participantsCount > 1,
-              hard: p.difficulty === "hard",
-            })}
-          </Text>
           <Text style={styles.dayLabel}>Day</Text>
           {p.loading ? (
             <View style={styles.daySkel} />
@@ -201,6 +192,11 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             <DisplayNumber value={p.currentDay} size="home" />
           )}
           <Text style={styles.ofLabel}>of {p.durationDays}</Text>
+          {p.loading ? null : (
+            <Text style={styles.metaLine}>
+              {`${p.dueCount ?? 0} days done · ${p.securedCount ?? 0} secured`}
+            </Text>
+          )}
         </View>
 
         {p.loading ? (
@@ -283,7 +279,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             {p.tasks.map((t, i) => {
               const closed = homeWindowClosed({ windowState: t.windowState, done: t.completed_today });
               const Icon = t.completed_today ? Check : TASK_ICON[t.task_type];
-              const iconTone = t.completed_today ? DS_V3.color.brandText : DS_V3.color.textSecondary;
+              const iconTone = t.completed_today ? DS_V3.color.brand : DS_V3.color.textSecondary;
               return (
                 <View key={t.id}>
                   {i > 0 ? <View style={styles.divider} /> : null}
@@ -326,7 +322,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                   onPress={p.onShare}
                   style={styles.taskRow}
                 >
-                  <Share size={ICON} color={DS_V3.color.brandText} />
+                  <Share size={ICON} color={DS_V3.color.textPrimary} />
                   <View style={styles.taskCopy}>
                     <Text style={styles.taskTitle}>{SHARE_TODAY}</Text>
                     <Text style={styles.caption}>{UNTIL_MIDNIGHT}</Text>
@@ -449,7 +445,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontWeight: "500",
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   hero24: {
     fontSize: 24,
@@ -481,6 +477,7 @@ const styles = StyleSheet.create({
   status: {
     alignSelf: "stretch",
     flexShrink: 1,
+    paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.sm,
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
@@ -489,6 +486,7 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     alignSelf: "stretch",
+    paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.sm,
     flexDirection: "row",
     flexWrap: "wrap",
@@ -500,13 +498,13 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   todaySecured: {
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
     paddingTop: DS_V3.space.lg,
     paddingBottom: DS_V3.space.sm,
   },
@@ -615,7 +613,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   about: {
     paddingHorizontal: DS_V3.space.gutter,

@@ -201,10 +201,15 @@ export function TaskFlowV2() {
           taskName={f.taskName}
           headerTitle={counterHeaderLines(f.challengeName, f.currentDay, f.durationDays).title}
           headerLabel={counterHeaderLines(f.challengeName, f.currentDay, f.durationDays).label}
+          challengeName={f.challengeName}
+          currentDay={f.currentDay}
+          durationDays={f.durationDays}
+          dayReady={f.dayReady}
           hasCamera={f.gates.includes("camera")}
           keypadOpen={f.keypad?.field === "count"}
           onTypeCount={f.onTypeCount}
           onAddOne={f.onAddOne}
+          onAddAmount={f.onAddAmount}
           onOpenKeypad={f.onOpenCountKeypad}
           onRemoveOne={f.onRemoveOne}
           onSubmit={f.onSubmitCount}

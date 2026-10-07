@@ -12,6 +12,7 @@ import {
   securedDaySharedOnInsert,
   sharedOnInsert,
 } from "./activity-share";
+import { eventIsShared } from "./is-friend";
 
 describe("sharedOnInsert R2", () => {
   it("old-client omit writes shared; shareChoicePending true writes unshared", () => {
@@ -52,6 +53,15 @@ describe("feed vs record", () => {
     expect(feedShowsEvent(false)).toBe(false);
     expect(securedDaySharedOnInsert(0)).toBe(false);
     expect(securedDaySharedOnInsert(1)).toBe(true);
+  });
+
+  it("an unanswered proof never appears in anyone's feed", () => {
+    expect(feedShowsEvent("unanswered")).toBe(false);
+    expect(feedShowsEvent("kept")).toBe(false);
+    expect(eventIsShared({ share_state: "unanswered", shared: false })).toBe(false);
+    expect(eventIsShared({ share_state: "kept", shared: false })).toBe(false);
+    const feed = readFileSync(resolve(__dirname, "../trpc/routes/feed.ts"), "utf8");
+    expect(feed).toMatch(/getLiveFeed[\s\S]*eq\("share_state", "shared"\)/);
   });
 });
 

@@ -1564,6 +1564,7 @@ export const DS_V3 = {
     textPrimary: '#F2F0EB',
     textSecondary: 'rgba(242,240,235,0.64)',
     textTertiary: 'rgba(242,240,235,0.44)',
+    coverChip: 'rgba(15,15,15,0.42)',
     primary: '#BB471D',
     brand: '#DC5401',
     selectedBg: '#F2F0EB',

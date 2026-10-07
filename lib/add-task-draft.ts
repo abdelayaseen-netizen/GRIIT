@@ -40,7 +40,7 @@ export const ADD_TASK_PROOFS: readonly {
   {
     id: "self",
     title: "Self-report",
-    caption: "You say it is done. Nothing is checked.",
+    caption: "Self-reported.",
   },
   {
     id: "self_time",

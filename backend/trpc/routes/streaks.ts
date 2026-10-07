@@ -85,6 +85,31 @@ export function restoreStreakCount(input: {
   return n;
 }
 
+/**
+ * Streak after spending a freeze on yesterday.
+ * Monday secured, Tuesday held, Wednesday still open → 2 (Monday and Tuesday are one run).
+ * Today counts only once it is already secured.
+ */
+export function previewStreakAfterFreeze(input: {
+  todayKey: string;
+  yesterdayKey: string;
+  securedDateKeys: readonly string[];
+  frozenDateKeys?: readonly string[];
+}): number {
+  const secured = new Set(input.securedDateKeys);
+  const frozen = new Set(input.frozenDateKeys ?? []);
+  frozen.add(input.yesterdayKey);
+  let n = 0;
+  let cursor = input.todayKey;
+  if (secured.has(cursor)) n += 1;
+  cursor = addCalendarDaysToDateKey(cursor, -1);
+  while (secured.has(cursor) || frozen.has(cursor)) {
+    n += 1;
+    cursor = addCalendarDaysToDateKey(cursor, -1);
+  }
+  return n;
+}
+
 /** No Days Off is an active enrollment whose challenge has is_hard_mode. */
 export function freezeBlockedByHardMode(
   rows: readonly {

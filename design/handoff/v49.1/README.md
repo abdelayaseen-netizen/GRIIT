@@ -1,0 +1,1227 @@
+# GRIIT consistency pass
+
+One system, applied to every screen. Not a redesign: the same loop, the same navigation, the same
+copy that already worked, rebuilt on ten tokens, eight text styles, three radii and one card recipe.
+
+- Prototype: `GRIIT System.dc.html` (twelve labelled frames, each with a two line change note; the day
+  secured frame plays the only animation in the app).
+- Source: `src/tokens.ts` plus `src/components/*`. No raw hex appears outside `tokens.ts`.
+- Proof photography: `assets/proof-keyboard.png`, `assets/proof-can.png`, cropped 4:5 from the
+  supplied screenshots.
+
+Voice: blunt, short, no cheerleading, no exclamation marks. The app never claims verification it
+cannot back. Copy describes, it does not sell.
+
+## The 12 laws
+
+1. **One canvas.** `canvas #0F0F0F` on every screen. No gray screens, no white screens, no light mode.
+2. **One family, two weights.** System font, 400 and 500 only. Hierarchy from size and colour.
+3. **Eight text styles.** display 34/41, number 64/64 (streak only), title 28/34, heading 20/25,
+   body 17/22, bodyStrong 17/22, secondary 15/20, caption 13/18, label 12/16 uppercase. Each maps to
+   an Apple text style so Dynamic Type scales the app; the streak number is fixed.
+4. **20pt gutters, 4pt grid.** Screen and card padding 20, stacked cards 12, sections 32, two column
+   gutter 12. Every number on screen is a multiple of 4.
+5. **Three radii.** 12 inputs and chips, 20 cards, pill for buttons, tab bar and avatars.
+6. **Orange means "do this".** `brand.action #BB471D` fill with a white label, one per viewport.
+   Repeated row actions are secondary. Active tabs, chips and segments use `#BB471D` text or a 1.5pt
+   `#DC5401` outline, never a fill. `#DC5401` is non-text only.
+7. **Weight comes from surface, not from black.** Cards are `surface`; there is no separate ink hero
+   card. The Profile streak card is a surface card carrying the display number, brand.tint if it needs
+   weight. Cover fallbacks stay canvas. The proof moment is the full bleed photo with the number over
+   it, not a change of ground. Primary buttons are brand fill with an onBrand label.
+8. **Two headers plus the wizard.** Root: display title at the gutter, 8pt below the status bar area.
+   Pushed: 44pt bar, chevron left, centred heading 17/500. Wizard: Cancel, step, progress bar, tab bar
+   hidden, CTA pinned above the home indicator.
+9. **One card recipe.** Surface #1A1917, radius 20, 1pt border #2E2B27 on canvas, no shadow. No ghost
+   placeholders.
+10. **One empty state.** Heading 20, one sentence, one primary button. Same component everywhere.
+11. **Copy rules.** Sentence case except the label style. Second person. No emoji, no dashes.
+    "Day 1", "1 day", "23 days". The same concept uses the same phrase on every screen.
+12. **One identity fallback.** Initials from the display name on `avatar.tint`, else a person glyph.
+    Never initials from a `user_` handle. Greeting is display name, then username, then first name.
+
+## Containment, laws 21 to 25
+
+21. **The canvas is a surface.** Content sits directly on the canvas by default. A card is used only
+    when content must be read or tapped as one unit: a proof, a challenge cover, a settings group,
+    the proof task card, the streak card. Headings, captions, chip rows, people strips, lists of
+    rows, prompts and hints sit on the canvas with no box.
+22. **Nesting depth is two.** Canvas, then card, then content. Never a bordered element inside a
+    bordered card. Inside a card a button is filled or tertiary, never outlined. A card never
+    contains a card.
+23. **One selection language per screen.** A segmented control switches views, max one per screen,
+    directly under the title or directly under the hero (amended, Sept 6 2026). Filters and scopes are ghost chips: text on the canvas, selected is
+    brand.tint fill with brand.action text, unselected has no border and no background. Chips never
+    sit directly under a segmented control; they belong to a content section, under a heading.
+24. **Chrome budget.** At most one band of controls between the title and the first content. A hint
+    is a caption line under a heading, not a tinted band. HintBox is reserved for the Create wizard.
+26. **Clearance.** The tab bar floats over content, so every tab screen's scroll view ends with
+    `size.tabBarClearance` of bottom padding (96: bar 64, offset 12, gutter 20) and the last element
+    is fully visible above the bar at the end of the scroll. Nothing tappable sits under the bar or
+    the FAB. Pinned bottom buttons exist only where the tab bar is hidden.
+25. **One hero per screen.** The number on Home, the featured cover on Discover, the ink card on
+    Profile, the list on Activity, the form on Create. Everything else is quiet: text on canvas,
+    secondary colour, no fill.
+
+Media, state and motion rules 13 to 20 are enforced in `ProofImage`, `Skeleton`, `EmptyState` and
+`motion.daySecuredMs`: 4:5 everywhere, scrim under any text on an image, ink fallback instead of gray
+boxes, blurhash instead of spinners, one animated moment, 44 by 44 minimum hit size.
+
+## Tokens
+
+| token | hex | use | measured |
+|---|---|---|---|
+| canvas | #0F0F0F | every screen | |
+| surface | #1A1917 | cards, sheets, inputs | |
+| border | #2E2B27 | card edges, dividers, segmented track | |
+| text.primary | #F5F3EE | primary text | 17.3:1 canvas, 15.8:1 surface |
+| text.secondary | #A39E95 | subtitles, captions, meta | 7.2:1 canvas, 6.6:1 surface |
+| brand | #DC5401 | fills, week strip, active outlines | |
+| brand.text | #E8600F | orange as text on dark grounds | 5.6:1 canvas, 5.1:1 surface |
+| brand.tint | #3A1F10 | hint grounds, selected chips, your own row | |
+| onBrand | #0F0F0F | label on a brand fill | 4.9:1 on brand |
+| danger | #E5533D | destructive only | 5.1:1 on canvas |
+
+**Why ink, not cream.** Labrecque and Milne (2012) find high value negatively affects
+ruggedness (β = -.344, p < .001) and saturation carries ruggedness and excitement; their central
+result is that consistency between colour and brand personality predicts preference better than the
+colour itself. GRIIT's traits are ruggedness and competence, and the copy says "Discipline,
+witnessed." A cream and white ground said journaling app. The audience's own reference set (WHOOP,
+Nike Run Club, Hevy, Bandit) and the nearest mechanical analog (BeReal) are dark, and 6am proof
+photos read as dark holes on a light page and as content on ink. The cost is sunlight readability,
+which does not apply to a 6am indoor use. This is the mode, not a dark mode.
+
+Two text colours, ink and secondary. The pink leaderboard banner and the multi colour initials
+avatars are removed.
+
+## Components
+
+`Button` (primary, secondary, tertiary; 52pt, 44pt small) · `Card` · `InkCard` · `Chip` ·
+`SegmentedControl` (one level) · `ListRow` · `Divider` · `HintBox` · `EmptyState` · `ErrorState` ·
+`Avatar` (32/40/56/96) · `AvatarStack` (max 3, 2pt ring) · `FeedPost` (photo, no photo, finished) ·
+`ChallengeCard` · `PersonCard` · `LeaderRow` · `RootHeader` · `PushedHeader` · `WizardHeader` · `WizardFooter` ·
+`TabBar` · `WeekStrip` · `ProofImage` (feed, card, thumb) · `Skeleton` · `ShareCard` (story, feed).
+
+## What changed, per screen
+
+1. **Home.** Canvas fixed from cool gray. Greeting is the display name, not "Welcome" with a "?"
+   avatar. "Current streak" is secondary in sentence case and matches Profile. The "While you were
+   away" banner is one caption line with no dash. Feed uses FeedPost variants, and the Friends and
+   Everyone switch became ghost chips under the Feed heading so the screen has one selection
+   language. The proof task circle lost its border: nothing bordered sits inside a card.
+2. **Discover.** Rebuilt: chips, one featured ChallengeCard, a two column grid, a people strip, the
+   idea card. Masonry, proof posts in the grid, gray placeholder tiles and repeated orange Follow
+   buttons are gone. One filled orange button on screen, the featured Start. Titles wrap, nothing
+   truncates. Difficulty reads as one secondary caption, "14 days · Easy", not an uppercase orange
+   chip, and the section heading carries a caption line. Containment pass: the people strip and the
+   "Have your own idea?" prompt lost their boxes and sit on the canvas, so the featured cover is the
+   only hero and the outlined button no longer sits inside a card. Filter chips are ghost chips.
+3. **Activity, notifications.** Canvas fixed. Bold empty title dropped to heading at 500. The text
+   link with an arrow became one primary button. EmptyState component.
+4. **Activity, leaderboard.** Two stacked segmented controls collapsed into one, with scope as chips.
+   The pink banner became a HintBox. The ink card holding one row became ListRows with rank, avatar
+   40, name, points, on the canvas with dividers rather than inside a card, and the viewer's own row
+   is filled brand.tint at radius 12 so it can be found without a border. Flame emoji removed.
+   The HintBox became a caption line under a "This week" heading, and the scope chips moved out from
+   under the segmented control into the content section.
+5. **Profile.** Handle shows once. Orange "US" avatar replaced by cream initials from the display
+   name. Edit profile is secondary. Streak card at radius 20. Tab pills became a SegmentedControl.
+   Bio prompt is a tertiary button, not an underlined link. The empty state moved out of its card
+   onto the canvas. The Consistency card ("No due days") is restored, with "See the full record" as a
+   tertiary button rather than an outlined one, since law 22 bars outlined buttons inside a card.
+6. **Settings.** Radius 28 rows became the card recipe at 20. "· —" removed from the Account
+   subtitle. Sign out secondary, Delete account tertiary in danger.
+7. **Create, step 1.** Tab bar hidden, CTA pinned above the home indicator (it sat behind the tab
+   bar). Duration chips at radius 12, Solo and Group use the selected chip style, tip uses HintBox,
+   "JUST YOU" all caps became caption sentence case.
+8. **FeedPost.** Three variants as a sheet. No photo is one surface line card instead of an empty
+   block with three icons, and it is no longer ink: ink stays reserved for the hero card, the FAB and
+   cover fallbacks. Finished is a brand tint card with the check in summary.
+9. **Share card.** Both sizes on app tokens and app type, a real proof photo, one line of copy. The
+   proof frame is 840 wide on the story and 720 on the feed card instead of the specified 900: at 900
+   the 160px number and the 80px logo overflow the fixed canvas and the image is what gets squashed
+   off 4:5. Law 13 beats the stated width, so the frame carries `flex: none` and the width flexes.
+10. **Day secured.** Before and after, plus the 400ms count up and week strip fill.
+11. **Loading and error.** Skeletons in the card recipe, blurhash proof frames, no spinners over
+    content. Errors reuse EmptyState with no red banner and no toast.
+12. **System sheet.** Type scale, tokens, spacing, radii, buttons, states, image sizes.
+
+## Law check, 26 by 27
+
+P = pass, n/a = the law does not apply on that frame.
+
+| Law | 1 Home | 2 Disc | 3 Notifs | 4 Board | 5 Profile | 6 Set | 7 Create | 8 Feed | 9 Share1 | 10 Sec | 11 States | 12 Sheet | 13 Face | 14 Cap | 15 Sec2 | 16 Stamp | 17 Share2 | 18 Proto | 19 Welc | 20 Compl | 21 Badges | 22 Cr1 | 23 Cr2 | 24 AddTask | 25 Cr3 | 26 Review | 27 Launched |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 One canvas | P | P | P | P | P | P | P | P | P | P | P | P | n/a | P† | P† | P | n/a | P† | P† | P† | P | P | P | P | P | P | P |
+| 2 Two weights | P‡ | P‡ | P‡ | P‡ | P‡ | P | P | P‡ | P‡ | P‡ | P | P‡ | P‡ | P | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ | P‡ | n/a | n/a | n/a | n/a | n/a | n/a |
+| 3 Eight text styles | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 4 20pt gutters, 4pt grid | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 5 Three radii | P | P | P | P | P | P | P | P | P* | P | P | P | P | P | P | P | P* | P | P | P* | P | P | P | P | P | P | P |
+| 6 Orange means do this | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | P | n/a | P | P | P | P | P | P |
+| 7 Black is structure | P | P | P | P | P | n/a | n/a | P | P | P | n/a | P | P | P† | P† | P | P† | P† | P† | P† | n/a | P | P | P | P | P | n/a |
+| 8 Two headers plus wizard | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a | P | P | n/a | P | n/a | n/a |
+| 9 One card recipe | P | P | P | P | P | P | P | P | n/a | P | P | P | P | n/a | n/a | P | n/a | P | n/a | n/a | P | P | n/a | P | P | n/a | n/a |
+| 10 One empty state | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | P | P | n/a | P | n/a |
+| 11 Copy rules | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 12 One identity fallback | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 13 Media 4:5, three sizes | P | P | n/a | n/a | n/a | n/a | n/a | P | P | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 14 Scrim under text on image | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 15 Ink fallback, blur loading | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | P | P | P | P | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 16 Avatars 32/40/56/96 | P | P | n/a | P | P | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | n/a | P | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+| 17 Skeleton, no spinners | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a |
+| 18 Error reuses empty state | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a |
+| 19 One animated moment | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | P | P | P |
+| 20 44 by 44 minimum | P | P | P | P | P | P | P | P | n/a | P | P | P | n/a | P | P | n/a | n/a | P | P | P | P | P | P | P | P | P | P |
+| 21 Card only for one unit | P | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | n/a | P | P | P | P | P | P | P | P | P | P |
+| 22 Nesting depth two | P | P | P | P | P | P | P | P | n/a | P | P | P** | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |
+| 23 One selection language | P | P | P | P | P | n/a | P | n/a | n/a | n/a | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | P | P | P | P | n/a | n/a |
+| 24 Chrome budget | P | P | P | P | P | P | P | n/a | n/a | n/a | P | n/a | n/a | P | P | n/a | n/a | P | P | P | n/a | P | P | P | P | n/a | n/a |
+| 25 One hero per screen | P | P | P | P | P | P | P | n/a | P | P | P | n/a | n/a | P | P | n/a | P | P | P | P | P | P | P | P | P | P | P |
+| 26 Clearance | P | P | P | P | P | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | P | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a |
+
+- **† Law 1 and law 7.** After the inversion every frame is ink, so the marks that used to flag dark
+  screens now simply mean "canvas". Capture, Secured and Complete are the full bleed photo moment;
+  the share card is an export asset, not a screen.
+- **‡ Law 2.** Amended: SF Pro 400 and 500 for all UI text, plus Barlow Condensed 600 for numbers the
+  user earned and nothing else. Never on a heading, a label or a button.
+- **\* Law 5.** Share cards use radius 60 on the proof and 24 on the stamp: 20 and 12 at export
+  scale. In the app the same components render at 20 and 12.
+- **\*\* Law 22 on frame 12.** The system sheet shows bordered specimens inside panels. They are
+  specimens on a documentation sheet, not nested app cards.
+
+## The display face
+
+**Barlow Condensed 600**, tabular, on `type.number` via `displayFace`. Sizes: 17 inline, 64 on Home and
+Profile, 96 on the moment screens, 160 mid, 220 for the share card headline. Frame 13 is the specimen.
+
+Earned, so it gets the face: the streak, "Day 23" in a feed header or on the proof card, rank, check
+ins and points on the leaderboard, verified days on a badge, best streak, the share card headline.
+Not earned, so it stays SF Pro: timestamps, follower counts, task counts like 0 / 1, "14 days" on a
+challenge card, wizard step numbers, character counts, prices. Inline in a run of SF Pro it sets at
+the same size, weight 600, with 1pt of extra tracking.
+
+## The Verified stamp
+
+Display face 12pt uppercase, tracking 0.08em, 1.5pt stroke, radius 12, 6 and 10pt padding.
+brand.action on light grounds, white on ink. It reads COMPLETE on a finished challenge. It appears on
+a FeedPost photo, a Profile badge, the secured screen and the share card, and it never appears on self
+reported content: rendering it is a claim about what the server confirmed. On Secured it lands at the
+end of the 400ms count up, not before it.
+
+## The inversion, Sept 6 2026
+
+The cream canvas was inherited from the first screenshots, never tested, and carried for six rounds.
+It is now ink. The swap is one token file; every frame and the prototype re-render from it. Type is
+unchanged: SF Pro reads neutral (Shaikh, Chaparro and Fox 2006, 561 participants: sans serifs score
+neither high nor low on any personality trait) and Barlow Condensed stays rationed to earned numbers,
+where the same study's "assertive, potent" display group belongs. Barlow gains presence reversed out
+of black, which is what condensed signage faces do.
+
+### Places a component leaned on the light canvas, and what each became
+
+| leaned on cream | became |
+|---|---|
+| Avatar fallback (`avatar.tint #EFE9DF` with ink initials) | `border #2E2B27` ground with text.primary initials; the token is retired, so the ten stay ten |
+| Avatar stack ring (2pt white) | 2pt `surface` ring |
+| Skeleton bars (`border` on white cards) | `border #2E2B27` bars on `surface` cards; the bars now read as lighter, not darker |
+| Blurhash placeholder ground | `surface` instead of avatar tint |
+| Image scrim | unchanged: transparent to 60 percent ink was already the right gradient on a dark page |
+| Stamp on light grounds (`brand.action` stroke) | `brand.text #E8600F`; the white on ink variant became text.primary |
+| Segmented control track | `border` track, selected pill is `border` filled with text.primary label (a white pill would out-shout the content) |
+| Chip unselected | unchanged in structure, text is now text.secondary on canvas; selected is `brand.tint` with `brand.text` |
+| Primary button | `brand #DC5401` fill with an `onBrand` black label, 4.9:1, replacing white on #BB471D at 3.95:1 |
+| `brand.action #BB471D` | retired. It only existed to pass contrast on white; `brand.text #E8600F` replaces it |
+| Tab bar FAB (ink circle on a white pill) | `brand` circle with an onBrand glyph: an ink circle on a surface pill is a hole |
+| Week strip: empty squares cream, filled ink | empty `border`, filled `brand`, today outlined `brand` |
+| Profile ink hero card | `surface` card, 1pt border, same display number |
+| FeedPost "no photo" ink line card | `surface` line card |
+| Cover fallback | stays `canvas`: a missing cover is now a hole in the page by design, with the title in text.primary over it |
+| Share card ground | already ink; the logo bars and the stamp were already reversed |
+| Badge unearned border | `border` with text.secondary label; earned stays `brand.text` |
+| Danger | `#B3261E` to `#E5533D`: the darker red fell below 4.5:1 on ink |
+| Document ground behind the frames | canvas, with 1pt `border` frame edges so the phones read against it |
+
+### Frame 20, the contact sheet
+
+Completion was the daily screen with a bigger number: day 30 looked like day 12, and the peak of the
+product had no shape. It is now the contact sheet. Display number 96, "30 days. Every one witnessed."
+in bodyStrong, then the hero: all thirty proofs at 4:5, six across and five down, 4pt gutters, radius
+4, inside the 20pt gutters. Self reported days sit at 40 percent with no stamp, so the honest cut is
+visible as a picture. COMPLETE centred under the grid. Primary "Start the next one", because
+challenge two is the metric; secondary "Share", tertiary "Done". The story share card is the same
+composition. Entry motion: the grid fills row by row over 600ms, five steps of 120ms, then the stamp,
+one haptic. Second and last animated moment in the app, earned by thirty days.
+
+Six across and five down rather than five by six: at 390pt with 20pt gutters a five column grid is
+521pt tall and pushes the buttons off the screen; six columns is 360pt and fits with the number, the
+copy, the stamp and three buttons.
+
+### Diff list for the inversion
+
+- `src/tokens.ts` — the ten dark tokens with measured ratios, law 1, 7, 9 and 19 comments, `contactSheet`.
+- All fifteen component files — colour names migrated (`ink` to `textPrimary`, `brandAction` to
+  `brandText`, `avatarTint` to `border`, `onInk` to `textPrimary`); primary button to brand fill.
+- `src/components/ContactSheet.tsx` — new, plus `revealRows`.
+- `src/components/MomentScreen.tsx` — the `complete` variant renders the contact sheet and the three
+  button footer.
+- `GRIIT System.dc.html` — all 21 frames re-rendered on the dark tokens; frame 12's token panel
+  rewritten; frame 20 rebuilt as the contact sheet; the prototype's Complete screen replaced and
+  `Start the next one` wired to Discover.
+- `GRIIT Prototype.dc.html` — same inversion and the same Complete screen.
+- `README.md` — this section, the token table, laws 1, 7 and 9, the tap list.
+
+## The Cursor package
+
+`cursor/` is written for the engineer, not the reviewer: no rationale, no adjectives, one value per
+property. `00_READ_FIRST.md` (laws, tokens, type scale, spacing, the seven lint greps),
+`01_components.md` (24 components in build order with props, states, token references, hit targets,
+never rules and the React Native equivalents), `02_screens.md` (16 screens with component trees,
+vertical rhythm in points, display face item by item, every state, literal copy tables),
+`03_media.md`, `04_law_table.md`, `05_diff_from_current_app.md` (the 17 screenshots mapped to changes
+and chunks).
+
+## Photography rule
+
+The app's texture is real proof photos: grainy, dark, unstyled, 6am. Discover's hero, the feed and the
+share card run on real proofs. No stock, no illustration, no gradient backgrounds, ever. The more
+people post, the bolder the app looks. A frame that needs a placeholder uses one of the two existing
+proof assets.
+
+## Copy rule
+
+Every confirmation is a declarative sentence with a period. "Day 23. Verified." "Day secured." "Not
+today." Never an exclamation mark, never "great job", never "you've got this".
+
+## Frames
+
+1 Home · 2 Discover · 3 Activity notifications · 4 Activity leaderboard · 5 Profile · 6 Settings ·
+7 Create step 1 · 8 FeedPost variants · 9 Share card v1 · 10 Day secured · 11 Loading and error ·
+12 System sheet · 13 Display face · 14 Capture · 15 Secured · 16 Verified stamp · 17 Share card ink ·
+18 Prototype · 19 Welcome · 20 Challenge complete · 21 Badges · 22 Create step 1 · 23 Create step 2 ·
+24 Add task sheet · 25 Create step 3 · 26 Review sheet · 27 Launched · 28 Active challenge ·
+29 Challenge detail · 30 Today's proof list · 31 Onboarding v2 · 32 Onboarding states ·
+33 Dark conversion · 34 Roster · 35 Invite picker · 36 Invite notification · 37 Detail invited ·
+38 Group row · 39 Post detail · 40 Writing step · 41 Consistency record · 42 Add task sheet ·
+43 Preview rows · 44 Home card · 45 Time gate · 46 Discard sheet · 47 Multi-challenge day ·
+48 Task done day open · 49 Counter Timer Run · 50 Add task second pass · 51 Comments and respect ·
+52 The morning after · 53 Two zeros · 54 The freeze · 55 Partial miss · 56 Roster yesterday ·
+57 The evening before · 58 Proof moment · 59 Secured · 60 Proofs grid · 61 Run manual · 62 Controls ·
+63 Capture · 64 Edit profile · 65 Discover row · 66 One number · 67 Scales · 68 Home · 69 Feed ·
+70 Profile · 71 Consistency · 72 Counter · 73 Secured · 74 Login · 75 Morning after ·
+76 Secured footer · 77 End of challenge · 78 Profile finished · 79 Secured footer R3 ·
+80 End of challenge · 81 Two at once · 82 Profile finished · 83 Tile states · 84 Groups ·
+85 Empty · 86 One photo · 87 Header tradeoff · 88 Proofs as days · 89 Day viewer ·
+90 Viewer states · 91 Consistency · 92 Badges.
+
+## Source
+
+`src/tokens.ts` · `components/Primitives.tsx` · `Identity.tsx` · `Media.tsx` · `States.tsx` ·
+`Feed.tsx` · `Chrome.tsx` · `Leaderboard.tsx` · `ShareCard.tsx` · `DisplayNumber.tsx` · `Stamp.tsx` ·
+`MomentScreen.tsx` (capture, secured, selfReported, complete) · `Welcome.tsx` · `Badges.tsx` ·
+`ActiveChallenge.tsx` · `ChallengeDetail.tsx` ·
+`Prototype.tsx` (state machine). Every value comes from `tokens.ts`; no raw hex in components.
+
+## List 1. Every tap in the prototype
+
+| tap | state |
+|---|---|
+| Welcome, Start | wired, goes to Home |
+| Welcome, Log in | dead |
+| Tab bar, Home / Discover / Activity / Profile | wired, active tint follows |
+| Tab bar, FAB | wired, opens Create step 1 |
+| Home, bell | dead |
+| Home, Post your first proof | wired, opens Capture (inert once posted) |
+| Home, Friends / Everyone | wired, swaps the feed list |
+| Home, heart on your own proof | wired, toggles |
+| Home, comment glyph | dead |
+| Capture, Cancel | wired, back to Home |
+| Capture, flip camera | dead |
+| Capture, shutter | wired, opens Secured and counts 0 to 1 over 400ms, stamp at the end |
+| Secured, Share | wired, opens the share card full screen |
+| Secured, Done | wired, Home with streak 1, today filled, proof card 1 / 1, proof at the top of the feed with the stamp |
+| Share, Back | wired, returns to Secured or Complete |
+| Discover, chips (For you, Trending, Body, Mind) | wired, swaps the featured card and the grid |
+| Discover, featured Start | wired, You're in, and sets Home's proof card to that challenge |
+| Discover, a person in the strip | wired, opens the visitor profile |
+| Discover, Follow in the strip | dead |
+| Discover, Build your own | wired, Create step 1 |
+| You're in, Back to Home | wired |
+| Activity, Notifications / Leaderboard | wired, swaps the view |
+| Activity, Find a challenge | wired, goes to Discover |
+| Leaderboard, Global / Friends / Challenges | wired, swaps the list |
+| Profile, gear | wired, opens Settings |
+| Profile, share glyph | dead |
+| Profile, Challenges / Proofs / Badges | wired, Proofs shows the posted proof after the loop |
+| Profile, See the full record | wired, month grid with today filled |
+| Visitor profile, back chevron | wired, returns to Discover |
+| Visitor profile, Request to follow | dead |
+| Settings, any row | wired, pushes a detail screen with a back chevron |
+| Settings, back chevron | wired, returns to Profile |
+| Settings, Sign out / Delete account | dead |
+| Record, back chevron | wired, returns to Profile |
+| Create, Cancel | wired, returns to the tab the FAB was tapped from |
+| Create, Continue | wired, steps 1 to 2 to 3 with the progress bar |
+| Create step 3, Start challenge | wired, You're in |
+| Complete, Start the next one | wired, goes to Discover and clears the challenge |
+| Complete, Share | wired, opens the share card |
+| Complete, Done | wired, back to Home |
+| Outside the frame, Complete the challenge | wired, jumps to day 30 and opens the contact sheet with the 600ms row reveal |
+| Outside the frame, Reset | wired, returns to Welcome |
+
+## List 2. The nine items
+
+- **1. Secured before state, no stamp** — Done. The 22 frame carries no stamp; the stamp appears at the end of the count up, in frame 15 and in the prototype.
+- **2. Self reported does not fill the square** — Done. Outlined square, no fill, no stamp, Done only, copy unchanged.
+- **3. Share cards, 220 number, new order** — Done, with one deviation: the proof is 720 on the story and 560 on the feed, not 900. With a 220 number, the copy line, the stamp and the 80px logo in the column, 900 overruns the story safe zone and the feed box, and law 13 outranks the width.
+- **4. Every earned number in the display face** — Done across frames 1 to 12: Home streak, Profile streak and best, "Day 1" in feed headers and on the proof card, "Day 23" on the FeedPost sheet, "7 of 7" on the finished variant, leaderboard rank, check ins and points, badge requirement, frame 10 before and after, frame 12 specimen, frame 9 share numbers. Timestamps, follower counts, 0 / 1, "14 days", step numbers and character counts were left in SF Pro.
+- **5. Welcome in ink** — Done. Frame 19, and the prototype opens on it.
+- **6. Challenge complete** — Done. Frame 20, phone plus the story share card with the COMPLETE stamp; reachable in the prototype via "Complete the challenge".
+- **7. Badges as stamps** — Done. Frame 21, and inside the prototype's Profile badges tab.
+- **8. Frame 18, one tappable phone** — Done. Seventeen screens, the state listed in the brief, cuts only, count up on Secured, dead taps where the brief says dead.
+- **9. Handoff** — Done. This README is one document; the two lists are above and below.
+
+## The Create wizard, Sept 6 2026
+
+Six surfaces rebuilt on the ink system: steps 1 to 3, the Add task sheet, the Review sheet and the
+launch result. Structure, question order and voice unchanged. What changed is containment and copy:
+pack rows left their cards and icon tiles, the uppercase section labels and the "ATHLETE · 3 TASKS"
+summary label are gone, proof types are ghost chips with one full sentence for the selected type
+instead of six truncated tiles, the tinted research band is a caption, and the raw validation array
+is the empty state pattern. Ampersands, em dashes and the label style used as body copy are all out.
+Source: `src/components/create/`.
+
+## Active challenge and challenge detail, Sept 8 2026
+
+The two screens the loop actually runs through, rebuilt.
+
+**Frame 28, active challenge**, the screen inside a challenge you joined. Four states: Day 1 with 0 of
+5 done, Day 12 with 3 of 5, Day 12 secured, and hard mode after a missed day. The green hero, the two
+0% tiles, the "0 in this challenge" row shown to a member and the duplicated header are gone. One
+position block, "Day 12 of 75" with the day as the only display number, then what is left, the week
+strip, difficulty. Task rows carry their real gate and their own verb: Start timer, Log pages, Take
+photo, never a generic Start. The pinned button names the next task.
+
+Four spec amendments, Sept 8: `secured_today` is a server field from `day_secures` via
+`getSecuredDateKeys` and is never derived from `tasks.every(completed_today)`, so five of five done
+with the server unsecured still reads "5 of 5 done." with a primary footer; the stamp binds to the
+completion (`verified`, `proof_photo_url`), not to `require_photo`; `reset_notice` renders only on a
+real backend reset event and never on `current_day === 1`; every numeric string in the copy table is
+a template.
+
+**Frame 29, challenge detail**, the screen before you join. Nothing here is earned, so no display
+face and no stamp. Facts are the three the creator set, "30 days · Solo · 12 people": difficulty came
+out, because it is the creator's opinion, the gate list is the truth, and it collided with Hard in the
+Enforcement picker. The task list is the screen's core, each task labelled with only the gates the app
+can enforce, camera, time window and location, in that order, and an ungated task reads
+"Self-reported" in secondary ink. The location label never prints the place. Enforcement is the creator's,
+set on the challenge and identical for everyone in it, so it is one textSecondary line under the task
+list and not a picker: hard mode reads "Hard mode. Gates are enforced; a failed gate fails the day.",
+standard reads "Standard mode. Every gate blocks. Freezes cover a missed day." Three states: not enrolled, free limit reached with Join disabled and "Leave one, or
+upgrade", and ended or not yet live, which drops both Join and the picker and states the date in one
+line. Solo reads "Day 1 is today." under Join; duo and team read "Join opens the invite step. You need
+a partner before Day 1."
+
+The primary button on frame 29 is `#BB471D` as briefed, with a `textPrimary` label; `#DC5401` is
+accent only there. Source: `src/components/ActiveChallenge.tsx`, `src/components/ChallengeDetail.tsx`,
+specs in `cursor/02_screens.md`.
+
+## Home, today's proof card
+
+The card lists every required task across every active enrollment for today, one row per task, grouped
+by challenge with the challenge name as a caption label above its rows. One enrollment carries no label.
+Rows are the call to action: the status dot is filled brand when done and a 1.5pt outline when not, done
+names drop to textSecondary without strike-through and stop being tappable, and each pending row opens
+that task's capture flow. There is no per-row button and no primary button under the list. Gate labels
+are the same three real gates as the challenge detail screen: Camera, Time window, Location, or
+"Self-reported". When `day_secured` comes back true the card adds one line, "Day secured."
+
+Component: `src/components/HomeV3.tsx` (`TodayCard`). Frames 01 and 30 in `GRIIT System.dc.html`.
+
+## Onboarding v2
+
+Nine screens. Welcome is screen 1 and is unchanged; screens 2 to 9 are `src/components/onboarding/`,
+sharing `OnboardingScreen` in `OnboardingChrome.tsx`: back chevron, a labelled Skip only where the
+screen is genuinely optional, an eight segment position bar with no step numbers, a 28pt title, and a
+pinned footer whose one filled button is `color.primary`.
+
+Order: Goals, WhyProof, WhyCircle, Commitment, FirstChallenge, Reminders, Account, Profile. Goals feeds
+FirstChallenge; Commitment stores the day target that drives "Day 1 of 30" on Home; the notification
+permission prompt exists only on Reminders; both Profile exits finish onboarding.
+
+Barlow Condensed does not appear in the flow. The user has earned nothing yet, so the only display
+number in onboarding is the Welcome headline. Where a screen argues for the product it uses the real
+component — the Today card from frame 30, a real feed row, the gate vocabulary from frame 29 — because
+real UI is the only illustration in this system. The three enforceable gates are camera, time window and
+location; "Verified" does not appear.
+
+Frames 31 and 32 in `GRIIT Onboarding and Auth.dc.html`. Per-screen copy tables and cut lists in
+`cursor/02_screens.md`.
+
+## Dark conversion: auth, self-report, secured
+
+Five screens that were still light theme: login, the forgot-password sent state, the self-report task
+step, the secured screen and the saving state. Frame 33, in `GRIIT Onboarding and Auth.dc.html`. No new tokens, no new components.
+
+Every element from the light versions survives. Login keeps both fields, show/hide, "Forgot password?",
+Apple, Google and the sign-up link, and shows Sign in disabled with one caption saying what would enable
+it. The sent state now names the address the link went to and adds a Resend that locks for 60 seconds
+with a visible countdown. The self-report step keeps "Self-reported. Nothing is checked." exactly and
+adds one card spelling out what the tap records. The secured screen composes its middle: streak number,
+day and verification line, week strip, then a photo frame only when there was a photo. Saving happens in
+the button, with "Nothing is secured until the server says so." as the caption under it; the full-screen
+takeover appears only past about 800ms.
+
+Barlow Condensed appears once across the five, on the secured streak number. Per-screen token lists and
+`components/ds/` reuse notes are in `cursor/02_screens.md`.
+
+## Where the frames live
+
+`GRIIT System.dc.html` holds frames 1 to 30, `GRIIT Onboarding and Auth.dc.html` holds 31 to 33,
+`GRIIT Group Challenges.dc.html` holds 34 to 38, `GRIIT Post Writing Record.dc.html` holds
+39 to 41, `GRIIT Task Model.dc.html` holds 42 to 46, `GRIIT Completion Loop.dc.html` holds 47 to 51,
+`GRIIT The Miss.dc.html` holds 52 to 57, `GRIIT Proof Moment.dc.html` holds 58 to 66, and
+`GRIIT Density.dc.html` holds 67 to 74, `GRIIT Patch v28-1.dc.html` holds 75 to 78, `GRIIT Chunk T.dc.html` holds 79 to 82, `GRIIT Proofs Grid.dc.html` holds 83 to 86, `GRIIT Chunk U Profile.dc.html` holds 87 to 92, and `GRIIT Chunk U Feed.dc.html` holds 93 to 96.
+
+They are split for one reason: every icon in these documents is a Lucide placeholder replaced in one
+synchronous pass at load, and one file with 33 frames and ~60 phone mockups hung the main thread hard
+enough that the page never became interactive. The index chip row in each document links to the other,
+so the split is invisible when navigating. Keep new frame sets in the smaller document, or start a third
+once it passes roughly 30 phones.
+
+## Group challenges
+
+Frames 34 to 38. Individual streaks stay individual; the group is a shared room capped at ten, and the
+cap is stated wherever a seat count is actionable — the roster header, the invite picker, the detail
+chip, and the social row on the active challenge screen.
+
+The roster shows the group streak as the one DisplayNumber on the screen, with a caption naming what it
+counts, and every member's own streak as a ListRow subtitle. Creator first, then by streak. Pending
+invites are a separate labelled section; the creator sees a flush tertiary Cancel where members see an
+inert "Invited". The invite picker uses trailing states rather than a button per row, and keeps "Share a
+link" pinned above a Divider in every state, including the empty one, because a link is the only path to
+someone you do not follow. The invited detail card is the existing `ChallengeDetail` with an `invite`
+prop: Join becomes Accept plus a tertiary Not now, under a caption naming the inviter.
+
+**No new components.** The reuse notes in `cursor/02_screens.md` are grounded in a read of
+`components/ds/` at `main` — the roster and picker rows are `ListRow` with an `Avatar` in its
+`icon` slot, the fresh-group state is `EmptyState` on the canvas, and the button variants are
+`primary` / `secondary` / `tertiary`. Two conflicts with the shipped code are recorded there rather
+than papered over: `Button variant="primary"` fills `DS_V3.color.brand` with an `onBrand` label
+while the frames draw brief 16's `#BB471D` on `#F5F3EE`, and `ListRow`'s title is always
+`textPrimary`, so the read state of a notification row needs a prop on `ListRow`.
+
+## Post detail, writing step, consistency record
+
+Frames 39 to 41, the last three light-theme screens.
+
+Post detail leads with `ProofImage size="feed"` and lets the component place the Stamp inside its own
+scrim — passed only when the completion carried camera proof. Comments are rows on the canvas with
+Dividers; the composer is a pinned `TextField` with a 44pt round Send that is surface-with-border until
+there is text. Loading is the `Skeleton` card recipe, static, never a spinner. "No comments yet." is one
+line, not an `EmptyState`, because the composer below it is already the action.
+
+The writing step puts a bare `TextInput` on the canvas rather than a `TextField` — 250 words do not
+belong in a 52pt bordered box. The counter is a caption on a 2pt rule that fills with brand, not a
+`DisplayNumber`: words typed are not earned. The CTA names the remaining work and is disabled until
+the count is met.
+
+The consistency record shows secured days over days elapsed as its one hero number, then splits the
+secured total into camera proof and self-reported inside the same stats Card, below a Divider. No Stamp
+appears anywhere on that screen: it would imply the aggregate was checked.
+
+One component is proposed, `ds/CommentRow` — avatar 32, a name and time baseline, wrapping body text.
+`ds/MemberRow` (which shipped after chunk L) hardcodes avatar 40 and a status trailing slot, and
+`ds/ListRow` cannot wrap. Per-screen token lists and copy tables are in `cursor/02_screens.md`.
+
+## The task model
+
+A task has one type and zero to three gates. Types: Check off, Timer, Counter, Text, Run. Gates: Camera,
+Time, Location. "Photo" is not a type and "verified proof" is not a toggle — both are the Camera gate.
+The gate line reads "Camera · By 7:00 am · Location", or "Self-reported" when there are no gates, built
+by one function in one order and called by every screen that shows a task.
+
+Frames 42 to 46 cover the add-task sheet (name, then what you do, then what proves it), the task preview
+row, the Home card with six tasks including a closed time window, the time gate in the completion flow,
+and the discard sheet. Two components are proposed: `ds/Sheet` (there is none, and the three hand-rolled
+sheets in the app disagree with each other and with DS_V3) and `ds/Switch` (RN's default track is iOS
+green).
+
+`cursor/02_screens.md` carries a numbered list of places the shipped code contradicts the model, with
+paths, for the migration plan — ten `WizardTaskType` values against five types, a heart-rate proof
+mechanism the model forbids, and the fact that the Time gate has no columns and no server check yet, so
+it must not ship until `checkins.ts` can reject a late check-in.
+
+## Closing the task-completion loop
+
+Frames 47 to 51. A day across several challenges is one card with one section per challenge, separated
+by Dividers, every row leading with the same status ring — three sibling cards would crowd the screen the
+way law 22 forbids a card inside a card.
+
+Frame 48 is the state the app never had: task done, day still open. It carries no streak number at all,
+because one task of six moves nothing, and it replaces both screens that grew in its place. Completing
+the last required task skips it entirely and goes to the Secured screen, which is where the number
+lives; the router branches on the server's `secured_today`, never on a client count.
+
+The Counter, Timer and Run steps are converted, with no display face on any of them — work in flight is
+not earned. The timer copy is corrected against the code: it runs on the wall clock and leaving the app
+does not stop it, so "leaving the app pauses it" must not ship. Nothing in the repo sets
+`strict_timer_mode` true, so no screen describes strict timer behaviour. There is no map anywhere in
+the app, so the Run step and the place screen show numbers and say so.
+
+The add-task sheet gains a live preview of the row the task will produce (which retires the "No gates"
+caption), a 3 × 2 type grid so no chip is orphaned, and a "Common tasks" starter row. Comments open in
+the `ds/Sheet` that shipped after chunk N rather than a route, and the respect heart finally fills —
+`FeedPostV3` passes a colour with no `fill`, which is the whole bug.
+
+Ten more repo contradictions are logged in `cursor/02_screens.md`, numbered 10 to 19, with paths.
+
+## The miss
+
+Frames 52 to 57. Everything before this designed the success path; the morning after an unsecured day,
+Home said "0 days · Post today to start." and accounted for nothing.
+
+The morning-after block sits between the streak hero and Today and states fact, then cost, then cushion:
+what was not secured, which tasks were missed, and what happened to the streak. It needs no new endpoint
+— `profiles.reconcileStreak` already returns `streak_broken`, `previous_streak` and
+`lastStandUsedThisSession`, and the client currently sends them to analytics and renders none of them.
+No red, no consolation, and the Last Stand variant is a receipt rather than a celebration.
+
+The rules turned out narrower than the brief assumed. **Last Stand has no grace window and no
+countdown** — it is applied automatically, retrospectively, to premium and trial users only, so there is
+nothing for the user to complete and no frames for it beyond the receipt and a record row. **Freezes are
+manual and currently unreachable**: `streaks.useFreeze` validates properly and nothing calls it, while
+`StreakFreezeModal`'s "Use streak freeze" button only dismisses the modal. Frame 54 is therefore an
+offer with its cost named, and "No, let it reset" at full tertiary weight.
+
+A partial day earns nothing — a day is secured or it is not — but the record now shows the 4 of 6 and
+names the tasks that were missing, and a Last Stand day is its own third state alongside camera proof
+and self-reported. The roster gains "Missed yesterday" in the existing caption slot with no colour and no
+icon, and the group streak line names who broke it. The evening reminders drop from four to two.
+
+A ten-row **Decisions for Yaseen** table and thirteen more repo contradictions, numbered 20 to 32, are in
+`cursor/02_screens.md` — including two that make the freeze mechanic non-functional today: the cron
+nulls `last_completed_date_key`, which is the field `useFreeze` needs to validate, and only one day
+can ever be frozen because the frozen set is derived from a single timestamp column.
+
+## The proof moment, the proof grid, and the last light screens
+
+Frames 58 to 66, against build 58.
+
+**The moment after a task** now leads with the photo the user just took. A camera task that ends on a
+text list throws away its own artefact three seconds after it was made. The share choice is two buttons,
+both one tap and both advancing — "Share to the feed" and "Keep it to the record" — so nothing defaults
+silently and nothing is celebrated. A self-reported task has no photo and no share choice.
+
+**Secured** loses the empty image card and the unqualified "Day 2." A day number belongs to a challenge,
+and with three running there are three of them, so the hero is the streak and day numbers only appear
+with a challenge name attached. Zero photos shows no image area and lists the challenges; one shows it
+full width; three or more show three tiles and a +n.
+
+**Profile → Proofs** is a 3-up square grid, newest first, day burned into the tile corner.
+Self-reported days do not appear — there is no photo — but the count under the grid names them, and the
+two empty states are written separately so a user with eleven self-reported days does not read the
+new-user message.
+
+The **Run step** stops claiming GPS for numbers the user typed and stops printing a note about the
+design system on a phone. **Pause, Reset, Remove one and Type it** become surface pills instead of bare
+orange text, which puts the accent colour back on the one primary per screen. The **capture shutter**
+goes from `surface` — one step off black on a dark viewfinder — to a proper white ring and fill, and
+the top controls get scrim pills with the task and its window named. **Edit profile**, the last light
+screen, comes onto DS_V3 with every field and validation unchanged. **"Ready for more?"** becomes the
+ListRow it always was.
+
+**One consistency number.** Home said "3 days · 67%" and Profile said "2 of 7" for the same user:
+`lib/profile-consistency.ts` counts a rolling week, Home counts the streak, and
+`profiles-record.ts` already computes the correct thing that neither reads. The definition is days
+secured over due days closed, since the first due day, today excluded. The phrasing is "{secured} of
+{due} days", everywhere, with no percentage — at 13 due days one miss moves it eight points, which is
+volatility, not information.
+
+Source: `src/components/{ProofMoment, SecuredDay, ProofsGrid, ControlPill}.tsx`,
+`src/lib/consistency.ts`. Copy tables, states, the seven answered product decisions and contradictions 33 to 45 are in
+`cursor/02_screens.md`; `ds/ControlPill` is declared in `cursor/01_components.md` and the build
+order is in `cursor/05_diff_from_current_app.md`.
+
+Two things the build depends on. **The share choice rides on whichever screen is reached** — frame 58
+when the day is still open, frame 59 when that task secured it — and the two are never shown back to
+back. And **the feed row must be written unshared**: `checkins.complete` currently inserts the public
+`task_completed` row with the photo at completion (`checkins.ts:822-842`), so until it carries a
+`shared` flag that the share buttons flip, "private until you choose" is a claim the server
+contradicts. A day secured with unshared proofs shows nothing in the feed — an unshared proof is not a
+quieter post, it is not a post.
+
+## The density pass
+
+Frames 67 to 74. GRIIT read oversized next to the apps its users live in — body around 17, row titles
+above 20, a phone holding four task rows. Every pair in `GRIIT Density.dc.html` is the same markup
+rendered through two token objects, so the only variable is the scale.
+
+Body goes 17 → 15, secondary 15 → 13, caption 13 → 12, label 12 → 11; heading 20 → 17, title 28 → 22.
+Gutter 20 → 16, section 32 → 24, card padding 20 → 14, card radius 20 → 14. Buttons 52 → 46, avatars
+32/40/56/96 → 28/32/44/80, tab bar 64 → 56. **Touch targets stay at 44 everywhere** — the pattern is to
+shrink the padding and let `minHeight: 44` do the work, so a one-line row is 44 either way and a
+two-line row goes 68 → 54.
+
+**The Barlow Condensed numerals do not move.** They are the signature, and the one place this app
+should be larger than its competition. Bringing everything around them down makes them read bigger at
+no cost — frame 73 shows the identical 140pt streak looking larger on the right.
+
+Measured off the frames: Home goes from six visible task rows to eight and recovers the Discover row
+that v27 clips away; the feed's third post goes from unreachable to 50pt, its avatar and name; the proof grid gains a whole
+third date section that v27 clips; Consistency gives back 121pt, the largest
+single reclaim; Login gives back 72pt. Login still does not clear the keyboard at either scale — that
+is a layout problem the pass does not solve, and it is logged rather than papered over.
+
+Values are in `src/tokens.dense.ts`, held out of `tokens.ts` pending one decision: **body 15 or
+14**. 14 is the reference size exactly and buys about one more row, but at 14/500 a row title sits two
+points from its gate line and the row loses its hierarchy. Recommendation is 15. Tab bar labels stay —
+a compass and a group of people are the same idea to a new user, whatever they mean to us.
+
+Eight breakages with fixes, six contradictions (46 to 51), the grep list and the ship order are in
+`cursor/02_screens.md` and `cursor/05_diff_from_current_app.md`. The one that must not be missed:
+`dynamicType` still maps `body` to Apple's 17pt `body`, so it has to be remapped in the same
+commit as the scale or the app scales wrong for anyone using Dynamic Type.
+
+## v28.1 — the states nobody designed
+
+A patch, not a chunk. Five gaps the Chunk Q simulator walked into. Frames 75 to 78, no new tokens, no
+new components.
+
+The **morning-after block** said "Your streak reset to 0." under a hero reading 1 day once the user
+secured today. One conditional line fixes it — "Your 12-day streak ended. Today starts the count at 1."
+— which states the loss before the restart so it cannot be read as a reward. The block exits on
+dismissal, on local midnight, or when a freeze resolves the miss; securing today is deliberately not an
+exit.
+
+The **Secured footer** keyed off the closing completion, so a day ending on a self-report offered no
+share choice at all even when it held three unshared camera proofs. It now offers the day's unshared
+photos as one set, posting one row, with a single Done when there is nothing unshared.
+
+**"Day {n} of {N}"** now binds N to `duration_days`, with a clamp so the app can never render "Day 76
+of 75". The empty-title fallback stops being the word "Task" and becomes the task's own type or target,
+with the real fix being validation in the Add task sheet.
+
+**The end of a challenge** did not exist: a run whose last day passed simply left Home. There is now
+one screen for both outcomes — days secured in the display face, then a 75-square contact sheet where a
+run with seven holes shows seven holes — and a Finished section in Profile so the challenge moves
+rather than disappears. Three status words, no fourth: "Day n of N", "{secured} of {N}", "Left on day
+n". Nothing is coloured by outcome and nothing congratulates; the record is the reward.
+
+Needs three columns the schema lacks: `ended_at`, `ended_reason ('completed' | 'left')` and
+`end_seen_at`. Contradictions 52 to 57 in `cursor/02_screens.md`, the last of which is that quitting
+currently deletes the row — a history shorter than the truth.
+
+## v28.2 and Chunk T — the end of a challenge
+
+**Item 2 withdrawn.** R3 stands: the Secured footer offers the closing completion's photo and nothing
+else. Every camera proof is already answered on its own frame 58, so a day-wide offer re-asks a
+question the user answered — and for one they answered "Keep", asks them to reverse a deliberate
+decision. When the closing completion is a self-report the footer is a single Done plus a pointer:
+"Today's other proofs are in Profile, Proofs. Any you kept private can be shared from there." A
+pointer, not a second offer. A whole-day post, if wanted, is specced separately and composes only
+proofs answered "Share".
+
+**Two numbers, two meanings.** "Day {n} of {N}" is calendar position in the user's timezone, clamped
+to N, advancing whether or not the day was secured. "{secured} of {N}" advances only on a secured day.
+Running rows and feed headers take the first, finished rows and the end screen take the second, and
+they are never mixed. A hard-mode reset rewrites `started_at`, so both return to zero together; a
+freeze or Last Stand changes neither, because they protect the streak, which is a third number again.
+
+**Chunk T** is the end of a run. It fires on the end date passing in the user's timezone, with the
+last day running to 23:59:59 local — not on a day counter, which would end the run at the clock time
+they joined. The four statuses `active_challenges` already carries map to four lines: "Day n of N",
+"{secured} of {N}", "Left on day n", "Failed on day n". Failed is blunt on purpose; softening it
+apologises for a rule the user chose.
+
+The contact sheet carries five states on the WeekStrip encoding — brand fill, solid border fill, an
+outline, an outline with a grey plug for frozen, a brand outline with a brand plug for a Last Stand —
+at 12 columns, because 75 days at 10 across leaves no room for the legend and the stats card. **Frozen
+and Last Stand days count as unsecured**: the streak survived them, the day did not, and the sentence
+under the number says which. Two challenges ending the same day get one combined screen with no
+restart button, since it would have to pick one. "Start it again" at the free cap stays enabled with
+the price stated. A one-day challenge holds, with a single centred tile.
+
+Needs `ended_at` and `end_seen_at` on `active_challenges`, with `end_seen_at` backfilled to `ended_at`
+or every historical enrollment fires an end screen. `ended_reason` is not needed — `status` already
+distinguishes the outcomes, and contradiction 57 is withdrawn: leaving writes `abandoned` and keeps
+the row.
+
+Source: `src/components/{ChallengeEnd,ProfileChallenges}.tsx`.
+
+## Proofs grid revision
+
+Frames 83 to 86, shipping with build 61 alongside the Chunk R density pass. Out of scope and
+untouched: the Consistency card, the segmented control, the proof detail screen, feed cards, the
+VERIFIED pill.
+
+**Decisions carried in as given.** Tile label is the task name; the challenge appears only when a date
+group holds more than one. Private photos get a small lock mark, shared photos get no mark, no eye
+icon and no tile-wide colour. Tap target and destination unchanged: tile → `app/proof/[id]`, where
+Share lives. A photo answered Keep is never re-offered — no Share action on the tile, no long-press
+menu, no whole-day post in this pass.
+
+**Recommendation on C, the date header: keep "19 September · 3 proofs" with no private count.** The
+lock marks sit a few pixels below the header, so a count restates what is already visible and makes
+the reader reconcile two numbers against the tiles — the same arithmetic the footer fix removes. It
+also implies the split is a property of the day; it is a property of a photo.
+
+**Recommendation on the challenge name: a sub-header inside the date group, not a second line on the
+tile.** A second line costs 13pt of a 116pt tile and prints the same word three times across
+a row to say what one line above it says once. It renders only on a day that holds more than one
+challenge, so the common case stays clean.
+
+The label sits on a gradient scrim rather than a caption bar, so it only darkens where the text is,
+and it holds over a bright photo and a near-black one. The lock is a 16pt ink disc at 72% carrying a
+white glyph — a bare glyph disappears on a white photo or a black one, the disc survives both. A
+failed image is surface with a border and an `image-off` glyph, never black, because a black square
+and a photo taken in the dark are the same pixel and one of them is an error. The footer is one line,
+"{n} photos", pending the engineering count fix; nothing in that slot may add or compare day counts.
+
+**No new tokens.** Two literals are stated in `cursor/02_screens.md` rather than tokenised — the tile
+scrim ramp and the lock disc ink — because each is used once and the existing `scrim` token is tuned
+for the 4:5 feed proof, not a 116pt square.
+
+Source: `src/components/{ProofTile,ProofGroupHeader}.tsx`.
+
+## Chunk U, part A — Profile, proofs as days, consistency
+
+Frames 87 to 92, build 62. Parts B (Home and Feed) and C (Create and task screens) follow as separate
+handoffs. Untouched: end-of-challenge, Discover, the Secured screen.
+
+**Decisions.** Proofs is the default tab and leads the profile. The streak and consistency cards merge
+into one 56pt row — the alternative is drawn beside it in frame 87 and costs 76pt, which is the first
+row of proof days moving below the fold. Proofs group by day, not by photo: date, photo count, and the
+day's first photo as cover, with the lock on any day holding a private photo. The visitor view carries
+shared photos only and drops days with none entirely, because a gap where a day should be is itself a
+disclosure. Consistency's headline is "{secured} of {elapsed} days secured" with the denominator
+written under it. Badges become rows — a treatment change only: the five marks, requirements, earned dates and footnote
+are the ones already shipping in `Badges.tsx` and frame 21, the stamp language holds (no icons, no
+circles, no cards), and earned differs from unearned on three channels rather than opacity.
+
+**The one R3 subtlety.** The day viewer offers Share on a private photo — but only to the owner, and
+only on a photo that was never *answered*. R3 forbids re-offering a photo the user answered Keep; a
+photo whose Share/Keep card was dismissed was never answered at all. Distinguishing the two needs the
+server to store three states rather than a boolean, which is contradiction 64.
+
+### A3 research — how consistency should be drawn
+
+**The question.** Three candidates: a GitHub-style contribution heatmap, a weekday-aligned month
+calendar, or a list of days.
+
+**Recommendation: the weekday-aligned month calendar.** Whichever is chosen, the headline, the month
+count and the per-challenge bars must all be reductions over one day array — authoring them separately
+is what produced a September claiming secured days in the future.
+
+**1. GRIIT's day states are categorical, and a heatmap's only channel is intensity.** A contribution
+graph encodes *how much* — it ranks, but it cannot name. A GRIIT day is one of eight named things
+(camera proof, self-reported, freeze, Last Stand, missed, open, not due, before join), and three of
+those must be told apart at a glance because they mean different things about whether the number is
+true. Intensity cannot say "a freeze held this day but it is not secured." A cell with a glyph can.
+
+**2. The actionable read is day-of-week, and only a weekday-aligned grid preserves it.** "I miss
+Sundays" is a conclusion a user can act on. A year heatmap is week-column-aligned and technically
+carries weekday on its vertical axis, but at 7-8pt cells nobody reads down a column. A month grid at
+30pt cells puts all four or five Sundays in one visible column.
+
+**3. A list of days is the most honest and the least usable.** It scales linearly — 68 days is 68 rows
+— and answers "what happened on the 14th" while making "how is this month going" a scroll. The month
+grid answers both at 31 cells.
+
+**What comparable products do.**
+
+- **Streaks** (Apple Design Award, the app that defined the category) uses per-habit heatmaps and
+  weekday circles on the card: <cite index="1-9,1-11">its redesigned habit cards use a vertical layout with weekday circles and streak pills, plus a streak heatmap of habit history on each card</cite>. Two
+  visualisations, because the weekday circles answer a question the heatmap cannot.
+- **Strava and the running apps** record the workout and bury the chain: <cite index="8-14,8-15,8-16,8-17">running apps like Strava, Garmin and Nike Run Club record distance and pace automatically, but most do not show streaks well — you see a weekly summary while the daily chain is buried</cite>. This is the
+  failure GRIIT must not repeat: rich per-session data, no legible answer to "am I consistent".
+- **Heatmap-first habit trackers** (Streakly and similar) go the other way, explicitly modelling
+  themselves on contribution graphs: <cite index="9-8,9-9">inspired by the Seinfeld strategy and contribution graphs, the app visualises progress as a heatmap so a user sees a year of discipline at a glance</cite>. Good for a single binary habit; GRIIT days are not binary.
+- **Apple-Watch-lineage trackers** pair rings with a <cite index="3-5">year-long heatmap showing consistency</cite> — again two views, the second for scale, not for state.
+
+**On how people read consistency data.** The mechanic GRIIT inherits is the chain, and the literature
+on it is about *visibility*, not density: <cite index="8-9">the chain is the point — if you cannot see it, you lose most of the psychological benefit</cite>. The often-cited
+UCL finding gives the horizon a consistency view has to cover: <cite index="7-30">repeating a behaviour in the same context each day builds automaticity, with the average time to form a habit around 66 days</cite>. A month grid with month
+navigation covers 66 days in two screens, both fully legible; a year heatmap covers it in one screen
+that cannot name a single day's state.
+
+**What this rules out.** Colour-only encoding. Every state carries a distinct interior shape — check,
+dot, snowflake, shield, dash, dashed ring, pin-dot, empty — so the grid reads in greyscale and to a
+colour-blind user, which a heatmap by construction does not.
+
+**Sources:** Streaks on the App Store; HabitBox on running streaks and where Strava hides the chain;
+Streakly and Habit Tracker: Daily Streaks on the App Store; the UCL automaticity figure as reported by
+Habi's 2026 streak-tracker review.
+
+Source: `src/components/{ProofDayCard,ConsistencyGrid,BadgeRow}.tsx`. No new tokens; three
+single-use literals are stated in `cursor/02_screens.md`.
+
+## Chunk U, part B — Home and Feed
+
+Frames 93 to 96, build 62, on top of Part A. Part C (Create and task screens) follows.
+
+**One card family.** Every feed event is the same card — avatar, name and time as the header row, the
+challenge as eyebrow, what happened as subject — which is the Part A day-viewer hierarchy. The photo
+post is that card with an image in the middle, so the feed is one list rather than two kinds of row.
+Five event variants ship: task completed, day secured, challenge started, challenge finished, badge
+earned. The Verified stamp appears on the camera-proof variant and nowhere else; a self-reported task
+shows its gate line and no stamp, because nothing checked it. A secured-day card links into that day
+in the poster's Proofs — the day viewer in visitor mode, so shared photos only.
+
+**Comments inline**, two at most, then "View all {n} comments". Composing stays in the sheet: one tap
+target for writing, one place the keyboard appears. Your own comment is marked by colour on your real
+name, not by the word "You" in a different slot.
+
+**Leaderboard: Global removed.** Per the attached research brief, absolute rankings help the top few
+and demotivate the rest (Bai & Hew 2025; Hanus & Fox 2015) — and at the current userbase the board is
+empty besides, so it would ship the demotivation without the competitive payoff. What ships is one
+opt-in board per challenge, scored on secured days since Monday with the rule written on the screen: a
+short top slice, the user's row with one neighbour either side, and nothing below — stated in words,
+naming the lowest rank actually on screen. The score is "{n} secured" in the display face with **no
+denominator at all**: a denominator of seven on a Tuesday asserts a week nobody has lived is already
+assessable, so the elapsed-days line under it carries how much of the week has ended. The board is generated from the same week array the
+strip renders, so no score can exceed the elapsed days and the user's own score matches what their Home
+screen says about the same Monday. Two people is drawn as a comparison rather than a ranking; one person
+gets no board.
+
+**The Friends scope is deferred, not designed.** It is the other defensible scope in the brief, but it
+depends on a follow graph that is not yet dense enough to rank against — with 28 followers of whom a
+handful share a challenge, a Friends board is either the per-challenge board with extra steps or a
+list of two. Revisit when the median user follows enough people who are enrolled in something.
+
+**Week strip** now draws every past day from the same `DayState` union as Consistency, so a missed
+Monday reads as missed rather than as an empty cell (contradiction 66, closed). Only four of the seven
+states can occur inside one week, so the strip legend has four entries.
+
+**B5 and B6 confirmed, not redesigned.** The morning-after block keeps v28.2 copy, with its
+consistency figure now from the same source as Profile; the Home hero sub-line is the Part A
+consistency line verbatim. Reconciling them exposed the streak: Profile read 12 beside a grid drawing
+21 September as missed, so both screens now derive the streak from that same day array and both read 0.
+The standing rule, now stated in the spec, is that every number on screen is a reduction over the day
+array rather than a value authored beside it.
+
+**On the removed statistic.** "Public accountability lifted goal completion from 43% to 76%
+(Matthews, 2015)" does not appear anywhere in this handoff package — grepped across every file, no
+match. Nothing to remove; noting it so the check is on the record. Where a line of that kind is wanted
+in future, it is "People who report progress weekly to one person finish more goals." with no numbers.
+
+**Engagement row** keeps all three affordances — respect, comment, share. Confirmed against
+`components/feed/FeedEngagementRow.tsx` on main, which ships `Heart`, `MessageCircle` and
+`ArrowUpRight`; nothing is cut. That file is also on the daylight palette and hides its counts at
+zero, both logged as contradictions.
+
+**One pinned world.** Every frame across parts A and B renders from a single object — today's date,
+each challenge's start date and task list, and which user secured which day — with the generator
+asserting it rather than restating it. A task card is addressed by challenge and task index, so its
+name, its gate line and its Verified stamp are all read out of that challenge's own task definition: a
+card cannot name a task the challenge does not have, cannot advertise a gate it does not enforce, and
+cannot claim a secured day its poster did not earn. "Day {n} of {N}" is computed from the start date
+(Iron man is day 69 here, not an authored 12), timestamps are unique per poster, and one event carries
+one time in every frame it appears in.
+
+This closed seven instances of one defect across the project. Each fix tightened an assertion in the
+generator rather than correcting a string, because a corrected string leaves the next fixture free to
+repeat the mistake — which is what happened twice. The rule is written at the top of the Part B spec
+section so Part C starts from it.
+
+**Frames:** 93 Card family · 94 Comments · 95 Challenge board · 96 Home. No new tokens; two
+single-use literals stated in `cursor/02_screens.md`. Contradictions 69 to 78 (Part A's run 64 to 68).
+
+## Chunk U, part A — v36 Consistency revision
+
+`GRIIT Chunk U Profile v36.dc.html`, frames 87-92; v35 kept. The principle now opens the screen; the
+headline is "62 of 68 due days secured" with one line defining a due day; the month grid and eight
+glyphs stay; "How it was earned" is a partition of the same 68 days that sums to it; each challenge
+and each month names its unit; each day is one line whose shape is its state. Completion % and Total
+secured are cut as restatements of the headline.
+
+Deriving the partition exposed that a day with a required camera task cannot be self-reported, so
+this record shows zero self-reported days where v35 drew four.
+
+**Design 9/10. Build blocked** on the record payload — contradictions 79, 81 and 88 against
+`lib/profile-v2-record.ts` @ f3c70b6: four day states instead of eight, the breakdown hardcoded to 0,
+and no per-day task counts. Source: `src/components/ConsistencyScreen.tsx`.
+
+## v37 chunk 1 — Share, Consistency, verified mark, Badges
+
+`GRIIT v37 Share.dc.html`. Transparent Instagram Story stickers in three variants (day secured,
+consistency, badge) and three backgrounds (clear, dark card, your shared photo), with one new token,
+`stickerShadow`, so light type survives any backdrop. A private photo is never offered as a background.
+Consistency is three numbers (due days secured, streak, camera share) with their denominators, one
+coaching sentence from the record, rules behind an info button, and a four-state grid. The VERIFIED pill
+becomes a check disc and the proof type; self-reported has no check. Badges are five body-face stamps;
+the record earns four of them, not the two v36 showed. Home, Add task and the Profile header are chunk 2.
+
+## v38.1
+
+Approved decisions applied: Home option A with Activity holding Feed, Leaderboard and Notifications in one segmented control; Standard mode copy describes today's freeze behaviour with no rule change; lengths 7/14/30/75/Custom; categories Fitness, Faith, Mind, Health, Discipline, Learning in both Discover and Create; Visibility replaces public proof; a "Which day" picker on Share today when more than one challenge secured; counter mock fixed to match its challenge; starter renamed "No Days Off".
+
+## v39
+
+The Profile proof viewer is frame 112, in `GRIIT v39 Proof Viewer.dc.html`. Tapping a day in Profile → Proofs opens a vertical feed of days, newest first, at the day that was tapped. Each day is a carousel with a "{i} of {k}" pill and a segmented bar. The photo is full width at 4:5. The task sits under it, then "{challenge} · {proof}" with the frame 100 verified mark. Owners see Shared, or a lock and Private. Visitors see shared photos only, with no share state, and days with none are left out. "Photo not saved" stays in date order and says what happened. The header is a close button and "Proofs"; each date is on its own day line.
+
+## v40
+
+Frame 113, in `GRIIT v40 Type.dc.html`. The condensed display face is removed from the product, and SF Pro is the only family. Hero numbers (streak, Day n, Consistency headline, sticker numerals, badge stamps) use SF Pro Display Heavy 800, tabular, −0.02em, at unchanged sizes. The sticker numeral steps down by digit count, 64 / 58 / 46 (`fitNumeral`), so "Day {n} of {N}" never wraps. Copy such as the Welcome headline uses SF Pro 500. Tokens: `displayFace` and `displayWeight`. Every component reads them, and `rg -i barlow cursor/ src/` is empty.
+
+## v41
+
+Frames 114–123, in `GRIIT v41 Finish Time Record.dc.html`. Source is in `src/components/v41/`. There are no new tokens and one new component, `TimeField`.
+
+- **114 Finish moment.** No blocking wait. Status follows the server: Saving…, then Task saved. or Day secured., or Didn't save. Try again. Every task type gets a share choice: a camera task shares its photo, and every other type shares a text card. A share tapped before the save lands is held, and it is dropped if the save fails. A secured day hands the share block to Secured, so it is never shown twice.
+- **115 Time gate.** A wheel picker, 12-hour display, 24-hour storage, same-day windows only.
+- **116 Late join.** If a required window has already closed when you join or launch, Day 1 is tomorrow, and today can't be lost to it.
+- **117 Proofs calendar.** Replaces the tile grid. Eight cell states. The header is "{secured} of {days} days".
+- **118 Challenges list.** One status line and one number per row.
+- **119 Detail deltas.** A per-challenge week strip, one gate source, and real freeze copy.
+- **120 Join errors.** Four honest sheets.
+- **121 Feed hit areas.** Annotated targets and pressed states.
+- **122 Covers.** Never from proofs; a generator for all six categories, plus a fallback.
+- **123 Create deltas.** Seven items covered by 104/105; two new.
+
+**Self-score: 8/10.** Below 9:
+- **F6, F9 and F10 are judged without the build 65 screenshots**, which aren't in the project. The deltas rest on your descriptions, not the device. Re-attach them and I'll re-audit.
+- **The two definitions of Standard (open question 2) are unresolved.** The Rules copy assumes freezes-only.
+- **The Secured-with-share frame (114 F) redraws frame 59's layout** rather than referencing its source directly. Check it against the shipped Secured screen.
+
+
+## v42 · Chunk D — Home, Feed, Profile, Badges, Onboarding (frames 124–143)
+
+File: `GRIIT v42 Chunk D.dc.html`. Source: `src/components/v42/`. Spec: `cursor/02_screens.md` → "v42 · Chunk D". No new tokens.
+
+**What changed**
+- **Home.** Order: hero, morning-after, Today, This week, Following. The hero line is "{n} of {m} days secured since {date}". No percentage. Freezes are a chip. The week strip clears the tab bar.
+- **Feed.** Photo posts have a camera seal instead of VERIFIED. Self-reported and text completions are compact rows. Joins are one line with guests excluded. Double tap respects the whole post; the heart still toggles.
+- **Profile.** Instagram header: 80pt avatar and four stats that never truncate. Icon tabs. The v41 calendar is kept, restyled only. Challenges are cards with a day strip.
+- **Badges.** Twelve badges, each from a named server fact, with an earned and a locked mark.
+- **Onboarding.** The secured contradiction is fixed. The privacy line is true. A self-playing demo card replaces the paragraphs. Start here only offers multi-day catalog challenges.
+- **Finish.** The feed and Story are two actions, and both stay available.
+- **System.** ScreenChrome is a solid top band on every screen. Avatars fall back to initials everywhere.
+
+**Decisions I made**
+1. The earned numbers (streak, secured) use the hero face in the profile stats; the social counts use 500. This shows earned against social at a glance.
+2. There are 12 badges, not 13. The 100-day streak was cut: it overlaps 100 days secured, and 75 is the longest preset.
+3. The freeze chip is hidden at 0 and on No Days Off. A "0" chip repeats the floating "0 freezes left" problem.
+4. The morning-after block is an outline with no fill, so it sits below the filled Today card in weight.
+5. There are two avatar tints, both from existing tokens. This adds no new colour.
+6. The profile buttons are 36pt, with a 4pt hitSlop to reach 44.
+7. The seal applies to stickers as well as posts (contradiction 118).
+
+**v42.1 (founder review):** SF Pro 800 for earned numbers (LOCKED fixed); Home ends with Following ×3 + "See all in Activity"; seal everywhere including stickers; guests are `username is null` or `is_guest`, filtered server-side; a double tap on your own post does nothing. Fixes: Start here pre-selects the closest length and puts No Days Off last, never pre-selected; challenge strips are capped at 14 segments with "{secured} of {due} days"; system lines carry the 32pt avatar. Added 144 (privacy copy) and 145 (challenge detail "Done for today"). Frame 111's "Today is secured." is now "Done for today."
+
+**Self-score: 8.5 / 10**, measured against ACCEPTANCE.
+- Met: every frame is 393pt; ScreenChrome is on every phone; every number traces to a field in the spec; copy tables are complete; components are listed; no percentages.
+- Below 9, **real copy from the screenshots**: no new screenshots arrived with this brief. The newest in uploads are the Sep 25 set. I built from the copy quoted in the brief and from earlier frames.
+- Below 9, **LOCKED rules**: two items conflict with later decisions (Barlow, and the feed on Home). I followed the later decisions and flagged them rather than silently breaking either.
+
+**Open questions**, all answered in the v42 review. The one left: the section 7 and 8 text and the screenshots did not arrive, so 144 and 145 are drafts from the rules.
+
+~~Original questions~~
+1. Barlow or SF Pro 800 for earned numbers? *Recommend SF Pro 800 (v40). Fix the brief's LOCKED list.*
+2. Should Home carry a feed? *Recommend the Following list as drawn, at most 3 items, with "See all in Activity". Home stays about today, and followers still show up there.*
+3. Should frame 100's check mark be retired everywhere? *Recommend yes, the seal everywhere, including stickers.*
+4. What counts as a guest? *Recommend `username is null` or `is_guest = true`, filtered in the feed query.*
+5. Should a double tap on your own post respect it? *Recommend no: it opens nothing and does nothing. Own-post respect is already disabled.*
+
+
+## v43 · Restructure (frames 146–154)
+
+File: `GRIIT v43 Restructure.dc.html`. Spec: `cursor/02_screens.md` → "v43 · Restructure". No new tokens.
+
+- **Home:** a slim header (day, name, streak chip, bell), the Today card, then the feed. Everyone until 3 follows. The week strip and freeze line move to challenge detail.
+- **Posts:** one frame for photo and self-reported proofs. Events have one style with an avatar every time, use the verbs started, secured and finished, and group when consecutive.
+- **Activity:** Notifications and Leaderboard only. Leaderboard rows sit at the 16 inset. "Day 5 of 7 this week".
+- **Discover:** search, the six categories, Friends are doing, Popular this week, New from the community. Loading, error and no-results states.
+- **Profile:** three stats (streak, secured, friends). Proofs grid with self-reported text tiles and a calendar toggle. Badges show the earned ones plus a next-badge card. Visitor states: public, private-not-friend and friend.
+- **Privacy:** one switch with plain who-sees-what, plus "See how a stranger sees you".
+- **Add task:** Photo Required/Optional/None and Limits Time/Place. Run removed from the chips. A hint-style placeholder. A check-in sheet for optional photos.
+
+**Flags:** token #0E0E0E vs #0F0F0F (kept #0F0F0F); Discover community challenges reverse the catalog-only rule; the one-switch privacy and the grid-first Proofs supersede v42.1 and v42. Contradictions 122–125.
+
+
+## v43.1 · Design for 5 users (frames 155–163)
+
+File: `GRIIT v43-1 Sparse.dc.html`. Spec: `cursor/02_screens.md` → "v43.1".
+
+- **155 Sparse feed** (invite a friend): one "You're caught up" line, then one invite card if you are alone in your challenge. No filler.
+- **156 First 10 seconds** (post proof): one full-width "Start: {task}" and a dashed slot for your first proof. No invite yet.
+- **157 Solo** (invite a friend): the board and the challenge detail make Invite the primary action, with a copyable link.
+- **158 Discover** (join a challenge): below 5 community challenges, one merged "Challenges" list sorted by people in it.
+- **159 Two-day profile** (post proof): an open Today tile at the front of the grid, the next badge one day away, and "Find friends".
+- **160 Day 2 morning** (post proof): "1 day. Secure today and it's 2." plus the window deadline, and two pushes at most.
+- **161** The challenge detail owns the week strip and the freeze line.
+- **162** An optional-photo task done without a photo renders as self-reported everywhere.
+- **163** What to watch in the 5-person test.
+
+Spec sync: Following | Everyone (Friends = mutual); privacy writes the existing three visibility fields; `photo_mode` in `challenge_tasks.config`; no completion rate in Discover. Frame 146's segment label is updated. Contradictions 126–129.
+
+### What to watch in the 5-person test
+1. **Day 2 return:** do all 5 open before the first window closes, and who needed the push?
+2. **First share:** how many share a proof to the feed in days 1–3?
+3. **Invites:** does anyone copy the challenge link? One person bringing a second is the test.
+4. **Self-report ratio:** on Photo: Optional tasks, nearly all done without a photo means the photo isn't worth its friction.
+5. **Dead feed:** Home sessions under 10 s that reach "You're caught up".
+
+
+## v44 · Finished pass (frames 164–172)
+
+File: `GRIIT v44 Finished.dc.html`. Spec: `cursor/02_screens.md` → "v44".
+
+- **164 Feed:** one family. Photo and self-reported panels share inset and radius, with the task title at the same size in both. Events keep the avatar column. Counts are hidden at 0.
+- **165 Today card:** open, partly done, all done, window closed and no challenge. The streak number shows only when it is about to move or just moved.
+- **166 Challenge detail:** this week's board, recent proofs, your record and the invite fill the bottom half. A freeze can be used from the detail row or the Home streak sheet until midnight.
+- **167–168 Discover:** the 8 built-ins as Featured, generated covers, real counts, sparse merge, loading, error and empty states, and a preview sheet before joining.
+- **169 Create:** three steps, then Review and Launched. Every task row shows its full rule; the add-task sheet is one screen.
+- **170 Profile:** a new profile filled with true, actionable items. Three stats with one rule each.
+- **171 Task complete:** a toast for each task, and one Secured screen for the last.
+
+**Open questions**
+1. ~~Lengths for 7K Steps, Fajr Before Sunrise and 3 Good Things?~~ Confirmed in v44.1: all 7.
+2. Launched for a group challenge: should Invite be primary instead of Start today? *Kept Start today primary; the invite link sits above it.*
+3. Freeze from the challenge detail covers the whole day for every challenge. Is that the intended model? *Yes per v28; flagged because the row lives on one challenge.*
+
+
+## v44.1 · Share system (frames 173–178)
+
+File: `GRIIT v44-1 Share.dc.html`. Spec: `cursor/02_screens.md` → "v44.1".
+
+- **173 Share sheet:** a full-screen preview you swipe between styles, an Ink / Orange / White colour row, an optional caption (sent as text), and four targets: Instagram Story, Save, Messages, More.
+- **174 Seven styles at 1080 × 1920** with the Instagram safe areas: Photo, Sticker (transparent), Card, Grid, Big number, Finish, Invite. Every style ends with "Join me · {INVITE_BASE}/i/{code}".
+- **175** Saved to Photos for A, B and C: the same bitmap as the preview.
+- **176** Moment → styles, and the pixel spec.
+- **177** Show Up 7 "Set your gym" right after Join, 250 m by default, with an honest Skip.
+- **178** Featured "Be the first"; Fajr Before Sunrise is 7 days.
+Contradictions 139–144.
+
+
+## v45 · Groups (frames 179–183)
+
+File: `GRIIT v45 Groups.dc.html`. Spec: `cursor/02_screens.md` → "v45".
+
+- **179 Group space:** a Today roster (secured, not yet with a count, window closed, joined today, plus each streak), ordered you first and then by name. A top-3 board, the challenge's shared posts and the invite row.
+- **180 Nudge:** only for members who can still secure today, once a day per person, with three fixed lines and no free text. "2 hours left." is offered only when it's true. Shows what the recipient sees.
+- **181 Notifications:** joined, you're left, nudged, finished, each as a push, an Activity row and a tap destination. At most 3 pushes a day per person, reminders included.
+- **182 Solo → group:** "Bring someone" converts with one confirmation. You stay on your day; newcomers start at Day 1.
+- **183 Accountability partners removed:** groups replace them, with a one-time migration card.
+
+**Needs your call:** step 3 "Anyone · Shows on Discover" conflicts with invite-only groups (145). The roster shows each member's task count, which goes beyond "whether you finished" (148).
+
+
+## v46 · Visual system reset (frames 184–191)
+
+File: `GRIIT v46 Visual Reset.dc.html`. Tokens: `src/tokens.v46.ts` (diff: `cursor/tokens_diff_v46.md`). Source: `src/components/v46/` (ScreenHeader, StreakStrip, Cover, Avatar, Segmented and Chip, FeedRows).
+
+- **184 System sheet:** the D1 type scale, D2 colour roles and the four orange uses, buttons, chips, the inverted segmented control, list rows, the section header, the streak strip, the D3 header, the cover generator for all six categories, and the six avatar tints.
+- **185 Home:** four states. The streak strip replaces the name block; one primary button names the next task; compact sections per challenge.
+- **186 Feed:** photo, self-reported row, activity line, broken-image tile, "You're caught up."
+- **187 Discover:** typographic covers, a Featured row, a 4:5 grid, People, and loading and error states.
+- **188 Profile:** handle in the nav bar, Streak · Best · Days secured, Next badge only on Badges.
+- **189 Challenge detail:** "days done · secured", Mon–Sun week, Camera / Self-reported badges.
+- **190 Activity:** 32pt segments, and a solo challenge shows only "A board needs two."
+- **191 Counter:** two-line header, +5 / +10, honest sub-line.
+
+**Self-score: 8.5/10.**
+- **Met:** every frame passes the squint test and uses the D3 header; nothing is below 11pt; no empty rectangles; the handoff is complete.
+- **Short:** no build 73 screenshots arrived, so I couldn't redraw against the device. Two locked items conflict with earlier approved decisions (Barlow, and the categories); I followed the approved decisions and flagged them as 151 and 152.
+
+**Decisions I made:**
+1. Display numerals stay SF Pro 800 (151).
+2. The done check is an orange glyph on a raised circle, not a filled orange disc, so a list of done tasks doesn't break the squint test.
+3. Week dots and the profile tab underline use text-primary, not orange.
+4. The Counter's count is 56/600 in the body face: it's work in progress, not an earned number.
+5. Loading uses hairline outlines with a shimmer: no grey fills.
+
+
+## v47 · Screen Atlas, batch 1 of 4
+
+File: `GRIIT v47 Atlas.dc.html`. Spec: `cursor/02_screens.md` → "v47".
+
+- **192** The week strip in eight states, in colour and greyscale; three sizes; the connector variant; the VoiceOver label.
+- **193–213** Home in states A–J, the freeze offer and the no-freezes sheet, the Today list stress case, four feed states, StreakSheet and JeopardyModal.
+- **214–253** Every task type × gate as a strip, plus endings, and a type × gate matrix.
+- **254–266** The share choice, the share sheet, the Which day picker, the Instagram hand-off and return, errors, sharing a past proof, and the seven styles.
+- **Flow strips 1–4.**
+- **The batch 1 index:** 74 frames.
+
+**Tweaks:** brightness (50–100%) and greyscale, for the 50% brightness test and the colour-free test.
+
+**Self-score: 8/10.** The IMG_0368–0397 screenshots aren't in the project, so no frame was compared with build 73. I grounded the copy in the current repo instead (FreezeSheet, StreakSheet, JeopardyModal, AskStep, the Blocked, WindowClosed, Failed, Review and OptionalPhoto steps). Upload the screenshots and batch 2 can mark each frame yes / differs / not built.
+
+
+## v48 · Atlas batch 1R (frames 301–402)
+
+Files: `GRIIT v48 Atlas.dc.html` (hub) plus `2 Home`, `3a Tasks`, `3b Tasks`, `4 Sharing`, `Flows`, cross-linked. One file at 2.2 MB froze the page, so the atlas is split; the index in the hub covers every frame. Generator: `src/atlas/v48-gen.js`. Source: `src/components/v47/` (recreated) and `src/components/v48/`.
+
+- **Streak first.** Home opens on the flame, number and strip; the primary sits under one status line.
+- **Safe areas** drawn on every frame; five measured overlays (tab, pushed, step, sheet, camera).
+- **Feed** full-bleed with carousels; self-reported compact; activity grouped and capped.
+- **Part 4**: every build 75 problem mapped to a rule and a frame; dark +not-found; action landing map.
+- **Area 3** as strips from tap to landing; type × gate matrix.
+
+**Self-score 8.5/10.** Below 9 only because build 75 screenshots aren't in the project: the "Built in 75" column reads pending / not built / differs-by-description. 19 frames are not built; 10 differ per the brief.
+
+
+## v48 · Atlas batch 2 (frames 501+)
+
+Batch 1R approved at 9.0 with two copy fixes applied (no "Nothing is secured…" caption on Saving; self-reported steps read only "Self-reported."). Home, task flows and sharing are frozen.
+
+Files: `GRIIT v48 Atlas B2.dc.html` (overview, contradictions 199–205, flow frames, index) plus `5 Feed`, `6 Discover`, `7 Challenge`, `8 Profile`, `Flows B2`. Generator: `src/atlas/v48-gen-b2.js` (runs after v48-gen.js). New source: `v48/ProofDayFeed.tsx`, `v48/Cover.tsx`. Proof photos: `assets/proofs/` (gym, book, water, run, Quran, food, notebook, coffee, sunrise).
+
+- **Profile**: 4:5 grid → vertical day feed → two-proof carousel; private proofs offer "Share this proof".
+- **Feed and posts**: full card family, seal sheet, respects, comments (empty, list, posting, failed, delete), report/block/hide, own-post menu, deleted and now-private posts.
+- **Discover**: generator covers only, raised tints, search with people, sparse/loading/error/no results, preview sheet, every pre-join state, join errors, set your gym, late join.
+- **Challenge**: solo, group, done, missed yesterday (Home freeze copy), last day, ended ×3, roster, invite, nudge, solo→group.
+- **Decisions applied**: Strict; leave takes effect at midnight; varied photos; two-photo days in Home feed and Profile.
+
+**Self-score 8.6/10** (build 75 screenshots still absent; set-gym map not drawn, flag 200).
+
+
+**Batch 2 fixes (Oct 4):** paywall prices in USD and sourced from RevenueCat offerings; every link reads `{INVITE_BASE}/i/{code}` until the domain is decided; the phone owner is Yaseen in every frame (Sami removed; Omar is never the viewer in batch 2).
+
+
+## v48 · Atlas batch 3 (frames 601+)
+
+Batch 2 approved at 9.0. Decisions applied: 199 tints in `tokens.v46.ts`; 200 no map; 202 a member's freeze holds the group streak; 203 ownership passes to the longest-standing member; 204 Delete removes from the feed only. Seeded owner is **Yaseen Abdelaziz (@yaseen)** in every frame.
+
+Files: `GRIIT v48 Atlas B3.dc.html` (overview, flags 206–211, flow frames, index) plus `9 Profiles`, `10 Activity`, `11 Create`, `12 Settings`, `13 Paywall`, `Flows B3`. Generator: `src/atlas/v48-gen-b3.js` (after v48-gen.js and v48-gen-b2.js).
+
+- **Visitor profile**: public, private, requested, following, mutual, blocked by me, not found, new; shared-only day feed; report user (not built).
+- **Activity**: every notification type with copy and destination; boards ranked, ties, unranked with neighbours, solo, Global last 7 days, scrolling chips.
+- **Create**: StepBasics states, packs, custom list, add-task sheet top/bottom, wheel picker, review, solo and group launch, discard, free limit.
+- **Settings**: account, delete flow ×4 with the Apple subscription warning, subscription, privacy (switch, who-sees-what, stranger preview), blocked users (not built), notifications incl. system-off, permissions (not built), about, terms.
+- **Paywall**: annual, monthly, purchasing, success, failed, cancelled, already Pro, from the limit. USD examples; strings from RevenueCat.
+
+**Self-score 8.7/10.**
+
+
+## v48 · Atlas batch 4 (frames 701+) and the full index
+
+Batch 3 approved at 9.1. Applied: Global board removed (206); private scope as drawn (207); reports email griit.health@gmail.com as minimum handling (209); contact griit.health@gmail.com (211); paywall benefits "More than 3 challenges at once" and "4 freezes every 30 days instead of 1".
+
+Files: `GRIIT v48 Atlas B4.dc.html` (overview, flags 212–215, retire list, **full atlas index of every frame 301–7xx** with batch · route · component · state · source · built in 75), `GRIIT v48 Atlas 1 Onboarding.dc.html`, `GRIIT v48 Atlas 14 System.dc.html`. Generator: `src/atlas/v48-gen-b4.js` (after gen, b2, b3).
+
+- **Onboarding**: splash, Welcome, WhyProof, WhyCircle, Goals, DayTarget, FirstChallenge (default, selected, joined, Browse all), Reminders (pre-prompt, iOS alert, denied), Account (choose, email errors, loading), Profile username (available, taken, invalid, saving, public-by-default line).
+- **Auth**: login, wrong password, signup, forgot, sent with 60 s lock, reset, expired link; create-profile tagged RETIRE; AuthGateModal; session-expired banner.
+- **System**: offline, error, not found, force update (not built), confirm dialog, toast/snackbar specimen, pull to refresh, loading rules, every push on the lock screen, app icon.
+
+**Self-score 8.8/10** (build 75 screenshots still absent).
+
+
+## v48 · Atlas complete and approved (Oct 4, 2026)
+
+Scores: 1R 9.0 · Batch 2 9.0 · Batch 3 9.1 · Batch 4 9.0. Final decisions 212–215 applied (Google only if working; guest-proof merge to confirm; 13+ checkbox on Account; force update via remote config).
+
+**Start here (engineering):** `GRIIT v48 Atlas · Complete (batches 1R–4).html` (offline, opens on the full index) or the source files `GRIIT v48 Atlas*.dc.html`. Specs: `cursor/02_screens.md` (copy tables per batch), `cursor/05_diff_from_current_app.md` (build order per batch). Tokens: `src/tokens.v46.ts` (categoryTint updated, flag 199). Components: `src/components/v46`, `v47`, `v48`. Generators: `src/atlas/v48-gen*.js`.
+
+Still open for engineering: 194 offline posting; 213 guest-proof merge; build 75 comparison (the Built in 75 column reads pending until screenshots are compared).
+
+
+## v48.1 patch (Oct 5, 2026)
+From the build 75 device test. `GRIIT v48.1 Patch.dc.html`: keyboard-open states (6), Copy-sticker flow on bright and dark photos (7), share choice after a camera proof + Home feed after sharing (3), the routing rule with one frame per case (5), plurals (1). Frames 801+, all in the full index on `GRIIT v48 Atlas B4.dc.html`. New code: `v48/routeAfterSave.ts`, `count()` + strings in `v48/copy.ts`. Fixed "1 days" in the Flow 1 share frame.
+
+
+## v48.2 approved (9.3)
+Option 2c (latest photo) ships. None state (910) is one text line, no card. 901–908 marked "not chosen" in the index. Handoff zip and the complete offline atlas include v48.1 and v48.2.
+
+
+## v49 approved (Oct 7, 2026)
+Decisions 216–221 approved as drawn; Home top Option B ships (4a removed). Added: Your data range 7d / 30d / All + empty state, photo zoom, Apple Health Create step (metric, permission, not sharing, no data). Copy: "From Apple Health", never "Verified". Cursor spec split into Build 78 (Feed, Your data, Home B) and Build 79 (Apple Health). Build 77 diff still pending: screenshots not received.

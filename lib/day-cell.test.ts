@@ -43,6 +43,8 @@ describe("shared day-cell", () => {
     const cal = readFileSync(resolve(__dirname, "../components/profile/ProofsCalendar.tsx"), "utf8");
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     const visitor = readFileSync(resolve(__dirname, "../app/profile/[username].tsx"), "utf8");
+    const cell = readFileSync(resolve(__dirname, "../components/ds/DayCell.tsx"), "utf8");
+    expect(cell).toContain('kind === "missed" ? <View style={styles.dash} />');
     expect(week).toContain("DayCell");
     expect(cal).toContain("DayCell");
     expect(cal).toContain("header.secured");

@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { User } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
   initialsFrom,
@@ -63,7 +64,7 @@ export default function Avatar({
     },
   ];
 
-  const letters = (
+  const letters = initials ? (
     <Text
       style={{
         fontSize: Math.round(size * 0.38),
@@ -74,6 +75,8 @@ export default function Avatar({
     >
       {initials}
     </Text>
+  ) : (
+    <User size={Math.round(size * 0.46)} color={tint.fg} strokeWidth={2} />
   );
 
   if (!showPhoto) {

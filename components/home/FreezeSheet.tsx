@@ -1,12 +1,12 @@
 import React from "react";
 import Sheet from "@/components/ds/Sheet";
 import Button from "@/components/ds/Button";
-import { Text, StyleSheet } from "react-native";
+import { Pressable, Text, StyleSheet } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { FREEZE } from "@/lib/copy";
+import { FREEZE, FREEZE_LINE } from "@/lib/copy";
+import { NOT_NOW } from "@/lib/v44-detail";
 import {
   CLOSE,
-  NO_LET_IT_RESET,
   SEE_PRO,
   freezeNoneShowsSeePro,
   freezeSheetVariant,
@@ -30,7 +30,7 @@ export type FreezeSheetProps = {
 export function FreezeSheet({
   visible,
   remaining,
-  restoredStreakDays,
+  restoredStreakDays: _restoredStreakDays,
   subscriptionStatus,
   submitting,
   onUseFreeze,
@@ -67,15 +67,13 @@ export function FreezeSheet({
       footer={
         <>
           <Button label={FREEZE.button} onPress={onUseFreeze} submitting={submitting} />
-          <Button label={NO_LET_IT_RESET} variant="tertiary" onPress={onRefuse} />
+          <Pressable accessibilityRole="button" accessibilityLabel={NOT_NOW} onPress={onRefuse}>
+            <Text style={styles.notNow}>{NOT_NOW}</Text>
+          </Pressable>
         </>
       }
     >
-      <Text style={styles.body}>
-        {typeof restoredStreakDays === "number"
-          ? FREEZE.sheetBody("yesterday", restoredStreakDays, remaining, "in 30 days")
-          : FREEZE.offer(remaining)}
-      </Text>
+      <Text style={styles.body}>{FREEZE_LINE}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </Sheet>
   );
@@ -87,6 +85,14 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  notNow: {
+    minHeight: DS_V3.size.tap,
+    textAlign: "center",
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   error: {
     fontSize: DS_V3.type.caption.fontSize,
