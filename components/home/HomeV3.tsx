@@ -4,7 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Share, X } from "lucide-react-native";
+import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import { StreakStrip } from "@/components/ds/StreakStrip";
@@ -31,7 +31,6 @@ import {
   type HomeProofCard,
   type HomeProofRow,
 } from "@/lib/home-proof-card";
-import { DAY_SECURED, SHARE_TODAY } from "@/lib/day-sticker";
 import { USE_FREEZE_FOR_YESTERDAY, YESTERDAY_WASNT_SECURED } from "@/lib/morning-after";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
@@ -149,7 +148,7 @@ export function HomeV3({
   onPressProof: _onPressProof,
   onPressTask,
   onPressChallenge,
-  onPressShareToday,
+  onPressShareToday: _onPressShareToday,
   sectionChoices,
   onToggleSection,
   freezesLeft: _freezesLeft,
@@ -365,39 +364,6 @@ export function HomeV3({
                 </View>
               </View>
             )}
-            {allDone ? (
-              <View style={styles.shareTodayBlock}>
-                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
-                {proof.showShareToday ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={SHARE_TODAY}
-                    onPress={onPressShareToday}
-                    style={styles.sharePill}
-                  >
-                    <Text style={styles.sharePillTxt}>{SHARE_TODAY}</Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : proof.showShareToday ? (
-              <View style={styles.shareTodayBlock}>
-                <Text style={styles.daySecured}>{DAY_SECURED}</Text>
-                <Divider />
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={SHARE_TODAY}
-                  onPress={onPressShareToday}
-                  style={styles.shareTodayRow}
-                >
-                  <Share size={RING} color={DS_V3.color.textSecondary} />
-                  <View style={styles.taskCopy}>
-                    <Text style={styles.task}>{SHARE_TODAY}</Text>
-                    <Text style={styles.caption}>{proof.shareTodayCaption}</Text>
-                  </View>
-                  <ChevronRight size={RING} color={DS_V3.color.textSecondary} />
-                </Pressable>
-              </View>
-            ) : null}
           </Card>
         </View>
       ) : null}

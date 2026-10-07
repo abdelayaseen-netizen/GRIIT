@@ -12,7 +12,6 @@ export const LIVE_FEED_TYPES = [
   "completed_challenge",
   "joined_challenge",
   "challenge_created",
-  "secured_day",
 ] as const;
 
 export function normalizeChallengeVisibility(raw: string | null | undefined): "public" | "friends" | "private" {

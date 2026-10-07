@@ -13,7 +13,6 @@ import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraS
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
 import { FeedCompactRow, FeedSystemLine } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
-import { systemLine } from "@/lib/feed-join";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
@@ -92,14 +91,14 @@ export default function FeedPostV3({
   const seal = showCameraSeal(post.proofPhotoUrl ?? null);
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
 
-  if (variant === "day_secured" || variant === "challenge_finished") {
+  if (variant === "challenge_finished") {
     return (
       <FeedSystemLine
         userId={post.userId}
         displayName={name}
         username={post.username}
         avatarUrl={avatarUri}
-        text={systemLine(name, post.currentDay, post.totalDays, post.challengeName)}
+        text={`${name} finished ${post.challengeName}`}
         ago={when}
         onProfile={onProfilePress ?? (() => undefined)}
       />

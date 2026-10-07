@@ -19,7 +19,7 @@ describe("displayDay", () => {
         challengeName: "No Days Off",
         currentDay: shown,
       })
-    ).toBe("Maya secured day 1");
+    ).toBe("Maya");
   });
 
   it("tomorrow morning unsecured → Day 2", () => {

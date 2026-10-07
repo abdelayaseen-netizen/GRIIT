@@ -30,7 +30,6 @@ export function enrollmentFinished(args: {
   durationDays: number;
   counterReachedTarget?: boolean;
 }): boolean {
-  if (args.counterReachedTarget === true) return false;
   if (args.challengeDone !== true) return false;
   return args.durationDays > 0 && args.dayIndex === args.durationDays;
 }

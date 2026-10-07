@@ -16,7 +16,7 @@ export type ShareFeedState = "idle" | "held" | "shared";
 export type FinishAfter = "failed" | "saved" | "secured_nav";
 export type HeldShareAction = "call_share" | "drop" | "keep_held";
 
-export const FINISH_SLOW_MS = 3000;
+export const FINISH_SLOW_MS = 800;
 
 export const FINISH_STATUS: Record<SaveState, string> = {
   saving: "Saving…",

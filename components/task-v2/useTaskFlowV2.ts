@@ -78,7 +78,6 @@ import {
   type TaskFlowStep,
   checkinGpsNextStep,
   chromeFlags,
-  chromeTitle,
   clockLabel,
   discardPhotoStep,
   finishSubmitOutcome,
@@ -687,7 +686,6 @@ export function useTaskFlowV2() {
       if (mountedRef.current) {
         setFinishShare("none");
         setFinishSave("failed");
-        setStep("finish");
       }
     }
   };
@@ -1012,7 +1010,7 @@ export function useTaskFlowV2() {
     photoMode,
     fromGps: false,
     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
-    chromeTitle: photoMode === "optional" ? "Photo optional" : chromeTitle(taskType, gates),
+    chromeTitle: challengeName.trim() || "Challenge",
     headerTitle: flowHeaderTitle(challengeName, currentDay, durationDays),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),

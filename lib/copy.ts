@@ -35,3 +35,9 @@ export const SHARE = {
   privacy: "No answer keeps it private.",
   shared: "Shared to the feed.",
 };
+export const METHOD = {
+  selfReported: "Self-reported.",
+  camera: (n: number) => (n === 1 ? "1 camera proof." : `${n} camera proofs.`),
+  mixed: (tasks: number, cameras: number) =>
+    `${tasks} ${tasks === 1 ? "task" : "tasks"}. ${METHOD.camera(cameras)} ${METHOD.selfReported}`,
+};

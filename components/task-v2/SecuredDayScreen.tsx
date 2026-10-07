@@ -18,10 +18,7 @@ import EmptyState from "@/components/ds/EmptyState";
 import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { SECURED_DONE } from "@/lib/simple-log";
-import {
-  PROOF_KEEP,
-  PROOF_SHARE_FAILED,
-} from "@/lib/proof-moment";
+import { PROOF_SHARE_FAILED } from "@/lib/proof-moment";
 import {
   SECURED_LOAD_ERROR,
   SECURED_LOAD_RETRY,
@@ -99,20 +96,30 @@ export default function SecuredDayScreen({
   const names = [...new Set(proofs.map((p) => p.challengeName))].join(", ");
   const day = proofs[0]?.day ?? selfReported[0]?.day ?? null;
   const title = securedMomentTitle(challengeCount, day);
-  const lines =
-    challengeCount === 1
-      ? []
-      : [
-          ...proofs.map((p) => securedChallengeLine(p.challengeName, p.day, p.length)),
-          ...selfReported.map((row) => securedChallengeLine(row.name, row.day, row.length)),
-        ];
+  const lineKeys = new Set<string>();
+  const lines: string[] = [];
+  const pushLine = (key: string, line: string) => {
+    if (lineKeys.has(key)) return;
+    lineKeys.add(key);
+    lines.push(line);
+  };
+  if (challengeCount !== 1) {
+    for (const p of proofs) {
+      pushLine(`p:${p.challengeName}:${p.day}:${p.length}`, securedChallengeLine(p.challengeName, p.day, p.length));
+    }
+    for (const row of selfReported) {
+      pushLine(`s:${row.name}:${row.day}`, securedChallengeLine(row.name, row.day, row.length));
+    }
+  }
   const previewPhoto = proofs[0]?.uri ?? null;
   const previewChallenge = proofs[0]?.challengeName ?? selfReported[0]?.name ?? "";
+  const previewLength = proofs[0]?.length ?? selfReported[0]?.length;
   const preview: ShareCardInput = {
     style: previewPhoto ? "A" : "C",
     colour: "ink",
     challenge: previewChallenge,
     day: day ?? undefined,
+    durationDays: previewLength,
     photoUri: previewPhoto,
     cameraSeal: Boolean(previewPhoto),
     username,
@@ -129,9 +136,10 @@ export default function SecuredDayScreen({
   return (
     <View style={styles.root}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={[
           styles.body,
-          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section * 4 },
+          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.lg },
         ]}
       >
         <Pressable
@@ -255,7 +263,6 @@ export default function SecuredDayScreen({
                 });
               }}
             />
-            <Button label={PROOF_KEEP} variant="tertiary" onPress={onKeep} />
           </>
         ) : (
           <Button label={SECURED_DONE} onPress={onDone} />
@@ -420,10 +427,10 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textSecondary,
     textAlign: "center",
   },
+  scroll: { flex: 1 },
   footer: {
-    position: "absolute",
-    left: DS_V3.space.gutter,
-    right: DS_V3.space.gutter,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.sm,
   },
 });

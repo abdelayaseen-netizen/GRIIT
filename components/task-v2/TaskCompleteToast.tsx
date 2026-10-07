@@ -96,7 +96,7 @@ export default function TaskCompleteToast({
       {toast.cameraSeal ? (
         <View style={styles.choice}>
           <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
-          <Text style={styles.body} numberOfLines={1}>{toast.body}</Text>
+          {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
           <ShareChoice
             state={shared ? "shared" : "unanswered"}
             isPhoto

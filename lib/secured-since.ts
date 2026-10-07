@@ -117,11 +117,11 @@ export function homeFollowingLine(post: {
   if (post.eventType === "joined_challenge" || post.eventType === "challenge_created") {
     return `started ${post.challengeName}`;
   }
-  if (post.isCompleted || post.eventType === "completed_challenge") {
+  if (post.eventType === "completed_challenge") {
     return `finished ${post.challengeName}`;
   }
   if (post.eventType === "secured_day") {
-    return `secured Day ${post.currentDay} of ${post.totalDays} · ${post.challengeName}`;
+    return "";
   }
   const task = (post.taskName ?? "").trim() || "a task";
   return `completed ${task} · Day ${post.currentDay} of ${post.totalDays}`;

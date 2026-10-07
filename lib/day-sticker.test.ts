@@ -154,9 +154,9 @@ describe("frame 111 surfaces", () => {
       "utf8",
     );
     const sheet = readFileSync(resolve(__dirname, "../components/share/DayStickerSheet.tsx"), "utf8");
-    expect(home).toContain("SHARE_TODAY");
-    expect(home).toContain("DAY_SECURED");
-    expect(home).toContain("shareTodayCaption");
+    expect(home).not.toContain("SHARE_TODAY");
+    expect(home).not.toContain("DAY_SECURED");
+    expect(home).not.toContain("shareTodayCaption");
     expect(home).not.toContain("section.showShareToday");
     expect(detail).toContain("DONE_FOR_TODAY");
     expect(detail).toContain("SHARE_TODAY");

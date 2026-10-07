@@ -34,13 +34,13 @@ describe("secured day copy", () => {
     expect(securedChallengeLine("Iron man", 2, 14)).toBe("Iron man · Day 2 of 14");
     expect(
       securedDayCaption({ taskCount: 4, challengeCount: 2, cameraProofs: 3 }),
-    ).toBe("4 tasks across 2 challenges. 3 camera proofs.");
+    ).toBe("4 tasks across 2 challenges. 3 camera proofs. Self-reported.");
     expect(
       securedDayCaption({ taskCount: 1, challengeCount: 1, cameraProofs: 1 }),
     ).toBe("1 task. 1 camera proof.");
     expect(
       securedDayCaption({ taskCount: 2, challengeCount: 1, cameraProofs: 1 }),
-    ).toBe("2 tasks. 1 camera proof.");
+    ).toBe("2 tasks. 1 camera proof. Self-reported.");
     expect(
       securedDayCaption({
         taskCount: 3,
@@ -48,7 +48,7 @@ describe("secured day copy", () => {
         cameraProofs: 0,
         allSelfReported: true,
       }),
-    ).toBe("3 tasks across 2 challenges, all self-reported. Nothing was checked.");
+    ).toBe("3 tasks across 2 challenges. Self-reported.");
     expect(
       securedDayCaption({
         taskCount: 2,
@@ -56,10 +56,10 @@ describe("secured day copy", () => {
         cameraProofs: 0,
         allSelfReported: true,
       }),
-    ).toBe("2 tasks, all self-reported. Nothing was checked.");
+    ).toBe("2 tasks. Self-reported.");
     expect(
       securedDayCaption({ taskCount: 3, challengeCount: 2, cameraProofs: 0 }),
-    ).toBe("3 tasks across 2 challenges. 0 camera proofs.");
+    ).toBe("3 tasks across 2 challenges. Self-reported.");
   });
 
   it("three tiles and +n", () => {
@@ -95,7 +95,7 @@ describe("secured day data", () => {
       challengeCount: onlySelf.challengeCount,
       cameraProofs: 0,
       allSelfReported: onlySelf.allSelfReported,
-    })).toContain("all self-reported");
+    })).toContain("Self-reported.");
   });
 
   it("lists self-reported challenges and never invents a photo", () => {

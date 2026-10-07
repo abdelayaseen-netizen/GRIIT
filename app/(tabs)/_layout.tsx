@@ -78,7 +78,7 @@ export default function TabLayout() {
       currentDay: 1,
       totalDays: 1,
       eventType: "task_completed",
-      isCompleted: true,
+      isCompleted: false,
       hasProof: true,
       photoUrl: toast.photoUri,
       proofPhotoUrl: toast.photoUri,
