@@ -146,16 +146,17 @@ export function itemsFromRecordProofs(
     shared?: boolean;
     shareState?: "unanswered" | "shared" | "kept";
   }[],
+  options?: { includeSelf?: boolean },
 ): ProofsGridItem[] {
   const out: ProofsGridItem[] = [];
   proofs.forEach((p, i) => {
-    if (!p.imageUrl) return;
+    if (!p.imageUrl && !options?.includeSelf) return;
     const gates = (p.gates ?? []).filter(
       (g): g is TaskGate => g === "camera" || g === "time" || g === "location",
     );
     out.push({
       id: p.eventId ?? `${p.dateKey}-${p.challengeName ?? ""}-${i}`,
-      uri: p.imageUrl,
+      uri: p.imageUrl ?? "",
       dateKey: p.dateKey,
       day: p.day,
       durationDays: p.durationDays ?? 30,

@@ -5,13 +5,14 @@
  *
  * Join line: SHARE_JOIN_WEB_ORIGIN stays empty until a public web domain exists.
  * Empty origin prints "Find me on GRIIT · @{username}". A set origin prints
- * "Join me · {origin}/invite/{id}".
+ * "{origin}/i/{id}" from inviteUrl. Never a hard-coded host.
  *
  * Last-picked colour is per style in memory for the open sheet only.
  * profiles.onboarding_answers is the only profile jsonb and it does not fit
  * a share preference. No column is written.
  */
 import { streakInARow } from "@/lib/task-complete-toast";
+import { dayParts, inviteUrl } from "@/lib/story-card";
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
 export const SHARE_PREVIEW_W = 270;
@@ -123,7 +124,7 @@ export type ShareText = {
   text: string;
   size: number;
   line: number;
-  weight: "500" | "600" | "800";
+  weight: "500" | "600" | "700" | "800";
   color: string;
   tracking?: number;
   caps?: boolean;
@@ -198,7 +199,7 @@ export function shareJoinLine(args: {
   if (base) {
     const id = args.inviteId?.trim() ?? "";
     if (!id) return "";
-    return `Join me · ${base}/invite/${id}`;
+    return inviteUrl(base, id);
   }
   const name = args.username?.trim().replace(/^@/, "") ?? "";
   if (!name) return "";
@@ -300,10 +301,11 @@ function checkDisc(colour: ShareColourId): string {
 }
 
 function dayRow(day: number, of: number, daySize: number, color: string, restColor: string): ShareItem {
+  const parts = dayParts(day, of);
   return {
     kind: "baseline",
-    lead: text(`Day ${day}`, daySize, daySize, color, "800", daySize >= 150 ? -0.02 * daySize : undefined),
-    rest: text(`of ${of}`, 60, 64, restColor, "500"),
+    lead: text(`Day ${parts.day}`, daySize, daySize, color, "700", daySize * -0.025),
+    rest: text(`of ${parts.of}`, 60, 64, restColor, "500"),
   };
 }
 
@@ -393,7 +395,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       gap: 16,
       items: [
         { kind: "flame", size: 64, color: "#DC5401" },
-        text(String(input.streak ?? 0), 60, 64, color, "800"),
+        text(String(input.streak ?? 0), 56, 62, color, "700", 56 * -0.025),
         text(streakInARow(input.streak ?? 0), 36, 44, color, "500"),
       ],
     });

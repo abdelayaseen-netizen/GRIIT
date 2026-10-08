@@ -32,8 +32,18 @@ function whoLine(names: string[], others: number): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
+/** 3 or more people: first name and the rest as others. */
+export function startedWho(names: string[], others: number): string {
+  const listed = names.filter(Boolean);
+  const total = listed.length + Math.max(0, others);
+  if (total <= 1) return listed[0] ?? "";
+  if (total === 2 && others === 0 && listed.length >= 2) return `${listed[0]} and ${listed[1]}`;
+  const rest = total - 1;
+  return `${listed[0]} and ${rest} ${rest === 1 ? "other" : "others"}`;
+}
+
 export function joinLine(names: string[], others: number, challenge: string): string {
-  return `${whoLine(names, others)} started ${challenge}`;
+  return `${startedWho(names, others)} started ${challenge}`;
 }
 
 export type FeedEventAvatar = {
@@ -72,18 +82,18 @@ export function isJoinGroup(item: FeedListItem): item is FeedEventGroup {
 
 export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb" | "challengeName" | "dayN" | "dayOf" | "secured">): string {
   const who = whoLine(group.names, group.others);
-  if (group.verb === "started") return `${who} started ${group.challengeName}`;
+  if (group.verb === "started") return `${startedWho(group.names, group.others)} started ${group.challengeName}`;
   if (!group.secured) return `${who} ended ${group.challengeName}`;
   return `${who} finished ${group.challengeName} · ${formatOfDays(group.secured, group.dayOf)}`;
 }
 
-/** Group consecutive same-verb + challenge events within 60 minutes. */
+/** Group started lines for one challenge inside one clock hour. Finished stays a post. */
 export function groupFeedJoins(posts: readonly LiveFeedPost[]): FeedListItem[] {
   const out: FeedListItem[] = [];
   let open: {
     verb: FeedEventVerb;
     challengeId: string;
-    t0: number;
+    hour: number;
     grouped: LiveFeedPost[];
   } | null = null;
 
@@ -130,23 +140,18 @@ export function groupFeedJoins(posts: readonly LiveFeedPost[]): FeedListItem[] {
 
   for (const post of posts) {
     const verb = feedEventVerb(post);
-    if (!verb || !post.challengeId) {
+    if (verb !== "started" || !post.challengeId) {
       flush();
       out.push(post);
       continue;
     }
-    const t = Date.parse(post.createdAt);
-    if (
-      open &&
-      open.verb === verb &&
-      open.challengeId === post.challengeId &&
-      Math.abs(t - open.t0) <= HOUR_MS
-    ) {
+    const hour = Math.floor(Date.parse(post.createdAt) / HOUR_MS);
+    if (open && open.verb === verb && open.challengeId === post.challengeId && open.hour === hour) {
       open.grouped.push(post);
       continue;
     }
     flush();
-    open = { verb, challengeId: post.challengeId, t0: t, grouped: [post] };
+    open = { verb, challengeId: post.challengeId, hour, grouped: [post] };
   }
   flush();
   return out;

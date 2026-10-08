@@ -173,6 +173,8 @@ export function useTaskFlowV2() {
   const [discardAsk, setDiscardAsk] = useState(false);
   const [text, setText] = useState("");
   const [count, setCount] = useState(0);
+  const countRef = useRef(count);
+  countRef.current = count;
   const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [durationSec, setDurationSec] = useState<number | null>(null);
@@ -706,7 +708,7 @@ export function useTaskFlowV2() {
         ...(taskType === "timer" ? { value: Math.floor(requiredSeconds / 60) } : {}),
         ...(taskType === "journal" ? { noteText: text } : {}),
         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
-          ? { value: count }
+          ? { value: countRef.current }
           : {}),
       },
       verificationKindFor(taskType, true)
@@ -810,7 +812,7 @@ export function useTaskFlowV2() {
       return;
     }
     if (decision === "submit_count") {
-      void finishSubmit({ value: count }, "self_report");
+      void finishSubmit({ value: countRef.current }, "self_report");
       return;
     }
     if (decision === "submit_checkin") {
@@ -941,7 +943,7 @@ export function useTaskFlowV2() {
               entry_mode: usedSessionTimer ? "timer" : "hand",
             }
           : taskType === "reading"
-            ? { value: count }
+            ? { value: countRef.current }
             : {}
     );
   };
@@ -1072,6 +1074,11 @@ export function useTaskFlowV2() {
     onPostRun,
     onAttachPhoto: () => setStep("capture"),
     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
+    onCompleteCount: () => {
+      countRef.current = counterGoal;
+      setCount(counterGoal);
+      void submitWithoutPhoto({ value: counterGoal }, "self_report");
+    },
     onDidIt: () => void submitWithoutPhoto({}, "self_report"),
     onHere: () => void submitWithoutPhoto({}, "gps"),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),

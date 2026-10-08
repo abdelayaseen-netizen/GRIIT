@@ -1,8 +1,9 @@
 /**
  * Frame 150 / 159 — proofs grid (photo, self-reported, not saved, Today) + calendar toggle.
  */
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import { CalendarDays, ImageOff, LayoutGrid, Lock, Plus } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -20,6 +21,7 @@ import {
   todayTileCaption,
 } from "@/lib/g3-profile";
 import { proofsDateLabel } from "@/lib/proofs-grid";
+import { consumeProofTile } from "@/lib/proof-return";
 import { KEPT_PROOFS_BODY } from "@/lib/v44-detail";
 import { NextBadgeCard } from "@/components/profile/BadgeGrid";
 import type { V42BadgeState } from "@/lib/v42-badges";
@@ -57,12 +59,22 @@ export default function ProfileProofs({
   monthKey: string;
   days: ProofsDayIn[];
   header: ProofsHeader;
-  onOpenDay: (dateKey: string) => void;
+  onOpenDay: (tile: ProfileProofTile) => void;
   onToday?: () => void;
   nextBadge?: V42BadgeState | null;
   onNextBadge?: () => void;
 }) {
   const [mode, setMode] = useState<"grid" | "calendar">("grid");
+  const [outlineId, setOutlineId] = useState<string | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      const id = consumeProofTile();
+      if (!id) return undefined;
+      setOutlineId(id);
+      const timer = setTimeout(() => setOutlineId(null), 1000);
+      return () => clearTimeout(timer);
+    }, []),
+  );
   const showToday = Boolean(isOwner && todayOpen);
   const empty = proofs.length === 0 && !showToday;
   const tileCount = proofs.length + (showToday ? 1 : 0);
@@ -101,7 +113,10 @@ export default function ProfileProofs({
           days={days}
           header={header}
           viewer={isOwner ? "owner" : "visitor"}
-          onDay={onOpenDay}
+          onDay={(dateKey) => {
+            const tile = proofs.find((p) => p.dateKey === dateKey);
+            onOpenDay(tile ?? { id: dateKey, dateKey });
+          }}
         />
       ) : empty ? (
         <View style={styles.empty}>
@@ -131,8 +146,8 @@ export default function ProfileProofs({
                 key={p.id}
                 accessibilityRole="button"
                 accessibilityLabel={`${p.taskName || "Proof"}, ${date}`}
-                onPress={() => onOpenDay(p.dateKey)}
-                style={styles.tile}
+                onPress={() => onOpenDay(p)}
+                style={[styles.tile, outlineId === p.id ? styles.outline : null]}
               >
                 {kind === "photo" ? (
                   <>
@@ -146,11 +161,11 @@ export default function ProfileProofs({
                   </View>
                 ) : (
                   <View style={styles.self}>
+                    <Text style={styles.dateChip}>{date}</Text>
                     <Text style={styles.selfLabel}>{SELF_REPORTED_TILE}</Text>
                     <Text style={styles.selfTask} numberOfLines={2}>
                       {p.taskName || "Task"}
                     </Text>
-                    <Text style={styles.selfDate}>{date}</Text>
                   </View>
                 )}
                 {kept ? (
@@ -232,7 +247,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DS_V3.color.textPrimary,
   },
-  selfDate: { fontSize: 11, lineHeight: 14, color: DS_V3.color.textSecondary },
+  dateChip: { fontSize: 11, lineHeight: 14, color: DS_V3.color.textSecondary },
+  outline: { borderWidth: 1.5, borderColor: DS_V3.color.textPrimary },
   missing: {
     fontSize: 11,
     lineHeight: 14,

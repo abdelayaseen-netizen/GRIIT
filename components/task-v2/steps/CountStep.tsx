@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Check } from "lucide-react-native";
 import KeyboardDock, { NUMBER_PAD_ACCESSORY_ID, NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
@@ -12,12 +13,12 @@ import {
   COUNT_ADD,
   COUNT_REMOVE,
   COUNT_TYPE,
-  countCtaEnabled,
   countCtaLabel,
   countOfLine,
   counterHeaderWhenReady,
   counterSubline,
 } from "@/lib/work-step";
+import { completeLabel, showLogPartial } from "@/lib/counter";
 
 type Props = {
   count: number;
@@ -37,7 +38,7 @@ type Props = {
   onAddAmount?: (n: number) => void;
   onOpenKeypad: () => void;
   onRemoveOne: () => void;
-  onSubmit: () => void;
+  onComplete: () => void;
   onBack: () => void;
 };
 
@@ -62,13 +63,13 @@ export function CountStep({
   onAddAmount,
   onOpenKeypad,
   onRemoveOne,
-  onSubmit,
+  onComplete,
   onBack,
 }: Props) {
   const insets = useSafeAreaInsets();
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
-  const enabled = countCtaEnabled(count, counterGoal);
+  const atTarget = counterGoal > 0 && count >= counterGoal;
   const line = countOfLine(count, counterGoal, counterUnit);
   const header = counterHeaderWhenReady(
     dayReady,
@@ -84,10 +85,9 @@ export function CountStep({
         footer={
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
             <Button
-              label={countCtaLabel(count, counterGoal)}
+              label={completeLabel(counterGoal, counterUnit, hasCamera)}
               variant="primary"
-              disabled={!enabled}
-              onPress={onSubmit}
+              onPress={onComplete}
             />
           </View>
         }
@@ -109,6 +109,15 @@ export function CountStep({
           <Text style={styles.figure}>{line.n}</Text>
           <Text style={styles.rest}>{line.rest}</Text>
         </View>
+        {showLogPartial(count, counterGoal) ? (
+          <Text style={styles.partial}>{countCtaLabel(count, counterGoal)}</Text>
+        ) : null}
+        {atTarget ? (
+          <View style={styles.met}>
+            <Check size={16} color={DS_V3.color.brand} />
+            <Text style={styles.metText}>Target met</Text>
+          </View>
+        ) : null}
         {keypadOpen ? (
           <View style={styles.typeField}>
             <TextField
@@ -127,8 +136,9 @@ export function CountStep({
           <>
             <View style={styles.addRow}>
             <Pressable
+              disabled={atTarget}
               onPress={() => {
-                if (holdOpenedKeypad.current) return;
+                if (atTarget || holdOpenedKeypad.current) return;
                 onAddOne();
               }}
               onPressIn={() => {
@@ -143,13 +153,13 @@ export function CountStep({
               }}
               accessibilityRole="button"
               accessibilityLabel={COUNT_ADD}
-              style={styles.addOne}
+              style={[styles.addOne, atTarget ? styles.dim : null]}
             >
               <Text style={styles.addOneText}>{COUNT_ADD}</Text>
             </Pressable>
             <View style={styles.bumps}>
-              <ControlPill label="+5" onPress={() => onAddAmount?.(5)} />
-              <ControlPill label="+10" onPress={() => onAddAmount?.(10)} />
+              <ControlPill label="+5" disabled={atTarget} onPress={() => onAddAmount?.(5)} />
+              <ControlPill label="+10" disabled={atTarget} onPress={() => onAddAmount?.(10)} />
             </View>
             </View>
             <ControlPillRow>
@@ -209,6 +219,22 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.heading.fontWeight,
     color: DS_V3.color.textSecondary,
   },
+  partial: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textTertiary,
+  },
+  met: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+  },
+  metText: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    color: DS_V3.color.textPrimary,
+  },
+  dim: { opacity: 0.4 },
   typeField: {
     alignSelf: "stretch",
   },

@@ -62,6 +62,7 @@ export function captureError(error: unknown, context?: string | Record<string, u
 export function captureSilentError(error: unknown, context?: string | Record<string, unknown>): void {
   const label = typeof context === "string" ? context : JSON.stringify(context ?? {});
   console.warn(`[${label}]`, error);
+  if (__DEV__) return;
   reportToSentry(error, context);
 }
 

@@ -1,0 +1,41 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build79
+- extendedWaitUntil:
+    visible: "Day 1"
+    timeout: 20000
+- assertVisible: "Your best"
+- assertVisible: "Read"
+- scrollUntilVisible:
+    element: "Best 40"
+    direction: DOWN
+- assertVisible: "Best 40"
+- scrollUntilVisible:
+    element: "1,000"
+    direction: DOWN
+- scrollUntilVisible:
+    element: "Share today"
+    direction: DOWN
+- assertVisible: "Share today"
+- scrollUntilVisible:
+    element: "Use a freeze"
+    direction: DOWN
+- assertVisible: "Yesterday wasn’t secured. A freeze holds your 12-day streak until midnight. 1 left."
+- scrollUntilVisible:
+    element: "Complete · 30 pages"
+    direction: DOWN
+- assertVisible: "Log 4 of 30"
+- scrollUntilVisible:
+    element: "Complete · take photo"
+    direction: DOWN
+- scroll
+- assertVisible:
+    text: ".*8 October.*"
+- scrollUntilVisible:
+    element: "Double tap photo"
+    direction: DOWN
+    visibilityPercentage: 50
+- doubleTapOn: "Double tap photo"
+- assertVisible: "Liked"

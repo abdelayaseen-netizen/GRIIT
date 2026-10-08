@@ -10,7 +10,7 @@ import ProofImage from "@/components/ds/ProofImage";
 import { ProofFallbackTile } from "@/components/ds/ProofFallbackTile";
 import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraSeal";
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
-import { FeedCompactRow, FeedSystemLine } from "@/components/feed/FeedCompactRow";
+import { FeedCompactRow } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
@@ -93,16 +93,46 @@ export default function FeedPostV3({
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
 
   if (variant === "challenge_finished") {
+    const secured = post.securedDays ?? post.currentDay;
+    const days = post.totalDays;
     return (
-      <FeedSystemLine
-        userId={post.userId}
-        displayName={name}
-        username={post.username}
-        avatarUrl={avatarUri}
-        text={`${name} finished ${post.challengeName}`}
-        ago={when}
-        onProfile={onProfilePress ?? (() => undefined)}
-      />
+      <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
+        <View style={styles.card}>
+          <View style={styles.header}>
+            <Pressable
+              onPress={onProfilePress}
+              accessibilityRole="button"
+              accessibilityLabel={`${name} profile`}
+              hitSlop={FEED_TAP_HIT_SLOP}
+            >
+              <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
+            </Pressable>
+            <View style={styles.flex}>
+              <Text style={styles.name}>Finished {post.challengeName}</Text>
+              <Text style={styles.subject}>{secured} of {days} days secured</Text>
+            </View>
+            <Text style={styles.when}>{when}</Text>
+          </View>
+          <Text style={styles.taskTitle}>{post.streakCount} day streak</Text>
+          {post.caption ? <Text style={styles.gate}>{post.caption}</Text> : null}
+          <ActionRow
+            liked={post.reactedByMe}
+            respectCount={post.respectCount}
+            commentCount={post.commentCount}
+            shareCount={post.shareCount ?? 0}
+            onLike={onLike}
+            onComment={onComment}
+            onShare={onShare}
+          />
+          <InlineComments
+            comments={comments}
+            total={post.commentCount}
+            viewerUserId={viewerUserId}
+            onOpen={onComment}
+            onAuthorPress={onCommentAuthorPress}
+          />
+        </View>
+      </DoubleTapRespect>
     );
   }
 
@@ -116,7 +146,6 @@ export default function FeedPostV3({
         onRespect={onLike}
         onOpen={open}
         ownPost={ownPost}
-        burstSize={64}
       >
         <FeedCompactRow
           userId={post.userId}

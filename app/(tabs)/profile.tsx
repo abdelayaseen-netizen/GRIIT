@@ -378,8 +378,11 @@ export default function ProfileScreen() {
               monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
               days={record?.days ?? []}
               header={header}
-              onOpenDay={(dateKey) =>
-                router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
+              onOpenDay={(tile) =>
+                router.push({
+                  pathname: ROUTES.PROFILE_DAY as never,
+                  params: { dateKey: tile.dateKey, at: tile.id },
+                } as never)
               }
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}

@@ -1,5 +1,10 @@
 import { joinMeOnGriitCode } from "@/lib/deep-links";
 
+/** Share-sheet sentence. The link is inviteDeepLink / inviteUrl, never a hard-coded host. */
+export function challengeInviteShareText(name: string, link: string): string {
+  return `Join me on ${name} on GRIIT. ${link}`;
+}
+
 export function defaultInviteShareText(inviteCode?: string | null): string {
   const code = inviteCode?.trim();
   return code ? joinMeOnGriitCode(code) : "Join me on GRIIT";

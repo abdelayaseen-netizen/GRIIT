@@ -2,28 +2,34 @@
  * Frame 147 FeedEvent — single or grouped started / secured / finished.
  */
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ChevronRight } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import type { FeedEventGroup } from "@/lib/feed-join";
 import { eventLine } from "@/lib/feed-join";
-import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 export default function FeedEvent({
   group,
+  onPress,
 }: {
   group: FeedEventGroup;
+  onPress?: () => void;
 }) {
   const faces = group.avatars.slice(0, 3);
-  const stacked = faces.length > 1;
-  const size = stacked ? 24 : 32;
+  const line = eventLine(group);
   return (
-    <View style={styles.row} accessibilityLabel={eventLine(group)}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={line}
+      onPress={onPress}
+      style={styles.row}
+    >
       <View style={styles.stack}>
         {faces.map((a, i) => (
           <View key={a.userId || `${a.username}-${i}`} style={i > 0 ? styles.shift : undefined}>
             <Avatar
-              size={size}
+              size={20}
               userId={a.userId}
               uri={a.avatarUrl}
               displayName={a.displayName}
@@ -32,11 +38,11 @@ export default function FeedEvent({
           </View>
         ))}
       </View>
-      <Text style={styles.text} numberOfLines={3}>
-        {eventLine(group)}
+      <Text style={styles.text} numberOfLines={2}>
+        {line}
       </Text>
-      <Text style={styles.time}>{formatTimeAgoCompact(group.createdAt)}</Text>
-    </View>
+      <ChevronRight size={16} color={DS_V3.color.textSecondary} />
+    </Pressable>
   );
 }
 
@@ -58,14 +64,9 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: "500",
-    color: DS_V3.color.textPrimary,
-  },
-  time: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "400",
     color: DS_V3.color.textSecondary,
   },
 });

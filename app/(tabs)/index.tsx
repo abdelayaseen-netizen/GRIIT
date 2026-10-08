@@ -811,6 +811,10 @@ export default function HomeScreen() {
               startLabel={
                 !todaySecured && startTask ? startCtaLabel(startTask.name) : null
               }
+              bestStreak={resolvedStats?.longestStreak ?? streak}
+              nextTask={
+                !todaySecured && startTask ? { id: startTask.id, title: startTask.name } : null
+              }
               showFirstProofSlot={firstProofEver && !todaySecured}
             />
           }

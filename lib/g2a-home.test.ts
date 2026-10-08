@@ -67,7 +67,7 @@ describe("g2a home copy", () => {
     const home = readFileSync(resolve(__dirname, "../components/home/HomeV3.tsx"), "utf8");
     expect(home).toContain("homeStatus(");
     expect(home).not.toContain("closedTaskStatus(");
-    expect(home).toContain("primary={startLabel ?");
+    expect(home).toContain("homeAction(");
   });
 
   it("Start label and window banner", () => {

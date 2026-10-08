@@ -212,7 +212,7 @@ export function TaskFlowV2() {
           onAddAmount={f.onAddAmount}
           onOpenKeypad={f.onOpenCountKeypad}
           onRemoveOne={f.onRemoveOne}
-          onSubmit={f.onSubmitCount}
+          onComplete={f.onCompleteCount}
           onBack={f.goBack}
         />
       ) : null}
