@@ -308,7 +308,10 @@ export default function VisitorProfileScreen() {
               consistency={consistency}
               consistencySub={consistencySub}
               tab={tab}
-              onChangeTab={setTab}
+              onChangeTab={(next) => {
+                if (next === "Your data") return;
+                setTab(next);
+              }}
               runs={(rec?.runs ?? []).map((r) => ({
                 id: r.id,
                 name: r.name,
@@ -397,10 +400,10 @@ export default function VisitorProfileScreen() {
                   days={rec?.days ?? []}
                   header={header}
                   securedDays={header.secured}
-                  onOpenDay={(dateKey) =>
+                  onOpenDay={(tile) =>
                     router.push({
                       pathname: ROUTES.PROFILE_DAY as never,
-                      params: { dateKey, userId: isSelf ? undefined : ownerId },
+                      params: { dateKey: tile.dateKey, at: tile.id, userId: isSelf ? undefined : ownerId },
                     } as never)
                   }
                 />

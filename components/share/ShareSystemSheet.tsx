@@ -29,7 +29,7 @@ import {
   shareToInstagramStory,
 } from "@/lib/share";
 import { facebookAppId, savePhotosCopy, showStoryAction } from "@/lib/share-sticker";
-import { STICKER } from "@/lib/copy";
+import { OPENED_IN_INSTAGRAM, STICKER } from "@/lib/copy";
 import { readShareColours, writeShareColour } from "@/lib/share-colour";
 import {
   SHARE_CAPTION_PLACEHOLDER,
@@ -150,12 +150,13 @@ export default function ShareSystemSheet({
           return;
         }
         if (kind === "story") {
-          await shareToInstagramStory(uri, {
+          const opened = await shareToInstagramStory(uri, {
             asSticker: storyUsesSticker(styleId),
             backgroundTopColor: palette.bg,
             backgroundBottomColor: palette.bg,
             caption: caption.trim(),
           });
+          if (opened === "instagram") setSaveStatus(OPENED_IN_INSTAGRAM);
           return;
         }
         if (kind === "save") {

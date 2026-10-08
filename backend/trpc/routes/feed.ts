@@ -285,6 +285,8 @@ export const feedRouter = createTRPCRouter({
     }
     const { count: commentTotal, error: cErr } = await ctx.supabase.from("feed_comments").select("id", { count: "exact", head: true }).eq("event_id", ev.id);
     if (cErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: cErr.message });
+    const { count: shareTotal, error: shareCountErr } = await ctx.supabase.from("feed_shares").select("id", { count: "exact", head: true }).eq("event_id", ev.id);
+    const shareCount = shareCountErr ? 0 : shareTotal ?? 0;
     const { data: streakRow } = await server.from("streaks").select("active_streak_count").eq("user_id", ev.user_id).maybeSingle();
     const streakFromDb = (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
     const md = ev.metadata ?? {};
@@ -350,6 +352,7 @@ export const feedRouter = createTRPCRouter({
       reactedByMe,
       lastReactorName,
       commentCount: commentTotal ?? 0,
+      shareCount,
       visibility: vis,
     };
   }),
@@ -374,6 +377,7 @@ export const feedRouter = createTRPCRouter({
     const eventIds = items.map((e) => e.id);
     const reactionStats = new Map<string, { count: number; reactedByMe: boolean; lastReactorId: string | null }>();
     const commentCounts = new Map<string, number>();
+    const shareCounts = new Map<string, number>();
     if (eventIds.length > 0) {
       const { data: reactions } = await ctx.supabase
         .from("feed_reactions")
@@ -391,6 +395,12 @@ export const feedRouter = createTRPCRouter({
       }
       const { data: comments } = await ctx.supabase.from("feed_comments").select("event_id").in("event_id", eventIds).limit(500);
       for (const row of (comments ?? []) as { event_id: string }[]) commentCounts.set(row.event_id, (commentCounts.get(row.event_id) ?? 0) + 1);
+      const { data: shares, error: shareErr } = await ctx.supabase.from("feed_shares").select("event_id").in("event_id", eventIds).limit(500);
+      if (!shareErr) {
+        for (const row of (shares ?? []) as { event_id: string }[]) {
+          shareCounts.set(row.event_id, (shareCounts.get(row.event_id) ?? 0) + 1);
+        }
+      }
     }
     const listReactorIds = new Set<string>();
     for (const [, stat] of reactionStats) {
@@ -415,6 +425,7 @@ export const feedRouter = createTRPCRouter({
         reaction_count: stat?.count ?? 0,
         reacted_by_me: stat?.reactedByMe ?? false,
         comment_count: commentCounts.get(item.id) ?? 0,
+        share_count: shareCounts.get(item.id) ?? 0,
         last_reactor_name: stat?.lastReactorId
           ? (profileMap.get(stat.lastReactorId)?.display_name ?? profileMap.get(stat.lastReactorId)?.username ?? null)
           : null,
@@ -720,6 +731,18 @@ export const feedRouter = createTRPCRouter({
       return { success: true as const, reacted, reactionCount: count ?? 0 };
     }),
 
+  recordShare: protectedProcedure
+    .input(z.object({ eventId: z.string().uuid(), kind: z.enum(["card", "link"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.supabase.from("feed_shares").insert({
+        user_id: ctx.userId,
+        event_id: input.eventId,
+        kind: input.kind,
+      });
+      if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to record the share." });
+      return { ok: true as const };
+    }),
+
   getComments: protectedProcedure
     .input(
       z.object({
@@ -730,7 +753,7 @@ export const feedRouter = createTRPCRouter({
     .query(async ({ input, ctx }) => {
       const { data: comments, error } = await ctx.supabase
         .from("feed_comments")
-        .select("id, event_id, user_id, text, created_at")
+        .select("id, event_id, user_id, text, created_at, parent_id")
         .eq("event_id", input.eventId)
         .order("created_at", { ascending: true })
         .limit(input.limit);
@@ -760,6 +783,7 @@ export const feedRouter = createTRPCRouter({
           user_id: row.user_id,
           text: row.text,
           created_at: row.created_at,
+          parent_id: (row as { parent_id?: string | null }).parent_id ?? null,
           display_name: profile?.display_name ?? profile?.username ?? "Someone",
           username: profile?.username ?? "?",
           avatar_url: profile?.avatar_url ?? null,
@@ -772,6 +796,7 @@ export const feedRouter = createTRPCRouter({
       z.object({
         eventId: z.string().uuid(),
         text: z.string().trim().min(1).max(200),
+        parentId: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -786,6 +811,7 @@ export const feedRouter = createTRPCRouter({
         user_id: ctx.userId,
         event_id: input.eventId,
         text: input.text.trim(),
+        ...(input.parentId ? { parent_id: input.parentId } : {}),
       }).select("id, event_id, user_id, text, created_at").single();
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to comment." });

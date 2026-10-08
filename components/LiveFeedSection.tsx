@@ -32,7 +32,8 @@ import InviteCard from "@/components/feed/InviteCard";
 import TodaySocialBand from "@/components/home/TodaySocialBand";
 import type { TodayPoster } from "@/lib/today-band";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
-import { groupFeedJoins, isJoinGroup, type FeedListItem } from "@/lib/feed-join";
+import { groupFeedJoins, isJoinGroup, type FeedEventGroup, type FeedListItem } from "@/lib/feed-join";
+import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
 import EmptyState from "@/components/ds/EmptyState";
 import Avatar from "@/components/ds/Avatar";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -152,6 +153,8 @@ function LiveFeedSection({
   const [blockTarget, setBlockTarget] = useState<LiveFeedPost | null>(null);
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const [commentEventId, setCommentEventId] = useState<string | null>(null);
+  const [startedPreview, setStartedPreview] = useState<ChallengePreview | null>(null);
+  const [joiningPreview, setJoiningPreview] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
@@ -336,10 +339,14 @@ function LiveFeedSection({
   const onShare = useCallback(async (post: LiveFeedPost) => {
     try {
       const handle = post.username || post.displayName || "Someone";
-      await Share.share({
+      const result = await Share.share({
         message: `${handle} is on Day ${post.currentDay} of ${post.challengeName} on GRIIT.`,
         ...(post.photoUrl ? { url: post.photoUrl } : {}),
       });
+      if (result.action === Share.sharedAction) {
+        await trpcMutate(TRPC.feed.recordShare, { eventId: post.id, kind: "card" });
+        updatePost(post.id, (p) => ({ ...p, shareCount: (p.shareCount ?? 0) + 1 }));
+      }
       try {
         track({ name: "share_completed", content_type: "feed" });
       } catch {
@@ -351,7 +358,7 @@ function LiveFeedSection({
         captureError(err, "LiveFeedShare");
       }
     }
-  }, []);
+  }, [updatePost]);
 
   const submitComment = useCallback(
     async (postId: string, text: string) => {
@@ -480,7 +487,13 @@ function LiveFeedSection({
       if (isJoinGroup(item)) {
         return (
           <View style={styles.v3Item}>
-            <FeedEvent group={item} />
+            <FeedEvent
+              group={item}
+              onPress={() => {
+                if (item.verb !== "started" || !item.challengeId) return;
+                setStartedPreview(previewFromStarted(item));
+              }}
+            />
           </View>
         );
       }
@@ -512,6 +525,16 @@ function LiveFeedSection({
                 : undefined
             }
             onOpenPost={() => router.push(ROUTES.POST_ID(item.id) as never)}
+            onOpenPhoto={() =>
+              router.push({
+                pathname: ROUTES.POST_PHOTO(item.id),
+                params: {
+                  uri: item.photoUrl ?? item.proofPhotoUrl ?? "",
+                  name: item.displayName ?? "",
+                  context: `${item.challengeName} · Day ${item.currentDay}`,
+                },
+              } as never)
+            }
           />
         </View>
       );
@@ -835,8 +858,38 @@ function LiveFeedSection({
         eventId={commentEventId ?? ""}
         onClose={() => setCommentEventId(null)}
       />
+      <ChallengePreviewSheet
+        item={startedPreview}
+        joining={joiningPreview}
+        onClose={() => setStartedPreview(null)}
+        onDetails={(item) => {
+          setStartedPreview(null);
+          const href = feedChallengeHref(item.id);
+          if (href) router.push(href as never);
+        }}
+        onJoin={(item) => {
+          setJoiningPreview(true);
+          void trpcMutate(TRPC.challenges.join, { challengeId: item.id })
+            .catch((err) => captureError(err, "feed-join"))
+            .finally(() => {
+              setJoiningPreview(false);
+              setStartedPreview(null);
+            });
+        }}
+      />
     </View>
   );
+}
+
+function previewFromStarted(group: FeedEventGroup): ChallengePreview {
+  return {
+    id: group.challengeId ?? "",
+    title: group.challengeName,
+    category: "Discipline",
+    days: group.dayOf > 0 ? group.dayOf : 1,
+    modeLine: "",
+    day1Line: "",
+  };
 }
 
 const styles = StyleSheet.create({

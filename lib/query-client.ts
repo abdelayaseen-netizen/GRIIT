@@ -1,11 +1,11 @@
 import { QueryClient, QueryCache, MutationCache } from "@tanstack/react-query";
-import { captureError } from "@/lib/sentry";
+import { captureError, captureSilentError } from "@/lib/sentry";
 import { shouldRetryQuery } from "@/lib/query-retry";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      captureError(error, "ReactQuery");
+      captureSilentError(error, "ReactQuery");
     },
   }),
   mutationCache: new MutationCache({

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildWeekStripDays,
+  firstWeekStripDays,
   weekStripAccessibilityLabel,
   weekStripDayState,
   weekStripDayStates,
@@ -45,6 +46,24 @@ describe("weekStripDayState", () => {
     });
     expect(days[3]?.state).toBe("frozen");
     expect(days[3]?.letter).toBe("T");
+  });
+
+  it("counts the first week as days 1–7 and does not mark a later day missed", () => {
+    const days = firstWeekStripDays("2026-10-05", {
+      securedDateKeys: ["2026-10-05"],
+      todayKey: "2026-10-07",
+      todaySecured: false,
+    });
+    expect(days.map((d) => d.letter)).toEqual(["1", "2", "3", "4", "5", "6", "7"]);
+    expect(days.map((d) => d.state)).toEqual([
+      "secured",
+      "missed",
+      "missed",
+      "future",
+      "future",
+      "future",
+      "future",
+    ]);
   });
 
   it("labels Thursday frozen", () => {

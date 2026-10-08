@@ -158,9 +158,12 @@ export function instagramStoriesShareInput(args: {
   return { social: "instagramstories", appId, backgroundImage: args.imageUri, ...colors };
 }
 
-/** Empty Meta App ID: do not offer Instagram Story. Copy / Save / More still work. */
-export function showStoryAction(appId: string): boolean {
-  return appId.trim().length > 0;
+/**
+ * The Instagram button stays even when the Meta App ID is empty.
+ * shareToInstagramStory falls back to the system sheet so the button is never dead.
+ */
+export function showStoryAction(_appId: string): boolean {
+  return true;
 }
 
 export type SavePhotosResult = "saved" | "denied";

@@ -95,7 +95,7 @@ describe("postDetailPhotoUri", () => {
     expect(postDetailPhotoUri({ proofPhotoUrl: null, photoUrl: null })).toBeNull();
     expect(postDetailPhotoUri({ proofPhotoUrl: "", photoUrl: "  " })).toBeNull();
     expect(postDetailPhotoUri({ proofPhotoUrl: "https://cdn/p.jpg" })).toBe("https://cdn/p.jpg");
-    const src = readFileSync(resolve(__dirname, "../app/post/[id].tsx"), "utf8");
+    const src = readFileSync(resolve(__dirname, "../app/post/[id]/index.tsx"), "utf8");
     expect(src).toContain("postDetailPhotoUri");
     expect(src).toContain("proofUri ? <ProofImage");
   });

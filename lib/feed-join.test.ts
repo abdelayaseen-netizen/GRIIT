@@ -36,8 +36,8 @@ describe("joinLine", () => {
   it("names one, two, and n others with singular other", () => {
     expect(joinLine(["Alex"], 0, "Iron man")).toBe("Alex started Iron man");
     expect(joinLine(["Alex", "Bina"], 0, "Iron man")).toBe("Alex and Bina started Iron man");
-    expect(joinLine(["Alex", "Bina"], 1, "Iron man")).toBe("Alex, Bina and 1 other started Iron man");
-    expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex, Bina and 3 others started Iron man");
+    expect(joinLine(["Alex", "Bina"], 1, "Iron man")).toBe("Alex and 2 others started Iron man");
+    expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex and 4 others started Iron man");
   });
 
   it("finished with 0 secured says ended; 1 day is singular", () => {
@@ -119,6 +119,27 @@ describe("groupFeedJoins", () => {
     expect(isJoinGroup(items[0]!) && items[0].others).toBe(1);
     expect(isJoinGroup(items[1]!) && items[1].names).toEqual(["Drew"]);
     expect(items[2] && !isJoinGroup(items[2]) && items[2].id).toBe("task");
+  });
+
+  it("leaves a finished challenge as a post", () => {
+    const items = groupFeedJoins([
+      post({
+        id: "f1",
+        eventType: "completed_challenge",
+        isCompleted: true,
+        createdAt: "2026-10-01T12:00:00.000Z",
+      }),
+      post({
+        id: "f2",
+        userId: "b",
+        displayName: "Bina",
+        eventType: "completed_challenge",
+        isCompleted: true,
+        createdAt: "2026-10-01T12:10:00.000Z",
+      }),
+    ]);
+    expect(items.every((item) => !isJoinGroup(item))).toBe(true);
+    expect(items.map((item) => ("id" in item ? item.id : ""))).toEqual(["f1", "f2"]);
   });
 
   it("does not turn secured_day rows into a system line", () => {

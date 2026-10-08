@@ -22,6 +22,10 @@ describe("push registration is silent to the user", () => {
     expect(logbox).toContain("LogBox.ignoreLogs");
     expect(logbox).toContain("Error reading persisted server registration info");
     expect(logbox).toContain("Error fetching offerings");
+    const purchases = readFileSync(resolve(__dirname, "./subscription.ts"), "utf8");
+    expect(purchases).toContain("PurchasesModule.LOG_LEVEL?.DEBUG");
+    expect(purchases).toContain("PurchasesModule.LOG_LEVEL?.ERROR");
+    expect(purchases).toMatch(/__DEV__ \? PurchasesModule\.LOG_LEVEL\?\.DEBUG : PurchasesModule\.LOG_LEVEL\?\.ERROR/);
     expect(reminders).toContain("Notifications are off for GRIIT");
   });
 });

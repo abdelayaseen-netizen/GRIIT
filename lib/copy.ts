@@ -33,6 +33,7 @@ export const STREAK = {
   label: (n: number) => `${n}-day streak`,
 };
 export const STICKER = { copied: "Copied. Paste it in your Instagram story." };
+export const OPENED_IN_INSTAGRAM = "Opened in Instagram";
 export const SHARE = {
   cta: "Share this photo to the feed",
   keep: "Keep it to the record",

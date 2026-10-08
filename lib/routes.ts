@@ -49,6 +49,7 @@ export const ROUTES = {
     `/follow-list?userId=${encodeURIComponent(userId)}&mode=${mode}&username=${encodeURIComponent(username)}` as const,
   /** Feed post / comment thread */
   POST_ID: (id: string) => `/post/${id}` as const,
+  POST_PHOTO: (id: string) => `/post/${id}/photo` as const,
   /** Own proof full view — Share flips the same activity row. */
   PROOF: (id: string) => `/proof/${id}` as const,
   INVITE_CODE: (code: string) => `/invite/${code}` as const,

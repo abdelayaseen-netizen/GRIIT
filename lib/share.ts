@@ -9,9 +9,9 @@ import { challengeDeepLink, inviteDeepLink, profileDeepLink } from "@/lib/deep-l
 import { facebookAppId } from "@/lib/config";
 import { instagramStoriesShareInput, type SavePhotosResult } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
-import { groupInviteShareMessage } from "@/lib/group-ui";
 import {
   challengeCompleteShareText,
+  challengeInviteShareText,
   challengeShareText,
   defaultInviteShareText,
   profileShareText,
@@ -78,7 +78,15 @@ export async function inviteToChallenge(
 ): Promise<void> {
   const inviteCode = challenge.inviteCode ?? challenge.id;
   const url = inviteDeepLink(inviteCode, refUserId);
-  await shareOrCopy(groupInviteShareMessage(challenge.name, inviteCode), "Join my challenge", url);
+  await shareOrCopy(challengeInviteShareText(challenge.name, url), "Join my challenge");
+}
+
+export async function copyChallengeInvite(
+  challenge: { id: string; inviteCode?: string },
+  refUserId?: string | null,
+): Promise<void> {
+  const inviteCode = challenge.inviteCode ?? challenge.id;
+  await Clipboard.setStringAsync(inviteDeepLink(inviteCode, refUserId));
 }
 
 export async function shareProfile(
@@ -206,6 +214,8 @@ export async function shareStickerToMessages(imageUri: string, body: string): Pr
   }
 }
 
+export type InstagramShareResult = "instagram" | "sheet";
+
 export async function shareToInstagramStory(
   imageUri: string,
   opts?: {
@@ -214,12 +224,14 @@ export async function shareToInstagramStory(
     backgroundBottomColor?: string;
     caption?: string;
   },
-): Promise<void> {
+): Promise<InstagramShareResult> {
+  const caption = opts?.caption?.trim() ?? "";
   if (Platform.OS === "web") {
-    return;
+    await shareImageAndCaption(imageUri, caption);
+    return "sheet";
   }
-  if (opts?.caption?.trim()) {
-    await copyShareCaption(opts.caption);
+  if (caption) {
+    await copyShareCaption(caption);
   }
   const input = instagramStoriesShareInput({
     imageUri,
@@ -228,7 +240,10 @@ export async function shareToInstagramStory(
     backgroundTopColor: opts?.asSticker ? opts.backgroundTopColor : undefined,
     backgroundBottomColor: opts?.asSticker ? opts.backgroundBottomColor : undefined,
   });
-  if (!input) return;
+  if (!input) {
+    await shareImageAndCaption(imageUri, caption);
+    return "sheet";
+  }
   try {
     await RNShare.shareSingle({
       social: Social.InstagramStories,
@@ -243,8 +258,10 @@ export async function shareToInstagramStory(
     } catch {
       /* non-fatal */
     }
+    return "instagram";
   } catch {
-    /* Instagram missing or share cancelled — do not URL-pass the image. */
+    await shareImageAndCaption(imageUri, caption);
+    return "sheet";
   }
 }
 

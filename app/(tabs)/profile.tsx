@@ -57,6 +57,8 @@ import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { YourDataTab } from "@/components/profile/YourDataTab";
+import type { MeStatsResult } from "@/backend/lib/me-stats";
 import ProfileProofs from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
@@ -71,7 +73,7 @@ import {
   weekdayFromCreatedAt,
 } from "@/lib/g3-profile";
 
-type ProfileTab = "challenges" | "proofs" | "badges";
+type ProfileTab = "challenges" | "proofs" | "data" | "badges";
 
 type RecordPayload = ProfileRecord & {
   timezone: string;
@@ -85,7 +87,7 @@ type RecordPayload = ProfileRecord & {
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
-  return value === "challenges" || value === "proofs" || value === "badges";
+  return value === "challenges" || value === "proofs" || value === "data" || value === "badges";
 }
 
 export default function ProfileScreen() {
@@ -107,6 +109,13 @@ export default function ProfileScreen() {
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
 
+  const lifetimeStats = useQuery({
+    queryKey: ["profiles", "meStats", "all", user?.id ?? ""],
+    queryFn: () => trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range: "all" }),
+    staleTime: 60 * 1000,
+    enabled: !isGuest && !!user?.id,
+  });
+
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
     queryFn: () =>
@@ -119,12 +128,12 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching;
+  const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching || lifetimeStats.isRefetching;
 
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch()]);
-  }, [refetchAll, recordQuery, followCountsQuery]);
+    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch(), lifetimeStats.refetch()]);
+  }, [refetchAll, recordQuery, followCountsQuery, lifetimeStats]);
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
@@ -215,7 +224,8 @@ export default function ProfileScreen() {
   const friends =
     bootstrapFollows?.friends ??
     (followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0));
-  const v3Tab = tab === "proofs" ? "Proofs" : tab === "badges" ? "Badges" : "Challenges";
+  const v3Tab =
+    tab === "proofs" ? "Proofs" : tab === "data" ? "Your data" : tab === "badges" ? "Badges" : "Challenges";
   const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
   const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
@@ -277,7 +287,7 @@ export default function ProfileScreen() {
             streak={streakFromArray}
             best={best}
             todaySecured={todaySecured}
-            totalDaysSecured={header.secured}
+            totalDaysSecured={lifetimeStats.data?.user_stats.lifetime_secured_days ?? header.secured}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
               consistencyContext(consistency, formatSinceDate, todaySecured) ||
@@ -285,10 +295,11 @@ export default function ProfileScreen() {
               consistencySubFromU
             }
             tab={v3Tab}
+            showDataTab
             onChangeTab={(next) => {
               void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setTab(
-                next === "Proofs" ? "proofs" : next === "Badges" ? "badges" : "challenges",
+                next === "Proofs" ? "proofs" : next === "Your data" ? "data" : next === "Badges" ? "badges" : "challenges",
               );
             }}
             runs={(record?.runs ?? []).map((r) => ({
@@ -349,6 +360,7 @@ export default function ProfileScreen() {
               />
             )
           ) : null}
+          {v3Tab === "Your data" ? <YourDataTab /> : null}
           {v3Tab === "Proofs" ? (
             <ProfileProofs
               proofs={proofs.map((p, i) => ({
@@ -366,8 +378,11 @@ export default function ProfileScreen() {
               monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
               days={record?.days ?? []}
               header={header}
-              onOpenDay={(dateKey) =>
-                router.push({ pathname: ROUTES.PROFILE_DAY as never, params: { dateKey } } as never)
+              onOpenDay={(tile) =>
+                router.push({
+                  pathname: ROUTES.PROFILE_DAY as never,
+                  params: { dateKey: tile.dateKey, at: tile.id },
+                } as never)
               }
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}

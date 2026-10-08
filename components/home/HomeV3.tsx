@@ -4,11 +4,12 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp } from "lucide-react-native";
+import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
-import { StreakStrip } from "@/components/ds/StreakStrip";
+import WeekStrip from "@/components/ds/WeekStrip";
 import { homeStatus } from "@/lib/home-status";
+import { greetingSub } from "@/lib/greeting";
 import Button from "@/components/ds/Button";
 import Divider from "@/components/ds/Divider";
 import Skeleton from "@/components/ds/Skeleton";
@@ -32,6 +33,8 @@ import {
   type HomeProofRow,
 } from "@/lib/home-proof-card";
 import { FREEZE, FREEZE_LINE } from "@/lib/copy";
+import { bestLabel, freezeHoldLine, homeAction, streakNumeralSize, type HomeNextTask } from "@/lib/home-top";
+import { streakInARow } from "@/lib/task-complete-toast";
 import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
 import { JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
@@ -128,10 +131,16 @@ export type HomeV3Props = {
   highlightTaskId?: string | null;
   /** Server day_secures already includes today. A later join does not clear it. */
   daySecured?: boolean;
+  /** 1–7 while the strip counts days from the first enrollment. */
+  firstWeekDay?: number | null;
+  /** Replaces Mon–Sun letters. First week uses "1"–"7". */
+  weekLetters?: readonly string[];
+  bestStreak?: number | null;
+  nextTask?: HomeNextTask | null;
 };
 
 export function HomeV3({
-  title: _title,
+  title,
   streak,
   streakLine: _streakLine,
   morningAfter,
@@ -150,10 +159,10 @@ export function HomeV3({
   onPressProof: _onPressProof,
   onPressTask,
   onPressChallenge,
-  onPressShareToday: _onPressShareToday,
+  onPressShareToday,
   sectionChoices,
   onToggleSection,
-  freezesLeft: _freezesLeft,
+  freezesLeft,
   showFreezeChip: _showFreezeChip = false,
   loading,
   error,
@@ -161,12 +170,16 @@ export function HomeV3({
   firstDayLine,
   day2Hero: _day2Hero,
   windowBanner: _windowBanner,
-  startLabel,
-  band,
+  startLabel: _startLabel,
+  band: _band,
   showFirstProofSlot,
   noDaysOff: _noDaysOff = false,
   highlightTaskId,
   daySecured = false,
+  firstWeekDay: firstWeek = null,
+  weekLetters,
+  bestStreak,
+  nextTask = null,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
 
@@ -216,11 +229,29 @@ export function HomeV3({
     otherChallenge: todayBlocked ? openSection?.challenge : null,
     nextTask: openRow?.name,
   });
-  const weekDays = ["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
+  const letters = weekLetters ?? ["M", "T", "W", "T", "F", "S", "S"];
+  const weekDays = letters.map((letter, i) => ({
     letter,
     filled: weekStates?.[i] === "secured" || weekStates?.[i] === "frozen",
     state: weekStates?.[i],
   }));
+  const openCount = homeRows.filter((row) => !row.done && !row.closed).length;
+  const sub = greetingSub({
+    secured: daySecured || allDone,
+    nextTask: openRow?.name,
+    openCount,
+    firstWeekDay: firstWeek,
+    blocked: status,
+  });
+  const streakN = streak ?? 0;
+  const action = homeAction({
+    securedToday: daySecured || allDone,
+    yesterdayUnsecured: Boolean(morningAfter?.onUseFreeze),
+    freezesLeft,
+    nextTask,
+  });
+  const numeral = streakNumeralSize(streakN);
+  const cardSub = action.kind === "freeze" ? freezeHoldLine(streakN, freezesLeft) : sub;
 
   const renderRow = (row: HomeProofRow) => {
     const inner = (
@@ -257,17 +288,44 @@ export function HomeV3({
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      <StreakStrip
-        streak={streak ?? 0}
-        days={weekDays}
-        todayIndex={todayIndex}
-        status={status}
-        onOpenSheet={() => onPressStreak?.()}
-        band={band}
-        primary={startLabel ? <Button label={startLabel} onPress={_onPressProof} /> : undefined}
-      />
+      {title ? (
+        <Text style={styles.greeting} accessibilityRole="header">
+          {title}
+        </Text>
+      ) : null}
+      <View style={styles.topCard}>
+        <View style={styles.topRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Streak"
+            onPress={() => onPressStreak?.()}
+            style={styles.flameTile}
+          >
+            <Flame size={22} color={DS_V3.color.brand} fill={DS_V3.color.brand} />
+          </Pressable>
+          <Text
+            style={[styles.numeral, { fontSize: numeral, lineHeight: Math.round(numeral * 1.1), letterSpacing: numeral * -0.025 }]}
+          >
+            {streakN.toLocaleString("en-US")}
+          </Text>
+          <Text style={styles.streakWords}>{streakInARow(streakN)}</Text>
+          <Text style={styles.best}>{bestLabel(streakN, bestStreak ?? streakN)}</Text>
+        </View>
+        <WeekStrip days={weekDays} todayIndex={todayIndex} />
+        <View style={styles.hair} />
+        {cardSub ? <Text style={styles.cardSub}>{cardSub}</Text> : null}
+        {action.kind === "share" ? (
+          <Button label={action.label} variant="tertiary" onPress={onPressShareToday} />
+        ) : null}
+        {action.kind === "freeze" ? (
+          <Button label={action.label} onPress={morningAfter?.onUseFreeze} />
+        ) : null}
+        {action.kind === "task" ? (
+          <Button label={action.label} onPress={() => onPressTask?.(action.taskId)} />
+        ) : null}
+      </View>
 
-      {morningAfter?.onUseFreeze ? (
+      {morningAfter?.onUseFreeze && action.kind !== "freeze" ? (
         <View style={styles.freezeRow}>
           <Text style={styles.secondary}>{FREEZE_LINE}</Text>
           <Button label={FREEZE.button} variant="secondary" onPress={morningAfter.onUseFreeze} />
@@ -384,6 +442,61 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
+  },
+  greeting: {
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    fontWeight: "400",
+    color: DS_V3.color.textSecondary,
+  },
+  topCard: {
+    marginHorizontal: DS_V3.space.gutter,
+    marginTop: DS_V3.space.md,
+    backgroundColor: DS_V3.color.surface,
+    borderRadius: 20,
+    padding: DS_V3.space.gutter,
+    gap: DS_V3.space.md,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+  },
+  flameTile: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: DS_V3.color.raised,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  numeral: {
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  streakWords: {
+    flex: 1,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textSecondary,
+  },
+  best: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  hair: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: DS_V3.color.hairline,
+  },
+  cardSub: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textSecondary,
   },
   pad: {
     paddingHorizontal: DS_V3.space.gutter,

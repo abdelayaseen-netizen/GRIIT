@@ -34,7 +34,7 @@ function TextRun({ item, shadow }: { item: ShareText; shadow: { color: string; r
           lineHeight: item.line,
           fontWeight: item.weight,
           letterSpacing: item.tracking,
-          fontVariant: item.weight === "800" ? ["tabular-nums"] : undefined,
+          fontVariant: item.weight === "800" || item.weight === "700" ? ["tabular-nums"] : undefined,
         },
         shadowStyle,
       ]}

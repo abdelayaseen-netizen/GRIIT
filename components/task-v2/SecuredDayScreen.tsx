@@ -1,7 +1,7 @@
 /**
  * Frame 59 — streak is the hero; image area follows proof count; never an empty card.
  */
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import ViewShot from "react-native-view-shot";
 import { Download, Flame, Instagram, ShieldOff, Snowflake, X } from "lucide-react-native";
@@ -18,6 +18,7 @@ import EmptyState from "@/components/ds/EmptyState";
 import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
 import { SECURED_DONE } from "@/lib/simple-log";
+import { OPENED_IN_INSTAGRAM } from "@/lib/copy";
 import { PROOF_SHARE_FAILED } from "@/lib/proof-moment";
 import {
   SECURED_LOAD_ERROR,
@@ -126,6 +127,7 @@ export default function SecuredDayScreen({
     streak,
   };
   const showStory = showStoryAction(facebookAppId());
+  const [storyNote, setStoryNote] = useState<string | null>(null);
   const shot = React.useRef<ViewShot>(null);
 
   const capture = async () => {
@@ -247,12 +249,15 @@ export default function SecuredDayScreen({
                 variant="secondary"
                 icon={<Instagram size={18} color={DS_V3.color.textPrimary} />}
                 onPress={() => {
-                  void capture().then((uri) => {
-                    if (uri) void shareToInstagramStory(uri);
+                  void capture().then(async (uri) => {
+                    if (!uri) return;
+                    const opened = await shareToInstagramStory(uri);
+                    if (opened === "instagram") setStoryNote(OPENED_IN_INSTAGRAM);
                   });
                 }}
               />
             ) : null}
+            {storyNote ? <Text style={styles.fail}>{storyNote}</Text> : null}
             <Button
               label="Save"
               variant="secondary"

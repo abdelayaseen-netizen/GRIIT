@@ -54,7 +54,7 @@ import {
   weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
-import { inviteToChallenge } from "@/lib/share";
+import { copyChallengeInvite, inviteToChallenge } from "@/lib/share";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
@@ -463,6 +463,10 @@ export default function ActiveChallengeDetailScreen() {
     void inviteToChallenge({ name: title, id: challengeId || title });
   }, [title, challengeId]);
 
+  const handleCopyInvite = useCallback(() => {
+    void copyChallengeInvite({ id: challengeId || title });
+  }, [challengeId, title]);
+
   const handleParticipants = useCallback(() => {
     if (!challengeId) return;
     if (participationType === "team") {
@@ -540,6 +544,7 @@ export default function ActiveChallengeDetailScreen() {
           onUseFreeze={undefined}
           people={people}
           onInvite={people.showInvite ? handleInvite : undefined}
+          onCopyInvite={people.showInvite ? handleCopyInvite : undefined}
         />
         <DayStickerSheet
           visible={shareTodayOpen && thisDone}

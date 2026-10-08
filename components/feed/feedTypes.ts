@@ -28,6 +28,7 @@ export type LiveFeedPost = {
   reactedByMe: boolean;
   lastReactorName?: string | null;
   commentCount: number;
+  shareCount?: number;
   visibility: "public" | "friends" | "private";
 };
 

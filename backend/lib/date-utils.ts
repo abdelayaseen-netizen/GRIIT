@@ -15,6 +15,14 @@ export function addCalendarDaysToDateKey(dateKey: string, deltaDays: number): st
   return dt.toISOString().slice(0, 10);
 }
 
+/** Inclusive calendar span. Sep 6 through Sep 24 is 19 days. */
+export function inclusiveDayCount(startKey: string, endKey: string): number {
+  const a = Date.parse(`${startKey}T00:00:00Z`);
+  const b = Date.parse(`${endKey}T00:00:00Z`);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return 0;
+  return Math.round((b - a) / 86_400_000) + 1;
+}
+
 function isValidDate(instant: Date): boolean {
   return !Number.isNaN(instant.getTime());
 }

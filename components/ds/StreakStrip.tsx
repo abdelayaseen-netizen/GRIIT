@@ -56,5 +56,5 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   word: { ...DS_V3.type.secondary, color: DS_V3.color.textPrimary, flex: 1 },
-  status: { ...DS_V3.type.body, color: DS_V3.color.textPrimary },
+  status: { ...DS_V3.type.body, color: DS_V3.color.textSecondary },
 });

@@ -69,9 +69,14 @@ export async function initializeRevenueCat(userId: string): Promise<void> {
   try {
     const RC = Purchases.default;
     const RCAny = RC as typeof RC & { setLogLevel?: (level: number) => void };
-    const PurchasesModule = Purchases as typeof Purchases & { LOG_LEVEL?: { DEBUG: number } };
-    if (__DEV__ && PurchasesModule.LOG_LEVEL?.DEBUG != null && typeof RCAny.setLogLevel === "function") {
-      RCAny.setLogLevel(PurchasesModule.LOG_LEVEL.DEBUG);
+    const PurchasesModule = Purchases as typeof Purchases & {
+      LOG_LEVEL?: { DEBUG: number; ERROR: number };
+    };
+    // DEBUG only in dev. Production stays on ERROR so "Error fetching offerings"
+    // cannot surface as a LogBox toast or a verbose SDK log.
+    const logLevel = __DEV__ ? PurchasesModule.LOG_LEVEL?.DEBUG : PurchasesModule.LOG_LEVEL?.ERROR;
+    if (logLevel != null && typeof RCAny.setLogLevel === "function") {
+      RCAny.setLogLevel(logLevel);
     }
     await RC.configure({ apiKey, appUserID: userId });
 

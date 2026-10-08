@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { getTierForDays, getPointsToNextTier, getNextTierName } from "../../lib/progression";
 import {
+  dateKeyFromIsoInTimeZone,
   getTodayDateKey,
   getYesterdayDateKey,
   daysBetweenKeys,
@@ -20,6 +21,7 @@ import { loadDayTaskTally } from "../../lib/record-days";
 import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
+import { buildMeStats, type MeStatsEnrollment, type MeStatsProof, type ProofMethod } from "../../lib/me-stats";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -506,6 +508,83 @@ export const profilesStatsProcedures = {
       });
 
       return { days: result };
+    }),
+
+  /** Owner only. Range stats for Your data. Streak dates are inclusive. */
+  meStats: protectedProcedure
+    .input(z.object({ range: z.enum(["7d", "30d", "all"]).default("7d") }))
+    .query(async ({ ctx, input }) => {
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
+      const [secures, freezes, streak, enrollments, proofs] = await Promise.all([
+        ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(800),
+        ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(400),
+        ctx.supabase
+          .from("streaks")
+          .select("active_streak_count")
+          .eq("user_id", ctx.userId)
+          .maybeSingle(),
+        ctx.supabase
+          .from("active_challenges")
+          .select("id, start_at, created_at, status, ended_at, challenges(title, duration_days)")
+          .eq("user_id", ctx.userId)
+          .limit(50),
+        ctx.supabase
+          .from("activity_events")
+          .select("created_at, shared_at, metadata")
+          .eq("user_id", ctx.userId)
+          .eq("event_type", "task_completed")
+          .order("created_at", { ascending: false })
+          .limit(500),
+      ]);
+      if (secures.error || freezes.error || enrollments.error || proofs.error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load your data." });
+      }
+      const rows = (enrollments.data ?? []) as {
+        id: string;
+        start_at?: string | null;
+        created_at?: string | null;
+        status?: string | null;
+        ended_at?: string | null;
+        challenges?: { title?: string | null; duration_days?: number | null } | { title?: string | null; duration_days?: number | null }[] | null;
+      }[];
+      const enrollmentRows: MeStatsEnrollment[] = rows.map((row) => {
+        const challenge = Array.isArray(row.challenges) ? row.challenges[0] : row.challenges;
+        const startIso = row.start_at ?? row.created_at ?? "";
+        const finished = row.status === "completed" || row.status === "ended" || row.status === "left";
+        return {
+          id: row.id,
+          title: challenge?.title?.trim() || "Challenge",
+          startKey: startIso ? dateKeyFromIsoInTimeZone(startIso, tz) : todayKey,
+          durationDays: challenge?.duration_days ?? 1,
+          status: finished ? "finished" : "running",
+          finishedAt: row.ended_at ? dateKeyFromIsoInTimeZone(row.ended_at, tz) : null,
+        };
+      });
+      const proofRows: MeStatsProof[] = ((proofs.data ?? []) as {
+        created_at: string;
+        shared_at?: string | null;
+        metadata?: Record<string, unknown> | null;
+      }[]).map((row) => {
+        const md = row.metadata ?? {};
+        const method: ProofMethod =
+          md.verification_method === "apple_health"
+            ? "apple_health"
+            : md.photo_url || md.proof_photo_url || md.has_photo === true
+              ? "camera"
+              : "self_reported";
+        return { atIso: row.shared_at || row.created_at, method };
+      });
+      return buildMeStats({
+        range: input.range,
+        todayKey,
+        timeZone: tz,
+        currentStreak: (streak.data as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+        securedKeys: (secures.data ?? []).map((r: { date_key: string }) => r.date_key),
+        heldKeys: (freezes.data ?? []).map((r: { date_key: string }) => r.date_key),
+        enrollments: enrollmentRows,
+        proofs: proofRows,
+      });
     }),
 
   /** Delete account: clears profile data; when SUPABASE_SERVICE_ROLE_KEY is set, also deletes auth user. Client must sign out after. */

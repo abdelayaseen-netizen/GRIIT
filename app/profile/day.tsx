@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Screen from "@/components/ds/Screen";
-import { DayViewer } from "@/components/profile/DayViewer";
+import { ProofScroll } from "@/components/profile/ProofScroll";
+import { rememberProofTile } from "@/lib/proof-return";
 import { DS_V3 } from "@/lib/design-system";
 import { firstString } from "@/lib/task-helpers";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { itemsFromRecordProofs, proofsDateLabel, type ProofsGridItem } from "@/lib/proofs-grid";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
@@ -17,8 +18,9 @@ type RecordPayload = ProfileRecord & { timezone: string; todayKey: string };
 
 export default function ProfileDayScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ dateKey?: string; userId?: string }>();
+  const params = useLocalSearchParams<{ dateKey?: string; userId?: string; at?: string }>();
   const dateKey = firstString(params.dateKey);
+  const at = firstString(params.at);
   const userId = firstString(params.userId);
   const isOwner = !userId;
   const q = useQuery({
@@ -26,17 +28,20 @@ export default function ProfileDayScreen() {
     queryFn: () =>
       trpcQuery(TRPC.profiles.getRecord, userId ? { userId } : undefined) as Promise<RecordPayload>,
   });
-  const all = itemsFromRecordProofs(q.data?.proofs ?? []);
+  const all = itemsFromRecordProofs(q.data?.proofs ?? [], { includeSelf: true });
   const visible = isOwner ? all : all.filter((i) => i.shared);
-  const [sharedIds, setSharedIds] = useState<string[]>([]);
   const [viewDateKey, setViewDateKey] = useState(dateKey);
   const [countLabel, setCountLabel] = useState("1 of 1");
+  const currentId = useRef(at);
   useEffect(() => {
     setViewDateKey(dateKey);
   }, [dateKey]);
-  const items: ProofsGridItem[] = visible.map((i) =>
-    sharedIds.includes(i.id) ? { ...i, shared: true } : i,
-  );
+  useEffect(() => {
+    return () => {
+      if (currentId.current) rememberProofTile(currentId.current);
+    };
+  }, []);
+  const items: ProofsGridItem[] = visible;
 
   return (
     <Screen>
@@ -59,17 +64,13 @@ export default function ProfileDayScreen() {
           </View>
           <View style={styles.side} />
         </View>
-        <DayViewer
+        <ProofScroll
           items={items}
-          initialDateKey={dateKey}
-          isOwner={isOwner}
-          onDateKeyChange={setViewDateKey}
-          onCountLabelChange={setCountLabel}
-          onShare={(item) => {
-            if (!item.eventId) return;
-            void trpcMutate(TRPC.checkins.shareProof, { eventId: item.eventId }).then(() => {
-              setSharedIds((ids) => [...ids, item.id]);
-            });
+          initialId={at || items.find((item) => item.dateKey === dateKey)?.id}
+          onIndexChange={(item, index) => {
+            currentId.current = item.id;
+            setViewDateKey(item.dateKey);
+            setCountLabel(`${index + 1} of ${items.length || 1}`);
           }}
         />
       </View>

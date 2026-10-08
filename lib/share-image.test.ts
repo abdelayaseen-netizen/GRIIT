@@ -34,7 +34,10 @@ describe("v44.1 share styles", () => {
     expect(shareJoinLine({ username: "noahb", inviteId: code })).not.toContain("griit.app");
     expect(shareJoinLine({ username: "noahb", inviteId: code })).not.toContain("code");
     expect(shareJoinLine({ username: "noahb", inviteId: "ch-1", origin: "https://example.com" })).toBe(
-      "Join me · https://example.com/invite/ch-1",
+      "https://example.com/i/ch-1",
+    );
+    expect(shareJoinLine({ username: "noahb", inviteId: "ch-1", origin: "https://example.com" })).not.toContain(
+      "griit.to",
     );
     expect(shareJoinLine({ username: "noahb", origin: "https://example.com" })).toBe("");
     const photo = buildSharePaint({
