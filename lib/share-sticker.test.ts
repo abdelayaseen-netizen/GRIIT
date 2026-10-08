@@ -90,14 +90,16 @@ describe("Meta App ID comes from config only", () => {
     expect(instagramStoriesShareInput({ imageUri: "file://s.png", asSticker: true, appId: "" })).toBe(
       null,
     );
-    expect(showStoryAction("")).toBe(false);
-    expect(showStoryAction("   ")).toBe(false);
+    expect(showStoryAction("")).toBe(true);
+    expect(showStoryAction("   ")).toBe(true);
     expect(showStoryAction("123")).toBe(true);
     const cfg = readFileSync(resolve(__dirname, "./config.ts"), "utf8");
     const share = readFileSync(resolve(__dirname, "./share.ts"), "utf8");
     const sticker = readFileSync(resolve(__dirname, "./share-sticker.ts"), "utf8");
     expect(cfg).toContain("EXPO_PUBLIC_FACEBOOK_APP_ID");
     expect(share).toContain("facebookAppId");
+    expect(share).toContain("shareImageAndCaption");
+    expect(share).toContain('return "sheet"');
     expect(share).toContain("shareSingle");
     expect(share).toContain("InstagramStories");
     expect(share).not.toContain("instagramStoriesUrl");
@@ -154,11 +156,11 @@ describe("ShareCardV3 is gone and Story uses the text card or ShareSticker", () 
   });
 });
 
-describe("empty id → no Story action rendered", () => {
-  it("hides Instagram Story when the Meta App ID is empty", () => {
-    expect(showStoryAction("")).toBe(false);
-    expect(showStoryAction(facebookAppId({}))).toBe(false);
-    expect(showStoryAction(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: undefined }))).toBe(false);
+describe("empty id → Story falls back, button stays", () => {
+  it("keeps Instagram Story when the Meta App ID is empty", () => {
+    expect(showStoryAction("")).toBe(true);
+    expect(showStoryAction(facebookAppId({}))).toBe(true);
+    expect(showStoryAction(facebookAppId({ EXPO_PUBLIC_FACEBOOK_APP_ID: undefined }))).toBe(true);
     const sheet = readFileSync(
       resolve(__dirname, "../components/share/ShareSystemSheet.tsx"),
       "utf8",
@@ -168,6 +170,7 @@ describe("empty id → no Story action rendered", () => {
       "utf8",
     );
     expect(sheet).toContain("showStoryAction(facebookAppId())");
+    expect(sheet).toContain("OPENED_IN_INSTAGRAM");
     expect(sheet).toContain("showStory ?");
     expect(finish).toContain("ShareChoice");
     expect(sheet).toContain("SHARE_TARGET_STORY");
