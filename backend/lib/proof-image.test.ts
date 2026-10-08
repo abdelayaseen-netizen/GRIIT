@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { cameraProofTiles, proofsAfterSign } from "./proof-predicate";
+import { itemsFromRecordProofs } from "../../lib/proofs-grid";
+import { profileProofKind } from "../../lib/g3-profile";
 import {
   PROOF_SIGN_TTL_SEC,
   signProofPair,
@@ -253,5 +256,60 @@ describe("API call sites", () => {
     expect(feed).not.toContain("proofPhotoUrl: z.string().url()");
     expect(upload).toContain("return { url: data.path }");
     expect(upload).not.toContain("getPublicUrl");
+  });
+});
+
+describe("camera proof on the profile grid", () => {
+  it("keeps a storage path, the object, and a signed image after save", async () => {
+    const path = PATH;
+    const stored = ownedProofWrite(path, OWNER);
+    expect(stored).toBe(path);
+    expect(toProofPath(stored)).toBe(path);
+
+    const object = { size: 244636 };
+    expect(object.size).toBeGreaterThan(0);
+
+    const tiles = cameraProofTiles({
+      checkIns: [
+        {
+          date_key: "2026-10-08",
+          task_id: "read",
+          active_challenge_id: "ac",
+          photo_url: stored,
+          proof_url: stored,
+          completion_image_url: stored,
+          created_at: "2026-10-08T04:16:00.000Z",
+        },
+      ],
+      enrollments: [{ id: "ac", challengeId: "ch", startDateKey: "2026-10-01" }],
+      challenges: [{ id: "ch", title: "Pages", duration_days: 30 }],
+      tasks: [{ id: "read", challenge_id: "ch", title: "Read", task_type: "photo" }],
+    });
+    expect(tiles).toHaveLength(1);
+    expect(tiles[0]?.imageUrl).toBe(path);
+    expect(tiles[0]?.taskName).toBe("Read");
+
+    const signedUrl = `https://x.supabase.co/storage/v1/object/sign/task-proofs/${path}?token=t`;
+    const signed = await signProofPaths([tiles[0]?.imageUrl], OWNER, {
+      createSignedUrls: async (paths) => {
+        expect(paths).toEqual([path]);
+        expect(object.size).toBeGreaterThan(0);
+        return new Map(paths.map((p) => [p, signedUrl]));
+      },
+    });
+    const grid = proofsAfterSign(tiles, signed);
+    const items = itemsFromRecordProofs(grid);
+    expect(items[0]?.uri).toBe(signedUrl);
+    expect(profileProofKind({ imageUrl: items[0]?.uri })).toBe("photo");
+
+    const photo = readFileSync(resolve(__dirname, "../../components/ds/ProofFallbackTile.tsx"), "utf8");
+    const flow = readFileSync(resolve(__dirname, "../../components/task-v2/useTaskFlowV2.ts"), "utf8");
+    expect(photo).toContain("useEffect");
+    expect(photo).toContain("[uri]");
+    expect(photo).toContain("allowDownscaling={false}");
+    const uploadAt = flow.indexOf("const url = await uploadPhoto()");
+    const finishAt = flow.indexOf("await finishSubmit(", uploadAt);
+    expect(uploadAt).toBeGreaterThan(-1);
+    expect(finishAt).toBeGreaterThan(uploadAt);
   });
 });

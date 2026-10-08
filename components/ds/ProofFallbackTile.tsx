@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { Image, type ImageStyle } from "expo-image";
 import { Camera } from "lucide-react-native";
@@ -32,16 +32,24 @@ export function ProofPhoto({
   taskName?: string | null;
   style?: StyleProp<ImageStyle>;
 }) {
-  const [failed, setFailed] = useState(false);
-  if (!uri || failed) {
+  const [attempt, setAttempt] = useState(0);
+  // A signed URL rotates hourly. A failed first paint must not stick to the next one.
+  useEffect(() => {
+    setAttempt(0);
+  }, [uri]);
+  if (!uri || attempt > 1) {
     return <ProofFallbackTile taskName={taskName} style={styles.fill} />;
   }
   return (
     <Image
+      key={`${uri}:${attempt}`}
       source={{ uri }}
       style={style}
       contentFit="cover"
-      onError={() => setFailed(true)}
+      cachePolicy="memory-disk"
+      allowDownscaling={false}
+      recyclingKey={uri}
+      onError={() => setAttempt((n) => n + 1)}
     />
   );
 }
