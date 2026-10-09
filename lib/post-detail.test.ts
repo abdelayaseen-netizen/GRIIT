@@ -79,14 +79,18 @@ describe("composerFieldGround", () => {
 });
 
 describe("completionLine", () => {
-  it("is {name} · {task} · {challenge}", () => {
+  it("is {challenge} · Day n of N · {task}", () => {
     expect(
       completionLine({
-        author: "Maya",
-        task: "Read ten pages",
-        challenge: "Iron man",
+        challenge: "Read",
+        day: 3,
+        total: 30,
+        task: "Read 30 min before bed",
       }),
-    ).toBe("Maya · Read ten pages · Iron man");
+    ).toBe("Read · Day 3 of 30 · Read 30 min before bed");
+    expect(completionLine({ challenge: "Read", day: 3, total: 30, task: "  " })).toBe(
+      "Read · Day 3 of 30",
+    );
   });
 });
 
