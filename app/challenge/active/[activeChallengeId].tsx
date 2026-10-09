@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, Text } from "react-native";
 import Screen from "@/components/ds/Screen";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { supabase } from "@/lib/supabase";
@@ -25,6 +25,7 @@ import { getDailyTargetForChallengeTask } from "@/lib/task-progress";
 import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { completedTaskIds } from "@/lib/today-completion";
 import {
   challengeDetailTodayCopy,
   challengeEnrollmentDone,
@@ -177,8 +178,14 @@ export default function ActiveChallengeDetailScreen() {
       return (Array.isArray(rows) ? rows : []) as CheckinRow[];
     },
     enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      void bootstrap.refetch();
+    }, [bootstrap.refetch]),
+  );
 
   useEffect(() => {
     if (!id || !activeChallenge) return;
@@ -278,6 +285,11 @@ export default function ActiveChallengeDetailScreen() {
     }
   }, [activeChallenge, currentDay, challengeId]);
 
+  const doneToday = useMemo(
+    () => completedTaskIds(bootstrap.data?.todayCheckinsForUser, id),
+    [bootstrap.data?.todayCheckinsForUser, id],
+  );
+
   const checkinByTask = useMemo(() => {
     const map = new Map<string, CheckinRow>();
     for (const c of checkins) {
@@ -323,12 +335,12 @@ export default function ActiveChallengeDetailScreen() {
         gates: gatesFor(row),
         gateTime: gateTimeFor(row),
         windowState: windowStateFor(row, profileTz ?? "UTC"),
-        completed_today: Boolean(cin),
+        completed_today: doneToday.has(row.id),
         verified: Boolean(cin && proofUrl(cin)),
         proof_photo_url: cin ? proofUrl(cin) : null,
       };
     });
-  }, [rawTasks, checkinByTask, currentDay, enrollmentDuration, profileTz]);
+  }, [rawTasks, checkinByTask, doneToday, currentDay, enrollmentDuration, profileTz]);
 
   const thisDone = challengeEnrollmentDone(tasks);
   const todayCopy = challengeDetailTodayCopy({
