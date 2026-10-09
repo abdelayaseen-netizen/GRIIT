@@ -828,6 +828,9 @@ export default function HomeScreen() {
           streak={streak ?? undefined}
           longestStreak={resolvedStats?.longestStreak}
           activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
+          todayKey={todayKey}
+          securedDateKeys={securedDateKeys}
+          frozenDateKeys={(resolvedStats as { frozenDateKeys?: string[] } | null)?.frozenDateKeys ?? []}
         />
         <StreakSheet
           visible={showStreakSheet && !taskToastUp}

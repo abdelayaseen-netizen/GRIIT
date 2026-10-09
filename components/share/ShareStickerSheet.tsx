@@ -24,6 +24,7 @@ export type ShareStickerDay = {
   streak?: number;
   secured?: number;
   task?: string;
+  cells?: ShareCardInput["cells"];
 };
 
 export type ShareStickerText = {
@@ -128,6 +129,7 @@ function cardFromProps(props: ShareStickerSheetProps): Omit<ShareCardInput, "sty
     inviteCode,
     streak: props.streak ?? day?.streak,
     secured: day?.secured,
+    cells: day?.cells,
     longestStreak: props.longestStreak,
     activeLine: props.activeLine,
     dateLabel: props.dateLabel ?? (moment === "day_secured" ? shareDateLabel() : undefined),

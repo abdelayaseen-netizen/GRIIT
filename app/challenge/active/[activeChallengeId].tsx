@@ -584,12 +584,15 @@ export default function ActiveChallengeDetailScreen() {
                     photoCount: todayProofUri ? 1 : 0,
                     proof: stickerProof,
                     stickerKind: "challenge",
+                    startDateKey,
                   },
                 ]
               : []
           }
           preselectedId={id ?? title}
           proofUri={todayProofUri}
+          todayKey={todayKey}
+          securedDateKeys={keys}
         />
         <Sheet
           visible={leaveConfirmVisible}

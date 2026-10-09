@@ -12,6 +12,7 @@
  * a share preference. No column is written.
  */
 import { streakInARow } from "@/lib/task-complete-toast";
+import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { dayParts, inviteUrl } from "@/lib/story-card";
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
@@ -244,6 +245,30 @@ export function defaultGrid(input: {
     if (i < today) return "missed";
     return "future";
   });
+}
+
+/** Squares for one enrollment. Done, missed, held, and future come from that enrollment's dates. */
+export function shareDayCells(input: {
+  startDateKey: string;
+  durationDays: number;
+  todayKey: string;
+  securedDateKeys: readonly string[];
+  frozenDateKeys?: readonly string[];
+}): GridCell[] {
+  const total = Math.max(0, Math.min(90, Math.floor(input.durationDays)));
+  if (!total || !input.startDateKey || !input.todayKey) return [];
+  const secured = new Set(input.securedDateKeys);
+  const frozen = new Set(input.frozenDateKeys ?? []);
+  const cells: GridCell[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const key = addCalendarDaysToDateKey(input.startDateKey, i);
+    if (key > input.todayKey) cells.push("future");
+    else if (secured.has(key)) cells.push("secured");
+    else if (frozen.has(key)) cells.push("held");
+    else if (key === input.todayKey) cells.push("today");
+    else cells.push("missed");
+  }
+  return cells;
 }
 
 export function gridMetrics(count: number): { cell: number; gap: number; radius: number } {
