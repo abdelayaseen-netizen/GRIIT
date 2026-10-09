@@ -4,6 +4,7 @@ import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
 import { finishedRunFromEnrollment } from "./finished-run";
+import { mayEmitFinishedChallenge } from "./finalize-ended";
 import { canSeeContent, eventIsShared } from "./is-friend";
 import { sharedPathsFromEvents, signProofPaths } from "./proof-image";
 
@@ -351,6 +352,7 @@ export async function hydrateActivityEventsToPosts(
       taskName: typeof md.task_name === "string" ? md.task_name : null,
       currentDay: Math.max(1, currentDay),
       securedDays,
+      startedOn: enrollment?.start_at ?? null,
       securedToday: securedTodayByUser.has(ev.user_id),
       totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays),
       eventType: ev.event_type,
@@ -370,17 +372,28 @@ export async function hydrateActivityEventsToPosts(
       visibility,
     };
   });
+  const dropped = new Set<string>();
+  for (let i = 0; i < visible.length; i += 1) {
+    const ev = visible[i]!;
+    if (ev.event_type !== "completed_challenge") continue;
+    const post = posts[i];
+    const md = ev.metadata ?? {};
+    const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
+    const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? (ev.challenge_id ? activeMap.get(`${ev.user_id}:${ev.challenge_id}`) : undefined);
+    if (!mayEmitFinishedChallenge(post?.securedDays ?? 0, enrollment?.status)) dropped.add(ev.id);
+  }
+  const shown = posts.filter((post) => !dropped.has(post.id));
   const sharedPaths = sharedPathsFromEvents(
-    visible.map((ev) => ({
+    visible.filter((ev) => !dropped.has(ev.id)).map((ev) => ({
       user_id: ev.user_id,
       metadata: ev.metadata,
       shared: ev.shared,
       share_state: "shared",
     })),
   );
-  const stored = posts.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
+  const stored = shown.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
   const signed = await signProofPaths(stored, viewerId, { sharedPaths });
-  return posts.map((p, i) => ({
+  return shown.map((p, i) => ({
     ...p,
     photoUrl: signed[i * 2] ?? null,
     proofPhotoUrl: signed[i * 2 + 1] ?? null,

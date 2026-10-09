@@ -5,6 +5,7 @@
 import { TRPCError } from "@trpc/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { enrollmentIsPastEnd } from "./enrollment-end-at";
+import { dateKeyFromIso } from "./calendar-day";
 
 /** Unseen endings: completed or team-failed, not abandoned. */
 export const UNSEEN_END_STATUSES = ["completed", "failed"] as const;
@@ -20,6 +21,7 @@ export type FinalizeEnrollment = {
   challenge_id: string;
   status: string;
   end_at: string;
+  start_at?: string | null;
 };
 
 export function endedStatusForFinalize(_enrollment: {
@@ -43,6 +45,16 @@ export function shouldEmitCompletedChallenge(
   return true;
 }
 
+/** A finish post exists only after at least one secured day, and never after a leave. */
+export function mayEmitFinishedChallenge(
+  securedDays: number,
+  status: string | null | undefined,
+): boolean {
+  if (securedDays < 1) return false;
+  const s = (status ?? "").toLowerCase();
+  return s !== "abandoned" && s !== "left";
+}
+
 export function isUnseenEnding(row: { status: string; end_seen_at: string | null }): boolean {
   return (
     (row.status === "completed" || row.status === "failed") && row.end_seen_at == null
@@ -56,7 +68,7 @@ export async function applyFinalizeEnded(
 ): Promise<{ finalized: string[]; eventsEmitted: number }> {
   const { data: rows, error } = await supabase
     .from("active_challenges")
-    .select("id, user_id, challenge_id, status, end_at")
+    .select("id, user_id, challenge_id, status, end_at, start_at")
     .eq("user_id", userId)
     .eq("status", "active");
   if (error) {
@@ -77,6 +89,25 @@ export async function applyFinalizeEnded(
     throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load end events." });
   }
   const events = (eventRows ?? []) as ExistingEndEvent[];
+
+  const { data: secureRows } = await supabase
+    .from("day_secures")
+    .select("date_key")
+    .eq("user_id", userId);
+  const secureKeys = ((secureRows ?? []) as { date_key?: string }[])
+    .map((row) => row.date_key)
+    .filter((key): key is string => typeof key === "string");
+
+  const { data: proofRows } = await supabase
+    .from("activity_events")
+    .select("challenge_id, metadata, share_state")
+    .eq("user_id", userId)
+    .eq("event_type", "task_completed");
+  const sharedProofChallenge = new Set(
+    ((proofRows ?? []) as { challenge_id?: string | null; share_state?: string | null; metadata?: Record<string, unknown> | null }[])
+      .filter((row) => row.share_state === "shared" && row.challenge_id)
+      .map((row) => row.challenge_id as string),
+  );
 
   const challengeIds = [...new Set(due.map((r) => r.challenge_id))];
   const { data: challenges } = await supabase
@@ -106,14 +137,18 @@ export async function applyFinalizeEnded(
     if (!won || won.length === 0) continue;
     finalized.push(row.id);
     if (!shouldEmitCompletedChallenge(events, row)) continue;
+    const startKey = row.start_at ? dateKeyFromIso(row.start_at, "UTC") : null;
+    const endKey = dateKeyFromIso(row.end_at, "UTC");
+    const securedDays = secureKeys.filter((key) => (!startKey || key >= startKey) && key <= endKey).length;
+    if (!mayEmitFinishedChallenge(securedDays, status)) continue;
     const ch = titleById.get(row.challenge_id);
+    const sharedFinish = sharedProofChallenge.has(row.challenge_id);
     const { error: insErr } = await supabase.from("activity_events").insert({
       user_id: userId,
       event_type: "completed_challenge",
       challenge_id: row.challenge_id,
-      // end event has no photo; matches pre-Chunk-T behaviour. Privacy of end events is an open Design question.
-      shared: true,
-      share_state: "shared",
+      shared: sharedFinish,
+      share_state: sharedFinish ? "shared" : "private",
       metadata: {
         active_challenge_id: row.id,
         challenge_name: ch?.title ?? "Challenge",

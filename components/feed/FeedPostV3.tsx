@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { Check, Heart, MessageCircle, Send } from "lucide-react-native";
+import { Check, Heart, MessageCircle, MoreHorizontal, Send } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
@@ -23,6 +23,7 @@ import {
   feedCardVariant,
   feedProofSubject,
 } from "@/lib/feed-card-family";
+import { formatOfDays } from "@/lib/format-days";
 import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
 const HEART = 22;
@@ -30,6 +31,13 @@ const COMMENT = 22;
 const SEND = 20;
 const PHOTO_INSET = 16;
 const PHOTO_RADIUS = 20;
+
+function finishStartedLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(date);
+}
 
 export type FeedPostV3Props = {
   post: LiveFeedPost;
@@ -93,8 +101,9 @@ export default function FeedPostV3({
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
 
   if (variant === "challenge_finished") {
-    const secured = post.securedDays ?? post.currentDay;
+    const secured = post.securedDays ?? 0;
     const days = post.totalDays;
+    const started = finishStartedLabel(post.startedOn);
     return (
       <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
         <View style={styles.card}>
@@ -108,13 +117,24 @@ export default function FeedPostV3({
               <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
             </Pressable>
             <View style={styles.flex}>
-              <Text style={styles.name}>Finished {post.challengeName}</Text>
-              <Text style={styles.subject}>{secured} of {days} days secured</Text>
+              <Text style={styles.name}>{name}</Text>
+              <Text style={styles.subject}>Finished {post.challengeName}</Text>
             </View>
             <Text style={styles.when}>{when}</Text>
+            <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
           </View>
-          <Text style={styles.taskTitle}>{post.streakCount} day streak</Text>
-          {post.caption ? <Text style={styles.gate}>{post.caption}</Text> : null}
+          <View style={styles.finishCard}>
+            <View style={styles.finishCover} />
+            <View style={styles.flex}>
+              <Text style={styles.finishKicker}>CHALLENGE COMPLETE</Text>
+              <Text style={styles.finishName}>{post.challengeName}</Text>
+              <Text style={styles.finishCount}>{formatOfDays(secured, days)} secured</Text>
+              <Text style={styles.finishMeta}>
+                {`Longest streak ${post.streakCount}${started ? `  ·  Held  ·  Started ${started}` : "  ·  Held"}`}
+              </Text>
+            </View>
+          </View>
+          {post.caption ? <Text style={styles.finishCaption}>{post.caption}</Text> : null}
           <ActionRow
             liked={post.reactedByMe}
             respectCount={post.respectCount}
@@ -200,6 +220,11 @@ export default function FeedPostV3({
           {photo ? (
             <Pressable accessibilityRole="image" accessibilityLabel="Open photo" onPress={onOpenPhoto ?? open}>
               <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
+              {post.caption ? (
+                <View style={styles.scrim} pointerEvents="none">
+                  <Text style={styles.photoTitle}>{post.caption}</Text>
+                </View>
+              ) : null}
             </Pressable>
           ) : (
             <ProofFallbackTile taskName={subject} />
@@ -307,15 +332,73 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     aspectRatio: 4 / 5,
   },
-  scrim: { position: "absolute", left: 0, right: 0, bottom: 0, height: "42%" },
+  scrim: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: 36,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    backgroundColor: "rgba(15,15,15,0.72)",
+  },
   photoTitle: {
     position: "absolute",
     left: 16,
     right: 16,
     bottom: 16,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+  },
+  finishCard: {
+    marginHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: DS_V3.color.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.hairline,
+    padding: 12,
+    flexDirection: "row",
+    gap: 12,
+  },
+  finishCover: {
+    width: 56,
+    height: 72,
+    borderRadius: 8,
+    backgroundColor: DS_V3.color.raised,
+  },
+  finishKicker: {
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.6,
+    color: DS_V3.color.textSecondary,
+  },
+  finishName: {
+    marginTop: 2,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: DS_V3.color.textPrimary,
+  },
+  finishCount: {
+    marginTop: 4,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: "600",
+    color: DS_V3.color.textPrimary,
+  },
+  finishMeta: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 16,
+    color: DS_V3.color.textSecondary,
+  },
+  finishCaption: {
+    marginTop: 10,
+    marginHorizontal: 16,
+    fontSize: 15,
+    lineHeight: 20,
     color: DS_V3.color.textPrimary,
   },
   selfPanel: {

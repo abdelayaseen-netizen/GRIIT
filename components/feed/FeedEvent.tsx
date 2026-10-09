@@ -8,6 +8,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import type { FeedEventGroup } from "@/lib/feed-join";
 import { eventLine } from "@/lib/feed-join";
+import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 export default function FeedEvent({
   group,
@@ -41,6 +42,7 @@ export default function FeedEvent({
       <Text style={styles.text} numberOfLines={2}>
         {line}
       </Text>
+      <Text style={styles.time}>{formatTimeAgoCompact(group.createdAt)}</Text>
       <ChevronRight size={16} color={DS_V3.color.textSecondary} />
     </Pressable>
   );
@@ -54,6 +56,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: DS_V3.color.hairline,
   },
   stack: {
     flexDirection: "row",
@@ -67,6 +72,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "400",
+    color: DS_V3.color.textSecondary,
+  },
+  time: {
+    fontSize: 13,
+    lineHeight: 18,
     color: DS_V3.color.textSecondary,
   },
 });
