@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { shareDayCells } from "@/lib/share-image";
+import { STICKER_SECURED } from "@/lib/share-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 import {
   WHICH_DAY,

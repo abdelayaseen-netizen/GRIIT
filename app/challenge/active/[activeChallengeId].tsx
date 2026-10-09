@@ -52,7 +52,6 @@ import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
 import {
   enrollmentWeekDateKeys,
   peopleCardCopy,
-  weekDayBeforeEnrollment,
   weekdayLetterForDateKey,
   weekSecuredOfDue,
 } from "@/lib/g2a-challenge";
