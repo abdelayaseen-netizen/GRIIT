@@ -304,7 +304,7 @@ export function ProfileV3({
         ) : null}
       </View>
 
-      {tab === "Badges" || tab === "Proofs" || (tab === "Challenges" && challengesInParent) ? null : (
+      {tab === "Badges" || tab === "Proofs" || tab === "Your data" || (tab === "Challenges" && challengesInParent) ? null : (
         <Text style={styles.foot}>{FOOTNOTE}</Text>
       )}
         </>
