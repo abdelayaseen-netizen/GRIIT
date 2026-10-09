@@ -129,6 +129,7 @@ const STROKE = (DS_V3.space.xs * 3) / 8;
 const styles = StyleSheet.create({
   picker: {
     gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
     paddingBottom: DS_V3.space.gutter,
   },
   pickerLabel: {
@@ -153,8 +154,8 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.textSecondary,
   },
   radioOn: {
-    backgroundColor: DS_V3.color.brand,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
+    borderColor: DS_V3.color.textPrimary,
   },
   optionCopy: {
     flex: 1,
