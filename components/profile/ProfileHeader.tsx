@@ -80,7 +80,11 @@ export function ProfileHeader(p: {
             </View>
           ) : null}
         </Pressable>
-        {p.bio ? <Text style={styles.bio}>{p.bio}</Text> : null}
+        {p.bio ? (
+          <Text style={styles.bio}>{p.bio}</Text>
+        ) : p.isOwner ? (
+          <Text style={styles.addBio}>{p.bioPlaceholder ?? "Add a bio"}</Text>
+        ) : null}
       </View>
       {p.isOwner ? (
         <Btn label={EDIT_PROFILE} onPress={p.onEdit} />
