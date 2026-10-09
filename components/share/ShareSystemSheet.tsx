@@ -187,7 +187,7 @@ export default function ShareSystemSheet({
 
   const targets = [
     ...(storyUsesSticker(styleId)
-      ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: true }]
+      ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: false }]
       : []),
     ...(showStory ? [{ id: "story" as const, label: SHARE_TARGET_STORY, icon: Instagram, primary: false }] : []),
     { id: "save" as const, label: SHARE_TARGET_SAVE, icon: Download, primary: false },

@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.secondary.fontWeight,
   },
   primary: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   primaryDestructive: {
     backgroundColor: DS_V3.color.danger,

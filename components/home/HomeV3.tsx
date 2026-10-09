@@ -53,7 +53,7 @@ export function StatusRing({ row }: { row: HomeProofRow }) {
   if (state === "done") {
     return (
       <View style={[styles.ring, styles.ringDone]} accessibilityLabel={homeRingA11y("done")}>
-        <Check size={RING_CHECK} color={DS_V3.color.canvas} strokeWidth={2.5} />
+        <Check size={RING_CHECK} color={DS_V3.color.brand} strokeWidth={2.5} />
       </View>
     );
   }
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   ringDone: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.raised,
   },
   ringPending: {
     borderWidth: STROKE,

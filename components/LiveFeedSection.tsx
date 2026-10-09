@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textSecondary,
   },
   untilThree: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -959,10 +959,10 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   togglePillActive: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   toggleText: { fontSize: 12, color: DS_V3.color.textSecondary, fontWeight: "500" },
-  toggleTextActive: { color: DS_V3.color.brandText, fontWeight: "500" },
+  toggleTextActive: { color: DS_V3.color.canvas, fontWeight: "500" },
     listContent: {
       paddingHorizontal: 0,
       backgroundColor: DS_V3.color.canvas,
