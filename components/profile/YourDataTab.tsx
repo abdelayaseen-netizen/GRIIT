@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { DS_V3 } from "@/lib/design-system";
+import { dateRange, hourLabel } from "@/lib/v51-format";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import {
@@ -24,7 +25,16 @@ function civilLabel(key: string): string {
 }
 
 function streakRange(start: string, end: string): string {
-  return `${civilLabel(start)} – ${civilLabel(end)}`;
+  const a = keyDate(start);
+  const b = keyDate(end);
+  if (!a || !b) return `${civilLabel(start)} – ${civilLabel(end)}`;
+  return dateRange(a, b);
+}
+
+function keyDate(key: string): Date | null {
+  const [year, month, day] = key.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 const RANGES: { id: StatsRange; label: string }[] = [
@@ -84,6 +94,7 @@ export function YourDataTab() {
           </Card>
           <Card title="Days">
             <Heat days={stats.day_secures} />
+            <Text style={styles.secondary}>Secured, Missed, Held, Today, Not due</Text>
           </Card>
           <Card title="Streaks">
             <Text style={styles.body}>{stats.user_stats.current_streak}-day streak</Text>
@@ -108,7 +119,7 @@ export function YourDataTab() {
               <Text style={styles.body}>{EMPTY_STATS_COPY.histogram}</Text>
             ) : (
               <>
-                <Text style={styles.body}>{`Most often around ${hour}:00.`}</Text>
+                <Text style={styles.body}>{`Most often around ${hourLabel(hour).trim()}.`}</Text>
                 <Histogram counts={stats.user_stats.proof_hour_histogram} />
               </>
             )}
@@ -213,10 +224,10 @@ const styles = StyleSheet.create({
   hist: { flexDirection: "row", alignItems: "flex-end", height: 48, gap: 2 },
   bar: { flex: 1, backgroundColor: DS_V3.color.textPrimary, borderRadius: 1 },
   card: {
-    backgroundColor: DS_V3.color.surface,
-    borderRadius: DS_V3.radius.card,
-    padding: DS_V3.space.gutter,
+    paddingVertical: DS_V3.space.md,
     gap: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_V3.color.hairline,
   },
   cardTitle: { color: DS_V3.color.textSecondary, fontSize: 13, fontWeight: "600" },
   pct: { color: DS_V3.color.textPrimary, fontSize: 40, fontWeight: "600" },
