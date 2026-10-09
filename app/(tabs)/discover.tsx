@@ -18,7 +18,7 @@ import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
 import { trackEvent } from "@/lib/analytics";
-import { profilePrimaryName } from "@/lib/profile-display";
+import { personListName } from "@/lib/profile-display";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { day1StartCopy, JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
@@ -174,13 +174,15 @@ function DiscoverScreenInner() {
             : p.is_private
               ? "Request"
               : "Follow";
+      const listed = personListName({
+        username: p.username,
+        display_name: p.display_name,
+      });
       return {
         user_id: p.user_id,
-        name: profilePrimaryName({
-          username: p.username,
-          display_name: p.display_name,
-        }),
-        uri: p.avatar_url,
+        name: listed.label,
+        glyph: listed.glyph,
+        uri: listed.glyph ? null : p.avatar_url,
         status: personStatus(p),
         followLabel,
         followDisabled: state === "following" || state === "pending",

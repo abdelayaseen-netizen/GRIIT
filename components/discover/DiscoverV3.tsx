@@ -61,6 +61,7 @@ export type DiscoverPerson = {
   followLabel: string;
   followDisabled?: boolean;
   followPending?: boolean;
+  glyph?: boolean;
 };
 
 export type DiscoverV3Props = {
@@ -278,7 +279,7 @@ export function DiscoverV3({
   const footer = (
     <>
       <View style={styles.peopleSection}>
-        <Text style={styles.peopleHeading}>People</Text>
+        {people.length > 0 ? <Text style={styles.peopleHeading}>People</Text> : null}
         <FlatList
           horizontal
           data={people}
@@ -294,6 +295,7 @@ export function DiscoverV3({
               followLabel={item.followLabel}
               followDisabled={item.followDisabled}
               followPending={item.followPending}
+              glyph={item.glyph}
               onFollow={() => onFollowPerson(item.user_id)}
               onPress={() => onOpenPerson(item.user_id)}
             />
