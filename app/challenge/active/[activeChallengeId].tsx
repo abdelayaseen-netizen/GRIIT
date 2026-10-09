@@ -26,6 +26,7 @@ import ActiveChallengeV3 from "@/components/challenge/ActiveChallengeV3";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { completedTaskIds } from "@/lib/today-completion";
+import { enrollmentWeekDayState } from "@/lib/week-strip-days";
 import {
   challengeDetailTodayCopy,
   challengeEnrollmentDone,
@@ -462,12 +463,21 @@ export default function ActiveChallengeDetailScreen() {
     privateOrSolo: participationType === "solo" || vis === "private",
     challengeTitle: title,
   });
+  const lastDateKey = addCalendarDaysToDateKey(startDateKey, Math.max(0, durationDays - 1));
   const weekDaysOverride = weekKeys.map((key, i) => {
-    const before = weekDayBeforeEnrollment(key, startDateKey);
+    const state = enrollmentWeekDayState({
+      dateKey: key,
+      startDateKey,
+      todayKey,
+      lastDateKey,
+      secured: weekSecured[i] === true,
+      frozen: false,
+      lastStand: false,
+    });
     return {
       letter: weekdayLetterForDateKey(key, profileTz),
-      filled: !before && weekSecured[i] === true,
-      state: before ? ("na" as const) : undefined,
+      filled: state === "secured",
+      state,
     };
   });
 
