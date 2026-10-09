@@ -149,6 +149,7 @@ export default function VisitorProfileScreen() {
         followers: number;
         following: number;
         friends?: number;
+        friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
       }>,
     staleTime: 60 * 1000,
     enabled: !!ownerId && !!user?.id,
@@ -298,6 +299,7 @@ export default function VisitorProfileScreen() {
               followers={followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0)}
               following={followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0)}
               friends={followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0)}
+              friendFaces={followCountsQuery.data?.friendFaces ?? []}
               bio={bio}
               streak={streakFromArray}
               best={rec?.streak.best ?? 0}

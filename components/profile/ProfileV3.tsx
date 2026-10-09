@@ -57,6 +57,7 @@ export type ProfileV3Props = {
   followers: number;
   following: number;
   friends?: number;
+  friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
   bio: string;
   bioPlaceholder?: string | null;
   streak: number;
@@ -106,6 +107,7 @@ export function ProfileV3({
   followers,
   following,
   friends,
+  friendFaces,
   bio,
   bioPlaceholder,
   streak,
@@ -177,6 +179,7 @@ export function ProfileV3({
         bestDays={best}
         securedDays={locked ? 0 : (totalDaysSecured ?? 0)}
         friends={friends ?? 0}
+        friendFaces={friendFaces}
         followers={followers}
         following={following}
         isOwner={!onFollow}

@@ -123,6 +123,7 @@ export default function ProfileScreen() {
         followers: number;
         following: number;
         friends?: number;
+        friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
       }>,
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
@@ -282,6 +283,7 @@ export default function ProfileScreen() {
             followers={followers}
             following={following}
             friends={friends}
+            friendFaces={followCountsQuery.data?.friendFaces ?? []}
             bio={bio}
             bioPlaceholder={bioPlaceholder}
             streak={streakFromArray}

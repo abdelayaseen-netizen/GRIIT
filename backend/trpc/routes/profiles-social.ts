@@ -404,10 +404,20 @@ export const profilesSocialProcedures = {
       const out = new Set(
         ((outbound ?? []) as { following_id: string }[]).map((r) => r.following_id),
       );
-      const friends = ((inbound ?? []) as { follower_id: string }[]).filter((r) =>
-        out.has(r.follower_id),
-      ).length;
-      return { followers: followers ?? 0, following: following ?? 0, friends };
+      const mutualIds = ((inbound ?? []) as { follower_id: string }[])
+        .filter((r) => out.has(r.follower_id))
+        .map((r) => r.follower_id);
+      const faceIds = mutualIds.slice(0, 3);
+      const { data: faceRows } = faceIds.length
+        ? await server.from("profiles").select("user_id, username, display_name, avatar_url").in("user_id", faceIds)
+        : { data: [] as { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }[] };
+      const friendFaces = ((faceRows ?? []) as { user_id: string; username?: string | null; display_name?: string | null; avatar_url?: string | null }[]).map((row) => ({
+        userId: row.user_id,
+        username: row.username ?? "",
+        displayName: row.display_name ?? row.username ?? "",
+        avatarUrl: row.avatar_url ?? null,
+      }));
+      return { followers: followers ?? 0, following: following ?? 0, friends: mutualIds.length, friendFaces };
     }),
 
   /**
