@@ -49,30 +49,24 @@ function card(sections: HomeProofSection[]): HomeV3Proof {
 }
 
 const mid = card([
-  section("gym", "Gym once a day", 5, 7, [
-    row("workout", "Workout", "take a photo", false),
-    row("read", "Read", "self-reported", false),
-  ]),
-  section("pray", "5-minute prayer", 8, 30, [row("prayer", "5-minute prayer or intention", "self-reported", true)]),
+  section("gym", "Gym once a day", 5, 7, [row("workout", "Workout", "Self-reported", false)]),
+  section("read", "Read 30 min before bed", 6, 30, [row("read", "Read", "Camera", false)]),
+  section("pray", "5-Minute Morning Prayer", 2, 7, [row("prayer", "5-minute prayer or intention", "Self-reported", true)]),
 ]);
 
 const allDone = card([
-  section("gym", "Gym once a day", 5, 7, [
-    row("workout", "Workout", "take a photo", true),
-    row("read", "Read", "self-reported", true),
-    row("prayer", "5-minute prayer or intention", "self-reported", true),
-  ]),
+  section("pray", "5-Minute Morning Prayer", 2, 7, [row("prayer", "5-minute prayer or intention", "Self-reported", true)]),
+  section("gym", "Gym once a day", 5, 7, [row("workout", "Workout", "Self-reported", true)]),
+  section("read", "Read 30 min before bed", 6, 30, [row("read", "Read", "Camera", true)]),
 ]);
 
 const missed = card([
-  section("gym", "Gym once a day", 6, 7, [
-    row("workout", "Workout", "take a photo", false),
-    row("read", "Read", "self-reported", false),
-    row("prayer", "5-minute prayer or intention", "self-reported", false),
-  ]),
+  section("pray", "5-Minute Morning Prayer", 2, 7, [row("prayer", "5-minute prayer or intention", "Self-reported", false)]),
+  section("gym", "Gym once a day", 5, 7, [row("workout", "Workout", "Self-reported", false)]),
+  section("read", "Read 30 min before bed", 6, 30, [row("read", "Read", "Camera", false)]),
 ]);
 
-const dayOne = card([section("read", "Read 30", 1, 30, [row("read", "Read", "take a photo", false)])]);
+const dayOne = card([section("read", "Read 30 min before bed", 6, 30, [row("read", "Read", "Camera", false)])]);
 
 type StateId = "mid" | "done" | "freeze" | "day1";
 
@@ -99,8 +93,9 @@ export default function Build81Harness() {
         </View>
         <ScrollView testID="build81-home" contentContainerStyle={styles.scroll}>
           <HomeV3
+            key={state}
             title={state === "freeze" ? "Good morning" : state === "done" ? "Good evening" : state === "day1" ? "Good morning" : "Good afternoon"}
-            dateLine={state === "freeze" ? "Friday, Oct 9" : "Thursday, Oct 8"}
+            dateLine={state === "freeze" ? "Friday, Oct 9" : state === "day1" ? "Wednesday, Sep 30" : "Thursday, Oct 8"}
             streak={state === "done" ? 3 : state === "day1" ? 0 : 2}
             streakLine=""
             bestStreak={state === "freeze" ? 3 : state === "done" ? 3 : 2}
@@ -111,17 +106,23 @@ export default function Build81Harness() {
               state === "day1"
                 ? ["na", "na", "na", "na", "na", "na", "na"]
                 : state === "freeze"
-                  ? ["secured", "secured", "missed", "future", "future", "future", "future"]
+                  ? ["secured", "secured", "secured", "missed", "missed", "future", "future"]
                   : ["secured", "secured", "future", "future", "future", "future", "future"]
             }
             firstWeekDay={state === "day1" ? 1 : null}
-            freezesLeft={2}
+            freezesLeft={1}
             morningAfter={
               state === "freeze"
                 ? { cost: "", cushion: "", onDismiss: noop, onUseFreeze: noop }
                 : null
             }
-            nextTask={state === "mid" ? { id: "workout", title: "Workout" } : null}
+            nextTask={
+              state === "mid"
+                ? { id: "workout", title: "Workout" }
+                : state === "day1"
+                  ? { id: "read", title: "Read · take a photo" }
+                  : null
+            }
             daySecured={state === "done"}
             onPressProof={noop}
             onPressTask={noop}
