@@ -100,10 +100,10 @@ export function ProofViewer({
       <GestureDetector gesture={headerPan}>
         <View style={styles.header}>
           <View style={styles.headerCopy}>
-            <Text style={styles.date}>{dateLabel || proofsDateLabel(day.dateKey)}</Text>
+            <Text testID={`proof-day-${day.dateKey}`} style={styles.date}>{dateLabel || proofsDateLabel(day.dateKey)}</Text>
             <Text style={styles.meta}>{task.challenge} · {task.dayLine}</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.close}>
+          <Pressable testID="proof-close" accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.close}>
             <X size={22} color={DS_V3.color.textPrimary} />
           </Pressable>
         </View>
@@ -129,7 +129,7 @@ export function ProofViewer({
         </View>
       </GestureDetector>
       <View style={styles.footer}>
-        <Text style={styles.task}>{task.name}</Text>
+        <Text testID={`proof-task-${task.name}`} style={styles.task}>{task.name}</Text>
         {task.shared ? (
           <View style={styles.counts}>
             <Heart size={18} color={DS_V3.color.textPrimary} />
@@ -140,7 +140,7 @@ export function ProofViewer({
         ) : (
           <View style={styles.counts}>
             <Lock size={16} color={DS_V3.color.textSecondary} />
-            <Text style={styles.meta}>Private. Only you can see this.</Text>
+            <Text testID="proof-private" style={styles.meta}>Private. Only you can see this.</Text>
           </View>
         )}
       </View>

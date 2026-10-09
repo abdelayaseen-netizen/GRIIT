@@ -1,0 +1,45 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81-proof
+- extendedWaitUntil:
+    visible:
+      id: proof-task-Workout
+    timeout: 25000
+- swipe:
+    start: 80%, 55%
+    end: 15%, 55%
+- extendedWaitUntil:
+    visible:
+      id: proof-task-Read
+    timeout: 8000
+- assertVisible:
+    id: proof-private
+- swipe:
+    start: 15%, 55%
+    end: 80%, 55%
+- extendedWaitUntil:
+    visible:
+      id: proof-task-Workout
+    timeout: 8000
+- swipe:
+    start: 50%, 30%
+    end: 50%, 75%
+- extendedWaitUntil:
+    visible:
+      id: proof-task-Prayer
+    timeout: 8000
+- swipe:
+    start: 50%, 75%
+    end: 50%, 30%
+- extendedWaitUntil:
+    visible:
+      id: proof-task-Workout
+    timeout: 8000
+- tapOn:
+    id: proof-close
+- extendedWaitUntil:
+    visible:
+      id: proof-closed
+    timeout: 8000
