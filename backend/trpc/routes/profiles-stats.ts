@@ -21,7 +21,7 @@ import { loadDayTaskTally } from "../../lib/record-days";
 import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
-import { buildMeStats, type MeStatsEnrollment, type MeStatsProof, type ProofMethod } from "../../lib/me-stats";
+import { buildMeStats, proofMethodFromMetadata, type MeStatsEnrollment, type MeStatsProof } from "../../lib/me-stats";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -567,13 +567,7 @@ export const profilesStatsProcedures = {
         metadata?: Record<string, unknown> | null;
       }[]).map((row) => {
         const md = row.metadata ?? {};
-        const method: ProofMethod =
-          md.verification_method === "apple_health"
-            ? "apple_health"
-            : md.photo_url || md.proof_photo_url || md.has_photo === true
-              ? "camera"
-              : "self_reported";
-        return { atIso: row.shared_at || row.created_at, method };
+        return { atIso: row.created_at, method: proofMethodFromMetadata(md) };
       });
       return buildMeStats({
         range: input.range,
