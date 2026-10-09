@@ -21,6 +21,7 @@ export function FeedCompactRow(p: {
   comments: number;
   onProfile: () => void;
   onChallenge: () => void;
+  onOpen?: () => void;
   onRespect: () => void;
   onComments: () => void;
 }) {
@@ -36,7 +37,7 @@ export function FeedCompactRow(p: {
           </Text>
           <Text style={styles.ago}>{p.ago}</Text>
         </View>
-        <Text style={styles.line}>
+        <Text onPress={p.onOpen} style={styles.line}>
           completed {p.task} · Day {p.dayN} of {p.dayOf}
         </Text>
         <Text onPress={p.onChallenge} style={styles.meta}>
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
   line: { fontSize: 14, lineHeight: 19, color: DS_V3.color.textPrimary },
   meta: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   actions: { flexDirection: "row", gap: 18, marginTop: 4 },
-  act: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 32 },
+  act: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 44, minHeight: 44 },
   count: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.textSecondary },
   countOn: { color: DS_V3.color.brandText },
   join: {

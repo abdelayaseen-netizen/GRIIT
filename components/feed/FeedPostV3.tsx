@@ -105,54 +105,56 @@ export default function FeedPostV3({
     const days = post.totalDays;
     const started = finishStartedLabel(post.startedOn);
     return (
-      <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Pressable
-              onPress={onProfilePress}
-              accessibilityRole="button"
-              accessibilityLabel={`${name} profile`}
-              hitSlop={FEED_TAP_HIT_SLOP}
-            >
-              <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
-            </Pressable>
-            <View style={styles.flex}>
-              <Text style={styles.name}>{name}</Text>
-              <Text style={styles.subject}>Finished {post.challengeName}</Text>
+      <View style={styles.card}>
+        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
+          <View>
+            <View style={styles.header}>
+              <Pressable
+                onPress={onProfilePress}
+                accessibilityRole="button"
+                accessibilityLabel={`${name} profile`}
+                hitSlop={FEED_TAP_HIT_SLOP}
+              >
+                <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
+              </Pressable>
+              <View style={styles.flex}>
+                <Text style={styles.name}>{name}</Text>
+                <Text style={styles.subject}>Finished {post.challengeName}</Text>
+              </View>
+              <Text style={styles.when}>{when}</Text>
+              <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
             </View>
-            <Text style={styles.when}>{when}</Text>
-            <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
-          </View>
-          <View style={styles.finishCard}>
-            <View style={styles.finishCover} />
-            <View style={styles.flex}>
-              <Text style={styles.finishKicker}>CHALLENGE COMPLETE</Text>
-              <Text style={styles.finishName}>{post.challengeName}</Text>
-              <Text style={styles.finishCount}>{formatOfDays(secured, days)} secured</Text>
-              <Text style={styles.finishMeta}>
-                {`Longest streak ${post.streakCount}${started ? `  ·  Held  ·  Started ${started}` : "  ·  Held"}`}
-              </Text>
+            <View style={styles.finishCard}>
+              <View style={styles.finishCover} />
+              <View style={styles.flex}>
+                <Text style={styles.finishKicker}>CHALLENGE COMPLETE</Text>
+                <Text style={styles.finishName}>{post.challengeName}</Text>
+                <Text style={styles.finishCount}>{formatOfDays(secured, days)} secured</Text>
+                <Text style={styles.finishMeta}>
+                  {`Longest streak ${post.streakCount}${started ? `  ·  Held  ·  Started ${started}` : "  ·  Held"}`}
+                </Text>
+              </View>
             </View>
+            {post.caption ? <Text style={styles.finishCaption}>{post.caption}</Text> : null}
           </View>
-          {post.caption ? <Text style={styles.finishCaption}>{post.caption}</Text> : null}
-          <ActionRow
-            liked={post.reactedByMe}
-            respectCount={post.respectCount}
-            commentCount={post.commentCount}
-            shareCount={post.shareCount ?? 0}
-            onLike={onLike}
-            onComment={onComment}
-            onShare={onShare}
-          />
-          <InlineComments
-            comments={comments}
-            total={post.commentCount}
-            viewerUserId={viewerUserId}
-            onOpen={onComment}
-            onAuthorPress={onCommentAuthorPress}
-          />
-        </View>
-      </DoubleTapRespect>
+        </DoubleTapRespect>
+        <ActionRow
+          liked={post.reactedByMe}
+          respectCount={post.respectCount}
+          commentCount={post.commentCount}
+          shareCount={post.shareCount ?? 0}
+          onLike={onLike}
+          onComment={onComment}
+          onShare={onShare}
+        />
+        <InlineComments
+          comments={comments}
+          total={post.commentCount}
+          viewerUserId={viewerUserId}
+          onOpen={onComment}
+          onAuthorPress={onCommentAuthorPress}
+        />
+      </View>
     );
   }
 
@@ -161,38 +163,31 @@ export default function FeedPostV3({
 
   if (!proofPost) {
     return (
-      <DoubleTapRespect
+      <FeedCompactRow
+        userId={post.userId}
+        displayName={name}
+        username={post.username}
+        avatarUrl={avatarUri}
+        ago={when}
+        task={subject || ""}
+        dayN={post.currentDay}
+        dayOf={post.totalDays}
+        challenge={post.challengeName}
+        gateLine={meta || "Self-reported"}
+        respects={post.respectCount}
         respected={post.reactedByMe}
-        onRespect={onLike}
+        comments={post.commentCount}
+        onProfile={onProfilePress ?? (() => undefined)}
+        onChallenge={onChallengePress ?? (() => undefined)}
         onOpen={open}
-        ownPost={ownPost}
-      >
-        <FeedCompactRow
-          userId={post.userId}
-          displayName={name}
-          username={post.username}
-          avatarUrl={avatarUri}
-          ago={when}
-          task={subject || "a task"}
-          dayN={post.currentDay}
-          dayOf={post.totalDays}
-          challenge={post.challengeName}
-          gateLine={meta || "Self-reported"}
-          respects={post.respectCount}
-          respected={post.reactedByMe}
-          comments={post.commentCount}
-          onProfile={onProfilePress ?? (() => undefined)}
-          onChallenge={onChallengePress ?? (() => undefined)}
-          onRespect={ownPost ? () => undefined : onLike}
-          onComments={onComment}
-        />
-      </DoubleTapRespect>
+        onRespect={ownPost ? () => undefined : onLike}
+        onComments={onComment}
+      />
     );
   }
 
   return (
     <>
-    <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
     <View style={styles.card}>
       <View style={styles.header}>
         <Pressable
@@ -216,6 +211,7 @@ export default function FeedPostV3({
         <Text style={styles.when}>{when}</Text>
       </View>
       {variant === "task_camera" ? (
+        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={onOpenPhoto ?? open} ownPost={ownPost}>
         <View style={styles.photoFrame}>
           {photo ? (
             <Pressable accessibilityRole="image" accessibilityLabel="Open photo" onPress={onOpenPhoto ?? open}>
@@ -235,7 +231,9 @@ export default function FeedPostV3({
             </View>
           ) : null}
         </View>
+        </DoubleTapRespect>
       ) : (
+        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
         <View style={styles.selfPanel}>
           <View style={styles.selfTop}>
             <View style={styles.checkDisc}>
@@ -245,6 +243,7 @@ export default function FeedPostV3({
           </View>
           <Text style={styles.taskTitle}>{subject}</Text>
         </View>
+        </DoubleTapRespect>
       )}
       <ActionRow
         liked={post.reactedByMe}
@@ -263,7 +262,6 @@ export default function FeedPostV3({
         onAuthorPress={onCommentAuthorPress}
       />
     </View>
-    </DoubleTapRespect>
     <SealSheet visible={sealOpen} onDismiss={() => setSealOpen(false)} gates={{}} />
     </>
   );
@@ -295,6 +293,7 @@ function ActionRow({
           accessibilityRole="button"
           accessibilityLabel={liked ? "Remove respect" : "Give respect"}
           accessibilityState={{ selected: liked }}
+          testID="feed-respect"
           onPress={() => {
             bounce.setValue(1);
             Animated.sequence([

@@ -1,0 +1,16 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn: "Feed"
+- assertVisible: "Feed"
+- tapOn:
+    id: "feed-respect"
+- assertVisible: "Feed"
+- assertNotVisible: "Comments"
