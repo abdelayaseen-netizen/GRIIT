@@ -68,7 +68,7 @@ export default function ChallengeCard({
         <View style={{ aspectRatio: 4 / 5 }} />
       )}
       {caption(people, gate) ? (
-        <Text style={styles.meta} numberOfLines={1}>
+        <Text style={styles.meta} numberOfLines={2}>
           {caption(people, gate)}
         </Text>
       ) : null}

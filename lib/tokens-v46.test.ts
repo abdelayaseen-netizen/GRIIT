@@ -22,7 +22,14 @@ describe("v46 tokens", () => {
   it("remaps Dynamic Type onto the v46 roles", () => {
     expect(dynamicType.titleL).toBe("title1");
     expect(dynamicType.title).toBe("title3");
-    expect(dynamicType.headline).toBe("subheadline");
+    expect(dynamicType.headline).toBe("headline");
+    expect(dynamicType.body).toBe("body");
+    expect(dynamicType.secondary).toBe("subheadline");
+    expect(dynamicType.caption).toBe("footnote");
+    expect(DS_V3.type.headline).toMatchObject({ fontSize: 17, lineHeight: 22, fontWeight: "600" });
+    expect(DS_V3.type.body).toMatchObject({ fontSize: 17, lineHeight: 22, fontWeight: "400" });
+    expect(DS_V3.type.secondary).toMatchObject({ fontSize: 15, lineHeight: 20, fontWeight: "400" });
+    expect(DS_V3.type.caption).toMatchObject({ fontSize: 13, lineHeight: 18, fontWeight: "500" });
     expect(dynamicType.number).toBeNull();
     expect(dynamicType.display).toBe(dynamicType.titleL);
     expect(dynamicType.heading).toBe(dynamicType.title);

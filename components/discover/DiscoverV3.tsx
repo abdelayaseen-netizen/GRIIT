@@ -225,7 +225,7 @@ export function DiscoverV3({
               width={160}
               height={200}
             />
-            <Text style={styles.caption} numberOfLines={1}>
+            <Text style={styles.caption} numberOfLines={2}>
               {discoverProofLabel({ proofType: featured.proof_type, taskTypes: featured.task_types })}
             </Text>
           </Pressable>
@@ -245,7 +245,7 @@ export function DiscoverV3({
               width={160}
               height={200}
             />
-            <Text style={styles.caption} numberOfLines={1}>
+            <Text style={styles.caption} numberOfLines={2}>
               {item.rule || featuredProofLabel(item.proof)}
             </Text>
           </Pressable>

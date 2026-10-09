@@ -93,7 +93,7 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={2}>
           {challenge.title}
         </Text>
         {friendsCount > 0 ? (
@@ -115,7 +115,7 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
         ) : null}
       </View>
 
-      <Text style={styles.meta} numberOfLines={1}>
+      <Text style={styles.meta} numberOfLines={2}>
         {meta}
       </Text>
     </Pressable>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 6,
     marginTop: 10,
@@ -145,8 +145,9 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontFamily: undefined,
-    fontSize: 15.5,
-    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    fontSize: DS_V3.type.headline.fontSize,
+    lineHeight: DS_V3.type.headline.lineHeight,
+    fontWeight: DS_V3.type.headline.fontWeight,
     color: DS_V3.color.textPrimary,
     letterSpacing: -0.1,
   },

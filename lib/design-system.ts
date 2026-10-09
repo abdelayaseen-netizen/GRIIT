@@ -1518,22 +1518,29 @@ export const DS_DAYLIGHT = {
 // Weight 600 is Title L, Title, and Headline only. Display numerals are SF Pro 800.
 const typeTitleL = { fontSize: 28, lineHeight: 34, fontWeight: '600' as const };
 const typeTitle = { fontSize: 20, lineHeight: 25, fontWeight: '600' as const };
-const typeHeadline = { fontSize: 15, lineHeight: 20, fontWeight: '600' as const };
+const typeHeadline = { fontSize: 17, lineHeight: 22, fontWeight: '600' as const };
+const typeBody = { fontSize: 17, lineHeight: 22, fontWeight: '400' as const };
+const typeSecondary = { fontSize: 15, lineHeight: 20, fontWeight: '400' as const };
+const typeCaption = { fontSize: 13, lineHeight: 18, fontWeight: '500' as const };
 
-/** Apple text styles for the v46 roles. `number` stays fixed. */
+/**
+ * Apple text styles for the v51 roles. React Native scales `fontSize` with the
+ * system content-size category when `allowFontScaling` is left on, which is
+ * the Dynamic Type path. `number` stays fixed.
+ */
 export const dynamicType = {
   titleL: 'title1',
   title: 'title3',
-  headline: 'subheadline',
-  body: 'subheadline',
-  secondary: 'footnote',
-  caption: 'caption1',
+  headline: 'headline',
+  body: 'body',
+  secondary: 'subheadline',
+  caption: 'footnote',
   label: 'caption2',
   number: null,
   display: 'title1',
   heading: 'title3',
   bodyStrong: 'headline',
-  stamp: 'caption1',
+  stamp: 'footnote',
 } as const;
 
 export const categoryTint = {
@@ -1580,9 +1587,9 @@ export const DS_V3 = {
     titleL: typeTitleL,
     title: typeTitle,
     headline: typeHeadline,
-    body: { fontSize: 15, lineHeight: 20, fontWeight: '400' as const },
-    secondary: { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
-    caption: { fontSize: 12, lineHeight: 16, fontWeight: '500' as const },
+    body: typeBody,
+    secondary: typeSecondary,
+    caption: typeCaption,
     label: { fontSize: 11, lineHeight: 13, fontWeight: '500' as const, letterSpacing: 0.66, textTransform: 'uppercase' as const },
     number: { fontSize: 64, lineHeight: 64, fontWeight: '800' as const, fontFamily: undefined, fontVariant: ['tabular-nums'] as const, letterSpacing: -1.28 },
     display: typeTitleL,
