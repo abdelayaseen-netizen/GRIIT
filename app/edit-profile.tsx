@@ -179,7 +179,7 @@ export default function EditProfileScreen() {
             style={styles.navBtn}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={DS_V3.color.brandText} />
+              <ActivityIndicator size="small" color={DS_V3.color.textSecondary} />
             ) : (
               <Text style={[styles.save, blocked && styles.saveOff]}>Save</Text>
             )}

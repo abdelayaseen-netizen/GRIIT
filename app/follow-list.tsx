@@ -221,7 +221,7 @@ export default function FollowListScreen() {
           </View>
         ) : listQuery.isPending ? (
           <View style={styles.loading}>
-            <ActivityIndicator size="large" color={DS_V3.color.primary} />
+            <ActivityIndicator size="large" color={DS_V3.color.textSecondary} />
           </View>
         ) : (
           <FlatList

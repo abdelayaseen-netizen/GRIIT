@@ -94,7 +94,7 @@ function InviteLinkScreenInner() {
   return (
     <Screen style={styles.safe} edges={["top"]}>
       <View style={styles.wrap}>
-        <ActivityIndicator size="large" color={DS_V3.color.brand} />
+        <ActivityIndicator size="large" color={DS_V3.color.textSecondary} />
       </View>
     </Screen>
   );

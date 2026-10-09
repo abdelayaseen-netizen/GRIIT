@@ -717,7 +717,7 @@ function LiveFeedSection({
         ListFooterComponent={
           <View style={styles.feedFooter}>
             {feedQuery.isFetchingNextPage ? (
-              <ActivityIndicator size={24} color={DS_V3.color.brand} />
+              <ActivityIndicator size={24} color={DS_V3.color.textSecondary} />
             ) : null}
             {!feedQuery.isPending && !feedQuery.isError && !feedQuery.hasNextPage ? (
               <View style={styles.caughtUp} accessibilityLabel={CAUGHT_UP}>

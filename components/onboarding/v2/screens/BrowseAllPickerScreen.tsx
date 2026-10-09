@@ -7,6 +7,7 @@ import {
   catalogueForBrowseAll,
   type SuggestableChallenge,
 } from "@/lib/onboarding-v2-browse";
+import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "../theme";
 import ChallengePickCard from "./ChallengePickCard";
 
@@ -48,7 +49,7 @@ export default function BrowseAllPickerScreen({
 
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color={OBV2_COLOR.orange} />
+          <ActivityIndicator color={DS_V3.color.textSecondary} />
         </View>
       ) : (
         <ScrollView

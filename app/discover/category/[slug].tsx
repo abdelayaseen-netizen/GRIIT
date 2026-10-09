@@ -194,7 +194,7 @@ function CategoryScreenInner() {
     () =>
       query.isFetchingNextPage ? (
         <View style={styles.loadMoreRow}>
-          <ActivityIndicator size="small" color={DS_V3.color.brand} />
+          <ActivityIndicator size="small" color={DS_V3.color.textSecondary} />
         </View>
       ) : null,
     [query.isFetchingNextPage]

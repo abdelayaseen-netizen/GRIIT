@@ -206,7 +206,7 @@ export default function FirstChallengeScreen({
     >
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color={DS_V3.color.brand} />
+          <ActivityIndicator color={DS_V3.color.textSecondary} />
         </View>
       ) : empty ? (
         <View style={styles.emptyWrap}>

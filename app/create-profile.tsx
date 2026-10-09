@@ -149,7 +149,7 @@ function CreateProfileScreenInner() {
     return (
       <Screen style={[styles.container, { backgroundColor: DS_V3.color.canvas }]} edges={["top", "bottom"]}>
         <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={DS_V3.color.brand} />
+          <ActivityIndicator size="large" color={DS_V3.color.textSecondary} />
         </View>
       </Screen>
     );

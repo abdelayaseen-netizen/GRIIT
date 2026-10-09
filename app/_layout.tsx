@@ -111,7 +111,7 @@ const SPLASH_MAX_MS = 1800;
 function AuthRedirectorLoading() {
   return (
     <View style={layoutStyles.authLoadingOverlay}>
-      <ActivityIndicator size="large" color={DS_V3.color.brand} />
+      <ActivityIndicator size="large" color={DS_V3.color.textSecondary} />
     </View>
   );
 }

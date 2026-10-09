@@ -47,8 +47,8 @@ export function FeedCompactRow(p: {
           <Pressable onPress={p.onRespect} hitSlop={8} style={styles.act} accessibilityRole="button" accessibilityLabel="Respect">
             <Heart
               size={18}
-              color={p.respected ? DS_V3.color.brand : DS_V3.color.textSecondary}
-              fill={p.respected ? DS_V3.color.brand : "transparent"}
+              color={p.respected ? DS_V3.color.textPrimary : DS_V3.color.textSecondary}
+              fill={p.respected ? DS_V3.color.textPrimary : "transparent"}
             />
             {showFeedCount(p.respects) ? (
               <Text style={[styles.count, p.respected ? styles.countOn : null]}>{p.respects}</Text>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 18, marginTop: 4 },
   act: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 44, minHeight: 44 },
   count: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.textSecondary },
-  countOn: { color: DS_V3.color.brandText },
+  countOn: { color: DS_V3.color.textPrimary },
   join: {
     minHeight: 44,
     flexDirection: "row",
