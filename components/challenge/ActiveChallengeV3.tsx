@@ -507,6 +507,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
     paddingTop: DS_V3.space.lg,
     paddingBottom: DS_V3.space.sm,
+    paddingHorizontal: DS_V3.space.gutter,
   },
   statusSkel: {
     marginTop: DS_V3.space.sm,
