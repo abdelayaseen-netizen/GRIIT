@@ -313,12 +313,6 @@ function stickerShadow(colour: ShareColourId): { color: string; radius: number }
   return { color: "rgba(245,243,238,0.55)", radius: 18 };
 }
 
-function stickerColor(colour: ShareColourId): string {
-  if (colour === "white") return "#F5F3EE";
-  if (colour === "orange") return "#DC5401";
-  return "#0F0F0F";
-}
-
 function checkDisc(colour: ShareColourId): string {
   if (colour === "orange") return "rgba(15,15,15,0.12)";
   if (colour === "white") return "#F8E3D5";
@@ -408,7 +402,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   }
 
   if (input.style === "B") {
-    const color = stickerColor(input.colour);
+    const color = "#F5F3EE";
     base.transparent = true;
     base.background = "transparent";
     base.wordmark = null;
