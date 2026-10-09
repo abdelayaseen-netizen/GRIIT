@@ -4,13 +4,14 @@
  * Caption is never part of the paint.
  *
  * Join line: SHARE_JOIN_WEB_ORIGIN stays empty until a public web domain exists.
- * Empty origin prints "@{username}". A set origin prints
- * "{origin}/i/{id}" from inviteUrl. Never a hard-coded host.
+ * With no host, the line is "@{username}". INVITE_BASE, or a passed origin,
+ * prints "@{username} · {base}/i/{id}". Never a hard-coded host.
  *
  * Last-picked colour is per style in memory for the open sheet only.
  * profiles.onboarding_answers is the only profile jsonb and it does not fit
  * a share preference. No column is written.
  */
+import { INVITE_BASE } from "@/lib/config";
 import { streakInARow } from "@/lib/task-complete-toast";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { dayParts, inviteUrl } from "@/lib/story-card";
@@ -197,7 +198,7 @@ export function shareJoinLine(args: {
   origin?: string;
 }): string {
   const name = args.username?.trim().replace(/^@/, "") ?? "";
-  const base = (args.origin ?? SHARE_JOIN_WEB_ORIGIN).trim().replace(/\/$/, "");
+  const base = (args.origin ?? INVITE_BASE ?? SHARE_JOIN_WEB_ORIGIN).trim().replace(/\/$/, "");
   const id = args.inviteId?.trim() ?? "";
   const link = base && id ? inviteUrl(base, id) : "";
   const handle = name ? `@${name}` : "";
