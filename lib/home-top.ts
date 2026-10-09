@@ -33,6 +33,15 @@ export function homeAction(input: {
   return { kind: "none" };
 }
 
+/** Mid-day line on the streak card. "Workout is next. 2 of 3 left today." */
+export function todayNextLine(task: string | null | undefined, left: number, total: number): string {
+  const name = task?.trim() || "Next";
+  return `${name} is next. ${left} of ${total} left today.`;
+}
+
+export const DAY_ONE_WORDS = "Nothing to break yet.";
+export const DAY_ONE_SUB = "Secure today and the streak starts. Days count from the day you joined.";
+
 export function freezeHoldLine(streak: number, freezesLeft: number): string {
   const left = freezesLeft === 1 ? "1 left" : `${freezesLeft} left`;
   return `Yesterday wasn’t secured. A freeze holds your ${streak}-day streak until midnight. ${left}.`;

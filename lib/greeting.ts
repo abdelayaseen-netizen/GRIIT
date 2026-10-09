@@ -40,6 +40,17 @@ export function greeting(
   return `Still up, ${name}`;
 }
 
+/** "Thursday, Oct 8" in the profile time zone. */
+export function homeScreenDate(now: Date, timeZone = "UTC"): string {
+  const tz = timeZone.trim() || "UTC";
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    timeZone: tz,
+  }).format(now);
+}
+
 export function greetingSub(o: {
   secured: boolean;
   nextTask?: string | null;

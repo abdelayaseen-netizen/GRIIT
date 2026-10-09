@@ -1,17 +1,15 @@
 /**
  * HomeV3 — frame 01 + 02_screens.md Home tree (presentation).
  */
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import Card from "@/components/ds/Card";
 import WeekStrip from "@/components/ds/WeekStrip";
 import { homeStatus } from "@/lib/home-status";
 import { greetingSub } from "@/lib/greeting";
 import Button from "@/components/ds/Button";
-import Divider from "@/components/ds/Divider";
 import Skeleton from "@/components/ds/Skeleton";
 import EmptyState from "@/components/ds/EmptyState";
 import { greetingName } from "@/lib/profile-display";
@@ -26,22 +24,20 @@ import {
   homeChallengeOpenA11y,
   homeProofDayLine,
   homeRingA11y,
-  homeSectionToggleA11y,
   homeProofRingState,
   homeProofTitleMuted,
   type HomeProofCard,
   type HomeProofRow,
+  type HomeProofSection,
 } from "@/lib/home-proof-card";
 import { FREEZE, FREEZE_LINE } from "@/lib/copy";
-import { bestLabel, freezeHoldLine, homeAction, streakNumeralSize, type HomeNextTask } from "@/lib/home-top";
+import { DAY_ONE_SUB, DAY_ONE_WORDS, bestLabel, freezeHoldLine, homeAction, streakNumeralSize, todayNextLine, type HomeNextTask } from "@/lib/home-top";
 import { streakInARow } from "@/lib/task-complete-toast";
-import { todaySectionExpanded } from "@/lib/today-section-collapse";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
 import { JOIN_CAPTION_TOMORROW } from "@/lib/challenge-detail-mapping";
 import {
   FIRST_PROOF_SLOT_BODY,
   FIRST_PROOF_SLOT_HEADING,
-  SECTION_DONE,
   firstClosedUndoneTask,
 } from "@/lib/g2a-home";
 
@@ -53,7 +49,7 @@ export function StatusRing({ row }: { row: HomeProofRow }) {
   if (state === "done") {
     return (
       <View style={[styles.ring, styles.ringDone]} accessibilityLabel={homeRingA11y("done")}>
-        <Check size={RING_CHECK} color={DS_V3.color.brand} strokeWidth={2.5} />
+        <Check size={RING_CHECK} color={DS_V3.color.textPrimary} strokeWidth={2.5} />
       </View>
     );
   }
@@ -137,6 +133,8 @@ export type HomeV3Props = {
   weekLetters?: readonly string[];
   bestStreak?: number | null;
   nextTask?: HomeNextTask | null;
+  /** "Thursday, Oct 8" under the greeting. */
+  dateLine?: string | null;
 };
 
 export function HomeV3({
@@ -160,8 +158,8 @@ export function HomeV3({
   onPressTask,
   onPressChallenge,
   onPressShareToday,
-  sectionChoices,
-  onToggleSection,
+  sectionChoices: _sectionChoices,
+  onToggleSection: _onToggleSection,
   freezesLeft,
   showFreezeChip: _showFreezeChip = false,
   loading,
@@ -180,8 +178,10 @@ export function HomeV3({
   weekLetters,
   bestStreak,
   nextTask = null,
+  dateLine = null,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
+  const [doneOpen, setDoneOpen] = useState(false);
 
   if (error) {
     return (
@@ -251,15 +251,36 @@ export function HomeV3({
     nextTask,
   });
   const numeral = streakNumeralSize(streakN);
-  const cardSub = action.kind === "freeze" ? freezeHoldLine(streakN, freezesLeft) : sub;
+  const dayOne = firstWeek === 1 && streakN === 0;
+  const cardSub = action.kind === "freeze"
+    ? freezeHoldLine(streakN, freezesLeft)
+    : dayOne
+      ? DAY_ONE_SUB
+      : action.kind === "share"
+        ? "Day secured. See you tomorrow."
+        : action.kind === "task"
+          ? todayNextLine(nextTask?.title ?? openRow?.name, openCount, proof?.totalCount ?? openCount)
+          : sub;
 
-  const renderRow = (row: HomeProofRow) => {
+  const renderRow = (section: HomeProofSection, row: HomeProofRow) => {
+    const dayLine = homeProofDayLine(section.day, section.dayTotal);
+    const meta = `${section.challenge} · ${dayLine} · ${row.caption}`;
     const inner = (
       <>
         <StatusRing row={row} />
         <View style={styles.taskCopy}>
           <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
-          <Text style={styles.caption}>{row.caption}</Text>
+          {section.challengeId ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={homeChallengeOpenA11y(section.challenge)}
+              onPress={() => onPressChallenge?.(section.challengeId!)}
+            >
+              <Text style={styles.caption}>{meta}</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.caption}>{meta}</Text>
+          )}
         </View>
         {!row.done ? (
           <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
@@ -293,6 +314,7 @@ export function HomeV3({
           {title}
         </Text>
       ) : null}
+      {dateLine ? <Text style={styles.dateLine}>{dateLine}</Text> : null}
       <View style={styles.topCard}>
         <View style={styles.topRow}>
           <Pressable
@@ -303,19 +325,23 @@ export function HomeV3({
           >
             <Flame size={22} color={DS_V3.color.brand} fill={DS_V3.color.brand} />
           </Pressable>
-          <Text
-            style={[styles.numeral, { fontSize: numeral, lineHeight: Math.round(numeral * 1.1), letterSpacing: numeral * -0.025 }]}
-          >
-            {streakN.toLocaleString("en-US")}
-          </Text>
-          <Text style={styles.streakWords}>{streakInARow(streakN)}</Text>
-          <Text style={styles.best}>{bestLabel(streakN, bestStreak ?? streakN)}</Text>
+          {dayOne ? (
+            <Text style={styles.dayOne}>Day 1</Text>
+          ) : (
+            <Text
+              style={[styles.numeral, { fontSize: numeral, lineHeight: Math.round(numeral * 1.1), letterSpacing: numeral * -0.025 }]}
+            >
+              {streakN.toLocaleString("en-US")}
+            </Text>
+          )}
+          <Text style={styles.streakWords}>{dayOne ? DAY_ONE_WORDS : streakInARow(streakN)}</Text>
+          {dayOne ? null : <Text style={styles.best}>{bestLabel(streakN, bestStreak ?? streakN)}</Text>}
         </View>
         <WeekStrip days={weekDays} todayIndex={todayIndex} />
         <View style={styles.hair} />
         {cardSub ? <Text style={styles.cardSub}>{cardSub}</Text> : null}
         {action.kind === "share" ? (
-          <Button label={action.label} variant="tertiary" onPress={onPressShareToday} />
+          <Button label={action.label} variant="tertiary" ink onPress={onPressShareToday} />
         ) : null}
         {action.kind === "freeze" ? (
           <Button label={action.label} onPress={morningAfter?.onUseFreeze} />
@@ -333,76 +359,62 @@ export function HomeV3({
       ) : null}
 
       {proof ? (
-        <View style={styles.gutter}>
-          <Card>
-            <View style={styles.cardHead}>
-              <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
-            </View>
-            {proof.hasChallenge ? (
-              proof.sections.map((section, i) => {
-                const expanded = todaySectionExpanded(
-                  sectionChoices?.[section.id],
-                  section.doneCount,
-                  section.totalCount,
+        <View style={styles.today}>
+          {proof.hasChallenge ? (
+            <>
+              <View style={styles.todayHead}>
+                <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
+                <Text style={styles.countTxt}>
+                  {proof.doneCount} of {proof.totalCount} done
+                </Text>
+              </View>
+              {firstDayLine ? <Text style={styles.caption}>{firstDayLine}</Text> : null}
+              {proof.sections.flatMap((section) =>
+                section.rows.filter((row) => !row.done).map((row) => renderRow(section, row)),
+              )}
+              {(() => {
+                const done = proof.sections.flatMap((section) =>
+                  section.rows.filter((row) => row.done).map((row) => ({ section, row })),
                 );
+                if (done.length === 0) return null;
+                const label = done.length === 1 ? "1 done" : `${done.length} done`;
                 return (
-                <View key={section.id}>
-                  {i > 0 ? <Divider style={styles.sectionDivider} /> : null}
-                  <View style={i > 0 ? styles.sectionGap : styles.sectionFirst}>
-                    <View style={styles.proofHead}>
-                      <View style={styles.flex}>
-                        {section.challengeId ? (
-                          <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={homeChallengeOpenA11y(section.challenge)}
-                            onPress={() => onPressChallenge?.(section.challengeId!)}
-                          >
-                            <Text style={styles.task}>{section.challenge}</Text>
-                          </Pressable>
-                        ) : (
-                          <Text style={styles.task}>{section.challenge}</Text>
-                        )}
-                        <Text style={styles.caption}>{homeProofDayLine(section.day, section.dayTotal)}</Text>
-                        {i === 0 && firstDayLine ? <Text style={styles.caption}>{firstDayLine}</Text> : null}
+                  <View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={label}
+                      onPress={() => setDoneOpen((open) => !open)}
+                      style={styles.proofRow}
+                    >
+                      <View style={[styles.ring, styles.ringDone]}>
+                        <Check size={RING_CHECK} color={DS_V3.color.textPrimary} strokeWidth={2.5} />
                       </View>
-                      {section.doneCount === section.totalCount && section.totalCount > 0 ? (
-                        <View style={styles.sectionDone}>
-                          <Check size={14} color={DS_V3.color.brand} />
-                          <Text style={styles.sectionDoneTxt}>{SECTION_DONE}</Text>
-                        </View>
-                      ) : (
-                        <Text style={styles.countTxt}>
-                          {section.doneCount} of {section.totalCount} done
-                        </Text>
-                      )}
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={homeSectionToggleA11y(expanded, section.challenge)}
-                        onPress={() => onToggleSection?.(section.id, !expanded)}
-                        style={styles.chevronHit}
-                      >
-                        {expanded ? (
+                      <View style={styles.taskCopy}>
+                        <Text style={styles.task}>{label}</Text>
+                        <Text style={styles.caption}>{done.map((item) => item.row.name).join(" · ")}</Text>
+                      </View>
+                      <View style={styles.chevronHit}>
+                        {doneOpen ? (
                           <ChevronUp size={RING} color={DS_V3.color.textSecondary} />
                         ) : (
                           <ChevronDown size={RING} color={DS_V3.color.textSecondary} />
                         )}
-                      </Pressable>
-                    </View>
-                    {expanded ? section.rows.map(renderRow) : null}
+                      </View>
+                    </Pressable>
+                    {doneOpen ? done.map((item) => renderRow(item.section, item.row)) : null}
                   </View>
-                </View>
                 );
-              })
-            ) : (
-              <View style={styles.emptyChallenge}>
-                <Text style={styles.secondary}>{NO_CHALLENGE_YET}</Text>
-                <View style={styles.emptyActions}>
-                  <Button label={FIND_A_CHALLENGE} onPress={onFindChallenge} boxHeight={40} />
-                  <Button label={CREATE_CHALLENGE} variant="secondary" onPress={onCreateChallenge} boxHeight={40} />
-                </View>
+              })()}
+            </>
+          ) : (
+            <View style={styles.emptyChallenge}>
+              <Text style={styles.secondary}>{NO_CHALLENGE_YET}</Text>
+              <View style={styles.emptyActions}>
+                <Button label={FIND_A_CHALLENGE} onPress={onFindChallenge} boxHeight={40} />
+                <Button label={CREATE_CHALLENGE} variant="secondary" onPress={onCreateChallenge} boxHeight={40} />
               </View>
-            )}
-          </Card>
+            </View>
+          )}
         </View>
       ) : null}
 
@@ -446,10 +458,32 @@ const styles = StyleSheet.create({
   greeting: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.sm,
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: "400",
+    fontSize: DS_V3.type.titleL.fontSize,
+    lineHeight: DS_V3.type.titleL.lineHeight,
+    fontWeight: DS_V3.type.titleL.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  dateLine: {
+    paddingHorizontal: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
     color: DS_V3.color.textSecondary,
+  },
+  dayOne: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  today: {
+    marginTop: DS_V3.space.section,
+    paddingHorizontal: DS_V3.space.gutter,
+  },
+  todayHead: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    paddingBottom: DS_V3.space.sm,
   },
   topCard: {
     marginHorizontal: DS_V3.space.gutter,
@@ -681,8 +715,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: DS_V3.space.md,
-    minHeight: 48,
-    marginBottom: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
+    paddingVertical: DS_V3.space.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_V3.color.hairline,
   },
   rowFlash: {
     backgroundColor: DS_V3.color.brandTint,

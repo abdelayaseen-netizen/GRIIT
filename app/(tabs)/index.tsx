@@ -19,7 +19,7 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
-import { firstWeekDay, greeting } from "@/lib/greeting";
+import { firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
@@ -752,6 +752,7 @@ export default function HomeScreen() {
                 profile?.username ?? "",
                 homeTimeZone,
               )}
+              dateLine={homeScreenDate(new Date(), homeTimeZone)}
               streak={streak}
               streakLine={streakLine}
               morningAfter={morningAfter}

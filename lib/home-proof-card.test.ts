@@ -433,7 +433,8 @@ describe("Home Today card", () => {
     expect(src).toContain("ChevronUp");
     expect(src).not.toContain("countChip");
     expect(src).toContain("countTxt");
-    expect(src).toContain("{section.doneCount} of {section.totalCount} done");
+    expect(src).toContain("{proof.doneCount} of {proof.totalCount} done");
+    expect(src).toContain("setDoneOpen");
   });
 });
 

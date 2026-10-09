@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestLabel, freezeHoldLine, homeAction, streakNumeralSize } from "@/lib/home-top";
+import { DAY_ONE_SUB, DAY_ONE_WORDS, bestLabel, freezeHoldLine, homeAction, streakNumeralSize, todayNextLine } from "@/lib/home-top";
 
 describe("home top", () => {
   it("labels the best streak and sizes the numeral", () => {
@@ -24,6 +24,12 @@ describe("home top", () => {
     expect(
       homeAction({ securedToday: false, yesterdayUnsecured: false, freezesLeft: 0, nextTask: null }).kind,
     ).toBe("none");
+  });
+
+  it("writes the mid-day next line and the day 1 copy", () => {
+    expect(todayNextLine("Workout", 2, 3)).toBe("Workout is next. 2 of 3 left today.");
+    expect(DAY_ONE_WORDS).toBe("Nothing to break yet.");
+    expect(DAY_ONE_SUB.startsWith("Secure today")).toBe(true);
   });
 
   it("writes the freeze hold line with a curly apostrophe", () => {
