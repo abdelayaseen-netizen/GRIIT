@@ -334,12 +334,6 @@ function joinItem(input: ShareCardInput, color: string): ShareItem | null {
   return text(line, 30, 38, color, "500");
 }
 
-function userItem(input: ShareCardInput, color: string): ShareItem | null {
-  const user = atUser(input.username);
-  if (!user) return null;
-  return text(user, 36, 44, color, "500");
-}
-
 function cellsFor(input: ShareCardInput): GridCell[] {
   if (input.cells && input.cells.length > 0) return input.cells;
   return defaultGrid({
@@ -396,7 +390,6 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     if (task) push(text(task, 56, 66, palette.fg));
     push(dayRow(day, total, 150, palette.fg, palette.fg));
     if (input.cameraSeal) push({ kind: "seal", label: "Camera", color: palette.fg });
-    push(userItem(input, palette.fg));
     push(joinItem(input, "#F5F3EE"));
     return base;
   }
@@ -436,7 +429,6 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     if (task) push(text(task, 96, 108, palette.fg));
     push(dayRow(day, total, 150, palette.fg, palette.fg));
     push(text("Self-reported", 38, 46, palette.sub));
-    push(userItem(input, palette.fg));
     if (input.rule?.trim()) push(text(input.rule.trim(), 34, 42, palette.sub));
     push(joinItem(input, palette.fg));
     return base;
@@ -487,7 +479,6 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     if (input.style === "F" && input.dateRange?.trim()) {
       push(text(input.dateRange.trim(), 34, 42, palette.sub));
     }
-    push(userItem(input, palette.fg));
     push(joinItem(input, palette.fg));
     return base;
   }
@@ -498,8 +489,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     push(text(streakInARow(input.streak ?? 0), 72, 84, palette.fg));
     if (input.activeLine?.trim()) push(text(input.activeLine.trim(), 38, 46, palette.sub));
     const date = input.dateLabel?.trim() || shareDateLabel();
-    const user = atUser(input.username);
-    push(text(user ? `${date} · ${user}` : date, 36, 44, palette.fg));
+    push(text(date, 36, 44, palette.fg));
     push(joinItem(input, palette.fg));
     return base;
   }
@@ -528,8 +518,6 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       plate: input.colour === "ink" ? "#1A1917" : "rgba(15,15,15,0.08)",
     });
   }
-  const from = atUser(input.username);
-  if (from && link.startsWith("Join me ·")) push(text(`from ${from}`, 34, 42, palette.sub));
   return base;
 }
 

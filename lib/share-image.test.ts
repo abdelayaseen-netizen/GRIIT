@@ -80,6 +80,7 @@ describe("v44.1 share styles", () => {
     expect(lines).toContain("Go to the gym");
     expect(lines).toContain("SHOW UP 7");
     expect(lines).toContain("Find me on GRIIT · @noahb");
+    expect(lines.filter((line) => line.includes("@noahb"))).toHaveLength(1);
     expect(lines.join("\n")).not.toContain("Day 3. Pages before coffee.");
     expect(photo.transparent).toBe(false);
     expect(photo.photo).toBe(true);
