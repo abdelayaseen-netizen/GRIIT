@@ -1,0 +1,41 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81
+- extendedWaitUntil:
+    visible:
+      id: home-greeting
+    timeout: 25000
+- assertVisible:
+    id: home-today-count
+- tapOn:
+    id: build81-done
+- extendedWaitUntil:
+    visible:
+      id: home-done
+    timeout: 8000
+- tapOn:
+    id: home-done
+- extendedWaitUntil:
+    visible:
+      id: home-done-open
+    timeout: 8000
+- tapOn:
+    id: build81-freeze
+- extendedWaitUntil:
+    visible:
+      id: home-card-sub
+    timeout: 8000
+- tapOn:
+    id: build81-day1
+- extendedWaitUntil:
+    visible:
+      id: home-card-sub
+    timeout: 8000
+- tapOn:
+    id: build81-mid
+- extendedWaitUntil:
+    visible:
+      id: home-greeting
+    timeout: 8000

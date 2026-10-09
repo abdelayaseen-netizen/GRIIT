@@ -310,11 +310,11 @@ export function HomeV3({
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {title ? (
-        <Text style={styles.greeting} accessibilityRole="header">
+        <Text testID="home-greeting" style={styles.greeting} accessibilityRole="header">
           {title}
         </Text>
       ) : null}
-      {dateLine ? <Text style={styles.dateLine}>{dateLine}</Text> : null}
+      {dateLine ? <Text testID="home-date" style={styles.dateLine}>{dateLine}</Text> : null}
       <View style={styles.topCard}>
         <View style={styles.topRow}>
           <Pressable
@@ -339,7 +339,7 @@ export function HomeV3({
         </View>
         <WeekStrip days={weekDays} todayIndex={todayIndex} />
         <View style={styles.hair} />
-        {cardSub ? <Text style={styles.cardSub}>{cardSub}</Text> : null}
+        {cardSub ? <Text testID="home-card-sub" style={styles.cardSub}>{cardSub}</Text> : null}
         {action.kind === "share" ? (
           <Button label={action.label} variant="tertiary" ink onPress={onPressShareToday} />
         ) : null}
@@ -364,7 +364,7 @@ export function HomeV3({
             <>
               <View style={styles.todayHead}>
                 <Text style={styles.heading}>{HOME_PROOF_HEADING}</Text>
-                <Text style={styles.countTxt}>
+                <Text testID="home-today-count" style={styles.countTxt}>
                   {proof.doneCount} of {proof.totalCount} done
                 </Text>
               </View>
@@ -381,6 +381,7 @@ export function HomeV3({
                 return (
                   <View>
                     <Pressable
+                      testID="home-done"
                       accessibilityRole="button"
                       accessibilityLabel={label}
                       onPress={() => setDoneOpen((open) => !open)}
@@ -401,7 +402,7 @@ export function HomeV3({
                         )}
                       </View>
                     </Pressable>
-                    {doneOpen ? done.map((item) => renderRow(item.section, item.row)) : null}
+                    {doneOpen ? <View testID="home-done-open">{done.map((item) => renderRow(item.section, item.row))}</View> : null}
                   </View>
                 );
               })()}
