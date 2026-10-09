@@ -4,6 +4,9 @@
  * view-shot of that same component at 1080 × 1920.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Image } from "expo-image";
+
+const SAMPLE_STORY = require("../../design/handoff/v51/handoff/GRIIT-v51-handoff/atlas/assets/proofs/sunrise1.jpg");
 import {
   Modal,
   Pressable,
@@ -69,20 +72,12 @@ export type ShareSystemSheetProps = {
 function ScaledPreview({ card }: { card: ShareCardInput }) {
   return (
     <View style={styles.previewClip}>
-      {card.style === "B" ? <Checkerboard /> : null}
+      {card.style === "B" ? <Image source={SAMPLE_STORY} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
       <View style={styles.previewScale}>
         <ShareImage input={card} />
       </View>
     </View>
   );
-}
-
-function Checkerboard() {
-  const cells = Array.from({ length: 64 }, (_, i) => {
-    const light = (Math.floor(i / 8) + (i % 8)) % 2 === 0;
-    return <View key={i} style={[styles.check, light ? styles.checkLight : styles.checkDark]} />;
-  });
-  return <View style={styles.checker}>{cells}</View>;
 }
 
 export default function ShareSystemSheet({

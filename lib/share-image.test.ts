@@ -28,18 +28,17 @@ describe("v44.1 share styles", () => {
 
   it("prints the username line until an origin exists, then the invite URL", () => {
     expect(SHARE_JOIN_WEB_ORIGIN).toBe("");
-    expect(shareJoinLine({ username: "noahb", inviteId: code })).toBe("Find me on GRIIT · @noahb");
-    expect(shareJoinLine({ username: "@noahb" })).toBe("Find me on GRIIT · @noahb");
+    expect(shareJoinLine({ username: "noahb", inviteId: code })).toBe("@noahb");
+    expect(shareJoinLine({ username: "@noahb" })).toBe("@noahb");
     expect(shareJoinLine({ inviteId: code })).toBe("");
     expect(shareJoinLine({ username: "noahb", inviteId: code })).not.toContain("griit.app");
-    expect(shareJoinLine({ username: "noahb", inviteId: code })).not.toContain("code");
     expect(shareJoinLine({ username: "noahb", inviteId: "ch-1", origin: "https://example.com" })).toBe(
-      "https://example.com/i/ch-1",
+      "@noahb · https://example.com/i/ch-1",
     );
     expect(shareJoinLine({ username: "noahb", inviteId: "ch-1", origin: "https://example.com" })).not.toContain(
       "griit.to",
     );
-    expect(shareJoinLine({ username: "noahb", origin: "https://example.com" })).toBe("");
+    expect(shareJoinLine({ username: "noahb", origin: "https://example.com" })).toBe("@noahb");
     const photo = buildSharePaint({
       style: "A",
       colour: "ink",
@@ -51,7 +50,7 @@ describe("v44.1 share styles", () => {
       inviteCode: code,
       cameraSeal: true,
     });
-    expect(paintStrings(photo)).toContain("Find me on GRIIT · @noahb");
+    expect(paintStrings(photo)).toContain("@noahb");
     const invite = buildSharePaint({
       style: "G",
       colour: "ink",
@@ -60,7 +59,7 @@ describe("v44.1 share styles", () => {
       inviteCode: code,
       proofLine: "7 days · Camera · Gym",
     });
-    expect(paintStrings(invite)).toContain("Find me on GRIIT · @noahb");
+    expect(paintStrings(invite)).toContain("@noahb");
     expect(paintStrings(invite).join("\n")).not.toContain("code K7Q2M");
   });
 
@@ -79,7 +78,7 @@ describe("v44.1 share styles", () => {
     const lines = paintStrings(photo);
     expect(lines).toContain("Go to the gym");
     expect(lines).toContain("SHOW UP 7");
-    expect(lines).toContain("Find me on GRIIT · @noahb");
+    expect(lines).toContain("@noahb");
     expect(lines.filter((line) => line.includes("@noahb"))).toHaveLength(1);
     expect(lines.join("\n")).not.toContain("Day 3. Pages before coffee.");
     expect(photo.transparent).toBe(false);
@@ -133,8 +132,6 @@ describe("v44.1 share styles", () => {
     expect(shareMessageBody("Day 3. Pages before coffee.", shareJoinLine({ username: "noahb", inviteId: code }))).toBe(
       "Day 3. Pages before coffee.",
     );
-    expect(shareMessageBody("  ", shareJoinLine({ username: "noahb", inviteId: code }))).toBe(
-      "Find me on GRIIT · @noahb",
-    );
+    expect(shareMessageBody("  ", shareJoinLine({ username: "noahb", inviteId: code }))).toBe("@noahb");
   });
 });

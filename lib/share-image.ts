@@ -4,7 +4,7 @@
  * Caption is never part of the paint.
  *
  * Join line: SHARE_JOIN_WEB_ORIGIN stays empty until a public web domain exists.
- * Empty origin prints "Find me on GRIIT · @{username}". A set origin prints
+ * Empty origin prints "@{username}". A set origin prints
  * "{origin}/i/{id}" from inviteUrl. Never a hard-coded host.
  *
  * Last-picked colour is per style in memory for the open sheet only.
@@ -190,21 +190,19 @@ export function rememberColour(
   return { ...memory, [style]: colour };
 }
 
-/** No origin: username line. Origin set: invite URL with the challenge id. */
+/** "@handle · {base}/i/{code}". The handle is not repeated when the link is missing. */
 export function shareJoinLine(args: {
   username?: string | null;
   inviteId?: string | null;
   origin?: string;
 }): string {
-  const base = (args.origin ?? SHARE_JOIN_WEB_ORIGIN).trim().replace(/\/$/, "");
-  if (base) {
-    const id = args.inviteId?.trim() ?? "";
-    if (!id) return "";
-    return inviteUrl(base, id);
-  }
   const name = args.username?.trim().replace(/^@/, "") ?? "";
-  if (!name) return "";
-  return `Find me on GRIIT · @${name}`;
+  const base = (args.origin ?? SHARE_JOIN_WEB_ORIGIN).trim().replace(/\/$/, "");
+  const id = args.inviteId?.trim() ?? "";
+  const link = base && id ? inviteUrl(base, id) : "";
+  const handle = name ? `@${name}` : "";
+  if (handle && link) return `${handle} · ${link}`;
+  return handle || link;
 }
 
 export function shareMessageBody(caption: string, joinLine: string): string {

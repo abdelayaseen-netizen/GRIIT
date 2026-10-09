@@ -90,6 +90,10 @@ function Grid({
   );
 }
 
+export function ShareLegend({ color }: { color: string }) {
+  return <Text style={{ color, fontSize: 28, lineHeight: 34 }}>Done · Missed · Held · To come · Today</Text>;
+}
+
 function hexAlpha(color: string): string {
   if (color.startsWith("rgba") || color.startsWith("rgb")) return color;
   return `${color}99`;
@@ -136,15 +140,18 @@ function ItemView({ item, shadow }: { item: ShareItem; shadow: { color: string; 
   }
   if (item.kind === "grid") {
     return (
-      <Grid
-        cells={item.cells}
-        cell={item.cell}
-        gap={item.gap}
-        radius={item.radius}
-        accent={item.accent}
-        sub={item.sub}
-        line={item.line}
-      />
+      <View style={{ gap: 16 }}>
+        <Grid
+          cells={item.cells}
+          cell={item.cell}
+          gap={item.gap}
+          radius={item.radius}
+          accent={item.accent}
+          sub={item.sub}
+          line={item.line}
+        />
+        <ShareLegend color={item.sub} />
+      </View>
     );
   }
   return (
