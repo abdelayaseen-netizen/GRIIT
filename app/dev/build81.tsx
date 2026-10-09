@@ -94,7 +94,13 @@ export default function Build81Harness() {
         <ScrollView testID="build81-home" contentContainerStyle={styles.scroll}>
           <HomeV3
             key={state}
-            title={state === "freeze" ? "Good morning" : state === "done" ? "Good evening" : state === "day1" ? "Good morning" : "Good afternoon"}
+            title={
+              state === "done"
+                ? "Good evening, Yaseen"
+                : state === "mid"
+                  ? "Good afternoon, Yaseen"
+                  : "Good morning, Yaseen"
+            }
             dateLine={state === "freeze" ? "Friday, Oct 9" : state === "day1" ? "Wednesday, Sep 30" : "Thursday, Oct 8"}
             streak={state === "done" ? 3 : state === "day1" ? 0 : 2}
             streakLine=""
@@ -107,7 +113,9 @@ export default function Build81Harness() {
                 ? ["na", "na", "na", "na", "na", "na", "na"]
                 : state === "freeze"
                   ? ["secured", "secured", "secured", "missed", "missed", "future", "future"]
-                  : ["secured", "secured", "future", "future", "future", "future", "future"]
+                  : state === "done"
+                    ? ["na", "secured", "secured", "secured", "future", "future", "future"]
+                    : ["secured", "secured", "future", "future", "future", "future", "future"]
             }
             firstWeekDay={state === "day1" ? 1 : null}
             freezesLeft={1}
