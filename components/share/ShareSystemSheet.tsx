@@ -156,6 +156,7 @@ export default function ShareSystemSheet({
           if (!storyUsesSticker(styleId)) return;
           await copyStickerPngToPasteboard(uri);
           setSaveStatus(STICKER.copied);
+          setTimeout(() => setSaveStatus(null), 2200);
           return;
         }
         if (kind === "story") {
@@ -261,8 +262,6 @@ export default function ShareSystemSheet({
           accessibilityLabel={SHARE_CAPTION_PLACEHOLDER}
         />
 
-        {saveStatus ? <Text style={styles.saved}>{saveStatus}</Text> : null}
-
         <View style={[styles.targets, { paddingBottom: insets.bottom + 34 }]}>
           {targets.map((target) => {
             const Icon = target.icon;
@@ -283,6 +282,12 @@ export default function ShareSystemSheet({
             );
           })}
         </View>
+
+        {saveStatus ? (
+          <View style={styles.toast} accessibilityLiveRegion="polite">
+            <Text style={styles.saved}>{saveStatus}</Text>
+          </View>
+        ) : null}
 
         <View pointerEvents="none" style={styles.shotHost} collapsable={false}>
           <ViewShot
@@ -403,12 +408,21 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
     fontSize: 15,
   },
+  toast: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 120,
+    borderRadius: 12,
+    backgroundColor: DS_V3.color.raised,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
   saved: {
     textAlign: "center",
-    color: DS_V3.color.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 8,
+    color: DS_V3.color.textPrimary,
+    fontSize: 15,
+    lineHeight: 20,
   },
   targets: {
     marginTop: "auto",
