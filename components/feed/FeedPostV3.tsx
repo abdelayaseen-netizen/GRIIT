@@ -162,7 +162,9 @@ export default function FeedPostV3({
   }
 
   const proofPost = variant === "task_self" || (variant === "task_camera" && Boolean(photo));
-  const daySubject = feedProofSubject(post.currentDay, post.totalDays, post.challengeName);
+  const daySubject = variant === "task_self"
+    ? `Day ${post.currentDay} of ${post.totalDays} · ${post.challengeName}`
+    : feedProofSubject(post.currentDay, post.totalDays, post.challengeName);
 
   if (!proofPost) {
     return (
@@ -238,11 +240,16 @@ export default function FeedPostV3({
         <View style={styles.selfPanel}>
           <View style={styles.selfTop}>
             <View style={styles.checkDisc}>
-              <Check size={22} color={DS_V3.color.brandText} />
+              <Check size={22} color={DS_V3.color.textPrimary} />
             </View>
-            <Text style={styles.gate}>{meta || "Self-reported"}</Text>
+            <View style={styles.taskCopy}>
+              <Text style={styles.taskTitle}>{subject}</Text>
+              <Text style={styles.gate}>{selfReportedLine(post.createdAt)}</Text>
+            </View>
           </View>
-          <Text style={styles.taskTitle}>{subject}</Text>
+          <View style={styles.selfRule} />
+          <Text style={styles.selfMeta}>{`${post.challengeName} · Day ${post.currentDay} of ${post.totalDays}`}</Text>
+          {post.caption ? <Text style={styles.selfCaption}>{post.caption}</Text> : null}
         </View>
         </DoubleTapRespect>
       )}
@@ -265,6 +272,15 @@ export default function FeedPostV3({
     <SealSheet visible={sealOpen} onDismiss={() => setSealOpen(false)} gates={{}} />
     </>
   );
+}
+
+function selfReportedLine(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Self-reported";
+  const h = d.getHours();
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `Self-reported · ${hour}:${min} ${h < 12 ? "am" : "pm"}`;
 }
 
 function PostHeader({
@@ -468,38 +484,35 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   selfPanel: {
-    marginHorizontal: PHOTO_INSET,
-    borderRadius: PHOTO_RADIUS,
+    marginHorizontal: 16,
+    borderRadius: 16,
     backgroundColor: DS_V3.color.surface,
-    borderWidth: 1,
-    borderColor: DS_V3.color.border,
-    paddingTop: 18,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 14,
+    padding: 16,
+    gap: 12,
   },
   selfTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+  taskCopy: { flex: 1, gap: 2 },
   checkDisc: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.raised,
     alignItems: "center",
     justifyContent: "center",
   },
   gate: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
+    ...DS_V3.type.secondary,
     color: DS_V3.color.textSecondary,
-    textAlign: "right",
   },
   taskTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: "500",
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
   },
+  selfRule: { height: StyleSheet.hairlineWidth, backgroundColor: DS_V3.color.hairline },
+  selfMeta: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
+  selfCaption: { ...DS_V3.type.body, color: DS_V3.color.textPrimary },
   seal: { position: "absolute", top: 12, left: 12, zIndex: 2 },
   header: {
     flexDirection: "row",

@@ -15,6 +15,8 @@ describe("feed actions", () => {
     expect(src).toContain("Held");
     expect(src).toContain("Started");
     expect(src).not.toContain("finishMeta");
+    expect(src).toContain("selfReportedLine");
+    expect(src).not.toContain("Verified");
     expect(src).toContain("width: 44");
     const row = readFileSync(resolve(__dirname, "../components/feed/FeedCompactRow.tsx"), "utf8");
     expect(row).toContain("minWidth: 44");
