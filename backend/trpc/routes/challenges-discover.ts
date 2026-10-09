@@ -8,7 +8,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { filterOnboardingStarterPack } from "../../lib/onboarding-starter-pack";
 import { deriveProofType } from "../../lib/task-model";
-import { discoverPreviewTasks } from "../../../lib/discover-preview-tasks";
+import { discoverPreviewTasks } from "../../lib/discover-preview-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
