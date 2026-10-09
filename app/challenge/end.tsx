@@ -110,7 +110,7 @@ function ChallengeEndScreenInner() {
   if (unseenQuery.isLoading && challenges.length === 0) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={DS_V3.color.brand} />
+        <ActivityIndicator color={DS_V3.color.textSecondary} />
       </View>
     );
   }
@@ -118,7 +118,7 @@ function ChallengeEndScreenInner() {
   if (challenges.length === 0) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={DS_V3.color.brand} />
+        <ActivityIndicator color={DS_V3.color.textSecondary} />
       </View>
     );
   }

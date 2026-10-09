@@ -27,14 +27,14 @@ export function ProgressStrip({
               {
                 backgroundColor:
                   d === "secured"
-                    ? DS_V3.color.brand
+                    ? DS_V3.color.textPrimary
                     : d === "held"
                       ? DS_V3.color.textSecondary
                       : d === "future"
                         ? DS_V3.color.border
                         : "transparent",
                 borderWidth: d === "missed" ? 1 : d === "today" ? 1.5 : 0,
-                borderColor: d === "today" ? DS_V3.color.brand : DS_V3.color.textSecondary,
+                borderColor: d === "today" ? DS_V3.color.textPrimary : DS_V3.color.textSecondary,
               },
             ]}
           />
@@ -115,10 +115,10 @@ const styles = StyleSheet.create({
     height: 24,
     paddingHorizontal: 9,
     borderRadius: 999,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.raised,
     justifyContent: "center",
   },
-  chipTxt: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.brandText },
+  chipTxt: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.textPrimary },
   meta: { flexDirection: "row", alignItems: "center", gap: 8 },
   line: { flex: 1, ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   faces: { flexDirection: "row" },

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
+import { shareDayCells } from "@/lib/share-image";
 import { STICKER_SECURED } from "@/lib/share-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 import {
@@ -26,6 +27,9 @@ export type DayStickerSheetProps = {
   streak?: number;
   longestStreak?: number;
   activeLine?: string;
+  todayKey?: string;
+  securedDateKeys?: readonly string[];
+  frozenDateKeys?: readonly string[];
 };
 
 export default function DayStickerSheet({
@@ -39,10 +43,24 @@ export default function DayStickerSheet({
   streak,
   longestStreak,
   activeLine,
+  todayKey,
+  securedDateKeys = [],
+  frozenDateKeys = [],
 }: DayStickerSheetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(preselectedId ?? null);
   const selected =
     challenges.find((c) => c.id === selectedId) ?? defaultShareTodayChallenge(challenges, preselectedId);
+  const cells =
+    selected?.startDateKey && todayKey && selected.dayTotal
+      ? shareDayCells({
+          startDateKey: selected.startDateKey,
+          durationDays: selected.dayTotal,
+          todayKey,
+          securedDateKeys,
+          frozenDateKeys,
+        })
+      : undefined;
+  const securedCount = cells?.filter((cell) => cell === "secured").length;
   const showPicker = showWhichDayPicker(challenges);
 
   useEffect(() => {
@@ -71,7 +89,8 @@ export default function DayStickerSheet({
               status: selected.stickerKind === "challenge" ? DONE_FOR_TODAY : STICKER_SECURED,
               photoUri: proofUri,
               photoShared,
-              secured: selected.day,
+              cells,
+              secured: securedCount,
               cameraSeal: (selected.proof ?? "self") !== "self" && Boolean(proofUri),
             }
           : undefined
@@ -111,6 +130,7 @@ const STROKE = (DS_V3.space.xs * 3) / 8;
 const styles = StyleSheet.create({
   picker: {
     gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
     paddingBottom: DS_V3.space.gutter,
   },
   pickerLabel: {
@@ -135,8 +155,8 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.textSecondary,
   },
   radioOn: {
-    backgroundColor: DS_V3.color.brand,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
+    borderColor: DS_V3.color.textPrimary,
   },
   optionCopy: {
     flex: 1,

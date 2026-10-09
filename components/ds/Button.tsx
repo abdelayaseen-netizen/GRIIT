@@ -84,7 +84,7 @@ export default function Button({
           : ink
             ? DS_V3.color.textPrimary
             : DS_V3.color.brandText;
-  const spinnerColor = variant === "primary" ? DS_V3.color.onBrand : labelColor;
+  const spinnerColor = variant === "primary" ? DS_V3.color.onBrand : DS_V3.color.textSecondary;
 
   return (
     <Pressable
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.secondary.fontWeight,
   },
   primary: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   primaryDestructive: {
     backgroundColor: DS_V3.color.danger,

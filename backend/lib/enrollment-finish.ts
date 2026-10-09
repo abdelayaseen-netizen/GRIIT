@@ -3,6 +3,7 @@
  * Secured days are day_secures that fall on a due date.
  * A freeze holds the run and does not add to it. A miss ends the run.
  */
+import { dateKeyFromIso } from "./calendar-day";
 
 export type EnrollmentFinishNumbers = {
   securedDays: number;
@@ -42,4 +43,17 @@ export function enrollmentFinishNumbers(args: {
     heldDays,
     daysDone: securedDays + heldDays,
   };
+}
+
+/** "Sep 6" in the enrollment time zone. Date parts are formatted in UTC so the key does not shift. */
+export function finishStartedLabel(iso: string | null | undefined, timeZone: string): string | null {
+  if (!iso) return null;
+  const key = dateKeyFromIso(iso, timeZone);
+  const [year, month, day] = key.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }

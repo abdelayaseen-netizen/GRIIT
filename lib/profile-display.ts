@@ -21,6 +21,22 @@ export function profilePrimaryName(
   return "";
 }
 
+const EMOJI_NAME = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\uFE0F|\u200D|\s)+$/u;
+
+/** A person row. An emoji or a missing name is the person glyph plus @handle. */
+export function personListName(p: {
+  username?: string | null;
+  display_name?: string | null;
+}): { label: string; glyph: boolean } {
+  const display = collapseDisplayName(p.display_name);
+  const handle = collapseDisplayName(p.username).replace(/^@/, "");
+  const emoji = display.length > 0 && EMOJI_NAME.test(display);
+  if (!display || emoji) {
+    return { label: handle ? `@${handle}` : "", glyph: true };
+  }
+  return { label: display, glyph: false };
+}
+
 /** Home greeting. Never the literal "User". Null → date line alone. */
 export function greetingName(p: {
   display_name?: string | null;

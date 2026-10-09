@@ -3,7 +3,9 @@ import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
 import { calendarDayFromStartAt, dateKeyFromIso } from "./calendar-day";
+import { enrollmentFinishNumbers, finishStartedLabel } from "./enrollment-finish";
 import { finishedRunFromEnrollment } from "./finished-run";
+import { mayEmitFinishedChallenge } from "./finalize-ended";
 import { canSeeContent, eventIsShared } from "./is-friend";
 import { sharedPathsFromEvents, signProofPaths } from "./proof-image";
 
@@ -164,6 +166,10 @@ export async function hydrateActivityEventsToPosts(
     taskName?: string | null;
     currentDay: number;
     securedDays?: number;
+    longestStreak?: number;
+    heldDays?: number;
+    startedOn?: string | null;
+    startedLabel?: string | null;
     totalDays: number;
     eventType: string;
     isCompleted: boolean;
@@ -272,6 +278,7 @@ export async function hydrateActivityEventsToPosts(
   const streakByUser = new Map<string, number>();
   const securedTodayByUser = new Set<string>();
   const securedKeysByUser = new Map<string, string[]>();
+  const frozenKeysByUser = new Map<string, string[]>();
   const finishedBounds = finishedSecureQueryBounds({
     events: visible,
     enrollments: activeRows,
@@ -281,12 +288,20 @@ export async function hydrateActivityEventsToPosts(
   });
   if (userIds.length > 0) {
     const todayKey = getTodayDateKey("UTC");
-    const [{ data: streakRows }, { data: secureRows }, { data: allSecures }] = await Promise.all([
+    const [{ data: streakRows }, { data: secureRows }, { data: allSecures }, { data: freezeRows }] = await Promise.all([
       server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds),
       server.from("day_secures").select("user_id").in("user_id", userIds).eq("date_key", todayKey),
       finishedBounds
         ? server
             .from("day_secures")
+            .select("user_id, date_key")
+            .in("user_id", finishedBounds.userIds)
+            .gte("date_key", finishedBounds.fromKey)
+            .lt("date_key", finishedBounds.toKeyExclusive)
+        : Promise.resolve({ data: [] as { user_id: string; date_key: string }[] }),
+      finishedBounds
+        ? server
+            .from("freeze_uses")
             .select("user_id, date_key")
             .in("user_id", finishedBounds.userIds)
             .gte("date_key", finishedBounds.fromKey)
@@ -299,6 +314,11 @@ export async function hydrateActivityEventsToPosts(
       const list = securedKeysByUser.get(row.user_id) ?? [];
       list.push(row.date_key);
       securedKeysByUser.set(row.user_id, list);
+    }
+    for (const row of (freezeRows ?? []) as { user_id: string; date_key: string }[]) {
+      const list = frozenKeysByUser.get(row.user_id) ?? [];
+      list.push(row.date_key);
+      frozenKeysByUser.set(row.user_id, list);
     }
   }
   const posts = visible.map((ev) => {
@@ -335,6 +355,13 @@ export async function hydrateActivityEventsToPosts(
         })
       : undefined;
     const securedDays = finishedRun?.secured;
+    const finishCard = finishedRun
+      ? enrollmentFinishNumbers({
+          dueDateKeys: finishedRun.dueDayKeys,
+          securedDateKeys: securedKeysByUser.get(ev.user_id) ?? [],
+          frozenDateKeys: frozenKeysByUser.get(ev.user_id) ?? [],
+        })
+      : undefined;
     const hasProof = Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.has_photo === true;
     const stat = reactionStats.get(ev.id);
     const mdStreak = typeof md.streak_count === "number" ? md.streak_count : null;
@@ -351,6 +378,10 @@ export async function hydrateActivityEventsToPosts(
       taskName: typeof md.task_name === "string" ? md.task_name : null,
       currentDay: Math.max(1, currentDay),
       securedDays,
+      longestStreak: finishCard?.longestStreak,
+      heldDays: finishCard?.heldDays,
+      startedOn: enrollment?.start_at ?? null,
+      startedLabel: finishStartedLabel(enrollment?.start_at, tz),
       securedToday: securedTodayByUser.has(ev.user_id),
       totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays),
       eventType: ev.event_type,
@@ -370,17 +401,28 @@ export async function hydrateActivityEventsToPosts(
       visibility,
     };
   });
+  const dropped = new Set<string>();
+  for (let i = 0; i < visible.length; i += 1) {
+    const ev = visible[i]!;
+    if (ev.event_type !== "completed_challenge") continue;
+    const post = posts[i];
+    const md = ev.metadata ?? {};
+    const enrollmentId = typeof md.active_challenge_id === "string" ? md.active_challenge_id : "";
+    const enrollment = (enrollmentId ? activeById.get(enrollmentId) : undefined) ?? (ev.challenge_id ? activeMap.get(`${ev.user_id}:${ev.challenge_id}`) : undefined);
+    if (!mayEmitFinishedChallenge(post?.securedDays ?? 0, enrollment?.status)) dropped.add(ev.id);
+  }
+  const shown = posts.filter((post) => !dropped.has(post.id));
   const sharedPaths = sharedPathsFromEvents(
-    visible.map((ev) => ({
+    visible.filter((ev) => !dropped.has(ev.id)).map((ev) => ({
       user_id: ev.user_id,
       metadata: ev.metadata,
       shared: ev.shared,
       share_state: "shared",
     })),
   );
-  const stored = posts.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
+  const stored = shown.flatMap((p) => [p.photoUrl, p.proofPhotoUrl ?? null]);
   const signed = await signProofPaths(stored, viewerId, { sharedPaths });
-  return posts.map((p, i) => ({
+  return shown.map((p, i) => ({
     ...p,
     photoUrl: signed[i * 2] ?? null,
     proofPhotoUrl: signed[i * 2 + 1] ?? null,

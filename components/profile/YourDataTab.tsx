@@ -13,6 +13,20 @@ import {
   type StatsRange,
 } from "@/backend/lib/me-stats";
 
+function civilLabel(key: string): string {
+  const [year, month, day] = key.split("-").map(Number);
+  if (!year || !month || !day) return key;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+function streakRange(start: string, end: string): string {
+  return `${civilLabel(start)} – ${civilLabel(end)}`;
+}
+
 const RANGES: { id: StatsRange; label: string }[] = [
   { id: "7d", label: "7d" },
   { id: "30d", label: "30d" },
@@ -76,7 +90,7 @@ export function YourDataTab() {
             <Text style={styles.secondary}>
               Best {stats.user_stats.best_streak}
               {stats.user_stats.best_streak_start && stats.user_stats.best_streak_end
-                ? ` · ${stats.user_stats.best_streak_start} – ${stats.user_stats.best_streak_end}`
+                ? ` · ${streakRange(stats.user_stats.best_streak_start, stats.user_stats.best_streak_end)}`
                 : ""}
             </Text>
           </Card>

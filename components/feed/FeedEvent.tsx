@@ -8,6 +8,7 @@ import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import type { FeedEventGroup } from "@/lib/feed-join";
 import { eventLine } from "@/lib/feed-join";
+import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 
 export default function FeedEvent({
   group,
@@ -27,13 +28,14 @@ export default function FeedEvent({
     >
       <View style={styles.stack}>
         {faces.map((a, i) => (
-          <View key={a.userId || `${a.username}-${i}`} style={i > 0 ? styles.shift : undefined}>
+          <View key={a.userId || `${a.username}-${i}`} style={[styles.face, i > 0 ? styles.shift : undefined]}>
             <Avatar
               size={20}
               userId={a.userId}
               uri={a.avatarUrl}
               displayName={a.displayName}
               username={a.username}
+              ring
             />
           </View>
         ))}
@@ -41,6 +43,7 @@ export default function FeedEvent({
       <Text style={styles.text} numberOfLines={2}>
         {line}
       </Text>
+      <Text style={styles.time}>{formatTimeAgoCompact(group.createdAt)}</Text>
       <ChevronRight size={16} color={DS_V3.color.textSecondary} />
     </Pressable>
   );
@@ -50,23 +53,31 @@ const styles = StyleSheet.create({
   row: {
     minHeight: DS_V3.size.tap,
     paddingHorizontal: DS_V3.space.gutter,
-    paddingVertical: DS_V3.space.md,
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_V3.space.md,
+    gap: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: DS_V3.color.hairline,
   },
   stack: {
     flexDirection: "row",
     alignItems: "center",
   },
+  face: { zIndex: 1 },
   shift: {
-    marginLeft: -8,
+    marginLeft: -6,
   },
   text: {
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "400",
+    color: DS_V3.color.textSecondary,
+  },
+  time: {
+    ...DS_V3.type.caption,
     color: DS_V3.color.textSecondary,
   },
 });

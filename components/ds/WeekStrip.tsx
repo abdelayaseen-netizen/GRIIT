@@ -1,6 +1,6 @@
 /**
  * WeekStrip — 01_components.md "WeekStrip" and Motion
- * Frame 192: secured is a white fill and an ink check. Future days are dashed.
+ * Frame 192: secured is a white fill and an ink check. Future days are dotted.
  * Days before joining are a dot. Frozen / Last Stand stay surface + icon.
  * Not tappable. Max seven squares.
  */
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   dashed: {
     borderWidth: 1,
-    borderStyle: "dashed",
+    borderStyle: "dotted",
     borderColor: DS_V3.color.raised,
   },
   dot: {

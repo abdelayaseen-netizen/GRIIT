@@ -8,6 +8,7 @@ import {
 } from "../../lib/challenge-tasks";
 import { filterOnboardingStarterPack } from "../../lib/onboarding-starter-pack";
 import { deriveProofType } from "../../lib/task-model";
+import { discoverPreviewTasks } from "../../lib/discover-preview-tasks";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
@@ -355,6 +356,9 @@ export const challengesDiscoverProcedures = {
           friend_names: friendNames,
           others_count: othersCount,
         },
+        tasks: discoverPreviewTasks(
+          (pick.challenge_tasks ?? []) as Parameters<typeof discoverPreviewTasks>[0],
+        ),
       };
     }),
 
@@ -578,7 +582,7 @@ export const challengesDiscoverProcedures = {
     const { data: rows, error } = await server
       .from("challenges")
       // challenges.cover_url does not exist in prod — client uses generated covers.
-      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id")
+      .select("id, title, duration_days, difficulty, category, participants_count, participation_type, visibility, status, creator_id, challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)")
       .eq("status", "published")
       .eq("visibility", "PUBLIC")
       .limit(60);
@@ -647,6 +651,9 @@ export const challengesDiscoverProcedures = {
         cover_url: null,
         participantCount: pc,
         previewUsers,
+        tasks: discoverPreviewTasks(
+          ((c as { challenge_tasks?: unknown }).challenge_tasks ?? []) as Parameters<typeof discoverPreviewTasks>[0],
+        ),
       };
     });
 

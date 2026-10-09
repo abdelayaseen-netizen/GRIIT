@@ -38,7 +38,7 @@ describe("ownedProofWrite", () => {
   it("user A cannot write B's path; file:// is never stored", () => {
     const publicA = `https://x.supabase.co/storage/v1/object/public/task-proofs/${PATH}`;
     const publicB = `https://x.supabase.co/storage/v1/object/public/task-proofs/${OTHER}/secret.jpg`;
-    expect(ownedProofWrite(publicA, OWNER)).toBe(publicA);
+    expect(ownedProofWrite(publicA, OWNER)).toBe(PATH);
     expect(ownedProofWrite(PATH, OWNER)).toBe(PATH);
     expect(ownedProofWrite(publicB, OWNER)).toBeNull();
     expect(ownedProofWrite(`${OTHER}/secret.jpg`, OWNER)).toBeNull();

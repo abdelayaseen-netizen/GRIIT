@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   proofText: { fontSize: 16, lineHeight: 20 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   cell: { width: 34, height: 34, borderRadius: 6 },
-  cellOn: { backgroundColor: DS_V3.color.brand },
+  cellOn: { backgroundColor: DS_V3.color.textPrimary },
   badgeCol: { alignItems: "center", gap: 14 },
   stamp: {
     borderRadius: 20,

@@ -17,8 +17,8 @@ export type StampProps = {
   onInk?: boolean;
 };
 
-export default function Stamp({ label = "Photo", onInk }: StampProps) {
-  const color = onInk ? DS_V3.color.textPrimary : DS_V3.color.brandText;
+export default function Stamp({ label = "Photo", onInk: _onInk }: StampProps) {
+  const color = DS_V3.color.textPrimary;
   return (
     <View style={[styles.frame, { borderColor: color }]}>
       <Text style={[styles.label, { color }]}>{label.toUpperCase()}</Text>

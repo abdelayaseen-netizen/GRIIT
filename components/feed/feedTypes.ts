@@ -12,6 +12,10 @@ export type LiveFeedPost = {
   currentDay: number;
   /** Finished events — R1 window over that enrollment. Omit when unknown. */
   securedDays?: number;
+  longestStreak?: number;
+  heldDays?: number;
+  startedOn?: string | null;
+  startedLabel?: string | null;
   /** Author secured today — same input Home passes to displayDay. */
   securedToday?: boolean;
   totalDays: number;

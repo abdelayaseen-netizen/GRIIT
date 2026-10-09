@@ -25,6 +25,7 @@ export type PersonCardProps = {
   followLabel: string;
   followDisabled?: boolean;
   followPending?: boolean;
+  glyph?: boolean;
   onFollow?: () => void;
   onPress?: () => void;
 };
@@ -38,6 +39,7 @@ export default function PersonCard({
   followLabel,
   followDisabled,
   followPending,
+  glyph = false,
   onFollow,
   onPress,
 }: PersonCardProps) {
@@ -49,7 +51,7 @@ export default function PersonCard({
         onPress={onPress}
         style={styles.body}
       >
-        <Avatar size={DS_V3.size.avatar.md} uri={uri} displayName={name} />
+        <Avatar size={DS_V3.size.avatar.md} uri={glyph ? null : uri} displayName={glyph ? "" : name} />
         <Text style={styles.name} numberOfLines={2}>
           {name}
         </Text>

@@ -15,6 +15,7 @@ import {
 import { scheduleG2aForUser } from "@/lib/g2a-refresh";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
+import { TODAY_CHECKINS_QUERY_KEY } from "@/lib/today-completion";
 import { displayDay } from "@/lib/challenge-day";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import type {
@@ -177,6 +178,7 @@ export function useAppChallengeMutations({
           void fetchActiveChallenge();
           void fetchStats();
           void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+          void queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
           void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
@@ -297,6 +299,7 @@ export function useAppChallengeMutations({
       };
       // After the server has written the day — not before. Home reads these keys only.
       await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+      await queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
       await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });

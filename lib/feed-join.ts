@@ -32,14 +32,18 @@ function whoLine(names: string[], others: number): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** 3 or more people: first name and the rest as others. */
+/** Two names, then "and n others". Frame 1226: "Bilal, Zayd and 2 others". */
 export function startedWho(names: string[], others: number): string {
-  const listed = names.filter(Boolean);
-  const total = listed.length + Math.max(0, others);
-  if (total <= 1) return listed[0] ?? "";
-  if (total === 2 && others === 0 && listed.length >= 2) return `${listed[0]} and ${listed[1]}`;
-  const rest = total - 1;
-  return `${listed[0]} and ${rest} ${rest === 1 ? "other" : "others"}`;
+  const listed = names.filter(Boolean).slice(0, 2);
+  const extra = Math.max(0, names.filter(Boolean).length - listed.length) + Math.max(0, others);
+  if (listed.length === 0) return "";
+  if (extra === 0) {
+    if (listed.length === 1) return listed[0]!;
+    return `${listed[0]} and ${listed[1]}`;
+  }
+  const rest = `${extra} ${extra === 1 ? "other" : "others"}`;
+  if (listed.length === 1) return `${listed[0]} and ${rest}`;
+  return `${listed[0]}, ${listed[1]} and ${rest}`;
 }
 
 export function joinLine(names: string[], others: number, challenge: string): string {

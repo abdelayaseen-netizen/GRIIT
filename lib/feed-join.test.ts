@@ -36,8 +36,9 @@ describe("joinLine", () => {
   it("names one, two, and n others with singular other", () => {
     expect(joinLine(["Alex"], 0, "Iron man")).toBe("Alex started Iron man");
     expect(joinLine(["Alex", "Bina"], 0, "Iron man")).toBe("Alex and Bina started Iron man");
-    expect(joinLine(["Alex", "Bina"], 1, "Iron man")).toBe("Alex and 2 others started Iron man");
-    expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex and 4 others started Iron man");
+    expect(joinLine(["Alex", "Bina"], 1, "Iron man")).toBe("Alex, Bina and 1 other started Iron man");
+    expect(joinLine(["Alex", "Bina"], 3, "Iron man")).toBe("Alex, Bina and 3 others started Iron man");
+    expect(joinLine(["Bilal", "Zayd"], 2, "Up by 5")).toBe("Bilal, Zayd and 2 others started Up by 5");
   });
 
   it("finished with 0 secured says ended; 1 day is singular", () => {

@@ -409,7 +409,7 @@ export const profilesRecordProcedures = {
 
       const { data: proofEvents, error: proofEventsErr } = await db
         .from("activity_events")
-        .select("id, metadata, created_at, shared")
+        .select("id, metadata, created_at, shared, share_state")
         .eq("user_id", ownerId)
         .eq("event_type", "task_completed")
         .limit(800);
@@ -429,8 +429,31 @@ export const profilesRecordProcedures = {
           metadata?: Record<string, unknown> | null;
           created_at?: string;
           shared?: boolean;
+          share_state?: string | null;
         }[],
       });
+      const eventIds = proofs.map((tile) => tile.eventId).filter((id): id is string => Boolean(id)).slice(0, 200);
+      if (eventIds.length > 0) {
+        const [{ data: reactions }, { data: comments }] = await Promise.all([
+          db.from("feed_reactions").select("event_id").in("event_id", eventIds),
+          db.from("feed_comments").select("event_id").in("event_id", eventIds),
+        ]);
+        const respect = new Map<string, number>();
+        const comment = new Map<string, number>();
+        for (const row of (reactions ?? []) as { event_id?: string }[]) {
+          if (!row.event_id) continue;
+          respect.set(row.event_id, (respect.get(row.event_id) ?? 0) + 1);
+        }
+        for (const row of (comments ?? []) as { event_id?: string }[]) {
+          if (!row.event_id) continue;
+          comment.set(row.event_id, (comment.get(row.event_id) ?? 0) + 1);
+        }
+        for (const tile of proofs) {
+          if (!tile.eventId) continue;
+          tile.respectCount = respect.get(tile.eventId) ?? 0;
+          tile.commentCount = comment.get(tile.eventId) ?? 0;
+        }
+      }
 
       const enrollmentIds = [
         ...record.runs.map((r) => r.id),

@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   nextCopy: { flex: 1, gap: 4 },
   nextTitle: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
   bar: { height: 6, borderRadius: 3, backgroundColor: DS_V3.color.border, overflow: "hidden" },
-  barFill: { height: 6, backgroundColor: DS_V3.color.brand },
+  barFill: { height: 6, backgroundColor: DS_V3.color.textPrimary },
   foot: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   count: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  discOn: { backgroundColor: DS_V3.color.brand },
+  discOn: { backgroundColor: DS_V3.color.raised },
   discOff: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: DS_V3.color.border },
   ring: {
     ...StyleSheet.absoluteFillObject,

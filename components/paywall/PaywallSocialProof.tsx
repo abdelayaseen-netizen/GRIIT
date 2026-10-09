@@ -90,7 +90,7 @@ export default function PaywallSocialProof({
         ListEmptyComponent={
           loading ? (
             <View style={styles.loadingPlans}>
-              <ActivityIndicator color={GRIIT_COLORS.primary} size="large" accessibilityLabel="Loading plans" />
+              <ActivityIndicator color={DS_V3.color.textSecondary} size="large" accessibilityLabel="Loading plans" />
             </View>
           ) : (
             <Text style={styles.noPlansText}>Subscription plans are unavailable. Check your connection.</Text>

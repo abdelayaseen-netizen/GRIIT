@@ -43,6 +43,7 @@ import {
   postDetailStamp,
   sendComposerArmed,
 } from "@/lib/post-detail";
+import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -51,6 +52,7 @@ type CommentItem = {
   user_id: string;
   text: string;
   created_at: string;
+  parent_id: string | null;
   display_name: string;
   username: string;
   avatar_url: string | null;
@@ -67,6 +69,7 @@ function PostThreadScreenInner() {
   const id = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
+  const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
 
   const cachedPost = useMemo(() => {
@@ -102,21 +105,32 @@ function PostThreadScreenInner() {
   });
 
   const comments = commentsQuery.data ?? [];
+  const rows = useMemo(
+    () => threadRows(comments.map((item) => ({ ...item, parent_id: item.parent_id ?? null }))),
+    [comments],
+  );
   const section = commentsSectionKind(commentsQuery.isPending, comments.length);
   const sendArmed = sendComposerArmed(draft);
+  const placeholder = replyTo ? replyComposerPlaceholder(replyTo.name) : COMMENT_PLACEHOLDER;
 
   const onRefresh = useCallback(() => {
     void Promise.all([postQuery.refetch(), commentsQuery.refetch()]);
   }, [postQuery, commentsQuery]);
 
   const commentMutation = useMutation({
-    mutationFn: (text: string) => trpcMutate(TRPC.feed.comment, { eventId: id, text }),
+    mutationFn: (input: { text: string; parentId?: string }) =>
+      trpcMutate(TRPC.feed.comment, {
+        eventId: id,
+        text: input.text,
+        ...(input.parentId ? { parentId: input.parentId } : {}),
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
       await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
       void postQuery.refetch();
       setDraft("");
+      setReplyTo(null);
     },
     onError: (e) => {
       captureError(e, "PostThreadComment");
@@ -140,8 +154,8 @@ function PostThreadScreenInner() {
   const onSend = useCallback(() => {
     const t = draft.trim();
     if (!t || !id) return;
-    commentMutation.mutate(t);
-  }, [draft, id, commentMutation]);
+    commentMutation.mutate({ text: t, parentId: replyTo?.id });
+  }, [draft, id, commentMutation, replyTo]);
 
   const listHeader = useMemo(() => {
     if (loading) {
@@ -185,9 +199,10 @@ function PostThreadScreenInner() {
           </View>
           <Text style={styles.completion}>
             {completionLine({
-              author,
-              task: displayPost.taskName?.trim() || "a task",
               challenge: displayPost.challengeName,
+              day: displayPost.currentDay,
+              total: displayPost.totalDays,
+              task: displayPost.taskName,
             })}
           </Text>
           {commentsCountLabel(displayPost.commentCount) ? (
@@ -205,7 +220,8 @@ function PostThreadScreenInner() {
   }, [loading, displayPost, postQuery.isError, postQuery.error, section]);
 
   const renderCommentItem = useCallback(
-    ({ item, index }: { item: CommentItem; index: number }) => {
+    ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {
+      const item = row.item;
       const isMine = Boolean(user?.id && item.user_id === user.id);
       const parts = commentRowParts({
         displayName: item.display_name,
@@ -214,16 +230,20 @@ function PostThreadScreenInner() {
         text: item.text,
         formatTime: relativeTime,
       });
+      const next = rows[index + 1];
       return (
-        <View>
+        <View style={row.depth > 0 ? styles.reply : undefined}>
+          {row.depth > 0 ? <View style={styles.threadLine} /> : null}
+          <View style={styles.replyBody}>
           <Pressable
+            onPress={() => setReplyTo({ id: item.id, name: parts.name })}
             onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
             delayLongPress={450}
             accessibilityRole="button"
             accessibilityLabel={
               isMine
                 ? "Your comment — long press to delete"
-                : `Comment by ${parts.name}`
+                : `Reply to ${parts.name}`
             }
           >
             <CommentRow
@@ -252,11 +272,12 @@ function PostThreadScreenInner() {
               </Pressable>
             </View>
           ) : null}
-          {index < comments.length - 1 ? <Divider /> : null}
+          {next && next.depth === 0 ? <Divider /> : null}
+          </View>
         </View>
       );
     },
-    [user?.id, deleteCommentTargetId, deleteCommentMutation, comments.length],
+    [user?.id, deleteCommentTargetId, deleteCommentMutation, rows],
   );
 
   return (
@@ -269,8 +290,8 @@ function PostThreadScreenInner() {
         keyboardVerticalOffset={Platform.OS === "ios" ? DS_V3.size.tap : 0}
       >
         <FlatList
-          data={section === "list" ? comments : []}
-          keyExtractor={(c) => c.id}
+          data={section === "list" ? rows : []}
+          keyExtractor={(row) => row.item.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={listHeader}
           ListEmptyComponent={
@@ -298,12 +319,21 @@ function PostThreadScreenInner() {
         />
 
         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.lg) }]}>
+          {replyTo ? (
+            <Pressable
+              onPress={() => setReplyTo(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel reply"
+            >
+              <Text style={styles.cancelReply}>Cancel reply</Text>
+            </Pressable>
+          ) : null}
           <View style={styles.field}>
             <TextField
               value={draft}
               onChangeText={setDraft}
-              placeholder={COMMENT_PLACEHOLDER}
-              accessibilityLabel={COMMENT_PLACEHOLDER}
+              placeholder={placeholder}
+              accessibilityLabel={placeholder}
               ground={composerFieldGround("route")}
               maxLength={200}
               multiline
@@ -343,6 +373,23 @@ const styles = StyleSheet.create({
   list: { paddingBottom: DS_V3.space.lg },
   stack: { gap: DS_V3.space.lg, paddingBottom: DS_V3.space.lg },
   gutter: { paddingHorizontal: DS_V3.space.gutter, gap: DS_V3.space.lg },
+  reply: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    paddingLeft: DS_V3.space.gutter,
+  },
+  threadLine: {
+    width: 2,
+    backgroundColor: DS_V3.color.hairline,
+    marginRight: DS_V3.space.sm,
+  },
+  replyBody: { flex: 1 },
+  cancelReply: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.textSecondary,
+    paddingBottom: DS_V3.space.sm,
+  },
   authorRow: {
     flexDirection: "row",
     alignItems: "center",

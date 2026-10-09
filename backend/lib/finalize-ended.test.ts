@@ -8,6 +8,7 @@ import {
   endedStatusForFinalize,
   isUnseenEnding,
   shouldEmitCompletedChallenge,
+  mayEmitFinishedChallenge,
 } from "./finalize-ended";
 
 const USER = "11111111-1111-4111-8111-111111111111";
@@ -34,9 +35,13 @@ type EventRow = {
   shared?: boolean;
 };
 
-function createDb(seed: { ac: AcRow[]; events: EventRow[] }, opts?: { insertError?: { code: string } }) {
+function createDb(
+  seed: { ac: AcRow[]; events: EventRow[]; secures?: { date_key: string }[] },
+  opts?: { insertError?: { code: string } },
+) {
   const ac = seed.ac.map((r) => ({ ...r }));
   const events = seed.events.map((r) => ({ ...r }));
+  const secures = (seed.secures ?? [{ date_key: "2026-09-19" }]).map((r) => ({ ...r }));
   const updates: Record<string, unknown>[] = [];
   const inserts: EventRow[] = [];
 
@@ -112,11 +117,22 @@ function createDb(seed: { ac: AcRow[]; events: EventRow[] }, opts?: { insertErro
     return chain;
   }
 
+  function secureChain() {
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      then: (resolve: (v: { data: unknown; error: null }) => unknown) =>
+        Promise.resolve(resolve({ data: secures, error: null })),
+    };
+    return chain;
+  }
+
   const supabase = {
     from: (table: string) => {
       if (table === "active_challenges") return acChain();
       if (table === "activity_events") return evChain();
       if (table === "challenges") return chChain();
+      if (table === "day_secures") return secureChain();
       throw new Error(table);
     },
     _ac: ac,
@@ -167,6 +183,29 @@ describe("applyFinalizeEnded", () => {
     expect(db._inserts.filter((e) => e.event_type === "completed_challenge")).toHaveLength(1);
     expect(db._ac[0]?.status).toBe("completed");
     expect(db._ac[0]?.ended_at).toBe("2026-09-19T23:59:59.999Z");
+  });
+
+  it("does not emit a finish for zero secured days or a leave", async () => {
+    const db = createDb({
+      ac: [
+        {
+          id: AC,
+          user_id: USER,
+          challenge_id: CH,
+          status: "active",
+          end_at: "2026-09-19T23:59:59.999Z",
+        },
+      ],
+      events: [],
+      secures: [],
+    });
+    const result = await applyFinalizeEnded(db as never, USER, NOW);
+    expect(result.finalized).toEqual([AC]);
+    expect(result.eventsEmitted).toBe(0);
+    expect(db._inserts).toHaveLength(0);
+    expect(mayEmitFinishedChallenge(0, "completed")).toBe(false);
+    expect(mayEmitFinishedChallenge(2, "abandoned")).toBe(false);
+    expect(mayEmitFinishedChallenge(2, "completed")).toBe(true);
   });
 
   it("zombie already completed is not re-emitted", async () => {

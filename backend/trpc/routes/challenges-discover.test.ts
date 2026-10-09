@@ -30,6 +30,7 @@ const RECOMMENDED_COLUMNS = [
   "visibility",
   "status",
   "creator_id",
+  "challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)",
 ] as const;
 
 function sectionAfter(marker: string): string {

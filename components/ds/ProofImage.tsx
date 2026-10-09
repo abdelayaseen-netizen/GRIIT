@@ -56,6 +56,8 @@ export function proofRequestSource(
   if (!/^https?:\/\//i.test(raw)) return input;
   try {
     const url = new URL(raw);
+    // A signed storage URL is authorized by its token. Extra params are not a resize.
+    if (url.pathname.includes("/object/sign/")) return raw;
     url.searchParams.set("w", String(PROOF_REQUEST_WIDTH[size]));
     return url.toString();
   } catch {

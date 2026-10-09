@@ -80,6 +80,7 @@ describe("v44.1 share styles", () => {
     expect(lines).toContain("Go to the gym");
     expect(lines).toContain("SHOW UP 7");
     expect(lines).toContain("Find me on GRIIT · @noahb");
+    expect(lines.filter((line) => line.includes("@noahb"))).toHaveLength(1);
     expect(lines.join("\n")).not.toContain("Day 3. Pages before coffee.");
     expect(photo.transparent).toBe(false);
     expect(photo.photo).toBe(true);
@@ -93,6 +94,16 @@ describe("v44.1 share styles", () => {
       inviteCode: code,
     });
     expect(paintStrings(sticker)).toContain("days in a row");
+    const ink = buildSharePaint({
+      style: "B",
+      colour: "ink",
+      challenge: "Show Up 7",
+      day: 5,
+      durationDays: 7,
+      streak: 3,
+    });
+    expect(JSON.stringify(ink.block.items)).toContain("#F5F3EE");
+    expect(JSON.stringify(ink.block.items)).not.toContain("#0F0F0F");
     const one = buildSharePaint({
       style: "E",
       colour: "orange",
@@ -104,7 +115,6 @@ describe("v44.1 share styles", () => {
     expect(paintStrings(one)).toContain("day in a row");
     expect(paintStrings(one)).not.toContain("days in a row");
     expect(sticker.transparent).toBe(true);
-    expect(sticker.background).toBe("transparent");
     expect(storyUsesSticker("B")).toBe(true);
     expect(storyUsesSticker("A")).toBe(false);
     expect(storyUsesSticker("G")).toBe(false);

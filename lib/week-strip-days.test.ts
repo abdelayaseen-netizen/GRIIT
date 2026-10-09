@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildWeekStripDays,
+  enrollmentWeekDayState,
   firstWeekStripDays,
   weekStripAccessibilityLabel,
   weekStripDayState,
@@ -86,5 +87,26 @@ describe("weekStripDayState", () => {
     expect(cell).toContain("Snowflake");
     expect(cell).toContain("Shield");
     expect(strip).toContain("weekStripAccessibilityLabel");
+  });
+});
+
+describe("enrollmentWeekDayState", () => {
+  const base = {
+    startDateKey: "2026-10-06",
+    todayKey: "2026-10-08",
+    lastDateKey: "2026-10-12",
+    secured: false,
+    frozen: false,
+    lastStand: false,
+  };
+  it("covers every strip state", () => {
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-05" })).toBe("before");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-09" })).toBe("future");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-13" })).toBe("future");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-07" })).toBe("missed");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-06", secured: true })).toBe("secured");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-06", frozen: true })).toBe("frozen");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-06", lastStand: true })).toBe("last_stand");
+    expect(enrollmentWeekDayState({ ...base, dateKey: "2026-10-08" })).toBe("missed");
   });
 });

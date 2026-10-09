@@ -1,0 +1,20 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build80
+- extendedWaitUntil:
+    visible:
+      id: build80-photo
+    timeout: 25000
+- takeScreenshot: photo-post
+- scrollUntilVisible:
+    element:
+      id: build80-started
+    direction: DOWN
+- takeScreenshot: started-line
+- scrollUntilVisible:
+    element:
+      id: build80-finished
+    direction: DOWN
+- takeScreenshot: finished-post

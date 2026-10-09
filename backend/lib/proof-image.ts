@@ -39,7 +39,7 @@ export function ownedProofWrite(
     logger.warn({ userId, path }, "[proof-image] drop unowned proof write");
     return null;
   }
-  return trimmed;
+  return path;
 }
 
 export function toProofPath(stored: string | null | undefined): string | null {

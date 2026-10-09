@@ -38,6 +38,7 @@ import {
 } from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
+import { completedTaskIds } from "@/lib/today-completion";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
 import { StreakSheet } from "@/components/home/StreakSheet";
 import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
@@ -263,7 +264,7 @@ export default function HomeScreen() {
       const doneRows = checkins.filter(
         (c) => c.active_challenge_id === ac.id && c.status === "completed",
       );
-      const doneSet = new Set(doneRows.map((c) => c.task_id));
+      const doneSet = completedTaskIds(checkins, ac.id);
       const proofByTask = new Map(
         doneRows.map((c) => [
           String(c.task_id),
@@ -827,6 +828,9 @@ export default function HomeScreen() {
           streak={streak ?? undefined}
           longestStreak={resolvedStats?.longestStreak}
           activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
+          todayKey={todayKey}
+          securedDateKeys={securedDateKeys}
+          frozenDateKeys={(resolvedStats as { frozenDateKeys?: string[] } | null)?.frozenDateKeys ?? []}
         />
         <StreakSheet
           visible={showStreakSheet && !taskToastUp}

@@ -19,7 +19,24 @@ export const WEEK_STRIP_WEEKDAYS = [
   "Sunday",
 ] as const;
 
-/** Home week squares. Secured wins over frozen when both exist for a key. */
+/** Challenge detail strip. Missed is only a past due day. Future stays dotted. Before join is a dot. */
+export function enrollmentWeekDayState(input: {
+  dateKey: string;
+  startDateKey: string;
+  todayKey: string;
+  lastDateKey: string;
+  secured: boolean;
+  frozen: boolean;
+  lastStand: boolean;
+}): WeekStripDayState {
+  if (!input.dateKey || input.dateKey < input.startDateKey) return "before";
+  if (input.dateKey > input.todayKey || input.dateKey > input.lastDateKey) return "future";
+  if (input.secured) return "secured";
+  if (input.lastStand) return "last_stand";
+  if (input.frozen) return "frozen";
+  if (input.dateKey < input.todayKey) return "missed";
+  return "missed";
+}
 export function weekStripDayState(input: {
   secured: boolean;
   frozen: boolean;

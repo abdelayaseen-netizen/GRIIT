@@ -12,11 +12,14 @@ export function commentsCountLabel(n: number): string {
 }
 
 export function completionLine(input: {
-  author: string;
-  task: string;
   challenge: string;
+  day: number;
+  total: number;
+  task?: string | null;
 }): string {
-  return `${input.author} · ${input.task} · ${input.challenge}`;
+  const task = input.task?.trim() ?? "";
+  const head = `${input.challenge} · Day ${input.day} of ${input.total}`;
+  return task ? `${head} · ${task}` : head;
 }
 
 export function postDetailPhotoUri(post: {

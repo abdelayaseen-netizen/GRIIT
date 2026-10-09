@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { addCalendarDaysToDateKey } from "./date-utils";
-import { enrollmentFinishNumbers } from "./enrollment-finish";
+import { enrollmentFinishNumbers, finishStartedLabel } from "./enrollment-finish";
 
 function keys(from: string, n: number): string[] {
   const out: string[] = [];
@@ -43,6 +43,14 @@ describe("enrollmentFinishNumbers", () => {
       frozenDateKeys: ["2026-10-01"],
     });
     expect(n).toEqual({ securedDays: 1, longestStreak: 1, heldDays: 0, daysDone: 1 });
+  });
+});
+
+describe("finishStartedLabel", () => {
+  it("uses the profile time zone, not the UTC clock", () => {
+    expect(finishStartedLabel("2026-09-06T02:00:00.000Z", "America/New_York")).toBe("Sep 5");
+    expect(finishStartedLabel("2026-09-06T04:00:00.000Z", "America/New_York")).toBe("Sep 6");
+    expect(finishStartedLabel(null, "UTC")).toBeNull();
   });
 });
 

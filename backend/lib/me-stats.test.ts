@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestStreakRun, buildMeStats, consistencyPct, usualHour } from "./me-stats";
+import { bestStreakRun, buildMeStats, consistencyPct, proofMethodFromMetadata, usualHour } from "./me-stats";
 import { inclusiveDayCount } from "./date-utils";
 
 describe("best streak dates", () => {
@@ -66,5 +66,65 @@ describe("range stats", () => {
     });
     expect(usualHour(stats.user_stats.proof_hour_histogram)).toBe(9);
     expect(stats.user_stats.proofs_by_method.camera).toBe(5);
+  });
+
+  it("buckets a UTC midnight proof in the profile time zone, not as 0:00", () => {
+    const stats = buildMeStats({
+      ...base,
+      range: "all",
+      proofs: Array.from({ length: 5 }, () => ({
+        atIso: "2026-10-06T04:00:00.000Z",
+        method: "self_reported" as const,
+      })),
+    });
+    expect(usualHour(stats.user_stats.proof_hour_histogram)).toBe(0);
+    const evening = buildMeStats({
+      ...base,
+      range: "all",
+      proofs: Array.from({ length: 5 }, () => ({
+        atIso: "2026-10-07T00:30:00.000Z",
+        method: "self_reported" as const,
+      })),
+    });
+    expect(usualHour(evening.user_stats.proof_hour_histogram)).toBe(20);
+  });
+
+  it("counts a self-reported proof as self-reported even when a photo url is stored", () => {
+    expect(
+      proofMethodFromMetadata({
+        verification_method: "self_reported",
+        photo_url: "user/proof.jpg",
+        has_photo: true,
+      }),
+    ).toBe("self_reported");
+    expect(proofMethodFromMetadata({ verification_method: "photo" })).toBe("camera");
+    expect(proofMethodFromMetadata({ photo_url: "user/proof.jpg" })).toBe("camera");
+  });
+
+  it("hides a challenge with no due days and uses the singular day", () => {
+    const stats = buildMeStats({
+      ...base,
+      range: "7d",
+      enrollments: [
+        {
+          id: "today",
+          title: "Starts today",
+          startKey: "2026-10-07",
+          durationDays: 7,
+          status: "running",
+          finishedAt: null,
+        },
+        {
+          id: "one",
+          title: "One day",
+          startKey: "2026-10-06",
+          durationDays: 1,
+          status: "finished",
+          finishedAt: "2026-10-06",
+        },
+      ],
+    });
+    expect(stats.enrollments.map((row) => row.id)).toEqual(["one"]);
+    expect(stats.enrollments[0]?.line).toBe("1 of 1 day secured.");
   });
 });

@@ -230,6 +230,7 @@ function LiveFeedSection({
   const posts = (optimisticPost ? [optimisticPost, ...pagePosts.filter((post) => post.id !== optimisticPost.id)] : pagePosts).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
+    if ((post.isCompleted || post.eventType === "completed_challenge") && (post.securedDays ?? 0) < 1) return false;
     return true;
   });
 
@@ -535,6 +536,7 @@ function LiveFeedSection({
                 },
               } as never)
             }
+            onMenu={() => openPostMenu(item)}
           />
         </View>
       );
@@ -715,7 +717,7 @@ function LiveFeedSection({
         ListFooterComponent={
           <View style={styles.feedFooter}>
             {feedQuery.isFetchingNextPage ? (
-              <ActivityIndicator size={24} color={DS_V3.color.brand} />
+              <ActivityIndicator size={24} color={DS_V3.color.textSecondary} />
             ) : null}
             {!feedQuery.isPending && !feedQuery.isError && !feedQuery.hasNextPage ? (
               <View style={styles.caughtUp} accessibilityLabel={CAUGHT_UP}>
@@ -918,7 +920,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: DS_RADIUS.SM,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textSecondary,
   },
   untilThree: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -959,10 +961,10 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   togglePillActive: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   toggleText: { fontSize: 12, color: DS_V3.color.textSecondary, fontWeight: "500" },
-  toggleTextActive: { color: DS_V3.color.brandText, fontWeight: "500" },
+  toggleTextActive: { color: DS_V3.color.canvas, fontWeight: "500" },
     listContent: {
       paddingHorizontal: 0,
       backgroundColor: DS_V3.color.canvas,

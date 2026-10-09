@@ -10,9 +10,6 @@ import { dayLine } from "@/lib/story-card";
 import { proofsDateLabel, type ProofsGridItem } from "@/lib/proofs-grid";
 import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
 
-const HEADER = 88;
-const CAPTION = 72;
-
 function selfReportedLine(capturedAt: string | null): string {
   if (!capturedAt) return "Self-reported";
   const d = new Date(capturedAt);
@@ -39,7 +36,6 @@ export function ProofScroll({
   const { width } = useWindowDimensions();
   const photoW = Math.max(1, width - DS_V3.space.gutter * 2);
   const photoH = Math.round(photoW * 1.25);
-  const itemH = HEADER + photoH + CAPTION;
   const initialIndex = useMemo(() => {
     if (!initialId) return 0;
     const i = items.findIndex((item) => item.id === initialId);
@@ -59,7 +55,7 @@ export function ProofScroll({
       data={items}
       keyExtractor={(item) => item.id}
       initialScrollIndex={items.length > 0 ? initialIndex : undefined}
-      getItemLayout={(_data, index) => ({ length: itemH, offset: itemH * index, index })}
+      onScrollToIndexFailed={() => undefined}
       initialNumToRender={2}
       windowSize={5}
       onViewableItemsChanged={onViewable}
@@ -67,7 +63,7 @@ export function ProofScroll({
       renderItem={({ item }) => {
         const photo = Boolean(item.uri);
         return (
-          <View style={[styles.entry, { height: itemH }]}>
+          <View style={styles.entry}>
             <Text style={styles.meta}>
               {proofsDateLabel(item.dateKey)} · {item.challengeName} · {dayLine(item.day, item.durationDays)} · {item.taskName}
             </Text>
@@ -83,7 +79,13 @@ export function ProofScroll({
                 <Text style={styles.selfLine}>{selfReportedLine(item.capturedAt)}</Text>
               </View>
             )}
-            {item.shared ? null : <Text style={styles.private}>Only you can see this.</Text>}
+            {item.shared ? (
+              <Text style={styles.share}>
+                {`${item.respectCount ?? 0} ${item.respectCount === 1 ? "respect" : "respects"} · ${item.commentCount ?? 0} ${item.commentCount === 1 ? "comment" : "comments"}`}
+              </Text>
+            ) : (
+              <Text style={styles.private}>Only you can see this.</Text>
+            )}
           </View>
         );
       }}

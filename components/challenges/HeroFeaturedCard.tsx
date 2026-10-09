@@ -23,4 +23,5 @@ export interface HeroFeaturedData {
     friend_names: string[];
     others_count: number;
   };
+  tasks?: { title: string; gate: string }[];
 }

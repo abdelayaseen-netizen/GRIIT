@@ -73,7 +73,7 @@ function FeedCardHeaderInner({ post, onProfilePress, onMenuPress }: Props) {
         {completedToday ? (
           <View style={styles.badgeOuter}>
             <View style={styles.badgeGreen}>
-              <Check size={8} color={DS_V3.color.textPrimary} strokeWidth={3} />
+              <Check size={8} color={DS_V3.color.canvas} strokeWidth={3} />
             </View>
           </View>
         ) : showStreakBadge ? (
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -158,14 +158,14 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeStreakText: {
     fontSize: 9,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.textPrimary,
+    color: DS_V3.color.canvas,
   },
   headerMid: { flex: 1, marginLeft: 11, minWidth: 0 },
   username: {

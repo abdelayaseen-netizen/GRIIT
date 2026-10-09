@@ -22,6 +22,7 @@ import { deriveProofType } from "../../lib/task-model";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
+import { enrollmentFinishNumbers, finishStartedLabel } from "../../lib/enrollment-finish";
 import { finishedRunFromEnrollment } from "../../lib/finished-run";
 import { ownedProofWrite, sharedPathsFromEvents, signProofPair, signProofPaths } from "../../lib/proof-image";
 import { canSeeContent, coMemberChallengeIds, eventIsShared, isFriend, mutualFriendIds, sharesChallenge } from "../../lib/is-friend";
@@ -314,14 +315,23 @@ export const feedRouter = createTRPCRouter({
           timeZoneByUser: new Map([[ev.user_id, tz]]),
         })
       : null;
-    const { data: secureRows } = finishedBounds
-      ? await server
-          .from("day_secures")
-          .select("date_key")
-          .eq("user_id", ev.user_id)
-          .gte("date_key", finishedBounds.fromKey)
-          .lt("date_key", finishedBounds.toKeyExclusive)
-      : { data: [] as { date_key: string }[] };
+    const [{ data: secureRows }, { data: freezeRows }] = finishedBounds
+      ? await Promise.all([
+          server
+            .from("day_secures")
+            .select("date_key")
+            .eq("user_id", ev.user_id)
+            .gte("date_key", finishedBounds.fromKey)
+            .lt("date_key", finishedBounds.toKeyExclusive),
+          server
+            .from("freeze_uses")
+            .select("date_key")
+            .eq("user_id", ev.user_id)
+            .gte("date_key", finishedBounds.fromKey)
+            .lt("date_key", finishedBounds.toKeyExclusive),
+        ])
+      : [{ data: [] as { date_key: string }[] }, { data: [] as { date_key: string }[] }];
+    const securedDateKeys = ((secureRows ?? []) as { date_key: string }[]).map((r) => r.date_key);
     const finishedRun = isCompletedChallenge
       ? finishedRunFromEnrollment({
           startAt: enrollment?.start_at,
@@ -330,8 +340,15 @@ export const feedRouter = createTRPCRouter({
           status: enrollment?.status,
           timeZone: tz,
           todayKey: postTodayKey,
-          securedDateKeys: ((secureRows ?? []) as { date_key: string }[]).map((r) => r.date_key),
+          securedDateKeys,
           durationDays,
+        })
+      : undefined;
+    const finishCard = finishedRun
+      ? enrollmentFinishNumbers({
+          dueDateKeys: finishedRun.dueDayKeys,
+          securedDateKeys,
+          frozenDateKeys: ((freezeRows ?? []) as { date_key: string }[]).map((r) => r.date_key),
         })
       : undefined;
     const securedDays = finishedRun?.secured;
@@ -344,7 +361,7 @@ export const feedRouter = createTRPCRouter({
       { sharedPaths: sharedPathsFromEvents([ev]) },
     );
     return {
-      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
+      id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, longestStreak: finishCard?.longestStreak, heldDays: finishCard?.heldDays, startedOn: enrollment?.start_at ?? null, startedLabel: finishStartedLabel(enrollment?.start_at, tz), totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: signed.photoUrl, proofPhotoUrl: signed.proofPhotoUrl, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,

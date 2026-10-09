@@ -34,17 +34,10 @@ export function respectHeart(liked: boolean): {
   fill: string;
   countColor: string;
 } {
-  if (liked) {
-    return {
-      color: DS_V3.color.brand,
-      fill: DS_V3.color.brand,
-      countColor: DS_V3.color.brandText,
-    };
-  }
   return {
-    color: DS_V3.color.textSecondary,
-    fill: "none",
-    countColor: DS_V3.color.textSecondary,
+    color: DS_V3.color.textPrimary,
+    fill: liked ? DS_V3.color.textPrimary : "none",
+    countColor: DS_V3.color.textPrimary,
   };
 }
 

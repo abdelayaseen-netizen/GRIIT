@@ -1,0 +1,19 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build80
+- extendedWaitUntil:
+    visible:
+      id: feed-respect
+    timeout: 25000
+- tapOn:
+    id: feed-respect
+- extendedWaitUntil:
+    visible:
+      id: respect-13
+    timeout: 8000
+- assertVisible:
+    id: build80-opened
+- assertNotVisible:
+    id: comments-open

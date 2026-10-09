@@ -16,7 +16,7 @@ export default function Spinner({ size = 20 }: SpinnerProps) {
   const dim = size === 44 ? DS_V3.size.tap : DS_V3.space.gutter;
   return (
     <ActivityIndicator
-      color={DS_V3.color.brand}
+      color={DS_V3.color.textSecondary}
       size={size === 44 ? "large" : "small"}
       style={[styles.box, { width: dim, height: dim }]}
     />

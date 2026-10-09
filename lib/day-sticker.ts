@@ -21,6 +21,7 @@ export type ShareTodayChallenge = {
   stickerKind?: "day" | "challenge";
   /** Challenge id used as the invite code. Existing column, already on the home section. */
   inviteCode?: string | null;
+  startDateKey?: string | null;
 };
 
 function isDateKey(value: string): boolean {
@@ -79,6 +80,7 @@ export function shareTodayChallenges(
     totalCount?: number;
     proof?: "camera" | "camera_place" | "self";
     challengeId?: string | null;
+    startDateKey?: string | null;
   }[],
 ): ShareTodayChallenge[] {
   return sections
@@ -97,6 +99,7 @@ export function shareTodayChallenges(
       proof: s.proof,
       stickerKind: "day" as const,
       inviteCode: s.challengeId ?? null,
+      startDateKey: s.startDateKey ?? null,
     }));
 }
 

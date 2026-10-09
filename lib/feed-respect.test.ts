@@ -26,15 +26,15 @@ describe("feed respect", () => {
 });
 
 describe("respectHeart", () => {
-  it("outline textSecondary when not respected; brand fill when respected", () => {
+  it("stays Text 1, filled when respected", () => {
     const off = respectHeart(false);
     expect(off.fill).toBe("none");
-    expect(off.color).toBe(DS_V3.color.textSecondary);
-    expect(off.countColor).toBe(DS_V3.color.textSecondary);
+    expect(off.color).toBe(DS_V3.color.textPrimary);
+    expect(off.countColor).toBe(DS_V3.color.textPrimary);
     const on = respectHeart(true);
-    expect(on.fill).toBe(DS_V3.color.brand);
-    expect(on.color).toBe(DS_V3.color.brand);
-    expect(on.countColor).toBe(DS_V3.color.brandText);
+    expect(on.fill).toBe(DS_V3.color.textPrimary);
+    expect(on.color).toBe(DS_V3.color.textPrimary);
+    expect(on.countColor).toBe(DS_V3.color.textPrimary);
   });
 });
 

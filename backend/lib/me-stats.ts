@@ -111,6 +111,16 @@ export function usualHour(histogram: readonly number[]): number | null {
   return idx;
 }
 
+/** The proof's recorded method. A photo URL does not turn a self-reported task into camera. */
+export function proofMethodFromMetadata(metadata: Record<string, unknown> | null | undefined): ProofMethod {
+  const method = metadata?.verification_method;
+  if (method === "apple_health") return "apple_health";
+  if (method === "self_reported" || method === "manual") return "self_reported";
+  if (method === "photo") return "camera";
+  if (metadata?.photo_url || metadata?.proof_photo_url) return "camera";
+  return "self_reported";
+}
+
 function hourInZone(iso: string, timeZone: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
@@ -205,7 +215,7 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
     const securedDays = days.filter((k) => secured.has(k)).length;
     const heldDays = days.filter((k) => held.has(k)).length;
     const dueDays = days.length;
-    const heldLine = heldDays > 0 ? ` ${heldDays} day${heldDays === 1 ? "" : "s"} held by a freeze.` : "";
+    const heldLine = heldDays > 0 ? ` ${heldDays} ${heldDays === 1 ? "day" : "days"} held by a freeze.` : "";
     return {
       id: row.id,
       title: row.title,
@@ -213,9 +223,9 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
       due_days: dueDays,
       status: row.status,
       finished_at: row.finishedAt,
-      line: `${securedDays} of ${dueDays} days secured.${heldLine}`,
+      line: `${securedDays} of ${dueDays} ${dueDays === 1 ? "day" : "days"} secured.${heldLine}`,
     };
-  });
+  }).filter((row) => row.due_days > 0);
   return {
     range: input.range,
     user_stats: {

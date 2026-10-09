@@ -69,11 +69,20 @@ export type ShareSystemSheetProps = {
 function ScaledPreview({ card }: { card: ShareCardInput }) {
   return (
     <View style={styles.previewClip}>
+      {card.style === "B" ? <Checkerboard /> : null}
       <View style={styles.previewScale}>
         <ShareImage input={card} />
       </View>
     </View>
   );
+}
+
+function Checkerboard() {
+  const cells = Array.from({ length: 64 }, (_, i) => {
+    const light = (Math.floor(i / 8) + (i % 8)) % 2 === 0;
+    return <View key={i} style={[styles.check, light ? styles.checkLight : styles.checkDark]} />;
+  });
+  return <View style={styles.checker}>{cells}</View>;
 }
 
 export default function ShareSystemSheet({
@@ -178,7 +187,7 @@ export default function ShareSystemSheet({
 
   const targets = [
     ...(storyUsesSticker(styleId)
-      ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: true }]
+      ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: false }]
       : []),
     ...(showStory ? [{ id: "story" as const, label: SHARE_TARGET_STORY, icon: Instagram, primary: false }] : []),
     { id: "save" as const, label: SHARE_TARGET_SAVE, icon: Download, primary: false },
@@ -321,6 +330,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 30,
   },
+  checker: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  check: { width: "12.5%", height: "12.5%" },
+  checkLight: { backgroundColor: "#E7E2D8" },
+  checkDark: { backgroundColor: "#8E887E" },
   previewScale: {
     position: "absolute",
     width: SHARE_W,

@@ -23,8 +23,11 @@ export function ProfileChallenges({
 }) {
   void formatDate;
   const running = challenges.filter((c) => c.status === "active");
+  const left = challenges
+    .filter((c) => c.status === "abandoned")
+    .sort((a, b) => (b.ended_at ?? "").localeCompare(a.ended_at ?? ""));
   const finished = challenges
-    .filter((c) => c.status !== "active")
+    .filter((c) => c.status === "completed" || c.status === "failed")
     .sort((a, b) => (b.ended_at ?? "").localeCompare(a.ended_at ?? ""));
 
   return (
@@ -56,6 +59,25 @@ export function ProfileChallenges({
           <Text style={styles.section}>Finished</Text>
           <View style={styles.gutter}>
             {finished.map((c) => (
+              <View key={c.id} style={styles.cardWrap}>
+                <ChallengeCard
+                  title={c.title}
+                  status={c.status}
+                  line={cardLine(c)}
+                  days={c.segs ?? []}
+                  onPress={() => onOpen?.(c)}
+                />
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      {left.length ? (
+        <>
+          <Text style={styles.section}>Left</Text>
+          <View style={styles.gutter}>
+            {left.map((c) => (
               <View key={c.id} style={styles.cardWrap}>
                 <ChallengeCard
                   title={c.title}
