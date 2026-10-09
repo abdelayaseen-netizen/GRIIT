@@ -41,6 +41,8 @@ export type ProofsGridItem = {
   gateTime: GateTime | null;
   eventId: string | null;
   shared: boolean;
+  respectCount?: number;
+  commentCount?: number;
   /** Object size when known. Below `MIN_PROOF_IMAGE_BYTES` is a stub. */
   bytes?: number | null;
   shareState?: "unanswered" | "shared" | "kept";
@@ -145,6 +147,8 @@ export function itemsFromRecordProofs(
     gateTime?: GateTime | null;
     shared?: boolean;
     shareState?: "unanswered" | "shared" | "kept";
+    respectCount?: number;
+    commentCount?: number;
   }[],
   options?: { includeSelf?: boolean },
 ): ProofsGridItem[] {
@@ -167,6 +171,8 @@ export function itemsFromRecordProofs(
       gateTime: p.gateTime ?? null,
       eventId: p.eventId ?? null,
       shared: p.shared !== false,
+      respectCount: p.respectCount,
+      commentCount: p.commentCount,
       bytes: typeof p.bytes === "number" ? p.bytes : null,
       shareState: p.shareState,
     });

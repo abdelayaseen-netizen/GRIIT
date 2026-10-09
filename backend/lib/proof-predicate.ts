@@ -52,6 +52,8 @@ export type RecordProofTile = {
   taskName: string;
   gateTime: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
   shared: boolean;
+  respectCount?: number;
+  commentCount?: number;
 };
 
 export function checkInHasCameraProof(row: ProofCheckIn): boolean {
