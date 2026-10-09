@@ -6,9 +6,11 @@ import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions } from "re
 import Sheet from "@/components/ds/Sheet";
 import Button from "@/components/ds/Button";
 import { Cover, type CoverCategory } from "@/components/ds/Cover";
+import Chip from "@/components/ds/Chip";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
 import { JOIN_CAPTION_TODAY } from "@/lib/challenge-detail-mapping";
+import type { DiscoverPreviewTask } from "@/lib/discover-preview-tasks";
 import type { FeaturedBuiltin } from "@/lib/featured-catalog";
 
 export type ChallengePreview = {
@@ -22,6 +24,8 @@ export type ChallengePreview = {
   proof?: string;
   window?: string;
   modeLine: string;
+  difficulty?: string;
+  tasks?: DiscoverPreviewTask[];
   day1Line: string;
   builtin?: FeaturedBuiltin | null;
 };
@@ -49,7 +53,6 @@ export function ChallengePreviewSheet({
         ? "1 person"
         : `${item.people.toLocaleString("en-US")} people`;
   const meta = [formatDays(item.days), item.category, people].filter(Boolean).join(" · ");
-  const gate = [item.proof, item.window].filter((s) => (s ?? "").trim()).join(" · ");
 
   return (
     <Sheet
@@ -74,10 +77,14 @@ export function ChallengePreviewSheet({
         <Cover category={item.category} title={item.title} days={item.days} width={coverW} height={200} />
         <Text style={styles.meta}>{meta}</Text>
         {item.description ? <Text style={styles.description}>{item.description}</Text> : null}
-        <Text style={styles.section}>Every day</Text>
-        {item.taskTitle ? <Text style={styles.row}>{item.taskTitle}</Text> : null}
-        {gate ? <Text style={styles.rule}>{gate}</Text> : null}
-        <Text style={styles.mode}>{item.modeLine}</Text>
+        {(item.tasks ?? []).length > 0 ? <Text style={styles.section}>Every day</Text> : null}
+        {(item.tasks ?? []).map((task) => (
+          <Text key={task.title} style={styles.row}>
+            {task.title}
+            {task.gate ? <Text style={styles.rule}>{` · ${task.gate}`}</Text> : null}
+          </Text>
+        ))}
+        {item.difficulty ? <Chip label={item.difficulty} /> : null}
       </ScrollView>
     </Sheet>
   );

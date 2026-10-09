@@ -42,6 +42,7 @@ import {
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
+import { difficultyChip } from "@/lib/discover-preview-tasks";
 
 const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
   fitness: "Fitness",
@@ -147,6 +148,8 @@ export function DiscoverV3({
       taskTitle: item.task,
       proof: featuredProofLabel(item.proof),
       window: item.rule,
+      tasks: [{ title: item.task, gate: [featuredProofLabel(item.proof), item.rule].filter(Boolean).join(" · ") }],
+      difficulty: "Standard",
       modeLine: MODE_STANDARD_DETAIL,
       day1Line,
       builtin: item,
@@ -160,7 +163,8 @@ export function DiscoverV3({
       category: catalogCoverCategory(item.category),
       days: item.duration,
       people: item.participantCount,
-      proof: item.difficulty === "HARD" ? "Hard" : undefined,
+      tasks: item.tasks ?? [],
+      difficulty: difficultyChip(item.difficulty),
       modeLine: item.difficulty === "HARD"
         ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
         : MODE_STANDARD_DETAIL,
@@ -203,10 +207,8 @@ export function DiscoverV3({
                 category: catalogCoverCategory(featured.category),
                 days: featured.duration_days,
                 people: featured.circleCount,
-                proof: discoverProofLabel({
-                  proofType: featured.proof_type,
-                  taskTypes: featured.task_types,
-                }),
+                tasks: featured.tasks ?? [],
+                difficulty: difficultyChip(featured.difficulty),
                 modeLine: featured.difficulty === "HARD"
                   ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
                   : MODE_STANDARD_DETAIL,

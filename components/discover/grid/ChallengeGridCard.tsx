@@ -40,6 +40,7 @@ export type RecommendedChallenge = {
   cover_url?: string | null;
   participantCount: number;
   previewUsers: RecommendedChallengePreviewUser[];
+  tasks?: { title: string; gate: string }[];
 };
 
 export type ChallengeGridCardProps = {
