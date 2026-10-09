@@ -3,7 +3,8 @@
  */
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { Check, Heart, MessageCircle, MoreHorizontal, Send } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Check, Heart, MessageCircle, MoreHorizontal, Share } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
@@ -23,21 +24,11 @@ import {
   feedCardVariant,
   feedProofSubject,
 } from "@/lib/feed-card-family";
-import { formatOfDays } from "@/lib/format-days";
 import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
-const HEART = 22;
-const COMMENT = 22;
-const SEND = 20;
+const ICON = 24;
 const PHOTO_INSET = 16;
 const PHOTO_RADIUS = 20;
-
-function finishStartedLabel(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(date);
-}
 
 export type FeedPostV3Props = {
   post: LiveFeedPost;
@@ -53,6 +44,7 @@ export type FeedPostV3Props = {
   onSeeDay?: () => void;
   onOpenPost?: () => void;
   onOpenPhoto?: () => void;
+  onMenu?: () => void;
 };
 
 export default function FeedPostV3({
@@ -68,6 +60,7 @@ export default function FeedPostV3({
   onSeeDay,
   onOpenPost,
   onOpenPhoto,
+  onMenu,
 }: FeedPostV3Props) {
   const [sealOpen, setSealOpen] = React.useState(false);
   const photo = liveFeedProofUrl(post);
@@ -103,36 +96,47 @@ export default function FeedPostV3({
   if (variant === "challenge_finished") {
     const secured = post.securedDays ?? 0;
     const days = post.totalDays;
-    const started = finishStartedLabel(post.startedOn);
+    const started = post.startedLabel ?? "";
+    const dayWord = days === 1 ? "day" : "days";
     return (
       <View style={styles.card}>
+        <PostHeader
+          name={name}
+          subject={`Finished ${post.challengeName}`}
+          when={when}
+          userId={post.userId}
+          username={post.username}
+          avatarUri={avatarUri}
+          onProfilePress={onProfilePress}
+          onMenu={onMenu}
+        />
         <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
           <View>
-            <View style={styles.header}>
-              <Pressable
-                onPress={onProfilePress}
-                accessibilityRole="button"
-                accessibilityLabel={`${name} profile`}
-                hitSlop={FEED_TAP_HIT_SLOP}
-              >
-                <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
-              </Pressable>
-              <View style={styles.flex}>
-                <Text style={styles.name}>{name}</Text>
-                <Text style={styles.subject}>Finished {post.challengeName}</Text>
-              </View>
-              <Text style={styles.when}>{when}</Text>
-              <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
-            </View>
             <View style={styles.finishCard}>
-              <View style={styles.finishCover} />
-              <View style={styles.flex}>
-                <Text style={styles.finishKicker}>CHALLENGE COMPLETE</Text>
-                <Text style={styles.finishName}>{post.challengeName}</Text>
-                <Text style={styles.finishCount}>{formatOfDays(secured, days)} secured</Text>
-                <Text style={styles.finishMeta}>
-                  {`Longest streak ${post.streakCount}${started ? `  ·  Held  ·  Started ${started}` : "  ·  Held"}`}
-                </Text>
+              <View style={styles.finishTop}>
+                <View style={styles.finishCover}>
+                  <LinearGradient
+                    colors={["#4A3A6B", "#151414"]}
+                    start={{ x: 0.2, y: 0 }}
+                    end={{ x: 0.8, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <Text style={styles.finishCoverNum}>{days}</Text>
+                </View>
+                <View style={styles.flex}>
+                  <Text style={styles.finishKicker}>Challenge complete</Text>
+                  <Text style={styles.finishName} numberOfLines={1}>{post.challengeName}</Text>
+                </View>
+              </View>
+              <View style={styles.finishCountRow}>
+                <Text style={styles.finishCount}>{secured}</Text>
+                <Text style={styles.finishOf}>{`of ${days} ${dayWord} secured`}</Text>
+              </View>
+              <View style={styles.finishRule} />
+              <View style={styles.finishStats}>
+                <FinishStat value={String(post.longestStreak ?? 0)} label="Longest streak" />
+                <FinishStat value={String(post.heldDays ?? 0)} label="Held" />
+                <FinishStat value={started || "—"} label="Started" />
               </View>
             </View>
             {post.caption ? <Text style={styles.finishCaption}>{post.caption}</Text> : null}
@@ -142,7 +146,6 @@ export default function FeedPostV3({
           liked={post.reactedByMe}
           respectCount={post.respectCount}
           commentCount={post.commentCount}
-          shareCount={post.shareCount ?? 0}
           onLike={onLike}
           onComment={onComment}
           onShare={onShare}
@@ -189,37 +192,35 @@ export default function FeedPostV3({
   return (
     <>
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={onProfilePress}
-          accessibilityRole="button"
-          accessibilityLabel={`${name} profile`}
-          hitSlop={FEED_TAP_HIT_SLOP}
-        >
-          <Avatar size={32} userId={post.userId} uri={avatarUri} displayName={name} username={post.username} />
-        </Pressable>
-        <Pressable
-          onPress={onProfilePress}
-          accessibilityRole="button"
-          accessibilityLabel={`${name} profile`}
-          hitSlop={FEED_TAP_HIT_SLOP}
-          style={styles.flex}
-        >
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.subject} numberOfLines={1}>{daySubject}</Text>
-        </Pressable>
-        <Text style={styles.when}>{when}</Text>
-      </View>
+      <PostHeader
+        name={name}
+        subject={daySubject}
+        when={when}
+        userId={post.userId}
+        username={post.username}
+        avatarUri={avatarUri}
+        onProfilePress={onProfilePress}
+        onMenu={onMenu}
+      />
       {variant === "task_camera" ? (
         <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={onOpenPhoto ?? open} ownPost={ownPost}>
         <View style={styles.photoFrame}>
           {photo ? (
-            <Pressable accessibilityRole="image" accessibilityLabel="Open photo" onPress={onOpenPhoto ?? open}>
+            <Pressable
+              accessibilityRole="image"
+              accessibilityLabel={post.caption ? `${post.caption}. Open photo` : "Open photo"}
+              onPress={onOpenPhoto ?? open}
+            >
               <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
               {post.caption ? (
-                <View style={styles.scrim} pointerEvents="none">
+                <LinearGradient
+                  colors={["transparent", "rgba(15,15,15,0.72)", "rgba(15,15,15,0.9)"]}
+                  locations={[0, 0.45, 1]}
+                  style={styles.scrim}
+                  pointerEvents="none"
+                >
                   <Text style={styles.photoTitle}>{post.caption}</Text>
-                </View>
+                </LinearGradient>
               ) : null}
             </Pressable>
           ) : (
@@ -249,7 +250,6 @@ export default function FeedPostV3({
         liked={post.reactedByMe}
         respectCount={post.respectCount}
         commentCount={post.commentCount}
-        shareCount={post.shareCount ?? 0}
         onLike={onLike}
         onComment={onComment}
         onShare={onShare}
@@ -267,11 +267,71 @@ export default function FeedPostV3({
   );
 }
 
+function PostHeader({
+  name,
+  subject,
+  when,
+  userId,
+  username,
+  avatarUri,
+  onProfilePress,
+  onMenu,
+}: {
+  name: string;
+  subject: string;
+  when: string;
+  userId: string;
+  username: string;
+  avatarUri: string | null | undefined;
+  onProfilePress?: () => void;
+  onMenu?: () => void;
+}) {
+  return (
+    <View style={styles.header}>
+      <Pressable
+        onPress={onProfilePress}
+        accessibilityRole="button"
+        accessibilityLabel={`${name} profile`}
+        hitSlop={FEED_TAP_HIT_SLOP}
+      >
+        <Avatar size={32} userId={userId} uri={avatarUri} displayName={name} username={username} />
+      </Pressable>
+      <Pressable
+        onPress={onProfilePress}
+        accessibilityRole="button"
+        accessibilityLabel={`${name} profile`}
+        hitSlop={FEED_TAP_HIT_SLOP}
+        style={styles.flex}
+      >
+        <Text style={styles.name} numberOfLines={1}>{name}</Text>
+        <Text style={styles.subject} numberOfLines={1}>{subject}</Text>
+      </Pressable>
+      <Text style={styles.when}>{when}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="More"
+        onPress={onMenu}
+        style={styles.hit}
+      >
+        <MoreHorizontal size={20} color={DS_V3.color.textSecondary} />
+      </Pressable>
+    </View>
+  );
+}
+
+function FinishStat({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.finishStat}>
+      <Text style={styles.finishStatValue}>{value}</Text>
+      <Text style={styles.finishStatLabel}>{label}</Text>
+    </View>
+  );
+}
+
 function ActionRow({
   liked,
   respectCount,
   commentCount,
-  shareCount,
   onLike,
   onComment,
   onShare,
@@ -279,7 +339,6 @@ function ActionRow({
   liked: boolean;
   respectCount: number;
   commentCount: number;
-  shareCount: number;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
@@ -305,20 +364,29 @@ function ActionRow({
           style={styles.hit}
         >
           <Animated.View style={{ transform: [{ scale: bounce }] }}>
-            <Heart size={HEART} color={heart.color} fill={heart.fill} />
+            <Heart size={ICON} color={heart.color} fill={heart.fill} />
           </Animated.View>
         </Pressable>
-        {respectCount > 0 ? <Text style={[styles.count, { color: heart.countColor }]}>{respectCount}</Text> : null}
+        {respectCount > 0 ? (
+          <Text
+            testID="feed-respect-count"
+            accessibilityLabel={`${respectCount} respects`}
+            style={[styles.count, { color: heart.countColor }]}
+          >
+            {respectCount}
+          </Text>
+        ) : null}
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
-        <MessageCircle size={COMMENT} color={DS_V3.color.textPrimary} />
-      </Pressable>
-      {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
+      <View style={styles.respect}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Comment" onPress={onComment} style={styles.hit}>
+          <MessageCircle size={ICON} color={DS_V3.color.textPrimary} />
+        </Pressable>
+        {commentCount > 0 ? <Text style={styles.count}>{commentCount}</Text> : null}
+      </View>
       <View style={styles.flex} />
       <Pressable accessibilityRole="button" accessibilityLabel="Share" onPress={onShare} style={styles.hit}>
-        <Send size={SEND} color={DS_V3.color.textPrimary} />
+        <Share size={ICON} color={DS_V3.color.textPrimary} />
       </Pressable>
-      {shareCount > 0 ? <Text style={styles.count}>{shareCount}</Text> : null}
     </View>
   );
 }
@@ -326,78 +394,77 @@ function ActionRow({
 const styles = StyleSheet.create({
   card: { backgroundColor: DS_V3.color.canvas },
   photoFrame: {
-    marginHorizontal: PHOTO_INSET,
-    borderRadius: PHOTO_RADIUS,
     overflow: "hidden",
     aspectRatio: 4 / 5,
+    backgroundColor: DS_V3.color.surface,
   },
   scrim: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 36,
+    paddingTop: 44,
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: "rgba(15,15,15,0.72)",
   },
   photoTitle: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 16,
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: "500",
+    fontWeight: "400",
     color: DS_V3.color.textPrimary,
   },
   finishCard: {
     marginHorizontal: 16,
     borderRadius: 16,
     backgroundColor: DS_V3.color.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: DS_V3.color.hairline,
-    padding: 12,
-    flexDirection: "row",
-    gap: 12,
+    padding: 16,
+    gap: 10,
   },
+  finishTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   finishCover: {
-    width: 56,
-    height: 72,
-    borderRadius: 8,
-    backgroundColor: DS_V3.color.raised,
+    width: 48,
+    height: 60,
+    borderRadius: 10,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  finishKicker: {
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.6,
-    color: DS_V3.color.textSecondary,
-  },
-  finishName: {
-    marginTop: 2,
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: DS_V3.color.textPrimary,
-  },
-  finishCount: {
-    marginTop: 4,
+  finishCoverNum: {
     fontSize: 20,
-    lineHeight: 24,
+    lineHeight: 20,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  finishKicker: { ...DS_V3.type.label, color: DS_V3.color.textSecondary },
+  finishName: {
+    fontSize: 20,
+    lineHeight: 25,
     fontWeight: "600",
     color: DS_V3.color.textPrimary,
   },
-  finishMeta: {
-    marginTop: 6,
-    fontSize: 12,
-    lineHeight: 16,
-    color: DS_V3.color.textSecondary,
+  finishCountRow: { flexDirection: "row", alignItems: "baseline", gap: 6 },
+  finishCount: {
+    fontSize: 40,
+    lineHeight: 40,
+    fontWeight: "700",
+    letterSpacing: -1,
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
   },
+  finishOf: { fontSize: 15, lineHeight: 20, fontWeight: "400", color: DS_V3.color.textSecondary },
+  finishRule: { height: 1, backgroundColor: DS_V3.color.raised },
+  finishStats: { flexDirection: "row", gap: 24 },
+  finishStat: { gap: 0 },
+  finishStatValue: { fontSize: 15, lineHeight: 20, fontWeight: "600", color: DS_V3.color.textPrimary },
+  finishStatLabel: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   finishCaption: {
-    marginTop: 10,
-    marginHorizontal: 16,
+    paddingTop: 10,
+    paddingHorizontal: 16,
     fontSize: 15,
     lineHeight: 20,
+    fontWeight: "400",
     color: DS_V3.color.textPrimary,
   },
   selfPanel: {
@@ -433,25 +500,27 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: DS_V3.color.textPrimary,
   },
-  seal: { position: "absolute", top: 12, right: 12, zIndex: 2 },
+  seal: { position: "absolute", top: 12, left: 12, zIndex: 2 },
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 10,
-    paddingTop: 12,
-    paddingHorizontal: 16,
+    paddingTop: 10,
     paddingBottom: 10,
+    paddingLeft: 16,
+    paddingRight: 6,
   },
   flex: { flex: 1 },
-  name: { fontSize: 14, lineHeight: 18, fontWeight: "500", color: DS_V3.color.textPrimary },
-  when: { fontSize: 12, lineHeight: 16, color: DS_V3.color.textSecondary, marginTop: 1 },
-  subject: { fontSize: 12, lineHeight: 16, color: DS_V3.color.textSecondary },
+  name: { fontSize: 15, lineHeight: 20, fontWeight: "600", color: DS_V3.color.textPrimary },
+  when: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
+  subject: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
   actions: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 6,
+    gap: 8,
+    paddingHorizontal: 12,
   },
-  respect: { flexDirection: "row", alignItems: "center" },
-  count: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
+  respect: { flexDirection: "row", alignItems: "center", gap: 5 },
+  count: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary },
   hit: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
 });

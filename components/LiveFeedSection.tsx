@@ -230,6 +230,7 @@ function LiveFeedSection({
   const posts = (optimisticPost ? [optimisticPost, ...pagePosts.filter((post) => post.id !== optimisticPost.id)] : pagePosts).filter((post) => {
     if (hiddenPostIds.includes(post.id)) return false;
     if (post.visibility === "private" && post.userId !== user?.id) return false;
+    if ((post.isCompleted || post.eventType === "completed_challenge") && (post.securedDays ?? 0) < 1) return false;
     return true;
   });
 
@@ -535,6 +536,7 @@ function LiveFeedSection({
                 },
               } as never)
             }
+            onMenu={() => openPostMenu(item)}
           />
         </View>
       );

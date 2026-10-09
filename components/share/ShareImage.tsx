@@ -71,6 +71,10 @@ function Grid({
         return (
           <View
             key={`${state}-${i}`}
+            accessible
+            accessibilityLabel={
+              missed ? "Missed day" : state === "future" ? "Future day" : state === "held" ? "Held day" : "Secured day"
+            }
             style={{
               width: cell,
               height: cell,

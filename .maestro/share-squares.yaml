@@ -1,0 +1,15 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build80
+- extendedWaitUntil:
+    visible:
+      id: build80-photo
+    timeout: 25000
+- scrollUntilVisible:
+    element:
+      id: build80-share
+    direction: DOWN
+- assertVisible:
+    id: build80-share

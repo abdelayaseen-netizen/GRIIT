@@ -28,13 +28,14 @@ export default function FeedEvent({
     >
       <View style={styles.stack}>
         {faces.map((a, i) => (
-          <View key={a.userId || `${a.username}-${i}`} style={i > 0 ? styles.shift : undefined}>
+          <View key={a.userId || `${a.username}-${i}`} style={[styles.face, i > 0 ? styles.shift : undefined]}>
             <Avatar
               size={20}
               userId={a.userId}
               uri={a.avatarUrl}
               displayName={a.displayName}
               username={a.username}
+              ring
             />
           </View>
         ))}
@@ -52,20 +53,21 @@ const styles = StyleSheet.create({
   row: {
     minHeight: DS_V3.size.tap,
     paddingHorizontal: DS_V3.space.gutter,
-    paddingVertical: DS_V3.space.md,
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: DS_V3.space.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
     borderColor: DS_V3.color.hairline,
   },
   stack: {
     flexDirection: "row",
     alignItems: "center",
   },
+  face: { zIndex: 1 },
   shift: {
-    marginLeft: -8,
+    marginLeft: -6,
   },
   text: {
     flex: 1,
@@ -75,8 +77,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textSecondary,
   },
   time: {
-    fontSize: 13,
-    lineHeight: 18,
+    ...DS_V3.type.caption,
     color: DS_V3.color.textSecondary,
   },
 });

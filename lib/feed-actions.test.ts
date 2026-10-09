@@ -10,6 +10,11 @@ describe("feed actions", () => {
     expect(photo).toBeGreaterThan(0);
     expect(actions).toBeGreaterThan(photo);
     expect(src).toContain('testID="feed-respect"');
+    expect(src).toContain("Challenge complete");
+    expect(src).toContain("Longest streak");
+    expect(src).toContain("Held");
+    expect(src).toContain("Started");
+    expect(src).not.toContain("finishMeta");
     expect(src).toContain("width: 44");
     const row = readFileSync(resolve(__dirname, "../components/feed/FeedCompactRow.tsx"), "utf8");
     expect(row).toContain("minWidth: 44");

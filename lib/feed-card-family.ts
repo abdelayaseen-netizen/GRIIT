@@ -58,7 +58,7 @@ export function feedCardSubject(p: FeedCardInput, variant: FeedCardVariant): str
 export function feedProofSubject(day: number, total: number, challenge: string): string {
   const name = challenge.trim();
   const dayLine = `Day ${Math.max(0, Math.floor(day))} of ${Math.max(0, Math.floor(total))}`;
-  return name ? `${dayLine} · ${name}` : dayLine;
+  return name ? `${name} · ${dayLine}` : dayLine;
 }
 
 export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string {
