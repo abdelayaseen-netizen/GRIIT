@@ -23,27 +23,27 @@ export function getCategoryStyle(category: ChallengeCategory): CategoryStyle {
     case "body":
       return {
         Icon: Dumbbell,
-        tint: DS_V3.color.brandTint,
-        iconColor: DS_V3.color.brandText,
+        tint: DS_V3.color.surface,
+        iconColor: DS_V3.color.textPrimary,
       };
     case "mind":
       return {
         Icon: Brain,
-        tint: DS_V3.color.brandTint,
-        iconColor: DS_V3.color.brandText,
+        tint: DS_V3.color.surface,
+        iconColor: DS_V3.color.textPrimary,
       };
     case "faith":
       return {
         Icon: BookHeart,
-        tint: DS_V3.color.brandTint,
-        iconColor: DS_V3.color.brandText,
+        tint: DS_V3.color.surface,
+        iconColor: DS_V3.color.textPrimary,
       };
     case "focus":
     default:
       return {
         Icon: Target,
-        tint: DS_V3.color.brandTint,
-        iconColor: DS_V3.color.brandText,
+        tint: DS_V3.color.surface,
+        iconColor: DS_V3.color.textPrimary,
       };
   }
 }

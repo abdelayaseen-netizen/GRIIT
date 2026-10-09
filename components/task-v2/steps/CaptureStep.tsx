@@ -30,7 +30,7 @@ export function CaptureStep({
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {workDone ? (
         <View style={styles.doneRow}>
-          <Check size={DS_V3.space.gutter} color={DS_V3.color.brandText} />
+          <Check size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
           <View style={styles.doneCopy}>
             <Text style={styles.done}>{workDone}</Text>
             {photoAfter ? <Text style={styles.after}>{photoAfter}</Text> : null}

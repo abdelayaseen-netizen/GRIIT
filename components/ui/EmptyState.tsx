@@ -75,7 +75,7 @@ function EmptyStateInner({
           accessibilityRole="button"
           accessibilityLabel={secondaryCtaLabel}
         >
-          <RefreshCw size={16} color={DS_V3.color.brand} />
+          <RefreshCw size={16} color={DS_V3.color.textPrimary} />
           <Text style={styles.secondaryCtaText}>{secondaryCtaLabel}</Text>
         </TouchableOpacity>
       ) : null}
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 54,
     paddingHorizontal: 24,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     borderRadius: DS_RADIUS.card,
     marginBottom: DS_SPACING.md,
   },
@@ -141,6 +141,6 @@ const styles = StyleSheet.create({
   secondaryCtaText: {
     fontSize: 14,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
   },
 });

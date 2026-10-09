@@ -226,7 +226,7 @@ function SignupScreenInner() {
 
   const getInputBorderColor = (field: keyof typeof touched, isValid: boolean) => {
     if (touched[field] && !isValid) return DS_V3.color.danger;
-    if (focusedField === field) return DS_V3.color.brand;
+    if (focusedField === field) return DS_V3.color.textPrimary;
     return DS_V3.color.border;
   };
 
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   usernameHint: { flexDirection: "row", alignItems: "center", marginTop: -DS_SPACING.sm, marginBottom: DS_SPACING.sm },
   usernameErrorRow: { flex: 1, flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8 },
-  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.brand, fontWeight: "500" },
+  availableText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.textPrimary, fontWeight: "500" },
   takenText: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, color: DS_V3.color.danger, fontWeight: "500" },
   passwordRow: {
     flexDirection: "row",
@@ -548,8 +548,8 @@ const styles = StyleSheet.create({
   },
   strengthBarInactive: { opacity: 0.25 },
   strengthWeak: { backgroundColor: DS_V3.color.danger },
-  strengthMedium: { backgroundColor: DS_V3.color.brand },
-  strengthStrong: { backgroundColor: DS_V3.color.brand },
+  strengthMedium: { backgroundColor: DS_V3.color.textPrimary },
+  strengthStrong: { backgroundColor: DS_V3.color.textPrimary },
   strengthLabel: { fontSize: DS_TYPOGRAPHY.statLabel.fontSize, marginLeft: DS_SPACING.xs },
   inlineError: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
     marginBottom: DS_SPACING.xs,
   },
   button: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     borderRadius: DS_RADIUS.buttonPill,
     paddingVertical: DS_SPACING.lg,
     alignItems: "center",
@@ -579,12 +579,12 @@ const styles = StyleSheet.create({
     marginTop: DS_SPACING.lg,
   },
   footerText: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, color: DS_V3.color.textSecondary },
-  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.brand },
+  footerLink: { fontSize: DS_TYPOGRAPHY.secondary.fontSize, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, color: DS_V3.color.textPrimary },
   termsText: {
     fontSize: DS_TYPOGRAPHY.statLabel.fontSize,
     color: DS_V3.color.textSecondary,
     textAlign: "center",
     marginTop: DS_SPACING.xxl,
   },
-  termsLink: { color: DS_V3.color.brand, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
+  termsLink: { color: DS_V3.color.textPrimary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD },
 });

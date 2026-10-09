@@ -68,6 +68,7 @@ export function YourDataTab() {
               key={item.id}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
+              testID={`your-data-${item.id}`}
               accessibilityLabel={item.label}
               onPress={() => setRange(item.id)}
               style={[styles.segItem, on && styles.segOn]}
@@ -80,7 +81,7 @@ export function YourDataTab() {
       {query.isPending ? <ActivityIndicator color={DS_V3.color.textSecondary} /> : null}
       {query.isError ? <Text style={styles.body}>Couldn’t load your data.</Text> : null}
       {stats ? (
-        <>
+        <View testID="your-data-loaded">
           <Card title="Consistency">
             {pct == null ? (
               <Text style={styles.body}>
@@ -130,7 +131,7 @@ export function YourDataTab() {
               <Text style={styles.body}>{row.line}</Text>
             </Card>
           ))}
-        </>
+        </View>
       ) : null}
     </View>
   );

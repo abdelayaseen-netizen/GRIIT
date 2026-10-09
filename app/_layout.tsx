@@ -492,7 +492,7 @@ const layoutStyles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     borderRadius: 999,
   },
   authRetryButtonText: {

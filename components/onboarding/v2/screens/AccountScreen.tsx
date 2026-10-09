@@ -285,7 +285,7 @@ export default function AccountScreen({
             <Text style={styles.phone}>{ACCOUNT_PHONE_LINE}</Text>
             <TextLink
               label="Have an account? Log in"
-              tone={DS_V3.color.brandText}
+              tone={DS_V3.color.textPrimary}
               onPress={() => onSignInWithAccount()}
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -380,7 +380,7 @@ export default function AccountScreen({
           <Text style={styles.savedHead}>Saved and waiting for you</Text>
           {saved.map((line) => (
             <View key={line} style={styles.savedRow}>
-              <Check size={CHECK} color={DS_V3.color.brandText} />
+              <Check size={CHECK} color={DS_V3.color.textPrimary} />
               <Text style={styles.savedLine}>{line}</Text>
             </View>
           ))}

@@ -230,7 +230,7 @@ function CategoryScreenInner() {
           <RefreshControl
             refreshing={query.isRefetching}
             onRefresh={onRefresh}
-            tintColor={DS_V3.color.brand}
+            tintColor={DS_V3.color.textSecondary}
           />
         }
       />

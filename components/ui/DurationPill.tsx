@@ -39,12 +39,12 @@ const s = StyleSheet.create({
   pillSelected: {
     backgroundColor: DS_V3.color.surface,
     borderWidth: 2,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   text: {
     fontSize: 16,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
     color: DS_V3.color.textPrimary,
   },
-  textSelected: { color: DS_V3.color.brand },
+  textSelected: { color: DS_V3.color.textPrimary },
 });

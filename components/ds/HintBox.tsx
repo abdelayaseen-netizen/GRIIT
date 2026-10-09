@@ -19,7 +19,7 @@ export default function HintBox({ children }: HintBoxProps) {
     <View style={styles.box}>
       <Lightbulb
         size={ICON}
-        color={DS_V3.color.brandText}
+        color={DS_V3.color.textPrimary}
         accessibilityLabel="Hint"
       />
       <Text style={styles.text}>{children}</Text>
@@ -29,7 +29,7 @@ export default function HintBox({ children }: HintBoxProps) {
 
 const styles = StyleSheet.create({
   box: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_V3.radius.input,
     padding: DS_V3.space.lg,
     flexDirection: "row",
@@ -41,6 +41,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

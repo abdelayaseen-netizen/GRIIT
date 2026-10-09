@@ -323,7 +323,7 @@ function LeaderboardBody({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => void onRefresh()}
-          tintColor={DS_V3.color.brand}
+          tintColor={DS_V3.color.textSecondary}
         />
       }
     />

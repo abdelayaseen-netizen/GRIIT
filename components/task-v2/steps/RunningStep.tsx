@@ -130,6 +130,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   captionBrand: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

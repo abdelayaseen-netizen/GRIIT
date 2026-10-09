@@ -14,7 +14,7 @@ function OfflineBannerInner({ insetTop }: { insetTop?: number }) {
   const top = insetTop ?? insets.top;
   return (
     <View style={[styles.banner, topBannerOffset(top, OFFLINE_BANNER_PAD)]}>
-      <WifiOff size={14} color={DS_V3.color.brand} />
+      <WifiOff size={14} color={DS_V3.color.textPrimary} />
       <Text style={styles.text}>You&apos;re offline. Some features may not work.</Text>
     </View>
   );
@@ -24,7 +24,7 @@ export const OfflineBanner = React.memo(OfflineBannerInner);
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",

@@ -112,7 +112,7 @@ function ForgotPasswordScreenInner() {
           <Card>
             <View style={styles.sentRow}>
               <View style={styles.mailTile}>
-                <Mail size={DS_V3.space.gutter} color={DS_V3.color.brandText} />
+                <Mail size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
               </View>
               <View style={styles.sentCopy}>
                 <Text style={styles.sentLabel}>Sent to</Text>
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     width: DS_V3.size.tap,
     height: DS_V3.size.tap,
     borderRadius: DS_V3.radius.input,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },

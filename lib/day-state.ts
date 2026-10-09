@@ -36,12 +36,12 @@ export const DAY_GLYPH: Record<
   DayState,
   { icon?: "check" | "snowflake" | "shield"; fill?: string; border?: string; dashed?: boolean; dot?: boolean; dash?: boolean }
 > = {
-  camera: { icon: "check", fill: "brand" },
-  self: { fill: "brandTint", border: "brand", dot: true },
+  camera: { icon: "check", fill: "textPrimary" },
+  self: { fill: "surface", border: "textPrimary", dot: true },
   freeze: { icon: "snowflake", fill: "surface", border: "border" },
-  laststand: { icon: "shield", fill: "surface", border: "brand" },
+  laststand: { icon: "shield", fill: "surface", border: "textPrimary" },
   missed: { border: "border", dash: true },
-  today: { border: "brand", dashed: true },
+  today: { border: "textPrimary", dashed: true },
   notdue: { dot: true },
   beforejoin: {},
 };

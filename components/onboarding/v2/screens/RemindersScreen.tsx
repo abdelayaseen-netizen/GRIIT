@@ -153,7 +153,7 @@ export default function RemindersScreen({
         ) : (
           <View style={styles.preview}>
             <View style={styles.appIcon}>
-              <Shield size={DS_V3.space.gutter} color={DS_V3.color.brandText} />
+              <Shield size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
             </View>
             <View style={styles.previewText}>
               <Text style={styles.previewTitle}>GRIIT</Text>
@@ -247,7 +247,7 @@ export default function RemindersScreen({
             <TextLink label="Back to presets" onPress={() => setCustomOpen(false)} />
             <TextLink
               label={`Use ${draftText}`}
-              tone={DS_V3.color.brandText}
+              tone={DS_V3.color.textPrimary}
               onPress={useDraft}
             />
           </View>
@@ -257,7 +257,7 @@ export default function RemindersScreen({
         </View>
       ) : (
         <View style={styles.customLink}>
-          <TextLink label="Pick a custom time" tone={DS_V3.color.brandText} onPress={openCustom} />
+          <TextLink label="Pick a custom time" tone={DS_V3.color.textPrimary} onPress={openCustom} />
         </View>
       )}
     </OnboardingScreen>
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     width: TILE,
     height: TILE,
     borderRadius: DS_V3.radius.input,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -356,9 +356,9 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   presetOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   presetH: {
     fontSize: DS_V3.type.secondary.fontSize,
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
   },
-  presetOnText: { color: DS_V3.color.brandText },
+  presetOnText: { color: DS_V3.color.textPrimary },
   customLink: {
     paddingHorizontal: DS_V3.space.gutter,
   },
@@ -405,16 +405,16 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.surface,
   },
   merBtnOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   merText: {
     fontSize: DS_V3.type.caption.fontSize,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
   },
-  merTextOn: { color: DS_V3.color.brandText },
+  merTextOn: { color: DS_V3.color.textPrimary },
   gridLabel: {
     fontSize: DS_V3.type.label.fontSize,
     lineHeight: DS_V3.type.label.lineHeight,
@@ -437,16 +437,16 @@ const styles = StyleSheet.create({
   },
   minBtn: { flex: 1, width: undefined },
   gridBtnOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   gridBtnText: {
     fontSize: DS_V3.type.caption.fontSize,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
     color: DS_V3.color.textPrimary,
   },
-  gridBtnTextOn: { color: DS_V3.color.brandText },
+  gridBtnTextOn: { color: DS_V3.color.textPrimary },
   customActions: { flexDirection: "row", justifyContent: "space-between" },
   customSaved: {
     fontSize: DS_V3.type.caption.fontSize,

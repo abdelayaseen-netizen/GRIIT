@@ -93,7 +93,7 @@ export const ChallengeGridCard = React.memo(function ChallengeGridCard({
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={3}>
           {challenge.title}
         </Text>
         {friendsCount > 0 ? (

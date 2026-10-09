@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   badge: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_V3.radius.input,
     paddingVertical: BADGE_Y,
     paddingHorizontal: DS_V3.space.md,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   group: {
     gap: DS_V3.space.xs,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_V3.radius.pill,
   },
   dotFilled: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   dotOutline: {
     borderWidth: PT_HAIR,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   skelBadge: {
     width: DS_V3.space.section,

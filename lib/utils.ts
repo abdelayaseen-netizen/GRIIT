@@ -3,12 +3,12 @@ import { initialsFrom } from "@/lib/avatar-initials";
 
 /** Rotating avatar backgrounds by user id hash (feed spec). */
 const FEED_AVATAR_BY_USER_ID = [
-  DS_V3.color.brand,
-  DS_V3.color.brandText,
-  DS_V3.color.brand,
-  DS_V3.color.brand,
-  DS_V3.color.brandTint,
-  DS_V3.color.brandText,
+  DS_V3.color.textPrimary,
+  DS_V3.color.textPrimary,
+  DS_V3.color.textPrimary,
+  DS_V3.color.textPrimary,
+  DS_V3.color.surface,
+  DS_V3.color.textPrimary,
 ] as const;
 
 export function getFeedAvatarBgFromUserId(userId: string): string {

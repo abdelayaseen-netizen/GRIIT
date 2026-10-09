@@ -60,7 +60,7 @@ export const CategoryChips = React.memo(function CategoryChips({
       {CHIPS.map(({ id, label, Icon }) => {
         const isSelected = selected === id;
         const textColor = isSelected
-          ? DS_V3.color.brand
+          ? DS_V3.color.textPrimary
           : DS_V3.color.textSecondary;
         return (
           <Pressable
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   chipSelected: {
-    backgroundColor: DS_V3.color.brandTint,
-    borderColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
+    borderColor: DS_V3.color.surface,
   },
   iconWrap: {
     width: ICON_SIZE,

@@ -59,6 +59,7 @@ export function ProfileHeader(p: {
         <Text style={styles.name}>{p.displayName}</Text>
         <Text style={styles.handle}>@{handle}</Text>
         <Pressable
+          testID="profile-friends"
           accessibilityRole="button"
           accessibilityLabel={friendLabel}
           onPress={p.friends === 0 ? onShareOrFind : p.onFriends}

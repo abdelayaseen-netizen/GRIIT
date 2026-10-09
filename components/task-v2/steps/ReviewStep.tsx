@@ -35,7 +35,7 @@ export function ReviewStep({
               onChangeText={(t) => onCaption(t.slice(0, 120))}
               placeholder="Add a caption"
               placeholderTextColor={DS_V3.color.textSecondary}
-              selectionColor={DS_V3.color.brand}
+              selectionColor={DS_V3.color.textPrimary}
               style={styles.capInput}
               maxLength={120}
             />

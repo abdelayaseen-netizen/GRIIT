@@ -136,7 +136,7 @@ function flameStateFor(
 function CountdownBanner({ minutesRemaining }: { minutesRemaining: number }) {
   return (
     <View style={styles.countdownBanner} accessibilityRole="alert">
-      <Clock size={16} color={DS_V3.color.brand} strokeWidth={2} />
+      <Clock size={16} color={DS_V3.color.textPrimary} strokeWidth={2} />
       <Text style={styles.countdownText}>
         Streak ends in {minutesRemaining} minutes
       </Text>
@@ -181,7 +181,7 @@ function TaskRow({
         ]}
       >
         {task.done ? (
-          <Check size={13} color={DS_V3.color.brandText} strokeWidth={3} />
+          <Check size={13} color={DS_V3.color.textPrimary} strokeWidth={3} />
         ) : null}
       </View>
       <Text style={styles.taskName} numberOfLines={1}>
@@ -227,12 +227,12 @@ function HeaderBlock({
         break;
       case 'atRisk':
         label = 'Current streak';
-        labelColor = DS_V3.color.brand;
+        labelColor = DS_V3.color.textPrimary;
         caption = "Don't break the chain.";
         break;
       case 'secured':
         label = 'Streak secured';
-        labelColor = DS_V3.color.brand;
+        labelColor = DS_V3.color.textPrimary;
         caption = '+1 day stronger.';
         break;
       default: {
@@ -300,7 +300,7 @@ function PrimaryCTA({
       style={({ pressed }) => [styles.cta, pressed ? styles.rowPressed : null]}
     >
       {withIcon ? (
-        <Camera size={18} color={DS_V3.color.brandText} strokeWidth={2} />
+        <Camera size={18} color={DS_V3.color.textPrimary} strokeWidth={2} />
       ) : null}
       <Text style={styles.ctaText}>{label}</Text>
     </Pressable>
@@ -336,7 +336,7 @@ function FreezeButton({
       <Snowflake
         size={16}
         color={
-          disabled ? DS_V3.color.textSecondary : DS_V3.color.brand
+          disabled ? DS_V3.color.textSecondary : DS_V3.color.textPrimary
         }
         strokeWidth={2}
       />
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 16,
     borderRadius: DS_RADIUS_V2.xl,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
   },
   countdownText: {
     fontSize: 16,
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   countPill: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: 20,
     paddingHorizontal: 13,
     paddingVertical: 7,
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   countPillText: {
     fontSize: 13,
     fontWeight: '500',
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
   },
 
   // ── Task rows ──
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
   badgeFill: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
 
   // ── CTAs ──
@@ -720,12 +720,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   ctaText: {
     fontSize: 17,
     fontWeight: '500',
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   freezeBtn: {
     flexDirection: 'row',

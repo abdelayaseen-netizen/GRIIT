@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: {
-    backgroundColor: DS_V3.color.brandTint,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.surface,
+    borderColor: DS_V3.color.border,
   },
   chipText: {
     fontSize: DS_V3.type.caption.fontSize,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   chipTextOn: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   captionBrand: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   accessory: {
     backgroundColor: DS_V3.color.surface,
@@ -362,6 +362,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

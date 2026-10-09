@@ -3,18 +3,18 @@ import { View, Text, StyleSheet } from "react-native";
 import { DS_V3, DS_TYPOGRAPHY } from "@/lib/design-system"
 
 const INITIAL_CIRCLE_COLORS = [
-  DS_V3.color.brandTint,
-  DS_V3.color.brandTint,
-  DS_V3.color.brandTint,
-  DS_V3.color.brandTint,
-  DS_V3.color.brandTint,
-  DS_V3.color.brandTint,
+  DS_V3.color.surface,
+  DS_V3.color.surface,
+  DS_V3.color.surface,
+  DS_V3.color.surface,
+  DS_V3.color.surface,
+  DS_V3.color.surface,
 ] as const;
 
 function getInitialColor(username: string): string {
   const code = (username || "?").charCodeAt(0) ?? 0;
   const idx = code % INITIAL_CIRCLE_COLORS.length;
-  return INITIAL_CIRCLE_COLORS[idx] ?? DS_V3.color.brandTint;
+  return INITIAL_CIRCLE_COLORS[idx] ?? DS_V3.color.surface;
 }
 
 export function InitialCircle({ username, size = 44 }: { username: string; size?: number }) {

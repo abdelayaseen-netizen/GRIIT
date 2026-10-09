@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   boxChecked: {
-    backgroundColor: DS_V3.color.brand,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
+    borderColor: DS_V3.color.border,
   },
   label: {
     fontSize: 16,

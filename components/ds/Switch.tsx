@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   on: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   off: {
     backgroundColor: DS_V3.color.surface,

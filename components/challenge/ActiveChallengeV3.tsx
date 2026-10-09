@@ -173,7 +173,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             <RefreshControl
               refreshing={Boolean(p.refreshing)}
               onRefresh={p.onRefresh}
-              tintColor={DS_V3.color.brand}
+              tintColor={DS_V3.color.textSecondary}
             />
           ) : undefined
         }
@@ -279,7 +279,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             {p.tasks.map((t, i) => {
               const closed = homeWindowClosed({ windowState: t.windowState, done: t.completed_today });
               const Icon = t.completed_today ? Check : TASK_ICON[t.task_type];
-              const iconTone = t.completed_today ? DS_V3.color.brand : DS_V3.color.textSecondary;
+              const iconTone = t.completed_today ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
               return (
                 <View key={t.id}>
                   {i > 0 ? <View style={styles.divider} /> : null}

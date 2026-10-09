@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.sm,
     paddingVertical: DS_V3.space.xs,
   },
-  stampEarned: { borderColor: DS_V3.color.brandText },
+  stampEarned: { borderColor: DS_V3.color.textPrimary },
   stampLocked: { borderColor: DS_V3.color.border },
   stampText: {
     fontSize: 12,
@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
   },
   body: { flex: 1, ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
   trail: { ...DS_V3.type.label, letterSpacing: 0, textTransform: "none" },
-  earnedInk: { color: DS_V3.color.brandText },
+  earnedInk: { color: DS_V3.color.textPrimary },
   lockedInk: { color: DS_V3.color.textSecondary },
 });

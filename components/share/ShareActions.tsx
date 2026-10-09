@@ -84,7 +84,7 @@ export default function ShareActions({
           accessibilityState={{ disabled: true }}
           style={styles.shared}
         >
-          <Check size={18} color={DS_V3.color.brandText} />
+          <Check size={18} color={DS_V3.color.textPrimary} />
           <Text style={styles.sharedLabel}>{FINISH_SHARED}</Text>
         </View>
       ) : (

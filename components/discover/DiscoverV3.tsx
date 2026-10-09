@@ -359,7 +359,7 @@ export function DiscoverV3({
               <RefreshControl
                 refreshing={Boolean(refreshing)}
                 onRefresh={onRefresh}
-                tintColor={DS_V3.color.brand}
+                tintColor={DS_V3.color.textSecondary}
               />
             ) : undefined
           }

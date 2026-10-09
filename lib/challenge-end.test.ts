@@ -21,7 +21,7 @@ describe("recap day cell and Start it again", () => {
     expect(showStartAgain(1)).toBe(false);
     expect(showStartAgain(7)).toBe(true);
     const ui = readFileSync(resolve(__dirname, "../components/challenge/ChallengeEnd.tsx"), "utf8");
-    expect(ui).toContain('state === "camera" || state === "self" ? DS_V3.color.brand');
+    expect(ui).toContain('state === "camera" || state === "self" ? DS_V3.color.textPrimary');
     expect(ui).not.toContain('state === "self" ? DS_V3.color.border');
     expect(ui).toContain("showStartAgain(c.duration_days)");
   });

@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   active: {
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   value: {
     fontSize: DS_V3.type.body.fontSize,

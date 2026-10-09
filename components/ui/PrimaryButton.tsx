@@ -31,8 +31,8 @@ const HEIGHT = 56;
 
 const variantStyles: Record<Exclude<Variant, "create" | "createGreen">, { bg: string; text: string; border?: string }> = {
   black: { bg: DS_V3.color.canvas, text: DS_V3.color.textPrimary },
-  accent: { bg: DS_V3.color.brand, text: DS_V3.color.textPrimary },
-  success: { bg: DS_V3.color.brand, text: DS_V3.color.textPrimary },
+  accent: { bg: DS_V3.color.primary, text: DS_V3.color.textPrimary },
+  success: { bg: DS_V3.color.primary, text: DS_V3.color.textPrimary },
   ghost: { bg: "transparent", text: DS_V3.color.textPrimary },
   outline: { bg: "transparent", text: DS_V3.color.textPrimary, border: DS_V3.color.border },
 };
@@ -150,13 +150,13 @@ const createStyles = StyleSheet.create({
   button: {
     height: DS_MEASURES.CTA_HEIGHT,
     borderRadius: DS_RADIUS.card,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: DS_SPACING.xxl,
   },
   buttonGreen: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   buttonDisabled: {
     opacity: 0.5,

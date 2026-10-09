@@ -1,0 +1,15 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81-share
+- extendedWaitUntil:
+    visible:
+      id: share-save-all
+    timeout: 25000
+- tapOn:
+    id: share-save-all
+- extendedWaitUntil:
+    visible:
+      id: share-saved-all
+    timeout: 40000

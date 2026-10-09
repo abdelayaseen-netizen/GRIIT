@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
   modeOn: {
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   modeTitleRow: {
     flexDirection: "row",
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     marginTop: DS_V3.space.xs,
   },
   radioOn: {
-    backgroundColor: DS_V3.color.brand,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
+    borderColor: DS_V3.color.border,
   },
 });

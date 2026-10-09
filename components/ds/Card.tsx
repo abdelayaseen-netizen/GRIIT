@@ -36,6 +36,6 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.surface,
   },
   tint: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
   },
 });

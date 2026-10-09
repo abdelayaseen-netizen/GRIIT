@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
   },
   seg: { flex: 1, height: 2, borderRadius: 2 },
-  segOn: { backgroundColor: DS_V3.color.brand },
+  segOn: { backgroundColor: DS_V3.color.textPrimary },
   segOff: { backgroundColor: DS_V3.color.border },
   eyebrow: {
     ...DS_V3.type.caption,

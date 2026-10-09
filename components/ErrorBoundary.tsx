@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   button: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: DS_RADIUS.MD,

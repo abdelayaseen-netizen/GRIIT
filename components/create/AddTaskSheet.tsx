@@ -452,7 +452,7 @@ export default function AddTaskSheet({
             accessibilityLabel={ADD_TASK_SEARCH_PLACE}
           />
           <ListRow
-            icon={<LocateFixed size={ICON} color={DS_V3.color.brandText} />}
+            icon={<LocateFixed size={ICON} color={DS_V3.color.textPrimary} />}
             title={ADD_TASK_USE_LOCATION}
             subtitle={accuracyM != null ? placeAccuracyLine(accuracyM) : undefined}
             onPress={() => void takeCurrentLocation()}
@@ -599,8 +599,8 @@ const styles = StyleSheet.create({
     marginTop: DS_V3.space.xs,
   },
   radioOn: {
-    backgroundColor: DS_V3.color.brand,
-    borderColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
+    borderColor: DS_V3.color.border,
   },
   proofCopy: {
     flex: 1,

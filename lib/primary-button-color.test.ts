@@ -29,7 +29,6 @@ describe("primary button labels", () => {
       resolve(__dirname, "../components/task-v2/steps/CountStep.tsx"),
       "utf8",
     );
-    expect(count).toContain("backgroundColor: DS_V3.color.brand");
-    expect(count).not.toContain("backgroundColor: DS_V3.color.primary");
+    expect(count).toContain("backgroundColor: DS_V3.color.primary");
   });
 });

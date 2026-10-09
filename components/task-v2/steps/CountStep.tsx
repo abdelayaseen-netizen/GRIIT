@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     width: CIRCLE,
     height: CIRCLE,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -277,6 +277,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   captionBrand: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

@@ -15,7 +15,7 @@ export function homeProofFilled(securedToday: boolean): {
 } {
   return {
     posted: securedToday,
-    circleFill: securedToday ? DS_V3.color.brand : DS_V3.color.border,
+    circleFill: securedToday ? DS_V3.color.textPrimary : DS_V3.color.border,
     todaySquareFilled: securedToday,
   };
 }

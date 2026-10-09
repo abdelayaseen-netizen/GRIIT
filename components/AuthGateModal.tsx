@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
     marginRight: 8,
   },
   bulletText: {

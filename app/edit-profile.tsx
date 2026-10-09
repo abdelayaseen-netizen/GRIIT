@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   saveOff: { color: DS_V3.color.textSecondary },
   body: { paddingHorizontal: DS_V3.space.section, paddingBottom: 40, gap: DS_V3.space.gutter },
@@ -389,6 +389,6 @@ const styles = StyleSheet.create({
   ok: {
     fontSize: DS_V3.type.caption.fontSize,
     lineHeight: DS_V3.type.caption.lineHeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

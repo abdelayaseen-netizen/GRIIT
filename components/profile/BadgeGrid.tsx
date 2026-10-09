@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: DS_V3.color.brandText,
+    borderColor: DS_V3.color.textPrimary,
   },
   mark: { fontSize: 16, fontWeight: DS_V3.displayWeight, fontVariant: ["tabular-nums"] },
   name: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary, textAlign: "center" },
@@ -176,5 +176,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  shareTxt: { ...DS_V3.type.secondary, fontWeight: "500", color: DS_V3.color.brandText },
+  shareTxt: { ...DS_V3.type.secondary, fontWeight: "500", color: DS_V3.color.textPrimary },
 });

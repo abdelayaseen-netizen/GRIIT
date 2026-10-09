@@ -56,8 +56,8 @@ function FeedEngagementRowInner({
           <Animated.View style={{ transform: [{ scale: heartBounce }] }}>
             <Heart
               size={23}
-              color={DS_V3.color.brand}
-              fill={reactedByMe ? DS_V3.color.brand : "none"}
+              color={DS_V3.color.textPrimary}
+              fill={reactedByMe ? DS_V3.color.textPrimary : "none"}
             />
           </Animated.View>
         </Pressable>

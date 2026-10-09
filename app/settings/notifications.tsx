@@ -107,7 +107,7 @@ export default function SettingsNotificationsScreen() {
                   void persist({ enabled: v });
                   if (v) void registerPushTokenWithBackend();
                 }}
-                trackColor={{ false: DS_V3.color.border, true: DS_V3.color.brand }}
+                trackColor={{ false: DS_V3.color.border, true: DS_V3.color.textPrimary }}
               />
             </View>
             {enabled ? (
@@ -203,7 +203,7 @@ function Toggle({
         value={value}
         disabled={disabled}
         onValueChange={onChange}
-        trackColor={{ false: DS_V3.color.border, true: DS_V3.color.brand }}
+        trackColor={{ false: DS_V3.color.border, true: DS_V3.color.textPrimary }}
       />
     </Pressable>
   );
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   osBannerBtn: {
     minHeight: DS_V3.size.tap,
     borderRadius: DS_V3.radius.input,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },

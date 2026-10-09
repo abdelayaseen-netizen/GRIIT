@@ -132,7 +132,7 @@ export default function ProfileProofs({
               onPress={onToday}
               style={[styles.tile, styles.today]}
             >
-              <Plus size={18} color={DS_V3.color.brand} />
+              <Plus size={18} color={DS_V3.color.textPrimary} />
               <Text style={styles.todayTitle}>{TODAY_TILE}</Text>
               <Text style={styles.todayCap}>{todayTileCaption(tasksLeft ?? 0)}</Text>
             </Pressable>
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   today: {
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
     alignItems: "center",
     justifyContent: "center",
     gap: 4,

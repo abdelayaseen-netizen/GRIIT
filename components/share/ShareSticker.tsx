@@ -65,7 +65,7 @@ function ProofMark({ bg, proof }: { bg: StickerBackground; proof: ProofKind }) {
       <Text
         style={[
           styles.proofText,
-          { color: onClear(bg) ? DS_V3.color.textPrimary : DS_V3.color.brandText, fontWeight: "500" },
+          { color: onClear(bg) ? DS_V3.color.textPrimary : DS_V3.color.textPrimary, fontWeight: "500" },
           typeShadow(bg),
         ]}
       >
@@ -202,7 +202,7 @@ export function BadgeSticker(p: {
               height: size,
               borderWidth: t.border,
               borderStyle: earned ? "solid" : "dashed",
-              backgroundColor: solid ? DS_V3.color.brand : t.fill === "tint" ? DS_V3.color.brandTint : "transparent",
+              backgroundColor: solid ? DS_V3.color.textPrimary : t.fill === "tint" ? DS_V3.color.surface : "transparent",
             },
           ]}
         >
@@ -217,7 +217,7 @@ export function BadgeSticker(p: {
                   bottom: inset * (i + 1),
                   left: inset * (i + 1),
                   borderRadius: Math.max(6, 20 - inset * (i + 1) * 0.6),
-                  borderColor: solid ? DS_V3.color.canvas : DS_V3.color.brand,
+                  borderColor: solid ? DS_V3.color.canvas : DS_V3.color.textPrimary,
                 },
               ]}
             />
@@ -225,7 +225,7 @@ export function BadgeSticker(p: {
           <Text style={[styles.stampN, { color: solid ? DS_V3.color.canvas : DS_V3.color.textPrimary }]}>
             {p.count}
           </Text>
-          <Text style={[styles.stampDays, { color: solid ? DS_V3.color.canvas : DS_V3.color.brandText }]}>
+          <Text style={[styles.stampDays, { color: solid ? DS_V3.color.canvas : DS_V3.color.textPrimary }]}>
             {p.count === 1 ? "DAY" : "DAYS"}
           </Text>
         </View>
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 15,
     borderRadius: 1,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   glyphShadow: {
     shadowColor: INK,
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   of: { fontSize: 20, lineHeight: 24 },
   track: { height: 8, borderRadius: 4, overflow: "hidden" },
-  fill: { height: "100%", backgroundColor: DS_V3.color.brand },
+  fill: { height: "100%", backgroundColor: DS_V3.color.textPrimary },
   foot: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 2 },
   footLeft: { flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 },
   secured: { fontSize: 16, lineHeight: 20, fontWeight: "500", color: DS_V3.color.textPrimary },
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 999,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.textPrimary,
   },
   ring: { position: "absolute", borderWidth: 1 },
   stampN: { fontSize: 45, lineHeight: 48, fontWeight: "500", fontVariant: ["tabular-nums"] },

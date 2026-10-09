@@ -89,7 +89,7 @@ export default function TaskCompleteToast({
         {toast.photoUri ? (
           <Image source={{ uri: toast.photoUri }} style={styles.thumb} />
         ) : (
-          <Check size={22} color={DS_V3.color.brandText} />
+          <Check size={22} color={DS_V3.color.textPrimary} />
         )}
       </View>
       )}
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     height: 32,
     paddingHorizontal: 12,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
     justifyContent: "center",
   },

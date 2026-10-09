@@ -82,7 +82,7 @@ export default function DayCell({
         <Snowflake size={icon} color={DS_V3.color.textPrimary} strokeWidth={2} />
       ) : null}
       {kind === "last_stand" ? (
-        <Shield size={icon} color={DS_V3.color.brandText} strokeWidth={2} />
+        <Shield size={icon} color={DS_V3.color.textPrimary} strokeWidth={2} />
       ) : null}
       {lock ? (
         <View style={styles.lockDisc} accessibilityElementsHidden>
@@ -109,7 +109,7 @@ export default function DayCell({
 function fillStyle(kind: DayCellKind) {
   switch (kind) {
     case "self":
-      return { backgroundColor: DS_V3.color.brand };
+      return { backgroundColor: DS_V3.color.textPrimary };
     case "camera":
     case "private":
       return { backgroundColor: DS_V3.color.surface };
@@ -119,7 +119,7 @@ function fillStyle(kind: DayCellKind) {
       return {
         backgroundColor: DS_V3.color.surface,
         borderWidth: kind === "last_stand" ? 1.5 : 1,
-        borderColor: kind === "last_stand" ? DS_V3.color.brand : DS_V3.color.border,
+        borderColor: kind === "last_stand" ? DS_V3.color.border : DS_V3.color.border,
       };
     case "missed":
       return { borderWidth: dayCellBorderWidth(kind), borderColor: DS_V3.color.textSecondary };

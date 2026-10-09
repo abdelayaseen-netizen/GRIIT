@@ -248,7 +248,7 @@ function Field({
         <Text
           style={[
             styles.hint,
-            { color: hintTone === "error" ? DS_V3.color.danger : DS_V3.color.brand },
+            { color: hintTone === "error" ? DS_V3.color.danger : DS_V3.color.textPrimary },
           ]}
         >
           {hint}

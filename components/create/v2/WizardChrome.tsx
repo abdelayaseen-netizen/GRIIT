@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     height: DS_V3.space.xs,
     borderRadius: DS_V3.radius.input,
   },
-  trackOn: { backgroundColor: DS_V3.color.brand },
+  trackOn: { backgroundColor: DS_V3.color.textPrimary },
   trackOff: { backgroundColor: DS_V3.color.border },
   footer: {
     paddingHorizontal: DS_V3.space.gutter,

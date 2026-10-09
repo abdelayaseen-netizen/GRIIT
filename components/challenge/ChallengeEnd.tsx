@@ -35,14 +35,14 @@ const LEGEND: [DayState, string][] = [
 
 function Tile({ state, size = TILE }: { state: DayState; size?: number }) {
   const fill =
-    state === "camera" || state === "self" ? DS_V3.color.brand : "transparent";
+    state === "camera" || state === "self" ? DS_V3.color.textPrimary : "transparent";
   const stroke =
     state === "last_stand"
-      ? DS_V3.color.brand
+      ? DS_V3.color.textPrimary
       : state === "camera" || state === "self"
         ? "transparent"
         : DS_V3.color.border;
-  const plug = state === "frozen" ? DS_V3.color.border : state === "last_stand" ? DS_V3.color.brand : null;
+  const plug = state === "frozen" ? DS_V3.color.border : state === "last_stand" ? DS_V3.color.textPrimary : null;
   return (
     <View
       style={{

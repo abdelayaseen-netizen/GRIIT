@@ -83,7 +83,7 @@ export default function Button({
           ? DS_V3.color.danger
           : ink
             ? DS_V3.color.textPrimary
-            : DS_V3.color.brandText;
+            : DS_V3.color.textPrimary;
   const spinnerColor = variant === "primary" ? DS_V3.color.onBrand : DS_V3.color.textSecondary;
 
   return (

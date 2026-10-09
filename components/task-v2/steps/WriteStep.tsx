@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textSecondary,
   },
   counterMet: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   track: {
     height: RULE,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   fill: {
     height: RULE,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   editor: {
     flex: 1,
@@ -180,6 +180,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   captionBrand: {
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
 });

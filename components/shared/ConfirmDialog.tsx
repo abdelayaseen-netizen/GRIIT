@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: DS_SPACING.md,
     borderRadius: DS_RADIUS.MD,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
   },
   btnPrimaryText: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   btnDestructive: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
     borderColor: DS_V3.color.danger,
   },

@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.lg,
   },
   highlight: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_V3.radius.input,
     paddingHorizontal: DS_V3.space.lg,
   },

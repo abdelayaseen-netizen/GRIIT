@@ -742,7 +742,7 @@ function LiveFeedSection({
           <RefreshControl
             refreshing={isPulling}
             onRefresh={handleRefresh}
-            tintColor={DS_V3.color.brand}
+            tintColor={DS_V3.color.textSecondary}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -975,7 +975,7 @@ const styles = StyleSheet.create({
   empty: { paddingVertical: 32, paddingHorizontal: DS_SPACING.lg, alignItems: "center" },
   emptyTitle: { fontSize: 14, fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD, color: DS_V3.color.textPrimary, marginBottom: 6 },
   emptySub: { fontSize: 12, color: DS_V3.color.textSecondary, textAlign: "center" },
-  retry: { fontSize: 13, color: DS_V3.color.brand, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
+  retry: { fontSize: 13, color: DS_V3.color.textPrimary, fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD, marginTop: 8 },
   emptyFriends: {
     alignItems: "center",
     paddingVertical: 32,
@@ -1000,7 +1000,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     borderRadius: DS_RADIUS.XL,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   emptyFriendsCtaText: {
     fontSize: 13,
@@ -1092,7 +1092,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: DS_V3.color.surface,
     borderLeftWidth: 3,
-    borderLeftColor: DS_V3.color.brand,
+    borderLeftColor: DS_V3.color.border,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderTopRightRadius: 10,

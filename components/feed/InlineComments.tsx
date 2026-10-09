@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   wrap: { gap: 4, paddingTop: DS_V3.space.sm },
   line: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary },
   name: { ...DS_V3.type.caption, fontWeight: "500", color: DS_V3.color.textPrimary },
-  mine: { color: DS_V3.color.brandText },
+  mine: { color: DS_V3.color.textPrimary },
   text: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary },
   caption: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
 });

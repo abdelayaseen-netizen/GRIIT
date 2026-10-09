@@ -25,8 +25,8 @@ export default function Badges({ badges, footnote }: BadgesProps) {
       <View style={styles.grid}>
         {badges.map((b) => {
           const earned = Boolean(b.earnedOn);
-          const color = earned ? DS_V3.color.brandText : DS_V3.color.textSecondary;
-          const stroke = earned ? DS_V3.color.brandText : DS_V3.color.border;
+          const color = earned ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
+          const stroke = earned ? DS_V3.color.textPrimary : DS_V3.color.border;
           return (
             <View key={b.label} style={styles.cell}>
               <View style={[styles.stamp, { borderColor: stroke }]}>

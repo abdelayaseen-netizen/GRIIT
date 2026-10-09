@@ -40,7 +40,7 @@ function MilestonePostCardInner({
 
       <View style={styles.banner}>
         <View style={styles.iconBox}>
-          <Star size={24} color={DS_V3.color.brand} fill={DS_V3.color.brand} />
+          <Star size={24} color={DS_V3.color.textPrimary} fill={DS_V3.color.textPrimary} />
         </View>
         <View style={styles.bannerText}>
           <Text style={styles.bannerTitle}>{title}</Text>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 14,
     alignItems: "center",
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_V3.radius.card,
   },
   iconBox: {

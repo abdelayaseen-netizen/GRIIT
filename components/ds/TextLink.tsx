@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   secondary: {
     color: DS_V3.color.textSecondary,

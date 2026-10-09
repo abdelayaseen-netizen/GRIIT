@@ -12,22 +12,22 @@ interface InlineErrorProps {
 
 const VARIANT_STYLES = {
   error: {
-    bg: DS_V3.color.brandTint,
+    bg: DS_V3.color.surface,
     border: DS_V3.color.danger,
     text: DS_V3.color.danger,
     icon: DS_V3.color.danger,
   },
   warning: {
-    bg: DS_V3.color.brandTint,
-    border: DS_V3.color.brand,
-    text: DS_V3.color.brandText,
-    icon: DS_V3.color.brand,
+    bg: DS_V3.color.surface,
+    border: DS_V3.color.border,
+    text: DS_V3.color.textPrimary,
+    icon: DS_V3.color.textPrimary,
   },
   success: {
-    bg: DS_V3.color.brandTint,
+    bg: DS_V3.color.surface,
     border: DS_V3.color.border,
-    text: DS_V3.color.brand,
-    icon: DS_V3.color.brand,
+    text: DS_V3.color.textPrimary,
+    icon: DS_V3.color.textPrimary,
   },
 } as const;
 

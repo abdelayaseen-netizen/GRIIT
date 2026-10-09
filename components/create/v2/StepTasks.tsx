@@ -169,8 +169,8 @@ export function StepTasks({
           ? PACKS.map((p, i) => {
               const on = pack?.id === p.id;
               const copy = PACK_COPY[p.id] ?? { title: p.name, meta: p.subtitle };
-              const tint = on ? DS_V3.color.brandText : DS_V3.color.textPrimary;
-              const metaTint = on ? DS_V3.color.brandText : DS_V3.color.textSecondary;
+              const tint = on ? DS_V3.color.textPrimary : DS_V3.color.textPrimary;
+              const metaTint = on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
               return (
                 <View key={p.id}>
                   <Pressable
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     paddingVertical: DS_V3.space.gutter,
   },
   packOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: DS_V3.radius.input,
     paddingHorizontal: DS_V3.space.lg,
   },

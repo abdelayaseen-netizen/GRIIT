@@ -70,7 +70,7 @@ function buildConfig(payload: LiveActivityPayload): LiveActivity.LiveActivityCon
     backgroundColor: DS_V3.color.canvas,
     titleColor: DS_V3.color.textPrimary,
     subtitleColor: DS_V3.color.textSecondary,
-    progressViewTint: DS_V3.color.brand,
+    progressViewTint: DS_V3.color.textPrimary,
     progressViewLabelColor: DS_V3.color.textSecondary,
     deepLinkUrl: payload.route,
     timerType: "digital",

@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
   },
   muted: { color: DS_V3.color.textSecondary },
-  brandText: { color: DS_V3.color.brandText },
+  brandText: { color: DS_V3.color.textPrimary },
   danger: { color: DS_V3.color.danger },
   input: {
     fontSize: DS_V3.type.body.fontSize,
@@ -316,6 +316,6 @@ const styles = StyleSheet.create({
   },
   whoOn: {
     borderWidth: STROKE,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
 });

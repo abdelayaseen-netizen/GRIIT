@@ -46,7 +46,7 @@ export default function MemberRow({
   const trail = !inviteNotif && trailing ? memberTrailing(trailing, full) : null;
   const trailColor =
     trail?.tone === "brand"
-      ? DS_V3.color.brandText
+      ? DS_V3.color.textPrimary
       : trail?.tone === "muted"
         ? DS_V3.color.textSecondary
         : DS_V3.color.textSecondary;
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     width: DOT,
     height: DOT,
     borderRadius: DOT / 2,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   name: {
     flexShrink: 1,

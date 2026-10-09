@@ -62,21 +62,21 @@ export function DayCell({
 }) {
   const fill =
     state === "camera"
-      ? DS_V3.color.brand
+      ? DS_V3.color.textPrimary
       : state === "self"
-        ? DS_V3.color.brandTint
+        ? DS_V3.color.surface
         : state === "freeze" || state === "laststand"
           ? DS_V3.color.surface
           : "transparent";
   const border =
     state === "self" || state === "today" || state === "laststand"
-      ? DS_V3.color.brand
+      ? DS_V3.color.textPrimary
       : state === "freeze" || state === "missed"
         ? DS_V3.color.border
         : undefined;
   const dashed = state === "today";
   const iconColor =
-    state === "camera" ? DS_V3.color.canvas : state === "laststand" ? DS_V3.color.brandText : DS_V3.color.textPrimary;
+    state === "camera" ? DS_V3.color.canvas : state === "laststand" ? DS_V3.color.textPrimary : DS_V3.color.textPrimary;
   return (
     <View
       accessibilityElementsHidden
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brandText,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   dash: { width: 11, height: 1.5, backgroundColor: DS_V3.color.textSecondary },
   notDue: { width: 3, height: 3, borderRadius: DS_V3.radius.pill },
@@ -244,5 +244,5 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.surface,
     overflow: "hidden",
   },
-  fill: { height: "100%", backgroundColor: DS_V3.color.brand },
+  fill: { height: "100%", backgroundColor: DS_V3.color.textPrimary },
 });

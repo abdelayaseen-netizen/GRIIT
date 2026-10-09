@@ -648,7 +648,7 @@ export async function registerForPushNotificationsAsync(opts?: {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: DS_V3.color.brand,
+      lightColor: DS_V3.color.textPrimary,
     });
 
     return tokenData.data;

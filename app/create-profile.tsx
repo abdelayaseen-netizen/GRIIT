@@ -56,7 +56,7 @@ function CreateProfileScreenInner() {
   const inputBorder = useCallback(
     (field: string) => {
       if (field === "username" && usernameError) return DS_V3.color.danger;
-      return focusedField === field ? DS_V3.color.brand : DS_V3.color.border;
+      return focusedField === field ? DS_V3.color.textPrimary : DS_V3.color.border;
     },
     [focusedField, usernameError]
   );
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_BOLD,
     letterSpacing: 1.2,
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
     textTransform: "uppercase",
     marginBottom: 8,
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   cta: {
     height: 56,
     borderRadius: DS_RADIUS.joinCta,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     alignItems: "center",
     justifyContent: "center",
   },

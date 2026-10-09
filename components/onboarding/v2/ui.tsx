@@ -11,6 +11,7 @@ import {
   v2SegmentFilled,
   type OnboardingV2Step,
 } from "@/lib/onboarding-v2-routing";
+import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR, OBV2_RADIUS } from "./theme";
 
 type ButtonProps = {
@@ -218,8 +219,8 @@ const styles = StyleSheet.create({
     paddingVertical: 17,
     minHeight: 60,
   },
-  btnPrimary: { backgroundColor: OBV2_COLOR.orange },
-  btnPrimaryPressed: { backgroundColor: OBV2_COLOR.orangeHover },
+  btnPrimary: { backgroundColor: DS_V3.color.primary },
+  btnPrimaryPressed: { backgroundColor: DS_V3.color.primary },
   btnDark: { backgroundColor: OBV2_COLOR.blackBtn },
   btnDarkPressed: { opacity: 0.88 },
   btnGhost: { backgroundColor: "transparent", borderWidth: 2, borderColor: OBV2_COLOR.borderStrong },

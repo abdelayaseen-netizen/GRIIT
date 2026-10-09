@@ -81,7 +81,7 @@ export function OptionRow({
         <Text style={styles.optionTitle}>{title}</Text>
         <Text style={styles.optionSub}>{subtitle}</Text>
       </View>
-      {selected ? <Check size={CHECK} color={DS_V3.color.brandText} /> : null}
+      {selected ? <Check size={CHECK} color={DS_V3.color.textPrimary} /> : null}
     </Pressable>
   );
 }
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: DS_V3.radius.pill,
   },
   segOn: {
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   segOff: {
     backgroundColor: DS_V3.color.border,
@@ -264,9 +264,9 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   optionOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   optionCopy: {
     flex: 1,

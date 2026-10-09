@@ -78,10 +78,10 @@ const styles = StyleSheet.create({
   },
   row: { minHeight: 56, justifyContent: "center" },
   rowTitle: { fontSize: 17, fontWeight: "500", color: DS_V3.color.textPrimary },
-  picked: { color: DS_V3.color.brandText },
+  picked: { color: DS_V3.color.textPrimary },
   radii: { flexDirection: "row", gap: 8 },
   chip: { height: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: DS_V3.color.border, justifyContent: "center" },
-  chipOn: { borderColor: DS_V3.color.brand },
+  chipOn: { borderColor: DS_V3.color.border },
   chipTxt: { color: DS_V3.color.textPrimary },
   caption: { fontSize: 13, lineHeight: 18, color: DS_V3.color.textSecondary },
 });

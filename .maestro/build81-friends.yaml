@@ -1,0 +1,21 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81-friends
+- extendedWaitUntil:
+    visible:
+      id: profile-friends
+    timeout: 25000
+- tapOn:
+    id: friends-some
+- extendedWaitUntil:
+    visible:
+      id: profile-friends
+    timeout: 8000
+- tapOn:
+    id: friends-zero
+- extendedWaitUntil:
+    visible:
+      id: profile-friends
+    timeout: 8000

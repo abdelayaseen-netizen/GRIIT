@@ -56,7 +56,7 @@ function SuggestionCard({
           <Text style={styles.cardMeta}>{`${formatDays(days)} · ${participation}`}</Text>
         </View>
         {selected ? (
-          <Check size={RADIO} color={DS_V3.color.brandText} />
+          <Check size={RADIO} color={DS_V3.color.textPrimary} />
         ) : (
           <View style={styles.radioOff} />
         )}
@@ -260,9 +260,9 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   cardOn: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   cardHead: {
     flexDirection: "row",

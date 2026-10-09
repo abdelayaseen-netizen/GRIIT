@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   bar: {
     width: DS_V3.space.gutter / 2,
     borderRadius: DS_V3.space.xs,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
   },
   center: {
     ...StyleSheet.absoluteFillObject,

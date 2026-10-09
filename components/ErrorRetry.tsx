@@ -19,7 +19,7 @@ export function ErrorRetry({ message = "Something went wrong", onRetry }: ErrorR
         accessibilityLabel="Retry loading"
         accessibilityRole="button"
       >
-        <RefreshCw size={16} color={DS_V3.color.brand} />
+        <RefreshCw size={16} color={DS_V3.color.textPrimary} />
         <Text style={styles.retryText}>Try again</Text>
       </TouchableOpacity>
     </View>
@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_SPACING.md,
     borderRadius: DS_RADIUS.MD,
     borderWidth: 1,
-    borderColor: DS_V3.color.brand,
+    borderColor: DS_V3.color.border,
   },
   retryText: {
     fontSize: DS_TYPOGRAPHY.SIZE_SM,
     fontWeight: DS_TYPOGRAPHY.WEIGHT_SEMIBOLD,
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
   },
 });

@@ -329,13 +329,14 @@ export function HomeV3({
             <Text style={styles.dayOne}>Day 1</Text>
           ) : (
             <Text
+              maxFontSizeMultiplier={1.6}
               style={[styles.numeral, { fontSize: numeral, lineHeight: Math.round(numeral * 1.1), letterSpacing: numeral * -0.025 }]}
             >
               {streakN.toLocaleString("en-US")}
             </Text>
           )}
-          <Text style={styles.streakWords}>{dayOne ? DAY_ONE_WORDS : streakInARow(streakN)}</Text>
-          {dayOne ? null : <Text style={styles.best}>{bestLabel(streakN, bestStreak ?? streakN)}</Text>}
+          <Text style={styles.streakWords} numberOfLines={2}>{dayOne ? DAY_ONE_WORDS : streakInARow(streakN)}</Text>
+          {dayOne ? null : <Text style={styles.best} numberOfLines={2}>{bestLabel(streakN, bestStreak ?? streakN)}</Text>}
         </View>
         <WeekStrip days={weekDays} todayIndex={todayIndex} />
         <View style={styles.hair} />
@@ -497,6 +498,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: DS_V3.space.sm,
   },
   flameTile: {
@@ -568,7 +570,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
   },
   streakChip: {
     height: 32,
@@ -722,7 +724,7 @@ const styles = StyleSheet.create({
     borderTopColor: DS_V3.color.hairline,
   },
   rowFlash: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderRadius: 12,
   },
   ring: {
@@ -768,7 +770,7 @@ const styles = StyleSheet.create({
   done: {
     minHeight: DS_V3.size.button,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -778,7 +780,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   week: {
     paddingHorizontal: DS_V3.space.gutter,
@@ -806,7 +808,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     ...DS_V3.type.bodyStrong,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   meta: {
     flexDirection: "row",
@@ -826,7 +828,7 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,
-    color: DS_V3.color.brandText,
+    color: DS_V3.color.textPrimary,
   },
   shareTodayRow: {
     flexDirection: "row",
@@ -871,7 +873,7 @@ const styles = StyleSheet.create({
   sharePill: {
     height: 36,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,

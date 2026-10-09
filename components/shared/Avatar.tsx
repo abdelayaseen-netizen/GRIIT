@@ -21,7 +21,7 @@ type AvatarProps = {
 export function Avatar({ url, name, size, userId, bgColor, style }: AvatarProps) {
   const initialSource = name.trim() || "?";
   const fallbackBg =
-    bgColor ?? (userId ? getFeedAvatarBgFromUserId(userId) : DS_V3.color.brand);
+    bgColor ?? (userId ? getFeedAvatarBgFromUserId(userId) : DS_V3.color.textPrimary);
   const fontSize = Math.max(10, Math.round(size * 0.36));
 
   const radius = size / 2;

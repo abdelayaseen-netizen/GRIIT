@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   errorPill: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
     borderWidth: 1,
     borderColor: DS_V3.color.danger,
     borderRadius: DS_RADIUS.MD,

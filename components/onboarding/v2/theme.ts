@@ -20,12 +20,12 @@ export const OBV2_COLOR = {
   /** Tertiary / legal / placeholder ink. */
   ink3: DS_V3.color.textSecondary,
   /** Brand orange (fills, CTAs). */
-  orange: DS_V3.color.brand,
+  orange: DS_V3.color.textPrimary,
   /** Orange used as text/icon on light surfaces. */
-  orangeInk: DS_V3.color.brand,
-  orangeHover: DS_V3.color.brandText,
+  orangeInk: DS_V3.color.textPrimary,
+  orangeHover: DS_V3.color.textPrimary,
   /** Peach tint (selected chips, banners, icon wells). */
-  peach: DS_V3.color.brandTint,
+  peach: DS_V3.color.surface,
   /** Hairline dividers / unselected borders. */
   hair: DS_V3.color.border,
   sunken: DS_V3.color.surface,

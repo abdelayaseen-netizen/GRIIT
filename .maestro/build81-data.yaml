@@ -1,0 +1,27 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81-data
+- extendedWaitUntil:
+    visible:
+      id: your-data-7d
+    timeout: 25000
+- tapOn:
+    id: your-data-30d
+- extendedWaitUntil:
+    visible:
+      id: your-data-loaded
+    timeout: 20000
+- tapOn:
+    id: your-data-all
+- extendedWaitUntil:
+    visible:
+      id: your-data-loaded
+    timeout: 20000
+- tapOn:
+    id: your-data-7d
+- extendedWaitUntil:
+    visible:
+      id: your-data-loaded
+    timeout: 20000

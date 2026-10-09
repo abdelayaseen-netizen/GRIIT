@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 16,
     fontWeight: "500",
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
   },
   title: {
     fontSize: 20,
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: DS_RADIUS.LG,
-    backgroundColor: DS_V3.color.brand,
+    backgroundColor: DS_V3.color.primary,
     minWidth: 60,
     height: 38,
     alignItems: "center",
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     height: 40,
   },
   rightBtnSoft: {
-    backgroundColor: DS_V3.color.brandTint,
+    backgroundColor: DS_V3.color.surface,
   },
   rightBtnDisabled: { opacity: 0.5 },
   rightText: {
@@ -101,6 +101,6 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   rightTextSoft: {
-    color: DS_V3.color.brand,
+    color: DS_V3.color.textPrimary,
   },
 });

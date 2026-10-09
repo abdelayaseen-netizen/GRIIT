@@ -144,7 +144,7 @@ export default function Build81Harness() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: DS_V3.color.canvas },
-  switcher: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
+  switcher: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
   chip: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary },
   scroll: { paddingBottom: 48 },
 });

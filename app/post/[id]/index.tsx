@@ -306,7 +306,7 @@ function PostThreadScreenInner() {
                 (postQuery.isRefetching && !postQuery.isPending)
               }
               onRefresh={onRefresh}
-              tintColor={DS_V3.color.brandText}
+              tintColor={DS_V3.color.textPrimary}
             />
           }
           renderItem={renderCommentItem}

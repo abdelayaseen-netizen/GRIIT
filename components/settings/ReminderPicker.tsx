@@ -11,6 +11,7 @@ import {
   type ReminderMinute,
   type ReminderPresetId,
 } from "@/lib/onboarding-v2-reminders";
+import { DS_V3 } from "@/lib/design-system";
 import { PROFILE_V2_COLOR } from "@/lib/profile-v2-tokens";
 
 const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: PROFILE_V2_COLOR.sunken,
   },
   min: { flex: 1 },
-  cellOn: { backgroundColor: PROFILE_V2_COLOR.orange },
+  cellOn: { backgroundColor: DS_V3.color.textPrimary },
   cellTxt: { fontSize: 14, color: PROFILE_V2_COLOR.ink },
   actions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
   use: {
