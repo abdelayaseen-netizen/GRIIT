@@ -36,6 +36,7 @@ export const ROUTES = {
   SETTINGS_PERMISSIONS: "/settings/permissions",
   PROFILE_CONSISTENCY: "/profile/consistency",
   PROFILE_DAY: "/profile/day",
+  PROFILE_PROOF: (date: string) => `/profile/proof/${date}` as const,
   ACCOUNTABILITY: "/accountability",
   ACCOUNTABILITY_ADD: "/accountability/add",
   ACCOUNTABILITY_ADD_DAY1: "/accountability/add?from=day1",

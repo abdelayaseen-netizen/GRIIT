@@ -28,7 +28,7 @@ import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
 const ICON = 24;
 const PHOTO_INSET = 16;
-const PHOTO_RADIUS = 20;
+const PHOTO_RADIUS = 16;
 
 export type FeedPostV3Props = {
   post: LiveFeedPost;
@@ -484,8 +484,8 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   selfPanel: {
-    marginHorizontal: 16,
-    borderRadius: 16,
+    marginHorizontal: PHOTO_INSET,
+    borderRadius: PHOTO_RADIUS,
     backgroundColor: DS_V3.color.surface,
     padding: 16,
     gap: 12,

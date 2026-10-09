@@ -520,8 +520,8 @@ function LiveFeedSection({
               item.eventType === "secured_day" && item.username
                 ? () =>
                     router.push({
-                      pathname: ROUTES.PROFILE_DAY as never,
-                      params: { dateKey: item.createdAt.slice(0, 10), userId: item.userId },
+                      pathname: ROUTES.PROFILE_PROOF(item.createdAt.slice(0, 10)) as never,
+                      params: { userId: item.userId },
                     } as never)
                 : undefined
             }

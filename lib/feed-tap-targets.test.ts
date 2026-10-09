@@ -29,7 +29,7 @@ describe("feed tap targets", () => {
     const live = readFileSync(resolve(__dirname, "../components/LiveFeedSection.tsx"), "utf8");
     expect(live).toContain("feedChallengeHref");
     expect(live).toContain("feedAuthorHref");
-    expect(live).toContain("ROUTES.PROFILE_DAY");
+    expect(live).toContain("ROUTES.PROFILE_PROOF");
     const detail = readFileSync(resolve(__dirname, "../components/challenge/ChallengeDetailV3.tsx"), "utf8");
     expect(detail).toContain("This challenge is private.");
   });

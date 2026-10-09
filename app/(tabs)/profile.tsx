@@ -380,8 +380,8 @@ export default function ProfileScreen() {
               header={header}
               onOpenDay={(tile) =>
                 router.push({
-                  pathname: ROUTES.PROFILE_DAY as never,
-                  params: { dateKey: tile.dateKey, at: tile.id },
+                  pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
+                  params: { at: tile.id },
                 } as never)
               }
               onToday={() => router.push(ROUTES.TABS_HOME as never)}

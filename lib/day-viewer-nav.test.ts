@@ -91,7 +91,7 @@ describe("day viewer paging", () => {
     expect(src).toContain("windowSize");
     expect(src).not.toMatch(/<Modal/);
     expect(src).not.toContain("Swipe left at the last photo");
-    const screen = readFileSync(resolve(__dirname, "../app/profile/day.tsx"), "utf8");
+    const screen = readFileSync(resolve(__dirname, "../app/profile/proof/[date].tsx"), "utf8");
     expect(screen).toContain("countLabel");
     expect(screen).toContain("proofsDateLabel");
   });

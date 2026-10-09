@@ -54,7 +54,7 @@ describe("Chunk U Profile Part A", () => {
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     const consist = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
     expect(own).toContain("ProfileProofs");
-    expect(own).toContain("ROUTES.PROFILE_DAY");
+    expect(own).toContain("ROUTES.PROFILE_PROOF");
     expect(own).not.toContain("ROUTES.POST_ID");
     expect(consist).toContain("daysFromSource");
     expect(consist).toContain("ConsistencyGrid");

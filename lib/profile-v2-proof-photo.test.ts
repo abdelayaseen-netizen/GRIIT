@@ -88,7 +88,7 @@ describe("proofPhotoFromCheckIn", () => {
     expect(helper).not.toContain("publicUrlForProofStoragePath");
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     expect(own).not.toContain("PROFILE_V3_FOOTNOTE");
-    expect(own).toContain("ROUTES.PROFILE_DAY");
+    expect(own).toContain("ROUTES.PROFILE_PROOF");
   });
 });
 

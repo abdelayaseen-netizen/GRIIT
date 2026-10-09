@@ -123,7 +123,7 @@ describe("proofs grid wiring", () => {
     const grid = readFileSync(resolve(__dirname, "../components/profile/ProofsGrid.tsx"), "utf8");
     const full = readFileSync(resolve(__dirname, "../app/proof/[id].tsx"), "utf8");
     expect(profile).toContain("ProfileProofs");
-    expect(profile).toContain("ROUTES.PROFILE_DAY");
+    expect(profile).toContain("ROUTES.PROFILE_PROOF");
     expect(profile).not.toContain("ROUTES.POST_ID");
     expect(profile).not.toContain("title={`Day ${item.day}`}");
     expect(grid).toContain("proofsTileLabel");

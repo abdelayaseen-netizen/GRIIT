@@ -349,8 +349,8 @@ export default function VisitorProfileScreen() {
               onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
               onOpenProof={(p) => {
                 router.push({
-                  pathname: ROUTES.PROFILE_DAY as never,
-                  params: { dateKey: p.dateKey, userId: ownerId },
+                  pathname: ROUTES.PROFILE_PROOF(p.dateKey) as never,
+                  params: { userId: ownerId },
                 } as never);
               }}
               followLabel={isSelf && !previewStranger ? undefined : followCtrl.label}
@@ -402,8 +402,8 @@ export default function VisitorProfileScreen() {
                   securedDays={header.secured}
                   onOpenDay={(tile) =>
                     router.push({
-                      pathname: ROUTES.PROFILE_DAY as never,
-                      params: { dateKey: tile.dateKey, at: tile.id, userId: isSelf ? undefined : ownerId },
+                      pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
+                      params: { at: tile.id, userId: isSelf ? undefined : ownerId },
                     } as never)
                   }
                 />

@@ -49,7 +49,7 @@ describe("Chunk U U5", () => {
     expect(grid).toContain("monthSummaryLabel");
     expect(grid).toContain("secured in");
     expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("borderRadius: PHOTO_RADIUS");
-    expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("const PHOTO_RADIUS = 20");
+    expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("const PHOTO_RADIUS = 16");
     expect(readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8")).toContain("const PHOTO_INSET = 16");
   });
 });
