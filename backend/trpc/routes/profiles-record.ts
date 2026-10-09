@@ -409,7 +409,7 @@ export const profilesRecordProcedures = {
 
       const { data: proofEvents, error: proofEventsErr } = await db
         .from("activity_events")
-        .select("id, metadata, created_at, shared")
+        .select("id, metadata, created_at, shared, share_state")
         .eq("user_id", ownerId)
         .eq("event_type", "task_completed")
         .limit(800);
@@ -429,6 +429,7 @@ export const profilesRecordProcedures = {
           metadata?: Record<string, unknown> | null;
           created_at?: string;
           shared?: boolean;
+          share_state?: string | null;
         }[],
       });
 

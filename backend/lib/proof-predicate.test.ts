@@ -134,9 +134,35 @@ describe("splitSecuredProof", () => {
         capturedAt: null,
         taskName: "Task",
         gateTime: { mode: null, start: null, end: null },
-        shared: true,
+        shared: false,
       },
     ]);
+  });
+
+  it("marks a proof shared only when share_state is shared", () => {
+    const base = {
+      checkIns: [
+        {
+          date_key: "2026-09-18",
+          task_id: "t1",
+          active_challenge_id: "ac-a",
+          proof_url: "owner/a.jpg",
+        },
+      ],
+      enrollments: [{ id: "ac-a", challengeId: "ch-a", startDateKey: "2026-09-10" }],
+      challenges: [{ id: "ch-a", title: "Iron man", duration_days: 75 }],
+      tasks: [{ id: "t1", challenge_id: "ch-a", title: "Read", task_type: "photo" }],
+    };
+    const shared = cameraProofTiles({
+      ...base,
+      events: [{ id: "ev-s", metadata: { task_id: "t1", date_key: "2026-09-18" }, share_state: "shared" }],
+    });
+    const kept = cameraProofTiles({
+      ...base,
+      events: [{ id: "ev-k", metadata: { task_id: "t1", date_key: "2026-09-18" }, share_state: "kept" }],
+    });
+    expect(shared[0]?.shared).toBe(true);
+    expect(kept[0]?.shared).toBe(false);
   });
 
   it("abandoned enrollment with proofs today → secured screen caption shows the real title, not \"Challenge\"", () => {

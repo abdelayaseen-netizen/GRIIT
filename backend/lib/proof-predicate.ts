@@ -172,7 +172,13 @@ export function cameraProofTiles(args: {
   enrollments: { id: string; challengeId: string; startDateKey: string }[];
   challenges: { id: string; title?: string | null; duration_days?: number | null }[];
   tasks: (TaskModelRow & { id?: string; challenge_id?: string; title?: string | null })[];
-  events?: { id: string; metadata?: Record<string, unknown> | null; created_at?: string; shared?: boolean }[];
+  events?: {
+    id: string;
+    metadata?: Record<string, unknown> | null;
+    created_at?: string;
+    shared?: boolean;
+    share_state?: string | null;
+  }[];
 }): RecordProofTile[] {
   const titleByChallenge = new Map(
     args.challenges.map((c) => [c.id, (c.title ?? "").trim() || "Challenge"]),
@@ -213,7 +219,7 @@ export function cameraProofTiles(args: {
             end: task.gate_time_end ?? null,
           }
         : null,
-      shared: event?.shared !== false,
+      shared: event?.share_state === "shared",
     });
   }
   tiles.sort((a, b) => {
