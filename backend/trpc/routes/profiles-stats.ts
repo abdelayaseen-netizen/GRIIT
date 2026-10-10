@@ -21,7 +21,7 @@ import { loadDayTaskTally } from "../../lib/record-days";
 import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
-import { buildMeStats, proofMethodFromMetadata, type MeStatsEnrollment, type MeStatsProof } from "../../lib/me-stats";
+import { buildMeStats, proofMethodFromMetadata, resolveStatsTimeZone, type MeStatsEnrollment, type MeStatsProof } from "../../lib/me-stats";
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -512,9 +512,18 @@ export const profilesStatsProcedures = {
 
   /** Owner only. Range stats for Your data. Streak dates are inclusive. */
   meStats: protectedProcedure
-    .input(z.object({ range: z.enum(["7d", "30d", "all"]).default("7d") }))
+    .input(z.object({
+      range: z.enum(["7d", "30d", "all"]).default("7d"),
+      timeZone: z.string().max(64).optional(),
+    }))
     .query(async ({ ctx, input }) => {
-      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const { data: tzRow } = await ctx.supabase
+        .from("profiles")
+        .select("timezone, reminder_timezone")
+        .eq("user_id", ctx.userId)
+        .maybeSingle();
+      const stored = tzRow as { timezone?: string | null; reminder_timezone?: string | null } | null;
+      const tz = resolveStatsTimeZone(stored?.timezone || stored?.reminder_timezone, input.timeZone);
       const todayKey = getTodayDateKey(tz);
       const [secures, freezes, streak, enrollments, proofs] = await Promise.all([
         ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(800),

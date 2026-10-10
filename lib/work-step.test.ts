@@ -25,6 +25,7 @@ import {
   runHonestyLine,
   runPaceLine,
   runPrimaryLabel,
+  timerClockLine,
   timerPostEnabled,
   timerStartLabel,
   workDoneLine,
@@ -56,6 +57,8 @@ describe("work step CTA labels", () => {
     expect(timerStartLabel(600)).toBe("Start 10:00");
     expect(timerPostEnabled(1)).toBe(false);
     expect(timerPostEnabled(0)).toBe(true);
+    expect(timerClockLine(30, "10:42 AM")).toBe("Ends 10:42 AM");
+    expect(timerClockLine(0, "10:42 AM")).toBe("Time's up.");
     expect(TIMER_HONESTY).toBe("Runs on the clock. Lock the phone if you want.");
     expect(TIMER_LEAVING).toBe("Leaving the app does not stop it.");
   });

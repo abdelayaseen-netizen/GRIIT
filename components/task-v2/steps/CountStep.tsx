@@ -81,17 +81,7 @@ export function CountStep({
   return (
     <View style={styles.root}>
       <NumberPadDoneBar />
-      <KeyboardDock
-        footer={
-          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-            <Button
-              label={completeLabel(counterGoal, counterUnit, hasCamera)}
-              variant="primary"
-              onPress={onComplete}
-            />
-          </View>
-        }
-      >
+      <KeyboardDock>
       <View style={{ paddingTop: insets.top }}>
         <PushedHeader
           title={header?.title ?? headerTitle}
@@ -170,6 +160,14 @@ export function CountStep({
         )}
       </View>
       </KeyboardDock>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+        <Button
+          testID="count-complete"
+          label={completeLabel(counterGoal, counterUnit, hasCamera)}
+          variant="primary"
+          onPress={onComplete}
+        />
+      </View>
     </View>
   );
 }
@@ -183,6 +181,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.size.button + DS_V3.space.lg,
     gap: DS_V3.space.md,
     alignItems: "center",
   },

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -13,7 +14,7 @@ import {
   TIMER_RESET,
   WORK_POST,
   WORK_SECURED_CAPTION,
-  timerEndsLabel,
+  timerClockLine,
   timerPostEnabled,
 } from "@/lib/work-step";
 
@@ -30,6 +31,8 @@ type Props = {
   onBack: () => void;
   footerCaption?: string;
   footerBrand?: boolean;
+  submitting?: boolean;
+  error?: string | null;
 };
 
 const FIGURE = DS_V3.size.shutter + DS_V3.space.xs;
@@ -47,12 +50,24 @@ export function RunningStep({
   onBack,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
+  submitting = false,
+  error,
 }: Props) {
   const insets = useSafeAreaInsets();
   const endsAt = startedAtIso
     ? clockLabel(Date.parse(startedAtIso) + requiredSeconds * 1000)
     : "";
   const ready = timerPostEnabled(remainingSec);
+  const rang = useRef(false);
+  useEffect(() => {
+    if (!ready) {
+      rang.current = false;
+      return;
+    }
+    if (rang.current) return;
+    rang.current = true;
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  }, [ready]);
 
   return (
     <View style={styles.root}>
@@ -61,16 +76,29 @@ export function RunningStep({
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
-        <Text style={styles.label}>{timerEndsLabel(endsAt)}</Text>
+        <Text testID={ready ? "timer-times-up" : "timer-ends"} style={styles.label}>
+          {timerClockLine(remainingSec, endsAt)}
+        </Text>
         <Text style={styles.figure}>{fmtMmSs(remainingSec)}</Text>
         <Text style={styles.leaving}>{TIMER_LEAVING}</Text>
-        <ControlPillRow>
-          <ControlPill label={TIMER_PAUSE} icon="pause" onPress={onPause} />
-          <ControlPill label={TIMER_RESET} icon="rotate-ccw" onPress={onReset} />
-        </ControlPillRow>
+        {ready ? null : (
+          <View testID="timer-controls">
+            <ControlPillRow>
+              <ControlPill label={TIMER_PAUSE} icon="pause" onPress={onPause} />
+              <ControlPill label={TIMER_RESET} icon="rotate-ccw" onPress={onReset} />
+            </ControlPillRow>
+          </View>
+        )}
       </View>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-        <Button label={WORK_POST} disabled={!ready} onPress={onPost} />
+        <Button
+          testID="timer-post"
+          label={WORK_POST}
+          disabled={!ready}
+          submitting={submitting}
+          onPress={onPost}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>
           {ready ? footerCaption : TIMER_POST_CAPTION}
         </Text>
@@ -131,5 +159,12 @@ const styles = StyleSheet.create({
   },
   captionBrand: {
     color: DS_V3.color.textPrimary,
+  },
+  error: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
+    textAlign: "center",
   },
 });

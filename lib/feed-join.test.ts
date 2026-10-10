@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { doubleTapAction, eventLine, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal } from "@/lib/feed-join";
+import { doubleTapAction, eventLine, groupFeedJoins, isJoinGroup, joinLine, showCameraSeal, startedPreviewCopy } from "@/lib/feed-join";
 
 function post(partial: Partial<LiveFeedPost> & { id: string }): LiveFeedPost {
   return {
@@ -141,6 +141,29 @@ describe("groupFeedJoins", () => {
     ]);
     expect(items.every((item) => !isJoinGroup(item))).toBe(true);
     expect(items.map((item) => ("id" in item ? item.id : ""))).toEqual(["f1", "f2"]);
+  });
+
+  it("hides the viewer's own started line and groups the rest by challenge and hour", () => {
+    const items = groupFeedJoins(
+      [
+        post({ id: "me", userId: "me", displayName: "Yaseen", eventType: "joined_challenge", createdAt: "2026-10-09T14:10:00.000Z" }),
+        post({ id: "a", userId: "a", displayName: "Alex", eventType: "joined_challenge", createdAt: "2026-10-09T14:20:00.000Z" }),
+        post({ id: "b", userId: "b", displayName: "Bina", eventType: "joined_challenge", challengeId: "c2", challengeName: "Read", createdAt: "2026-10-09T14:30:00.000Z" }),
+      ],
+      "me",
+    );
+    expect(items).toHaveLength(2);
+    expect(isJoinGroup(items[0]!)).toBe(true);
+    if (isJoinGroup(items[0]!)) expect(items[0].names).toEqual(["Alex"]);
+  });
+
+  it("offers Open challenge when the viewer is already in", () => {
+    expect(startedPreviewCopy(null)).toEqual({ line: "Day 1 is today.", label: "Join", open: false });
+    expect(startedPreviewCopy({ day: 6, total: 7 })).toEqual({
+      line: "You're in · Day 6 of 7",
+      label: "Open challenge",
+      open: true,
+    });
   });
 
   it("does not turn secured_day rows into a system line", () => {

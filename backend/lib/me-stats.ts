@@ -97,6 +97,15 @@ export function consistencyPct(secured: number, due: number): number | null {
   return Math.round((secured / due) * 100);
 }
 
+/** Profile zone when it is stored. Otherwise the device zone. Never invent UTC over a known device zone. */
+export function resolveStatsTimeZone(stored: string | null | undefined, device: string | null | undefined): string {
+  const profile = stored?.trim();
+  if (profile) return profile;
+  const fromDevice = device?.trim();
+  if (fromDevice) return fromDevice;
+  return "UTC";
+}
+
 export function usualHour(histogram: readonly number[]): number | null {
   const sum = histogram.reduce((a, b) => a + b, 0);
   if (sum < 5) return null;

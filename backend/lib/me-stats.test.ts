@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { bestStreakRun, buildMeStats, consistencyPct, proofMethodFromMetadata, usualHour } from "./me-stats";
+import { bestStreakRun, buildMeStats, consistencyPct, proofMethodFromMetadata, resolveStatsTimeZone, usualHour } from "./me-stats";
+import { hourLabel } from "@/lib/v51-format";
 import { inclusiveDayCount } from "./date-utils";
 
 describe("best streak dates", () => {
@@ -53,6 +54,23 @@ describe("range stats", () => {
   it("hides the usual hour until 5 proofs", () => {
     const stats = buildMeStats({ ...base, range: "all" });
     expect(usualHour(stats.user_stats.proof_hour_histogram)).toBeNull();
+  });
+
+  it("uses the device zone when the profile zone is empty, and labels 8 am", () => {
+    expect(resolveStatsTimeZone(null, "America/New_York")).toBe("America/New_York");
+    expect(resolveStatsTimeZone("America/Chicago", "America/New_York")).toBe("America/Chicago");
+    const stats = buildMeStats({
+      ...base,
+      range: "7d",
+      timeZone: resolveStatsTimeZone(null, "America/New_York"),
+      proofs: Array.from({ length: 5 }, () => ({
+        atIso: "2026-10-06T12:00:00.000Z",
+        method: "self_reported" as const,
+      })),
+    });
+    const hour = usualHour(stats.user_stats.proof_hour_histogram);
+    expect(hour).toBe(8);
+    expect(`Most often around ${hourLabel(hour!).trim()}.`).toBe("Most often around 8 am.");
   });
 
   it("counts a proof hour in the user's time zone", () => {

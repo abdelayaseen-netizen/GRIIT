@@ -141,6 +141,12 @@ export function timerEndsLabel(clock: string): string {
   return `Ends ${clock}`;
 }
 
+/** At 00:00 the clock line replaces the end time. */
+export function timerClockLine(remainingSeconds: number, clock: string): string {
+  if (remainingSeconds <= 0) return "Time's up.";
+  return timerEndsLabel(clock);
+}
+
 export function timerPostEnabled(remainingSeconds: number): boolean {
   return remainingSeconds <= 0;
 }

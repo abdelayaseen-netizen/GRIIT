@@ -13,8 +13,8 @@ import {
 
 describe("task complete toast copy", () => {
   it("names a saved photo and a done self-report, and counts what is left", () => {
-    expect(taskDoneTitle("Read", false)).toBe("Read saved.");
-    expect(taskDoneTitle("Gym", true)).toBe("Gym saved.");
+    expect(taskDoneTitle("Read", false)).toBe("Saved.");
+    expect(taskDoneTitle("Gym", true)).toBe("Saved.");
     expect(taskLeftBody(2, false)).toBe("");
     expect(taskLeftBody(1, false)).toBe("");
     expect(taskLeftBody(2, true)).toBe("");
@@ -45,6 +45,8 @@ describe("task complete toast copy", () => {
     const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
     expect(flow).toContain("publishTaskToast");
     expect(flow).toContain("taskDoneTitle");
+    expect(flow).toContain("routeAfterSave");
+    expect(flow).not.toContain("await loadAlsoToday");
     expect(flow).not.toContain('setStep("finish")');
   });
 });

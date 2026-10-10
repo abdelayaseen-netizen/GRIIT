@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -26,6 +27,7 @@ import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
+  const [confirmDidIt, setConfirmDidIt] = useState(false);
 
   return (
     <View
@@ -79,6 +81,7 @@ export function TaskFlowV2() {
           soundOn={f.soundOn}
           onSoundOn={f.setSoundOn}
           onStart={() => void f.startTimer()}
+          onAlready={() => setConfirmDidIt(true)}
           onBack={f.goBack}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
@@ -174,6 +177,8 @@ export function TaskFlowV2() {
           onBack={f.goBack}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
+          submitting={f.saving}
+          error={f.submitError}
         />
       ) : null}
 
@@ -294,6 +299,17 @@ export function TaskFlowV2() {
         visible={f.discardAsk}
         onDiscard={f.onDiscardPhoto}
         onKeep={f.onKeepPhoto}
+      />
+      <ConfirmDialog
+        visible={confirmDidIt}
+        title="Log it as done?"
+        message="It posts as self-reported."
+        confirmLabel="Log it"
+        onCancel={() => setConfirmDidIt(false)}
+        onConfirm={() => {
+          setConfirmDidIt(false);
+          f.onDidIt();
+        }}
       />
     </View>
   );

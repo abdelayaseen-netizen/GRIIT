@@ -22,7 +22,7 @@ import {
 } from "@/lib/g3-profile";
 
 function Mark({ badge }: { badge: V42BadgeState }) {
-  const ink = badge.earned ? DS_V3.color.onBrand : DS_V3.color.textSecondary;
+  const ink = badge.earned ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
   if (badge.mark === "flag") return <Flag size={18} color={ink} />;
   if (badge.mark === "flag-triangle-right") return <FlagTriangleRight size={18} color={ink} />;
   if (badge.mark === "rotate-ccw") return <RotateCcw size={18} color={ink} />;

@@ -1,0 +1,17 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://dev/build81-timer
+- extendedWaitUntil:
+    visible:
+      id: timer-times-up
+    timeout: 15000
+- assertNotVisible:
+    id: timer-controls
+- tapOn:
+    id: timer-post
+- extendedWaitUntil:
+    visible:
+      id: toast-saved
+    timeout: 15000

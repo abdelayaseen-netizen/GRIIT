@@ -132,7 +132,7 @@ export default function ProfileProofs({
               onPress={onToday}
               style={[styles.tile, styles.today]}
             >
-              <Plus size={18} color={DS_V3.color.textPrimary} />
+              <Plus size={18} color={DS_V3.color.textSecondary} />
               <Text style={styles.todayTitle}>{TODAY_TILE}</Text>
               <Text style={styles.todayCap}>{todayTileCaption(tasksLeft ?? 0)}</Text>
             </Pressable>
@@ -152,7 +152,9 @@ export default function ProfileProofs({
                 {kind === "photo" ? (
                   <>
                     <ProofPhoto uri={p.imageUrl} taskName={p.taskName} style={styles.img} />
-                    <Text style={styles.dateBurn}>{date}</Text>
+                    <View style={styles.scrim} pointerEvents="none">
+                      <Text style={styles.dateBurn}>{date}</Text>
+                    </View>
                   </>
                 ) : kind === "missing" ? (
                   <View style={styles.self}>
@@ -222,6 +224,14 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   img: { ...StyleSheet.absoluteFillObject },
+  scrim: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: 16,
+    backgroundColor: "rgba(15,15,15,0.55)",
+  },
   dateBurn: {
     padding: 6,
     fontSize: 11,
@@ -257,7 +267,7 @@ const styles = StyleSheet.create({
   today: {
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: DS_V3.color.border,
+    borderColor: DS_V3.color.hairline,
     alignItems: "center",
     justifyContent: "center",
     gap: 4,

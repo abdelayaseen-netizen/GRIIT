@@ -1,4 +1,5 @@
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { calendarDayFromStartAt } from "@/backend/lib/calendar-day";
 import { checkInHasCameraProof } from "@/backend/lib/proof-predicate";
 import { formatOfDays } from "@/lib/format-days";
 
@@ -91,8 +92,37 @@ export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb
   return `${who} finished ${group.challengeName} · ${formatOfDays(group.secured, group.dayOf)}`;
 }
 
+export function viewerChallengeDay(
+  enrollments: readonly { challengeId: string; startAt: string | null; durationDays: number }[],
+  challengeId: string,
+  todayKey: string,
+  timeZone: string,
+): { day: number; total: number } | null {
+  const row = enrollments.find((item) => item.challengeId === challengeId);
+  if (!row) return null;
+  const total = Math.max(1, Math.floor(row.durationDays) || 1);
+  return { day: calendarDayFromStartAt(row.startAt, timeZone, todayKey, total), total };
+}
+
+/** Enrolled viewers open the challenge. Everyone else can join. */
+export function startedPreviewCopy(enrolled: { day: number; total: number } | null): {
+  line: string;
+  label: string;
+  open: boolean;
+} {
+  if (!enrolled) return { line: "Day 1 is today.", label: "Join", open: false };
+  return {
+    line: `You're in · Day ${enrolled.day} of ${enrolled.total}`,
+    label: "Open challenge",
+    open: true,
+  };
+}
+
 /** Group started lines for one challenge inside one clock hour. Finished stays a post. */
-export function groupFeedJoins(posts: readonly LiveFeedPost[]): FeedListItem[] {
+export function groupFeedJoins(posts: readonly LiveFeedPost[], viewerId?: string | null): FeedListItem[] {
+  const visible = viewerId
+    ? posts.filter((post) => !(feedEventVerb(post) === "started" && post.userId === viewerId))
+    : posts;
   const out: FeedListItem[] = [];
   let open: {
     verb: FeedEventVerb;
@@ -142,7 +172,7 @@ export function groupFeedJoins(posts: readonly LiveFeedPost[]): FeedListItem[] {
     open = null;
   };
 
-  for (const post of posts) {
+  for (const post of visible) {
     const verb = feedEventVerb(post);
     if (verb !== "started" || !post.challengeId) {
       flush();

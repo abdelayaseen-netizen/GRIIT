@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { ShareChoice } from "@/components/ds/ShareChoice";
+import { SHARE } from "@/lib/copy";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   clearTaskCompleteFlash,
@@ -16,8 +16,8 @@ import {
 } from "@/lib/task-complete-toast";
 
 const LIFE_MS = 4000;
-const PHOTO_LIFE_MS = 8000;
-const UNDO_MS = 6000;
+const PHOTO_LIFE_MS = 4000;
+const UNDO_MS = 4000;
 
 export function useTaskCompleteFlash(): string | null {
   const [id, setId] = React.useState<string | null>(null);
@@ -78,9 +78,9 @@ export default function TaskCompleteToast({
   return (
     <Animated.View
       {...pan.panHandlers}
+      testID="toast-saved"
       style={[
         styles.wrap,
-        toast.cameraSeal ? styles.wrapPhoto : null,
         { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] },
       ]}
     >
@@ -93,44 +93,38 @@ export default function TaskCompleteToast({
         )}
       </View>
       )}
+      <View style={styles.copy}>
+        <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
+        {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
+      </View>
       {toast.cameraSeal ? (
-        <View style={styles.choice}>
-          <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
-          {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
-          <ShareChoice
-            state={shared ? "shared" : "unanswered"}
-            isPhoto
-            photoUri={toast.photoUri}
-            onShare={() => {
-              void Promise.resolve(onShareFeed?.(toast)).then(() => setShared(true));
-            }}
-            onKeep={() => dismissTaskToast()}
-            onUndo={() => {
-              void Promise.resolve(onUndoFeed?.(toast)).then(() => {
-                setShared(false);
-                dismissTaskToast();
-              });
-            }}
-            onRetry={() => {
-              void Promise.resolve(onShareFeed?.(toast)).then(() => setShared(true));
-            }}
-          />
-        </View>
+        <Pressable
+          testID="toast-share"
+          accessibilityRole="button"
+          accessibilityLabel={shared ? "Undo share" : SHARE.cta}
+          onPress={() => {
+            if (shared) {
+              setShared(false);
+              void Promise.resolve(onUndoFeed?.(toast)).finally(() => dismissTaskToast());
+              return;
+            }
+            setShared(true);
+            void Promise.resolve(onShareFeed?.(toast)).catch(() => setShared(false));
+          }}
+          style={styles.photoPill}
+        >
+          {toast.photoUri ? <Image source={{ uri: toast.photoUri }} style={styles.photo} /> : null}
+          <Text style={styles.pillTxt}>{shared ? "Undo" : "Share"}</Text>
+        </Pressable>
       ) : (
-        <>
-          <View style={styles.copy}>
-            <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
-            <Text style={styles.body} numberOfLines={1}>{toast.body}</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Share as a card"
-            onPress={() => onShare?.(toast)}
-            style={styles.pill}
-          >
-            <Text style={styles.pillTxt}>Share</Text>
-          </Pressable>
-        </>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Share as a card"
+          onPress={() => onShare?.(toast)}
+          style={styles.pill}
+        >
+          <Text style={styles.pillTxt}>Share</Text>
+        </Pressable>
       )}
     </Animated.View>
   );
@@ -151,11 +145,6 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 10,
   },
-  wrapPhoto: {
-    flexDirection: "column",
-    alignItems: "stretch",
-  },
-  choice: { gap: 8, width: "100%" },
   thumb: {
     width: 40,
     height: 40,
@@ -178,4 +167,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.onBrand },
+  photoPill: {
+    height: 40,
+    paddingLeft: 4,
+    paddingRight: 12,
+    borderRadius: DS_V3.radius.pill,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  photo: { width: 28, height: 32, borderRadius: 6 },
 });

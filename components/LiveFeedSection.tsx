@@ -32,7 +32,9 @@ import InviteCard from "@/components/feed/InviteCard";
 import TodaySocialBand from "@/components/home/TodaySocialBand";
 import type { TodayPoster } from "@/lib/today-band";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
-import { groupFeedJoins, isJoinGroup, type FeedEventGroup, type FeedListItem } from "@/lib/feed-join";
+import { getTodayDateKey } from "@/lib/date-utils";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { groupFeedJoins, isJoinGroup, viewerChallengeDay, type FeedEventGroup, type FeedListItem } from "@/lib/feed-join";
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
 import EmptyState from "@/components/ds/EmptyState";
 import Avatar from "@/components/ds/Avatar";
@@ -235,7 +237,30 @@ function LiveFeedSection({
   });
 
   const finalFeed = keepLiveFeedPosts(posts);
-  const listItems = useMemo(() => groupFeedJoins(finalFeed), [finalFeed]);
+  const listItems = useMemo(() => groupFeedJoins(finalFeed, user?.id), [finalFeed, user?.id]);
+  const mineQuery = useQuery({
+    queryKey: ["challenges", "listMyActive", user?.id ?? ""],
+    queryFn: () =>
+      trpcQuery<
+        { challenge_id?: string; start_at?: string | null; challenges?: { duration_days?: number | null } | null }[]
+      >(TRPC.challenges.listMyActive),
+    enabled: !!user?.id,
+    staleTime: 30 * 1000,
+  });
+  const startedEnrollment = useMemo(() => {
+    if (!startedPreview) return null;
+    const zone = getDeviceIanaTimeZone();
+    return viewerChallengeDay(
+      (mineQuery.data ?? []).map((row) => ({
+        challengeId: String(row.challenge_id ?? ""),
+        startAt: row.start_at ?? null,
+        durationDays: row.challenges?.duration_days ?? 1,
+      })),
+      startedPreview.id,
+      getTodayDateKey(zone),
+      zone,
+    );
+  }, [mineQuery.data, startedPreview]);
   const feedViewTracked = useRef(false);
 
   useEffect(() => {
@@ -863,7 +888,13 @@ function LiveFeedSection({
       <ChallengePreviewSheet
         item={startedPreview}
         joining={joiningPreview}
+        enrolled={startedEnrollment}
         onClose={() => setStartedPreview(null)}
+        onOpen={(item) => {
+          setStartedPreview(null);
+          const href = feedChallengeHref(item.id);
+          if (href) router.push(href as never);
+        }}
         onDetails={(item) => {
           setStartedPreview(null);
           const href = feedChallengeHref(item.id);

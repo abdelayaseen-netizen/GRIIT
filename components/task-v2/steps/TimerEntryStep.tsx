@@ -23,6 +23,7 @@ type Props = {
   soundOn: boolean;
   onSoundOn: (v: boolean) => void;
   onStart: () => void;
+  onAlready: () => void;
   onBack: () => void;
   footerCaption?: string;
   footerBrand?: boolean;
@@ -38,6 +39,7 @@ export function TimerEntryStep({
   soundOn,
   onSoundOn,
   onStart,
+  onAlready,
   onBack,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
@@ -60,7 +62,13 @@ export function TimerEntryStep({
         </View>
       </View>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
-        <Button label={timerStartLabel(requiredSeconds)} onPress={onStart} />
+        <Button testID="timer-start" label={timerStartLabel(requiredSeconds)} onPress={onStart} />
+        <Button
+          testID="timer-already"
+          label="Already did it"
+          variant="secondary"
+          onPress={onAlready}
+        />
         <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
       </View>
     </View>

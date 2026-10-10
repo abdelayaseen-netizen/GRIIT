@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firstWeekDay, greeting, greetingSub, inclusiveDayCount } from "./greeting";
+import { earliestEnrollmentStart, firstWeekDay, greeting, greetingSub, inclusiveDayCount } from "./greeting";
 
 const TZ = "America/New_York";
 
@@ -46,6 +46,12 @@ describe("first week and inclusive spans", () => {
     expect(firstWeekDay("2026-10-07", "2026-10-07")).toBe(1);
     expect(firstWeekDay("2026-10-13", "2026-10-07")).toBe(7);
     expect(firstWeekDay("2026-10-14", "2026-10-07")).toBeNull();
+  });
+
+  it("uses the oldest enrollment, including one that already finished", () => {
+    const start = earliestEnrollmentStart(["2026-10-04", "2026-09-30", null]);
+    expect(start).toBe("2026-09-30");
+    expect(firstWeekDay("2026-10-10", start)).toBeNull();
   });
 
   it("Sep 6 through Sep 24 is 19 days, so an 18-day streak cannot use that span", () => {

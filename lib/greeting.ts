@@ -68,6 +68,12 @@ export function greetingSub(o: {
   return `Next: ${o.nextTask ?? "a task"}. ${o.openCount} tasks left today.`;
 }
 
+/** Earliest start across every enrollment, including finished and left ones. */
+export function earliestEnrollmentStart(keys: readonly (string | null | undefined)[]): string | null {
+  const sorted = keys.filter((key): key is string => Boolean(key)).sort();
+  return sorted[0] ?? null;
+}
+
 /** Day 1–7 from the earliest start, or null once the calendar week takes over. */
 export function firstWeekDay(todayKey: string, earliestStartKey: string | null | undefined): number | null {
   if (!earliestStartKey || earliestStartKey > todayKey) return null;

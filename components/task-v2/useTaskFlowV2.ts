@@ -8,7 +8,7 @@ import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
@@ -24,15 +24,14 @@ import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "
 import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
 import {
   dayOpenTaskHref,
-  selectDayOpen,
   serverSecuredToday,
   type DayOpenModel,
 } from "@/lib/day-open";
-import { dayOpenTasksFromActive } from "@/lib/day-open-active";
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
-import { dismissTaskToast, publishTaskToast, taskDoneTitle, taskLeftBody } from "@/lib/task-complete-toast";
+import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
+import { routeAfterSave } from "@/lib/route-after-save";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -45,8 +44,6 @@ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/li
 import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
 import {
   FINISH_SLOW_MS,
-  alsoTodayFromTasks,
-  enrollmentDueToday,
   finishAfterMutation,
   resolveHeldShare,
   type AlsoTodayRow,
@@ -191,7 +188,7 @@ export function useTaskFlowV2() {
   const [sessionUp, setSessionUp] = useState(0);
   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
   const [result, setResult] = useState<SubmitResult | null>(null);
-  const [dayOpen, setDayOpen] = useState<DayOpenModel | null>(null);
+  const [dayOpen] = useState<DayOpenModel | null>(null);
   const [finishSave, setFinishSave] = useState<SaveState>("saving");
   const [finishShare, setFinishShare] = useState<ShareIntent>("none");
   const [finishFeedPosted, setFinishFeedPosted] = useState(false);
@@ -379,41 +376,6 @@ export function useTaskFlowV2() {
     }
   };
 
-  const loadAlsoToday = async () => {
-    try {
-      const [activeList, checkins] = await Promise.all([
-        trpcQuery(TRPC.challenges.listMyActive) as Promise<
-          Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]
-        >,
-        trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-          Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
-        >,
-      ]);
-      const enrollments = (Array.isArray(activeList) ? activeList : []).filter((row) =>
-        enrollmentDueToday({
-          startAt:
-            (row as { start_at?: string | null }).start_at ??
-            (row as { started_at?: string | null }).started_at ??
-            (row as { created_at?: string | null }).created_at,
-          timeZone,
-          todayKey: dateKey,
-        }),
-      );
-      const tasks = dayOpenTasksFromActive({
-        enrollments,
-        completed: Array.isArray(checkins) ? checkins : [],
-        todayKey: dateKey,
-        timeZone,
-      });
-      if (mountedRef.current) {
-        setAlsoToday(alsoTodayFromTasks(tasks, taskId));
-      }
-      return tasks;
-    } catch {
-      return [];
-    }
-  };
-
   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
     if (submitInFlight.current) return;
     if (!flowAllowsSubmit(windowState)) {
@@ -563,46 +525,49 @@ export function useTaskFlowV2() {
       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
       void endLiveActivity();
       clearTimeout(slowTimer);
-      setSaving(false);
       const eventId = closingProofEventId(complete.dayProofs, proofUrl);
       if (outcome === "failed") {
         submitInFlight.current = false;
+        setSaving(false);
         finishShareRef.current = "none";
         if (mountedRef.current) {
           setFinishShare("none");
           setFinishSave("failed");
+          setFailNote((note) => note || "Couldn't save. Try Post again.");
         }
         return;
       }
-      await postHeldShare(eventId ?? undefined);
+      void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
-        const tasks = await loadAlsoToday();
-        const left = alsoTodayFromTasks(tasks, taskId);
-        if (mountedRef.current) {
+        const route = routeAfterSave({
+          challengeFinished: false,
+          daySecuredNow: false,
+          enrollmentId: activeChallengeId,
+        });
+        if (route.screen === "Toast" && mountedRef.current) {
           setShareEventId(eventId);
           setFinishSave("saved");
-          setDayOpen(
-            selectDayOpen({
-              taskName,
-              challengeId: activeChallengeId,
-              tasks,
-              targetStreak: profile?.target_streak,
-            }),
-          );
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           publishTaskToast({
             taskId,
             title: taskDoneTitle(taskName, hasCameraProof),
-            body: taskLeftBody(left.length, hasCameraProof),
+            body: taskName,
             photoUri: photoUri ?? proofUrl ?? null,
             cameraSeal: hasCameraProof,
             eventId: eventId ?? null,
+            challengeId: enrollmentQ.data?.challenge_id ?? null,
+            challengeName,
+            taskName,
+            currentDay,
+            totalDays: durationDays,
           });
           returnToOrigin();
         }
         submitInFlight.current = false;
+        setSaving(false);
         return;
       }
+      setSaving(false);
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
         requiredRemaining: complete.requiredRemaining,
@@ -1009,6 +974,7 @@ export function useTaskFlowV2() {
     taskRequired,
     verifyLine,
     saving,
+    submitError: failNote,
     requirePhoto,
     photoMode,
     fromGps: false,

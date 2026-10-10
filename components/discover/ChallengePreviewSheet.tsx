@@ -10,6 +10,7 @@ import Chip from "@/components/ds/Chip";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
 import { JOIN_CAPTION_TODAY } from "@/lib/challenge-detail-mapping";
+import { startedPreviewCopy } from "@/lib/feed-join";
 import type { DiscoverPreviewTask } from "@/lib/discover-preview-tasks";
 import type { FeaturedBuiltin } from "@/lib/featured-catalog";
 
@@ -33,13 +34,17 @@ export type ChallengePreview = {
 export function ChallengePreviewSheet({
   item,
   joining,
+  enrolled,
   onJoin,
+  onOpen,
   onDetails,
   onClose,
 }: {
   item: ChallengePreview | null;
   joining?: boolean;
+  enrolled?: { day: number; total: number } | null;
   onJoin: (item: ChallengePreview) => void;
+  onOpen?: (item: ChallengePreview) => void;
   onDetails: (item: ChallengePreview) => void;
   onClose: () => void;
 }) {
@@ -53,6 +58,8 @@ export function ChallengePreviewSheet({
         ? "1 person"
         : `${item.people.toLocaleString("en-US")} people`;
   const meta = [formatDays(item.days), item.category, people].filter(Boolean).join(" · ");
+  const preview = startedPreviewCopy(enrolled ?? null);
+  const joinLabel = preview.open ? preview.label : `Join ${item.title}`;
 
   return (
     <Sheet
@@ -61,10 +68,10 @@ export function ChallengePreviewSheet({
       heading=""
       footer={
         <>
-          <Text style={styles.day}>{item.day1Line || JOIN_CAPTION_TODAY}</Text>
+          <Text style={styles.day}>{preview.open ? preview.line : item.day1Line || JOIN_CAPTION_TODAY}</Text>
           <Button
-            label={`Join ${item.title}`}
-            onPress={() => onJoin(item)}
+            label={joinLabel}
+            onPress={() => (preview.open ? onOpen?.(item) : onJoin(item))}
             submitting={joining}
           />
           <Pressable accessibilityRole="button" accessibilityLabel="See full details" onPress={() => onDetails(item)}>

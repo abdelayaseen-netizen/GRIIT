@@ -12,8 +12,9 @@ describe("camera share choice", () => {
     expect(choice).toContain("SHARE.cta");
     expect(copy).toContain("Share this photo to the feed");
     expect(copy).toContain("No answer keeps it private.");
-    expect(toast).toContain("PHOTO_LIFE_MS = 8000");
-    expect(toast).toContain("UNDO_MS = 6000");
+    expect(toast).toContain("PHOTO_LIFE_MS = 4000");
+    expect(toast).toContain("testID=\"toast-saved\"");
+    expect(toast).not.toContain("PHOTO_LIFE_MS = 8000");
     expect(feed).toContain("subscribeOptimisticFeedPost");
     expect(checkins).toContain("unshareProof:");
     expect(checkins).toContain("keepSharePatch");

@@ -19,7 +19,7 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
-import { firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
+import { earliestEnrollmentStart, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
@@ -184,6 +184,7 @@ export default function HomeScreen() {
         todayKey?: string;
         daySource?: DaySource;
         header?: ProofsHeader;
+        earliestStartKey?: string | null;
       }>,
     staleTime: 60 * 1000,
     enabled: !isGuest && !!user?.id,
@@ -500,9 +501,11 @@ export default function HomeScreen() {
   const homeStrip = useMemo(() => {
     const starts = heroTasks
       .map((task) => task.startDateKey)
-      .filter((key): key is string => typeof key === "string" && key <= todayKey)
-      .sort();
-    const earliest = starts[0] ?? null;
+      .filter((key): key is string => typeof key === "string" && key <= todayKey);
+    const earliest = earliestEnrollmentStart([
+      recordQuery.data?.earliestStartKey,
+      ...starts,
+    ]);
     const day = firstWeekDay(todayKey, earliest);
     const statsRow = resolvedStats as StatsFromApi | null;
     if (day && earliest) {
@@ -529,7 +532,7 @@ export default function HomeScreen() {
       }),
       todayIndex: todayWeekIndex,
     };
-  }, [heroTasks, todayKey, resolvedStats, securedDateKeys, todaySecured, weekStates, weekDateKeys, todayWeekIndex]);
+  }, [heroTasks, todayKey, resolvedStats, securedDateKeys, todaySecured, weekStates, weekDateKeys, todayWeekIndex, recordQuery.data?.earliestStartKey]);
 
   const useFreeze = useMutation({
     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],

@@ -9,11 +9,16 @@ export type TaskCompleteToast = {
   photoUri: string | null;
   cameraSeal: boolean;
   eventId?: string | null;
+  challengeId?: string | null;
+  challengeName?: string;
+  taskName?: string;
+  currentDay?: number;
+  totalDays?: number;
 };
 
-export function taskDoneTitle(task: string, _photo?: boolean): string {
-  const name = task.trim() || "Task";
-  return `${name} saved.`;
+/** The verb stays whole. The task name is the second line and may truncate. */
+export function taskDoneTitle(_task?: string, _photo?: boolean): string {
+  return "Saved.";
 }
 
 /** Photo proofs use the share pill. Self-reported proofs get no second line. */

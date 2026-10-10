@@ -4,8 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
-import { clearOptimisticFeedPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
-import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -65,32 +64,20 @@ export default function TabLayout() {
   const shareFeed = React.useCallback(async (toast: TaskToast) => {
     if (!toast.eventId || !user?.id) return;
     await trpcMutate(TRPC.checkins.shareProof, { eventId: toast.eventId });
-    const post: LiveFeedPost = {
-      id: toast.eventId,
+    const post = optimisticTaskPost({
+      eventId: toast.eventId,
       userId: user.id,
       username: profile?.username ?? "",
       displayName: profile?.display_name ?? "You",
       avatarUrl: profile?.avatar_url ?? null,
-      streakCount: 0,
-      challengeId: null,
-      challengeName: "",
-      taskName: toast.title.replace(/ (done|saved)\.$/, ""),
-      currentDay: 1,
-      totalDays: 1,
-      eventType: "task_completed",
-      isCompleted: false,
-      hasProof: true,
+      challengeId: toast.challengeId,
+      challengeName: toast.challengeName,
+      taskName: toast.taskName ?? toast.body,
+      currentDay: toast.currentDay,
+      totalDays: toast.totalDays,
       photoUrl: toast.photoUri,
-      proofPhotoUrl: toast.photoUri,
-      verified: false,
-      caption: null,
-      createdAt: new Date().toISOString(),
-      respectCount: 0,
-      reactedByMe: false,
-      commentCount: 0,
-      visibility: "public",
-    };
-    publishOptimisticFeedPost(post);
+    });
+    if (post) publishOptimisticFeedPost(post);
   }, [profile?.avatar_url, profile?.display_name, profile?.username, user?.id]);
   const undoFeed = React.useCallback(async (toast: TaskToast) => {
     if (!toast.eventId) return;

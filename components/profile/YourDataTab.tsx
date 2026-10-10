@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { DS_V3 } from "@/lib/design-system";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { dateRange, hourLabel } from "@/lib/v51-format";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -47,7 +48,8 @@ export function YourDataTab() {
   const [range, setRange] = useState<StatsRange>("7d");
   const query = useQuery({
     queryKey: ["profiles", "meStats", range],
-    queryFn: () => trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range }),
+    queryFn: () =>
+      trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range, timeZone: getDeviceIanaTimeZone() }),
   });
   const stats = query.data;
   const pct = stats ? consistencyPct(stats.user_stats.secured_days, stats.user_stats.due_days) : null;

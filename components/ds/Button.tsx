@@ -46,6 +46,7 @@ export type ButtonProps = {
   labelType?: "secondary";
   /** Overrides the size height. Home empty actions are 40. */
   boxHeight?: number;
+  testID?: string;
 };
 
 export default function Button({
@@ -65,6 +66,7 @@ export default function Button({
   singleLine,
   labelType,
   boxHeight,
+  testID,
 }: ButtonProps) {
   const height = boxHeight ?? (size === "small" ? DS_V3.size.buttonSmall : DS_V3.size.button);
   const spinning = Boolean(submitting || loading);
@@ -88,6 +90,7 @@ export default function Button({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: blocked }}

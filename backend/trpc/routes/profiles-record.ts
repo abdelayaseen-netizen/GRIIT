@@ -294,7 +294,7 @@ export const profilesRecordProcedures = {
         });
       }
 
-      const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes] = await Promise.all([
+      const [streakRes, historyRes, securesRes, unlocksRes, freezeRes, standRes, startsRes] = await Promise.all([
         db
           .from("streaks")
           .select("active_streak_count, longest_streak_count, last_completed_date_key")
@@ -319,6 +319,7 @@ export const profilesRecordProcedures = {
           .limit(200),
         db.from("freeze_uses").select("date_key").eq("user_id", ownerId).limit(365),
         db.from("last_stand_uses").select("date_key").eq("user_id", ownerId).limit(365),
+        db.from("active_challenges").select("start_at").eq("user_id", ownerId).limit(80),
       ]);
 
       captureError("streaks", streakRes.error, ctx);
@@ -329,6 +330,11 @@ export const profilesRecordProcedures = {
       captureError("last_stand_uses", standRes.error, ctx);
 
       const acRows = (historyRes.data ?? []) as ActiveRow[];
+      const earliestStartKey =
+        ((startsRes.data ?? []) as { start_at?: string | null }[])
+          .map((row) => (row.start_at ? dateKeyFromIsoInTimeZone(row.start_at, timezone) : ""))
+          .filter(Boolean)
+          .sort()[0] ?? null;
       const challengeIds = [...new Set(acRows.map((r) => r.challenge_id))];
       const securedDateKeys = ((securesRes.data ?? []) as { date_key: string }[]).map((r) => r.date_key);
 
@@ -668,6 +674,6 @@ export const profilesRecordProcedures = {
             })
           : [];
 
-      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header, badgeGrid });
+      return finish({ ...sliced, proofs: proofsOut }, { monthKey, days: daysOut, daySource, header, badgeGrid, earliestStartKey });
     }),
 };
