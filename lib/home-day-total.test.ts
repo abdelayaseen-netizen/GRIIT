@@ -55,10 +55,10 @@ describe("calendarDay", () => {
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
     const detail = readFileSync(resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"), "utf8");
     const feed = readFileSync(resolve(__dirname, "../backend/lib/feed-activity-hydrate.ts"), "utf8");
-    const task = readFileSync(resolve(__dirname, "../app/challenge/active/[activeChallengeId].tsx"), "utf8");
-    expect(home).toContain("calendarDayFromStartAt");
-    expect(detail).toContain("calendarDayFromStartAt");
+    expect(home).toContain("enrollmentDayIndex");
+    expect(home).not.toContain("calendarDayFromStartAt");
+    expect(detail).toContain("enrollmentDayIndex");
+    expect(detail).toContain("currentDay: String(shownDay)");
     expect(feed).toContain("calendarDayFromStartAt");
-    expect(task).toContain("currentDay: String(shownDay)");
   });
 });

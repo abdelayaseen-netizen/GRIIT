@@ -13,7 +13,8 @@ export function detailMetaLine(args: {
 }): string {
   const who = args.group ? "Group" : "Solo";
   const mode = args.hard ? MODE_HARD_TITLE : MODE_STANDARD_TITLE;
-  return `Day ${Math.max(0, Math.floor(args.day))} of ${Math.max(1, Math.floor(args.total))} · ${who} · ${mode}`;
+  const day = Number.isFinite(args.day) ? Math.max(1, Math.floor(args.day)) : 1;
+  return `Day ${day} of ${Math.max(1, Math.floor(args.total))} · ${who} · ${mode}`;
 }
 
 export const NO_SHARED_PROOFS_IN_CHALLENGE = "No shared proofs in this challenge yet.";

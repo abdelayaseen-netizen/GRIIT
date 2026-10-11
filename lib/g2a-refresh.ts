@@ -6,6 +6,7 @@
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { calendarDayFromStartAt } from "@/lib/home-day-total";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "@/lib/date-utils";
 import { tasksDueTodayAcrossEnrollments } from "@/lib/notification-due-count";
 import { closeTimeLabel } from "@/lib/g2a-home";
@@ -22,6 +23,7 @@ import { applyG2aPlan } from "@/lib/g2a-notification-schedule";
 
 type EnrollmentRow = {
   id?: string;
+  current_day?: number | null;
   start_at?: string | null;
   started_at?: string | null;
   created_at?: string | null;
@@ -93,7 +95,10 @@ export async function scheduleG2aForUser(args: {
   const durationDays = typeof matched?.challenges?.duration_days === "number" ? matched.challenges.duration_days : 1;
   const title = matched?.challenges?.title ?? "GRIIT";
   const tz = args.timezone ?? "UTC";
-  const shownDay = calendarDayFromStartAt(startAt, tz, todayKey, durationDays);
+  const shownDay =
+    typeof matched?.current_day === "number"
+      ? enrollmentDayIndex({ currentDay: matched.current_day, durationDays })
+      : calendarDayFromStartAt(startAt, tz, todayKey, durationDays);
   const tomorrowKey = addCalendarDaysToDateKey(todayKey, 1);
   const tomorrowDay = calendarDayFromStartAt(startAt, tz, tomorrowKey, durationDays);
   const morningTask =

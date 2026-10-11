@@ -1,5 +1,5 @@
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
-import { calendarDayFromStartAt } from "@/lib/home-day-total";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import { taskDisplayName, type HomeProofTask } from "@/lib/home-proof-card";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
@@ -43,8 +43,10 @@ export function dayOpenTasksFromActive(args: {
     );
     const challengeName = (ac.challenges?.title ?? "").trim() || "Challenge";
     const durationDays = ac.challenges?.duration_days ?? 1;
-    const startAt = ac.start_at ?? ac.started_at ?? ac.created_at;
-    const currentDay = calendarDayFromStartAt(startAt, args.timeZone, args.todayKey, durationDays);
+    const currentDay = enrollmentDayIndex({
+      currentDay: ac.current_day,
+      durationDays,
+    });
     const challengeSecuredToday =
       required.length > 0 && required.every((t) => doneSet.has(t.id));
     for (const t of required) {

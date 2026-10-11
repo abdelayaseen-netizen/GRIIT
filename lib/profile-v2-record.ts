@@ -13,6 +13,7 @@ import { dueKeysForRange, RECORD_WINDOW_STATUSES } from "../backend/lib/due-keys
 import { finishedRunScore } from "../backend/lib/finished-run";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
+import { enrollmentDayIndex } from "./challenge-day";
 import { securedElapsed } from "./consistency";
 import {
   badgeRowsFromProgress,
@@ -94,6 +95,8 @@ export type ChallengeRangeInput = {
   /** Exclusive end calendar day (`end_at` in timezone). */
   endDateKey: string;
   durationDays: number;
+  /** `active_challenges.current_day` when the caller has the enrollment row. */
+  currentDay?: number | null;
   tasksPerDay: number;
   completedAtKey?: string | null;
 };
@@ -340,7 +343,10 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
         todayKey: input.todayKey,
       });
       const elapsed = rangeWindow.elapsed;
-      const day = calendarDay(range.startDateKey, input.todayKey, range.durationDays);
+      const day =
+        typeof range.currentDay === "number"
+          ? enrollmentDayIndex({ currentDay: range.currentDay, durationDays: range.durationDays })
+          : calendarDay(range.startDateKey, input.todayKey, range.durationDays);
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);

@@ -3,7 +3,13 @@ export const WRITE_WORDS_LABEL = "Words";
 export const WRITE_FOOTER_CAPTION = "Self-reported.";
 
 export function writeStepHeader(day: number): string {
-  return `Day ${day} · Write`;
+  const n = Number.isFinite(day) ? Math.max(1, Math.floor(day)) : 1;
+  return `Day ${n} · Write`;
+}
+
+/** Word target when a journal task leaves min_words blank. An explicit count is kept. */
+export function journalMinWords(configured: number | null | undefined): number {
+  return configured ?? 10;
 }
 
 export function writeHonestyLine(target: number): string {

@@ -1,4 +1,5 @@
-import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
+import { homeDayLine, homeDayTotal } from "@/lib/home-day-total";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { SELF_REPORTED, closedWindowCaption, closedWindowTime, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
@@ -229,13 +230,13 @@ function sectionKey(task: HomeProofTask): string {
 function sectionFromTasks(
   id: string,
   tasks: HomeProofTask[],
-  todayKey?: string,
+  _todayKey?: string,
 ): HomeProofSection {
   const first = tasks[0]!;
-  const day =
-    first.startDateKey && todayKey
-      ? calendarDay(first.startDateKey, todayKey, first.durationDays)
-      : clampCalendarDay(first.currentDay, first.durationDays);
+  const day = enrollmentDayIndex({
+    currentDay: first.currentDay,
+    durationDays: first.durationDays,
+  });
   const rows = tasks.map(homeProofRow);
   return {
     id,

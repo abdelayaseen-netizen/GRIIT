@@ -48,7 +48,8 @@ import {
 import { dateKeyFromIso } from "@/lib/challenge-end";
 import { rangeSecuredElapsed } from "@/lib/profile-v2-record";
 import { exclusiveEndDateKey } from "@/backend/lib/record-days";
-import { calendarDayFromStartAt, homeDayTotal } from "@/lib/home-day-total";
+import { homeDayTotal } from "@/lib/home-day-total";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import {
   enrollmentWeekDateKeys,
   peopleCardCopy,
@@ -261,7 +262,7 @@ export default function ActiveChallengeDetailScreen() {
     todayKey,
   });
   const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
-  const shownDay = calendarDayFromStartAt(startIso, profileTz ?? "UTC", todayKey, durationDays);
+  const shownDay = enrollmentDayIndex({ currentDay, durationDays });
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {

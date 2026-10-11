@@ -197,6 +197,7 @@ export function TaskFlowV2() {
           onPost={f.onJournalPost}
           onBack={f.goBack}
           submitting={f.saving}
+          fieldMounted={f.journalFieldOn}
         />
       ) : null}
 

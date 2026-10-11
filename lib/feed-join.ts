@@ -1,5 +1,6 @@
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { calendarDayFromStartAt } from "@/backend/lib/calendar-day";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import { checkInHasCameraProof } from "@/backend/lib/proof-predicate";
 import { formatOfDays } from "@/lib/format-days";
 
@@ -93,7 +94,12 @@ export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb
 }
 
 export function viewerChallengeDay(
-  enrollments: readonly { challengeId: string; startAt: string | null; durationDays: number }[],
+  enrollments: readonly {
+    challengeId: string;
+    startAt: string | null;
+    durationDays: number;
+    currentDay?: number | null;
+  }[],
   challengeId: string,
   todayKey: string,
   timeZone: string,
@@ -101,7 +107,11 @@ export function viewerChallengeDay(
   const row = enrollments.find((item) => item.challengeId === challengeId);
   if (!row) return null;
   const total = Math.max(1, Math.floor(row.durationDays) || 1);
-  return { day: calendarDayFromStartAt(row.startAt, timeZone, todayKey, total), total };
+  const day =
+    typeof row.currentDay === "number"
+      ? enrollmentDayIndex({ currentDay: row.currentDay, durationDays: total })
+      : calendarDayFromStartAt(row.startAt, timeZone, todayKey, total);
+  return { day, total };
 }
 
 /** Enrolled viewers open the challenge. Everyone else can join. */

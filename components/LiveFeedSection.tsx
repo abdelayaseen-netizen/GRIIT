@@ -242,7 +242,12 @@ function LiveFeedSection({
     queryKey: ["challenges", "listMyActive", user?.id ?? ""],
     queryFn: () =>
       trpcQuery<
-        { challenge_id?: string; start_at?: string | null; challenges?: { duration_days?: number | null } | null }[]
+        {
+          challenge_id?: string;
+          start_at?: string | null;
+          current_day?: number | null;
+          challenges?: { duration_days?: number | null } | null;
+        }[]
       >(TRPC.challenges.listMyActive),
     enabled: !!user?.id,
     staleTime: 30 * 1000,
@@ -255,6 +260,7 @@ function LiveFeedSection({
         challengeId: String(row.challenge_id ?? ""),
         startAt: row.start_at ?? null,
         durationDays: row.challenges?.duration_days ?? 1,
+        currentDay: row.current_day,
       })),
       startedPreview.id,
       getTodayDateKey(zone),

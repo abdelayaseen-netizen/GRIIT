@@ -37,7 +37,8 @@ import {
   windowClosesBanner,
 } from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
-import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
+import { dateKeyFromIso } from "@/lib/home-day-total";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import { completedTaskIds } from "@/lib/today-completion";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
 import { StreakSheet } from "@/components/home/StreakSheet";
@@ -280,9 +281,12 @@ export default function HomeScreen() {
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
       const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
       if (startDateKey > todayKey) continue;
-      const currentDay = calendarDayFromStartAt(startIso, homeTimeZone, todayKey, durationDays);
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
+      const currentDay = enrollmentDayIndex({
+        currentDay: ac.current_day,
+        durationDays,
+      });
 
       for (const t of required) {
         const tType = String(t.type ?? "manual").toLowerCase();

@@ -92,6 +92,7 @@ type ActiveRow = {
   start_at: string;
   end_at: string;
   ended_at?: string | null;
+  current_day?: number | null;
 };
 
 type ChallengeRow = {
@@ -302,7 +303,7 @@ export const profilesRecordProcedures = {
           .maybeSingle(),
         db
           .from("active_challenges")
-          .select("id, challenge_id, status, start_at, end_at, ended_at")
+          .select("id, challenge_id, status, start_at, end_at, ended_at, current_day")
           .eq("user_id", ownerId)
           .in("status", ["active", "completed", "abandoned"])
           .limit(50),
@@ -384,6 +385,7 @@ export const profilesRecordProcedures = {
           startDateKey,
           endDateKey: exclusiveEndDateKey(row, startDateKey, timezone),
           durationDays: durationById.get(row.challenge_id) ?? 30,
+          currentDay: row.current_day,
           tasksPerDay: tasksById.get(row.challenge_id) ?? 1,
         };
       });

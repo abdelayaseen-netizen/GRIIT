@@ -5,6 +5,7 @@ import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { inclusiveLastDateKey } from "../backend/lib/record-days";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { formatOfDays } from "@/lib/format-days";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
 import {
   challengeLine,
   dueForStrip,
@@ -65,8 +66,7 @@ export function cardDue(c: ChallengeRow): number {
 export function statusLine(c: ChallengeRow): string {
   switch (c.status) {
     case "active":
-      // current_day on the row is calendar Day n (r.day), not the DB column.
-      return `Day ${Math.max(1, c.current_day)} of ${c.duration_days}`;
+      return `Day ${enrollmentDayIndex({ currentDay: c.current_day, durationDays: c.duration_days })} of ${c.duration_days}`;
     case "completed":
       return formatOfDays(c.secured_days, c.elapsed_days ?? c.duration_days);
     case "abandoned":

@@ -51,14 +51,15 @@ import {
   type SaveState,
   type ShareIntent,
 } from "@/lib/finish-moment";
-import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { prepareJournalUnmount } from "@/lib/journal-leave";
 import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
   TIMER_PHOTO_AFTER,
   workDoneLine,
-  workStepDay,
   workThenCamera,
 } from "@/lib/work-step";
 import {
@@ -125,32 +126,30 @@ export function useTaskFlowV2() {
   const originTab = originTabFromParam(firstString(params.originTab));
   const userId = user?.id ?? "";
   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
-  const timeZone = profile?.timezone?.trim() || "UTC";
   const enrollmentQ = useQuery({
     queryKey: ["activeChallenge", "startAt", activeChallengeId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("active_challenges")
-        .select("start_at, started_at, created_at, challenge_id")
+        .select("current_day, challenge_id")
         .eq("id", activeChallengeId)
         .maybeSingle();
       if (error) throw error;
       return data as {
-        start_at?: string | null;
-        started_at?: string | null;
-        created_at?: string | null;
+        current_day?: number | null;
         challenge_id?: string | null;
       } | null;
     },
     enabled: !!activeChallengeId,
     staleTime: 60 * 1000,
   });
-  const startAt =
-    enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null;
   const dayReady = !activeChallengeId || enrollmentQ.isFetched;
-  const currentDay = dayReady ? workStepDay(startAt, timeZone, dateKey, durationDays) : 0;
+  const currentDay = enrollmentDayIndex({
+    currentDay: dayReady ? enrollmentQ.data?.current_day : 1,
+    durationDays,
+  });
   const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
-  const minWords = config.min_words ?? 150;
+  const minWords = journalMinWords(config.min_words);
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
   const gates = useMemo(
@@ -174,6 +173,7 @@ export function useTaskFlowV2() {
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [discardAsk, setDiscardAsk] = useState(false);
   const [text, setText] = useState("");
+  const [journalFieldOn, setJournalFieldOn] = useState(true);
   const [count, setCount] = useState(0);
   const countRef = useRef(count);
   countRef.current = count;
@@ -578,11 +578,13 @@ export function useTaskFlowV2() {
       }
       trackUsage("task_completed", { method: kind });
       if (hasCameraProof) trackUsage("proof_posted");
-      // A long journal unmounts the text field. Empty it first so the native
-      // text state is not destroyed while it still holds the entry.
+      // A long journal quits the app if the text field unmounts while it still
+      // holds the entry. Clear, paint, then remove the field before leaving.
       if (kind === "word_count") {
-        setText("");
-        await new Promise((resolve) => setTimeout(resolve, 80));
+        await prepareJournalUnmount({
+          clear: () => setText(""),
+          unmountField: () => setJournalFieldOn(false),
+        });
       }
       void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
@@ -1007,6 +1009,7 @@ export function useTaskFlowV2() {
     startedAtIso,
     text,
     setText,
+    journalFieldOn,
     minWords,
     count,
     counterGoal,

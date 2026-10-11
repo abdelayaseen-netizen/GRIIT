@@ -36,6 +36,8 @@ type Props = {
   onPost: () => void;
   onBack: () => void;
   submitting?: boolean;
+  /** False after a save, so the native field is gone before the screen leaves. */
+  fieldMounted?: boolean;
 };
 
 const RULE = DS_V3.space.xs / 2;
@@ -53,6 +55,7 @@ export function WriteStep({
   onPost,
   onBack,
   submitting = false,
+  fieldMounted = true,
 }: Props) {
   const insets = useSafeAreaInsets();
   const written = wordCount(text);
@@ -91,17 +94,21 @@ export function WriteStep({
             <View style={[styles.fill, { width: `${Math.round(fill * 100)}%` }]} />
           </View>
         </View>
-        <TextInput
-          testID="write-body"
-          accessibilityLabel="Write your entry"
-          value={text}
-          onChangeText={onChangeText}
-          multiline
-          style={styles.editor}
-          placeholder={WRITE_PLACEHOLDER}
-          placeholderTextColor={DS_V3.color.textSecondary}
-          textAlignVertical="top"
-        />
+        {fieldMounted ? (
+          <TextInput
+            testID="write-body"
+            accessibilityLabel="Write your entry"
+            value={text}
+            onChangeText={onChangeText}
+            multiline
+            style={styles.editor}
+            placeholder={WRITE_PLACEHOLDER}
+            placeholderTextColor={DS_V3.color.textSecondary}
+            textAlignVertical="top"
+          />
+        ) : (
+          <View style={styles.editor} />
+        )}
       </View>
       </KeyboardDock>
     </View>

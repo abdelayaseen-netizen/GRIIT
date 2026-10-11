@@ -10,6 +10,7 @@ import {
   writeCtaEnabled,
   writeCtaLabel,
   writeHonestyLine,
+  journalMinWords,
   writeStepHeader,
 } from "@/lib/write-step";
 
@@ -48,6 +49,12 @@ describe("write CTA", () => {
 describe("write copy", () => {
   it("matches the frame 40 table", () => {
     expect(writeStepHeader(12)).toBe("Day 12 · Write");
+    expect(writeStepHeader(0)).toBe("Day 1 · Write");
+    expect(journalMinWords(undefined)).toBe(10);
+    expect(journalMinWords(null)).toBe(10);
+    expect(journalMinWords(150)).toBe(150);
+    expect(journalMinWords(30)).toBe(30);
+    expect(journalMinWords(0)).toBe(0);
     expect(writeHonestyLine(150)).toBe("150 words. Counted, not read.");
     expect(WRITE_WORDS_LABEL).toBe("Words");
     expect(WRITE_PLACEHOLDER).toBe("Write here");

@@ -26,7 +26,7 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_V3, DS_RADIUS_V2 } from '@/lib/design-system';
-import { calendarDay, clampCalendarDay } from '@/lib/home-day-total';
+import { enrollmentDayIndex } from '@/lib/challenge-day';
 import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
@@ -456,9 +456,10 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
 
   const firstTask = props.tasks[0];
   const heroDay = firstTask
-    ? firstTask.startDateKey && props.todayKey
-      ? calendarDay(firstTask.startDateKey, props.todayKey, firstTask.durationDays)
-      : clampCalendarDay(firstTask.currentDay, firstTask.durationDays)
+    ? enrollmentDayIndex({
+        currentDay: firstTask.currentDay,
+        durationDays: firstTask.durationDays,
+      })
     : 1;
   const subtitle =
     firstTask != null ? `${firstTask.challengeName} · Day ${heroDay}` : undefined;
