@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:create-challenge": "node scripts/verify-create-challenge.js",
+    "agents": "tsx agents/src/cli.ts",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },

@@ -60,3 +60,7 @@ android/
 # local audit script (developer-only, not part of project)
 run_audit.sh
 audit/
+
+# agent simulator runs (screenshots, account passwords)
+agents/runs/
+agents/.tmp/
