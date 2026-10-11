@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { BackHandler, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ROUTES } from "@/lib/routes";
-import { track } from "@/lib/analytics";
+import { track, trackUsage } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -205,6 +205,11 @@ export default function OnboardingFlowV2() {
     if (!hydrated || completed) return;
     track({ name: "onboarding_started" });
   }, [hydrated, completed]);
+
+  useEffect(() => {
+    if (!hydrated || completed) return;
+    trackUsage("onboarding_step", { name: step });
+  }, [hydrated, completed, step]);
 
   const goNext = useCallback(() => {
     const idx = ONBOARDING_V2_ORDER.indexOf(step);

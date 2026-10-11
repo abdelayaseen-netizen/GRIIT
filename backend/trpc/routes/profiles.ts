@@ -229,7 +229,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit, target_streak"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit, target_streak, is_test"
         )
         .eq("user_id", ctx.userId)
         .single();

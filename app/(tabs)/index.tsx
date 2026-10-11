@@ -80,7 +80,7 @@ import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { track } from "@/lib/analytics";
+import { track, trackUsage } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
 import { computeHomeState } from "@/lib/home-state";
 import {
@@ -541,6 +541,7 @@ export default function HomeScreen() {
         dateKeyToFreeze: yesterdayKey,
       }),
     onSuccess: () => {
+      trackUsage("freeze_used");
       setFreezeSpent(true);
       setStreakHeld(true);
       setShowFreezeSheet(false);

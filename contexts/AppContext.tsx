@@ -12,7 +12,7 @@ import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
 import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener, ENTITLEMENT_ID } from '@/lib/subscription';
-import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
+import { identify, resetAnalytics, setUsageTestAccount, trackEvent } from '@/lib/analytics';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import { getDeviceIanaTimeZone } from '@/lib/iana-timezone';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
@@ -243,8 +243,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!p) return;
     const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
     const tier = typeof rawTier === "string" ? rawTier : undefined;
+    setUsageTestAccount((p as { is_test?: boolean }).is_test === true);
     identify(user.id, {
-      email: user.email ?? undefined,
       isPremium,
       tier,
     });

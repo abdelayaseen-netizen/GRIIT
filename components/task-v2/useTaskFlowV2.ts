@@ -7,6 +7,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { trackUsage } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -112,6 +113,10 @@ export function useTaskFlowV2() {
 
   const taskId = firstString(params.taskId);
   const activeChallengeId = firstString(params.activeChallengeId);
+  useEffect(() => {
+    if (!taskId) return;
+    trackUsage("task_started");
+  }, [taskId]);
   const taskType = (firstString(params.taskType) || "manual").toLowerCase();
   const taskName = firstString(params.taskName) || "Untitled task";
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
@@ -571,6 +576,8 @@ export function useTaskFlowV2() {
         }
         return;
       }
+      trackUsage("task_completed", { method: kind });
+      if (hasCameraProof) trackUsage("proof_posted");
       void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
         const route = routeAfterSave({
@@ -1104,6 +1111,7 @@ export function useTaskFlowV2() {
       setSharing(true);
       void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
         .then(() => {
+          trackUsage("proof_shared");
           setSharing(false);
           returnToOrigin();
         })
