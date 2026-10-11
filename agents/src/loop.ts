@@ -154,17 +154,28 @@ export async function runPersona(opts: {
       const privacy = await applyPrivacy(persona.stress);
       if (privacy) console.log(`${persona.id} ${privacy}`);
       let accountOk = false;
+      let lastStatus = "";
       for (let attempt = 0; attempt < 2 && !accountOk; attempt++) {
         await installPrepared();
         await openForAgent();
-        const status = sessionMatchesAgent({ fresh, expectedEmail: creds.email, onDevice: await accountOnDevice() });
-        accountOk = status === "match" || (fresh && status === "signed_out");
-        if (!accountOk) console.log(`${persona.id} signed-in account did not match (${status}). Resetting.`);
+        lastStatus = "";
+        for (let read = 0; read < 5; read++) {
+          lastStatus = sessionMatchesAgent({ fresh, expectedEmail: creds.email, onDevice: await accountOnDevice() });
+          if (lastStatus === "match" || (fresh && lastStatus === "signed_out")) break;
+          if (lastStatus === "wrong_account") break;
+          await sleep(400);
+        }
+        accountOk = lastStatus === "match" || (fresh && lastStatus === "signed_out");
+        if (!accountOk && lastStatus !== "wrong_account") {
+          accountOk = true;
+          console.log(`${persona.id} session file was not readable after Home. Continuing. A different account still stops this agent.`);
+        }
+        if (!accountOk) console.log(`${persona.id} signed-in account did not match (${lastStatus}). Resetting.`);
       }
       if (!accountOk) {
         giveUp = "Skipped. The signed-in account still did not match this agent after a reset.";
         errors.push(giveUp);
-      } else {
+      } else if (lastStatus === "match" || (fresh && lastStatus === "signed_out")) {
         console.log(`${persona.id} account matches before step 1`);
       }
     }
