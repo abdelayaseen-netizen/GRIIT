@@ -91,6 +91,7 @@ import {
   canFlipShare,
   flipSharePatch,
   keepSharePatch,
+  shareColumns,
   shareColumnsForComplete,
 } from "../../lib/activity-share";
 import { cameraProofTiles } from "../../lib/proof-predicate";
@@ -1588,6 +1589,7 @@ export const checkinsRouter = createTRPCRouter({
           const achievementRows = newUnlockKeys.map((key) => ({
             user_id: ctx.userId,
             event_type: "unlocked_achievement" as const,
+            ...shareColumns("unanswered"),
             metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
           }));
           const { data: existingEvents } = await ctx.supabase

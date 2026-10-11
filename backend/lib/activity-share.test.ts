@@ -91,6 +91,7 @@ describe("source: complete, flip, feed, record/roster/grid", () => {
     expect(before).not.toContain("if (isPhotoProof)");
     expect(before).not.toContain('taskType === "photo"');
     expect(src).toContain("...shareCols");
+    expect(src).toContain('shareColumns("unanswered")');
     expect(src).toContain("shareProof:");
     expect(src).toContain("getSupabaseServer()");
     expect(src).toContain("canFlipShare");
