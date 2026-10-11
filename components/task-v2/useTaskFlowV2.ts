@@ -578,6 +578,12 @@ export function useTaskFlowV2() {
       }
       trackUsage("task_completed", { method: kind });
       if (hasCameraProof) trackUsage("proof_posted");
+      // A long journal unmounts the text field. Empty it first so the native
+      // text state is not destroyed while it still holds the entry.
+      if (kind === "word_count") {
+        setText("");
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
       void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
         const route = routeAfterSave({
