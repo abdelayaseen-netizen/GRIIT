@@ -160,6 +160,7 @@ export function TaskFlowV2() {
           onCaption={f.setCaption}
           onRetake={f.onRetake}
           onPost={f.onReviewPost}
+          submitting={f.saving}
         />
       ) : null}
 
@@ -195,6 +196,7 @@ export function TaskFlowV2() {
           onChangeText={f.setText}
           onPost={f.onJournalPost}
           onBack={f.goBack}
+          submitting={f.saving}
         />
       ) : null}
 

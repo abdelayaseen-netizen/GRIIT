@@ -2,8 +2,9 @@
  * CreateWizardV2 — 3-step challenge creation wizard.
  * Visual layer on DS_V3. WizardState and create payload are unchanged.
  */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -116,6 +117,8 @@ function canLaunch(s: WizardState): boolean {
 }
 
 export function CreateWizardV2() {
+  const scrollRef = useRef<ScrollView>(null);
+  const categoryY = useRef(0);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
@@ -443,9 +446,12 @@ export function CreateWizardV2() {
         <WizardHeader step={state.step} total={3} onCancel={handleCancel} />
 
         <ScrollView
+          ref={scrollRef}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
           {state.step === 1 ? (
             <StepBasics
@@ -453,6 +459,12 @@ export function CreateWizardV2() {
               onChangeTitle={setTitle}
               category={state.category}
               onChangeCategory={setCategory}
+              onCategoryLayout={(y) => {
+                categoryY.current = y;
+              }}
+              onTitleFocus={() => {
+                scrollRef.current?.scrollTo({ y: Math.max(0, categoryY.current - 8), animated: true });
+              }}
               durationDays={state.durationDays}
               onChangeDuration={setDuration}
               customDuration={state.customDuration}

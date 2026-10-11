@@ -29,6 +29,7 @@ import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard"
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
 import { catalogCoverCategory } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
+import { discoverCategoryMatches, discoverSectionItems } from "@/lib/discover-people";
 import {
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
@@ -136,7 +137,7 @@ export function DiscoverV3({
 }: DiscoverV3Props) {
   const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
-  const gridData = challengesLoading ? [] : challenges;
+  const gridData = challengesLoading ? [] : discoverSectionItems(challenges, category);
   const [preview, setPreview] = React.useState<ChallengePreview | null>(null);
   const day1Line = todaySecured ? JOIN_CAPTION_TOMORROW : JOIN_CAPTION_TODAY;
 
@@ -193,8 +194,9 @@ export function DiscoverV3({
       <Text style={[styles.heading, styles.featuredHeading]}>Featured</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
         {featuredLoading ? <Skeleton variant="proof" /> : null}
-        {featured && !FEATURED_BUILTINS.some((b) => b.id === featured.id) ? (
+        {featured && discoverCategoryMatches(featured.category, category) && !FEATURED_BUILTINS.some((b) => b.id === featured.id) ? (
           <Pressable
+            testID={`discover-card-${featured.id}`}
             accessibilityRole="button"
             accessibilityLabel={featured.name}
             onPress={() => {
@@ -230,9 +232,10 @@ export function DiscoverV3({
             </Text>
           </Pressable>
         ) : null}
-        {FEATURED_BUILTINS.map((item) => (
+        {discoverSectionItems(FEATURED_BUILTINS, category).map((item) => (
           <Pressable
             key={item.id}
+            testID={`discover-card-${item.id}`}
             accessibilityRole="button"
             accessibilityLabel={item.title}
             onPress={() => openBuiltin(item)}
@@ -344,6 +347,7 @@ export function DiscoverV3({
           renderItem={({ item }) => (
             <View style={styles.col}>
               <ChallengeCard
+                testID={`discover-card-${item.id}`}
                 title={item.title}
                 category={item.category}
                 days={item.duration}

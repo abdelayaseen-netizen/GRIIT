@@ -3,6 +3,7 @@
  */
 import React from "react";
 import {
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -27,6 +28,8 @@ export type StepBasicsProps = {
   onChangeTitle: (v: string) => void;
   category: WizardCategory | null;
   onChangeCategory: (v: WizardCategory) => void;
+  onTitleFocus?: () => void;
+  onCategoryLayout?: (y: number) => void;
   durationDays: number | null;
   onChangeDuration: (days: number | null) => void;
   customDuration: string;
@@ -58,6 +61,8 @@ export function StepBasics({
   onChangeTitle,
   category,
   onChangeCategory,
+  onTitleFocus,
+  onCategoryLayout,
   durationDays,
   onChangeDuration,
   customDuration,
@@ -77,10 +82,10 @@ export function StepBasics({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.block}>
+      <Pressable accessible={false} onPress={() => Keyboard.dismiss()} style={styles.block}>
         <Text style={styles.title}>Name your challenge</Text>
         <Text style={styles.secondary}>One sentence. Be specific.</Text>
-      </View>
+      </Pressable>
 
       <View style={styles.fieldBlock}>
         <Card
@@ -90,6 +95,7 @@ export function StepBasics({
             accessibilityLabel="Challenge title"
             value={title}
             onChangeText={onChangeTitle}
+            onFocus={onTitleFocus}
             placeholder={CREATE_NAME_PLACEHOLDER}
             placeholderTextColor={NAME_PLACEHOLDER_COLOR}
             style={styles.input}
@@ -115,7 +121,7 @@ export function StepBasics({
         </Text>
       </View>
 
-      <View style={styles.section}>
+      <View style={styles.section} onLayout={(e) => onCategoryLayout?.(e.nativeEvent.layout.y)}>
         <Text style={styles.heading}>Category</Text>
         <View style={styles.chipGrid}>
           {CREATE_CATEGORIES.map((c) => (

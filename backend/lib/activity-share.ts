@@ -1,14 +1,14 @@
 /**
- * Chunk Q + U share visibility for activity_events.
- * R2: omit shareChoicePending → shared (old clients). true → unanswered until flip.
- * Flip is service-role after ownership check. No user UPDATE policy.
+ * Completions are private until the person taps Share.
+ * shareChoicePending is ignored on insert. The only writers of `shared`
+ * are the explicit share actions (shareProof, shareCompletion).
  * share_state is the source of truth; `shared` stays in sync for build-61.
  */
 
 export type ShareState = "unanswered" | "shared" | "kept";
 
-export function shareStateOnInsert(shareChoicePending?: boolean): ShareState {
-  return shareChoicePending === true ? "unanswered" : "shared";
+export function shareStateOnInsert(_shareChoicePending?: boolean): ShareState {
+  return "unanswered";
 }
 
 export function sharedFromShareState(state: ShareState): boolean {

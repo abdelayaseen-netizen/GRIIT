@@ -141,8 +141,8 @@ export function OnboardingScreen({
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
         {children}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </ScrollView>
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
   );
 }
@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.title.lineHeight,
     fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
+    flexShrink: 1,
   },
   subtitle: {
     fontSize: DS_V3.type.secondary.fontSize,
@@ -273,6 +274,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   optionTitle: {
+    flexShrink: 1,
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,

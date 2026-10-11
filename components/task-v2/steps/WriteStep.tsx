@@ -35,6 +35,7 @@ type Props = {
   onChangeText: (t: string) => void;
   onPost: () => void;
   onBack: () => void;
+  submitting?: boolean;
 };
 
 const RULE = DS_V3.space.xs / 2;
@@ -51,6 +52,7 @@ export function WriteStep({
   onChangeText,
   onPost,
   onBack,
+  submitting = false,
 }: Props) {
   const insets = useSafeAreaInsets();
   const written = wordCount(text);
@@ -66,7 +68,8 @@ export function WriteStep({
             <Button
               label={writeCtaLabel(written, minWords)}
               variant="primary"
-              disabled={!enabled}
+              disabled={!enabled || submitting}
+              submitting={submitting}
               onPress={onPost}
             />
             <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
@@ -89,6 +92,8 @@ export function WriteStep({
           </View>
         </View>
         <TextInput
+          testID="write-body"
+          accessibilityLabel="Write your entry"
           value={text}
           onChangeText={onChangeText}
           multiline

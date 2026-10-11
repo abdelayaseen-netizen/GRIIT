@@ -100,12 +100,9 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.sm,
   },
   grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: DS_V3.space.md,
   },
   cell: {
-    width: "48%",
-    flexGrow: 1,
+    width: "100%",
   },
 });

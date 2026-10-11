@@ -465,6 +465,40 @@ export function useTaskFlowV2() {
         }
         return;
       }
+      if (hasCameraProof) {
+        clearTimeout(slowTimer);
+        const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+        void attemptSecureDayAfterComplete({
+          requiredRemaining: complete.requiredRemaining,
+          activeChallengeId,
+          challengeTitle: complete.challengeName ?? challengeName,
+          secureDay,
+        }).catch(() => undefined);
+        if (userId && taskId) void clearLocalTimerSession(userId, taskId, dateKey);
+        void endLiveActivity();
+        if (mountedRef.current) {
+          setShareEventId(eventId);
+          setFinishSave("saved");
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          publishTaskToast({
+            taskId,
+            title: taskDoneTitle(taskName, true),
+            body: taskName,
+            photoUri: photoUri ?? proofUrl ?? null,
+            cameraSeal: true,
+            eventId: eventId ?? null,
+            challengeId: enrollmentQ.data?.challenge_id ?? null,
+            challengeName,
+            taskName,
+            currentDay,
+            totalDays: durationDays,
+          });
+          returnToOrigin();
+        }
+        submitInFlight.current = false;
+        setSaving(false);
+        return;
+      }
       let secure: {
         success?: boolean;
         alreadySecured?: boolean;
@@ -659,8 +693,13 @@ export function useTaskFlowV2() {
   };
 
   const submitPhoto = async (extra: Record<string, unknown> = {}) => {
+    if (submitInFlight.current) return;
+    setSaving(true);
     const url = await uploadPhoto();
-    if (!url) return;
+    if (!url) {
+      setSaving(false);
+      return;
+    }
     await finishSubmit(
       {
         proofUrl: url,

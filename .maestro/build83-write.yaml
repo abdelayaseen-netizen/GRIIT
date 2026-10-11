@@ -1,0 +1,26 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Write 3 gratitudes"
+    timeout: 20000
+- tapOn:
+    text: "Write 3 gratitudes"
+    index: 1
+- extendedWaitUntil:
+    visible:
+      id: "write-body"
+    timeout: 15000
+- assertNotVisible: "Post"
+- tapOn:
+    id: "write-body"
+- inputText: "grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful grateful"
+- assertVisible: "Post"
+- tapOn: "Post"
+- extendedWaitUntil:
+    visible: "Today"
+    timeout: 25000
+- assertNotVisible: "Write 150 more words"

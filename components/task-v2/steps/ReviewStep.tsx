@@ -16,6 +16,7 @@ type Props = {
   onCaption: (t: string) => void;
   onRetake: () => void;
   onPost: () => void;
+  submitting?: boolean;
 };
 
 export function ReviewStep({
@@ -24,6 +25,7 @@ export function ReviewStep({
   onCaption,
   onRetake,
   onPost,
+  submitting = false,
 }: Props) {
   return (
     <KeyboardDock
@@ -41,7 +43,7 @@ export function ReviewStep({
             />
             <Text style={styles.counter}>{caption.length} / 120</Text>
           </View>
-          <Button label="Post proof" onPress={onPost} />
+          <Button label="Post proof" submitting={submitting} disabled={submitting} onPress={onPost} />
         </View>
       }
     >

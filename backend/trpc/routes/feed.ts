@@ -18,6 +18,7 @@ import {
   type EvRow,
 } from "../../lib/feed-activity-hydrate";
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
+import { flipSharePatch } from "../../lib/activity-share";
 import { deriveProofType } from "../../lib/task-model";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
@@ -542,7 +543,7 @@ export const feedRouter = createTRPCRouter({
     type ActivityEventsWriter = {
       from: (table: "activity_events") => {
         insert: (row: { user_id: string; event_type: string; challenge_id: string; metadata: Record<string, unknown> }) => { select: (cols: "id, metadata") => { single: () => Promise<{ data: { id: string; metadata?: Record<string, unknown> } | null; error: { message: string } | null }> } };
-        update: (row: { metadata: Record<string, unknown> }) => { eq: (col: "id", value: string) => Promise<{ error: { message: string } | null }> };
+        update: (row: { metadata: Record<string, unknown>; shared: true; share_state: "shared"; shared_at: string }) => { eq: (col: "id", value: string) => Promise<{ error: { message: string } | null }> };
       };
     };
     const activityEventsWriter = server as unknown as ActivityEventsWriter;
@@ -605,7 +606,8 @@ export const feedRouter = createTRPCRouter({
       prevMeta = ins.metadata ?? {};
     }
     const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: ownedProofWrite(input.proofPhotoUrl, ctx.userId), feed_shared: true };
-    const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
+    const sharePatch = flipSharePatch(false, new Date().toISOString(), null);
+    const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta, ...sharePatch }).eq("id", eventId);
     if (uErr) {
       logger.error({ err: uErr }, "[shareCompletion] update failed");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });

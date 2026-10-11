@@ -12,6 +12,14 @@ export function discoverFeaturedChip(
   return "all";
 }
 
+/** Featured, Popular, and any other challenge list for the selected chip. */
+export function discoverSectionItems<T extends { category?: string | null }>(
+  items: readonly T[],
+  selected: DiscoverCategory,
+): T[] {
+  return items.filter((item) => discoverCategoryMatches(item.category, selected));
+}
+
 export function discoverCategoryMatches(
   stored: string | null | undefined,
   selected: DiscoverCategory,
