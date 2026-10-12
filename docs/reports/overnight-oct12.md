@@ -1,14 +1,18 @@
 # Overnight Oct 11 → Oct 12
 
-Build number: not shipped yet.
+Build number: not shipped. Last internal TestFlight build is 86. `feat/build87` was not merged.
 
-Cost so far: $0. Phase 2 cap $3. Phase 5 cap $30.
-
-This file is the progress log. Each phase appends what finished, what was skipped, and why.
+API cost: Phase 2 agents $1.13. Phase 5 $0. Total $1.13.
 
 ## Final message
 
-Filled in when the night ends. Until then, read the phase sections.
+1. Build 87 did not ship. Maestro was not green, and the ship rule requires Maestro plus the suite. The suite passed (1,610 tests). tsc was clean.
+2. Phase 1: 23 files deleted, 2,267 lines, 1 dependency. Hermes bundle 12,266,664 → 12,268,094 bytes. S1–S8 were not timed, so there is no pass/fail.
+3. Phase 2: Join went from 12/24 to 19/24. Account median went from 67s to 107s. First task done went from 9/24 to 6/24. Concept quiz 0 of 24 on both builds. v52 frames, the share sheet, Maestro, and the App Store punch-list were not finished. The v52 zip was not on disk.
+4. Phase 3: overall 5.5. Scores are in `docs/reports/scorecard-oct12.md`. Would be rejected today for no review demo, an untraced account deletion, and an unproven report-user / text filter. Verdict: do not launch to learn from the public yet.
+5. Phase 5 is a simulation, not a forecast, calibrated to the 24 build 87 agents, not to 100 people. D1 23.9% (18.4–30.3). D7 11.9% (7.3–15.6). D30 5.5% (2.8–9.2). D365 0.9% (0–1.8). Wellness women and gym men are the only groups with a D30 median above 0; the rest are too small to rank. Shares per installer 0.22. K 0.03 (low on the Tenjin scale; the 0.2 install rate is an assumption). 91 of 200 seed people are Android and cannot install. Paid 0.9%. One coded quit reason: missed without a freeze. Largest D30 lifts: everyone finishes a first task (+1.8 points), a friend in the challenge (+0.9), freezes versus none (+0.9). Model agreement was not run. No sanity flag: 5.5% is inside 0.5×–2× of the 9% fitness midpoint.
+6. Files: `docs/reports/scorecard-oct12.md`, `docs/reports/scorecard-oct12.json`, `agents/sim/2026-10-12/`, `docs/sql/pending-oct12.sql`. The build 87 steps were appended to `agents/summary/all-steps.csv` on the agent-testers checkout, not on this branch.
+7. Cost by phase: Phase 2 $1.13, Phase 5 $0, total $1.13.
 
 ## Phase 0 — preflight
 
@@ -101,6 +105,18 @@ Skipped, with the reason:
 - Share sheet vs v51 frames 1319–1323. Not changed.
 - App Store report, block, filter, contact, and account deletion. Not audited line by line yet. Settings already has `AccountDangerZone`.
 - Maestro for each Done path and the faith/fitness joins. Not run yet.
-- The $3 onboarding rerun. Starting after Metro is serving this branch.
+- The $3 onboarding rerun finished. Measured cost $1.13. Report: `agents/runs/2026-10-11-onboarding-b87/report.html` on the agent-testers checkout. Join 19/24 (was 12). Account median 107s (was 67). First task 6/24 (was 9). Concept quiz still 0 of 24. The first attempt died because `maestro` was not on PATH. The retry with Maestro on PATH ran all 24.
+
+## Phase 3
+
+Written to `docs/reports/scorecard-oct12.md` and `.json`. Overall 5.5. The authorization table and S1–S8 timings are empty because they were not produced.
+
+## Phase 4
+
+Skipped. Maestro did not pass, so the branch was not merged and no TestFlight build was submitted.
+
+## Phase 5
+
+Code model only. 30 seeds, 200 people, day-1 pool from the 24 build 87 agents. LLM moments were not run, so there is no second-model agreement and no quote file. Cost $0. Outputs under `agents/sim/2026-10-12/`. `daily.csv`, `moments.jsonl`, and `invites.csv` were not written. The 100-person day-1 run was not done.
 
 is_test hiding did not fail in Phase 0, so item 0 was not required.

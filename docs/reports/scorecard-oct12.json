@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-12",
+  "build": null,
+  "build_note": "Build 87 did not ship. Last internal TestFlight build is 86.",
+  "overall": 5.5,
+  "areas": [
+    {"id": "product_loop", "name": "Product loop", "score": 6, "weight": 2, "evidence": [{"type": "measured", "text": "6 of 24 build 87 agents tapped Done", "path": "agents/runs/2026-10-11-onboarding-b87"}], "problems": ["Most new users never finish a task", "Share sheet not matched to v51", "Account creation drops the people who now get past Join"], "fixes": [{"text": "One-tap Done on the Home row", "impact": 5, "effort": "S", "rank": 1}]},
+    {"id": "ux_onboarding", "name": "UX and onboarding", "score": 5, "weight": 2, "evidence": [{"type": "measured", "text": "Join 12 to 19; account median 67s to 107s; task done 9 to 6; concept quiz 0", "path": "docs/reports/scorecard-oct12.md"}], "problems": ["Account step is slower", "Goals still trap 4 agents", "Nobody defined secured, freeze, or self-reported"], "fixes": [{"text": "Shorten account creation", "impact": 5, "effort": "M", "rank": 1}]},
+    {"id": "frontend", "name": "Frontend code", "score": 6, "weight": 1, "evidence": [{"type": "measured", "text": "23 files and 2267 lines removed; : any count 8; ts-ignore count 1", "path": "docs/reports/overnight-oct12.md"}], "problems": ["Dead UI was still in the tree", "Hex and orange audit not done", "Non-null assertion count not finished"], "fixes": [{"text": "Finish the token audit", "impact": 2, "effort": "S", "rank": 3}]},
+    {"id": "backend", "name": "Backend code", "score": 5, "weight": 1, "evidence": [{"type": "inspected", "text": "Full procedure authorization table was not completed", "path": "backend/trpc/routes/profiles.ts"}], "problems": ["No complete authz table", "RLS not re-read", "participants_count is not split by is_test"], "fixes": [{"text": "Finish the procedure table", "impact": 4, "effort": "M", "rank": 2}]},
+    {"id": "data_integrity", "name": "Data integrity", "score": 7, "weight": 2, "evidence": [{"type": "inspected", "text": "shownChallengeDay and enrollmentDayStats tests still in the 1610 passing tests", "path": "backend/lib/enrollment-day-stats.ts"}], "problems": ["Not rechecked on a device", "No scripts/integrity runner", "Stored participants_count can include test members"], "fixes": [{"text": "Add the integrity script", "impact": 3, "effort": "M", "rank": 2}]},
+    {"id": "performance", "name": "Performance", "score": 4, "weight": 1, "evidence": [{"type": "judgment", "text": "S1-S8 were not timed. Bundle 12266664 to 12268094 bytes.", "path": "docs/reports/overnight-oct12.md"}], "problems": ["No release timing", "No pass/fail vs R10"], "fixes": [{"text": "Time S1-S8 on a release simulator build", "impact": 3, "effort": "M", "rank": 2}]},
+    {"id": "reliability", "name": "Reliability", "score": 4, "weight": 1, "evidence": [{"type": "judgment", "text": "Offline, delay, and duplicate submit were not run", "path": ""}], "problems": ["Unknown offline behavior"], "fixes": [{"text": "Simulate offline post and a 3s delay", "impact": 3, "effort": "M", "rank": 2}]},
+    {"id": "security", "name": "Security and privacy", "score": 6, "weight": 1, "evidence": [{"type": "inspected", "text": "deleteAccount deletes the profile and the auth user when the service role exists", "path": "backend/trpc/routes/profiles.ts"}], "problems": ["Bundle not scanned for secrets", "Deletion of related rows not traced"], "fixes": [{"text": "Trace deleteAccount across tables", "impact": 4, "effort": "M", "rank": 1}]},
+    {"id": "tests", "name": "Tests", "score": 7, "weight": 1, "evidence": [{"type": "measured", "text": "1610 tests passed", "path": ""}], "problems": ["Maestro did not pass tonight"], "fixes": [{"text": "Run the Done and faith-join Maestro flows", "impact": 3, "effort": "S", "rank": 2}]},
+    {"id": "analytics", "name": "Analytics", "score": 4, "weight": 1, "evidence": [{"type": "inspected", "text": "Event names exist. Arrival was not readable.", "path": "lib/analytics.ts"}], "problems": ["No PostHog counts", "Cannot compute D1 or K"], "fixes": [{"text": "Query PostHog with a personal key", "impact": 4, "effort": "S", "rank": 1}]},
+    {"id": "appstore", "name": "App Store readiness", "score": 5, "weight": 1, "evidence": [{"type": "inspected", "text": "Report post, block, contact, and delete exist. Demo account does not.", "path": "docs/reports/scorecard-oct12.md"}], "problems": ["No review demo", "Deletion may leave rows", "Report-user and text filter not proven"], "fixes": [{"text": "Prepare a review demo and trace deletion", "impact": 5, "effort": "M", "rank": 1}]},
+    {"id": "market_fit", "name": "Market fit", "score": 6, "weight": 1, "evidence": [{"type": "judgment", "text": "Streak, freeze, photo, and feed are in the product. Widgets, Health, and a coach are not.", "path": "docs/reports/scorecard-oct12.md"}], "problems": ["Words are not learned", "No friend in the first challenge", "No widget or Health"], "fixes": [{"text": "Explain freeze before the first miss", "impact": 4, "effort": "S", "rank": 1}]}
+  ],
+  "performance": [],
+  "authz_table": [],
+  "appstore": [
+    {"guideline": "1.2", "item": "report post", "status": "pass", "note": "LiveFeedSection"},
+    {"guideline": "1.2", "item": "block user", "status": "pass", "note": "profiles.blockUser"},
+    {"guideline": "1.2", "item": "report user", "status": "risk", "note": "Not confirmed"},
+    {"guideline": "1.2", "item": "text filter", "status": "risk", "note": "content-moderation.ts exists"},
+    {"guideline": "1.2", "item": "contact", "status": "pass", "note": "Settings About mailto"},
+    {"guideline": "5.1.1", "item": "delete account", "status": "risk", "note": "Profile plus auth user when service role is set"},
+    {"guideline": "2.1", "item": "demo account", "status": "fail", "note": "Not prepared"}
+  ],
+  "market_matrix": {"features": ["streaks", "freezes", "photo proof", "feed", "widgets", "apple health"], "apps": [{"name": "GRIIT", "has": {"streaks": "yes", "freezes": "yes", "photo proof": "yes", "feed": "yes", "widgets": "no", "apple health": "no"}}]},
+  "metrics_proposal": {"north_star": "weekly secured days per active user", "first_value": "first secured day within 24h", "core_value": "7 secured days within 10 days", "activation_window_days": 0},
+  "onboarding_compare": [
+    {"step": "welcome", "b86_reached": 24, "b87_reached": 24, "b86_median_s": 8, "b87_median_s": 14},
+    {"step": "goals", "b86_reached": 24, "b87_reached": 24, "b86_median_s": 8, "b87_median_s": 8},
+    {"step": "intro", "b86_reached": 21, "b87_reached": 20, "b86_median_s": 12, "b87_median_s": 17},
+    {"step": "length", "b86_reached": 21, "b87_reached": 20, "b86_median_s": 4, "b87_median_s": 4},
+    {"step": "start_here", "b86_reached": 21, "b87_reached": 20, "b86_median_s": 8, "b87_median_s": 10},
+    {"step": "joined", "b86_reached": 12, "b87_reached": 19, "b86_median_s": 4, "b87_median_s": 5},
+    {"step": "reminders", "b86_reached": 13, "b87_reached": 19, "b86_median_s": 4, "b87_median_s": 5},
+    {"step": "account", "b86_reached": 13, "b87_reached": 19, "b86_median_s": 67, "b87_median_s": 107},
+    {"step": "home", "b86_reached": 13, "b87_reached": 12, "b86_median_s": 25, "b87_median_s": 58},
+    {"step": "task_done", "b86_reached": 9, "b87_reached": 6, "b86_median_s": 10, "b87_median_s": 12}
+  ],
+  "top10": [
+    {"rank": 1, "text": "Shorten account creation. Median went from 67s to 107s.", "area": "ux_onboarding"},
+    {"rank": 2, "text": "First Done in the first session.", "area": "product_loop"},
+    {"rank": 3, "text": "Teach secured, freeze, and self-reported. Quiz is 0 of 24.", "area": "ux_onboarding"},
+    {"rank": 4, "text": "Keep freezes. The model drops about 1 D30 point without them.", "area": "product_loop"},
+    {"rank": 5, "text": "A friend in the challenge. About 1 D30 point in the model.", "area": "market_fit"},
+    {"rank": 6, "text": "If everyone finished a first task, modeled D30 median moves from 5.5 to 7.3.", "area": "ux_onboarding"},
+    {"rank": 7, "text": "Android. 91 of 200 seed people cannot install.", "area": "market_fit"},
+    {"rank": 8, "text": "Keep the day-count clamp.", "area": "data_integrity"},
+    {"rank": 9, "text": "A share card people can see, or K stays unknown.", "area": "product_loop"},
+    {"rank": 10, "text": "Keep notifications optional.", "area": "appstore"}
+  ],
+  "verdict": "Not ready to learn from a public launch. Join improved and the day numbers agree, but 6 of 24 finished a task, the concept quiz is still 0, and there is no measured D7."
+}

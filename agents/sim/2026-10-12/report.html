@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT launch simulation</title>
+<style>body{font:16px/1.45 -apple-system,sans-serif;max-width:880px;margin:32px auto;color:#1a1918;background:#f7f5f1} td,th{padding:6px 10px;text-align:left;border-bottom:1px solid #ddd}</style>
+</head><body>
+<h1>If GRIIT launched on 12 Oct 2026</h1>
+<p><strong>This is a simulation, not a forecast.</strong> 30 random seeds. Day 1 is the 24-person build 87 agent run, sampled with replacement. Days 2–365 are a code model. LLM key moments were not run. iOS share is an estimate.</p>
+<h2>Retention among iOS installers, percent</h2>
+<table>
+<tr><th></th><th>p10</th><th>median</th><th>p90</th></tr>
+<tr><td>D1</td><td>18.4</td><td>23.9</td><td>30.3</td></tr>
+<tr><td>D7</td><td>7.3</td><td>11.9</td><td>15.6</td></tr>
+<tr><td>D30</td><td>2.8</td><td>5.5</td><td>9.2</td></tr>
+<tr><td>D365</td><td>0</td><td>0.9</td><td>1.8</td></tr>
+</table>
+<p>The untouched curve was fit to enable3.io 2025 health and fitness midpoints (D1 32.5%, D7 16.5%, D30 about 9%). The simulated D30 median, 5.5%, is inside 0.5× to 2× of that 9%. No sanity flag.</p>
+<p>Group medians are unstable. Wellness women 6.3 and gym men 4.8 are the only groups whose D30 median is above 0. The other groups’ medians are 0, with upper bands from 8 to 25, because each group is a handful of installers.</p>
+<h2>What-if D30 median</h2>
+<table>
+<tr><th>Scenario</th><th>D30 median</th></tr>
+<tr><td>Baseline</td><td>5.5</td></tr>
+<tr><td>Everyone finishes a first task</td><td>7.3</td></tr>
+<tr><td>A friend in the challenge</td><td>6.4</td></tr>
+<tr><td>No freezes</td><td>4.6</td></tr>
+<tr><td>No reminders</td><td>5.5</td></tr>
+<tr><td>Android can install (rate, not headcount)</td><td>5.0</td></tr>
+</table>
+<p>91 of 200 seed people are Android and cannot install. That is the iOS-only cost. The retention rate among people who do install barely moves.</p>
+<p>K median 0.03 (0.02–0.04). Tenjin calls K under 0.1 low. The invite-to-install rate of 0.2 is an assumption, not a measurement. Paid median 0.9% of installers. Share output is 0.22 shares per installer, not a percent of people who shared.</p>
+<p>The only quit reason the code recorded is “missed without a freeze.” There are no model-written quotes. Two-model agreement was not run.</p>
+</body></html>

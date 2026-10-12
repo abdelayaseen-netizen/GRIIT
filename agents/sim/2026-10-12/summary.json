@@ -1,0 +1,125 @@
+{
+  "label": "SIMULATION, not a forecast",
+  "seeds": 30,
+  "people_seed": 200,
+  "people_total": 200,
+  "day1_source": "build 87, 24 fresh agents, agents/runs/2026-10-11-onboarding-b87. Not the 100-person run. n=24.",
+  "ios_share": "estimate, not a cited primary source",
+  "retention": {
+    "overall": {
+      "d1": [
+        18.35,
+        23.85,
+        30.28
+      ],
+      "d7": [
+        7.34,
+        11.93,
+        15.6
+      ],
+      "d30": [
+        2.75,
+        5.5,
+        9.17
+      ],
+      "d90": [
+        1.83,
+        3.67,
+        6.42
+      ],
+      "d365": [
+        0.0,
+        0.92,
+        1.83
+      ]
+    },
+    "by_group": {
+      "gym_men": [
+        0.0,
+        4.76,
+        14.29
+      ],
+      "lowtech": [
+        0.0,
+        0.0,
+        11.11
+      ],
+      "wellness_women": [
+        0.0,
+        6.25,
+        12.5
+      ],
+      "college": [
+        0.0,
+        0.0,
+        8.33
+      ],
+      "creator": [
+        0.0,
+        0.0,
+        20.0
+      ],
+      "muslim": [
+        0.0,
+        0.0,
+        15.38
+      ],
+      "parent": [
+        0.0,
+        0.0,
+        25.0
+      ],
+      "pro": [
+        0.0,
+        0.0,
+        18.18
+      ],
+      "teen": [
+        0.0,
+        0.0,
+        14.29
+      ],
+      "lapsed": [
+        0.0,
+        0.0,
+        14.29
+      ]
+    }
+  },
+  "k_factor": [
+    0.02,
+    0.03,
+    0.04
+  ],
+  "paid_pct": {
+    "overall": [
+      0.0,
+      0.92,
+      1.83
+    ]
+  },
+  "share_rate": {
+    "overall": [
+      0.18,
+      0.22,
+      0.27
+    ]
+  },
+  "lost_to_android": 91,
+  "quit_reasons": [
+    {
+      "reason": "missed without a freeze",
+      "count": 942,
+      "quote": ""
+    }
+  ],
+  "model_agreement_pct": null,
+  "sanity_flag": "",
+  "llm_moments": "not run",
+  "cost_usd": 0,
+  "r1_check_d30": {
+    "sim_median": 5.5,
+    "benchmark_midpoint": 9.0,
+    "source": "enable3.io App retention benchmarks 2025, health & fitness"
+  }
+}
