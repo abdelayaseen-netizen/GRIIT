@@ -30,7 +30,7 @@ import {
   type HomeProofRow,
   type HomeProofSection,
 } from "@/lib/home-proof-card";
-import { FREEZE, FREEZE_LINE } from "@/lib/copy";
+import { FREEZE } from "@/lib/copy";
 import { DAY_ONE_SUB, DAY_ONE_WORDS, bestLabel, freezeHoldLine, homeAction, streakNumeralSize, todayNextLine, type HomeNextTask } from "@/lib/home-top";
 import { streakInARow } from "@/lib/task-complete-toast";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
@@ -92,6 +92,8 @@ export type HomeV3MorningAfter = {
 export type HomeV3Props = {
   title: string | null;
   streak: number | null;
+  /** Streak the freeze would restore. Shown instead of a reset 0. */
+  streakToKeep?: number | null;
   streakLine: string;
   morningAfter?: HomeV3MorningAfter | null;
   proof: HomeV3Proof | null;
@@ -108,6 +110,7 @@ export type HomeV3Props = {
   onPressStreak?: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
+  onCheckOff?: (id: string) => void;
   onPressChallenge?: (challengeId: string) => void;
   onPressShareToday?: () => void;
   sectionChoices?: Record<string, boolean | undefined>;
@@ -140,6 +143,7 @@ export type HomeV3Props = {
 export function HomeV3({
   title,
   streak,
+  streakToKeep = null,
   streakLine: _streakLine,
   morningAfter,
   proof,
@@ -156,6 +160,7 @@ export function HomeV3({
   onPressStreak,
   onPressProof: _onPressProof,
   onPressTask,
+  onCheckOff,
   onPressChallenge,
   onPressShareToday,
   sectionChoices: _sectionChoices,
@@ -244,6 +249,7 @@ export function HomeV3({
     blocked: status,
   });
   const streakN = streak ?? 0;
+  const keepN = streakToKeep != null && streakToKeep > 0 ? streakToKeep : streakN;
   const action = homeAction({
     securedToday: daySecured || allDone,
     yesterdayUnsecured: Boolean(morningAfter?.onUseFreeze),
@@ -253,7 +259,7 @@ export function HomeV3({
   const numeral = streakNumeralSize(streakN);
   const dayOne = firstWeek === 1 && streakN === 0;
   const cardSub = action.kind === "freeze"
-    ? freezeHoldLine(streakN, freezesLeft)
+    ? freezeHoldLine(keepN, freezesLeft)
     : dayOne
       ? DAY_ONE_SUB
       : action.kind === "share"
@@ -267,7 +273,18 @@ export function HomeV3({
     const meta = `${section.challenge} · ${dayLine} · ${row.caption}`;
     const inner = (
       <>
-        <StatusRing row={row} />
+        {row.tapDone && !row.done ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Done ${row.name}`}
+            onPress={() => onCheckOff?.(row.id)}
+            hitSlop={8}
+          >
+            <StatusRing row={row} />
+          </Pressable>
+        ) : (
+          <StatusRing row={row} />
+        )}
         <View style={styles.taskCopy}>
           <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
           {section.challengeId ? (
@@ -350,14 +367,13 @@ export function HomeV3({
         {action.kind === "task" ? (
           <Button label={action.label} onPress={() => onPressTask?.(action.taskId)} />
         ) : null}
+        {morningAfter?.onUseFreeze && action.kind !== "freeze" ? (
+          <View style={styles.freezeInCard}>
+            <Text style={styles.cardSub}>{freezeHoldLine(keepN, freezesLeft)}</Text>
+            <Button label={FREEZE.button} variant="secondary" onPress={morningAfter.onUseFreeze} />
+          </View>
+        ) : null}
       </View>
-
-      {morningAfter?.onUseFreeze && action.kind !== "freeze" ? (
-        <View style={styles.freezeRow}>
-          <Text style={styles.secondary}>{FREEZE_LINE}</Text>
-          <Button label={FREEZE.button} variant="secondary" onPress={morningAfter.onUseFreeze} />
-        </View>
-      ) : null}
 
       {proof ? (
         <View style={styles.today}>
@@ -623,6 +639,9 @@ const styles = StyleSheet.create({
   gutter: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+  },
+  freezeInCard: {
+    gap: DS_V3.space.sm,
   },
   freezeRow: {
     paddingHorizontal: DS_V3.space.gutter,

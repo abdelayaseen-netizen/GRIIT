@@ -155,14 +155,16 @@ export function tileImageSource(row: {
   return null;
 }
 
-/** Replace stored values with signed URLs, then drop anything that did not sign. */
+/** Replace a stored path with its signed URL. A tile that has a path stays in the grid. */
 export function proofsAfterSign<T extends { imageUrl?: string | null }>(
   tiles: readonly T[],
   signed: readonly (string | null)[],
 ): T[] {
   return tiles.flatMap((tile, i) => {
-    const imageUrl = signed[i] ?? null;
-    return imageUrl ? [{ ...tile, imageUrl }] : [];
+    const stored = tile.imageUrl?.trim() || null;
+    if (!stored) return [];
+    const imageUrl = signed[i] ?? stored;
+    return [{ ...tile, imageUrl }];
   });
 }
 

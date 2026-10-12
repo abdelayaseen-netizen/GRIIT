@@ -7,7 +7,7 @@ export const SIMPLE_ASK_HEADING = "Did you do it today?" as const;
 
 export const SIMPLE_ASK_HONESTY = "Self-reported." as const;
 
-export const SIMPLE_ASK_CTA = "I did it" as const;
+export const SIMPLE_ASK_CTA = "Done" as const;
 
 export const SIMPLE_ASK_SAVING = "Saving…" as const;
 

@@ -3,6 +3,7 @@ import {
   challengeDetailLine,
   isJoinableChallengeId,
   isNoDaysOffChallenge,
+  isRecommendableChallenge,
   matchReasonForChallenge,
   meetsOnboardingDuration,
   preselectedSuggestionId,
@@ -174,6 +175,30 @@ describe("suggestChallengesForGoals", () => {
       7,
     );
     expect(thin).toHaveLength(1);
+  });
+
+  it("never recommends an invite-only group, and faith titles stay faith", () => {
+    expect(isRecommendableChallenge({ participation_type: "team" })).toBe(false);
+    const squad = {
+      id: "a2222222-0001-4000-8000-000000000005",
+      title: "Fitness Squad",
+      category: "fitness",
+      description: "Complete daily workout as a team.",
+      duration_days: 30,
+      participation_type: "team",
+    };
+    const prayer = {
+      id: "a1000001-4000-4000-8000-000000000099",
+      title: "Quran Daily",
+      category: "Daily habits",
+      duration_days: 30,
+      participation_type: "solo",
+    };
+    const rows = suggestChallengesForGoals(["faith_prayer", "daily_habits"], [squad, prayer, ...CATALOG], 3, 7);
+    expect(rows.map((c) => c.title)).toContain("Quran Daily");
+    expect(rows.map((c) => c.title)).not.toContain("Fitness Squad");
+    expect(matchReasonForChallenge(prayer, ["faith_prayer"])).toBe("Matches faith and prayer");
+    expect(suggestChallengesForGoals(["daily_habits"], [prayer], 3, 7)).toEqual([]);
   });
 });
 

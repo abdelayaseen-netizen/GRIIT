@@ -42,7 +42,7 @@ import {
   saveLocalTimerSession,
 } from "@/lib/task-session-store";
 import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
-import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
+import { startLiveActivity, endLiveActivity, showLiveActivityDone } from "@/lib/live-activity";
 import {
   FINISH_SLOW_MS,
   finishAfterMutation,
@@ -52,7 +52,7 @@ import {
   type ShareIntent,
 } from "@/lib/finish-moment";
 import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { shownChallengeDay } from "@/lib/home-day-total";
 import { prepareJournalUnmount } from "@/lib/journal-leave";
 import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
@@ -131,12 +131,14 @@ export function useTaskFlowV2() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("active_challenges")
-        .select("current_day, challenge_id")
+        .select("start_at, started_at, created_at, challenge_id")
         .eq("id", activeChallengeId)
         .maybeSingle();
       if (error) throw error;
       return data as {
-        current_day?: number | null;
+        start_at?: string | null;
+        started_at?: string | null;
+        created_at?: string | null;
         challenge_id?: string | null;
       } | null;
     },
@@ -144,10 +146,15 @@ export function useTaskFlowV2() {
     staleTime: 60 * 1000,
   });
   const dayReady = !activeChallengeId || enrollmentQ.isFetched;
-  const currentDay = enrollmentDayIndex({
-    currentDay: dayReady ? enrollmentQ.data?.current_day : 1,
+  const startAt = dayReady
+    ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null)
+    : null;
+  const currentDay = shownChallengeDay(
+    startAt,
+    profile?.timezone ?? "UTC",
+    dateKey,
     durationDays,
-  });
+  );
   const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
   const minWords = journalMinWords(config.min_words);
   const counterGoal = resolveConfigCounterTarget(config) || 8;
@@ -874,6 +881,7 @@ export function useTaskFlowV2() {
 
   useEffect(() => {
     if (timerShouldAutoSubmit(step, remainingSec, !!startedAtIso)) {
+      showLiveActivityDone();
       void submitTimer();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

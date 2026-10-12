@@ -8,7 +8,6 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 
-const PT = DS_V3.space.xs / 4;
 const STROKE = (DS_V3.space.xs * 3) / 8;
 
 export type ChipVariant = "ghost" | "form";
@@ -98,14 +97,14 @@ const styles = StyleSheet.create({
     backgroundColor: DS_V3.color.selectedBg,
   },
   form: {
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: PT,
-    borderColor: DS_V3.color.border,
+    backgroundColor: "transparent",
+    borderWidth: STROKE,
+    borderColor: DS_V3.color.textSecondary,
   },
   formSelected: {
     backgroundColor: DS_V3.color.selectedBg,
     borderWidth: STROKE,
-    borderColor: DS_V3.color.selectedBg,
+    borderColor: DS_V3.color.textPrimary,
   },
   pressed: {
     opacity: 0.8,

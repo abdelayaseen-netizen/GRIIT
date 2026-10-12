@@ -31,9 +31,9 @@ export function writeCounterFill(written: number, target: number): number {
 }
 
 export function writeCtaLabel(written: number, target: number): string {
-  if (target <= 0) return written >= 1 ? "Post" : "Write here";
+  if (target <= 0) return written >= 1 ? "Done" : "Write here";
   const remaining = target - written;
-  if (remaining <= 0) return "Post";
+  if (remaining <= 0) return "Done";
   if (remaining === 1) return "Write 1 more word";
   return `Write ${remaining} more words`;
 }

@@ -65,7 +65,7 @@ export function TimerEntryStep({
         <Button testID="timer-start" label={timerStartLabel(requiredSeconds)} onPress={onStart} />
         <Button
           testID="timer-already"
-          label="Already did it"
+          label="Done, already did it"
           variant="secondary"
           onPress={onAlready}
         />

@@ -43,6 +43,7 @@ export const DAY_ONE_WORDS = "Nothing to break yet.";
 export const DAY_ONE_SUB = "Secure today and the streak starts. Days count from the day you joined.";
 
 export function freezeHoldLine(streak: number, freezesLeft: number): string {
+  const n = Math.max(0, Math.floor(streak));
   const left = freezesLeft === 1 ? "1 left" : `${freezesLeft} left`;
-  return `Yesterday wasn’t secured. A freeze holds your ${streak}-day streak until midnight. ${left}.`;
+  return `Use a freeze to keep your ${n}-day streak. ${left}. Until midnight.`;
 }

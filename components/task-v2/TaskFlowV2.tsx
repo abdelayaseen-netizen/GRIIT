@@ -21,6 +21,7 @@ import { ReviewStep } from "./steps/ReviewStep";
 import { RunningStep } from "./steps/RunningStep";
 import { SessionStep } from "./steps/SessionStep";
 import { TimerEntryStep } from "./steps/TimerEntryStep";
+import { homeDayLine } from "@/lib/home-day-total";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
@@ -75,7 +76,7 @@ export function TaskFlowV2() {
       {f.step === "entry" && f.taskType === "timer" ? (
         <TimerEntryStep
           taskName={f.taskName}
-          headerTitle={f.headerTitle}
+          headerTitle={homeDayLine(f.currentDay, f.durationDays)}
           headerLabel={f.chromeTitle}
           requiredSeconds={f.requiredSeconds}
           soundOn={f.soundOn}

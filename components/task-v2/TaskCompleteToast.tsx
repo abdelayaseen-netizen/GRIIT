@@ -10,6 +10,7 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   clearTaskCompleteFlash,
   dismissTaskToast,
+  runToastAction,
   subscribeTaskToast,
   taskCompleteFlashId,
   type TaskCompleteToast,
@@ -55,7 +56,7 @@ export default function TaskCompleteToast({
     if (!toast) return;
     slide.setValue(24);
     Animated.spring(slide, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
-    const life = shared ? UNDO_MS : toast.cameraSeal ? PHOTO_LIFE_MS : LIFE_MS;
+    const life = toast.lifeMs ?? (shared ? UNDO_MS : toast.cameraSeal ? PHOTO_LIFE_MS : LIFE_MS);
     const timer = setTimeout(() => dismissTaskToast(), life);
     return () => clearTimeout(timer);
   }, [toast, slide, shared]);
@@ -116,6 +117,18 @@ export default function TaskCompleteToast({
           {toast.photoUri ? <Image source={{ uri: toast.photoUri }} style={styles.photo} /> : null}
           <Text style={styles.pillTxt}>{shared ? "Undo" : "Share"}</Text>
         </Pressable>
+      ) : toast.actionLabel ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={toast.actionLabel}
+          onPress={() => {
+            runToastAction();
+            dismissTaskToast();
+          }}
+          style={styles.pill}
+        >
+          <Text style={styles.pillTxt}>{toast.actionLabel}</Text>
+        </Pressable>
       ) : (
         <Pressable
           accessibilityRole="button"
@@ -162,11 +175,11 @@ const styles = StyleSheet.create({
     height: 32,
     paddingHorizontal: 12,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.primary,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
-  pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.onBrand },
+  pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.canvas },
   photoPill: {
     height: 40,
     paddingLeft: 4,

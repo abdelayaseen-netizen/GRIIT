@@ -320,7 +320,7 @@ function PostHeader({
         style={styles.flex}
       >
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <Text style={styles.subject} numberOfLines={1}>{subject}</Text>
+        <Text style={styles.subject} numberOfLines={2}>{subject}</Text>
       </Pressable>
       <Text style={styles.when}>{when}</Text>
       <Pressable

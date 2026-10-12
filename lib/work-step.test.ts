@@ -13,7 +13,6 @@ import {
   RUN_HONESTY_TYPED,
   RUN_HONESTY_TYPED_NO_CAMERA,
   RUN_PHOTO_AFTER,
-  RUN_TAKE_PHOTO,
   SESSION_HONESTY,
   TIMER_HONESTY,
   TIMER_LEAVING,
@@ -45,7 +44,7 @@ describe("work step CTA labels", () => {
     expect(countCtaLabel(3, 8)).toBe("Log 3 of 8");
     expect(countCtaEnabled(3, 8)).toBe(false);
     expect(countCtaLabel(8, 8)).toBe(COUNT_POST);
-    expect(countCtaLabel(8, 8)).toBe("Post");
+    expect(countCtaLabel(8, 8)).toBe("Done");
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
     expect(COUNT_HONESTY).toBe("Self-reported.");
@@ -147,9 +146,9 @@ describe("run pace line", () => {
     expect(noTarget).not.toContain("Target");
   });
 
-  it("Take photo when Camera applies, Post when it does not", () => {
-    expect(runPrimaryLabel(true)).toBe(RUN_TAKE_PHOTO);
-    expect(runPrimaryLabel(false)).toBe("Post");
+  it("Done · take photo when Camera applies, Done when it does not", () => {
+    expect(runPrimaryLabel(true)).toBe("Done · take photo");
+    expect(runPrimaryLabel(false)).toBe("Done");
     expect(RUN_PHOTO_AFTER).toBe("The photo comes after the numbers");
   });
 });

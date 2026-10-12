@@ -108,6 +108,20 @@ export function startLiveActivity(payload: LiveActivityPayload): void {
   }
 }
 
+const DONE_COPY = "Done. Open GRIIT to post.";
+
+/** At 0:00 the lock screen says to open the app. It ends when the proof is posted. */
+export function showLiveActivityDone(): void {
+  if (Platform.OS !== "ios" || !currentActivityId) return;
+  const state: LiveActivity.LiveActivityState = { title: DONE_COPY, subtitle: "" };
+  try {
+    LiveActivity.updateActivity(currentActivityId, state);
+    lastState = state;
+  } catch (error) {
+    captureError(error, "showLiveActivityDone");
+  }
+}
+
 /** Stop the Live Activity. iOS only. No-op otherwise. Safe to call multiple times. */
 export function endLiveActivity(): void {
   if (Platform.OS !== "ios") return;

@@ -32,9 +32,8 @@ describe("home top", () => {
     expect(DAY_ONE_SUB.startsWith("Secure today")).toBe(true);
   });
 
-  it("writes the freeze hold line with a curly apostrophe", () => {
-    expect(freezeHoldLine(12, 1)).toBe(
-      "Yesterday wasn’t secured. A freeze holds your 12-day streak until midnight. 1 left.",
-    );
+  it("names the streak a freeze would keep", () => {
+    expect(freezeHoldLine(3, 1)).toBe("Use a freeze to keep your 3-day streak. 1 left. Until midnight.");
+    expect(freezeHoldLine(12, 2)).toBe("Use a freeze to keep your 12-day streak. 2 left. Until midnight.");
   });
 });

@@ -1,6 +1,5 @@
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { calendarDayFromStartAt } from "@/backend/lib/calendar-day";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { shownChallengeDay } from "@/backend/lib/calendar-day";
 import { checkInHasCameraProof } from "@/backend/lib/proof-predicate";
 import { formatOfDays } from "@/lib/format-days";
 
@@ -107,10 +106,7 @@ export function viewerChallengeDay(
   const row = enrollments.find((item) => item.challengeId === challengeId);
   if (!row) return null;
   const total = Math.max(1, Math.floor(row.durationDays) || 1);
-  const day =
-    typeof row.currentDay === "number"
-      ? enrollmentDayIndex({ currentDay: row.currentDay, durationDays: total })
-      : calendarDayFromStartAt(row.startAt, timeZone, todayKey, total);
+  const day = shownChallengeDay(row.startAt, timeZone, todayKey, total);
   return { day, total };
 }
 

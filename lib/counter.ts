@@ -1,7 +1,7 @@
 /** Port of design/handoff/v50 counter.ts. Do not import the handoff file. */
 
 export function completeLabel(target: number, unit: string, camera: boolean): string {
-  return camera ? "Complete · take photo" : `Complete · ${target} ${unit}`;
+  return camera ? "Done · take photo" : `Done · ${target} ${unit}`;
 }
 
 export function showLogPartial(n: number, target: number): boolean {

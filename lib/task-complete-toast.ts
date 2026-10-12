@@ -14,7 +14,21 @@ export type TaskCompleteToast = {
   taskName?: string;
   currentDay?: number;
   totalDays?: number;
+  actionLabel?: string;
+  lifeMs?: number;
 };
+
+let toastAction: (() => void) | null = null;
+
+export function setToastAction(action: (() => void) | null): void {
+  toastAction = action;
+}
+
+export function runToastAction(): void {
+  const action = toastAction;
+  toastAction = null;
+  action?.();
+}
 
 /** The verb stays whole. The task name is the second line and may truncate. */
 export function taskDoneTitle(_task?: string, _photo?: boolean): string {
@@ -61,6 +75,7 @@ export function publishTaskToast(toast: TaskCompleteToast): void {
 
 export function dismissTaskToast(): void {
   current = null;
+  toastAction = null;
   for (const listener of listeners) listener(null);
 }
 

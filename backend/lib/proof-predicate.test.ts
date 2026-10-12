@@ -235,7 +235,7 @@ describe("splitSecuredProof", () => {
     expect(tiles[0]?.imageUrl).toBe(path);
     const signed = proofsAfterSign(tiles, ["https://signed.example/proof.jpg"]);
     expect(signed[0]?.imageUrl).toBe("https://signed.example/proof.jpg");
-    expect(proofsAfterSign(tiles, [null])).toEqual([]);
+    expect(proofsAfterSign(tiles, [null])[0]?.imageUrl).toBe(path);
   });
 
   it("getTodayCheckins selects photo_url with the other proof columns", () => {

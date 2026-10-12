@@ -1,7 +1,6 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Check } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { TaskCapture } from "../TaskCapture";
 
@@ -19,8 +18,6 @@ type Props = {
 export function CaptureStep({
   challengeName,
   taskName,
-  workDone,
-  photoAfter,
   windowLabel,
   onCancel,
   onCaptured,
@@ -28,15 +25,6 @@ export function CaptureStep({
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {workDone ? (
-        <View style={styles.doneRow}>
-          <Check size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
-          <View style={styles.doneCopy}>
-            <Text style={styles.done}>{workDone}</Text>
-            {photoAfter ? <Text style={styles.after}>{photoAfter}</Text> : null}
-          </View>
-        </View>
-      ) : null}
       <TaskCapture
         challenge={challengeName}
         task={taskName}

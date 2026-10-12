@@ -13,5 +13,7 @@ export function formatTasks(n: number): string {
 }
 
 export function formatOfDays(x: number, y: number): string {
-  return `${x} of ${formatDays(y)}`;
+  const denom = Math.max(0, Math.floor(y));
+  const numer = Math.min(Math.max(0, Math.floor(x)), denom);
+  return `${numer} of ${formatDays(denom)}`;
 }

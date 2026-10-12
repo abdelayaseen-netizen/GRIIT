@@ -37,7 +37,7 @@ export function ProofPhoto({
   useEffect(() => {
     setAttempt(0);
   }, [uri]);
-  if (!uri || attempt > 1) {
+  if (!uri || attempt > 3) {
     return <ProofFallbackTile taskName={taskName} style={styles.fill} />;
   }
   return (
@@ -47,8 +47,6 @@ export function ProofPhoto({
       style={style}
       contentFit="cover"
       cachePolicy="memory-disk"
-      allowDownscaling={false}
-      recyclingKey={uri}
       onError={() => setAttempt((n) => n + 1)}
     />
   );

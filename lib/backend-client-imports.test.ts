@@ -14,6 +14,7 @@ export const PURE_BACKEND_ALLOWLIST = [
   "backend/lib/create-visibility.ts",
   "backend/lib/date-utils.ts",
   "backend/lib/due-keys.ts",
+  "backend/lib/enrollment-day-stats.ts",
   "backend/lib/feed-activity-hydrate.ts",
   "backend/lib/finished-run.ts",
   "backend/lib/join-errors.ts",

@@ -1,5 +1,5 @@
 import type { OnboardingGoal } from "@/store/onboardingStore";
-import { inferChallengeGoalTags } from "@/lib/goal-challenge-map";
+import { goalFromCategory, goalFromTitle, inferChallengeGoalTags } from "@/lib/goal-challenge-map";
 import { parseTargetStreak } from "@/lib/onboarding-v2-target-streak-parse";
 import type { SuggestionTask } from "@/lib/onboarding-v2-first-challenge";
 
@@ -14,6 +14,7 @@ export type SuggestableChallenge = {
   duration_days?: number | null;
   is_hard_mode?: boolean | null;
   participation_type?: string | null;
+  visibility?: string | null;
   participants_count?: number | null;
   tasks?: SuggestionTask[] | { length?: number };
 };
@@ -33,14 +34,30 @@ const MATCH_REASON: Record<OnboardingGoal, string> = {
 
 export { inferChallengeGoalTags };
 
-/** First intersecting inferred tag, else "Popular first challenge". */
+/** Named titles and the stored category win. Keywords fill in only when those miss. */
 export function matchReasonForChallenge(
   c: SuggestableChallenge,
   goals: readonly OnboardingGoal[]
 ): string {
+  const titled = goalFromTitle(c.title);
+  if (titled) return MATCH_REASON[titled];
+  const fromCategory = goalFromCategory(c.category);
+  if (fromCategory && goals.includes(fromCategory)) return MATCH_REASON[fromCategory];
   const selected = new Set(goals);
   const hit = inferChallengeGoalTags(c).find((tag) => selected.has(tag));
   return hit ? MATCH_REASON[hit] : "Popular first challenge";
+}
+
+/** Team challenges need an invite. Private rows are not a first join. */
+export function isRecommendableChallenge(c: {
+  participation_type?: string | null;
+  visibility?: string | null;
+}): boolean {
+  const part = (c.participation_type ?? "solo").toLowerCase();
+  if (part === "team") return false;
+  const vis = (c.visibility ?? "public").toLowerCase();
+  if (vis === "private" || vis === "friends") return false;
+  return true;
 }
 
 export function countNoun(n: number, singular: string, plural: string): string {
@@ -79,8 +96,13 @@ export function meetsOnboardingDuration(
 
 function goalScore(c: SuggestableChallenge, goals: readonly OnboardingGoal[]): number {
   if (goals.length === 0) return 0;
+  const titled = goalFromTitle(c.title);
+  if (titled) return goals.includes(titled) ? 2 : 0;
+  const fromCategory = goalFromCategory(c.category);
   const selected = new Set(goals);
-  return inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
+  const keyword = inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
+  if (fromCategory && selected.has(fromCategory)) return 2 + keyword;
+  return keyword;
 }
 
 /** First card that is not No Days Off. Null when the list is empty or only NDO. */
@@ -108,6 +130,7 @@ export function suggestChallengesForGoals(
     (c) =>
       typeof c.id === "string" &&
       isJoinableChallengeId(c.id) &&
+      isRecommendableChallenge(c) &&
       meetsOnboardingDuration(c.duration_days, resolved),
   );
   if (joinable.length === 0) return [];

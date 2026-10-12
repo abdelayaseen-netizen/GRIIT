@@ -46,10 +46,8 @@ import {
   type ActiveChallengeTask,
 } from "@/lib/active-challenge-ui";
 import { dateKeyFromIso } from "@/lib/challenge-end";
-import { rangeSecuredElapsed } from "@/lib/profile-v2-record";
-import { exclusiveEndDateKey } from "@/backend/lib/record-days";
-import { homeDayTotal } from "@/lib/home-day-total";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { homeDayTotal, shownChallengeDay } from "@/lib/home-day-total";
+import { enrollmentDayStats } from "@/backend/lib/enrollment-day-stats";
 import {
   enrollmentWeekDateKeys,
   peopleCardCopy,
@@ -233,26 +231,6 @@ export default function ActiveChallengeDetailScreen() {
     : todayKey;
   const weekKeys = useMemo(() => enrollmentWeekDateKeys(todayKey), [todayKey]);
   const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
-  const exclusiveEnd = activeChallenge?.end_at
-    ? exclusiveEndDateKey(
-        {
-          status: activeChallenge.status ?? "active",
-          end_at: activeChallenge.end_at,
-          ended_at: activeChallenge.ended_at,
-        },
-        startDateKey,
-        profileTz ?? "UTC",
-      )
-    : addCalendarDaysToDateKey(startDateKey, durationDays);
-  const enrollmentRecord = rangeSecuredElapsed(
-    {
-      status: activeChallenge?.status ?? "active",
-      startDateKey,
-      endDateKey: exclusiveEnd,
-    },
-    keys,
-    todayKey,
-  );
   const securedToday =
     todayKey >= startDateKey && securedTodayFromKeys(keys, todayKey);
   const weekSecured = weekStripFilledForEnrollment({
@@ -262,7 +240,15 @@ export default function ActiveChallengeDetailScreen() {
     todayKey,
   });
   const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
-  const shownDay = enrollmentDayIndex({ currentDay, durationDays });
+  const dayStats = enrollmentDayStats({
+    startAt: startIso,
+    startDateKey,
+    timeZone: profileTz ?? "UTC",
+    todayKey,
+    durationDays,
+    securedDateKeys: keys,
+  });
+  const shownDay = dayStats.day || shownChallengeDay(startIso, profileTz ?? "UTC", todayKey, durationDays);
 
   const taskSkippedTracked = useRef(false);
   useEffect(() => {
@@ -559,8 +545,8 @@ export default function ActiveChallengeDetailScreen() {
           todayStatus={todayCopy.status}
           todaySub={todayCopy.sub}
           weekLine={weekMeta.line}
-          securedCount={enrollmentRecord.secured}
-          dueCount={enrollmentRecord.elapsed}
+          securedCount={dayStats.secured}
+          dueCount={dayStats.due}
           weekDaysOverride={weekDaysOverride}
           freezeRow={undefined}
           onUseFreeze={undefined}

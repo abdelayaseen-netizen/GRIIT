@@ -23,6 +23,7 @@ import {
 import { persistOnboardingV2Step, loadOnboardingV2Step } from "@/lib/onboarding-v2-step";
 import { skipOnboardingV2 } from "@/lib/onboarding-v2-skip";
 import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
+import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
 import type { AccountAuthKind } from "@/lib/onboarding-v2-account-name";
@@ -172,7 +173,11 @@ export default function OnboardingFlowV2() {
     if (sessionKind === "real" && dbCompleted === null && !dbFetchFailed) return;
     if (!completed) return;
     setSentHome(true);
-    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
+    const id = useOnboardingStore.getState().selectedChallengeId;
+    void (async () => {
+      if (id) await joinFirstChallenge(id).catch(() => undefined);
+      router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
+    })();
   }, [hydrated, completed, user, dbCompleted, dbFetchFailed, sentHome, router]);
 
   useEffect(() => {
@@ -249,8 +254,10 @@ export default function OnboardingFlowV2() {
   }, []);
 
   const handleSignInSuccess = useCallback(() => {
+    const id = useOnboardingStore.getState().selectedChallengeId;
     setSignInOpen(false);
     setSignInPrefill(undefined);
+    if (id) void joinFirstChallenge(id);
   }, []);
 
   const handleAccountSuccess = useCallback(
@@ -327,7 +334,7 @@ export default function OnboardingFlowV2() {
         return <DayTargetScreen onContinue={goNext} onBack={goBack} />;
       case "first_challenge":
         if (browseOpen) {
-          return <BrowseAllPickerScreen onSelect={handleBrowseSelect} />;
+          return <BrowseAllPickerScreen onSelect={handleBrowseSelect} onBack={handleBrowseBack} />;
         }
         return (
           <FirstChallengeScreen

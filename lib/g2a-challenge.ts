@@ -61,7 +61,8 @@ export function weekSecuredOfDue(args: {
     due += 1;
     if (secured.has(key)) n += 1;
   }
-  return { secured: n, due, line: `${n} of ${due} days` };
+  const securedCount = Math.min(n, due);
+  return { secured: securedCount, due, line: `${securedCount} of ${due} days` };
 }
 
 export function freezeDetailCopy(args: {

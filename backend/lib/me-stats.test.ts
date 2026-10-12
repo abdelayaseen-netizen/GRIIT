@@ -71,6 +71,19 @@ describe("range stats", () => {
     const hour = usualHour(stats.user_stats.proof_hour_histogram);
     expect(hour).toBe(8);
     expect(`Most often around ${hourLabel(hour!).trim()}.`).toBe("Most often around 8 am.");
+    const sameProofs = Array.from({ length: 5 }, () => ({
+      atIso: "2026-10-06T12:00:00.000Z",
+      method: "self_reported" as const,
+    }));
+    for (const range of ["7d", "30d", "all"] as const) {
+      const again = buildMeStats({
+        ...base,
+        range,
+        timeZone: "America/New_York",
+        proofs: sameProofs,
+      });
+      expect(usualHour(again.user_stats.proof_hour_histogram), range).toBe(8);
+    }
   });
 
   it("counts a proof hour in the user's time zone", () => {

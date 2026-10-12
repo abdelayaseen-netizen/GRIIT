@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
@@ -22,7 +23,7 @@ import { HomeV3 } from "@/components/home/HomeV3";
 import { earliestEnrollmentStart, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
-import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
+import { currentTaskToast, publishTaskToast, setToastAction, subscribeTaskToast } from "@/lib/task-complete-toast";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
@@ -37,8 +38,7 @@ import {
   windowClosesBanner,
 } from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
-import { dateKeyFromIso } from "@/lib/home-day-total";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
 import { completedTaskIds } from "@/lib/today-completion";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
 import { StreakSheet } from "@/components/home/StreakSheet";
@@ -146,7 +146,7 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { stats, refetchAll, profile: contextProfile } = useApp();
+  const { stats, refetchAll, profile: contextProfile, completeTask } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
   const focus = useLocalSearchParams<{ focus?: string }>().focus;
   useEffect(() => {
@@ -283,10 +283,7 @@ export default function HomeScreen() {
       if (startDateKey > todayKey) continue;
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
-      const currentDay = enrollmentDayIndex({
-        currentDay: ac.current_day,
-        durationDays,
-      });
+      const currentDay = shownChallengeDay(startIso || null, homeTimeZone, todayKey, durationDays);
 
       for (const t of required) {
         const tType = String(t.type ?? "manual").toLowerCase();
@@ -580,6 +577,39 @@ export default function HomeScreen() {
 
   // ────────────── handlers ──────────────
 
+  const onCheckOff = useCallback(
+    (taskId: string) => {
+      const task = heroTasks.find((row) => row.id === taskId);
+      if (!task || task.done) return;
+      void (async () => {
+        const result = await completeTask({
+          activeChallengeId: task.activeChallengeId,
+          taskId: task.id,
+        });
+        const completionId = result?.completionId;
+        setToastAction(() => {
+          if (!completionId) return;
+          void supabase.from("check_ins").delete().eq("id", completionId).then(() => {
+            void refresh();
+          });
+        });
+        publishTaskToast({
+          taskId: task.id,
+          title: "Saved.",
+          body: "Self-reported.",
+          photoUri: null,
+          cameraSeal: false,
+          actionLabel: "Undo",
+          lifeMs: 5000,
+          challengeName: task.challengeName,
+          taskName: task.name,
+        });
+        void refresh();
+      })();
+    },
+    [heroTasks, completeTask, refresh],
+  );
+
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
       router.push(
@@ -762,6 +792,7 @@ export default function HomeScreen() {
               )}
               dateLine={homeScreenDate(new Date(), homeTimeZone)}
               streak={streak}
+              streakToKeep={recon.result?.lostStreak ?? null}
               streakLine={streakLine}
               morningAfter={morningAfter}
               proof={proof}
@@ -786,6 +817,7 @@ export default function HomeScreen() {
                 if (!next || next.done) return;
                 onPressTask(next);
               }}
+              onCheckOff={onCheckOff}
               onPressChallenge={onPressChallenge}
               onPressShareToday={() => setShareTodayOpen(true)}
               sectionChoices={sectionChoices}

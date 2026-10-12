@@ -128,6 +128,7 @@ export function StepBasics({
             <View key={c.id} style={styles.chipCell}>
               <Chip
                 label={c.label}
+                variant="form"
                 selected={category === c.id}
                 onPress={() => onChangeCategory(c.id)}
               />

@@ -108,6 +108,8 @@ export type ShareCardInput = {
   inviteCode?: string | null;
   streak?: number;
   secured?: number;
+  /** Days due so far. The "of N days" fraction uses this, not the full length. */
+  due?: number;
   longestStreak?: number;
   activeLine?: string;
   dateLabel?: string;
@@ -347,6 +349,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   const box = SHARE_CONTENT;
   const day = input.day ?? 1;
   const total = input.durationDays ?? day;
+  const due = input.due ?? total;
   const challenge = input.challenge.trim() || "Challenge";
   const task = input.task?.trim() ?? "";
   const base: SharePaint = {
@@ -443,7 +446,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       push({
         kind: "baseline",
         lead: text(String(secured), 200, 190, palette.fg, "800"),
-        rest: text(`of ${total} days secured`, 44, 52, palette.fg, "500"),
+        rest: text(`of ${due} days secured`, 44, 52, palette.fg, "500"),
       });
       push({
         kind: "row",
@@ -459,7 +462,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       push({
         kind: "baseline",
         lead: text(String(secured), 170, 170, palette.fg, "800"),
-        rest: text(`of ${total} days`, 60, 64, palette.fg, "500"),
+        rest: text(`of ${due} days`, 60, 64, palette.fg, "500"),
       });
     }
     if (cells.length) {

@@ -1,5 +1,4 @@
-import { homeDayLine, homeDayTotal } from "@/lib/home-day-total";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { calendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { SELF_REPORTED, closedWindowCaption, closedWindowTime, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
@@ -121,6 +120,7 @@ export type HomeProofRow = {
   /** Close time for HOME.lost, for example "6:30 am". */
   closedAt?: string;
   hasCameraProof: boolean;
+  tapDone?: boolean;
 };
 
 export function homeProofTitleMuted(row: Pick<HomeProofRow, "done" | "closed">): boolean {
@@ -175,6 +175,12 @@ export function homeWindowClosed(task: {
   return task.windowState === "closed" && task.done !== true;
 }
 
+export function homeCheckOffTap(task: Pick<HomeProofTask, "type" | "taskType" | "requirePhoto" | "done" | "windowState">): boolean {
+  if (task.done || task.requirePhoto || task.windowState === "closed") return false;
+  const t = (task.type ?? task.taskType ?? "").toLowerCase();
+  return t === "check_off" || t === "checkoff" || t === "manual";
+}
+
 export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const closed = homeWindowClosed(task);
   const gates = rowGates(task);
@@ -206,6 +212,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
     closed,
     closedAt: closed ? closedWindowTime(task.gateTime) || undefined : undefined,
     hasCameraProof: task.hasCameraProof === true,
+    tapDone: homeCheckOffTap(task),
   };
 }
 
@@ -230,13 +237,13 @@ function sectionKey(task: HomeProofTask): string {
 function sectionFromTasks(
   id: string,
   tasks: HomeProofTask[],
-  _todayKey?: string,
+  todayKey?: string,
 ): HomeProofSection {
   const first = tasks[0]!;
-  const day = enrollmentDayIndex({
-    currentDay: first.currentDay,
-    durationDays: first.durationDays,
-  });
+  const day =
+    first.startDateKey && todayKey
+      ? calendarDay(first.startDateKey, todayKey, first.durationDays)
+      : Math.max(1, first.currentDay);
   const rows = tasks.map(homeProofRow);
   return {
     id,

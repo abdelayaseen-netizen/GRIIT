@@ -27,7 +27,9 @@ export const COPY_LINK = "Copy link";
 export const PEOPLE_SOLO = "Just you so far · 1 of 10";
 
 export function recordOfDue(secured: number, due: number): string {
-  return `${formatOfDays(Math.max(0, Math.floor(secured)), Math.max(0, Math.floor(due)))} secured`;
+  const denom = Math.max(0, Math.floor(due));
+  const numer = Math.min(Math.max(0, Math.floor(secured)), denom);
+  return `${formatOfDays(numer, denom)} secured`;
 }
 
 export function streakSheetMissBody(args: {

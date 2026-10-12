@@ -6,6 +6,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { shareDayCells } from "@/lib/share-image";
+import { enrollmentDayStats } from "@/backend/lib/enrollment-day-stats";
+import { shownChallengeDay } from "@/backend/lib/calendar-day";
 import { STICKER_SECURED } from "@/lib/share-sticker";
 import { DONE_FOR_TODAY } from "@/lib/challenge-today-copy";
 import {
@@ -60,7 +62,18 @@ export default function DayStickerSheet({
           frozenDateKeys,
         })
       : undefined;
-  const securedCount = cells?.filter((cell) => cell === "secured").length;
+  const stats =
+    selected?.startDateKey && todayKey
+      ? enrollmentDayStats({
+          startDateKey: selected.startDateKey,
+          timeZone: "UTC",
+          todayKey,
+          durationDays: selected.dayTotal,
+          securedDateKeys,
+        })
+      : null;
+  const securedCount = stats?.secured ?? cells?.filter((cell) => cell === "secured").length;
+  const shownDay = stats?.day ?? selected?.day;
   const showPicker = showWhichDayPicker(challenges);
 
   useEffect(() => {
@@ -83,8 +96,9 @@ export default function DayStickerSheet({
         selected
           ? {
               challenge: selected.name,
-              day: selected.day,
+              day: shownDay ?? shownChallengeDay(null, "UTC", todayKey ?? "", selected.dayTotal ?? selected.day),
               durationDays: selected.dayTotal ?? selected.day,
+              due: stats?.due,
               proof: selected.proof ?? ((selected.photoCount ?? 0) > 0 ? "camera" : "self"),
               status: selected.stickerKind === "challenge" ? DONE_FOR_TODAY : STICKER_SECURED,
               photoUri: proofUri,

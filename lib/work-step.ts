@@ -21,7 +21,7 @@ export function counterSubline(hasCamera: boolean): string {
 export const COUNT_ADD = "Add one";
 export const COUNT_REMOVE = "Remove one";
 export const COUNT_TYPE = "Type it";
-export const COUNT_POST = "Post";
+export const COUNT_POST = "Done";
 
 export const TIMER_HONESTY = "Runs on the clock. Lock the phone if you want.";
 export const TIMER_MUST_ZERO = "It has to reach zero.";
@@ -45,7 +45,7 @@ export const RUN_GPS_WAITING = "Waiting for GPS";
 export const RUN_GPS_LOCKED = "GPS locked";
 export const RUN_START = "Start";
 export const RUN_STOP = "Stop";
-export const RUN_POST = "Post";
+export const RUN_POST = "Done";
 export const WORKOUT_HONESTY =
   "Duration is self-entered unless the in-app timer ran. The photo is still required.";
 export const WORKOUT_NEXT_PHOTO = "Next: photo proof";
@@ -54,7 +54,7 @@ export const WORKOUT_USE_TIMER = "Use the timer instead";
 export const SESSION_HONESTY =
   "Stopping fills in the duration. The photo is still required.";
 
-export const WORK_POST = "Post";
+export const WORK_POST = "Done";
 
 export function workTypeLabel(type: string): string {
   if (type === "counter" || type === "water" || type === "reading") return "Counter";
@@ -194,5 +194,5 @@ export function runPaceLine(
 }
 
 export function runPrimaryLabel(hasCamera: boolean): string {
-  return hasCamera ? RUN_TAKE_PHOTO : RUN_POST;
+  return hasCamera ? "Done · take photo" : RUN_POST;
 }

@@ -97,7 +97,22 @@ export function YourDataTab() {
           </Card>
           <Card title="Days">
             <Heat days={stats.day_secures} />
-            <Text style={styles.secondary}>Secured, Missed, Held, Today, Not due</Text>
+            <View style={styles.legend}>
+              {(
+                [
+                  ["Secured", "secured", false],
+                  ["Missed", "missed", false],
+                  ["Held", "held", false],
+                  ["Today", "none", true],
+                  ["Not due", "none", false],
+                ] as const
+              ).map(([word, state, today]) => (
+                <View key={word} style={styles.legendItem}>
+                  <View style={[styles.legendSwatch, heatStyle(state, today)]} />
+                  <Text style={styles.secondary}>{word}</Text>
+                </View>
+              ))}
+            </View>
           </Card>
           <Card title="Streaks">
             <Text style={styles.body}>{stats.user_stats.current_streak}-day streak</Text>
@@ -210,6 +225,9 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: DS_V3.space.gutter, paddingTop: DS_V3.space.lg, gap: DS_V3.space.md },
+  legend: { flexDirection: "row", flexWrap: "wrap", gap: DS_V3.space.sm, marginTop: DS_V3.space.sm },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.xs },
+  legendSwatch: { width: 10, height: 10, borderRadius: 2 },
   seg: {
     flexDirection: "row",
     backgroundColor: DS_V3.color.border,

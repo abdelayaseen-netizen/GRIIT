@@ -59,6 +59,37 @@ const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: strin
   },
 };
 
+const CATEGORY_GOAL: Record<string, OnboardingGoal> = {
+  faith: "faith_prayer",
+  prayer: "faith_prayer",
+  fitness: "physical_toughness",
+  body: "physical_toughness",
+  mind: "mental_discipline",
+  focus: "mental_discipline",
+  health: "sleep_recovery",
+  learning: "reading_learning",
+  discipline: "daily_habits",
+  habit: "daily_habits",
+  habits: "daily_habits",
+  "daily habits": "daily_habits",
+};
+
+/** The stored category, not a keyword in the title. */
+export function goalFromCategory(category: string | null | undefined): OnboardingGoal | null {
+  const c = (category ?? "").trim().toLowerCase();
+  if (!c) return null;
+  return CATEGORY_GOAL[c] ?? null;
+}
+
+/** Named faith and 75 Hard titles keep their goal even when the category column is wrong. */
+export function goalFromTitle(title: string | null | undefined): OnboardingGoal | null {
+  const t = (title ?? "").trim().toLowerCase();
+  if (!t) return null;
+  if (/pray|prayer|quran|masjid|salah|dhikr/.test(t)) return "faith_prayer";
+  if (/75/.test(t) && /hard/.test(t)) return "physical_toughness";
+  return null;
+}
+
 function haystack(c: ChallengeMapRow): string {
   return `${c.title ?? ""} ${c.description ?? ""} ${c.category ?? ""}`.toLowerCase();
 }

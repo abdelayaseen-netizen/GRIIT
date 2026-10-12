@@ -306,7 +306,9 @@ describe("camera proof on the profile grid", () => {
     const flow = readFileSync(resolve(__dirname, "../../components/task-v2/useTaskFlowV2.ts"), "utf8");
     expect(photo).toContain("useEffect");
     expect(photo).toContain("[uri]");
-    expect(photo).toContain("allowDownscaling={false}");
+    expect(photo).not.toContain("allowDownscaling={false}");
+    expect(photo).not.toContain("recyclingKey");
+    expect(photo).toContain("attempt > 3");
     const uploadAt = flow.indexOf("const url = await uploadPhoto()");
     const finishAt = flow.indexOf("await finishSubmit(", uploadAt);
     expect(uploadAt).toBeGreaterThan(-1);

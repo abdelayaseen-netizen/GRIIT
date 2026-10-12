@@ -31,13 +31,13 @@ describe("write CTA", () => {
     expect(writeCtaEnabled(0, 150)).toBe(false);
     expect(writeCtaLabel(149, 150)).toBe("Write 1 more word");
     expect(writeCtaEnabled(149, 150)).toBe(false);
-    expect(writeCtaLabel(150, 150)).toBe("Post");
+    expect(writeCtaLabel(150, 150)).toBe("Done");
     expect(writeCtaEnabled(150, 150)).toBe(true);
-    expect(writeCtaLabel(155, 150)).toBe("Post");
+    expect(writeCtaLabel(155, 150)).toBe("Done");
     expect(writeCtaEnabled(0, 0)).toBe(false);
     expect(writeCtaLabel(0, 0)).toBe("Write here");
     expect(writeCtaEnabled(1, 0)).toBe(true);
-    expect(writeCtaLabel(1, 0)).toBe("Post");
+    expect(writeCtaLabel(1, 0)).toBe("Done");
   });
 
   it("counts words the same way the submit path does", () => {

@@ -5,8 +5,7 @@
 
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { calendarDayFromStartAt } from "@/lib/home-day-total";
-import { enrollmentDayIndex } from "@/lib/challenge-day";
+import { shownChallengeDay } from "@/lib/home-day-total";
 import { addCalendarDaysToDateKey, getTodayDateKey } from "@/lib/date-utils";
 import { tasksDueTodayAcrossEnrollments } from "@/lib/notification-due-count";
 import { closeTimeLabel } from "@/lib/g2a-home";
@@ -95,12 +94,9 @@ export async function scheduleG2aForUser(args: {
   const durationDays = typeof matched?.challenges?.duration_days === "number" ? matched.challenges.duration_days : 1;
   const title = matched?.challenges?.title ?? "GRIIT";
   const tz = args.timezone ?? "UTC";
-  const shownDay =
-    typeof matched?.current_day === "number"
-      ? enrollmentDayIndex({ currentDay: matched.current_day, durationDays })
-      : calendarDayFromStartAt(startAt, tz, todayKey, durationDays);
+  const shownDay = shownChallengeDay(startAt, tz, todayKey, durationDays);
   const tomorrowKey = addCalendarDaysToDateKey(todayKey, 1);
-  const tomorrowDay = calendarDayFromStartAt(startAt, tz, tomorrowKey, durationDays);
+  const tomorrowDay = shownChallengeDay(startAt, tz, tomorrowKey, durationDays);
   const morningTask =
     [...winTasks].sort((a, b) => (a.closeHHMM ?? "").localeCompare(b.closeHHMM ?? ""))[0]?.name ?? "task";
   const closeLabel = (hhmm: string) => closeTimeLabel({ mode: "by", start: hhmm, end: null }) || hhmm;

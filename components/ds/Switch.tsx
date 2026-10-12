@@ -43,6 +43,7 @@ export default function Switch({
         style={[
           styles.thumb,
           { left: value ? TRACK_W - THUMB - PAD : PAD },
+          { backgroundColor: value ? DS_V3.color.canvas : DS_V3.color.textPrimary },
         ]}
       />
     </Pressable>
@@ -69,7 +70,6 @@ const styles = StyleSheet.create({
     width: THUMB,
     height: THUMB,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.textPrimary,
   },
   disabled: {
     opacity: 0.4,

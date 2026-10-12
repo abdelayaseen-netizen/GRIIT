@@ -13,7 +13,7 @@ import { dueKeysForRange, RECORD_WINDOW_STATUSES } from "../backend/lib/due-keys
 import { finishedRunScore } from "../backend/lib/finished-run";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
-import { enrollmentDayIndex } from "./challenge-day";
+import { enrollmentDayStats } from "../backend/lib/enrollment-day-stats";
 import { securedElapsed } from "./consistency";
 import {
   badgeRowsFromProgress,
@@ -337,20 +337,19 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .sort((a, b) => compareKeys(a.startDateKey, b.startDateKey))
     .map((range) => {
       const rangeDue = dueKeysForRange(range, input.todayKey);
-      const rangeWindow = securedElapsed({
-        dueDayKeys: rangeDue,
-        securedDateKeys: input.securedDateKeys,
+      const stats = enrollmentDayStats({
+        startDateKey: range.startDateKey,
+        timeZone: "UTC",
         todayKey: input.todayKey,
+        durationDays: range.durationDays,
+        securedDateKeys: input.securedDateKeys,
       });
-      const elapsed = rangeWindow.elapsed;
-      const day =
-        typeof range.currentDay === "number"
-          ? enrollmentDayIndex({ currentDay: range.currentDay, durationDays: range.durationDays })
-          : calendarDay(range.startDateKey, input.todayKey, range.durationDays);
+      const elapsed = stats.due;
+      const day = stats.day;
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);
-      const verified = rangeWindow.secured;
+      const verified = stats.secured;
       const missed = misses.length;
       return {
         id: range.id,
