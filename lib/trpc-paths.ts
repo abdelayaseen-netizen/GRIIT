@@ -148,6 +148,7 @@ export const TRPC = {
   },
   reports: {
     create: 'reports.create',
+    reportUser: 'reports.reportUser',
   },
   feed: {
     list: 'feed.list',

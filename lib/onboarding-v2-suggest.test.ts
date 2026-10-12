@@ -224,5 +224,11 @@ describe("challengeDetailLine", () => {
     expect(challengeDetailLine({ id: "x", duration_days: 23, tasks: [{}, {}] })).toBe(
       "23 days · 2 tasks · daily"
     );
+    expect(challengeDetailLine({ id: "x", duration_days: 30, tasks: [{}], participants_count: 9 })).toBe(
+      "30 days · 1 task · daily"
+    );
+    expect(challengeDetailLine({ id: "x", duration_days: 30, tasks: [{}], participants_count: 10 })).toBe(
+      "30 days · 1 task · 10 doing it · daily"
+    );
   });
 });

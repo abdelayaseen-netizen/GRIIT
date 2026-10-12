@@ -21,26 +21,20 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { persistOnboardingV2Step, loadOnboardingV2Step } from "@/lib/onboarding-v2-step";
-import { skipOnboardingV2 } from "@/lib/onboarding-v2-skip";
 import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
-import type { AccountAuthKind } from "@/lib/onboarding-v2-account-name";
 import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
 import WelcomeScreen from "./screens/WelcomeScreen";
 import SignInScreen from "./screens/SignInScreen";
-import WhyProofScreen from "./screens/WhyProofScreen";
-import WhyCircleScreen from "./screens/WhyCircleScreen";
 import GoalsScreen from "./screens/GoalsScreen";
+import HowItWorksScreen from "./screens/HowItWorksScreen";
 import RemindersScreen from "./screens/RemindersScreen";
-import AccountScreen from "./screens/AccountScreen";
-import ProfileScreen from "./screens/ProfileScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
-import DayTargetScreen from "./screens/DayTargetScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 import { readTargetStreak, writeTargetStreak } from "@/lib/onboarding-v2-target-streak";
 
@@ -260,13 +254,6 @@ export default function OnboardingFlowV2() {
     if (id) void joinFirstChallenge(id);
   }, []);
 
-  const handleAccountSuccess = useCallback(
-    (_kind: AccountAuthKind) => {
-      goNext();
-    },
-    [goNext]
-  );
-
   const handleBrowseSelect = useCallback(
     (challenge: SuggestableChallenge) => {
       const next = applyBrowsePick(challenge.id);
@@ -297,22 +284,12 @@ export default function OnboardingFlowV2() {
     router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
   }, [router]);
 
-  const handleSkip = useCallback(async () => {
-    setCompleteError("");
-    const result = await skipOnboardingV2();
-    if (!result.ok) {
-      setCompleteError(result.message);
-      return;
-    }
-    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
-  }, [router]);
-
   const renderScreen = () => {
     if (signInOpen) {
       return (
         <SignInScreen
           initialEmail={signInPrefill}
-          startOnEmailForm={step === "account"}
+          startOnEmailForm={false}
           onBack={() => {
             setSignInOpen(false);
             setSignInPrefill(undefined);
@@ -326,12 +303,8 @@ export default function OnboardingFlowV2() {
         return <WelcomeScreen onGetStarted={goNext} onHaveAccount={() => goToLogin()} />;
       case "goals":
         return <GoalsScreen onContinue={goNext} onBack={goBack} />;
-      case "why_proof":
-        return <WhyProofScreen onContinue={goNext} onSkip={() => void handleSkip()} onBack={goBack} />;
-      case "why_circle":
-        return <WhyCircleScreen onContinue={goNext} onSkip={() => void handleSkip()} onBack={goBack} />;
-      case "commitment":
-        return <DayTargetScreen onContinue={goNext} onBack={goBack} />;
+      case "how":
+        return <HowItWorksScreen onContinue={goNext} onBack={goBack} />;
       case "first_challenge":
         if (browseOpen) {
           return <BrowseAllPickerScreen onSelect={handleBrowseSelect} onBack={handleBrowseBack} />;
@@ -348,24 +321,7 @@ export default function OnboardingFlowV2() {
           />
         );
       case "reminders":
-        return <RemindersScreen onContinue={goNext} onBack={goBack} />;
-      case "account":
-        return (
-          <AccountScreen
-            onAuthSuccess={handleAccountSuccess}
-            onSkip={goNext}
-            onSignInWithAccount={goToLogin}
-            onBack={goBack}
-          />
-        );
-      case "profile":
-        return (
-          <ProfileScreen
-            onContinue={() => void handleFinish()}
-            onSkip={() => void handleFinish()}
-            onBack={goBack}
-          />
-        );
+        return <RemindersScreen onContinue={() => void handleFinish()} onBack={goBack} />;
     }
   };
 
@@ -383,13 +339,9 @@ export default function OnboardingFlowV2() {
   const usesChrome =
     !browseOpen &&
     (step === "goals" ||
-      step === "why_proof" ||
-      step === "why_circle" ||
-      step === "commitment" ||
+      step === "how" ||
       step === "first_challenge" ||
-      step === "reminders" ||
-      step === "account" ||
-      step === "profile");
+      step === "reminders");
   return (
     <View style={[styles.safeArea, (welcome || usesChrome || signIn) && styles.welcome]}>
       {step !== "welcome" && !signInOpen && !usesChrome ? (

@@ -92,4 +92,31 @@ export const reportsRouter = createTRPCRouter({
 
       return { success: true, alreadyReported: false };
     }),
+
+  reportUser: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        reason: z.enum(REPORT_REASONS),
+        details: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (input.userId === ctx.userId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You can't report yourself." });
+      }
+      const { error } = await ctx.supabase.from("user_reports").insert({
+        reporter_user_id: ctx.userId,
+        reported_user_id: input.userId,
+        reason: input.reason,
+        details: input.details ?? null,
+      });
+      if (error) {
+        const code = (error as { code?: string }).code;
+        if (code === "23505") return { success: true, alreadyReported: true };
+        logger.error({ err: error, userId: ctx.userId }, "[reports.reportUser] insert failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not submit your report. Please try again." });
+      }
+      return { success: true, alreadyReported: false };
+    }),
 });

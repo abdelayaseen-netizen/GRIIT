@@ -6,19 +6,15 @@
 export const ONBOARDING_V2_ORDER = [
   "welcome",
   "goals",
-  "why_proof",
-  "why_circle",
-  "commitment",
+  "how",
   "first_challenge",
   "reminders",
-  "account",
-  "profile",
 ] as const;
 
 export type OnboardingV2Step = (typeof ONBOARDING_V2_ORDER)[number];
 
-/** Dots after welcome. No "of 9." */
-export const ONBOARDING_V2_PROGRESS_SEGMENTS = 8;
+/** Dots after welcome: goals, how, start here, reminder. */
+export const ONBOARDING_V2_PROGRESS_SEGMENTS = 4;
 
 export type SessionKind = "none" | "guest" | "real";
 
@@ -28,12 +24,17 @@ const ORDER_SET = new Set<string>(ONBOARDING_V2_ORDER);
 
 /** Stale v4 / paywall-era keys resume on the Chunk A step. */
 const STEP_ALIASES: Record<string, OnboardingV2Step> = {
-  proof: "why_proof",
-  circle: "why_circle",
+  proof: "how",
+  why_proof: "how",
+  circle: "how",
+  why_circle: "how",
+  commitment: "how",
   challenge: "first_challenge",
   reminder: "reminders",
-  invite: "account",
-  dayone: "profile",
+  account: "reminders",
+  profile: "reminders",
+  invite: "reminders",
+  dayone: "reminders",
   paywall: "first_challenge",
 };
 

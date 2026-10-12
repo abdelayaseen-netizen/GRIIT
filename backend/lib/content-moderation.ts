@@ -111,6 +111,19 @@ export type ModerationResult = {
   category?: "profanity" | "negative" | "inappropriate" | "dangerous" | "low_effort" | "low_quality";
 };
 
+export const BLOCKED_TEXT = "That isn't allowed. Try different words.";
+
+/** Captions, comments, and display names. Profanity only, so a short name is not "low effort". */
+export function blockedPlainText(text: string): string | null {
+  const normalized = normalize(text);
+  if (!normalized) return null;
+  for (const word of PROFANITY_WORDS) {
+    const regex = new RegExp(`\\b${word}\\b`, "i");
+    if (regex.test(normalized)) return BLOCKED_TEXT;
+  }
+  return null;
+}
+
 export function moderateContent(title: string, description?: string): ModerationResult {
   const combined = normalize(`${title} ${description ?? ""}`);
 
@@ -119,7 +132,7 @@ export function moderateContent(title: string, description?: string): Moderation
     if (regex.test(combined)) {
       return {
         allowed: false,
-        reason: "Challenge contains inappropriate language. Please keep it clean.",
+        reason: BLOCKED_TEXT,
         category: "profanity",
       };
     }

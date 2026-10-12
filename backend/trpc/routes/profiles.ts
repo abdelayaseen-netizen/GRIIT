@@ -22,6 +22,7 @@ import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
 import { ensureProfile } from "../../lib/ensure-profile";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { blockedPlainText } from "../../lib/content-moderation";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -353,6 +354,12 @@ export const profilesRouter = createTRPCRouter({
       }
       if (typeof updatePayload.display_name === "string") {
         updatePayload.display_name = updatePayload.display_name.trim().replace(/\s+/g, " ");
+        const blocked = blockedPlainText(String(updatePayload.display_name));
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
+      if (typeof updatePayload.bio === "string") {
+        const blocked = blockedPlainText(String(updatePayload.bio));
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
       }
       if (Object.keys(updatePayload).length === 0) {
         const { data } = await ctx.supabase
@@ -535,18 +542,15 @@ export const profilesRouter = createTRPCRouter({
   deleteAccount: protectedProcedure
     .input(z.object({}))
     .mutation(async ({ ctx }) => {
-      const { error: profileError } = await ctx.supabase
-        .from("profiles")
-        .delete()
-        .eq("user_id", ctx.userId);
-      if (profileError) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete account data." });
-      }
       const { hasSupabaseAdmin, getSupabaseAdmin } = await import("../../lib/supabase-admin");
-      if (hasSupabaseAdmin()) {
-        const admin = getSupabaseAdmin();
-        await admin.auth.admin.deleteUser(ctx.userId);
+      if (!hasSupabaseAdmin()) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Couldn't delete the account. Try again.",
+        });
       }
+      const { eraseUserData } = await import("../../lib/delete-account");
+      await eraseUserData(getSupabaseAdmin() as never, ctx.userId);
       return { ok: true };
     }),
 });

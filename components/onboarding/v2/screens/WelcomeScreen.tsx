@@ -33,14 +33,14 @@ export default function WelcomeScreen({
         <LogoBars />
       </View>
       <View style={styles.center}>
-        <Text style={styles.headline}>
-          {"Discipline,\nwitnessed."}
+        <Text style={styles.headline}>Daily challenges you prove with a photo.</Text>
+        <Text style={styles.sub}>
+          Finish all of today's tasks and the day is secured. Secure days in a row to build your streak.
         </Text>
-        <Text style={styles.sub}>Photo proof. Daily. No way to fake it.</Text>
       </View>
       <View style={[styles.footer, { paddingBottom: insets.bottom + DS_V3.space.gutter }]}>
         <Button label="Start" onPress={onGetStarted} />
-        <Button label="Log in" variant="tertiary" ink onPress={onHaveAccount} />
+        <Button label="I already have an account" variant="tertiary" ink onPress={onHaveAccount} />
       </View>
     </View>
   );

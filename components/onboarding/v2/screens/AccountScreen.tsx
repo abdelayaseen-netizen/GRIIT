@@ -245,10 +245,29 @@ export default function AccountScreen({
   };
 
   const skip = <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const applePrimary = Platform.OS === "ios" && appleAvailable;
   const footer =
     state === "default" ? (
       <>
-        <ChromePrimary label="Continue" onPress={() => setState("email_entry")} />
+        {applePrimary ? (
+          <Button
+            label="Continue with Apple"
+            icon={<Apple size={ICON} color={DS_V3.color.onBrand} />}
+            onPress={() => void handleApple()}
+            disabled={loading}
+          />
+        ) : (
+          <ChromePrimary label="Continue with email" onPress={() => setState("email_entry")} />
+        )}
+        {applePrimary ? (
+          <Button
+            label="Continue with email"
+            variant="secondary"
+            icon={<Mail size={ICON} color={DS_V3.color.textPrimary} />}
+            onPress={() => setState("email_entry")}
+            disabled={loading}
+          />
+        ) : null}
         {skip}
       </>
     ) : (
@@ -266,22 +285,6 @@ export default function AccountScreen({
       <View style={styles.body}>
         {state === "default" ? (
           <View style={styles.auth}>
-            {Platform.OS === "ios" && appleAvailable ? (
-              <Button
-                label="Continue with Apple"
-                variant="secondary"
-                icon={<Apple size={ICON} color={DS_V3.color.textPrimary} />}
-                onPress={() => void handleApple()}
-                disabled={loading}
-              />
-            ) : null}
-            <Button
-              label="Continue with email"
-              variant="secondary"
-              icon={<Mail size={ICON} color={DS_V3.color.textPrimary} />}
-              onPress={() => setState("email_entry")}
-              disabled={loading}
-            />
             <Text style={styles.phone}>{ACCOUNT_PHONE_LINE}</Text>
             <TextLink
               label="Have an account? Log in"

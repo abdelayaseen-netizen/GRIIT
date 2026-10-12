@@ -93,6 +93,7 @@ function caller(userId: string | null) {
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
+    isAnonymous: false,
   });
 }
 
@@ -106,6 +107,7 @@ function joinCaller(userId: string) {
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
+    isAnonymous: false,
   });
 }
 

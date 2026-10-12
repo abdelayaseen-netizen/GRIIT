@@ -6,7 +6,7 @@ import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
-import { moderateContent } from "../../lib/content-moderation";
+import { blockedPlainText } from "../../lib/content-moderation";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import {
   LIVE_FEED_TYPES,
@@ -532,12 +532,9 @@ export const feedRouter = createTRPCRouter({
     const server = getSupabaseServer();
     if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
-      const captionCheck = moderateContent(input.caption.trim());
-      if (!captionCheck.allowed) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: captionCheck.reason ?? "Caption content is not allowed.",
-        });
+      const captionBlock = blockedPlainText(input.caption.trim());
+      if (captionBlock) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: captionBlock });
       }
     }
     type ActivityEventsWriter = {
@@ -819,12 +816,9 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const commentCheck = moderateContent(input.text);
-      if (!commentCheck.allowed) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: commentCheck.reason ?? "Comment content is not allowed.",
-        });
+      const commentBlock = blockedPlainText(input.text);
+      if (commentBlock) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: commentBlock });
       }
       const { data: inserted, error } = await ctx.supabase.from("feed_comments").insert({
         user_id: ctx.userId,

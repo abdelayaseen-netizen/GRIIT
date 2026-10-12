@@ -110,6 +110,7 @@ function createCaller(rows: AcRow[], svc: ReturnType<typeof createMock> | null =
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
+    isAnonymous: false,
   });
 }
 

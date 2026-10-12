@@ -20,6 +20,9 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
+import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
+import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
+import { conceptLine, type ConceptKind } from "@/lib/concept-once";
 import { earliestEnrollmentStart, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
@@ -148,10 +151,42 @@ export default function HomeScreen() {
   const isGuest = useIsGuest();
   const { stats, refetchAll, profile: contextProfile, completeTask } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [conceptSeen, setConceptSeen] = React.useState<ReadonlySet<ConceptKind>>(new Set());
+  const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
+  const [saveDismissed, setSaveDismissed] = React.useState({ first: false, second: false });
+  const [postGate, setPostGate] = React.useState(false);
   const focus = useLocalSearchParams<{ focus?: string }>().focus;
   useEffect(() => {
     if (focus === "freeze") setShowFreezeSheet(true);
   }, [focus]);
+
+  useEffect(() => {
+    void AsyncStorage.getItem("griit.concept.seen").then((raw) => {
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw) as ConceptKind[];
+        if (Array.isArray(parsed)) setConceptSeen(new Set(parsed));
+      } catch {
+        /* ignore a bad flag */
+      }
+    });
+    void Promise.all([
+      AsyncStorage.getItem("griit.saveStreak.dismissedFirst"),
+      AsyncStorage.getItem("griit.saveStreak.dismissedSecond"),
+    ]).then(([first, second]) => {
+      setSaveDismissed({ first: first === "1", second: second === "1" });
+    });
+  }, []);
+
+  const markConcept = useCallback((kind: ConceptKind) => {
+    setConceptSeen((prev) => {
+      if (prev.has(kind)) return prev;
+      const next = new Set(prev);
+      next.add(kind);
+      void AsyncStorage.setItem("griit.concept.seen", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
   const [taskToastUp, setTaskToastUp] = React.useState(false);
   React.useEffect(
@@ -387,6 +422,14 @@ export default function HomeScreen() {
     [securedDateKeys, homeTimeZone]
   );
 
+  useEffect(() => {
+    if (!todaySecured) return;
+    const line = conceptLine("secured", conceptSeen);
+    if (!line) return;
+    setConceptBanner(line);
+    markConcept("secured");
+  }, [todaySecured, conceptSeen, markConcept]);
+
   const morningAfter = useMemo(() => {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
@@ -541,7 +584,12 @@ export default function HomeScreen() {
       trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
         dateKeyToFreeze: yesterdayKey,
       }),
-    onSuccess: () => {
+      onSuccess: () => {
+      const line = conceptLine("freeze", conceptSeen);
+      if (line) {
+        setConceptBanner(line);
+        markConcept("freeze");
+      }
       trackUsage("freeze_used");
       setFreezeSpent(true);
       setStreakHeld(true);
@@ -593,10 +641,12 @@ export default function HomeScreen() {
             void refresh();
           });
         });
+        const selfLine = conceptLine("self", conceptSeen);
+        if (selfLine) markConcept("self");
         publishTaskToast({
           taskId: task.id,
           title: "Saved.",
-          body: "Self-reported.",
+          body: selfLine ?? "Self-reported.",
           photoUri: null,
           cameraSeal: false,
           actionLabel: "Undo",
@@ -607,7 +657,7 @@ export default function HomeScreen() {
         void refresh();
       })();
     },
-    [heroTasks, completeTask, refresh],
+    [heroTasks, completeTask, refresh, conceptSeen, markConcept],
   );
 
   const onPressTask = useCallback(
@@ -783,6 +833,10 @@ export default function HomeScreen() {
           inviteChallenge={inviteTarget ? { id: inviteTarget.id, name: inviteTarget.name } : null}
           showInvite={showInvite}
           ListHeaderComponent={
+            <>
+            {conceptBanner ? (
+              <Text style={s.concept} accessibilityRole="text">{conceptBanner}</Text>
+            ) : null}
             <HomeV3
               title={greeting(
                 new Date(),
@@ -819,7 +873,13 @@ export default function HomeScreen() {
               }}
               onCheckOff={onCheckOff}
               onPressChallenge={onPressChallenge}
-              onPressShareToday={() => setShareTodayOpen(true)}
+              onPressShareToday={() => {
+                if (user?.is_anonymous) {
+                  setPostGate(true);
+                  return;
+                }
+                setShareTodayOpen(true);
+              }}
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
@@ -859,7 +919,29 @@ export default function HomeScreen() {
               }
               showFirstProofSlot={firstProofEver && !todaySecured}
             />
+            </>
           }
+        />
+        <SaveStreakSheet
+          visible={shouldShowSaveStreak({
+            isAnonymous: user?.is_anonymous === true,
+            firstTaskDone: heroMetrics.tasksDoneToday > 0 || todaySecured,
+            securedDays: resolvedStats?.totalDaysSecured ?? 0,
+            aboutToPostPublic: postGate,
+            dismissedAfterFirst: saveDismissed.first,
+            dismissedAfterSecond: saveDismissed.second,
+          })}
+          onLater={() => {
+            setPostGate(false);
+            if ((resolvedStats?.totalDaysSecured ?? 0) >= 2) {
+              setSaveDismissed((prev) => ({ ...prev, second: true }));
+              void AsyncStorage.setItem("griit.saveStreak.dismissedSecond", "1");
+              return;
+            }
+            setSaveDismissed((prev) => ({ ...prev, first: true }));
+            void AsyncStorage.setItem("griit.saveStreak.dismissedFirst", "1");
+          }}
+          onSaved={() => setPostGate(false)}
         />
         <DayStickerSheet
           visible={shareTodayOpen}
@@ -951,6 +1033,13 @@ const s = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   guestList: {},
+  concept: {
+    marginHorizontal: 20,
+    marginBottom: 8,
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#F5F3EE",
+  },
   guestTitle: {
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,

@@ -219,7 +219,7 @@ export default function VisitorProfileScreen() {
   };
 
   const onMore = () => {
-    const opts = isSelf ? ["Share", "Cancel"] : ["Share", `Block @${handle}`, "Cancel"];
+    const opts = isSelf ? ["Share", "Cancel"] : ["Share", "Report", `Block @${handle}`, "Cancel"];
     const run = (i: number) => {
       if (i === 0) {
         void shareProfile({
@@ -228,14 +228,19 @@ export default function VisitorProfileScreen() {
           totalDaysSecured: rec?.detail.totalVerified ?? 0,
           tier: "Starter",
         });
-      } else if (!isSelf && i === 1) setShowBlock(true);
+      } else if (!isSelf && i === 1 && ownerId) {
+        void trpcMutate(TRPC.reports.reportUser, { userId: ownerId, reason: "other" }).catch((err) => {
+          captureError(err, "ReportUser");
+          Alert.alert("Couldn't send the report", "Try again.");
+        });
+      } else if (!isSelf && i === 2) setShowBlock(true);
     };
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options: opts,
           cancelButtonIndex: opts.length - 1,
-          ...(isSelf ? {} : { destructiveButtonIndex: 1 }),
+          ...(isSelf ? {} : { destructiveButtonIndex: 2 }),
         },
         run
       );
@@ -243,7 +248,10 @@ export default function VisitorProfileScreen() {
       Alert.alert("More", undefined, [
         { text: "Share", onPress: () => run(0) },
         ...(!isSelf
-          ? [{ text: `Block @${handle}`, style: "destructive" as const, onPress: () => run(1) }]
+          ? [
+              { text: "Report", onPress: () => run(1) },
+              { text: `Block @${handle}`, style: "destructive" as const, onPress: () => run(2) },
+            ]
           : []),
         { text: "Cancel", style: "cancel" },
       ]);

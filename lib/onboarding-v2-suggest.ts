@@ -65,11 +65,19 @@ export function countNoun(n: number, singular: string, plural: string): string {
   return n === 1 ? `1 ${singular}` : `${n} ${plural}`;
 }
 
+/** Stored participants_count. Hidden under 10. The column is not split by is_test. */
+export function doingItLine(count: number | null | undefined): string | null {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 10) return null;
+  return `${Math.floor(n).toLocaleString("en-US")} doing it`;
+}
+
 export function challengeDetailLine(c: SuggestableChallenge): string {
   const days = c.duration_days != null ? countNoun(c.duration_days, "day", "days") : null;
   const taskCount = Array.isArray(c.tasks) ? c.tasks.length : 0;
   const tasks = taskCount > 0 ? countNoun(taskCount, "task", "tasks") : null;
-  const line = [days, tasks, "daily"].filter(Boolean).join(" · ");
+  const doing = doingItLine(c.participants_count);
+  const line = [days, tasks, doing, "daily"].filter(Boolean).join(" · ");
   return line || c.category || "Starter";
 }
 

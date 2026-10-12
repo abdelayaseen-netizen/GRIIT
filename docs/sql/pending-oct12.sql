@@ -32,3 +32,20 @@ WHERE (title ILIKE '75 day hard' OR title ILIKE '75 Day Hard')
 -- UPDATE challenges
 -- SET status = 'archived'
 -- WHERE id IN (SELECT id FROM ranked WHERE n > 1);
+
+-- Report a user (App Review 1.2). The app inserts into this table from reports.reportUser.
+-- It does not exist yet, so reports fail until this is applied. Do not run it from the app.
+CREATE TABLE IF NOT EXISTS public.user_reports (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_user_id uuid NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  reported_user_id uuid NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  reason text NOT NULL,
+  details text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (reporter_user_id, reported_user_id)
+);
+ALTER TABLE public.user_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users insert own user report" ON public.user_reports;
+CREATE POLICY "Users insert own user report" ON public.user_reports
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = reporter_user_id);

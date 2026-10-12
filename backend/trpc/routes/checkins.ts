@@ -1669,6 +1669,9 @@ export const checkinsRouter = createTRPCRouter({
   }),
 
   shareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+    if (ctx.isAnonymous) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Save your account before a post is public." });
+    }
     const svc = getSupabaseServer();
     if (!svc) {
       logger.error({ eventId: input.eventId }, "[checkins.shareProof] service role missing");
@@ -1745,6 +1748,9 @@ export const checkinsRouter = createTRPCRouter({
   }),
 
   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+    if (ctx.isAnonymous) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Save your account before a post is public." });
+    }
     const { data: row } = await ctx.supabase.from("check_ins").select("id, active_challenge_id").eq("id", input.completionId).single();
     if (!row) return { success: false };
     const { data: ac } = await ctx.supabase.from("active_challenges").select("user_id").eq("id", (row as { active_challenge_id?: string }).active_challenge_id).single();
