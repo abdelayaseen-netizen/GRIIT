@@ -121,9 +121,11 @@ describe("suggestChallengesForGoals", () => {
     );
   });
 
-  it("never pads with a score-0 challenge", () => {
+  it("falls back to popular public challenges when nothing matches the goal", () => {
     const faithOnly = CATALOG.filter((c) => c.title !== "No Days Off");
-    expect(suggestChallengesForGoals(["faith_prayer"], faithOnly)).toEqual([]);
+    const rows = suggestChallengesForGoals(["faith_prayer"], faithOnly, 3, 7);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((c) => (c.duration_days ?? 0) >= 7)).toBe(true);
   });
 
   it("Physical toughness + Daily habits at 30 days has no result shorter than 30", () => {
@@ -198,7 +200,21 @@ describe("suggestChallengesForGoals", () => {
     expect(rows.map((c) => c.title)).toContain("Quran Daily");
     expect(rows.map((c) => c.title)).not.toContain("Fitness Squad");
     expect(matchReasonForChallenge(prayer, ["faith_prayer"])).toBe("Matches faith and prayer");
-    expect(suggestChallengesForGoals(["daily_habits"], [prayer], 3, 7)).toEqual([]);
+    expect(suggestChallengesForGoals(["daily_habits"], [prayer], 3, 7).map((c) => c.title)).toEqual(["Quran Daily"]);
+  });
+
+  it("collapses duplicate titles and keeps the row with more members", () => {
+    const copy = {
+      id: "a1000001-4000-4000-8000-000000000010",
+      title: "5K Training",
+      category: "Fitness",
+      duration_days: 30,
+      participants_count: 4,
+    };
+    const original = { ...CATALOG[0]!, participants_count: 1 };
+    const rows = suggestChallengesForGoals(["physical_toughness"], [original, copy], 3, 30);
+    expect(rows.filter((c) => c.title === "5K Training")).toHaveLength(1);
+    expect(rows.find((c) => c.title === "5K Training")?.id).toBe(copy.id);
   });
 });
 

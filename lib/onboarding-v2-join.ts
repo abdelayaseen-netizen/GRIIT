@@ -2,6 +2,7 @@ import { ensureAnonymousSession } from "@/lib/anon-auth";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { isJoinableChallengeId } from "@/lib/onboarding-v2-suggest";
+import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
 import { queryClient } from "@/lib/query-client";
 import { invalidateAfterOnboardingJoin } from "@/lib/onboarding-v2-invalidate";
 
@@ -24,9 +25,8 @@ export async function joinFirstChallenge(challengeId: string): Promise<JoinFirst
     await invalidateAfterOnboardingJoin(queryClient);
     return { ok: true };
   } catch (e) {
-    return {
-      ok: false,
-      message: e instanceof Error ? e.message : "Could not join. Try again.",
-    };
+    const classified = classifyJoinChallengeError(e);
+    if (classified.kind === "already") return { ok: true };
+    return { ok: false, message: classified.message || "Could not join. Try again." };
   }
 }

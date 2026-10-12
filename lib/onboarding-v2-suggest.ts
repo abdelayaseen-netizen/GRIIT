@@ -2,6 +2,7 @@ import type { OnboardingGoal } from "@/store/onboardingStore";
 import { goalFromCategory, goalFromTitle, inferChallengeGoalTags } from "@/lib/goal-challenge-map";
 import { parseTargetStreak } from "@/lib/onboarding-v2-target-streak-parse";
 import type { SuggestionTask } from "@/lib/onboarding-v2-first-challenge";
+import { dedupeChallengesByTitle } from "@/lib/challenge-dedupe";
 
 export const DEFAULT_ONBOARDING_LINE = 7;
 export const NO_DAYS_OFF_TITLE = "No Days Off";
@@ -126,12 +127,14 @@ export function suggestChallengesForGoals(
   line?: number | null,
 ): SuggestableChallenge[] {
   const resolved = resolveOnboardingLine(line);
-  const joinable = catalog.filter(
-    (c) =>
-      typeof c.id === "string" &&
-      isJoinableChallengeId(c.id) &&
-      isRecommendableChallenge(c) &&
-      meetsOnboardingDuration(c.duration_days, resolved),
+  const joinable = dedupeChallengesByTitle(
+    catalog.filter(
+      (c) =>
+        typeof c.id === "string" &&
+        isJoinableChallengeId(c.id) &&
+        isRecommendableChallenge(c) &&
+        meetsOnboardingDuration(c.duration_days, resolved),
+    ),
   );
   if (joinable.length === 0) return [];
 
@@ -151,7 +154,13 @@ export function suggestChallengesForGoals(
 
   const ndo = noDaysOff[0];
   const regularLimit = ndo ? Math.max(0, limit - 1) : limit;
-  const regular = ranked.slice(0, regularLimit);
+  const popular = [...rest].sort((a, b) => {
+    const count = (Number(b.participants_count) || 0) - (Number(a.participants_count) || 0);
+    if (count !== 0) return count;
+    return a.id.localeCompare(b.id);
+  });
+  const pool = ranked.length > 0 ? ranked : popular;
+  const regular = pool.slice(0, regularLimit);
   if (!ndo) return regular;
   return [...regular, ndo];
 }

@@ -141,8 +141,8 @@ export function OnboardingScreen({
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
         {children}
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </ScrollView>
+      {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
   );
 }
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollBody: {
-    paddingBottom: DS_V3.size.button + DS_V3.space.lg + FOOTER_BOTTOM,
+    paddingBottom: DS_V3.space.lg,
   },
   titleBlock: {
     paddingTop: TITLE_TOP,
