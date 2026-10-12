@@ -107,7 +107,9 @@ def generate_people(n: int, rng: random.Random) -> list[dict]:
         lo, hi = AGE[group]
         age = rng.randint(lo, hi)
         gender = rng.choice(GENDERS[group])
-        os_name = "ios" if rng.random() < IOS_SHARE[region] else "android"
+        # Seed people found the app on the App Store, so they have an iPhone.
+        # Android only applies to friends they might invite.
+        os_name = "ios"
         religion = "muslim" if group == "muslim" or rng.random() < 0.08 else "none"
         practice = rng.choice(["none", "light", "regular", "devout"]) if religion == "muslim" else "none"
         people.append(
@@ -118,7 +120,7 @@ def generate_people(n: int, rng: random.Random) -> list[dict]:
                 "gender": gender,
                 "region": region,
                 "os": os_name,
-                "source": rng.choice(["TikTok", "Instagram", "friend invite", "App Store search", "gym", "mosque", "school"]),
+                "source": "App Store search",
                 "motivation": rng.choice(["competitive", "accountability", "faith-driven", "aesthetic", "curious"]),
                 "tech": rng.randint(1, 5),
                 "pay_will": rng.choice(["low", "medium", "high"]),
@@ -129,13 +131,18 @@ def generate_people(n: int, rng: random.Random) -> list[dict]:
                 "city": rng.choice(["urban", "suburban", "rural"]),
                 "invited_by": "",
                 "friends": [],
+                "friend_os": {},
                 "voice_line": "",
             }
         )
     for person in people:
         k = rng.randint(3, 8)
         others = [p for p in people if p["id"] != person["id"]]
-        person["friends"] = [p["id"] for p in rng.sample(others, k=min(k, len(others)))]
+        chosen = rng.sample(others, k=min(k, len(others)))
+        person["friends"] = [p["id"] for p in chosen]
+        person["friend_os"] = {
+            p["id"]: ("ios" if rng.random() < IOS_SHARE[p["region"]] else "android") for p in chosen
+        }
     return people
 
 
@@ -152,11 +159,11 @@ def reached_at_least(furthest: str, step: str) -> bool:
     return REACH_ORDER.index(furthest) >= REACH_ORDER.index(step)
 
 
-def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: str) -> dict:
+def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: str, keep_daily: bool = False) -> dict:
     """One year. Returns summary fields and, for seed 0, daily rows."""
     installed = person["os"] == "ios" or scenario == "android"
     if not installed:
-        return {"installed": False, "furthest": "android", "active": {}, "quit_day": None, "quit_reason": "lost_to_android", "paid": False, "shares": 0, "invites": 0, "posts": 0, "secured": 0, "best_streak": 0, "freezes_used": 0, "deleted_day": None, "feeling": "indifferent"}
+        return {"installed": False, "furthest": "android", "active": {}, "quit_day": None, "quit_reason": "lost_to_android", "paid": False, "shares": 0, "invites": 0, "lost_android": 0, "invite_rows": [], "posts": 0, "secured": 0, "best_streak": 0, "freezes_used": 0, "deleted_day": None, "feeling": "indifferent"}
 
     home = reached_at_least(furthest, "home")
     task = furthest == "task_done"
@@ -177,6 +184,8 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
     posts = 1 if task and rng.random() < 0.4 else 0
     shares = 0
     invites = 0
+    lost_android = 0
+    invite_rows = []
     paid = False
     paid_day = None
     quit_day = None
@@ -203,6 +212,8 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
             mult *= 1.1
         if streak >= 7:
             mult *= 1.12  # small lift after a 7-day streak. R3's 3.6x is course completion, not daily opens.
+        if scenario == "words_in_context":
+            mult *= 1.05  # judgment: explaining the three words once, in context, is a small open-rate lift. Not measured.
         if reminders:
             mult *= 1.05
         if friend:
@@ -221,6 +232,15 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
             mult *= 1.1
         p_open = max(0.0, min(0.95, base * mult))
         opened = rng.random() < p_open
+        if keep_daily:
+            daily.append({
+                "day": d,
+                "date": when.isoformat(),
+                "opened": int(opened),
+                "secured": 0,
+                "streak": streak,
+                "habit_strength": round(habit, 3),
+            })
         if not opened:
             # Not opening is the retention curve itself. It is not an extra quit.
             continue
@@ -239,8 +259,19 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
             if rng.random() < 0.04:
                 shares += 1
                 feeling = "proud"
-            if rng.random() < 0.03:
+            if rng.random() < 0.03 and person["friends"]:
                 invites += 1
+                fid = rng.choice(person["friends"])
+                invite_rows.append({
+                    "from_id": person["id"],
+                    "to_id": fid,
+                    "day": d,
+                    "to_os": person["friend_os"].get(fid, "ios"),
+                    "installed": 1 if person["friend_os"].get(fid, "ios") == "ios" and rng.random() < 0.2 else 0,
+                    "channel": "friend",
+                })
+                if person["friend_os"].get(fid) == "android":
+                    lost_android += 1
             challenge_day += 1
         else:
             if freezes_on and freezes > 0 and rng.random() < 0.5:
@@ -251,7 +282,8 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
                 streak = 0
                 habit = max(0.0, habit - 0.05)
                 feeling = "guilty"
-                if rng.random() < 0.08:
+                miss_quit = 0.05 if scenario == "words_in_context" else 0.08
+                if rng.random() < miss_quit:
                     quit_day = d
                     quit_reason = "missed without a freeze"
         if challenge_len and challenge_day >= challenge_len and auto_next:
@@ -289,6 +321,9 @@ def simulate_person(rng: random.Random, person: dict, furthest: str, scenario: s
         "paid_day": paid_day,
         "shares": shares,
         "invites": invites,
+        "lost_android": lost_android,
+        "invite_rows": invite_rows,
+        "daily": daily,
         "posts": posts,
         "secured": secured,
         "best_streak": best,
@@ -319,6 +354,7 @@ def run_scenario(people: list[dict], furthest_pool: list[str], scenario: str, se
     quit_reasons = Counter()
     by_group = defaultdict(lambda: {"d30": []})
     lost_android = 0
+    invite_rows = []
     seed0 = []
     for seed in range(seeds):
         rng = random.Random(10_000 + seed * 97 + sum(ord(c) for c in scenario))
@@ -333,7 +369,7 @@ def run_scenario(people: list[dict], furthest_pool: list[str], scenario: str, se
                     seed0.append((person, {"installed": False, "furthest": "android"}))
                 continue
             furthest = sample_day1(rng, furthest_pool) if person["os"] == "ios" or scenario == "android" else "android"
-            result = simulate_person(rng, person, furthest, scenario)
+            result = simulate_person(rng, person, furthest, scenario, keep_daily=(seed == 0))
             if not result["installed"]:
                 continue
             inst += 1
@@ -349,6 +385,9 @@ def run_scenario(people: list[dict], furthest_pool: list[str], scenario: str, se
                 pay += 1
             sh += result["shares"]
             inv += result["invites"]
+            lost_android += result.get("lost_android", 0)
+            if seed == 0:
+                invite_rows.extend(result.get("invite_rows") or [])
             if result["quit_reason"]:
                 quit_reasons[result["quit_reason"]] += 1
             if seed == 0:
@@ -367,7 +406,7 @@ def run_scenario(people: list[dict], furthest_pool: list[str], scenario: str, se
         k.append(round((inv / inst) * 0.2, 3))
         for g, n in group_inst.items():
             by_group[g]["d30"].append(pct(group_d30[g], n))
-    android_people = sum(1 for p in people if p["os"] == "android")
+    android_people = lost_android // max(seeds, 1)
     return {
         "d1": band(d1),
         "d7": band(d7),
@@ -381,6 +420,7 @@ def run_scenario(people: list[dict], furthest_pool: list[str], scenario: str, se
         "by_group_d30": {g: band(v["d30"]) for g, v in by_group.items()},
         "quit_reasons": quit_reasons.most_common(8),
         "lost_android_people": android_people,
+        "invite_rows": invite_rows,
         "seed0": seed0 if scenario == "baseline" else [],
         "installers_note": "rates are among iOS installers" if scenario != "android" else "android can install",
     }
@@ -392,12 +432,18 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "population.json").write_text(json.dumps(people, indent=2))
     furthest = list(B86_FURTHEST)
-    scenarios = ["baseline", "no_freezes", "no_reminders", "with_friend", "onboarding_fixed", "auto_next", "android", "paywall_day0"]
-    # onboarding_fixed uses a pool that is all task_done
+    # The 7 who died on the account form are modeled as finishing the task first.
+    account_after = ["task_done"] * 13 + ["home"] * 6 + ["goals"] * 4 + ["start_here"] * 1
+    scenarios = ["baseline", "no_freezes", "no_reminders", "with_friend", "onboarding_fixed", "auto_next", "android", "paywall_day0", "account_after_task", "words_in_context"]
     results = {}
     for name in scenarios:
-        pool = ["task_done"] * 24 if name == "onboarding_fixed" else furthest
-        results[name] = run_scenario(people, pool, "baseline" if name == "onboarding_fixed" else name, 30)
+        if name == "onboarding_fixed":
+            pool, scenario = ["task_done"] * 24, "baseline"
+        elif name == "account_after_task":
+            pool, scenario = account_after, "baseline"
+        else:
+            pool, scenario = furthest, name
+        results[name] = run_scenario(people, pool, scenario, 30)
 
     base = results["baseline"]
     # sanity vs R1 fitness D30 midpoint 9%
@@ -435,6 +481,21 @@ def main() -> None:
         for name, row in results.items():
             w.writerow([name, row["d7"][1], row["d30"][1], row["d30"][0], row["d30"][2], row["d365"][1], row["k"][1], row["paid"][1]])
 
+    with (OUT / "invites.csv").open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["from_id", "to_id", "day", "to_os", "installed", "channel"])
+        w.writeheader()
+        for row in base.get("invite_rows") or []:
+            w.writerow(row)
+
+    with (OUT / "daily.csv").open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["seed", "day", "date", "id", "opened", "secured", "streak", "habit_strength"])
+        w.writeheader()
+        for person, result in base["seed0"]:
+            for row in result.get("daily") or []:
+                w.writerow({"seed": 0, "id": person["id"], **row})
+
+    (OUT / "moments.jsonl").write_text("")
+
     with (OUT / "people.csv").open("w", newline="") as f:
         fields = ["id", "group", "age", "gender", "region", "os", "source", "motivation", "tech", "pay_will", "invited_by", "day1_furthest_step", "joined", "first_task", "voice_line"]
         w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
@@ -457,8 +518,9 @@ Sampled with replacement from the 24 build 87 agent outcomes: 6 task_done, 6 hom
 The 100-person day-1 run was not done. This pool is the 24-person rerun.
 
 ## iOS share
-Estimate, not a primary source: US 0.58, UK 0.52, Canada 0.55, Gulf 0.55, Egypt 0.16.
-Android seed people cannot install except in the android what-if.
+Seed people are iPhone users who found GRIIT on the App Store. Android is only on friends they invite.
+Friend iOS share is an estimate, not a primary source: US 0.58, UK 0.52, Canada 0.55, Gulf 0.55, Egypt 0.16.
+lost_to_android is the mean number of those invited friends who are on Android, per seed. It is not a count of seed people.
 
 ## Untouched open curve
 Power curve fit to enable3.io 2025 health & fitness midpoints: D1 32.5%, D7 16.5%. D30 of that curve is about 9%, inside the 8–10% range.
@@ -478,6 +540,10 @@ Computed in baseline_open().
 ## Payment
 Anchor R4: about 2.1% freemium. North America ×1.4. Spread across the month (p/30 each day), not a measured GRIIT paywall rate.
 The paywall_day0 what-if raises the day-1 chance. It is not a measurement of the current paywall.
+
+## What-ifs added on 12 Oct
+- account_after_task: the 7 agents who died on the account form are counted as having finished the first task. That is the new flow, not a new measurement.
+- words_in_context: open rate ×1.05 and the quit-after-a-miss chance 0.08 → 0.05. Both are judgments.
 
 ## K
 Invites per installer times 0.2. The 0.2 install rate is an assumption. R6 is the scale used to read K, not a measured GRIIT rate.

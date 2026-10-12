@@ -14,6 +14,38 @@ Account diagnosis for the 7 who reached the account step and never the real Home
 
 The harness is not allowed to use Sign in with Apple, so every one of these went through email typing. That is why the step took about 107 seconds. The app did not show an error or a button that did nothing.
 
+## Ship status, 12 Oct
+
+Build number: not shipped. Last internal TestFlight build is still 86. `feat/build87` was not merged. Product commits on the branch: `f5b03e17` (account after the first task, v52 onboarding, deletion, report, text filter) and `8c39b45c` (this diagnosis).
+
+The ship rule was not met. tsc was clean and the suite passed (314 files, 1,619 tests) on the product commits. The flows that have to pass before a merge do not exist yet: onboarding with a fitness goal, onboarding with a faith goal, guest then account keeping the streak, Done on check-off / timer / counter / photo / write, post a photo, and delete account. Existing `.maestro` flows were not re-run. Metro (pid 72926) is still the dev server from before those commits, so the simulator bundle is stale until it reloads.
+
+S1–S8: not measured. See `docs/reports/speed-oct12.md`.
+
+App Store punch-list, in code, not yet reviewed by Apple:
+
+- Demo account: ready. Login is `APP_REVIEW_LOGIN` and `APP_REVIEW_PASSWORD` in `.env.local` only. Display name "App Review". Joined "Drink Water Today". One check-in for 12 Oct 2026 was set to completed. That is one day, not a multi-day streak.
+- Account deletion: `eraseUserData` removes the listed user rows, sets `challenges.creator_id` null, and deletes files under `task-proofs` and `avatars`. It needs the service role. Covered by `backend/lib/delete-account.test.ts`.
+- Report a user: the profile "…" menu calls `reports.reportUser`. The `user_reports` table is in `docs/sql/pending-oct12.sql` and has not been applied, so a report will fail until that SQL is run.
+- Text filter: captions, comments, display names, and bios use the blocklist and return "That isn't allowed. Try different words."
+
+Funnel: there is no new 24-agent run on the moved-account flow. The last measured funnel is still the one above (account 19, home 12, task done 6). The concept quiz has not been re-run. The last score is 0 of 24, on the old flow.
+
+Simulation (code only, 30 seeds, 200 iPhone seed people, label SIMULATION). Android applies only to invited friends. `daily.csv` has 60,627 day rows for seed 0. `invites.csv` has 31 invites. `moments.jsonl` is empty because the key-moment calls were not run. The 100-person day-1 run was not started, because the build did not ship and the harness prompt still describes the old account-before-home path.
+
+| | p10 | median | p90 |
+|---|---:|---:|---:|
+| D1 | 19.0% | 24.0% | 28.0% |
+| D7 | 9.5% | 12.0% | 14.0% |
+| D30 | 3.5% | 6.0% | 8.5% |
+| D365 | 0.5% | 1.0% | 2.0% |
+
+K is 0.03 / 0.03 / 0.04. The 0.2 install rate is still an assumption. Mean invited Android friends per seed: 15. That replaces last night's 91 of 200 seed people. Model agreement was not run.
+
+D30 median by what-if, same seeds: onboarding_fixed 9.0, account_after_task 7.5, baseline 6.0, with_friend 6.0, no_freezes 5.5, words_in_context 5.5. The first two lifts are the model, not a new measurement. words_in_context did not raise the median.
+
+API cost today: $0. Last night's agent run was $1.13 and is not part of today's cap.
+
 # Overnight Oct 11 → Oct 12
 
 Build number: not shipped. Last internal TestFlight build is 86. `feat/build87` was not merged.
