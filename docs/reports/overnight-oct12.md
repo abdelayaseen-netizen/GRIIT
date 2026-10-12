@@ -1,3 +1,19 @@
+# Oct 12 continuation
+
+Account diagnosis for the 7 who reached the account step and never the real Home (build 87, 24 agents). The early "home" label in those traces is an onboarding screen the harness mislabeled. All 7 are harness, not a dead button.
+
+| Agent | What happened | App or harness |
+|---|---|---|
+| creator-01 | Email signup reached the display-name screen. The run ended while the agent was still typing the name. | Harness |
+| gym-01 | The agent typed the email with an extra `.health`, then reached display name and the run ended on that field. | Harness |
+| lapsed-01 | The agent doubled `griit.health` in the email, tapped Send it, then the run ended while typing the display name. | Harness |
+| lapsed-02 | The agent typed the email twice (`@griit.health@griit.health`) and spent the rest of the run tapping the field to fix it. | Harness |
+| lowtech-01 | The agent appended `vv` to the display name and could not clear it. | Harness |
+| pro-02 | The agent appended `v` to the display name and could not clear it. | Harness |
+| teen-01 | The agent appended `.health` to the email and could not edit it back. The confirm step ("Send it" / Edit) is where they got stuck. | Harness |
+
+The harness is not allowed to use Sign in with Apple, so every one of these went through email typing. That is why the step took about 107 seconds. The app did not show an error or a button that did nothing.
+
 # Overnight Oct 11 → Oct 12
 
 Build number: not shipped. Last internal TestFlight build is 86. `feat/build87` was not merged.
