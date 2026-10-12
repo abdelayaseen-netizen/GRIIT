@@ -31,4 +31,76 @@ Skipped: nothing in this phase. Hiding test did not fail, so Phase 2 item 0 is n
 
 ## Phase 1 — deep clean and speed
 
-Not started.
+Code cleanup is committed. Speed timings were not taken.
+
+Dead code, measured with knip 5.x (`npx knip --reporter compact`, 435 unused files). Design handoff and `claude/design` were left in place: they are the frame source, not app code. Unused exports (135) were not deleted. Knip marks a symbol unused when another symbol in the same file is the one callers import, and deleting those symbols does not change what the user sees.
+
+Deleted, after a repo search showed no remaining import of the file name:
+
+| File | Why it is dead | Lines |
+|---|---|---|
+| components/ErrorRetry.tsx | no imports | 57 |
+| components/ds/ProofDayFeed.tsx | no imports | 172 |
+| components/ds/StatusBarBacking.tsx | no imports | 30 |
+| components/ds/StreakStrip.tsx | no imports | 60 |
+| components/feed/FeedPostCard.tsx | no imports; replaced by FeedPostV3 | 526 |
+| components/feed/FeedEngagementRow.tsx | only used by the deleted cards | (in the 2,267) |
+| components/feed/MilestonePostCard.tsx | no imports | 111 |
+| components/feed/WhoRespectedSheet.tsx | only used by the deleted cards | (in the 2,267) |
+| components/profile/ProofScroll.tsx | no imports | 137 |
+| components/shared/ImageViewerModal.tsx | only referenced by a comment | (in the 2,267) |
+| components/skeletons/SkeletonChallengeDetail.tsx | no imports | 48 |
+| components/skeletons/SkeletonLeaderboardRow.tsx | no imports | 36 |
+| components/skeletons/SkeletonProfile.tsx | no imports | 48 |
+| components/ui/CreateFlowCheckbox.tsx | no imports | 61 |
+| components/ui/CreateFlowHeader.tsx | no imports | 106 |
+| components/ui/CreateFlowInput.tsx | no imports | 65 |
+| components/ui/DurationPill.tsx | no imports | 50 |
+| components/ui/EnforcementBlock.tsx | no imports | 37 |
+| components/ui/InitialCircle.tsx | no imports | 40 |
+| components/ui/TaskTypeCard.tsx | no imports | 89 |
+| hooks/useJournalInput.ts | no imports | 125 |
+| hooks/useReduceMotion.ts | only used by the deleted modal | (in the 2,267) |
+| store/feedToggleStore.ts | no imports | 48 |
+
+Totals: 23 files deleted, 2,267 lines removed, 1 dependency removed (`@expo-google-fonts/barlow-condensed`). No RevenueCat debug toast was found. `lib/subscription.ts` sets the log level to ERROR outside `__DEV__`.
+
+Consolidation: live "Day n of N" already goes through `shownChallengeDay` from build 86. Duplicate public titles now go through `dedupeChallengesByTitle` on Start here and `filterDiscoverCatalog` on Discover. Call sites: the suggestion function and every Discover list that already called `filterDiscoverCatalog`.
+
+JS bundle, Hermes bytecode, `npx expo export --platform ios`:
+
+| | Bytes |
+|---|---|
+| Before (build 86 tree, commit 5bcc43a2) | 12,266,664 |
+| After (feat/build87, commit 82c8af82) | 12,268,094 |
+
+The deleted files were not imported, so they were not in the bundle. The after bundle is 1,430 bytes larger because of the onboarding changes.
+
+S1–S8 were not measured. A release build on the simulator was not produced, so there is no median or worst time and no pass/fail against the R10 targets. No speed patch was kept, because none was shown to help.
+
+tsc was clean. Full suite after the deletion: 313 files, 1,611 tests. After the font removal: the same suite passed.
+
+## Phase 2 — build 87 features
+
+In progress. Cost so far $0.
+
+Shipped in 82c8af82:
+
+- Continue and Join are pinned under the scroll view, so the goals button is not left below the fold. A source test checks the footer comes after `</ScrollView>`.
+- A second Join after "You're already in this challenge." advances instead of sitting on the error. The button was already disabled while the request runs (`joining` state, Button `disabled`).
+- Start here falls back to popular public challenges when nothing matches the goal, so a loaded catalog does not say "No suggestions". The empty state now says "Couldn't load challenges" and only shows when the catalog request fails.
+- Duplicate titles collapse to the row with more `participants_count`.
+- Standard-mode copy on the suggestion card is "Missed a day? A freeze holds your streak. You earn one every 7 days in a row."
+- Category and duplicate-archive SQL is in `docs/sql/pending-oct12.sql`. Not run.
+
+Skipped, with the reason:
+
+- v52 frames. No zip named GRIIT-v52 or OCT_11_0851 was on Disk (Downloads, Desktop, Spotlight). The flow was not rebuilt from frames. "Set your line" and the intro screens are still in the app.
+- "{n} doing it" only at n ≥ 10. That string is not in the app. Discover still shows the stored `participants_count`, which is not split into real vs test members.
+- Account screen reorder and removing a confirm step. Not changed. Apple sign-in is already on the screen.
+- Share sheet vs v51 frames 1319–1323. Not changed.
+- App Store report, block, filter, contact, and account deletion. Not audited line by line yet. Settings already has `AccountDangerZone`.
+- Maestro for each Done path and the faith/fitness joins. Not run yet.
+- The $3 onboarding rerun. Starting after Metro is serving this branch.
+
+is_test hiding did not fail in Phase 0, so item 0 was not required.
