@@ -135,6 +135,7 @@ describe("splitSecuredProof", () => {
         taskName: "Task",
         gateTime: { mode: null, start: null, end: null },
         shared: false,
+        startDateKey: "2026-09-10",
       },
     ]);
   });

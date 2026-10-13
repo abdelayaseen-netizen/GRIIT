@@ -2,6 +2,8 @@
  * Stories-style proof viewer. Port of the v51 step() rules.
  * Day 0 is the newest day.
  */
+import { homeDayLine, dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
+import { proofsDateLabel } from "@/lib/proofs-grid";
 export type Gesture =
   | "swipeLeft"
   | "swipeRight"
@@ -52,6 +54,44 @@ export type ViewerTask = {
 };
 export type ViewerDay = { dateKey: string; tasks: ViewerTask[] };
 
+/** The calendar date the proof was taken, in the profile time zone. */
+export function proofTakenDateKey(
+  dateKey: string,
+  capturedAt: string | null | undefined,
+  timeZone: string,
+): string {
+  if (!capturedAt) return dateKey;
+  const taken = dateKeyFromIso(capturedAt, timeZone);
+  return /^\d{4}-\d{2}-\d{2}$/.test(taken) ? taken : dateKey;
+}
+
+export function proofViewerCaption(input: {
+  dateKey: string;
+  capturedAt?: string | null;
+  timeZone: string;
+  startDateKey?: string | null;
+  durationDays: number;
+  storedDay: number;
+}): { dateKey: string; dateLabel: string; dayLine: string } {
+  const dateKey = proofTakenDateKey(input.dateKey, input.capturedAt, input.timeZone);
+  const day = input.startDateKey
+    ? shownChallengeDay(input.startDateKey, input.timeZone, dateKey, input.durationDays)
+    : Math.max(1, Math.floor(input.storedDay) || 1);
+  return { dateKey, dateLabel: proofsDateLabel(dateKey), dayLine: homeDayLine(day, input.durationDays) };
+}
+
+/** Open the tapped proof. A stored date that does not match still finds the task id. */
+export function viewerPosFor(days: readonly ViewerDay[], dateKey: string, at: string): Pos {
+  if (at) {
+    for (let day = 0; day < days.length; day++) {
+      const task = days[day]?.tasks.findIndex((entry) => entry.id === at) ?? -1;
+      if (task >= 0) return { day, task, photo: 0 };
+    }
+  }
+  const found = days.findIndex((entry) => entry.dateKey === dateKey);
+  return { day: found >= 0 ? found : 0, task: 0, photo: 0 };
+}
+
 /** Newest date first. Photos of the same task on a day stay together. */
 export function viewerDays(
   items: {
@@ -66,11 +106,21 @@ export function viewerDays(
     respectCount?: number;
     commentCount?: number;
     capturedAt: string | null;
+    startDateKey?: string | null;
   }[],
+  options?: { timeZone?: string },
 ): ViewerDay[] {
-  const dates = [...new Set(items.map((item) => item.dateKey))].sort((a, b) => b.localeCompare(a));
+  const timeZone = options?.timeZone ?? "UTC";
+  const stamped = items.map((item) => {
+    const dateKey = proofTakenDateKey(item.dateKey, item.capturedAt, timeZone);
+    const day = item.startDateKey
+      ? shownChallengeDay(item.startDateKey, timeZone, dateKey, item.durationDays)
+      : item.day;
+    return { ...item, dateKey, day };
+  });
+  const dates = [...new Set(stamped.map((item) => item.dateKey))].sort((a, b) => b.localeCompare(a));
   return dates.map((dateKey) => {
-    const rows = items.filter((item) => item.dateKey === dateKey);
+    const rows = stamped.filter((item) => item.dateKey === dateKey);
     const tasks: ViewerTask[] = [];
     for (const row of rows) {
       const existing = tasks.find((task) => task.name === row.taskName && task.challenge === row.challengeName);
@@ -83,7 +133,7 @@ export function viewerDays(
         id: row.id,
         name: row.taskName,
         challenge: row.challengeName,
-        dayLine: `Day ${row.day} of ${row.durationDays}`,
+        dayLine: homeDayLine(row.day, row.durationDays),
         shared: row.shared,
         respectCount: row.respectCount ?? 0,
         commentCount: row.commentCount ?? 0,

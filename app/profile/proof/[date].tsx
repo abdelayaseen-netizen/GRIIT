@@ -8,8 +8,8 @@ import { rememberProofTile } from "@/lib/proof-return";
 import { firstString } from "@/lib/task-helpers";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { itemsFromRecordProofs, proofsDateLabel } from "@/lib/proofs-grid";
-import { viewerDays, type Pos } from "@/lib/proof-viewer";
+import { itemsFromRecordProofs } from "@/lib/proofs-grid";
+import { viewerDays, viewerPosFor, type Pos } from "@/lib/proof-viewer";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 
 type RecordPayload = ProfileRecord & { timezone: string; todayKey: string };
@@ -27,14 +27,9 @@ export default function ProfileProofScreen() {
   const days = useMemo(() => {
     const items = itemsFromRecordProofs(q.data?.proofs ?? [], { includeSelf: true });
     const visible = userId ? items.filter((item) => item.shared) : items;
-    return viewerDays(visible);
+    return viewerDays(visible, { timeZone: q.data?.timezone || "UTC" });
   }, [q.data, userId]);
-  const initial = useMemo<Pos>(() => {
-    const found = days.findIndex((entry) => entry.dateKey === dateKey);
-    const day = found >= 0 ? found : 0;
-    const taskIndex = days[day]?.tasks.findIndex((entry) => entry.id === at) ?? 0;
-    return { day, task: taskIndex >= 0 ? taskIndex : 0, photo: 0 };
-  }, [at, dateKey, days]);
+  const initial = useMemo<Pos>(() => viewerPosFor(days, dateKey, at), [at, dateKey, days]);
   const [pos, setPos] = useState<Pos>(initial);
   useEffect(() => {
     setPos(initial);
@@ -49,7 +44,6 @@ export default function ProfileProofScreen() {
           days={days}
           pos={pos}
           countLabel={countLabel}
-          dateLabel={proofsDateLabel(dateKey || days[0]?.dateKey || "")}
           onPos={(next) => {
             setPos(next);
             const id = days[next.day]?.tasks[next.task]?.id;

@@ -52,6 +52,7 @@ export type RecordProofTile = {
   taskName: string;
   gateTime: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
   shared: boolean;
+  startDateKey?: string | null;
   respectCount?: number;
   commentCount?: number;
 };
@@ -224,6 +225,7 @@ export function cameraProofTiles(args: {
           }
         : null,
       shared: event?.share_state === "shared",
+      startDateKey: enrollment?.startDateKey ?? null,
     });
   }
   tiles.sort((a, b) => {

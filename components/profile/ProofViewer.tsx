@@ -17,14 +17,12 @@ export function ProofViewer({
   onPos,
   onClose,
   countLabel,
-  dateLabel,
 }: {
   days: ViewerDay[];
   pos: Pos;
   onPos: (next: Pos) => void;
   onClose: () => void;
   countLabel?: string;
-  dateLabel?: string;
 }) {
   const { width } = useWindowDimensions();
   const day = days[pos.day];
@@ -100,7 +98,7 @@ export function ProofViewer({
       <GestureDetector gesture={headerPan}>
         <View style={styles.header}>
           <View style={styles.headerCopy}>
-            <Text testID={`proof-day-${day.dateKey}`} style={styles.date}>{dateLabel || proofsDateLabel(day.dateKey)}</Text>
+            <Text testID={`proof-day-${day.dateKey}`} style={styles.date}>{proofsDateLabel(day.dateKey)}</Text>
             <Text style={styles.meta}>{task.challenge} · {task.dayLine}</Text>
           </View>
           <Pressable testID="proof-close" accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.close}>

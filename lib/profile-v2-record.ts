@@ -178,6 +178,7 @@ export type ProfileRecord = {
     taskName?: string;
     gateTime?: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
     shared?: boolean;
+    startDateKey?: string | null;
     shareState?: "unanswered" | "shared" | "kept";
     bytes?: number | null;
   }[];
