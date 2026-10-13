@@ -57,6 +57,7 @@ describe("discover people and chips", () => {
     ).toEqual(["Fajr"]);
     const v3 = readFileSync(resolve(__dirname, "../components/discover/DiscoverV3.tsx"), "utf8");
     expect(v3).toContain("discoverSectionItems");
+    expect(v3).toContain("gridData.length === 0");
     expect(v3).toContain("CREATE_CATEGORIES");
     expect(CREATE_CATEGORIES.map((c) => c.id)).toEqual([
       "fitness",

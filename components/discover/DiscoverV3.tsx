@@ -255,10 +255,12 @@ export function DiscoverV3({
         ))}
       </ScrollView>
 
-      <View style={styles.popularHead}>
-        <Text style={styles.heading}>Popular</Text>
-        <Text style={styles.caption}>this week</Text>
-      </View>
+      {!challengesLoading && gridData.length === 0 ? null : (
+        <View style={styles.popularHead}>
+          <Text style={styles.heading}>Popular</Text>
+          <Text style={styles.caption}>this week</Text>
+        </View>
+      )}
 
       {circle ? (
         <View style={styles.section}>
