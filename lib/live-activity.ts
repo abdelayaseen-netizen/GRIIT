@@ -108,12 +108,12 @@ export function startLiveActivity(payload: LiveActivityPayload): void {
   }
 }
 
-const DONE_COPY = "Done. Open GRIIT to post.";
+export const LIVE_ACTIVITY_DONE = "Done. Tap to post.";
 
 /** At 0:00 the lock screen says to open the app. It ends when the proof is posted. */
 export function showLiveActivityDone(): void {
   if (Platform.OS !== "ios" || !currentActivityId) return;
-  const state: LiveActivity.LiveActivityState = { title: DONE_COPY, subtitle: "" };
+  const state: LiveActivity.LiveActivityState = { title: LIVE_ACTIVITY_DONE, subtitle: "" };
   try {
     LiveActivity.updateActivity(currentActivityId, state);
     lastState = state;
