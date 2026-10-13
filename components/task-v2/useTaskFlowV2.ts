@@ -59,6 +59,7 @@ import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
   TIMER_PHOTO_AFTER,
+  timerElapsedSeconds,
   workDoneLine,
   workThenCamera,
 } from "@/lib/work-step";
@@ -181,6 +182,7 @@ export function useTaskFlowV2() {
   const [journalFieldOn, setJournalFieldOn] = useState(true);
   const [count, setCount] = useState(0);
   const countRef = useRef(count);
+  const finishEarlyRef = useRef<{ seconds: number } | null>(null);
   countRef.current = count;
   const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
@@ -729,7 +731,15 @@ export function useTaskFlowV2() {
           ? { capturedAt, captured_in_app: true }
           : undefined,
         ...extra,
-        ...(taskType === "timer" ? { value: Math.floor(requiredSeconds / 60) } : {}),
+        ...(taskType === "timer"
+          ? finishEarlyRef.current
+            ? {
+                value: finishEarlyRef.current.seconds / 60,
+                timer_seconds_on_screen: finishEarlyRef.current.seconds,
+                self_reported: true,
+              }
+            : { value: Math.floor(requiredSeconds / 60) }
+          : {}),
         ...(taskType === "journal" ? { noteText: text } : {}),
         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
           ? { value: countRef.current }
@@ -1090,6 +1100,16 @@ export function useTaskFlowV2() {
     pauseTimer,
     resetTimer,
     submitTimer,
+    onFinishEarly: () => {
+      const seconds = timerElapsedSeconds(requiredSeconds, remainingSec);
+      finishEarlyRef.current = { seconds };
+      setPausedRemaining(remainingSec);
+      void endLiveActivity();
+      void submitWithoutPhoto(
+        { self_reported: true, timer_seconds_on_screen: seconds, value: seconds / 60 },
+        "self_report",
+      );
+    },
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
     onAddAmount: (n: number) => setCount((c) => Math.min(counterGoal, c + Math.max(0, Math.floor(n)))),
     dayReady,

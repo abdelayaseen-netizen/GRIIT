@@ -178,6 +178,7 @@ export function TaskFlowV2() {
           onPause={f.pauseTimer}
           onReset={() => void f.resetTimer()}
           onPost={() => void f.submitTimer()}
+          onFinishEarly={f.onFinishEarly}
           onBack={f.goBack}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}

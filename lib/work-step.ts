@@ -28,7 +28,13 @@ export const TIMER_MUST_ZERO = "It has to reach zero.";
 export const TIMER_LEAVING = "Leaving the app does not stop it.";
 export const TIMER_LABEL = "Timer";
 export const TIMER_SOUND = "Sound when it ends";
-export const TIMER_POST_CAPTION = "Post opens when the timer reaches zero.";
+export const TIMER_FINISH_EARLY = "Finish early";
+
+export function timerElapsedSeconds(requiredSeconds: number, remainingSeconds: number): number {
+  const required = Math.max(0, Math.floor(requiredSeconds));
+  const remaining = Math.max(0, Math.floor(remainingSeconds));
+  return Math.max(0, required - remaining);
+}
 export const TIMER_PHOTO_AFTER = "The photo comes after the timer";
 export const TIMER_PAUSE = "Pause";
 export const TIMER_RESET = "Reset";

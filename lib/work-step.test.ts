@@ -25,6 +25,7 @@ import {
   runPaceLine,
   runPrimaryLabel,
   timerClockLine,
+  timerElapsedSeconds,
   timerPostEnabled,
   timerStartLabel,
   resolvedTaskDay,
@@ -63,6 +64,14 @@ describe("resolvedTaskDay", () => {
         durationDays: 7,
       }),
     ).toBe(6);
+  });
+});
+
+describe("timer elapsed", () => {
+  it("records the seconds already run when Finish early is tapped", () => {
+    expect(timerElapsedSeconds(300, 108)).toBe(192);
+    expect(timerElapsedSeconds(300, 0)).toBe(300);
+    expect(timerElapsedSeconds(300, 400)).toBe(0);
   });
 });
 

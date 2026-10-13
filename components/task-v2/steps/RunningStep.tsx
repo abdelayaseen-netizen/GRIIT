@@ -8,9 +8,9 @@ import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { clockLabel, fmtMmSs } from "@/lib/task-flow-state";
 import {
+  TIMER_FINISH_EARLY,
   TIMER_LEAVING,
   TIMER_PAUSE,
-  TIMER_POST_CAPTION,
   TIMER_RESET,
   WORK_POST,
   WORK_SECURED_CAPTION,
@@ -29,6 +29,7 @@ type Props = {
   onPause: () => void;
   onReset: () => void;
   onPost: () => void;
+  onFinishEarly: () => void;
   onBack: () => void;
   footerCaption?: string;
   footerBrand?: boolean;
@@ -49,6 +50,7 @@ export function RunningStep({
   onPause,
   onReset,
   onPost,
+  onFinishEarly,
   onBack,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
@@ -99,6 +101,13 @@ export function RunningStep({
       </View>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
         <Button
+          testID="timer-finish-early"
+          label={TIMER_FINISH_EARLY}
+          variant="secondary"
+          submitting={submitting}
+          onPress={onFinishEarly}
+        />
+        <Button
           testID="timer-post"
           label={WORK_POST}
           disabled={!ready}
@@ -106,9 +115,9 @@ export function RunningStep({
           onPress={onPost}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>
-          {ready ? footerCaption : TIMER_POST_CAPTION}
-        </Text>
+        {ready ? (
+          <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+        ) : null}
       </View>
     </View>
   );

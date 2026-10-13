@@ -611,8 +611,11 @@ export const checkinsRouter = createTRPCRouter({
         task?.min_duration_minutes ??
         durationMinutes ??
         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
+      const isTimer = taskType === "timer";
+      const timerSelfReport = isTimer && timerSelfReportSkipsSession(input.self_reported);
       if (
         !isMinimumDay &&
+        !timerSelfReport &&
         minDurationMinutes != null &&
         minDurationMinutes > 0 &&
         input.value != null &&
@@ -626,8 +629,6 @@ export const checkinsRouter = createTRPCRouter({
         const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
       }
-      const isTimer = taskType === "timer";
-      const timerSelfReport = isTimer && timerSelfReportSkipsSession(input.self_reported);
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
