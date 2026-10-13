@@ -16,7 +16,7 @@ The harness is not allowed to use Sign in with Apple, so every one of these went
 
 ## Ship status, 12 Oct
 
-Build number: not shipped. Last internal TestFlight build is still 86. `feat/build87` was not merged. Product commits on the branch: `f5b03e17` (account after the first task, v52 onboarding, deletion, report, text filter) and `8c39b45c` (this diagnosis).
+Build number: 87. Uploaded to App Store Connect for internal TestFlight. Commit `8972cd30` on main. EAS build `803996c7-ddce-4f63-ae28-6eac22242be2`. Submit profile group is Team (Expo). Health `https://grit-backend-production.up.railway.app/api/health` showed commit `8972cd3`. An authenticated `reports.reportUser` returned 200, and a second report returned 200 with already reported.
 
 The ship rule was not met. tsc was clean and the suite passed (314 files, 1,619 tests) on the product commits. The flows that have to pass before a merge do not exist yet: onboarding with a fitness goal, onboarding with a faith goal, guest then account keeping the streak, Done on check-off / timer / counter / photo / write, post a photo, and delete account. Existing `.maestro` flows were not re-run. Metro (pid 72926) is still the dev server from before those commits, so the simulator bundle is stale until it reloads.
 
