@@ -29,6 +29,24 @@ export function rollbackRespect(prev: RespectState): RespectState {
   return { reactedByMe: prev.reactedByMe, respectCount: prev.respectCount };
 }
 
+type FeedPostLike = { id: string } & Record<string, unknown>;
+
+/** Infinite-query cache is `{ pages }`, not a flat `posts` array. */
+export function patchLiveFeedCache<T extends { pages?: { posts?: FeedPostLike[] }[] }>(
+  old: T | undefined,
+  postId: string,
+  updater: (post: FeedPostLike) => FeedPostLike,
+): T | undefined {
+  if (!old?.pages) return old;
+  return {
+    ...old,
+    pages: old.pages.map((page) => ({
+      ...page,
+      posts: (page.posts ?? []).map((post) => (post.id === postId ? updater(post) : post)),
+    })),
+  };
+}
+
 export function respectHeart(liked: boolean): {
   color: string;
   fill: string;

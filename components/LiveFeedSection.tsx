@@ -24,7 +24,7 @@ import { feedAuthorHref, feedChallengeHref } from "@/lib/feed-tap-targets";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
-import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
+import { optimisticRespect, patchLiveFeedCache, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import ProofPost from "@/components/feed/ProofPost";
 import FeedEvent from "@/components/feed/FeedEvent";
@@ -317,13 +317,8 @@ function LiveFeedSection({
     (postId: string, updater: (p: LiveFeedPost) => LiveFeedPost) => {
       queryClient.setQueryData(
         ["liveFeed", scope, user?.id ?? ""],
-        (old: LiveFeedResponse | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) => (p.id === postId ? updater(p) : p)),
-          };
-        }
+        (old: { pages?: { posts?: LiveFeedPost[] }[]; pageParams?: unknown[] } | undefined) =>
+          patchLiveFeedCache(old, postId, (post) => updater(post as LiveFeedPost)),
       );
     },
     [queryClient, scope, user?.id]

@@ -1,0 +1,24 @@
+appId: app.griit.challenge-tracker
+---
+# Heart toggles. Double-tap on the photo likes and does not unlike.
+- launchApp:
+    stopApp: false
+- tapOn: "Activity"
+  optional: true
+- extendedWaitUntil:
+    visible:
+      id: feed-respect
+    timeout: 20000
+- tapOn:
+    id: feed-respect
+- extendedWaitUntil:
+    visible:
+      id: feed-respect-count
+    timeout: 8000
+- tapOn:
+    id: feed-respect
+- assertNotVisible:
+    id: feed-respect-count
+- doubleTapOn:
+    id: feed-respect
+    optional: true
