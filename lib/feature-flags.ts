@@ -72,11 +72,11 @@ export const FLAGS = {
    */
   SET_MEMBER_GYM: false,
   /**
-   * First-run starter task. Off keeps build 87 onboarding.
-   * The table exists. The client may only SELECT its own row.
+   * First-run starter task. The table exists.
+   * The client may only SELECT its own row.
    * Writes go through tRPC with the service role after an ownership check.
    */
-  STARTER_TASK_ENABLED: false,
+  STARTER_TASK_ENABLED: true,
 } as const;
 
 // ============================================
