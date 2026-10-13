@@ -76,7 +76,7 @@ export const FLAGS = {
    * The client may only SELECT its own row.
    * Writes go through tRPC with the service role after an ownership check.
    */
-  STARTER_TASK_ENABLED: true,
+  STARTER_TASK_ENABLED: false,
 } as const;
 
 // ============================================
