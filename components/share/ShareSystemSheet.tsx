@@ -69,11 +69,21 @@ export type ShareSystemSheetProps = {
   children?: React.ReactNode;
 };
 
-function ScaledPreview({ card }: { card: ShareCardInput }) {
+function ScaledPreview({ card, frameW, frameH }: { card: ShareCardInput; frameW: number; frameH: number }) {
+  const scale = frameW / SHARE_W;
   return (
-    <View style={styles.previewClip}>
+    <View style={[styles.previewClip, { width: frameW, height: frameH }]}>
       {card.style === "B" ? <Image source={SAMPLE_STORY} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-      <View style={styles.previewScale}>
+      <View
+        style={{
+          position: "absolute",
+          width: SHARE_W,
+          height: SHARE_H,
+          left: (frameW - SHARE_W) / 2,
+          top: (frameH - SHARE_H) / 2,
+          transform: [{ scale }],
+        }}
+      >
         <ShareImage input={card} />
       </View>
     </View>
@@ -89,7 +99,9 @@ export default function ShareSystemSheet({
   children,
 }: ShareSystemSheetProps) {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const previewH = Math.min(SHARE_PREVIEW_H, Math.max(280, height - insets.top - insets.bottom - 360));
+  const previewW = Math.round(previewH * (SHARE_W / SHARE_H));
   const stylesFor = stylesForMoment(moment);
   const shotRef = useRef<ViewShot>(null);
   const [index, setIndex] = useState(0);
@@ -211,7 +223,11 @@ export default function ShareSystemSheet({
         >
           {stylesFor.map((id) => (
             <View key={id} style={[styles.page, { width }]}>
-              <ScaledPreview card={{ ...card, style: id, colour: colourForStyle(memory, id) }} />
+              <ScaledPreview
+                frameW={previewW}
+                frameH={previewH}
+                card={{ ...card, style: id, colour: colourForStyle(memory, id) }}
+              />
             </View>
           ))}
         </ScrollView>

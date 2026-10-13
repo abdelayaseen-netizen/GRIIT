@@ -113,6 +113,9 @@ describe("v44.1 share styles", () => {
     });
     expect(paintStrings(one)).toContain("day in a row");
     expect(paintStrings(one)).not.toContain("days in a row");
+    expect(one.block.justify).toBe("center");
+    expect(one.wordmark?.y).toBeLessThan(200);
+    expect(one.block.y + one.block.h).toBeLessThanOrEqual(1920);
     expect(sticker.transparent).toBe(true);
     expect(storyUsesSticker("B")).toBe(true);
     expect(storyUsesSticker("A")).toBe(false);

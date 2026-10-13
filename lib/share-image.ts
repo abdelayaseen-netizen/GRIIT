@@ -169,6 +169,7 @@ export type SharePaint = {
     plate: { color: string; radius: number; pad: number } | null;
     gap: number;
     shadow: { color: string; radius: number } | null;
+    justify: "flex-start" | "center" | "flex-end";
     items: ShareItem[];
   };
 };
@@ -375,6 +376,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       plate: null,
       gap: 24,
       shadow: null,
+      justify: "flex-end",
       items: [],
     },
   };
@@ -486,6 +488,10 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   }
 
   if (input.style === "E") {
+    if (base.wordmark) base.wordmark.y = 140;
+    base.block.y = 280;
+    base.block.h = SHARE_H - 280 - 140;
+    base.block.justify = "center";
     push({ kind: "flame", size: 140, color: palette.accent });
     push(text(String(input.streak ?? 0), 520, 470, palette.fg, "800", -0.02 * 520));
     push(text(streakInARow(input.streak ?? 0), 72, 84, palette.fg));

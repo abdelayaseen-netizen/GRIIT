@@ -209,7 +209,7 @@ export default function ShareImage({ input }: { input: ShareCardInput }) {
           top: paint.block.y,
           width: paint.block.w,
           height: paint.block.h,
-          justifyContent: "flex-end",
+          justifyContent: paint.block.justify,
         }}
       >
         <View
