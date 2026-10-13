@@ -44,7 +44,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: ${EMAIL}
+- inputText: "b88likes@example.com"
 - tapOn:
     id: "account-password"
 - inputText: "Build88-guest-test"
@@ -54,7 +54,8 @@ appId: app.griit.challenge-tracker
     visible: "Send it"
     timeout: 10000
 - tapOn: "Send it"
-- tapOn: "Activity"
+- tapOn: "Home"
+- tapOn: "Everyone"
 - extendedWaitUntil:
     visible:
       id: feed-respect

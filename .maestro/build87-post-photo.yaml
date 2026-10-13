@@ -46,7 +46,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: ${EMAIL}
+- inputText: "b88friends@example.com"
 - tapOn:
     id: "account-password"
 - inputText: "Build87-guest-test"
@@ -77,18 +77,17 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Post to friends"
     timeout: 20000
-- tapOn: ${AUDIENCE}
-- tapOn: ${POST_BUTTON}
-- extendedWaitUntil:
-    visible: "^Done$"
-    timeout: 25000
-  optional: true
-- tapOn: "^Done$"
-  optional: true
+- tapOn: "Post to friends"
+- tapOn:
+    text: "Close"
+    optional: true
+- tapOn:
+    text: "^Done$"
+    optional: true
 - extendedWaitUntil:
     visible: "Back to today"
     timeout: 20000
-- assertVisible: ${AUDIENCE}
+- assertVisible: "Friends"
 - tapOn: "Back to today"
 - tapOn: "Profile"
 - extendedWaitUntil:

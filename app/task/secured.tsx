@@ -172,6 +172,11 @@ function TaskSecuredInner() {
   }, [proofs, queryClient, tz, retryTick]);
 
   const done = () => {
+    const openPost = firstString(params.openPost);
+    if (openPost) {
+      router.replace(ROUTES.POST_ID(openPost) as never);
+      return;
+    }
     const next = afterSecuredNext({
       challengeDone: result.challengeDone,
       challengeDay: result.challengeDay,
@@ -191,11 +196,6 @@ function TaskSecuredInner() {
           enrollmentId: enrollmentId ?? "",
         },
       } as never);
-      return;
-    }
-    const openPost = firstString(params.openPost);
-    if (openPost) {
-      router.replace(ROUTES.POST_ID(openPost) as never);
       return;
     }
     router.replace(originTabHref(originTabFromParam(firstString(params.originTab))) as never);
