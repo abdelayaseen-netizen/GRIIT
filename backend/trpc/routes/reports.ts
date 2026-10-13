@@ -113,7 +113,12 @@ export const reportsRouter = createTRPCRouter({
       });
       if (error) {
         const code = (error as { code?: string }).code;
+        // UNIQUE (reporter, reported). A second report is success, not a failure.
         if (code === "23505") return { success: true, alreadyReported: true };
+        // CHECK reporter <> reported. The client also blocks this before the insert.
+        if (code === "23514") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "You can't report yourself." });
+        }
         logger.error({ err: error, userId: ctx.userId }, "[reports.reportUser] insert failed");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not submit your report. Please try again." });
       }

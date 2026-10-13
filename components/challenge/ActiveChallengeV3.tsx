@@ -284,6 +284,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 <View key={t.id}>
                   {i > 0 ? <View style={styles.divider} /> : null}
                   <Pressable
+                    testID="active-task"
                     accessibilityRole="button"
                     accessibilityLabel={t.title}
                     accessibilityState={{ disabled: t.completed_today || closed }}

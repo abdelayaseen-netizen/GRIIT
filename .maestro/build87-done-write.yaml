@@ -1,0 +1,56 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000004"
+- extendedWaitUntil:
+    visible: "Join Journal Today"
+    timeout: 20000
+- tapOn: "Join Journal Today"
+- extendedWaitUntil:
+    visible: "Write a short journal entry"
+    timeout: 20000
+- tapOn:
+    id: "active-task"
+- extendedWaitUntil:
+    visible:
+      id: "write-body"
+    timeout: 15000
+- tapOn:
+    id: "write-body"
+- inputText: "one two three four five six seven eight nine ten"
+- hideKeyboard:
+    optional: true
+- tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Day 1 secured."
+    timeout: 20000

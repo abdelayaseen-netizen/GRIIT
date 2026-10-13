@@ -70,6 +70,7 @@ import {
 import { buildSimpleLogFacts } from "../../lib/simple-verification";
 import {
   assertTimerSessionElapsed,
+  timerSelfReportSkipsSession,
   parseTimerSession,
   wrapTimerSession,
   type TimerSessionKind,
@@ -280,6 +281,8 @@ export const checkinsRouter = createTRPCRouter({
         floor_min: z.number().nonnegative().nullable().optional(),
         /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
         shareChoicePending: z.boolean().optional(),
+        /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
+        self_reported: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -624,11 +627,12 @@ export const checkinsRouter = createTRPCRouter({
         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
       }
       const isTimer = taskType === "timer";
+      const timerSelfReport = isTimer && timerSelfReportSkipsSession(input.self_reported);
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
       let timerSessionPayload: unknown = null;
-      if (!isMinimumDay && isTimer) {
+      if (!isMinimumDay && isTimer && !timerSelfReport) {
         const { data: existingSessionRow } = await ctx.supabase
           .from("check_ins")
           .select("proof_payload_json")
@@ -1056,7 +1060,7 @@ export const checkinsRouter = createTRPCRouter({
         .maybeSingle();
       const verificationKind: VerificationKind = isPhotoProof
         ? "live_photo"
-        : isTimer
+        : isTimer && !timerSelfReport
           ? "timer"
           : isCheckinProof && locationGatePassed
             ? "gps"

@@ -44,7 +44,8 @@
     "production": {
       "ios": {
         "appleTeamId": "WZT43QXHZB",
-        "ascAppId": "6761116285"
+        "ascAppId": "6761116285",
+        "groups": ["Team (Expo)"]
       }
     }
   }

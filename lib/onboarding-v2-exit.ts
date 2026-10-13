@@ -12,6 +12,7 @@ export async function exitOnboardingV2(destination: string): Promise<ExitOnboard
   if (anon.kind !== "ok") {
     return { ok: false, message: anon.message ?? "Could not start a guest session." };
   }
-  await completeOnboardingV2({ destination });
+  const completed = await completeOnboardingV2({ destination });
+  if (completed && completed.ok === false) return completed;
   return { ok: true };
 }

@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
-import { SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
+import { GUEST_SETTINGS_LINE, SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import ListRow from "@/components/ds/ListRow";
@@ -26,6 +26,7 @@ import { AccountDangerZone } from "@/components/settings/AccountDangerZone";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
+import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
 
 const ABOUT_LINE = aboutVersionLine({
   version: Constants.expoConfig?.version,
@@ -46,6 +47,8 @@ export default function SettingsScreen() {
   const isGuest = useIsGuest();
   const { isPremium, profile } = useApp();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saveStreak, setSaveStreak] = useState(false);
+  const anonymous = user?.is_anonymous === true;
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const { error: deleteAccountError, showError: showDeleteAccountError, clearError: clearDeleteAccountError } =
@@ -60,6 +63,11 @@ export default function SettingsScreen() {
         <SettingsNav title="Settings" />
         <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          {anonymous ? (
+            <Text style={styles.guest} onPress={() => setSaveStreak(true)}>
+              {GUEST_SETTINGS_LINE}
+            </Text>
+          ) : null}
           <Card style={styles.card}>
             <ListRow
               icon={<User size={ICON} color={DS_V3.color.textPrimary} />}
@@ -118,6 +126,11 @@ export default function SettingsScreen() {
           <Text style={styles.ver}>{ABOUT_LINE}</Text>
         </ScrollView>
         </GriitFade>
+        <SaveStreakSheet
+          visible={saveStreak}
+          onLater={() => setSaveStreak(false)}
+          onSaved={() => setSaveStreak(false)}
+        />
       </Screen>
     </ErrorBoundary>
   );
@@ -133,6 +146,13 @@ const styles = StyleSheet.create({
   card: {
     padding: 0,
     overflow: "hidden",
+  },
+  guest: {
+    marginBottom: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   ver: {
     marginTop: DS_V3.space.section,

@@ -20,6 +20,11 @@ import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
+import { displayNameFromAccount } from "@/lib/account-display-name";
+import { adoptExistingAccount } from "@/lib/adopt-existing-account";
+import { CHECK_EMAIL_TO_SAVE } from "@/lib/email-save-pending";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
 import {
   CONFIRM_EMAIL_NOTICE,
@@ -37,6 +42,16 @@ import {
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
+
+async function saveDerivedDisplayName(appleName?: string, emailAddr?: string): Promise<void> {
+  const name = displayNameFromAccount({ appleName, email: emailAddr });
+  if (!name) return;
+  try {
+    await trpcMutate(TRPC.profiles.update, { display_name: name });
+  } catch (e) {
+    captureError(e, "AccountDisplayName");
+  }
+}
 
 const ICON = DS_V3.space.xs * 5;
 const CHECK = DS_V3.space.lg;
@@ -118,8 +133,25 @@ export default function AccountScreen({
           identityToken: credential.identityToken,
         });
         if (upgraded.kind === "identity_taken") {
-          setEmail(credential.email ?? "");
-          setState("email_taken");
+          const moved = await adoptExistingAccount({
+            guestUserId: sessionUser.id,
+            signIn: async () => {
+              const { data, error: signError } = await supabase.auth.signInWithIdToken({
+                provider: "apple",
+                token: credential.identityToken!,
+              });
+              if (signError || !data.user || !data.session) {
+                return { ok: false, message: signError ? mapAuthError(signError) : "Sign in failed. Please try again." };
+              }
+              return { ok: true };
+            },
+          });
+          if (!moved.ok) {
+            setError(moved.message);
+            return;
+          }
+          track({ name: "signup_completed", method: "apple" });
+          onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
           return;
         }
         const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
@@ -133,6 +165,7 @@ export default function AccountScreen({
         }
         track({ name: "signup_completed", method: "apple" });
         track({ name: "account_created", method: "apple" });
+        await saveDerivedDisplayName(displayNameFromApple, credential.email ?? undefined);
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_apple" }));
         return;
       }
@@ -152,13 +185,15 @@ export default function AccountScreen({
       await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
-      onAuthSuccess(
-        classifyAccountAuth({
-          path: "apple_id_token",
-          createdAt: data.user.created_at,
-          lastSignInAt: data.user.last_sign_in_at,
-        })
-      );
+      const appleKind = classifyAccountAuth({
+        path: "apple_id_token",
+        createdAt: data.user.created_at,
+        lastSignInAt: data.user.last_sign_in_at,
+      });
+      if (appleKind === "new_account") {
+        await saveDerivedDisplayName(displayNameFromApple, credential.email ?? undefined);
+      }
+      onAuthSuccess(appleKind);
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
@@ -183,8 +218,29 @@ export default function AccountScreen({
           email: trimmed,
           password,
         });
+        if (upgraded.kind === "confirm_email") {
+          setState("awaiting_confirm");
+          setError("");
+          return;
+        }
         if (upgraded.kind === "identity_taken") {
-          setState("email_taken");
+          const moved = await adoptExistingAccount({
+            guestUserId: sessionUser.id,
+            signIn: async () => {
+              const { error: signError } = await supabase.auth.signInWithPassword({
+                email: trimmed,
+                password,
+              });
+              if (signError) return { ok: false, message: mapAuthError(signError) };
+              return { ok: true };
+            },
+          });
+          if (!moved.ok) {
+            setError(moved.message);
+            return;
+          }
+          track({ name: "signup_completed", method: "email" });
+          onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
           return;
         }
         const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
@@ -199,6 +255,7 @@ export default function AccountScreen({
         setProfileSetupHints({ email: trimmed });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
+        await saveDerivedDisplayName(undefined, trimmed);
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_email" }));
         return;
       }
@@ -229,6 +286,7 @@ export default function AccountScreen({
       setProfileSetupHints({ email: trimmed });
       track({ name: "signup_completed", method: "email" });
       track({ name: "account_created", method: "email" });
+      await saveDerivedDisplayName(undefined, trimmed);
       onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
     } catch (e: unknown) {
       captureError(e, "OnboardingV2Email");
@@ -367,6 +425,12 @@ export default function AccountScreen({
           </View>
         ) : null}
 
+        {state === "awaiting_confirm" ? (
+          <View style={styles.auth}>
+            <Notice icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}>{CHECK_EMAIL_TO_SAVE}</Notice>
+          </View>
+        ) : null}
+
         {state === "email_taken" ? (
           <View style={styles.auth}>
             <Field label="Email" value={email} editable={false} />
@@ -429,6 +493,7 @@ function Field({
         placeholder={placeholder ?? label}
         placeholderTextColor={DS_V3.color.textSecondary}
         accessibilityLabel={label}
+        testID={label === "Email" ? "account-email" : label === "Password" ? "account-password" : undefined}
         style={[styles.input, error && styles.inputError]}
       />
     </View>

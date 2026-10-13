@@ -1,0 +1,72 @@
+appId: app.griit.challenge-tracker
+---
+# Creates a throwaway email account, then deletes it. Apple sheet is not tapped.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: "b87delete10222058@example.com"
+- tapOn:
+    id: "account-password"
+- inputText: "Build87-guest-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it"
+    timeout: 10000
+- tapOn: "Send it"
+- extendedWaitUntil:
+    visible: "Delete account"
+    timeout: 20000
+- tapOn: "Delete account"
+- extendedWaitUntil:
+    visible: "Type DELETE to confirm"
+    timeout: 10000
+- tapOn:
+    id: "delete-confirm"
+- inputText: "DELETE"
+- hideKeyboard
+- tapOn:
+    point: "50%,52%"
+- extendedWaitUntil:
+    visible: "Sign in"
+    timeout: 40000

@@ -21,7 +21,7 @@ import {
   sessionKindFromUser,
 } from "@/lib/onboarding-v2-routing";
 import { persistOnboardingV2Step, loadOnboardingV2Step } from "@/lib/onboarding-v2-step";
-import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
+import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
@@ -276,7 +276,7 @@ export default function OnboardingFlowV2() {
 
   const handleFinish = useCallback(async () => {
     setCompleteError("");
-    const result = await completeOnboardingV2();
+    const result = await exitOnboardingV2(ROUTES.TABS);
     if (!result.ok) {
       setCompleteError(result.message);
       return;

@@ -13,6 +13,7 @@ import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener, ENTITLEMENT_ID } from '@/lib/subscription';
 import { identify, resetAnalytics, setUsageTestAccount, trackEvent } from '@/lib/analytics';
+import { noteGuestDistinctId, peekGuestDistinctId } from '@/lib/analytics-identity';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import { getDeviceIanaTimeZone } from '@/lib/iana-timezone';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
@@ -164,7 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user?.id) {
       setSubscriptionState(null, null);
       clearSubscription();
-      resetAnalytics();
+      if (!peekGuestDistinctId()) resetAnalytics();
       timezoneHealForDeviceRef.current = null;
       subscriptionInitedForUser.current = null;
       setTodayCheckins(null);
@@ -244,6 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
     const tier = typeof rawTier === "string" ? rawTier : undefined;
     setUsageTestAccount((p as { is_test?: boolean }).is_test === true);
+    if (user.is_anonymous) noteGuestDistinctId(user.id);
     identify(user.id, {
       isPremium,
       tier,

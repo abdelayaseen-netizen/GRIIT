@@ -44,19 +44,25 @@ import {
 const RING = 22;
 const RING_CHECK = DS_V3.space.md;
 const STROKE = (DS_V3.space.xs * 3) / 8;
-export function StatusRing({ row }: { row: HomeProofRow }) {
+export function StatusRing({ row, silent }: { row: HomeProofRow; silent?: boolean }) {
   const state = homeProofRingState(row);
+  const label = silent ? undefined : homeRingA11y(state);
   if (state === "done") {
     return (
-      <View style={[styles.ring, styles.ringDone]} accessibilityLabel={homeRingA11y("done")}>
+      <View
+        accessible={!silent}
+        style={[styles.ring, styles.ringDone]}
+        accessibilityLabel={label}
+      >
         <Check size={RING_CHECK} color={DS_V3.color.textPrimary} strokeWidth={2.5} />
       </View>
     );
   }
   return (
     <View
+      accessible={!silent}
       style={[styles.ring, state === "closed" ? styles.ringClosed : styles.ringPending]}
-      accessibilityLabel={homeRingA11y(state)}
+      accessibilityLabel={label}
     />
   );
 }
@@ -275,12 +281,13 @@ export function HomeV3({
       <>
         {row.tapDone && !row.done ? (
           <Pressable
+            accessible
             accessibilityRole="button"
             accessibilityLabel={`Done ${row.name}`}
             onPress={() => onCheckOff?.(row.id)}
             hitSlop={8}
           >
-            <StatusRing row={row} />
+            <StatusRing row={row} silent />
           </Pressable>
         ) : (
           <StatusRing row={row} />
@@ -314,8 +321,7 @@ export function HomeV3({
     return (
       <Pressable
         key={row.id}
-        accessibilityRole="button"
-        accessibilityLabel={row.name}
+        accessible={false}
         onPress={() => onPressTask?.(row.id)}
         style={[styles.proofRow, highlightTaskId === row.id ? styles.rowFlash : null]}
       >

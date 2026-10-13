@@ -229,10 +229,17 @@ export default function VisitorProfileScreen() {
           tier: "Starter",
         });
       } else if (!isSelf && i === 1 && ownerId) {
-        void trpcMutate(TRPC.reports.reportUser, { userId: ownerId, reason: "other" }).catch((err) => {
-          captureError(err, "ReportUser");
-          Alert.alert("Couldn't send the report", "Try again.");
-        });
+        void trpcMutate<{ alreadyReported?: boolean }>(TRPC.reports.reportUser, {
+          userId: ownerId,
+          reason: "other",
+        })
+          .then((result) => {
+            if (result?.alreadyReported) Alert.alert("Already reported");
+          })
+          .catch((err) => {
+            captureError(err, "ReportUser");
+            Alert.alert("Couldn't send the report", "Try again.");
+          });
       } else if (!isSelf && i === 2) setShowBlock(true);
     };
     if (Platform.OS === "ios") {

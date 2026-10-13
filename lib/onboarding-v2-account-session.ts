@@ -12,9 +12,10 @@ export function isRealNonAnonymousSession(
 export type AccountErrorSurface =
   | { kind: "silent" }
   | { kind: "email_taken" }
+  | { kind: "confirm_email"; message: string }
   | { kind: "message"; message: string };
 
-const KIND_FALLBACK: Record<Exclude<AnonAuthKind, "ok" | "identity_taken" | "cancelled">, string> = {
+const KIND_FALLBACK: Record<Exclude<AnonAuthKind, "ok" | "identity_taken" | "confirm_email" | "cancelled">, string> = {
   no_anon_session: "No guest session to upgrade. Sign in or create an account.",
   offline: "You're offline. Connect and try again.",
   provider_error: "Could not finish signing in. Please try again.",
@@ -27,6 +28,9 @@ export function surfaceAccountAuthKind(
   if (kind === "ok") return { kind: "silent" };
   if (kind === "cancelled") return { kind: "silent" };
   if (kind === "identity_taken") return { kind: "email_taken" };
+  if (kind === "confirm_email") {
+    return { kind: "confirm_email", message: message || "Check your email to save your streak" };
+  }
   if (message) return { kind: "message", message: mapAuthError({ message }) };
   return { kind: "message", message: KIND_FALLBACK[kind] };
 }

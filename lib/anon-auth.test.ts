@@ -335,8 +335,8 @@ describe("upgradeAnonymousWithEmail", () => {
   });
 
   /**
-   * Identity gap — existing email: GoTrue rejects; we surface identity_taken.
-   * No merge into the other account; anon session (and Day 1) stay on anon-uid-1.
+   * GoTrue rejects the attach and leaves the guest session in place.
+   * The account sheet signs into the existing account and moves the rows after this.
    */
   it("existing email: returns identity_taken, does not merge, keeps anon uid", async () => {
     getSession.mockResolvedValue({
@@ -367,6 +367,22 @@ describe("upgradeAnonymousWithEmail", () => {
       password: "secret1",
     });
     expect(linkIdentity).not.toHaveBeenCalled();
+    expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  it("stays a guest when email confirmation is still required", async () => {
+    const pending = { ...anonUser, email: "a@b.com", email_confirmed_at: null };
+    getSession.mockResolvedValue({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({ data: { user: pending }, error: null });
+
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+
+    expect(res.kind).toBe("confirm_email");
+    expect(res.message).toBe("Check your email to save your streak");
+    expect(res.user?.is_anonymous).toBe(true);
     expect(removeItem).not.toHaveBeenCalled();
   });
 });

@@ -833,7 +833,7 @@ export default function HomeScreen() {
           inviteChallenge={inviteTarget ? { id: inviteTarget.id, name: inviteTarget.name } : null}
           showInvite={showInvite}
           ListHeaderComponent={
-            <>
+            <View>
             {conceptBanner ? (
               <Text style={s.concept} accessibilityRole="text">{conceptBanner}</Text>
             ) : null}
@@ -919,7 +919,7 @@ export default function HomeScreen() {
               }
               showFirstProofSlot={firstProofEver && !todaySecured}
             />
-            </>
+            </View>
           }
         />
         <SaveStreakSheet

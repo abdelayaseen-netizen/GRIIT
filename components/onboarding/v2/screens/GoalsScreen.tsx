@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+    paddingBottom: 280,
     gap: DS_V3.space.sm,
   },
   grid: {

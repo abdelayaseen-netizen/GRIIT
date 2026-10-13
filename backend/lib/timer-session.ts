@@ -50,6 +50,11 @@ export function assertTimerSessionElapsed(
   return { ok: true, session };
 }
 
+/** "Done, already did it" posts as self-reported and does not need a running session. */
+export function timerSelfReportSkipsSession(selfReported: boolean | undefined): boolean {
+  return selfReported === true;
+}
+
 export function wrapTimerSession(session: TimerSession): { session: TimerSession } {
   return { session };
 }

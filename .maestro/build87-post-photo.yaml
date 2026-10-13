@@ -1,0 +1,83 @@
+appId: app.griit.challenge-tracker
+---
+# Saves with email first, then posts the water photo. Apple sheet is not tapped.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: "b87photo10222020@example.com"
+- tapOn:
+    id: "account-password"
+- inputText: "Build87-guest-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it"
+    timeout: 10000
+- tapOn: "Send it"
+- extendedWaitUntil:
+    visible: "Delete account"
+    timeout: 20000
+- tapOn: "Go back"
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- extendedWaitUntil:
+    visible: "Drink water and post a photo"
+    timeout: 20000
+- tapOn:
+    id: "active-task"
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post proof"
+    timeout: 20000
+- tapOn: "Post proof"
+- extendedWaitUntil:
+    visible: "Day secured: every task done."
+    timeout: 20000

@@ -460,6 +460,25 @@ function LiveFeedSection({
     }
   }, [blockTarget, pagePosts, queryClient]);
 
+  const reportFeedPost = useCallback(
+    async (post: LiveFeedPost) => {
+      if (!post.userId || post.userId === user?.id) return;
+      try {
+        const result = await trpcMutate<{ alreadyReported?: boolean }>(TRPC.reports.reportUser, {
+          userId: post.userId,
+          reason: "other",
+          details: post.id,
+        });
+        setFeedSnack(result?.alreadyReported ? "Already reported" : "Reported. Thanks for helping keep GRIIT safe.");
+      } catch (e) {
+        captureError(e, "LiveFeedReportPost");
+        setFeedSnack("Couldn't send the report. Try again.");
+      }
+      setTimeout(() => setFeedSnack(null), 2500);
+    },
+    [user?.id]
+  );
+
   const openPostMenu = useCallback(
     (post: LiveFeedPost) => {
       if (!user?.id) return;
@@ -470,8 +489,7 @@ function LiveFeedSection({
       };
       const runOther = (index: number) => {
         if (index === 0) {
-          setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
-          setTimeout(() => setFeedSnack(null), 2500);
+          void reportFeedPost(post);
         } else if (index === 1) {
           setBlockTarget(post);
         } else if (index === 2) {
@@ -498,7 +516,7 @@ function LiveFeedSection({
         setAndroidMenuPost(post);
       }
     },
-    [user?.id, handleDeletePost]
+    [user?.id, handleDeletePost, reportFeedPost]
   );
 
   const maybeFetchMore = useCallback(
@@ -827,9 +845,9 @@ function LiveFeedSection({
                 <TouchableOpacity
                   style={styles.androidMenuRow}
                   onPress={() => {
+                    const reported = androidMenuPost;
                     setAndroidMenuPost(null);
-                    setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
-                    setTimeout(() => setFeedSnack(null), 2500);
+                    if (reported) void reportFeedPost(reported);
                   }}
                   accessibilityRole="button"
                   accessibilityLabel="Report post"

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
+import { GUEST_SETTINGS_LINE, SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
 
 describe("settings rows", () => {
   it("names the two-reminder system and public or private account", () => {
@@ -13,5 +13,10 @@ describe("settings rows", () => {
     expect(settings).toContain("settingsPrivacySub");
     expect(settings).not.toContain("Daily reminder at");
     expect(settings).not.toContain("activity ${activityVis}");
+    expect(GUEST_SETTINGS_LINE).toBe(
+      "You're using GRIIT as a guest. Save your account so you don't lose your streak if you delete the app.",
+    );
+    expect(settings).toContain("GUEST_SETTINGS_LINE");
+    expect(settings).toContain("is_anonymous");
   });
 });

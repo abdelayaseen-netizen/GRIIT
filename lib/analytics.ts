@@ -4,6 +4,7 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getPostHog, resetPostHog } from "./posthog";
+import { accountSaveDistinctId, clearGuestDistinctId, peekGuestDistinctId } from "./analytics-identity";
 import { setUsageConsentFlag, setUsageTestAccount, usageAllowed, usageConsentOn } from "./usage-gate";
 import type { IdentityTier } from "@/constants/identity-copy";
 
@@ -187,12 +188,17 @@ export function identify(userId: string, props?: UserProperties) {
   const ph = getPostHog();
   if (ph) {
     try {
+      const plan = accountSaveDistinctId({
+        guestDistinctId: peekGuestDistinctId(),
+        nextUserId: userId,
+      });
+      if (plan.aliasUserId) ph.alias(plan.aliasUserId);
       const rest = { ...(props ?? {}) };
       delete rest.email;
       if (Object.keys(rest).length > 0) {
-        ph.identify(userId, { $set: rest });
+        ph.identify(plan.distinctId, { $set: rest });
       } else {
-        ph.identify(userId);
+        ph.identify(plan.distinctId);
       }
     } catch {
       // ignore
@@ -201,6 +207,7 @@ export function identify(userId: string, props?: UserProperties) {
 }
 
 export function resetAnalytics() {
+  clearGuestDistinctId();
   resetPostHog();
 }
 

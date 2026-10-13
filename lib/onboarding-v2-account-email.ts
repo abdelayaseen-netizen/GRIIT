@@ -3,6 +3,7 @@ export type AccountIdentityState =
   | "email_entry"
   | "malformed"
   | "confirm_email"
+  | "awaiting_confirm"
   | "email_taken";
 
 export const EMAIL_TAKEN_NOTICE =

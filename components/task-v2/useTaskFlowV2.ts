@@ -1108,7 +1108,7 @@ export function useTaskFlowV2() {
       setCount(counterGoal);
       void submitWithoutPhoto({ value: counterGoal }, "self_report");
     },
-    onDidIt: () => void submitWithoutPhoto({}, "self_report"),
+    onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
     onHere: () => void submitWithoutPhoto({}, "gps"),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
     goNextTask,

@@ -8,6 +8,8 @@ export const TRPC = {
     signIn: 'auth.signIn',
     signOut: 'auth.signOut',
     getSession: 'auth.getSession',
+    prepareGuestMerge: 'auth.prepareGuestMerge',
+    claimGuestMerge: 'auth.claimGuestMerge',
   },
   profiles: {
     get: 'profiles.get',

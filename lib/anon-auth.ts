@@ -13,6 +13,7 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError } from "@/lib/sentry";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 import { ensureOwnProfile } from "@/lib/ensure-own-profile";
+import { CHECK_EMAIL_TO_SAVE, emailSaveStillPending } from "@/lib/email-save-pending";
 
 /** Shared by identity-taken copy so AccountScreen can make this phrase a link. */
 export const SIGN_IN_WITH_THAT_ACCOUNT = "Sign in with that account";
@@ -21,6 +22,7 @@ export type AnonAuthKind =
   | "ok"
   | "no_anon_session"
   | "identity_taken"
+  | "confirm_email"
   | "offline"
   | "provider_error"
   | "cancelled";
@@ -65,7 +67,7 @@ function isOfflineError(err: unknown): boolean {
 }
 
 /** True when the current session user is an anonymous Supabase user. */
-export function isAnonymousUser(user: User | null | undefined): boolean {
+export function isAnonymousUser(user: User | null | undefined): user is User {
   return user?.is_anonymous === true;
 }
 
@@ -431,6 +433,17 @@ export async function upgradeAnonymousWithEmail(params: {
         user: null,
         session: null,
         message: "Account upgrade changed user id unexpectedly. Day 1 was not preserved.",
+        previousAnonUserId: user.id,
+      };
+    }
+
+    if (emailSaveStillPending(nextUser)) {
+      const { data: refreshed } = await supabase.auth.getSession();
+      return {
+        kind: "confirm_email",
+        user: nextUser,
+        session: refreshed.session,
+        message: CHECK_EMAIL_TO_SAVE,
         previousAnonUserId: user.id,
       };
     }
