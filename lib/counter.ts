@@ -1,7 +1,9 @@
 /** Port of design/handoff/v50 counter.ts. Do not import the handoff file. */
 
-export function completeLabel(target: number, unit: string, camera: boolean): string {
-  return camera ? "Done · take photo" : `Done · ${target} ${unit}`;
+/** One tap finishes the count. A photo gate still opens the camera after this. */
+export function completeLabel(target: number, unit: string, _camera?: boolean): string {
+  const name = unit.trim();
+  return name ? `Done · ${target} ${name}` : `Done · ${target}`;
 }
 
 export function showLogPartial(n: number, target: number): boolean {
