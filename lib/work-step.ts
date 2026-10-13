@@ -73,6 +73,27 @@ export function workStepDay(
   return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
 }
 
+/**
+ * Prefer the enrollment row through shownChallengeDay.
+ * If that row has not loaded, keep the day the previous screen already computed.
+ * A missing row must not flash Day 1.
+ */
+export function resolvedTaskDay(input: {
+  queryOk: boolean;
+  startAt: string | null | undefined;
+  routeDay: number;
+  timeZone: string;
+  todayKey: string;
+  durationDays: number;
+}): number {
+  if (input.queryOk && input.startAt) {
+    return calendarDayFromStartAt(input.startAt, input.timeZone, input.todayKey, input.durationDays);
+  }
+  const routed = Math.floor(input.routeDay);
+  if (routed >= 1) return routed;
+  return 1;
+}
+
 /** Same as the task-flow header. Type is a label, not this string. */
 export function workStepHeader(challenge: string, day: number, durationDays: number): string {
   return flowHeaderTitle(challenge, day, durationDays);

@@ -27,10 +27,44 @@ import {
   timerClockLine,
   timerPostEnabled,
   timerStartLabel,
+  resolvedTaskDay,
   workDoneLine,
   workStepHeader,
   workThenCamera,
 } from "@/lib/work-step";
+
+describe("timer enrollment select", () => {
+  it("asks only for columns that exist on active_challenges", () => {
+    const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
+    expect(flow).toContain('.select("start_at, created_at, challenge_id")');
+  });
+});
+
+describe("resolvedTaskDay", () => {
+  it("uses the enrollment start once the row loads, and the route day until then", () => {
+    const start = "2026-10-07T12:00:00.000Z";
+    expect(
+      resolvedTaskDay({
+        queryOk: true,
+        startAt: start,
+        routeDay: 1,
+        timeZone: "UTC",
+        todayKey: "2026-10-12",
+        durationDays: 7,
+      }),
+    ).toBe(6);
+    expect(
+      resolvedTaskDay({
+        queryOk: false,
+        startAt: null,
+        routeDay: 6,
+        timeZone: "UTC",
+        todayKey: "2026-10-12",
+        durationDays: 7,
+      }),
+    ).toBe(6);
+  });
+});
 
 describe("count of line", () => {
   it("omits the unit word when none is set", () => {

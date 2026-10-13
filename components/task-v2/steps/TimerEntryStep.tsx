@@ -19,6 +19,7 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
+  dayReady?: boolean;
   requiredSeconds: number;
   soundOn: boolean;
   onSoundOn: (v: boolean) => void;
@@ -35,6 +36,7 @@ export function TimerEntryStep({
   taskName,
   headerTitle,
   headerLabel,
+  dayReady = true,
   requiredSeconds,
   soundOn,
   onSoundOn,
@@ -48,7 +50,12 @@ export function TimerEntryStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
+        <PushedHeader
+          title={headerTitle}
+          label={headerLabel}
+          titleSlot={dayReady ? undefined : <View style={styles.daySkeleton} accessibilityLabel="Loading day" />}
+          onBack={onBack}
+        />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -76,6 +83,12 @@ export function TimerEntryStep({
 }
 
 const styles = StyleSheet.create({
+  daySkeleton: {
+    width: 140,
+    height: 22,
+    borderRadius: DS_V3.radius.thumb,
+    backgroundColor: DS_V3.color.surface,
+  },
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,

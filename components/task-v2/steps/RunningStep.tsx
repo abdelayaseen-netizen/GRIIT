@@ -23,6 +23,7 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
+  dayReady?: boolean;
   startedAtIso: string | null;
   requiredSeconds: number;
   onPause: () => void;
@@ -42,6 +43,7 @@ export function RunningStep({
   taskName,
   headerTitle,
   headerLabel,
+  dayReady = true,
   startedAtIso,
   requiredSeconds,
   onPause,
@@ -72,7 +74,12 @@ export function RunningStep({
   return (
     <View style={styles.root}>
       <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
+        <PushedHeader
+          title={headerTitle}
+          label={headerLabel}
+          titleSlot={dayReady ? undefined : <View style={styles.daySkeleton} accessibilityLabel="Loading day" />}
+          onBack={onBack}
+        />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -108,6 +115,12 @@ export function RunningStep({
 }
 
 const styles = StyleSheet.create({
+  daySkeleton: {
+    width: 140,
+    height: 22,
+    borderRadius: DS_V3.radius.thumb,
+    backgroundColor: DS_V3.color.surface,
+  },
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,

@@ -78,6 +78,7 @@ export function TaskFlowV2() {
           taskName={f.taskName}
           headerTitle={homeDayLine(f.currentDay, f.durationDays)}
           headerLabel={f.chromeTitle}
+          dayReady={f.dayReady}
           requiredSeconds={f.requiredSeconds}
           soundOn={f.soundOn}
           onSoundOn={f.setSoundOn}
@@ -171,6 +172,7 @@ export function TaskFlowV2() {
           taskName={f.taskName}
           headerTitle={f.headerTitle}
           headerLabel={f.chromeTitle}
+          dayReady={f.dayReady}
           startedAtIso={f.startedAtIso}
           requiredSeconds={f.requiredSeconds}
           onPause={f.pauseTimer}

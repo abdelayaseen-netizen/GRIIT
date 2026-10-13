@@ -52,7 +52,7 @@ import {
   type ShareIntent,
 } from "@/lib/finish-moment";
 import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
-import { shownChallengeDay } from "@/lib/home-day-total";
+import { homeDayLine, shownChallengeDay } from "@/lib/home-day-total";
 import { prepareJournalUnmount } from "@/lib/journal-leave";
 import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
@@ -66,7 +66,6 @@ import {
   flowAllowsSubmit,
   flowFooterBrand,
   flowFooterCaption,
-  flowHeaderTitle,
   gateTimeFromConfig,
   withRequiredPhotoGate,
   isWindowClosedError,
@@ -131,13 +130,12 @@ export function useTaskFlowV2() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("active_challenges")
-        .select("start_at, started_at, created_at, challenge_id")
+        .select("start_at, created_at, challenge_id")
         .eq("id", activeChallengeId)
         .maybeSingle();
       if (error) throw error;
       return data as {
         start_at?: string | null;
-        started_at?: string | null;
         created_at?: string | null;
         challenge_id?: string | null;
       } | null;
@@ -145,9 +143,9 @@ export function useTaskFlowV2() {
     enabled: !!activeChallengeId,
     staleTime: 60 * 1000,
   });
-  const dayReady = !activeChallengeId || enrollmentQ.isFetched;
-  const startAt = dayReady
-    ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null)
+  const dayReady = !activeChallengeId || enrollmentQ.isSuccess;
+  const startAt = enrollmentQ.isSuccess
+    ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.created_at ?? null)
     : null;
   const currentDay = shownChallengeDay(
     startAt,
@@ -1043,7 +1041,7 @@ export function useTaskFlowV2() {
     fromGps: false,
     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
     chromeTitle: challengeName.trim() || "Challenge",
-    headerTitle: flowHeaderTitle(challengeName, currentDay, durationDays),
+    headerTitle: homeDayLine(currentDay, durationDays),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
