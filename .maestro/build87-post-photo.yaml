@@ -46,7 +46,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b87photo10222020@example.com"
+- inputText: ${EMAIL}
 - tapOn:
     id: "account-password"
 - inputText: "Build87-guest-test"
@@ -75,9 +75,28 @@ appId: app.griit.challenge-tracker
     timeout: 20000
 - tapOn: "Take proof photo"
 - extendedWaitUntil:
-    visible: "Post proof"
+    visible: "Post to friends"
     timeout: 20000
-- tapOn: "Post proof"
+- tapOn: ${AUDIENCE}
+- tapOn: ${POST_BUTTON}
 - extendedWaitUntil:
-    visible: "Day secured: every task done."
+    visible: "^Done$"
+    timeout: 25000
+  optional: true
+- tapOn: "^Done$"
+  optional: true
+- extendedWaitUntil:
+    visible: "Back to today"
     timeout: 20000
+- assertVisible: ${AUDIENCE}
+- tapOn: "Back to today"
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible:
+      id: "profile-proof"
+    timeout: 20000
+- tapOn:
+    id: "profile-proof"
+- extendedWaitUntil:
+    visible: "Posts"
+    timeout: 15000

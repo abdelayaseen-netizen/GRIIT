@@ -43,6 +43,7 @@ function createMockContext(overrides: { userId?: string | null } = {}) {
     requestId: "test-req-id",
     clientIp: "127.0.0.1",
     isAnonymous: false,
+    email: null,
     userId: userId as string | null,
     supabase,
   };

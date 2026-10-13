@@ -1,14 +1,64 @@
 appId: app.griit.challenge-tracker
 ---
-# Heart toggles. Double-tap on the photo likes and does not unlike.
+# Fresh account, then heart unlike, then double-tap the photo likes and does not unlike.
 - launchApp:
-    stopApp: false
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build88-guest-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it"
+    timeout: 10000
+- tapOn: "Send it"
 - tapOn: "Activity"
-  optional: true
 - extendedWaitUntil:
     visible:
       id: feed-respect
-    timeout: 20000
+    timeout: 25000
 - tapOn:
     id: feed-respect
 - extendedWaitUntil:
@@ -20,5 +70,12 @@ appId: app.griit.challenge-tracker
 - assertNotVisible:
     id: feed-respect-count
 - doubleTapOn:
-    id: feed-respect
-    optional: true
+    id: feed-photo
+- extendedWaitUntil:
+    visible:
+      id: feed-respect-count
+    timeout: 8000
+- doubleTapOn:
+    id: feed-photo
+- assertVisible:
+    id: feed-respect-count

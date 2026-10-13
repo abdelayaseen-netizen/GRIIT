@@ -144,6 +144,7 @@ export default function ProfileProofs({
             return (
               <Pressable
                 key={p.id}
+                testID="profile-proof"
                 accessibilityRole="button"
                 accessibilityLabel={`${p.taskName || "Proof"}, ${date}`}
                 onPress={() => onOpenDay(p)}

@@ -72,9 +72,9 @@ export const FLAGS = {
    */
   SET_MEMBER_GYM: false,
   /**
-   * First-run starter task. Off keeps build 87 onboarding: the account screen
-   * still comes after the first real task. On is not shipped until the
-   * starter_tasks SQL in docs/sql/pending-oct13.sql has been applied.
+   * First-run starter task. Off keeps build 87 onboarding.
+   * The table exists. The client may only SELECT its own row.
+   * Writes go through tRPC with the service role after an ownership check.
    */
   STARTER_TASK_ENABLED: false,
 } as const;

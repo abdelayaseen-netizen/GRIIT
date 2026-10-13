@@ -44,16 +44,22 @@ appId: app.griit.challenge-tracker
     timeout: 15000
 - tapOn: "Take proof photo"
 - extendedWaitUntil:
-    visible: "Post proof"
+    visible: "Post to friends"
     timeout: 20000
-- tapOn: "Post proof"
+- tapOn: "Post to friends"
+- tapOn: "^Done$"
+  optional: true
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 25000
+- tapOn: "Back to today"
 - extendedWaitUntil:
     visible: "Save your streak."
     timeout: 20000
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b87guest10222020@example.com"
+- inputText: ${EMAIL}
 - tapOn:
     id: "account-password"
 - inputText: "Build87-guest-test"

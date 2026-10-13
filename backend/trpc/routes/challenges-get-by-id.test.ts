@@ -94,6 +94,7 @@ function caller(userId: string | null) {
     requestId: "test",
     clientIp: "127.0.0.1",
     isAnonymous: false,
+    email: null,
   });
 }
 
@@ -108,6 +109,7 @@ function joinCaller(userId: string) {
     requestId: "test",
     clientIp: "127.0.0.1",
     isAnonymous: false,
+    email: null,
   });
 }
 

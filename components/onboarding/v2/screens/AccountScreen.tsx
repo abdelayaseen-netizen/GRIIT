@@ -24,6 +24,7 @@ import { displayNameFromAccount } from "@/lib/account-display-name";
 import { adoptExistingAccount } from "@/lib/adopt-existing-account";
 import { CHECK_EMAIL_TO_SAVE } from "@/lib/email-save-pending";
 import { trpcMutate } from "@/lib/trpc";
+import { isMaestroTestEmail } from "@/lib/maestro-account";
 import { TRPC } from "@/lib/trpc-paths";
 import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
 import {
@@ -42,6 +43,20 @@ import {
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
+
+async function flagMaestroProfile(emailAddr?: string): Promise<void> {
+  const email = (emailAddr ?? "").trim();
+  if (!isMaestroTestEmail(email)) return;
+  try {
+    await trpcMutate(TRPC.profiles.claimMaestroTest, {});
+    return;
+  } catch {
+    const { data } = await supabase.auth.getUser();
+    const id = data.user?.id;
+    if (!id) return;
+    await supabase.from("profiles").update({ is_test: true }).eq("user_id", id);
+  }
+}
 
 async function saveDerivedDisplayName(appleName?: string, emailAddr?: string): Promise<void> {
   const name = displayNameFromAccount({ appleName, email: emailAddr });
@@ -256,6 +271,7 @@ export default function AccountScreen({
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
         await saveDerivedDisplayName(undefined, trimmed);
+        await flagMaestroProfile(trimmed);
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_email" }));
         return;
       }
@@ -287,6 +303,7 @@ export default function AccountScreen({
       track({ name: "signup_completed", method: "email" });
       track({ name: "account_created", method: "email" });
       await saveDerivedDisplayName(undefined, trimmed);
+      await flagMaestroProfile(trimmed);
       onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
     } catch (e: unknown) {
       captureError(e, "OnboardingV2Email");

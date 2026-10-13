@@ -222,6 +222,7 @@ function createCaller(opts?: { failFollows?: boolean }) {
     requestId: "test",
     clientIp: "127.0.0.1",
     isAnonymous: false,
+    email: null,
   });
 }
 

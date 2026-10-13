@@ -10,7 +10,7 @@ SET is_test = true
 WHERE display_name = 'App Review'
   AND is_test IS DISTINCT FROM true;
 
--- Discover category tags. Not applied. No flag. The app already reads challenges.category.
+-- Discover category tags. APPLIED Oct 13. Left here as the record. Do not run again.
 -- 5-Minute Morning Prayer is stored as mind in the discover seed. Drink Water Today is stored as Fitness.
 -- Checked from repo seeds (not a live catalog query): featured builtins are fitness, health, discipline,
 -- faith, mind, learning. Public seed titles and categories:
@@ -30,8 +30,12 @@ SET category = 'health'
 WHERE title = 'Drink Water Today'
   AND category IS DISTINCT FROM 'health';
 
--- Starter task. Not applied. STARTER_TASK_ENABLED stays false until this exists.
--- One row per person. The title is never shown to anyone else. A written title is at most 40 characters.
+-- Starter task. APPLIED Oct 13 with one change from the draft below.
+-- The live policy is SELECT for the owner only. There is no INSERT, UPDATE, or DELETE policy.
+-- Create, complete, expire, and the freeze grant go through tRPC with the service role
+-- after the handler checks the row belongs to the caller. The client never writes this table.
+-- STARTER_TASK_ENABLED stays false until the starter screens ship.
+-- Draft recorded here. Do not re-run.
 CREATE TABLE IF NOT EXISTS public.starter_tasks (
   user_id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
   title text NOT NULL CHECK (char_length(title) BETWEEN 1 AND 40),
@@ -45,7 +49,8 @@ CREATE TABLE IF NOT EXISTS public.starter_tasks (
 ALTER TABLE public.starter_tasks ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS starter_tasks_own ON public.starter_tasks;
-CREATE POLICY starter_tasks_own ON public.starter_tasks
-  FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS starter_tasks_select_own ON public.starter_tasks;
+CREATE POLICY starter_tasks_select_own ON public.starter_tasks
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);

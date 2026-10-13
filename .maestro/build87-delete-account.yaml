@@ -44,7 +44,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b87delete10222058@example.com"
+- inputText: ${EMAIL}
 - tapOn:
     id: "account-password"
 - inputText: "Build87-guest-test"

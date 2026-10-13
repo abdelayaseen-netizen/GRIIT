@@ -34,6 +34,7 @@ function createMockContext(userId: string | null = TEST_USER_ID) {
     requestId: "edge-req-id",
     clientIp: "127.0.0.1",
     isAnonymous: false,
+    email: null,
     userId,
     supabase: { from: () => mockChain, rpc: vi.fn().mockResolvedValue({ data: [], error: null }) },
   };

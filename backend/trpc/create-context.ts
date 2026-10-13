@@ -22,6 +22,7 @@ export const createContext = async (opts: { req: Request }) => {
   const clientIp = getClientIp(opts.req);
   const authHeader = opts.req.headers.get("authorization");
   let userId: string | null = null;
+  let email: string | null = null;
   let isAnonymous = false;
   let supabase = sharedSupabase;
 
@@ -32,6 +33,7 @@ export const createContext = async (opts: { req: Request }) => {
         const { data: { user }, error } = await sharedSupabase.auth.getUser(token);
         if (!error && user) {
           userId = user.id;
+          email = user.email ?? null;
           isAnonymous = user.is_anonymous === true;
           supabase = createUserSupabase(token);
         }
@@ -46,6 +48,7 @@ export const createContext = async (opts: { req: Request }) => {
     requestId,
     clientIp,
     userId,
+    email,
     isAnonymous,
     supabase,
   };

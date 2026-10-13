@@ -25,6 +25,7 @@ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { blockedPlainText } from "../../lib/content-moderation";
 import { isHiddenFromRealViewers, viewerIsTestAccount } from "../../lib/test-authors";
 import { mutualFriendIds } from "../../lib/is-friend";
+import { isMaestroTestEmail } from "../../../lib/maestro-account";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -576,6 +577,21 @@ export const profilesRouter = createTRPCRouter({
       }
       return { isFollowing: Boolean(data) };
     }),
+
+  /** Maestro addresses only. Service role sets is_test after the email is checked. */
+  claimMaestroTest: protectedProcedure.mutation(async ({ ctx }) => {
+    const email = ctx.email ?? "";
+    if (!isMaestroTestEmail(email)) return { ok: false as const };
+    const svc = getSupabaseServer();
+    if (!svc) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not mark the test account." });
+    }
+    const { error } = await svc.from("profiles").update({ is_test: true } as never).eq("user_id", ctx.userId);
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not mark the test account." });
+    }
+    return { ok: true as const };
+  }),
 
   deleteAccount: protectedProcedure
     .input(z.object({}))

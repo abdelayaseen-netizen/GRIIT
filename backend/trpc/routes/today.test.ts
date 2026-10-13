@@ -48,6 +48,7 @@ describe("today.get", () => {
       requestId: "test",
       clientIp: "127.0.0.1",
       isAnonymous: false,
+      email: null,
     });
     if (!caller) return;
     const result = await caller.today.get();

@@ -74,7 +74,7 @@ export default function DoubleTapRespect({
 
   return (
     <GestureDetector gesture={gesture}>
-      <View accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
+      <View testID="feed-photo" accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
         {children}
         <Animated.View pointerEvents="none" style={burstStyle}>
           <View style={{ width: burstSize, height: burstSize, alignItems: "center", justifyContent: "center" }}>

@@ -31,6 +31,7 @@ export const TRPC = {
     getWeeklyTrend: 'profiles.getWeeklyTrend',
     search: 'profiles.search',
     deleteAccount: 'profiles.deleteAccount',
+    claimMaestroTest: 'profiles.claimMaestroTest',
     followUser: 'profiles.followUser',
     unfollowUser: 'profiles.unfollowUser',
     sendFollowRequest: 'profiles.sendFollowRequest',
