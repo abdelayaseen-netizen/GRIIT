@@ -95,6 +95,7 @@ export const TRPC = {
     complete: 'checkins.complete',
     shareProof: 'checkins.shareProof',
     unshareProof: 'checkins.unshareProof',
+    setPostAudience: 'checkins.setPostAudience',
     startSession: 'checkins.startSession',
     saveProgress: 'checkins.saveProgress',
     secureDay: 'checkins.secureDay',

@@ -481,40 +481,6 @@ export function useTaskFlowV2() {
         }
         return;
       }
-      if (hasCameraProof) {
-        clearTimeout(slowTimer);
-        const eventId = closingProofEventId(complete.dayProofs, proofUrl);
-        void attemptSecureDayAfterComplete({
-          requiredRemaining: complete.requiredRemaining,
-          activeChallengeId,
-          challengeTitle: complete.challengeName ?? challengeName,
-          secureDay,
-        }).catch(() => undefined);
-        if (userId && taskId) void clearLocalTimerSession(userId, taskId, dateKey);
-        void endLiveActivity();
-        if (mountedRef.current) {
-          setShareEventId(eventId);
-          setFinishSave("saved");
-          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          publishTaskToast({
-            taskId,
-            title: taskDoneTitle(taskName, true),
-            body: taskName,
-            photoUri: photoUri ?? proofUrl ?? null,
-            cameraSeal: true,
-            eventId: eventId ?? null,
-            challengeId: enrollmentQ.data?.challenge_id ?? null,
-            challengeName,
-            taskName,
-            currentDay,
-            totalDays: durationDays,
-          });
-          returnToOrigin();
-        }
-        submitInFlight.current = false;
-        setSaving(false);
-        return;
-      }
       let secure: {
         success?: boolean;
         alreadySecured?: boolean;
@@ -599,6 +565,15 @@ export function useTaskFlowV2() {
       }
       void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
+        const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
+        if (typeof body.audience === "string" && postedId && mountedRef.current) {
+          setFinishSave("saved");
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace(ROUTES.POST_ID(postedId) as never);
+          submitInFlight.current = false;
+          setSaving(false);
+          return;
+        }
         const route = routeAfterSave({
           challengeFinished: false,
           daySecuredNow: false,
@@ -689,6 +664,7 @@ export function useTaskFlowV2() {
             closingHasPhoto: hasCameraProof,
             originTab,
             counterReachedTarget: counterTask && count >= counterGoal,
+            openPost: typeof body.audience === "string" ? (typeof complete.eventId === "string" ? complete.eventId : eventId) : null,
           }) as never,
         );
       }

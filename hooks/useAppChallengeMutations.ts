@@ -102,6 +102,7 @@ export function useAppChallengeMutations({
       challengeName?: string;
       verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
       dayProofs?: { eventId: string | null; imageUrl: string | null }[];
+      eventId?: string | null;
     } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -132,6 +133,7 @@ export function useAppChallengeMutations({
             challengeName?: string;
             verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
             dayProofs?: { eventId: string | null; imageUrl: string | null }[];
+            eventId?: string | null;
           }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
@@ -254,6 +256,7 @@ export function useAppChallengeMutations({
             challengeName: data?.challengeName,
             verificationKind: data?.verificationKind,
             dayProofs: data?.dayProofs,
+            eventId: data?.eventId ?? null,
           };
         })
         .catch((err: unknown) => {

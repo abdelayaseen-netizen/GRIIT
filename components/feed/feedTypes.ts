@@ -34,6 +34,7 @@ export type LiveFeedPost = {
   commentCount: number;
   shareCount?: number;
   visibility: "public" | "friends" | "private";
+  audience?: "friends" | "everyone" | "only_me" | string | null;
 };
 
 export type FeedCommentPreview = {

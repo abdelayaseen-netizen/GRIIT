@@ -52,6 +52,8 @@ type AppContextValue = {
     workout_kind?: string;
     floor_min?: number | null;
     shareChoicePending?: boolean;
+    audience?: "friends" | "everyone" | "only_me";
+    self_reported?: boolean;
   }) => Promise<{
     firstTaskOfDay?: boolean;
     completionId?: string;
@@ -64,6 +66,7 @@ type AppContextValue = {
     challengeName?: string;
     verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
     dayProofs?: { eventId: string | null; imageUrl: string | null }[];
+    eventId?: string | null;
   } | void>;
   secureDay: (activeChallengeId: string) => Promise<{
     success?: boolean;

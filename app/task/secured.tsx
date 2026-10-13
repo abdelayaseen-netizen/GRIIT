@@ -54,6 +54,7 @@ function TaskSecuredInner() {
     freezesHeld?: string;
     freezeCap?: string;
     freezeAtCap?: string;
+    openPost?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -190,6 +191,11 @@ function TaskSecuredInner() {
           enrollmentId: enrollmentId ?? "",
         },
       } as never);
+      return;
+    }
+    const openPost = firstString(params.openPost);
+    if (openPost) {
+      router.replace(ROUTES.POST_ID(openPost) as never);
       return;
     }
     router.replace(originTabHref(originTabFromParam(firstString(params.originTab))) as never);

@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
+  Share,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,6 +45,8 @@ import {
   sendComposerArmed,
 } from "@/lib/post-detail";
 import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
+import { ROUTES } from "@/lib/routes";
+import { POST_AUDIENCES, audienceBadge, audienceLabel, type PostAudience } from "@/lib/post-audience";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -151,6 +154,15 @@ function PostThreadScreenInner() {
     },
   });
 
+  const audienceMutation = useMutation({
+    mutationFn: (audience: PostAudience) =>
+      trpcMutate(TRPC.checkins.setPostAudience, { eventId: id, audience }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["feed", "post", id] });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    },
+  });
+
   const onSend = useCallback(() => {
     const t = draft.trim();
     if (!t || !id) return;
@@ -205,6 +217,43 @@ function PostThreadScreenInner() {
               task: displayPost.taskName,
             })}
           </Text>
+          {audienceBadge(displayPost.audience) ? (
+            <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
+          ) : null}
+          {user?.id && displayPost.userId === user.id ? (
+            <View style={styles.authorCopy}>
+              <Pressable
+                onPress={() => {
+                  void Share.share({
+                    message: displayPost.caption?.trim() || `${displayPost.challengeName} on GRIIT`,
+                  });
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Share outside GRIIT"
+              >
+                <Text style={styles.author}>Share outside GRIIT</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.replace(ROUTES.TABS_HOME as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Back to today"
+              >
+                <Text style={styles.author}>Back to today</Text>
+              </Pressable>
+              <View style={styles.authorRow}>
+                {POST_AUDIENCES.map((choice) => (
+                  <Pressable
+                    key={choice}
+                    onPress={() => audienceMutation.mutate(choice)}
+                    accessibilityRole="button"
+                    accessibilityLabel={audienceLabel(choice)}
+                  >
+                    <Text style={styles.time}>{audienceLabel(choice)}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
           {commentsCountLabel(displayPost.commentCount) ? (
             <Text style={styles.count}>{commentsCountLabel(displayPost.commentCount)}</Text>
           ) : null}
@@ -217,7 +266,7 @@ function PostThreadScreenInner() {
         ) : null}
       </View>
     );
-  }, [loading, displayPost, postQuery.isError, postQuery.error, section]);
+  }, [loading, displayPost, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation]);
 
   const renderCommentItem = useCallback(
     ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {

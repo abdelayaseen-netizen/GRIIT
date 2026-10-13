@@ -401,6 +401,7 @@ export const feedRouter = createTRPCRouter({
       commentCount: commentTotal ?? 0,
       shareCount,
       visibility: vis,
+      audience: typeof md.audience === "string" ? md.audience : null,
     };
   }),
 

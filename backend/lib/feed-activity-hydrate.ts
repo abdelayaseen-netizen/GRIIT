@@ -184,6 +184,7 @@ export async function hydrateActivityEventsToPosts(
     lastReactorName: string | null;
     commentCount: number;
     visibility: "public" | "friends" | "private";
+    audience?: string | null;
   }[]
 > {
   if (events.length === 0) return [];
@@ -399,6 +400,7 @@ export async function hydrateActivityEventsToPosts(
         : null,
       commentCount: commentCounts.get(ev.id) ?? 0,
       visibility,
+      audience: typeof md.audience === "string" ? md.audience : null,
     };
   });
   const dropped = new Set<string>();

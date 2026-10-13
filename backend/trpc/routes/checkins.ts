@@ -981,6 +981,7 @@ export const checkinsRouter = createTRPCRouter({
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
       const hasPhoto = !!proofUrl;
+      let postedEventId: string | null = null;
       if (!createsActivityPost(input.self_reported === true, hasPhoto)) {
         // Self-reported, no photo: the check-in is saved and no feed row is written.
       } else {
@@ -1008,9 +1009,13 @@ export const checkinsRouter = createTRPCRouter({
           location_verified: locationGatePassed,
         },
       };
-      const { error: taskCompletedEventError } = await ctx.supabase
+      const inserted = await ctx.supabase
         .from("activity_events")
-        .insert(activityEventPayload as never);
+        .insert(activityEventPayload as never)
+        .select("id")
+        .maybeSingle();
+      postedEventId = (inserted.data as { id?: string } | null)?.id ?? null;
+      const taskCompletedEventError = inserted.error;
       if (taskCompletedEventError) {
         logger.error(
           { err: taskCompletedEventError },
@@ -1018,7 +1023,9 @@ export const checkinsRouter = createTRPCRouter({
         );
         const svc = getSupabaseServer();
         if (svc) {
-          const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload as never);
+          const retry = await svc.from("activity_events").insert(activityEventPayload as never).select("id").maybeSingle();
+          const retryErr = retry.error;
+          if (!retryErr) postedEventId = (retry.data as { id?: string } | null)?.id ?? postedEventId;
           if (retryErr) {
             logger.error({ err: retryErr }, "[checkins.complete] task_completed event FAILED on service-role retry too");
           } else {
@@ -1158,6 +1165,7 @@ export const checkinsRouter = createTRPCRouter({
         challengeName: challengeTitleForFeed,
         verificationKind,
         dayProofs: dayProofs.map((t, i) => ({ ...t, imageUrl: signedComplete[3 + i] ?? null })),
+        eventId: postedEventId,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
@@ -1761,6 +1769,40 @@ export const checkinsRouter = createTRPCRouter({
     }
     return { ok: true as const, shared: false as const };
   }),
+
+  setPostAudience: protectedProcedure
+    .input(z.object({
+      eventId: z.string().uuid(),
+      audience: z.enum(["friends", "everyone", "only_me"]),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const svc = getSupabaseServer();
+      if (!svc) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
+      }
+      const { data: row, error } = await svc
+        .from("activity_events")
+        .select("id, user_id, metadata")
+        .eq("id", input.eventId)
+        .maybeSingle();
+      if (error || !row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found." });
+      }
+      const ev = row as { id: string; user_id: string; metadata?: Record<string, unknown> | null };
+      if (!canFlipShare(ev.user_id, ctx.userId)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only change your own post." });
+      }
+      const cols = shareColumns(shareStateForAudience(input.audience));
+      const metadata = { ...(ev.metadata ?? {}), audience: input.audience };
+      const { error: upErr } = await svc
+        .from("activity_events")
+        .update({ ...cols, metadata } as never)
+        .eq("id", ev.id);
+      if (upErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
+      }
+      return { ok: true as const, audience: input.audience };
+    }),
 
   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
     if (ctx.isAnonymous) {

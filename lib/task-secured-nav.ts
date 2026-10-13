@@ -43,6 +43,7 @@ export function taskSecuredHref(
     closingHasPhoto?: boolean;
     originTab?: string | null;
     counterReachedTarget?: boolean;
+    openPost?: string | null;
   },
 ) {
   return {
@@ -65,6 +66,7 @@ export function taskSecuredHref(
       closingPhoto: share?.closingHasPhoto ? "1" : "0",
       originTab: share?.originTab ?? "home",
       counterTarget: share?.counterReachedTarget ? "1" : "0",
+      openPost: share?.openPost ?? "",
       freezeGranted: result.freezeGranted ? "1" : "0",
       freezesHeld: String(result.freezesHeld ?? 0),
       freezeCap: String(result.freezeCap ?? 0),

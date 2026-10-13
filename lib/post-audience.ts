@@ -8,6 +8,11 @@ export function postButtonLabel(audience: PostAudience): string {
   return "Post to friends";
 }
 
+export function audienceBadge(audience: string | null | undefined): string | null {
+  if (audience === "friends" || audience === "everyone" || audience === "only_me") return audienceLabel(audience);
+  return null;
+}
+
 export function audienceLabel(audience: PostAudience): string {
   if (audience === "everyone") return "Everyone";
   if (audience === "only_me") return "Only me";

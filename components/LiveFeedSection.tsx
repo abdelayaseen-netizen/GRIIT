@@ -474,13 +474,38 @@ function LiveFeedSection({
     [user?.id]
   );
 
+  const applyAudience = useCallback((post: LiveFeedPost, audience: "friends" | "everyone" | "only_me") => {
+    void trpcMutate(TRPC.checkins.setPostAudience, { eventId: post.id, audience }).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    });
+  }, [queryClient]);
+
   const openPostMenu = useCallback(
     (post: LiveFeedPost) => {
       if (!user?.id) return;
       const isOwn = post.userId === user.id;
+      const canRetarget = isOwn && (post.audience === "friends" || post.audience === "everyone" || post.audience === "only_me");
+
+      const pickAudience = () => {
+        const choices = ["Friends", "Everyone", "Only me", "Cancel"] as const;
+        const map = ["friends", "everyone", "only_me"] as const;
+        if (Platform.OS === "ios") {
+          ActionSheetIOS.showActionSheetWithOptions(
+            { options: [...choices], cancelButtonIndex: 3 },
+            (buttonIndex) => {
+              const next = map[buttonIndex];
+              if (next) applyAudience(post, next);
+            },
+          );
+        }
+      };
 
       const runOwn = (index: number) => {
-        if (index === 0) void handleDeletePost(post);
+        if (canRetarget && index === 0) {
+          pickAudience();
+          return;
+        }
+        if (index === (canRetarget ? 1 : 0)) void handleDeletePost(post);
       };
       const runOther = (index: number) => {
         if (index === 0) {
@@ -494,13 +519,15 @@ function LiveFeedSection({
 
       if (Platform.OS === "ios") {
         const options = isOwn
-          ? ["Delete from the feed", "Cancel"]
+          ? canRetarget
+            ? ["Who can see this", "Delete from the feed", "Cancel"]
+            : ["Delete from the feed", "Cancel"]
           : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
         ActionSheetIOS.showActionSheetWithOptions(
           {
             options,
             cancelButtonIndex: options.length - 1,
-            destructiveButtonIndex: isOwn ? 0 : 1,
+            destructiveButtonIndex: isOwn ? (canRetarget ? 1 : 0) : 1,
           },
           (buttonIndex) => {
             if (isOwn) runOwn(buttonIndex);
@@ -511,7 +538,7 @@ function LiveFeedSection({
         setAndroidMenuPost(post);
       }
     },
-    [user?.id, handleDeletePost, reportFeedPost]
+    [user?.id, handleDeletePost, reportFeedPost, applyAudience]
   );
 
   const maybeFetchMore = useCallback(
@@ -815,6 +842,25 @@ function LiveFeedSection({
           <View style={styles.androidMenuSheet}>
             {androidMenuPost && androidMenuPost.userId === user.id ? (
               <>
+                {androidMenuPost.audience === "friends" || androidMenuPost.audience === "everyone" || androidMenuPost.audience === "only_me" ? (
+                  <>
+                    {(["friends", "everyone", "only_me"] as const).map((choice) => (
+                      <TouchableOpacity
+                        key={choice}
+                        style={styles.androidMenuRow}
+                        onPress={() => {
+                          const target = androidMenuPost;
+                          setAndroidMenuPost(null);
+                          applyAudience(target, choice);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={choice === "friends" ? "Friends" : choice === "everyone" ? "Everyone" : "Only me"}
+                      >
+                        <Text style={styles.androidMenuCancel}>{choice === "friends" ? "Friends" : choice === "everyone" ? "Everyone" : "Only me"}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </>
+                ) : null}
                 <TouchableOpacity
                   style={styles.androidMenuRow}
                   onPress={() => {
