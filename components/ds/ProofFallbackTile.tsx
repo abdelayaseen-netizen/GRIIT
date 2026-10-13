@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { Image, type ImageStyle } from "expo-image";
 import { Camera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -23,6 +23,21 @@ export function ProofFallbackTile({
   );
 }
 
+function ProofShimmer() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.85, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+  return <Animated.View style={[styles.fill, styles.shimmer, { opacity }]} />;
+}
+
 export function ProofPhoto({
   uri,
   taskName,
@@ -33,22 +48,29 @@ export function ProofPhoto({
   style?: StyleProp<ImageStyle>;
 }) {
   const [attempt, setAttempt] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   // A signed URL rotates hourly. A failed first paint must not stick to the next one.
   useEffect(() => {
     setAttempt(0);
+    setLoaded(false);
   }, [uri]);
   if (!uri || attempt > 3) {
     return <ProofFallbackTile taskName={taskName} style={styles.fill} />;
   }
   return (
-    <Image
-      key={`${uri}:${attempt}`}
-      source={{ uri }}
-      style={style}
-      contentFit="cover"
-      cachePolicy="memory-disk"
-      onError={() => setAttempt((n) => n + 1)}
-    />
+    <View style={style as StyleProp<ViewStyle>}>
+      {loaded ? null : <ProofShimmer />}
+      <Image
+        key={`${uri}:${attempt}`}
+        source={{ uri }}
+        style={styles.fill}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        transition={180}
+        onLoad={() => setLoaded(true)}
+        onError={() => setAttempt((n) => n + 1)}
+      />
+    </View>
   );
 }
 
@@ -70,6 +92,9 @@ const styles = StyleSheet.create({
   },
   fill: {
     ...StyleSheet.absoluteFillObject,
+  },
+  shimmer: {
+    backgroundColor: DS_V3.color.hairline,
   },
 });
 

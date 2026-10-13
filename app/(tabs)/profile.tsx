@@ -2,7 +2,7 @@
  * Own profile v2 — identity, streak, consistency, Challenges / Proofs / Badges.
  * Record strings come from profiles.getRecord. No proof CTA except empty Proofs tab.
  */
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,14 @@ import Screen from "@/components/ds/Screen";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { cachedProofUrl, proofPrefetchUrls } from "@/lib/proof-url-cache";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -138,6 +140,27 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
+  const proofTiles = useMemo(
+    () =>
+      proofs.map((p, i) => {
+        const id = p.eventId ?? `${p.dateKey}-${i}`;
+        return {
+          id,
+          dateKey: p.dateKey,
+          imageUrl: cachedProofUrl(id, p.imageUrl) ?? p.imageUrl,
+          taskName: p.taskName ?? p.challengeName,
+          shared: p.shared,
+          shareState: p.shareState,
+          bytes: p.bytes,
+        };
+      }),
+    [proofs],
+  );
+  useEffect(() => {
+    for (const url of proofPrefetchUrls(proofTiles.map((tile) => tile.imageUrl))) {
+      void Image.prefetch(url);
+    }
+  }, [proofTiles]);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -365,15 +388,7 @@ export default function ProfileScreen() {
           {v3Tab === "Your data" ? <YourDataTab /> : null}
           {v3Tab === "Proofs" ? (
             <ProfileProofs
-              proofs={proofs.map((p, i) => ({
-                id: p.eventId ?? `${p.dateKey}-${i}`,
-                dateKey: p.dateKey,
-                imageUrl: p.imageUrl,
-                taskName: p.taskName ?? p.challengeName,
-                shared: p.shared,
-                shareState: p.shareState,
-                bytes: p.bytes,
-              }))}
+              proofs={proofTiles}
               isOwner
               todayOpen={todayOpen}
               tasksLeft={tasksLeft}

@@ -2,7 +2,7 @@
  * Visitor profile v2 — identity always; record gated server-side.
  * Public: Follow / Following. Friends/Private: Request to follow / Requested / Following.
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionSheetIOS,
   Alert,
@@ -16,11 +16,13 @@ import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Image } from "expo-image";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { cachedProofUrl, proofPrefetchUrls } from "@/lib/proof-url-cache";
 import { captureError } from "@/lib/sentry";
 import { shareProfile } from "@/lib/share";
 import { DS_V3 } from "@/lib/design-system";
@@ -271,6 +273,27 @@ export default function VisitorProfileScreen() {
   const locked = gate.profile ? null : { heading: lockTitle, body: lockBody };
 
   const proofs = rec?.proofs ?? [];
+  const proofTiles = useMemo(
+    () =>
+      proofs.map((p, i) => {
+        const id = p.eventId ?? `${p.dateKey}-${i}`;
+        return {
+          id,
+          dateKey: p.dateKey,
+          imageUrl: cachedProofUrl(id, p.imageUrl) ?? p.imageUrl,
+          taskName: p.taskName ?? p.challengeName,
+          shared: p.shared,
+          shareState: p.shareState,
+          bytes: p.bytes,
+        };
+      }),
+    [proofs],
+  );
+  useEffect(() => {
+    for (const url of proofPrefetchUrls(proofTiles.map((tile) => tile.imageUrl))) {
+      void Image.prefetch(url);
+    }
+  }, [proofTiles]);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
   const header = rec?.header ?? EMPTY_SECURED_HEADER;
@@ -403,15 +426,7 @@ export default function VisitorProfileScreen() {
             ListFooterComponent={
               tab === "Proofs" && !locked ? (
                 <ProfileProofs
-                  proofs={proofs.map((p, i) => ({
-                    id: p.eventId ?? `${p.dateKey}-${i}`,
-                    dateKey: p.dateKey,
-                    imageUrl: p.imageUrl,
-                    taskName: p.taskName ?? p.challengeName,
-                    shared: p.shared,
-                    shareState: p.shareState,
-                    bytes: p.bytes,
-                  }))}
+                  proofs={proofTiles}
                   isOwner={false}
                   monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
                   days={rec?.days ?? []}
