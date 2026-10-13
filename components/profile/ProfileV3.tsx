@@ -81,6 +81,7 @@ export type ProfileV3Props = {
   onInvite?: () => void;
   onFollowers: () => void;
   onFollowing: () => void;
+  onFriends?: () => void;
   onSeeRecord: () => void;
   onDiscover: () => void;
   onOpenRun: (id: string) => void;
@@ -129,6 +130,7 @@ export function ProfileV3({
   onInvite,
   onFollowers,
   onFollowing,
+  onFriends,
   onSeeRecord,
   onDiscover,
   onOpenRun,
@@ -196,7 +198,7 @@ export function ProfileV3({
         onEditBio={onEditProfile ?? (() => undefined)}
         onFollowers={onFollowers}
         onFollowing={onFollowing}
-        onFriends={onFollowers}
+        onFriends={onFriends ?? onFollowers}
       />
 
       {locked ? (

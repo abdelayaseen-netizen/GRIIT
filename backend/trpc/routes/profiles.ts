@@ -24,6 +24,7 @@ import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { blockedPlainText } from "../../lib/content-moderation";
 import { isHiddenFromRealViewers, viewerIsTestAccount } from "../../lib/test-authors";
+import { mutualFriendIds } from "../../lib/is-friend";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -523,6 +524,38 @@ export const profilesRouter = createTRPCRouter({
           display_name: p?.display_name ?? null,
           avatar_url: p?.avatar_url ?? null,
           is_following: followingSet.has(id),
+        };
+      });
+    }),
+
+  getFriends: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const mutual = await mutualFriendIds(ctx.supabase, input.userId);
+      const ids = [...mutual].slice(0, 50);
+      if (ids.length === 0) {
+        return [] as {
+          user_id: string;
+          username: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          is_following: boolean;
+        }[];
+      }
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", ids)
+        .limit(50);
+      const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
+      return ids.map((id) => {
+        const p = pmap.get(id) as { username?: string; display_name?: string | null; avatar_url?: string | null } | undefined;
+        return {
+          user_id: id,
+          username: p?.username ?? "unknown",
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          is_following: true,
         };
       });
     }),

@@ -43,6 +43,7 @@ export const TRPC = {
     getFollowCounts: 'profiles.getFollowCounts',
     getFollowers: 'profiles.getFollowers',
     getFollowing: 'profiles.getFollowing',
+    getFriends: 'profiles.getFriends',
     isFollowing: 'profiles.isFollowing',
     suggested: 'profiles.suggested',
     getMutualFollowers: 'profiles.getMutualFollowers',

@@ -357,6 +357,9 @@ export default function ProfileScreen() {
             onFollowing={() =>
               router.push(ROUTES.FOLLOW_LIST(user.id, "following", handle) as never)
             }
+            onFriends={() =>
+              router.push(ROUTES.FOLLOW_LIST(user.id, "friends", handle) as never)
+            }
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}

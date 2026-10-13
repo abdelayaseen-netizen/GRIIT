@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  TextInput,
   ActivityIndicator,
   Platform,
 } from "react-native";
@@ -42,7 +43,9 @@ export default function FollowListScreen() {
   const { user } = useAuth();
   const params = useLocalSearchParams<{ userId?: string; mode?: string; username?: string }>();
   const userId = paramString(params.userId);
-  const mode = paramString(params.mode) === "following" ? "following" : "followers";
+  const rawMode = paramString(params.mode);
+  const mode = rawMode === "following" ? "following" : rawMode === "friends" ? "friends" : "followers";
+  const [query, setQuery] = useState("");
   const username = paramString(params.username);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -57,7 +60,13 @@ export default function FollowListScreen() {
   const listQuery = useQuery({
     queryKey: ["followList", validUserId, mode],
     queryFn: () =>
-      trpcQuery(mode === "followers" ? TRPC.profiles.getFollowers : TRPC.profiles.getFollowing, {
+      trpcQuery(
+        mode === "followers"
+          ? TRPC.profiles.getFollowers
+          : mode === "friends"
+            ? TRPC.profiles.getFriends
+            : TRPC.profiles.getFollowing,
+        {
         userId: validUserId,
       }) as Promise<FollowRow[]>,
     enabled: !!validUserId,
@@ -70,7 +79,8 @@ export default function FollowListScreen() {
   }, [bannerError]);
 
   const titlePrefix = username ? `${username}'s ` : "";
-  const headerTitle = mode === "followers" ? `${titlePrefix}Followers` : `${titlePrefix}Following`;
+  const headerTitle =
+    mode === "followers" ? `${titlePrefix}Followers` : mode === "friends" ? `${titlePrefix}Friends` : `${titlePrefix}Following`;
 
   const invalidateFollow = useCallback(async () => {
     await qc.invalidateQueries({ queryKey: ["followList"] });
@@ -124,7 +134,14 @@ export default function FollowListScreen() {
     if (row) void runUnfollow(row);
   }, [unfollowTarget, runUnfollow]);
 
-  const users = listQuery.data ?? [];
+  const users = (listQuery.data ?? []).filter((row) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      row.username.toLowerCase().includes(q) ||
+      (row.display_name ?? "").toLowerCase().includes(q)
+    );
+  });
 
   const renderItem = useCallback(
     ({ item }: { item: FollowRow }) => {
@@ -180,7 +197,9 @@ export default function FollowListScreen() {
   const listEmpty = useCallback(
     () => (
       <View style={styles.emptyWrap}>
-        <Text style={styles.emptyTitle}>{mode === "followers" ? "No followers yet" : "Not following anyone yet"}</Text>
+        <Text style={styles.emptyTitle}>
+          {mode === "followers" ? "No followers yet" : mode === "friends" ? "No friends yet" : "Not following anyone yet"}
+        </Text>
         <Text style={styles.emptySub}>
           {mode === "followers"
             ? "Share your profile to get followers."
@@ -224,6 +243,17 @@ export default function FollowListScreen() {
             <ActivityIndicator size="large" color={DS_V3.color.textSecondary} />
           </View>
         ) : (
+          <>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search"
+            placeholderTextColor={DS_V3.color.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={styles.search}
+            accessibilityLabel="Search this list"
+          />
           <FlatList
             data={users}
             keyExtractor={(item) => item.user_id}
@@ -236,6 +266,7 @@ export default function FollowListScreen() {
             removeClippedSubviews={Platform.OS === "android"}
             showsVerticalScrollIndicator={false}
           />
+          </>
         )}
       </Screen>
       <ConfirmDialog
@@ -289,7 +320,18 @@ const styles = StyleSheet.create({
   },
   headerSpacer: { width: 28 },
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  listContent: { paddingHorizontal: DS_V3.space.md, paddingBottom: 24 },
+  search: {
+    marginHorizontal: DS_V3.space.md,
+    marginBottom: 8,
+    height: 40,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: DS_V3.color.surface,
+    color: DS_V3.color.textPrimary,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+  },
+  listContent: { paddingHorizontal: DS_V3.space.md, paddingBottom: 24, flexGrow: 1 },
   row: {
     flexDirection: "row",
     alignItems: "center",

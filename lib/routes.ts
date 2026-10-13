@@ -46,7 +46,7 @@ export const ROUTES = {
   /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
   CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
   PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
-  FOLLOW_LIST: (userId: string, mode: "followers" | "following", username: string) =>
+  FOLLOW_LIST: (userId: string, mode: "followers" | "following" | "friends", username: string) =>
     `/follow-list?userId=${encodeURIComponent(userId)}&mode=${mode}&username=${encodeURIComponent(username)}` as const,
   /** Feed post / comment thread */
   POST_ID: (id: string) => `/post/${id}` as const,

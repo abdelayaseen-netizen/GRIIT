@@ -379,6 +379,11 @@ export default function VisitorProfileScreen() {
                   ? router.push(ROUTES.FOLLOW_LIST(ownerId, "following", handle) as never)
                   : undefined
               }
+              onFriends={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "friends", handle) as never)
+                  : undefined
+              }
               onSeeRecord={() =>
                 router.push({
                   pathname: ROUTES.PROFILE_CONSISTENCY as never,
