@@ -71,6 +71,12 @@ export const FLAGS = {
    * save anything without new storage. Leave the screen in the tree.
    */
   SET_MEMBER_GYM: false,
+  /**
+   * First-run starter task. Off keeps build 87 onboarding: the account screen
+   * still comes after the first real task. On is not shipped until the
+   * starter_tasks SQL in docs/sql/pending-oct13.sql has been applied.
+   */
+  STARTER_TASK_ENABLED: false,
 } as const;
 
 // ============================================

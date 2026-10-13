@@ -29,3 +29,23 @@ UPDATE public.challenges
 SET category = 'health'
 WHERE title = 'Drink Water Today'
   AND category IS DISTINCT FROM 'health';
+
+-- Starter task. Not applied. STARTER_TASK_ENABLED stays false until this exists.
+-- One row per person. The title is never shown to anyone else. A written title is at most 40 characters.
+CREATE TABLE IF NOT EXISTS public.starter_tasks (
+  user_id uuid PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
+  title text NOT NULL CHECK (char_length(title) BETWEEN 1 AND 40),
+  source text NOT NULL CHECK (source IN ('picked', 'written')),
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'done_now', 'later', 'expired')),
+  freeze_granted boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz
+);
+
+ALTER TABLE public.starter_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS starter_tasks_own ON public.starter_tasks;
+CREATE POLICY starter_tasks_own ON public.starter_tasks
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
