@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import WeekStrip from "@/components/ds/WeekStrip";
+import { fillTodayOnStrip } from "@/lib/home-streak";
 import { homeStatus } from "@/lib/home-status";
 import { greetingSub } from "@/lib/greeting";
 import Button from "@/components/ds/Button";
@@ -157,7 +158,7 @@ export function HomeV3({
   weekFilled: _weekFilled,
   weekStates,
   todayIndex,
-  fillToday: _fillToday,
+  fillToday,
   following: _following = [],
   onSeeAllActivity: _onSeeAllActivity,
   onPressFollowing: _onPressFollowing,
@@ -241,11 +242,15 @@ export function HomeV3({
     nextTask: openRow?.name,
   });
   const letters = weekLetters ?? ["M", "T", "W", "T", "F", "S", "S"];
-  const weekDays = letters.map((letter, i) => ({
-    letter,
-    filled: weekStates?.[i] === "secured" || weekStates?.[i] === "frozen",
-    state: weekStates?.[i],
-  }));
+  const weekDays = fillTodayOnStrip(
+    letters.map((letter, i) => ({
+      letter,
+      filled: weekStates?.[i] === "secured" || weekStates?.[i] === "frozen",
+      state: weekStates?.[i],
+    })),
+    todayIndex,
+    Boolean(fillToday || daySecured),
+  );
   const openCount = homeRows.filter((row) => !row.done && !row.closed).length;
   const sub = greetingSub({
     secured: daySecured || allDone,

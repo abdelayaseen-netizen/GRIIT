@@ -23,6 +23,20 @@ export function resolveHomeStatsReady(input: {
   return input.queryFetched || input.queryData != null || input.contextStats != null;
 }
 
+/** Today's circle fills as soon as the day is secured, even if the day rows are still stale. */
+export function fillTodayOnStrip<T extends { filled: boolean; state?: string }>(
+  days: readonly T[],
+  todayIndex: number,
+  fillToday: boolean,
+): T[] {
+  if (!fillToday || todayIndex < 0 || todayIndex >= days.length) return [...days];
+  return days.map((day, index) => {
+    if (index !== todayIndex) return day;
+    if (day.state === "frozen") return { ...day, filled: true };
+    return { ...day, filled: true, state: "secured" };
+  });
+}
+
 export function resolveDisplayedStreak(
   statsReady: boolean,
   activeStreak: number | null | undefined

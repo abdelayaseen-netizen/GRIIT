@@ -51,6 +51,7 @@ describe("consistency builders", () => {
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
     expect(mutations).toContain('invalidateQueries({ queryKey: ["profiles", "getRecord"] })');
+    expect(mutations.match(/invalidateQueries\(\{ queryKey: \["profiles", "getRecord"\] \}\)/g)?.length).toBeGreaterThan(1);
     expect(mutations).toContain('refetchQueries({ queryKey: ["profiles", "getRecord"] })');
   });
 

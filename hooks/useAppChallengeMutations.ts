@@ -179,6 +179,8 @@ export function useAppChallengeMutations({
           void fetchActiveChallenge();
           void fetchStats();
           void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
+          void queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
+          void queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] });
           void queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
           void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
