@@ -85,7 +85,6 @@ export default function TaskCompleteToast({
         { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] },
       ]}
     >
-      {toast.cameraSeal ? null : (
       <View style={styles.thumb}>
         {toast.photoUri ? (
           <Image source={{ uri: toast.photoUri }} style={styles.thumb} />
@@ -93,7 +92,6 @@ export default function TaskCompleteToast({
           <Check size={22} color={DS_V3.color.textPrimary} />
         )}
       </View>
-      )}
       <View style={styles.copy}>
         <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
         {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
@@ -112,9 +110,8 @@ export default function TaskCompleteToast({
             setShared(true);
             void Promise.resolve(onShareFeed?.(toast)).catch(() => setShared(false));
           }}
-          style={styles.photoPill}
+          style={styles.pill}
         >
-          {toast.photoUri ? <Image source={{ uri: toast.photoUri }} style={styles.photo} /> : null}
           <Text style={styles.pillTxt}>{shared ? "Undo" : "Share"}</Text>
         </Pressable>
       ) : toast.actionLabel ? (
@@ -180,16 +177,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.canvas },
-  photoPill: {
-    height: 40,
-    paddingLeft: 4,
-    paddingRight: 12,
-    borderRadius: DS_V3.radius.pill,
-    borderWidth: 1,
-    borderColor: DS_V3.color.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  photo: { width: 28, height: 32, borderRadius: 6 },
 });
