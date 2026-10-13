@@ -34,6 +34,12 @@ describe("formatTimeAgo", () => {
     expect(r.text).toBe("1d");
     expect(r.isDayOrMore).toBe(true);
   });
+
+  it("returns a date once the post is a week old", () => {
+    const r = formatTimeAgo("2025-02-17T12:00:00.000Z");
+    expect(r.text).toBe("Feb 17");
+    expect(r.isDayOrMore).toBe(true);
+  });
 });
 
 describe("formatTimeAgoCompact", () => {

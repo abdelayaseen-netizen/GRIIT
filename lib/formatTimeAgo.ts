@@ -11,7 +11,15 @@ export function formatTimeAgo(dateString: string): { text: string; isDayOrMore: 
   if (diffMins < 1) return { text: "now", isDayOrMore: false };
   if (diffMins < 60) return { text: `${diffMins}m`, isDayOrMore: false };
   if (diffHours < 24) return { text: `${diffHours}h`, isDayOrMore: false };
-  return { text: `${diffDays}d`, isDayOrMore: true };
+  if (diffDays < 7) return { text: `${diffDays}d`, isDayOrMore: true };
+  return { text: calendarDateLabel(dateString), isDayOrMore: true };
+}
+
+/** "Sep 30". Used once a timestamp is a week old, and on a finished challenge card. */
+export function calendarDateLabel(dateString: string): string {
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 /** Compact relative time for feeds (e.g. "now", "5m", "2h", "3d"). */

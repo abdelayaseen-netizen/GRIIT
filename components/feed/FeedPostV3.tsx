@@ -15,7 +15,7 @@ import { FeedCompactRow } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
-import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { calendarDateLabel, formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
 import {
@@ -103,7 +103,7 @@ export default function FeedPostV3({
         <PostHeader
           name={name}
           subject={`Finished ${post.challengeName}`}
-          when={when}
+          when={calendarDateLabel(post.createdAt)}
           userId={post.userId}
           username={post.username}
           avatarUri={avatarUri}
