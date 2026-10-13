@@ -33,6 +33,7 @@ import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
 import { routeAfterSave } from "@/lib/route-after-save";
+import type { PostAudience } from "@/lib/post-audience";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -175,6 +176,9 @@ export function useTaskFlowV2() {
     windowState === "closed" ? "window_closed" : initialStep(taskType, withRequiredPhotoGate(config as Record<string, unknown>)),
   );
   const [caption, setCaption] = useState("");
+  const [audience, setAudience] = useState<PostAudience>("friends");
+  const audienceRef = useRef(audience);
+  audienceRef.current = audience;
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [discardAsk, setDiscardAsk] = useState(false);
@@ -727,6 +731,7 @@ export function useTaskFlowV2() {
         proofUrl: url,
         photo_url: url,
         noteText: caption.trim() || undefined,
+        audience: audienceRef.current,
         proof_payload_json: capturedAt
           ? { capturedAt, captured_in_app: true }
           : undefined,
@@ -1021,6 +1026,8 @@ export function useTaskFlowV2() {
     photoUri,
     caption,
     setCaption,
+    audience,
+    setAudience,
     remainingSec,
     startedAtIso,
     text,

@@ -5,6 +5,7 @@ import { Image } from "expo-image";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
+import { audienceLabel, postButtonLabel, POST_AUDIENCES, type PostAudience } from "@/lib/post-audience";
 
 type Props = {
   photoUri: string;
@@ -17,6 +18,8 @@ type Props = {
   onRetake: () => void;
   onPost: () => void;
   submitting?: boolean;
+  audience: PostAudience;
+  onAudience: (audience: PostAudience) => void;
 };
 
 export function ReviewStep({
@@ -26,6 +29,8 @@ export function ReviewStep({
   onRetake,
   onPost,
   submitting = false,
+  audience,
+  onAudience,
 }: Props) {
   return (
     <KeyboardDock
@@ -43,7 +48,23 @@ export function ReviewStep({
             />
             <Text style={styles.counter}>{caption.length} / 120</Text>
           </View>
-          <Button label="Post proof" submitting={submitting} disabled={submitting} onPress={onPost} />
+          <View style={styles.audienceRow}>
+            {POST_AUDIENCES.map((choice) => {
+              const on = choice === audience;
+              return (
+                <Pressable
+                  key={choice}
+                  onPress={() => onAudience(choice)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  style={[styles.audienceChip, on && styles.audienceChipOn]}
+                >
+                  <Text style={[styles.audienceChipText, on && styles.audienceChipTextOn]}>{audienceLabel(choice)}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Button label={postButtonLabel(audience)} submitting={submitting} disabled={submitting} onPress={onPost} />
         </View>
       }
     >

@@ -88,6 +88,7 @@ export function useAppChallengeMutations({
       workout_kind?: string;
       floor_min?: number | null;
       shareChoicePending?: boolean;
+      audience?: "friends" | "everyone" | "only_me";
       self_reported?: boolean;
     }): Promise<{
       firstTaskOfDay?: boolean;

@@ -95,6 +95,7 @@ import {
   shareColumns,
   shareColumnsForComplete,
 } from "../../lib/activity-share";
+import { createsActivityPost, shareStateForAudience } from "../../../lib/post-audience";
 import { cameraProofTiles } from "../../lib/proof-predicate";
 import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
 
@@ -281,6 +282,7 @@ export const checkinsRouter = createTRPCRouter({
         floor_min: z.number().nonnegative().nullable().optional(),
         /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
         shareChoicePending: z.boolean().optional(),
+        audience: z.enum(["friends", "everyone", "only_me"]).optional(),
         /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
         self_reported: z.boolean().optional(),
       })
@@ -978,7 +980,13 @@ export const checkinsRouter = createTRPCRouter({
       const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
-      const shareCols = shareColumnsForComplete(input.shareChoicePending);
+      const hasPhoto = !!proofUrl;
+      if (!createsActivityPost(input.self_reported === true, hasPhoto)) {
+        // Self-reported, no photo: the check-in is saved and no feed row is written.
+      } else {
+      const shareCols = input.audience
+        ? shareColumns(shareStateForAudience(input.audience))
+        : shareColumnsForComplete(input.shareChoicePending);
       const activityEventPayload = {
         user_id: ctx.userId,
         event_type: "task_completed" as const,
@@ -995,6 +1003,7 @@ export const checkinsRouter = createTRPCRouter({
           verification_method: verificationMethod,
           is_hard_mode: cfg.hard_mode === true,
           task_mode: input.task_mode,
+          audience: input.audience ?? null,
           heart_rate_verified: false,
           location_verified: locationGatePassed,
         },
@@ -1016,6 +1025,7 @@ export const checkinsRouter = createTRPCRouter({
             logger.info("[checkins.complete] task_completed event recovered via service role");
           }
         }
+      }
       }
 
       try {

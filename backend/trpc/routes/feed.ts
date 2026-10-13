@@ -36,6 +36,7 @@ import {
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { isHiddenFromRealViewers, testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
+import { audienceShowsInScope, canSeePostAudience, profilePostVisible } from "../../../lib/post-audience";
 import { localDayStartIso, pickTodayPosters } from "../../lib/today-posters";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -115,6 +116,8 @@ export const feedRouter = createTRPCRouter({
         if (!canSeeProfileContent(viewerId, owner, { isMutual: friendIds.has(ev.user_id), isCoMember })) return false;
       }
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
+      const audience = (ev.metadata as { audience?: string | null } | null)?.audience;
+      if (!audienceShowsInScope(audience, input.scope)) return false;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
       if (ev.challenge_id && !ch) return false;
       const vis = normalizeChallengeVisibility(ch?.visibility);
@@ -209,9 +212,26 @@ export const feedRouter = createTRPCRouter({
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
     const coMemberIds = await coMemberChallengeIds(ctx.supabase, viewerId);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at, shared, share_state").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
+    let evQuery = server
+      .from("activity_events")
+      .select("id, user_id, event_type, challenge_id, metadata, created_at, shared, share_state")
+      .eq("user_id", input.userId)
+      .in("event_type", [...LIVE_FEED_TYPES])
+      .order("created_at", { ascending: false })
+      .limit(Math.min(80, input.limit * 3));
+    if (input.userId !== viewerId) evQuery = evQuery.eq("share_state", "shared");
+    const { data: rawEvents, error: evErr } = await evQuery;
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
-    const events = (rawEvents ?? []) as EvRow[];
+    const events = ((rawEvents ?? []) as EvRow[]).filter((ev) => {
+      const audience = (ev.metadata as { audience?: string | null } | null)?.audience;
+      return profilePostVisible({
+        shareState: ev.share_state,
+        audience,
+        viewerId,
+        authorId: ev.user_id,
+        isFriend: friendIds.has(ev.user_id),
+      });
+    });
     const posts = await hydrateActivityEventsToPosts(events, viewerId, friendIds, ctx, server, coMemberIds);
     return { posts: posts.slice(0, input.limit) };
   }),
@@ -251,6 +271,15 @@ export const feedRouter = createTRPCRouter({
     const vis = normalizeChallengeVisibility(ch?.visibility);
     const postFriendIds = new Set<string>();
     if (ev.user_id !== viewerId && (await isFriend(ctx.supabase, viewerId, ev.user_id))) postFriendIds.add(ev.user_id);
+    const postAudience = (ev.metadata as { audience?: string | null } | null)?.audience;
+    if (!canSeePostAudience({
+      audience: postAudience,
+      viewerId,
+      authorId: ev.user_id,
+      isFriend: postFriendIds.has(ev.user_id),
+    })) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+    }
     if (!canSeeContent(viewerId, ev.user_id, vis, postFriendIds, {
       challengeId: ev.challenge_id,
       coMemberChallengeIds: postCoMembers,

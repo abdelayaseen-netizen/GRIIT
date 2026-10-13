@@ -163,6 +163,8 @@ export function TaskFlowV2() {
           onRetake={f.onRetake}
           onPost={f.onReviewPost}
           submitting={f.saving}
+          audience={f.audience}
+          onAudience={f.setAudience}
         />
       ) : null}
 
