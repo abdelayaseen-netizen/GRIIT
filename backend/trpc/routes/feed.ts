@@ -35,7 +35,7 @@ import {
 } from "../../lib/live-feed-page";
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
-import { testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
+import { isHiddenFromRealViewers, testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
 import { localDayStartIso, pickTodayPosters } from "../../lib/today-posters";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -147,7 +147,7 @@ export const feedRouter = createTRPCRouter({
       ];
       const [visResult, chResult] = await Promise.all([
         eventUserIds.length > 0
-          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility, is_test").in("user_id", eventUserIds).limit(200)
+          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility, is_test, display_name").in("user_id", eventUserIds).limit(200)
           : Promise.resolve({ data: [] }),
         challengeIds.length > 0
           ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
@@ -155,7 +155,7 @@ export const feedRouter = createTRPCRouter({
       ]);
       for (const r of ((visResult.data ?? []) as (PrivacyProfileFields & { is_test?: boolean })[])) {
         if (r.user_id) authorProfiles.set(r.user_id, r);
-        if (r.user_id && r.is_test === true) testAuthorIds.add(r.user_id);
+        if (r.user_id && isHiddenFromRealViewers(r)) testAuthorIds.add(r.user_id);
       }
       for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
         challengeMap.set(c.id, c);

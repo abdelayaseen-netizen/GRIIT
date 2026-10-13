@@ -14,6 +14,7 @@ import { getCached, setCached } from "../../lib/cache";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
+import { subtractTestParticipantCounts } from "../../lib/test-authors";
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 import { mutualFriendIds } from "../../lib/is-friend";
@@ -104,11 +105,14 @@ export const challengesDiscoverProcedures = {
 
     const { data: chRowsRaw, error } = await q;
     requireNoError(error, "Failed to load discover challenges.");
-    const chRows = filterDiscoverCatalog(
-      (chRowsRaw ?? []).filter(
-        (c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() !== "PRIVATE"
+    const chRows = await subtractTestParticipantCounts(
+      server,
+      filterDiscoverCatalog(
+        (chRowsRaw ?? []).filter(
+          (c: { visibility?: string | null }) => String(c.visibility ?? "").toUpperCase() !== "PRIVATE"
+        ),
+        ctx.userId,
       ),
-      ctx.userId,
     );
 
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -394,13 +398,16 @@ export const challengesDiscoverProcedures = {
 
       const { data: chRows, error } = await q;
       requireNoError(error, "Failed to load Quick wins challenges.");
-      const candidates = filterDiscoverCatalog(
-        (chRows ?? []) as (ChallengeWithTasksRow & {
-          difficulty?: string | null;
-          duration_days?: number;
-          creator_id?: string | null;
-        })[],
-        ctx.userId,
+      const candidates = await subtractTestParticipantCounts(
+        server,
+        filterDiscoverCatalog(
+          (chRows ?? []) as (ChallengeWithTasksRow & {
+            difficulty?: string | null;
+            duration_days?: number;
+            creator_id?: string | null;
+          })[],
+          ctx.userId,
+        ),
       );
       if (candidates.length === 0) return [];
 
@@ -588,7 +595,7 @@ export const challengesDiscoverProcedures = {
       .limit(60);
     requireNoError(error, "Failed to load recommendations.");
 
-    const sorted = [...filterDiscoverCatalog(rows ?? [], ctx.userId)].sort(
+    const sorted = [...(await subtractTestParticipantCounts(server, filterDiscoverCatalog(rows ?? [], ctx.userId)))].sort(
       (a, b) => (Number(b.participants_count) || 0) - (Number(a.participants_count) || 0)
     );
     const solo = sorted.filter((c: { participation_type?: string | null }) => {

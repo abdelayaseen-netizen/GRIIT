@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import type { PgError, ProfileRow } from "../../types/db";
 import { getSupabaseServer } from "../../lib/supabase-server";
-import { viewerIsTestAccount } from "../../lib/test-authors";
+import { isHiddenFromRealViewers, viewerIsTestAccount } from "../../lib/test-authors";
 import { sendPushToProfile } from "../../lib/sendPush";
 import { logger } from "../../lib/logger";
 import { followRowAccepted } from "../../lib/feed-activity-hydrate";
@@ -467,7 +467,7 @@ export const profilesSocialProcedures = {
         created_at?: string | null;
       };
       const candidates = ((rows ?? []) as (SuggestedRow & { is_test?: boolean | null })[]).filter(
-        (p) => !exclude.has(p.user_id) && (viewerIsTest || p.is_test !== true),
+        (p) => !exclude.has(p.user_id) && (viewerIsTest || !isHiddenFromRealViewers(p)),
       );
       if (candidates.length === 0) return [];
 

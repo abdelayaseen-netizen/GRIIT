@@ -23,6 +23,7 @@ import { ensureProfile } from "../../lib/ensure-profile";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { blockedPlainText } from "../../lib/content-moderation";
+import { isHiddenFromRealViewers, viewerIsTestAccount } from "../../lib/test-authors";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -398,15 +399,19 @@ export const profilesRouter = createTRPCRouter({
       if (!q) return [];
       const escapedSafe = sanitizeSearchQuery(q);
       if (!escapedSafe) return [];
-      const { data, error } = await ctx.supabase
+      const viewerIsTest = await viewerIsTestAccount(ctx.supabase, ctx.userId);
+      let people = ctx.supabase
         .from("profiles")
-        .select("user_id, username, display_name, avatar_url")
+        .select("user_id, username, display_name, avatar_url, is_test")
         .neq("user_id", ctx.userId)
-        .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`)
-        .limit(20);
+        .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`);
+      if (!viewerIsTest) people = people.eq("is_test", false);
+      const { data, error } = await people.limit(20);
       requireNoError(error, "Failed to search profiles.");
       const blockedIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
-      const rows = ((data ?? []) as ProfileRow[]).filter((r) => !blockedIds.has(r.user_id));
+      const rows = ((data ?? []) as (ProfileRow & { is_test?: boolean | null })[]).filter(
+        (r) => !blockedIds.has(r.user_id) && (viewerIsTest || !isHiddenFromRealViewers(r)),
+      );
       const ids = rows.map((r) => r.user_id);
       const { data: streakRows } =
         ids.length > 0
