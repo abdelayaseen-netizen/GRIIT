@@ -438,10 +438,9 @@ export default function VisitorProfileScreen() {
                   header={header}
                   securedDays={header.secured}
                   onOpenDay={(tile) =>
-                    router.push({
-                      pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
-                      params: { at: tile.id, userId: isSelf ? undefined : ownerId },
-                    } as never)
+                    ownerId
+                      ? router.push(ROUTES.PROFILE_POSTS(ownerId, tile.id) as never)
+                      : undefined
                   }
                 />
               ) : null

@@ -50,11 +50,11 @@ describe("Chunk U Profile Part A", () => {
     expect(visibleProofDays(days, false)[0]?.photoCount).toBe(1);
   });
 
-  it("own profile opens the day viewer, not a feed post", () => {
+  it("own profile opens the vertical posts list from the grid", () => {
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     const consist = readFileSync(resolve(__dirname, "../app/profile/consistency.tsx"), "utf8");
     expect(own).toContain("ProfileProofs");
-    expect(own).toContain("ROUTES.PROFILE_PROOF");
+    expect(own).toContain("ROUTES.PROFILE_POSTS");
     expect(own).not.toContain("ROUTES.POST_ID");
     expect(consist).toContain("daysFromSource");
     expect(consist).toContain("ConsistencyGrid");

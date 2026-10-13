@@ -399,10 +399,7 @@ export default function ProfileScreen() {
               days={record?.days ?? []}
               header={header}
               onOpenDay={(tile) =>
-                router.push({
-                  pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
-                  params: { at: tile.id },
-                } as never)
+                router.push(ROUTES.PROFILE_POSTS(user.id, tile.id) as never)
               }
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
