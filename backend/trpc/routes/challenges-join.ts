@@ -37,7 +37,7 @@ async function syncChallengeParticipantsCount(supabase: SupabaseClient, challeng
 
 export const challengesJoinProcedures = {
   join: protectedProcedure
-    .input(z.object({ challengeId: z.string().uuid() }))
+    .input(z.object({ challengeId: z.string().uuid(), startTomorrow: z.boolean().optional() }))
     .mutation(async ({ input, ctx }) => {
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
       await ensureProfile(getSupabaseServer() ?? ctx.supabase, ctx.userId);
@@ -186,7 +186,9 @@ export const challengesJoinProcedures = {
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
       try {
         const [activeChallenge, chResult] = await Promise.all([
-          joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId),
+          joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId, {
+            startTomorrow: input.startTomorrow === true,
+          }),
           ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single(),
         ]);
         const { data: ch } = chResult;

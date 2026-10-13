@@ -13,10 +13,10 @@ import {
 } from "./join-errors";
 import {
   anyTimeWindowClosedToday,
-  day1Defers,
   enrollmentStartAt,
   type TaskWindowRow,
 } from "./late-join-window";
+import { starterJoinStartsTomorrow } from "./starter-task";
 
 export {
   anyTimeWindowClosedToday,
@@ -39,7 +39,8 @@ export type JoinChallengeResult = { id: string; user_id: string; challenge_id: s
 export async function joinChallengeDirect(
   supabase: SupabaseClient,
   userId: string,
-  challengeId: string
+  challengeId: string,
+  options?: { startTomorrow?: boolean },
 ): Promise<JoinChallengeResult> {
   const now = new Date();
   const { data: existingActive } = await supabase
@@ -98,7 +99,8 @@ export async function joinChallengeDirect(
     .eq("user_id", userId)
     .eq("date_key", todayKey)
     .maybeSingle();
-  const defer = day1Defers({
+  const defer = starterJoinStartsTomorrow({
+    requested: options?.startTomorrow === true,
     windowClosed: anyTimeWindowClosedToday(taskWindowList, now, userTz),
     todaySecured: Boolean(securedToday),
   });

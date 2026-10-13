@@ -23,10 +23,11 @@ import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
 import { displayNameFromAccount } from "@/lib/account-display-name";
 import { adoptExistingAccount } from "@/lib/adopt-existing-account";
 import { CHECK_EMAIL_TO_SAVE } from "@/lib/email-save-pending";
-import { trpcMutate } from "@/lib/trpc";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { isMaestroTestEmail } from "@/lib/maestro-account";
 import { TRPC } from "@/lib/trpc-paths";
 import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
+import { FLAGS } from "@/lib/feature-flags";
 import {
   CONFIRM_EMAIL_NOTICE,
   EMAIL_TAKEN_NOTICE,
@@ -97,11 +98,25 @@ export default function AccountScreen({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [starterDone, setStarterDone] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === "ios") {
       void AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!FLAGS.STARTER_TASK_ENABLED) return;
+    let cancelled = false;
+    void trpcQuery<{ status?: string } | null>(TRPC.starterTask.get)
+      .then((row) => {
+        if (!cancelled) setStarterDone(row?.status === "done_now");
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const saved = accountSavedLines({
@@ -319,7 +334,17 @@ export default function AccountScreen({
     }
   };
 
-  const skip = <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const accountTitle = FLAGS.STARTER_TASK_ENABLED
+    ? starterDone
+      ? "Save your streak and your freeze."
+      : "Save your challenge."
+    : ACCOUNT_TITLE;
+  const accountSubtitle = FLAGS.STARTER_TASK_ENABLED
+    ? starterDone
+      ? "Your first day is secured. Sign in so it’s still here tomorrow."
+      : "Sign in so your challenge and today’s starter are kept."
+    : accountInLine(challengeTitle);
+  const skip = FLAGS.STARTER_TASK_ENABLED ? null : <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
   const applePrimary = Platform.OS === "ios" && appleAvailable;
   const footer =
     state === "default" ? (
@@ -353,8 +378,8 @@ export default function AccountScreen({
     <OnboardingScreen
       step={6}
       onBack={onBack}
-      title={ACCOUNT_TITLE}
-      subtitle={accountInLine(challengeTitle)}
+      title={accountTitle}
+      subtitle={accountSubtitle}
       footer={footer}
     >
       <View style={styles.body}>

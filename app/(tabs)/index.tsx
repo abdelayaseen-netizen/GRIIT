@@ -20,6 +20,7 @@ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
+import { StarterTodayRow } from "@/components/home/StarterTodayRow";
 import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
 import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
 import { conceptLine, type ConceptKind } from "@/lib/concept-once";
@@ -837,6 +838,11 @@ export default function HomeScreen() {
             {conceptBanner ? (
               <Text style={s.concept} accessibilityRole="text">{conceptBanner}</Text>
             ) : null}
+            <StarterTodayRow
+              challengeTitle={inviteTarget?.name ?? null}
+              durationDays={null}
+              onChanged={refresh}
+            />
             <HomeV3
               title={greeting(
                 new Date(),

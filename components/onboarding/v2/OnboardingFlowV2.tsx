@@ -25,6 +25,7 @@ import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
+import { FLAGS } from "@/lib/feature-flags";
 import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
@@ -34,6 +35,7 @@ import GoalsScreen from "./screens/GoalsScreen";
 import HowItWorksScreen from "./screens/HowItWorksScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
+import StarterPickerScreen from "./screens/StarterPickerScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 import { readTargetStreak, writeTargetStreak } from "@/lib/onboarding-v2-target-streak";
@@ -60,6 +62,7 @@ export default function OnboardingFlowV2() {
   const setTargetStreak = useOnboardingStore((s) => s.setTargetStreak);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
+  const selectedChallengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
   const step = resolveV2Step(rawStep);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
   const [dbUsername, setDbUsername] = useState<string | null>(null);
@@ -68,6 +71,7 @@ export default function OnboardingFlowV2() {
   const [signInOpen, setSignInOpen] = useState(false);
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [starterOpen, setStarterOpen] = useState(false);
   const [stepReady, setStepReady] = useState(false);
   const [completeError, setCompleteError] = useState("");
 
@@ -217,6 +221,14 @@ export default function OnboardingFlowV2() {
     setV2Step(next);
   }, [step, setV2Step]);
 
+  const afterChallenge = useCallback(() => {
+    if (FLAGS.STARTER_TASK_ENABLED) {
+      setStarterOpen(true);
+      return;
+    }
+    goNext();
+  }, [goNext]);
+
   const goBack = useCallback(() => {
     if (step === "welcome") return;
     const idx = ONBOARDING_V2_ORDER.indexOf(step);
@@ -235,12 +247,16 @@ export default function OnboardingFlowV2() {
         setBrowseOpen(next.phase === "open");
         return true;
       }
+      if (starterOpen) {
+        setStarterOpen(false);
+        return true;
+      }
       if (step === "welcome") return false;
       goBack();
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen, browseOpen]);
+  }, [step, goBack, signInOpen, browseOpen, starterOpen]);
 
   const goToLogin = useCallback((prefill?: string) => {
     setSignInPrefill(prefill);
@@ -285,6 +301,18 @@ export default function OnboardingFlowV2() {
   }, [router]);
 
   const renderScreen = () => {
+    if (starterOpen) {
+      return (
+        <StarterPickerScreen
+          challengeTitle={selectedChallengeTitle}
+          onBack={() => setStarterOpen(false)}
+          onContinue={() => {
+            setStarterOpen(false);
+            goNext();
+          }}
+        />
+      );
+    }
     if (signInOpen) {
       return (
         <SignInScreen
@@ -313,9 +341,9 @@ export default function OnboardingFlowV2() {
           <FirstChallengeScreen
             onJoin={(challengeId) => {
               setSelectedChallenge(challengeId);
-              goNext();
+              afterChallenge();
             }}
-            onSkip={goNext}
+            onSkip={afterChallenge}
             onBrowse={() => setBrowseOpen(true)}
             onBack={goBack}
           />
@@ -353,7 +381,7 @@ export default function OnboardingFlowV2() {
       {completeError ? <Text style={styles.completeError}>{completeError}</Text> : null}
       <StepFade
         stepKey={
-          signInOpen ? "signin" : browseOpen ? "browse-all" : step
+          signInOpen ? "signin" : starterOpen ? "starter" : browseOpen ? "browse-all" : step
         }
       >
         {renderScreen()}

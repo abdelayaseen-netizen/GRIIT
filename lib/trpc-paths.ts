@@ -110,6 +110,12 @@ export const TRPC = {
     getChallengeIdByStarterId: 'starters.getChallengeIdByStarterId',
     join: 'starters.join',
   },
+  starterTask: {
+    get: 'starterTask.get',
+    saveLater: 'starterTask.saveLater',
+    completeNow: 'starterTask.completeNow',
+    expire: 'starterTask.expire',
+  },
   streaks: {
     getFreezeStatus: 'streaks.getFreezeStatus',
     useFreeze: 'streaks.useFreeze',

@@ -1,3 +1,4 @@
+import { FLAGS } from "@/lib/feature-flags";
 import { ensureAnonymousSession } from "@/lib/anon-auth";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -21,7 +22,10 @@ export async function joinFirstChallenge(challengeId: string): Promise<JoinFirst
     return { ok: false, message: anon.message ?? "Could not start a guest session." };
   }
   try {
-    await trpcMutate(TRPC.challenges.join, { challengeId });
+    await trpcMutate(TRPC.challenges.join, {
+      challengeId,
+      ...(FLAGS.STARTER_TASK_ENABLED ? { startTomorrow: true } : {}),
+    });
     await invalidateAfterOnboardingJoin(queryClient);
     return { ok: true };
   } catch (e) {
