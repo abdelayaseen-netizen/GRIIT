@@ -1,6 +1,6 @@
 # Overnight 14 Oct 2026
 
-Status: chunk 6 recorded, chunk 7 skipped, chunks 8–14 still to run.
+Status: chunk 8 done. Chunks 9–14 still to run. Spend so far $0.21 of $40.
 
 Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87`.
 
@@ -13,8 +13,8 @@ Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 5 Small fixes (bugs 8, 13–16) | done | Guest, hint, and Strict. Share card and the live API are in chunk 6. |
 | 6 Prove it | failed | The 16 seeded bug flows passed. See `docs/reports/build89/after/RESULTS.md`. Smoke is 7 pass and 5 fail, so it is not all green. |
 | 7 Ship | skipped | Smoke did not all pass, so EAS was not started. |
-| 8 First-timers | not started | Next. Accounts go through `railway run`, not a copied service-role key. |
-| 9 Faith and routine | not started | |
+| 8 First-timers | done | Six fresh guests on the simulator. Spend $0.21. Jordan, Amina, Casey, and Priya gave up on a repeated screen. Robert and Sam stopped on their own. is_test was set through railway run. |
+| 9 Faith and routine | not started | Next. Email accounts, not more guests. |
 | 10 Fitness and competitive | not started | |
 | 11 Social | not started | |
 | 12 Edge cases | not started | |

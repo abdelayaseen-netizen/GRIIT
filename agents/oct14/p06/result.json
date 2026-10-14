@@ -1,0 +1,43 @@
+{
+  "personaId": "p06",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:31:03.759Z",
+  "endedAt": "2026-10-14T22:36:52.018Z",
+  "steps": 28,
+  "durationSec": 348,
+  "goals": [
+    {
+      "id": "p06-g1",
+      "text": "Tap through to the first task as fast as possible.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: Failed to run flow: Device became unreachable during viewHierarchy",
+    "home: Home is already selected.",
+    "other: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "8c21606a-5745-45aa-bb7c-f5866a172a7e",
+  "isTest": true,
+  "cleanup": "kept"
+}

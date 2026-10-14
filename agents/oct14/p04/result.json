@@ -1,0 +1,38 @@
+{
+  "personaId": "p04",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:26:34.382Z",
+  "endedAt": "2026-10-14T22:28:42.347Z",
+  "steps": 11,
+  "durationSec": 128,
+  "goals": [
+    {
+      "id": "p04-g1",
+      "text": "Look for a catch, then leave if the first task feels like a trick.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "57842ca2-765b-4429-a6c0-af0a1c4f9e89",
+  "isTest": true,
+  "cleanup": "kept"
+}
