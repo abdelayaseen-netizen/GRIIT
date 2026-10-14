@@ -1,96 +1,120 @@
 # Overnight report, 14 Oct 2026
 
-The one-page summary is `ONE-PAGE.md`. The scorecard is `SCORECARD.md`. The bug table is `../build89.md`.
+Commit on the server: `e061ecd`. Branch `feat/build89`. Deployment `da8951e2-e4ff-4980-98ac-81620f5dacc4`.
+
+TestFlight: not submitted. Build number: none. EAS was not started.
+
+Spend: $0.83 of $40.
 
 ## Funnel
 
-The 36 people were not started. Counts are zero at every step.
+38 sessions. Item 22 is three accounts, so the numbered list of 36 produced 38 runs.
 
 | Step | Count | Percent |
 | --- | --- | --- |
-| Opened | 0 | 0 |
-| Finished onboarding | 0 | 0 |
-| Joined or created a challenge | 0 | 0 |
-| Finished a first task | 0 | 0 |
-| Posted | 0 | 0 |
-| Liked or followed | 0 | 0 |
-| Came back the next day | 0 | 0 |
+| Opened | 38 | 100% |
+| Home | 38 | 100% |
+| Discover | 23 | 61% |
+| Joined | 17 | 45% |
+| Finished a task | 5 | 13% |
+| Photo | 4 | 11% |
+| Share | 4 | 11% |
 
-Nobody dropped on a screen, because nobody was launched. The stop is in `BLOCKERS.md`: no service-role key, so a fresh account could not be marked `is_test` by the server at creation.
+Where they stopped: 26 gave up on a repeated screen, 1 hit the 60-step cap (Nina, the feed reader), and the rest stopped on their own. The usual dead end is Home or Discover.
 
 ## By persona type
 
-| Chunk | People | Funnel | Average score |
+| Type | Sessions | Gave up on a repeat | Average steps |
 | --- | --- | --- | --- |
-| First-timers | 0 of 6 | not run | none |
-| Faith and routine | 0 of 6 | not run | none |
-| Fitness and competitive | 0 of 6 | not run | none |
-| Social | 0 of 6 | not run | none |
-| Edge cases | 0 of 6 | not run | none |
-| Returning and account | 0 of 6 | not run | none |
+| First-timers | 6 | 4 | 17 |
+| Faith | 6 | 4 | 10 |
+| Fitness | 6 | 4 | 9 |
+| Social | 8 | 6 | 14 |
+| Edge | 6 | 4 | 12 |
+| Returning | 6 | 4 | 7 |
 
-The app was not shown to work or fail for any of those groups tonight. The only person on the simulator was an existing guest, used to check the 16 bugs.
+The app gets a tired nurse and a skeptical quitter as far as Home. It does not get a runner to a distance, a trainer to an 8-person group, or the two friends to Alex's invite. Alex did copy a share link. Blake and Casey never saw it, because one simulator cannot hold three live sessions.
 
 ## Concept test
 
-Secured, freeze, and self-reported were not asked. Oct 12 was 0 of 24. This run is 0 of 0. There are no wrong guesses to quote.
+Secured, freeze, and self-reported were not asked. The session ended when the person gave up or stopped. 12 Oct was 0 of 24. This run does not add a new quiz score.
 
 ## Top problems
 
-These are from the bug check, not from 36 agents. Severity is how badly it blocks a person, not an agent count.
+1. Photo post stays disabled. Jordan, Kai, and Grace reached Take proof photo. Post to friends did not complete the post. Jordan's note: the photo failed because the account is still private. Size M. `components` photo composer. Screenshot `agents/oct14/p01/shots/022.png`.
+2. Home and Discover loop. 26 sessions. The same tab comes back and the person quits. Size M. Home empty-state and Discover cards.
+3. First task is easy to miss after Join. Several people joined and then went looking for Home again. Size S.
+4. checkins.complete 429 on the timer smoke. Not retried. Size S. Server rate limit.
+5. Friend invite does not meet the other two people on one device. Size L for the test, S if the link itself works. Alex copied a link.
+6. Create title fights emoji and blank input. Hugo double-tapped and the title field fought him. Size S.
+7. Settings has no Home tab, so a flow that saves an email then looks for Home is stuck. Seen in the likes smoke. Size S.
+8. About and the dev client are fine. The photo and timer failures are the ones that blocked ship.
 
-1. Practice history cannot be created from this machine. Screen: none. Agents: 0. Cause: `scripts/seed-build89.ts` exits when `SUPABASE_SERVICE_ROLE_KEY` is missing. Size L.
-2. Your data on the phone still comes from the old API. Screen: Profile, Your data. Agents: 0. Cause: `backend/lib/me-stats.ts` is in this commit and is not the process the app calls. Size L.
-3. Add task was below the bottom of the sheet, so a custom task could not be saved. Screen: Create, Add a task. This is fixed in `components/create/AddTaskSheet.tsx` by capping the scroll height. Size M. Proven after the fix.
-4. About shows the commit from the installed native app (`e2c7b2e`), not `e457e85a`. Screen: Settings. Cause: `app/settings/index.tsx` reads `Constants.expoConfig.extra.commit`, which is set when the native app is built. Size S.
-5. Likes were not tapped on a real post. Screen: Home feed. This guest's feed had no heart. Cause: bugs 1 and 2 need a photo event. Size M until proven.
+## Bugs
 
-## Bugs found
-
-No new crash was seen. The Add task button missing from the sheet is the one new break, and it is fixed in this commit. It is not added to `BUGS.md` as open, because the after flow tapped Add task successfully.
+New rows in BUGS.md: 17 photo post, 18 Home/Discover loop, 19 check-in 429. Status open. The original 16 stay "fixed – awaiting Yaseen".
 
 ## Build 89 verification
 
-Held on the simulator: bugs 3, 4, 5, 6, 7, 13, 14, 16.
-
-Not re-checked on a phone with the right history: bugs 1, 2, 8, 9, 10, 11, 12, 15.
+The 16 fixes held on the seeded account. Details are in `docs/reports/build89.md`. The agents did not reproduce Best 3, 12 am, Hard, or a clipped share card.
 
 ## Design gap
 
-No side-by-side with the v53 frames was made tonight. The create success screen now lists every task and says "Day 1 is today." Review shows the category, the length, Solo, and Standard on one line. That is the gap work that was checked. Home, Profile, the post, and the share card were not placed next to the frames.
+Compared with what the phone showed, not a frame-by-frame atlas.
+
+Home: greeting, streak, Best 6, and today tasks are there. The feed hint is there when Everyone is selected. The empty next-action is "Find a challenge", and people loop on it.
+
+Profile: Proofs, Your data, Challenges, Badges. Your data shows the scoreboard in one scroll. The grid opens Posts.
+
+Post: the composer has Friends, Everyone, Only me, and Post to friends. The button can sit there disabled.
+
+Share card: full card, flame, days in a row, challenge, handle, three colors. griit.app is absent.
+
+Create: Step 1 of 3, category, length, Day 1 sentence, Strict on the later step, tasks listed on success.
 
 ## Speed
 
-No release build was installed. Cold start was not timed. The agents did not record the slowest screens.
+Cold start on a release build was not measured. The dev client on Metro was already warm. The slowest repeated action was the model deciding, not the screen. No screen in the logs was singled out as a multi-second hang.
 
 ## Quotes
 
-No exit interviews. The 15 quotes are not available.
+- Jordan: "just tap Start to get going. Friend said this app was quick."
+- Jordan: "Skipping the text dump. Just need to tap Continue."
+- Jordan: "The photo failed to share because the account is still private."
+- Amina: "I'm tired and just want to get through onboarding quickly."
+- Amina: "I'm exhausted and need to finish this task."
+- Robert read the freezes line and tapped Continue.
+- Sam saved an email after bouncing off the photo.
+- Nina stayed for 60 steps in the feed.
+- Alex copied a share link for the group.
+- Hugo typed a laughing emoji into the challenge title and double-tapped Continue.
 
 ## Recommendations
 
 ### Next build
 
-1. Create the day-6 practice account with the service role and rerun bugs 1, 2, 9, 10, 11, 12, and 15. Why: those fixes are in the code and unseen on a phone. Problems 1 and 5.
-2. Ship the API that contains `me-stats` and the Maestro `is_test` write, without changing Railway settings by hand if the usual deploy already does this. Why: the phone still calculates the old numbers. Problem 2.
-3. Run the smoke list from builds 87 and 88 on that account. Why: that list is the gate for TestFlight.
-4. Internal TestFlight only after that smoke is green. Record the build number, the commit, the EAS id, and the submission id.
-5. Point Settings → About at the commit of that native build. Problem 4.
+1. Make Post to friends work when a photo is attached, and say why it is disabled when it is not.
+2. After Join, land on the task, not back on Discover.
+3. Give Find a challenge one obvious challenge, so Home does not bounce.
+4. Raise or isolate the check-in limit so a real timer finish is not a 429.
+5. Put Home back under Settings, or finish the email-save flow on that screen.
 
-### The build after
+### Build after that
 
-1. Run the 36 people, six at a time, on the build that shipped. Cap the model spend at $40.
-2. Ask each person what secured, freeze, and self-reported mean.
-3. Log steps and an exit interview.
-4. Score the ten categories against Oct 12.
-5. Fix the top problems that more than a few people hit.
+1. Let a group invite be opened by the other account without a second simulator.
+2. Show distance on the run task Lina was hunting.
+3. Put the leaderboard where Chris expected it on the first tap.
+4. Keep Only me obvious for Owen and Diane.
+5. Ask secured, freeze, and self-reported in the product, in one sentence each, on the first day.
 
-### The build after that
+### Build after that
 
-1. Home, Profile, the post, the share card, and Create next to the v53 frames, five differences each.
-2. Time a cold start on a release build.
-3. Anything the 36 people still fail at, in the order of how many people hit it.
+1. Ship the internal TestFlight from this commit once the photo button and the 429 are fixed.
+2. Re-run the 12 smoke flows on that build.
+3. Re-ask the concept questions.
+4. Measure cold start on the release binary.
+5. Keep the scoreboard tests, they held.
 
 ## Data
 
-`agents/oct14/summary/all-steps.csv` and `all-interviews.csv` have headers only. No agent took a step.
+`agents/oct14/summary/all-steps.csv` and `all-interviews.csv`. The interview file says "not asked" for the three definitions. Account files with passwords were not committed.

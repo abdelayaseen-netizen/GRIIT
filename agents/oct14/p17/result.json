@@ -1,0 +1,36 @@
+{
+  "personaId": "p17",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:54:09.034Z",
+  "endedAt": "2026-10-14T22:55:26.570Z",
+  "steps": 5,
+  "durationSec": 78,
+  "goals": [
+    {
+      "id": "p17-g1",
+      "text": "Join the hardest-looking challenge and try one task.",
+      "kind": "db",
+      "pass": false,
+      "detail": "no enrollment row"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "2577195c-e73f-4f21-b5b6-0268fb223b5e",
+  "isTest": true,
+  "cleanup": "kept"
+}

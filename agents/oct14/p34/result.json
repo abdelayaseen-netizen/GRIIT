@@ -1,0 +1,36 @@
+{
+  "personaId": "p34",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:38:07.544Z",
+  "endedAt": "2026-10-14T23:39:29.596Z",
+  "steps": 6,
+  "durationSec": 82,
+  "goals": [
+    {
+      "id": "p34-g1",
+      "text": "Edit the profile name and bio.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. auth repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "auth: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "b5297693-5551-48d9-b7c7-b889caa249b2",
+  "isTest": true,
+  "cleanup": "kept"
+}

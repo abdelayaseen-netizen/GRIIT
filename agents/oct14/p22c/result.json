@@ -1,0 +1,35 @@
+{
+  "personaId": "p22c",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:17:10.842Z",
+  "endedAt": "2026-10-14T23:18:16.661Z",
+  "steps": 3,
+  "durationSec": 66,
+  "goals": [
+    {
+      "id": "p22c-g1",
+      "text": "Open the feed and like a post.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "bb69f5dc-b060-49f7-b481-9a6ff1c559e8",
+  "isTest": true,
+  "cleanup": "kept"
+}

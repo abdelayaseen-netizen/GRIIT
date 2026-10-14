@@ -1,0 +1,38 @@
+{
+  "personaId": "p18",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:55:26.571Z",
+  "endedAt": "2026-10-14T22:57:14.574Z",
+  "steps": 9,
+  "durationSec": 108,
+  "goals": [
+    {
+      "id": "p18-g1",
+      "text": "Post a photo and look for a like.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3be476d5-a120-4a6d-8f74-bb4485996edb",
+  "isTest": true,
+  "cleanup": "kept"
+}

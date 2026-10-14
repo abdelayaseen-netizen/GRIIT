@@ -1,0 +1,35 @@
+{
+  "personaId": "p24",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:19:38.044Z",
+  "endedAt": "2026-10-14T23:20:41.018Z",
+  "steps": 3,
+  "durationSec": 63,
+  "goals": [
+    {
+      "id": "p24-g1",
+      "text": "Read the feed and do not start a task.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "f2892fd9-42be-4225-a177-830317776197",
+  "isTest": true,
+  "cleanup": "kept"
+}

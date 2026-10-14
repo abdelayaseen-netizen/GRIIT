@@ -1,0 +1,36 @@
+{
+  "personaId": "p14",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:47:23.955Z",
+  "endedAt": "2026-10-14T22:48:33.271Z",
+  "steps": 5,
+  "durationSec": 69,
+  "goals": [
+    {
+      "id": "p14-g1",
+      "text": "Find a run task and see if distance is recorded.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "97368dbe-c2b4-4460-acf4-8234529bcba6",
+  "isTest": true,
+  "cleanup": "kept"
+}

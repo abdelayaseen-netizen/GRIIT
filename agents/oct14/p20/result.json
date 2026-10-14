@@ -1,0 +1,35 @@
+{
+  "personaId": "p20",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:58:14.074Z",
+  "endedAt": "2026-10-14T23:00:03.934Z",
+  "steps": 9,
+  "durationSec": 110,
+  "goals": [
+    {
+      "id": "p20-g1",
+      "text": "Set a post to Only me and confirm it is not public.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "4ec93f71-867e-41bf-bd03-af7ff08e4ca4",
+  "isTest": true,
+  "cleanup": "kept"
+}

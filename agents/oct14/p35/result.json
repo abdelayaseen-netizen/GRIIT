@@ -1,0 +1,36 @@
+{
+  "personaId": "p35",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:39:29.596Z",
+  "endedAt": "2026-10-14T23:41:00.157Z",
+  "steps": 7,
+  "durationSec": 91,
+  "goals": [
+    {
+      "id": "p35-g1",
+      "text": "Open Settings and the reminder controls.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. activity repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "activity: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c49476f1-6435-4545-b68b-47329927ebec",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -1,0 +1,36 @@
+{
+  "personaId": "p32",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:35:28.661Z",
+  "endedAt": "2026-10-14T23:36:34.484Z",
+  "steps": 6,
+  "durationSec": 66,
+  "goals": [
+    {
+      "id": "p32-g1",
+      "text": "Find the save-account path from Settings.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "132b4288-f956-45f4-a901-757040bc70f4",
+  "isTest": true,
+  "cleanup": "kept"
+}

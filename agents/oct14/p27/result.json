@@ -1,0 +1,37 @@
+{
+  "personaId": "p27",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:23:54.162Z",
+  "endedAt": "2026-10-14T23:26:58.820Z",
+  "steps": 17,
+  "durationSec": 185,
+  "goals": [
+    {
+      "id": "p27-g1",
+      "text": "Start a timer and leave the screen.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "008f76f5-2e1d-49a6-ae97-16c7820d59f7",
+  "isTest": true,
+  "cleanup": "kept"
+}

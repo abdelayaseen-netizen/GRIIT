@@ -1,0 +1,38 @@
+{
+  "personaId": "p22b",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:16:05.482Z",
+  "endedAt": "2026-10-14T23:17:10.841Z",
+  "steps": 5,
+  "durationSec": 65,
+  "goals": [
+    {
+      "id": "p22b-g1",
+      "text": "Look for an invite or a way to join a friend's challenge.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "discover: For you is already selected."
+  ],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "6a671c52-ea5d-468d-8cb7-515d50460054",
+  "isTest": true,
+  "cleanup": "kept"
+}

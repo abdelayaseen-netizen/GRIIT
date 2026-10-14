@@ -1,0 +1,33 @@
+{
+  "personaId": "p31",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:34:39.531Z",
+  "endedAt": "2026-10-14T23:35:28.660Z",
+  "steps": 2,
+  "durationSec": 49,
+  "goals": [
+    {
+      "id": "p31-g1",
+      "text": "Read Home and say whether today is clear.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "785a76ac-afa1-4746-9923-ae25be04da89",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -20,3 +20,7 @@ From `docs/reports/bugs-oct13.md`. Only Yaseen sets a bug to closed.
 | 14 Guest and signed in with email | fixed – awaiting Yaseen | Anonymous users see guest. Email shows only when one exists. |
 | 15 Share preview clips | fixed – awaiting Yaseen | The preview scales the whole card into the frame. |
 | 16 Strict vs Hard | fixed – awaiting Yaseen | Users see Strict. The stored value stays hard. |
+| 17 Photo post stays disabled | open | After Take proof photo, Post to friends stays disabled. Jordan's log said the photo failed because the account is still private. Smoke flows build87-done-photo, build87-fitness, and build87-post-photo hit the same button. |
+| 18 Home and Discover loop | open | 26 of 38 sessions gave up because the same screen came back three times, mostly Home and Discover. |
+| 19 Check-in 429 | open | build87-done-timer reached Log it, then checkins.complete returned 429. Not retried. |
+

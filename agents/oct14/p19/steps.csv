@@ -1,0 +1,4 @@
+step,screen,action,expected,what happened,seconds,confused,quote
+1,home,tap,Tapping on the 'Your first proof goes here' section to open the share card so I can see what it looks like,Your first proof goes here.,12.2,n,Tapping on the 'Your first proof goes here' section to open the share card so I can see what it looks like
+2,home,tap,I need to tap on 'Your first proof goes here.' to open the share card and see what it looks like. This is the section mentioned in the recent steps that should show me the share card.,Your first proof goes here.,8.5,n,I need to tap on 'Your first proof goes here.' to open the share card and see what it looks like. This is the section mentioned in the recent steps that should show me the share card.
+3,home,abort,,Gave up. home repeated 3 times.,8.1,n,

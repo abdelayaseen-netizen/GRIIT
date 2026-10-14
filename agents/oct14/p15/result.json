@@ -1,0 +1,34 @@
+{
+  "personaId": "p15",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:48:33.273Z",
+  "endedAt": "2026-10-14T22:49:18.027Z",
+  "steps": 3,
+  "durationSec": 45,
+  "goals": [
+    {
+      "id": "p15-g1",
+      "text": "Open the leaderboard before doing a task.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5e53a729-7b9b-4707-a7b5-29d88e15794c",
+  "isTest": true,
+  "cleanup": "kept"
+}
