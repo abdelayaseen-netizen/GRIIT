@@ -36,6 +36,7 @@ export type StepBasicsProps = {
   onChangeCustomDuration: (v: string) => void;
   who: WizardWho;
   onChangeWho: (who: WizardWho) => void;
+  day1Line: string;
 };
 
 const PRESETS: readonly { days: number; label: string }[] = [
@@ -69,6 +70,7 @@ export function StepBasics({
   onChangeCustomDuration,
   who,
   onChangeWho,
+  day1Line,
 }: StepBasicsProps) {
   const customOpen =
     durationDays == null || !PRESETS.some((p) => p.days === durationDays);
@@ -140,7 +142,7 @@ export function StepBasics({
       <View style={styles.section}>
         <Text style={styles.heading}>How long?</Text>
         <Text style={styles.secondary}>
-          {`${durationDays ?? 7} days. Day 1 is today.`}
+          {`${durationDays ?? 7} days. ${day1Line}`}
         </Text>
         {customOpen ? (
           <TextInput

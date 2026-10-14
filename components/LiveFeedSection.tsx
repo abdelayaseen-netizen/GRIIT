@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
 import { optimisticRespect, patchLiveFeedCache, rollbackRespect, settleRespect } from "@/lib/feed-respect";
+import { logLikeFailure } from "@/lib/like-error";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import ProofPost from "@/components/feed/ProofPost";
 import FeedEvent from "@/components/feed/FeedEvent";
@@ -356,6 +357,7 @@ function LiveFeedSection({
         }
         void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
+        logLikeFailure(e, "LiveFeedRespect");
         captureError(e, "LiveFeedRespect");
         updatePost(post.id, (p) => ({ ...p, ...rollbackRespect(prev) }));
       }
@@ -729,7 +731,7 @@ function LiveFeedSection({
             </Pressable>
           </View>
         </View>
-          {followingCount < 3 ? (
+          {scope === "everyone" && followingCount < 3 ? (
             <Text style={styles.untilThree}>{EVERYONE_UNTIL_THREE}</Text>
           ) : null}
         </View>

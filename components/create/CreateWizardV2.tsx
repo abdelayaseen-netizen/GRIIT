@@ -47,6 +47,10 @@ import {
   type CreateVisibility,
 } from "@/backend/lib/create-visibility";
 import { reviewLateJoinState } from "@/lib/late-join";
+import { canSaveWizardTasks, savedWizardTasks } from "@/lib/wizard-saved-tasks";
+import { day1SentenceFromStart, predictedDay1Sentence } from "@/lib/day1-sentence";
+import { getTodayDateKey } from "@/lib/date-utils";
+import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
@@ -104,10 +108,7 @@ function canAdvanceStep1(s: WizardState): boolean {
 }
 
 function canAdvanceStep2(s: WizardState): boolean {
-  if (s.useCustom) {
-    return s.customTasks.length > 0 && s.customTasks.every((t) => t.name.trim().length > 0);
-  }
-  return !!s.pack;
+  return canSaveWizardTasks(savedWizardTasks(s.pack?.tasks, s.customTasks));
 }
 
 function canLaunch(s: WizardState): boolean {
@@ -198,8 +199,8 @@ export function CreateWizardV2() {
       return {
         ...p,
         pack,
-        category: pack.category,
-        durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
+        category: p.category ?? pack.category,
+        durationDays: pack.durationDays ?? p.durationDays ?? INITIAL_STATE.durationDays,
         difficulty,
         customDuration: "",
       };
@@ -270,9 +271,7 @@ export function CreateWizardV2() {
     setLaunchError("");
     setLaunchBusy(true);
     try {
-      const tasksForApi = state.useCustom
-        ? state.customTasks
-        : state.pack?.tasks ?? [];
+      const tasksForApi = savedWizardTasks(state.pack?.tasks, state.customTasks);
 
       const payload: CreateChallengeInput = {
         title: state.title.trim(),
@@ -341,7 +340,7 @@ export function CreateWizardV2() {
   }, [state, queryClient, limitBlocked]);
 
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
-  const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
+  const reviewTasks = savedWizardTasks(state.pack?.tasks, state.customTasks);
   const editingDraft = useMemo(() => {
     if (editingIndex == null) return null;
     return draftFromWizardTask(
@@ -352,6 +351,13 @@ export function CreateWizardV2() {
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
   );
+  const securedKeys = Array.isArray(bootstrap.data?.securedDateKeys)
+    ? (bootstrap.data.securedDateKeys as string[])
+    : [];
+  const predictedDay1 = predictedDay1Sentence({
+    todaySecured: homeSecuredToday(securedKeys, getTodayDateKey(timeZone)),
+    windowClosed: reviewLateJoinState(reviewTasks, timeZone).defer,
+  });
 
   if (limitBlocked) {
     return (
@@ -379,6 +385,7 @@ export function CreateWizardV2() {
         tomorrow={tomorrow}
         tasks={launched.tasks}
         timeZone={timeZone}
+        day1Line={day1SentenceFromStart(launched.startAt, timeZone)}
         onHome={() => router.replace(ROUTES.TABS_HOME as never)}
         onInvite={
           launched.group
@@ -403,7 +410,7 @@ export function CreateWizardV2() {
           who={state.who}
           difficulty={state.difficulty}
           visibility={state.visibility}
-          starts={late.starts}
+          starts={predictedDay1}
           lateJoinLine={late.line}
           tasks={reviewTasks}
           launchState={launchState}
@@ -471,6 +478,7 @@ export function CreateWizardV2() {
               onChangeCustomDuration={setCustomDuration}
               who={state.who}
               onChangeWho={setWho}
+              day1Line={predictedDay1}
             />
           ) : null}
           {state.step === 2 ? (

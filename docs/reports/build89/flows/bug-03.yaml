@@ -1,0 +1,12 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Create"
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- tapOn: "Task name"
+- inputText: "Evening journal"
+- tapOn: "^Add task$"
+- tapOn: "Starter packs"
+- tapOn: "Continue"
+- tapOn: "Review"
+- assertVisible: "Evening journal"

@@ -44,7 +44,7 @@ export function FeedCompactRow(p: {
           {p.challenge} · {p.gateLine}
         </Text>
         <View style={styles.actions}>
-          <Pressable onPress={p.onRespect} hitSlop={8} style={styles.act} accessibilityRole="button" accessibilityLabel="Respect">
+          <Pressable onPress={p.onRespect} hitSlop={8} style={styles.act} accessibilityRole="button" accessibilityLabel={p.respected ? "Liked by you" : "Like"}>
             <Heart
               size={18}
               color={p.respected ? DS_V3.color.textPrimary : DS_V3.color.textSecondary}

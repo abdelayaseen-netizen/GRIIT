@@ -353,7 +353,7 @@ export const checkinsRouter = createTRPCRouter({
       if (isMinimumDay && isChallengeHardMode) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Hard mode challenges require full completion.",
+          message: "Strict challenges require full completion.",
         });
       }
 
@@ -452,7 +452,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -484,7 +484,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -511,7 +511,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -525,7 +525,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -540,7 +540,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }

@@ -36,6 +36,6 @@ export function challengeCompleteShareText(data: {
   daysCompleted: number;
   isHardMode?: boolean;
 }): string {
-  const hardLine = data.isHardMode ? " Hard Mode." : "";
+  const hardLine = data.isHardMode ? " Strict." : "";
   return `I completed "${data.name}" on GRIIT. ${data.daysCompleted} of ${data.duration} days secured.${hardLine}`;
 }

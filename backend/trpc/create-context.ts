@@ -5,6 +5,8 @@ import { supabase as sharedSupabase } from "../lib/supabase";
 import { getClientIp } from "../lib/rate-limit";
 import { reportError } from "../lib/error-reporting";
 import { logger } from "../lib/logger";
+import { isMaestroTestEmail } from "../../lib/maestro-account";
+import { getSupabaseServer } from "../lib/supabase-server";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
@@ -36,6 +38,16 @@ export const createContext = async (opts: { req: Request }) => {
           email = user.email ?? null;
           isAnonymous = user.is_anonymous === true;
           supabase = createUserSupabase(token);
+          if (email && isMaestroTestEmail(email)) {
+            const svc = getSupabaseServer();
+            if (svc) {
+              const { error: flagError } = await svc
+                .from("profiles")
+                .update({ is_test: true } as never)
+                .eq("user_id", user.id);
+              if (flagError) logger.error({ err: flagError }, "[createContext] maestro is_test");
+            }
+          }
         }
       } catch (err) {
         logger.error({ err }, "[createContext] auth.getUser failed");

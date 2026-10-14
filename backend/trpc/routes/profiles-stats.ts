@@ -576,7 +576,13 @@ export const profilesStatsProcedures = {
         metadata?: Record<string, unknown> | null;
       }[]).map((row) => {
         const md = row.metadata ?? {};
-        return { atIso: row.created_at, method: proofMethodFromMetadata(md) };
+        const photo =
+          typeof md.photo_url === "string"
+            ? md.photo_url
+            : typeof md.proof_photo_url === "string"
+              ? md.proof_photo_url
+              : null;
+        return { atIso: row.created_at, method: proofMethodFromMetadata(md), photoKey: photo };
       });
       return buildMeStats({
         range: input.range,

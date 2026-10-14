@@ -77,7 +77,7 @@ export default function ChallengeCard({
       ) : null}
       {hard ? (
         <View style={styles.hard}>
-          <Text style={styles.hardText}>Hard</Text>
+          <Text style={styles.hardText}>Strict</Text>
         </View>
       ) : null}
     </Pressable>

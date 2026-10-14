@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn:
+    point: "88%,91%"
+- tapOn: "profile-proof"
+- assertVisible: "Posts"

@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
     marginBottom: DS_V3.space.gutter,
   },
   body: {
+    flexShrink: 1,
     paddingBottom: SAFE.stickyGap,
   },
   footer: {

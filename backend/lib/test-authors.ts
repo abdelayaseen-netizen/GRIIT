@@ -3,16 +3,25 @@
  * A test viewer still does.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isMaestroTestEmail } from "../../lib/maestro-account";
 
 type ProfileFlag = { user_id?: string | null; is_test?: boolean | null };
 
 /** App Review was created without is_test. Hide that display name until the pending SQL flags the row. */
+function looksLikeMaestroHandle(value: string | null | undefined): boolean {
+  return /^b8\d/i.test((value ?? "").trim());
+}
+
 export function isHiddenFromRealViewers(row: {
   is_test?: boolean | null;
   display_name?: string | null;
+  username?: string | null;
+  email?: string | null;
 }): boolean {
   if (row.is_test === true) return true;
-  return (row.display_name ?? "").trim().toLowerCase() === "app review";
+  if ((row.display_name ?? "").trim().toLowerCase() === "app review") return true;
+  if (row.email && isMaestroTestEmail(row.email)) return true;
+  return looksLikeMaestroHandle(row.username) || looksLikeMaestroHandle(row.display_name);
 }
 
 export function participantCountWithoutTest(stored: number, testEnrolled: number): number {

@@ -48,10 +48,10 @@ export function getCategoryStyle(category: ChallengeCategory): CategoryStyle {
   }
 }
 
-/** Display string for difficulty: "Easy" / "Medium" / "Hard". */
+/** Display string for difficulty: "Easy" / "Medium" / "Strict". Stored value stays HARD. */
 export function difficultyDescriptive(d: ChallengeDifficulty): string {
   if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
+  if (d === "HARD") return "Strict";
   return "Medium";
 }
 

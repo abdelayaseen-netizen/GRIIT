@@ -92,6 +92,10 @@ function isProfileTab(value: string | undefined): value is ProfileTab {
   return value === "challenges" || value === "proofs" || value === "data" || value === "badges";
 }
 
+function isEventId(id: string | null | undefined): id is string {
+  return typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -143,7 +147,7 @@ export default function ProfileScreen() {
   const proofTiles = useMemo(
     () =>
       proofs.map((p, i) => {
-        const id = p.eventId ?? `${p.dateKey}-${i}`;
+        const id = isEventId(p.eventId) ? p.eventId : `no-event-${p.dateKey}-${i}`;
         return {
           id,
           dateKey: p.dateKey,
@@ -398,9 +402,10 @@ export default function ProfileScreen() {
               monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
               days={record?.days ?? []}
               header={header}
-              onOpenDay={(tile) =>
-                router.push(ROUTES.PROFILE_POSTS(user.id, tile.id) as never)
-              }
+              onOpenDay={(tile) => {
+                if (!isEventId(tile.id)) return;
+                router.push(ROUTES.PROFILE_POSTS(user.id, tile.id) as never);
+              }}
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
               securedDays={header.secured}

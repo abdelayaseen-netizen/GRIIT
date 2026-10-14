@@ -29,7 +29,7 @@ export function discoverPreviewTasks(
 
 export function difficultyChip(raw: string | null | undefined): string {
   const value = (raw ?? "").toLowerCase();
-  if (value === "hard" || value === "extreme") return "Hard";
+  if (value === "hard" || value === "extreme") return "Strict";
   if (value === "easy") return "Easy";
   return "Standard";
 }

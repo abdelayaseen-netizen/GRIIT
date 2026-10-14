@@ -35,10 +35,11 @@ const ABOUT_LINE = aboutVersionLine({
 });
 const ICON = DS_V3.space.xs * 6;
 
-function accountSubtitle(email: string | null | undefined): string {
+function accountSubtitle(email: string | null | undefined, anonymous: boolean): string {
+  if (anonymous) return "guest";
   const trimmed = email?.trim() ?? "";
   if (trimmed) return trimmed;
-  return "Signed in with email";
+  return "guest";
 }
 
 export default function SettingsScreen() {
@@ -72,7 +73,7 @@ export default function SettingsScreen() {
             <ListRow
               icon={<User size={ICON} color={DS_V3.color.textPrimary} />}
               title="Account"
-              subtitle={accountSubtitle(email)}
+              subtitle={accountSubtitle(email, anonymous)}
               onPress={() => router.push(ROUTES.SETTINGS_ACCOUNT as never)}
             />
             <ListRow

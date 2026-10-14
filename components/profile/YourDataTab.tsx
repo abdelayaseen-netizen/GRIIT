@@ -54,11 +54,7 @@ export function YourDataTab() {
   const stats = query.data;
   const pct = stats ? consistencyPct(stats.user_stats.secured_days, stats.user_stats.due_days) : null;
   const hour = stats ? usualHour(stats.user_stats.proof_hour_histogram) : null;
-  const proofs = stats
-    ? stats.user_stats.proofs_by_method.camera +
-      stats.user_stats.proofs_by_method.self_reported +
-      stats.user_stats.proofs_by_method.apple_health
-    : 0;
+  const proofs = stats ? stats.user_stats.proof_count : 0;
 
   return (
     <View style={styles.wrap}>
@@ -127,9 +123,7 @@ export function YourDataTab() {
             {proofs === 0 ? (
               <Text style={styles.body}>{EMPTY_STATS_COPY.proofs}</Text>
             ) : (
-              <Text style={styles.body}>
-                {`${stats.user_stats.proofs_by_method.camera} camera · ${stats.user_stats.proofs_by_method.self_reported} self-reported · ${stats.user_stats.proofs_by_method.apple_health} Apple Health`}
-              </Text>
+              <Text style={styles.body}>{`${proofs} proofs`}</Text>
             )}
           </Card>
           <Card title="When you post">

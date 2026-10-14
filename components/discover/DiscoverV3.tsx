@@ -97,7 +97,7 @@ const CHIPS: { id: DiscoverCategory; label: string }[] = [
 
 function difficultyLabel(d: RecommendedChallenge["difficulty"]): string {
   if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
+  if (d === "HARD") return "Strict";
   return "Medium";
 }
 

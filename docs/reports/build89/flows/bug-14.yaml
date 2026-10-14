@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "You're using GRIIT as a guest.*"
+- tapOn: "Account"
+- assertNotVisible: "Signed in with email"

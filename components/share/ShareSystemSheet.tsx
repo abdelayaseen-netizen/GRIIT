@@ -70,21 +70,26 @@ export type ShareSystemSheetProps = {
 };
 
 function ScaledPreview({ card, frameW, frameH }: { card: ShareCardInput; frameW: number; frameH: number }) {
-  const scale = frameW / SHARE_W;
+  const scale = Math.min(frameW / SHARE_W, frameH / SHARE_H);
+  const scaledW = SHARE_W * scale;
+  const scaledH = SHARE_H * scale;
   return (
-    <View style={[styles.previewClip, { width: frameW, height: frameH }]}>
+    <View style={[styles.previewClip, { width: frameW, height: frameH, alignItems: "center", justifyContent: "center" }]}>
       {card.style === "B" ? <Image source={SAMPLE_STORY} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-      <View
-        style={{
-          position: "absolute",
-          width: SHARE_W,
-          height: SHARE_H,
-          left: (frameW - SHARE_W) / 2,
-          top: (frameH - SHARE_H) / 2,
-          transform: [{ scale }],
-        }}
-      >
-        <ShareImage input={card} />
+      <View style={{ width: scaledW, height: scaledH, overflow: "hidden" }}>
+        <View
+          style={{
+            width: SHARE_W,
+            height: SHARE_H,
+            transform: [
+              { translateX: -((SHARE_W - scaledW) / 2) },
+              { translateY: -((SHARE_H - scaledH) / 2) },
+              { scale },
+            ],
+          }}
+        >
+          <ShareImage input={card} />
+        </View>
       </View>
     </View>
   );

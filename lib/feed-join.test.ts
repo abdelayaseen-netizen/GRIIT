@@ -183,8 +183,8 @@ describe("CameraSeal and DoubleTapRespect", () => {
     expect(showCameraSeal(null)).toBe(false);
     expect(showCameraSeal("")).toBe(false);
     expect(showCameraSeal("https://cdn.example/proof.jpg")).toBe(true);
-    expect(doubleTapAction(true, false)).toBe("noop");
-    expect(doubleTapAction(true, true)).toBe("noop");
+    expect(doubleTapAction(true, false)).toBe("respect");
+    expect(doubleTapAction(true, true)).toBe("keep");
     expect(doubleTapAction(false, false)).toBe("respect");
     expect(doubleTapAction(false, true)).toBe("keep");
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");

@@ -2,7 +2,7 @@
  * Add task sheet — frames 42 and 50.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { LocateFixed } from "lucide-react-native";
@@ -82,6 +82,8 @@ export default function AddTaskSheet({
   onSave,
   initial,
 }: AddTaskSheetProps) {
+  const { height } = useWindowDimensions();
+  const scrollMax = Math.max(280, Math.round(height * 0.88 - 220));
   const [draft, setDraft] = useState<AddTaskDraft>(initial ?? ADD_TASK_DEFAULT);
   const [picking, setPicking] = useState<null | "by" | "from" | "to">(null);
   const [pickRevert, setPickRevert] = useState<string | null>(null);
@@ -186,6 +188,7 @@ export default function AddTaskSheet({
       }
     >
       <ScrollView
+        style={{ maxHeight: scrollMax }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}

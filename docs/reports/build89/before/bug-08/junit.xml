@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF" tests="1" failures="0" time="6.76" timestamp="2026-10-13T22:22:21">
+    <testcase id="bug-08" name="bug-08" classname="bug-08" file="docs/reports/build89/flows/bug-08.yaml" time="6.756" timestamp="2026-10-13T22:22:21" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

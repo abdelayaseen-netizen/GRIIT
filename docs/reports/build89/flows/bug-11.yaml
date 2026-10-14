@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "18 proofs"
+- tapOn: "Your data"
+- assertVisible: "18"

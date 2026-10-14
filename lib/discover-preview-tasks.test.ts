@@ -20,7 +20,7 @@ describe("discover preview tasks", () => {
     expect(tasks.map((task) => task.title)).toEqual(["Workout", "Cardio"]);
     expect(tasks[0]?.gate).toBe("Self-reported");
     expect(tasks[1]?.gate).toContain("Camera");
-    expect(difficultyChip("HARD")).toBe("Hard");
+    expect(difficultyChip("HARD")).toBe("Strict");
     expect(tasks.some((task) => task.title === "Hard" || task.gate === "Hard")).toBe(false);
   });
 

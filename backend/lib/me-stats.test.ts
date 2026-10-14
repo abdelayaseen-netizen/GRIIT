@@ -14,6 +14,8 @@ describe("best streak dates", () => {
     const run = bestStreakRun(keys);
     expect(run).toEqual({ count: 18, start: "2026-09-06", end: "2026-09-23" });
     expect(inclusiveDayCount(run!.start, run!.end)).toBe(18);
+    const withFreeze = bestStreakRun(["2026-10-07", "2026-10-08", "2026-10-10"], ["2026-10-09"]);
+    expect(withFreeze).toEqual({ count: 4, start: "2026-10-07", end: "2026-10-10" });
     expect(inclusiveDayCount("2026-09-06", "2026-09-24")).toBe(19);
   });
 });
@@ -58,6 +60,7 @@ describe("range stats", () => {
 
   it("uses the device zone when the profile zone is empty, and labels 8 am", () => {
     expect(resolveStatsTimeZone(null, "America/New_York")).toBe("America/New_York");
+    expect(resolveStatsTimeZone("UTC", "America/New_York")).toBe("America/New_York");
     expect(resolveStatsTimeZone("America/Chicago", "America/New_York")).toBe("America/Chicago");
     const stats = buildMeStats({
       ...base,
@@ -127,7 +130,7 @@ describe("range stats", () => {
         photo_url: "user/proof.jpg",
         has_photo: true,
       }),
-    ).toBe("self_reported");
+    ).toBe("camera");
     expect(proofMethodFromMetadata({ verification_method: "photo" })).toBe("camera");
     expect(proofMethodFromMetadata({ photo_url: "user/proof.jpg" })).toBe("camera");
   });
@@ -155,7 +158,9 @@ describe("range stats", () => {
         },
       ],
     });
-    expect(stats.enrollments.map((row) => row.id)).toEqual(["one"]);
-    expect(stats.enrollments[0]?.line).toBe("1 of 1 day secured.");
+    expect(stats.enrollments.map((row) => row.line)).toEqual([
+      "1 of 7 days. Today counts.",
+      "1 of 1 day. Today does not count.",
+    ]);
   });
 });

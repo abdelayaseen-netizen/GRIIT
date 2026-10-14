@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "Day 1 is today."
+- tapOn: "Start the challenge"
+- assertNotVisible: "Day 1 of 7 is today"

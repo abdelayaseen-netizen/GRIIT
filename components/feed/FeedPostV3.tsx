@@ -185,7 +185,7 @@ export default function FeedPostV3({
         onProfile={onProfilePress ?? (() => undefined)}
         onChallenge={onChallengePress ?? (() => undefined)}
         onOpen={open}
-        onRespect={ownPost ? () => undefined : onLike}
+        onRespect={onLike}
         onComments={onComment}
       />
     );
@@ -366,7 +366,7 @@ function ActionRow({
       <View style={styles.respect}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={liked ? "Remove respect" : "Give respect"}
+          accessibilityLabel={liked ? "Liked by you" : "Like"}
           accessibilityState={{ selected: liked }}
           testID="feed-respect"
           onPress={() => {
@@ -386,7 +386,7 @@ function ActionRow({
         {respectCount > 0 ? (
           <Text
             testID="feed-respect-count"
-            accessibilityLabel={`${respectCount} respects`}
+            accessibilityLabel={`${respectCount} likes`}
             style={[styles.count, { color: heart.countColor }]}
           >
             {respectCount}

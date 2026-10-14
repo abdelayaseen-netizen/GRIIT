@@ -53,7 +53,7 @@ export function factLine(c: Pick<EndedChallenge, "status" | "days">): string {
   const stand = c.days.filter((d) => d === "last_stand").length;
   const unsecured = c.days.length - secured;
 
-  if (c.status === "failed") return "Hard mode has no freezes, so one unsecured day ends the run.";
+  if (c.status === "failed") return "Strict mode has no freezes, so one unsecured day ends the run.";
   if (c.days.length === 1) {
     return secured ? `One day, secured. ${cam ? "Camera proof." : "Self-reported."}` : "One day, not secured.";
   }

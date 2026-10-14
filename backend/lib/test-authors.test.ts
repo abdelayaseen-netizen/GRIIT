@@ -6,6 +6,8 @@ describe("hidden accounts", () => {
     expect(isHiddenFromRealViewers({ is_test: true, display_name: "Seed" })).toBe(true);
     expect(isHiddenFromRealViewers({ is_test: false, display_name: "App Review" })).toBe(true);
     expect(isHiddenFromRealViewers({ is_test: false, display_name: "A real person" })).toBe(false);
+    expect(isHiddenFromRealViewers({ is_test: false, username: "b88only172545_abcd1234" })).toBe(true);
+    expect(isHiddenFromRealViewers({ is_test: null, email: "b89seed@example.com" })).toBe(true);
   });
 
   it("drops test enrollments from a discover count and never goes below zero", () => {

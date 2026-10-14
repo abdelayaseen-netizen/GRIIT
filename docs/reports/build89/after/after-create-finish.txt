@@ -1,0 +1,20 @@
+exit=0
+
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow after-create-finish
+Scrolling DOWN until "Edit Evening journal" is visible with speed 40, visibility percentage 20%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that "Edit Evening journal" is visible... COMPLETED
+Assert that "Only people you invite" is visible... COMPLETED
+Assert that "Day 1 is today." is visible... COMPLETED
+Assert that "Day 1 of 7 is today" is not visible... COMPLETED
+Assert that "Anyone can find and join" is not visible... COMPLETED
+Tap on "Start the challenge"... COMPLETED
+Assert that "Morning run" is visible... COMPLETED
+Assert that "Workout" is visible... COMPLETED
+Assert that "Body check-in" is visible... COMPLETED
+Assert that "Evening journal" is visible... COMPLETED
+Assert that "Day 1 of 7 is today" is not visible... COMPLETED
+
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled

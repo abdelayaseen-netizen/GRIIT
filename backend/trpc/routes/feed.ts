@@ -150,7 +150,7 @@ export const feedRouter = createTRPCRouter({
       ];
       const [visResult, chResult] = await Promise.all([
         eventUserIds.length > 0
-          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility, is_test, display_name").in("user_id", eventUserIds).limit(200)
+          ? server.from("profiles").select("user_id, username, profile_visibility, challenge_visibility, activity_visibility, is_test, display_name").in("user_id", eventUserIds).limit(200)
           : Promise.resolve({ data: [] }),
         challengeIds.length > 0
           ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)

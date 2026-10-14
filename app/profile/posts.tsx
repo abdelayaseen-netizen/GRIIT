@@ -13,6 +13,9 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { audienceBadge } from "@/lib/post-audience";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
+import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
+import { captureError } from "@/lib/sentry";
+import { logLikeFailure } from "@/lib/like-error";
 
 function param(v: string | string[] | undefined): string {
   if (typeof v === "string") return v;
@@ -34,6 +37,7 @@ export default function ProfilePostsScreen() {
   const userId = param(params.userId);
   const startId = param(params.startId);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [laidOut, setLaidOut] = useState(false);
 
   const postsQuery = useQuery({
     queryKey: ["profilePosts", userId],
@@ -49,9 +53,18 @@ export default function ProfilePostsScreen() {
   }, [posts, startId]);
 
   useEffect(() => {
-    if (posts.length === 0) return;
+    if (!laidOut || posts.length === 0 || !startId) return;
     listRef.current?.scrollToIndex({ index: startIndex, animated: false });
-  }, [posts.length, startIndex]);
+  }, [laidOut, posts.length, startId, startIndex]);
+
+  const toggleLike = useCallback((item: LiveFeedPost, on: boolean) => {
+    setLiked((prev) => ({ ...prev, [item.id]: !on }));
+    void trpcMutate(TRPC.feed.react, { eventId: item.id }).catch((err) => {
+      logLikeFailure(err, "ProfilePostLike");
+      captureError(err, "ProfilePostLike");
+      setLiked((prev) => ({ ...prev, [item.id]: item.reactedByMe }));
+    });
+  }, []);
 
   const onViewable = useCallback((info: { viewableItems: { index: number | null }[] }) => {
     const indexes = info.viewableItems.map((v) => v.index).filter((n): n is number => n != null);
@@ -68,7 +81,7 @@ export default function ProfilePostsScreen() {
         ref={listRef}
         data={posts}
         keyExtractor={(item) => item.id}
-        initialScrollIndex={posts.length > 0 ? startIndex : undefined}
+        onLoad={() => setLaidOut(true)}
         onViewableItemsChanged={onViewable}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
         renderItem={({ item }) => {
@@ -77,7 +90,13 @@ export default function ProfilePostsScreen() {
           return (
             <View style={styles.card}>
               {item.photoUrl ? (
-                <Image source={{ uri: item.photoUrl }} style={styles.photo} contentFit="cover" />
+                <DoubleTapRespect
+                  respected={on}
+                  onRespect={() => toggleLike(item, on)}
+                  onOpen={() => undefined}
+                >
+                  <Image source={{ uri: item.photoUrl }} style={styles.photo} contentFit="cover" />
+                </DoubleTapRespect>
               ) : null}
               <Text style={styles.line}>
                 {item.challengeName} · Day {item.currentDay} of {item.totalDays}
@@ -88,13 +107,8 @@ export default function ProfilePostsScreen() {
               <View style={styles.row}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Like"
-                  onPress={() => {
-                    setLiked((prev) => ({ ...prev, [item.id]: !on }));
-                    void trpcMutate(TRPC.feed.react, { eventId: item.id }).catch(() => {
-                      setLiked((prev) => ({ ...prev, [item.id]: item.reactedByMe }));
-                    });
-                  }}
+                  accessibilityLabel={on ? "Liked by you" : "Like"}
+                  onPress={() => toggleLike(item, on)}
                   style={styles.action}
                 >
                   <Heart size={18} color={DS_V3.color.textPrimary} fill={on ? DS_V3.color.textPrimary : "transparent"} />

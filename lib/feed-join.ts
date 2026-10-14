@@ -13,9 +13,8 @@ export function showCameraSeal(proofPhotoUrl?: string | null): boolean {
   });
 }
 
-/** Own-post double tap is a no-op. Double tap never removes respect. */
-export function doubleTapAction(ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
-  if (ownPost) return "noop";
+/** Double tap likes, including your own post. It never removes a like. */
+export function doubleTapAction(_ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
   return alreadyRespected ? "keep" : "respect";
 }
 

@@ -1,0 +1,16 @@
+bug-01 FAIL
+bug-02 FAIL
+bug-03 FAIL
+bug-04 FAIL
+bug-05 FAIL
+bug-06 FAIL
+bug-07 FAIL
+bug-08 PASS
+bug-09 FAIL
+bug-10 FAIL
+bug-11 FAIL
+bug-12 FAIL
+bug-13 FAIL
+bug-14 FAIL
+bug-15 FAIL
+bug-16 FAIL
