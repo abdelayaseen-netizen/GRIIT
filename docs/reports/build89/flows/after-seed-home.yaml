@@ -1,0 +1,9 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Home"
+- assertVisible: "Best 6"
+- scrollUntilVisible:
+    element: "Open Thirty Days challenge"
+    direction: DOWN
+    visibilityPercentage: 40
+- assertVisible: "6 of 7"

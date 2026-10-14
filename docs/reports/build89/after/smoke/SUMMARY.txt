@@ -1,0 +1,12 @@
+build87-done-checkoff PASS
+build87-done-counter PASS
+build87-done-timer FAIL
+build87-done-write PASS
+build87-done-photo FAIL
+build87-faith PASS
+build87-fitness FAIL
+build87-guest-account PASS
+build87-post-photo FAIL
+build87-delete-account PASS
+build88-likes FAIL
+build88-finish-early PASS

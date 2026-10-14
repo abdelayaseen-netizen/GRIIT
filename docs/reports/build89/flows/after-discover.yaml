@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Go back"
+- tapOn: "Go back"
+- tapOn: "Discover"
+- assertNotVisible: "Hard"

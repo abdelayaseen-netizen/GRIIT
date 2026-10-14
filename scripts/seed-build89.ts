@@ -110,6 +110,25 @@ async function main() {
     return { challengeId: id, activeId: (active as { id: string }).id, taskId: (taskRow as { id: string }).id, startKey };
   }
 
+  const { data: oldChallenges } = await admin.from("challenges").select("id").eq("creator_id", userId).in("title", ["Morning Prayer", "Thirty Days"]);
+  const oldIds = ((oldChallenges ?? []) as { id: string }[]).map((row) => row.id);
+  if (oldIds.length) {
+    const { data: oldActive } = await admin.from("active_challenges").select("id").in("challenge_id", oldIds);
+    const activeIds = ((oldActive ?? []) as { id: string }[]).map((row) => row.id);
+    if (activeIds.length) {
+      const { error } = await admin.from("check_ins").delete().in("active_challenge_id", activeIds);
+      await must("clear check_ins", error);
+    }
+    const { error: eventError } = await admin.from("activity_events").delete().in("challenge_id", oldIds);
+    await must("clear events", eventError);
+    const { error: activeError } = await admin.from("active_challenges").delete().in("challenge_id", oldIds);
+    await must("clear enrollments", activeError);
+    const { error: taskError } = await admin.from("challenge_tasks").delete().in("challenge_id", oldIds);
+    await must("clear tasks", taskError);
+    const { error: challengeError } = await admin.from("challenges").delete().in("id", oldIds);
+    await must("clear challenges", challengeError);
+  }
+
   const prayerStart = addDays(today, -5);
   const longStart = addDays(today, -10);
   const prayer = await challenge("Morning Prayer", 7, prayerStart);
@@ -152,7 +171,8 @@ async function main() {
       date_key,
       status: "completed",
       photo_url: photo,
-      verified: true,
+      proof_url: photo,
+      completion_image_url: photo,
     } as never, { onConflict: "active_challenge_id,task_id,date_key" });
     await must("check_in", checkError);
     const created = new Date(`${date_key}T00:30:00.000Z`).toISOString();

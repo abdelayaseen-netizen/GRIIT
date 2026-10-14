@@ -1,0 +1,11 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn:
+    point: "16%,59%"
+- extendedWaitUntil:
+    visible: "No camera proofs yet"
+    timeout: 8000
+    optional: true
+- tapOn:
+    text: "Show up, .*"
+    optional: true

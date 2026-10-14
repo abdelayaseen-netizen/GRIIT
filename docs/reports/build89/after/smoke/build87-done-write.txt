@@ -1,0 +1,31 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow build87-done-write
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Tap on (Optional) "http://localhost:8081"... WARNED
+Tap on (Optional) "http://localhost:8082"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Tap on "Physical toughness.*"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Show Up 7.*" is visible... COMPLETED
+Tap on "Set this up later"... COMPLETED
+Assert that "No reminders for now" is visible... COMPLETED
+Tap on "No reminders for now"... COMPLETED
+Assert that "No challenge yet.*" is visible... COMPLETED
+Open griit://challenge/b2000001-4000-4000-8000-000000000004... COMPLETED
+Assert that "Join Journal Today" is visible... COMPLETED
+Tap on "Join Journal Today"... COMPLETED
+Assert that "Write a short journal entry" is visible... COMPLETED
+Tap on id: active-task... COMPLETED
+Assert that id: write-body is visible... COMPLETED
+Tap on id: write-body... COMPLETED
+Input text one two three four five six seven eight nine ten... COMPLETED
+Hide Keyboard... WARNED
+Tap on "Done"... COMPLETED
+Assert that "Day 1 secured." is visible... COMPLETED

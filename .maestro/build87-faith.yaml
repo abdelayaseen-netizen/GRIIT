@@ -11,6 +11,9 @@ appId: app.griit.challenge-tracker
     text: "http://localhost:8081"
     optional: true
 - tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
     text: "Not now"
     optional: true
 - extendedWaitUntil:

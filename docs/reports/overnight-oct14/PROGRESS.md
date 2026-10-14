@@ -1,24 +1,24 @@
 # Overnight 14 Oct 2026
 
-Status: all done. The 36-person test and TestFlight did not run. The reasons are in BLOCKERS.md.
+Status: chunk 6 recorded, chunk 7 skipped, chunks 8–14 still to run.
 
-Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87` (worktree already had this branch; the main checkout is `main`).
+Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87`.
 
 | Chunk | Status | Note |
 | --- | --- | --- |
-| 1 Setup | failed | JAVA_HOME confirmed: `.maestro/build89-java-ok.yaml` passed. BUGS.md written. Before flows saved under `docs/reports/build89/before/` (15 fail, bug 8 pass because those handles were not on this guest's first Everyone screen). Seed did not run. See BLOCKERS.md. |
-| 2 Create wizard (bugs 3–7) | done | Simulator: Discipline kept, Evening journal plus Athlete tasks on Review and success, Invite says Only people you invite, Day 1 is today, success lists all four tasks. |
-| 3 One scoreboard (bugs 9–12) | done | Code and unit tests. Device proof needs the seeded account, which did not run. |
-| 4 Likes (bugs 1–2) | done | Code. Device proof needs a post with a real event id. This guest has no proofs. |
-| 5 Small fixes (bugs 8, 13–16) | done | Bug 13 passed on Following. Bug 14 passed (guest banner and Account says guest). Bug 16: Strict is on the How strict step and Hard is not on Discover. Share card and the server is_test flag are not proven on this guest. |
-| 6 Prove it | failed | Create, guest, Everyone hint, and Strict passed on the simulator. The seed-backed bugs and the build 87 and 88 smoke list did not. |
-| 7 Ship | skipped | Smoke did not pass, so EAS was not started. |
-| 8 First-timers | skipped | No service role, so a fresh is_test account could not be created. |
-| 9 Faith and routine | skipped | Same block as chunk 8. |
-| 10 Fitness and competitive | skipped | Same block as chunk 8. |
-| 11 Social | skipped | Same block as chunk 8. |
-| 12 Edge cases | skipped | Same block as chunk 8. |
-| 13 Returning and account | skipped | Same block as chunk 8. The review password was not printed. |
-| 14 Report | done | Written under docs/reports/overnight-oct14 and exported to the Desktop UX folder. Scores are not new, because the 36 people did not run. |
+| 1 Setup | failed | JAVA_HOME confirmed. Before flows saved. Seed had not run yet. |
+| 2 Create wizard (bugs 3–7) | done | Simulator proof on a guest. Rerun on the seeded account is in chunk 6. |
+| 3 One scoreboard (bugs 9–12) | done | Code and unit tests. Device proof is in chunk 6. |
+| 4 Likes (bugs 1–2) | done | Code. Device proof is in chunk 6. |
+| 5 Small fixes (bugs 8, 13–16) | done | Guest, hint, and Strict. Share card and the live API are in chunk 6. |
+| 6 Prove it | failed | The 16 seeded bug flows passed. See `docs/reports/build89/after/RESULTS.md`. Smoke is 7 pass and 5 fail, so it is not all green. |
+| 7 Ship | skipped | Smoke did not all pass, so EAS was not started. |
+| 8 First-timers | not started | Next. Accounts go through `railway run`, not a copied service-role key. |
+| 9 Faith and routine | not started | |
+| 10 Fitness and competitive | not started | |
+| 11 Social | not started | |
+| 12 Edge cases | not started | |
+| 13 Returning and account | not started | The review password is not printed. |
+| 14 Report | not started | The earlier report was written before this seed and deploy. Replace it after chunks 8–13. |
 
-BLOCKERS.md is only written if a step cannot proceed.
+API health commit is `e061ecd`. Deployment `da8951e2-e4ff-4980-98ac-81620f5dacc4`. About on this dev client shows that same commit.
