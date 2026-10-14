@@ -1,5 +1,13 @@
 # Blockers
 
+## Ship
+
+The smoke test did not pass, so EAS was not started and nothing was sent to TestFlight. Commit on the branch is `e457e85a`.
+
+## 36-person test
+
+Not started. Each non-guest account has to be created by the server with `is_test` set at creation. That write needs the service role, which is not on this machine. Guest signups were not used as a substitute, because those accounts would not be marked `is_test` either, and the anonymous cap is 30 an hour. No model calls were made. Spend is $0 of the $40 cap.
+
 ## Seed account
 
 `scripts/seed-build89.ts` is ready and uses the service role. It did not run.
