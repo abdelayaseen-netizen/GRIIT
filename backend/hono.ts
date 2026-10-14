@@ -1,4 +1,7 @@
 import "./ensure-backend-modules";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { trpcServer } from "@hono/trpc-server";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
@@ -50,13 +53,31 @@ app.use("*", async (c, next) => {
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 
+/** SHA written next to this file at deploy time. Wins over a stale Railway git variable. */
+function bakedCommit(): string | null {
+  try {
+    const path = join(dirname(fileURLToPath(import.meta.url)), "deploy-sha.txt");
+    const text = readFileSync(path, "utf8").trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+function commitSha(): string | null {
+  return (
+    bakedCommit() ??
+    process.env.RAILWAY_GIT_COMMIT_SHA ??
+    process.env.VERCEL_GIT_COMMIT_SHA ??
+    process.env.GIT_COMMIT_SHA ??
+    null
+  );
+}
+
 /** Liveness: no external I/O. Use for Railway / load balancer probes. */
 function livenessJson(c: Context) {
   const supa = getSupabaseConfigStatus();
-  const sha =
-    process.env.RAILWAY_GIT_COMMIT_SHA ??
-    process.env.VERCEL_GIT_COMMIT_SHA ??
-    process.env.GIT_COMMIT_SHA;
+  const sha = commitSha();
   return c.json({
     ok: true,
     status: "ok",
@@ -91,11 +112,7 @@ async function healthDeepJson(c: Context) {
     checks.supabase = "error";
   }
   const allOk = Object.values(checks).every((v) => v === "ok");
-  const commitSha =
-    process.env.RAILWAY_GIT_COMMIT_SHA ??
-    process.env.VERCEL_GIT_COMMIT_SHA ??
-    process.env.GIT_COMMIT_SHA ??
-    "unknown";
+  const commitShaValue = commitSha() ?? "unknown";
   return c.json(
     {
       ok: allOk,
@@ -104,8 +121,8 @@ async function healthDeepJson(c: Context) {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV ?? "development",
       checks,
-      commitSha,
-      commit: commitSha,
+      commitSha: commitShaValue,
+      commit: commitShaValue,
       service: "backend",
     },
     allOk ? 200 : 503
