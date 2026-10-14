@@ -1,6 +1,6 @@
 # Overnight 14 Oct 2026
 
-Status: chunk 8 done. Chunks 9–14 still to run. Spend so far $0.21 of $40.
+Status: chunk 9 done. Chunks 10–14 still to run. Spend so far $0.31 of $40.
 
 Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87`.
 
@@ -14,8 +14,8 @@ Branch: `feat/build89` in `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 6 Prove it | failed | The 16 seeded bug flows passed. See `docs/reports/build89/after/RESULTS.md`. Smoke is 7 pass and 5 fail, so it is not all green. |
 | 7 Ship | skipped | Smoke did not all pass, so EAS was not started. |
 | 8 First-timers | done | Six fresh guests on the simulator. Spend $0.21. Jordan, Amina, Casey, and Priya gave up on a repeated screen. Robert and Sam stopped on their own. is_test was set through railway run. |
-| 9 Faith and routine | not started | Next. Email accounts, not more guests. |
-| 10 Fitness and competitive | not started | |
+| 9 Faith and routine | done | Six email accounts, is_test set on the server. Spend $0.31. Four gave up on a repeated screen. Leo and Maya stopped on their own. |
+| 10 Fitness and competitive | not started | Next. |
 | 11 Social | not started | |
 | 12 Edge cases | not started | |
 | 13 Returning and account | not started | The review password is not printed. |

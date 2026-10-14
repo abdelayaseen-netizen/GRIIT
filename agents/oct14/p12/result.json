@@ -1,0 +1,35 @@
+{
+  "personaId": "p12",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:43:06.749Z",
+  "endedAt": "2026-10-14T22:45:19.804Z",
+  "steps": 18,
+  "durationSec": 133,
+  "goals": [
+    {
+      "id": "p12-g1",
+      "text": "Join a challenge, then see what the app says about today.",
+      "kind": "db",
+      "pass": true,
+      "detail": "14-Day 2-Minute Breath"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c3a8cfc6-0b66-4301-95de-cf68e767e77e",
+  "isTest": true,
+  "cleanup": "kept"
+}

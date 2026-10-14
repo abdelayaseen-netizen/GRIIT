@@ -85,7 +85,18 @@ export async function runPersona(opts: {
   const specs = opts.mode === "goal" ? specsFor(persona) : [];
   let creds = makeCredentials(persona.id);
   let installedSession: Record<string, unknown> | null = null;
-  if (!fresh && !giveUp) {
+  if (!fresh && persona.id === "p36") {
+    const email = process.env.APP_REVIEW_LOGIN?.trim() ?? "";
+    const password = process.env.APP_REVIEW_PASSWORD?.trim() ?? "";
+    if (!email || !password) {
+      giveUp = "Review login is missing from the environment.";
+      stopAll = true;
+    } else {
+      creds = { email, password, username: "review" };
+      isTest = true;
+      console.log("p36 using the review login");
+    }
+  } else if (!fresh && !giveUp) {
     const prepared = await prepareAgentAccount(persona.id, persona.name);
     if (!prepared.ok || !prepared.creds) {
       giveUp = `Could not prepare an is_test account (${prepared.detail}).`;

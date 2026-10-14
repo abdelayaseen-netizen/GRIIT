@@ -1,0 +1,36 @@
+{
+  "personaId": "p09",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:40:05.304Z",
+  "endedAt": "2026-10-14T22:40:47.305Z",
+  "steps": 5,
+  "durationSec": 42,
+  "goals": [
+    {
+      "id": "p09-g1",
+      "text": "Create or join a morning routine with more than one task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c819ccd2-d68c-48de-b764-8191135a5d94",
+  "isTest": true,
+  "cleanup": "kept"
+}
