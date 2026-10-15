@@ -5,7 +5,7 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | Chunk | Status |
 | --- | --- |
 | 1 Photo post | done. Guest and signed-in both reach Back to today. Root: secured path ignored the chosen audience, and shareProof rejected guests. |
-| 2 First task on Home | in progress |
+| 2 First task on Home | done. Join lands on Home. The task name is a button, so the tap opens the task. |
 | 2 First task on Home | not started |
 | 3 Check-in 429 | not started |
 | 4 Prove and ship | not started |

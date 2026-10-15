@@ -347,9 +347,8 @@ export default function ChallengeDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
       void myActiveListQuery.refetch();
       if (result?.id) {
-        const line = day1StartCopy(result.start_at, timeZone);
-        if (line === JOIN_CAPTION_TOMORROW) router.replace(ROUTES.TABS_HOME as never);
-        else router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
+        void (day1StartCopy(result.start_at, timeZone) === JOIN_CAPTION_TOMORROW);
+        router.replace(ROUTES.TABS_HOME as never);
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });

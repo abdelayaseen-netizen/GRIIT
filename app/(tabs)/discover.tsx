@@ -300,13 +300,8 @@ function DiscoverScreenInner() {
           void trpcMutate(TRPC.challenges.join, { challengeId })
             .then((result) => {
               const startAt = (result as { start_at?: string } | null)?.start_at;
-              const activeId = (result as { id?: string } | null)?.id;
-              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
-                router.push(ROUTES.TABS_HOME as never);
-                return;
-              }
-              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
-              else router.push(ROUTES.TABS_HOME as never);
+              void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
+              router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}
@@ -328,13 +323,8 @@ function DiscoverScreenInner() {
                 return;
               }
               const startAt = (result as { start_at?: string } | null)?.start_at;
-              const activeId = (result as { id?: string } | null)?.id;
-              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
-                router.push(ROUTES.TABS_HOME as never);
-                return;
-              }
-              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
-              else router.push(ROUTES.TABS_HOME as never);
+              void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
+              router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}

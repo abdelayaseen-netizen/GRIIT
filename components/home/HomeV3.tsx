@@ -298,7 +298,13 @@ export function HomeV3({
           <StatusRing row={row} />
         )}
         <View style={styles.taskCopy}>
-          <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={row.name}
+            onPress={() => onPressTask?.(row.id)}
+          >
+            <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
+          </Pressable>
           {section.challengeId ? (
             <Pressable
               accessibilityRole="button"
@@ -312,7 +318,14 @@ export function HomeV3({
           )}
         </View>
         {!row.done ? (
-          <ChevronRight size={RING} color={DS_V3.color.textSecondary} accessibilityLabel="Open" />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={row.name}
+            onPress={() => onPressTask?.(row.id)}
+            hitSlop={8}
+          >
+            <ChevronRight size={RING} color={DS_V3.color.textSecondary} />
+          </Pressable>
         ) : null}
       </>
     );
