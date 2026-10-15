@@ -22,5 +22,5 @@ From `docs/reports/bugs-oct13.md`. Only Yaseen sets a bug to closed.
 | 16 Strict vs Hard | fixed – awaiting Yaseen | Users see Strict. The stored value stays hard. |
 | 17 Photo post stays disabled | fixed – awaiting Yaseen | A guest Post to friends saved the check-in, then the secured screen still said the photo was private. shareProof rejected anonymous users at checkins.ts (the old line 1695) and ShareChoice.tsx:58 said "Couldn't share. It's still private." The day-secured path never opened the post. Signed-in, the same button stays disabled only while the upload is in flight (Button.tsx:96) with no line. Guests and signed-in accounts now open the post. Flows: docs/reports/oct15/flows/photo-guest.yaml and photo-signed.yaml. |
 | 18 Home and Discover loop | open | 26 of 38 sessions gave up because the same screen came back three times, mostly Home and Discover. |
-| 19 Check-in 429 | open | build87-done-timer reached Log it, then checkins.complete returned 429. Not retried. |
+| 19 Check-in 429 | fixed – awaiting Yaseen | The shared IP limiter in backend/hono.ts (checkRateLimit on `ip:`) returned HTTP 429, which the client logged as checkins.complete (429). Signed-in calls now use a per-user bucket (rateLimitSubject in backend/lib/rate-limit.ts). The client retries checkins.complete once after 1.5s. |
 

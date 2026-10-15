@@ -10,7 +10,7 @@ import * as Sentry from "@sentry/node";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 import { getSupabaseConfigStatus } from "./lib/supabase";
-import { checkRateLimit, getClientIp } from "./lib/rate-limit";
+import { checkRateLimit, getClientIp, rateLimitSubject } from "./lib/rate-limit";
 
 const REQUEST_BODY_MAX_BYTES = Number(process.env.REQUEST_BODY_MAX_BYTES) || 1_000_000; // 1MB
 
@@ -233,7 +233,7 @@ async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
     }
   }
 
-  const key = `ip:${ip}`;
+  const key = rateLimitSubject(req.headers.get("authorization"), ip);
   const { allowed, resetAt } = await checkRateLimit(key);
   if (!allowed) {
     const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);

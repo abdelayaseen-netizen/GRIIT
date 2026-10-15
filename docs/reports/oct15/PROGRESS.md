@@ -7,7 +7,7 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 1 Photo post | done. Guest and signed-in both reach Back to today. Root: secured path ignored the chosen audience, and shareProof rejected guests. |
 | 2 First task on Home | done. Join lands on Home. The task name is a button, so the tap opens the task. |
 | 2 First task on Home | not started |
-| 3 Check-in 429 | not started |
+| 3 Check-in 429 | in progress. Limit was the shared IP bucket in hono.ts. Per-user key is in, deploy next. |
 | 4 Prove and ship | not started |
 | 5 Agent harness | not started |
 | 6 Personas 1–6 | not started |

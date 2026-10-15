@@ -73,19 +73,26 @@ export async function trpcMutate<T = unknown>(
   input?: unknown,
 ): Promise<T> {
   const url = getTrpcUrl();
-  const fullUrl = `${url}/${path}`;
   const authHeaders = await getAuthHeaders();
 
-  const body = JSON.stringify(serialize(input ?? {}));
+  const response = await postTrpc(path, input, authHeaders);
 
-  const response = await fetchWithRetry(fullUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-    },
-    body,
-  });
+  async function postTrpc(procedure: string, payload: unknown, headers: Record<string, string>): Promise<Response> {
+    const init: RequestInit = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: JSON.stringify(serialize(payload ?? {})),
+    };
+    let next = await fetchWithRetry(`${url}/${procedure}`, init);
+    if (next.status === 429 && procedure === "checkins.complete") {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      next = await fetchWithRetry(`${url}/${procedure}`, init);
+    }
+    return next;
+  }
 
   const responseText = await response.text().catch(() => "");
 

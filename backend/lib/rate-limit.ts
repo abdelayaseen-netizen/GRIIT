@@ -142,10 +142,10 @@ export async function checkRouteRateLimit(
       const res = await limiters.auth.limit(`ip:${opts.ip}`);
       return { allowed: res.success, resetAt: res.reset };
     }
-    // Tighter limit for check-in completions: 10 per minute
+    // Tighter limit for check-in completions, per user. One finish must not share a bucket.
     if (path === "checkins.complete") {
       const key = opts.userId ? `checkin:${opts.userId}` : `checkin:${opts.ip}`;
-      const r = memoryLimit(key, 10);
+      const r = memoryLimit(key, 30);
       return { allowed: r.allowed, resetAt: r.resetAt };
     }
     if (writePaths.includes(path)) {
@@ -162,7 +162,7 @@ export async function checkRouteRateLimit(
   }
   if (path === "checkins.complete") {
     const k = opts.userId ? `checkin:${opts.userId}` : `checkin:${opts.ip}`;
-    const r = memoryLimit(k, 10);
+    const r = memoryLimit(k, 30);
     return { allowed: r.allowed, resetAt: r.resetAt };
   }
   if (writePaths.includes(path)) {
@@ -171,6 +171,21 @@ export async function checkRouteRateLimit(
     return { allowed: r.allowed, resetAt: r.resetAt };
   }
   return { allowed: true, resetAt: Date.now() + WINDOW_MS };
+}
+
+/** Bucket a signed-in request by the JWT subject so one IP cannot spend another person's limit. */
+export function rateLimitSubject(authHeader: string | null, ip: string): string {
+  const token = authHeader?.replace(/^Bearer\s+/i, "").trim() ?? "";
+  const payload = token.split(".")[1];
+  if (payload) {
+    try {
+      const json = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { sub?: unknown };
+      if (typeof json.sub === "string" && json.sub.length > 0) return `user:${json.sub}`;
+    } catch {
+      /* fall through to the IP bucket */
+    }
+  }
+  return `ip:${ip || "unknown"}`;
 }
 
 export function getClientIp(req: Request): string {
