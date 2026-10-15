@@ -4,7 +4,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 
 | # | Chunk | Status | Commit | Notes |
 |---|---|---|---|---|
-| 01 | Speed | FAILED | | Device timings, Maestro, and upload-size samples were not collected. No simulator was booted. Backend needs `railway up --service grit-backend` before chunk 02. tsc still has 6 errors in files this chunk did not change. |
+| 01 | Speed | FAILED | 23322e47 | Device timings, Maestro, and upload-size samples were not collected. No simulator was booted. Backend needs `railway up --service grit-backend` before chunk 02. tsc still has 6 errors in files this chunk did not change. |
 | 02 | First day | NOT STARTED | | |
 | 03 | Task inputs | NOT STARTED | | |
 | 04 | Posting and sharing | NOT STARTED | | |
@@ -18,10 +18,10 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 ## Item log
 (Cursor adds one line per item: `NN.N title: done / not done, sha`)
 
-01.1 Measure first: not done, timings not collected on a device
-01.2 Shrink photos: done, unit tests pass, upload samples not from the app
-01.3 Cached session: done
-01.4 One server call: done, not deployed
-01.5 Optimistic UI: done in code, Maestro not run
-01.6 Location: done
-01.7 Measure again: not done, same missing device run
+01.1 Measure first: not done, 23322e47
+01.2 Shrink photos: done, 23322e47
+01.3 Cached session: done, 23322e47
+01.4 One server call: done, 23322e47
+01.5 Optimistic UI: not done (Maestro not run), 23322e47
+01.6 Location: done, 23322e47
+01.7 Measure again: not done, 23322e47
