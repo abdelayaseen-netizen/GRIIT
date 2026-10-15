@@ -84,6 +84,12 @@ export async function restorePrivacy(): Promise<void> {
   await run("xcrun", ["simctl", "privacy", UDID, "grant", "location", APP_ID]);
 }
 
+export async function restartSimulator(): Promise<void> {
+  await run("xcrun", ["simctl", "shutdown", UDID], 40000);
+  await run("xcrun", ["simctl", "boot", UDID], 40000);
+  await run("xcrun", ["simctl", "bootstatus", UDID, "-b"], 120000);
+}
+
 export function shot(file: string): Promise<void> {
   return run("xcrun", ["simctl", "io", UDID, "screenshot", file], 15000).then((result) => {
     if (result.code !== 0) throw new Error(safeText(result.stderr || "screenshot failed"));

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseDecision, reviewAction } from "./gate";
 import { inferCheck } from "./goals";
-import { classifyScreen } from "./screen";
+import { classifyScreen, placeLabel } from "./screen";
 import type { Decision } from "./types";
 
 const tap = (target: string): Decision => ({ action: "tap", target, thought: "", emotion: "neutral" });
@@ -28,5 +28,6 @@ describe("agent action gate", () => {
     expect(classifyScreen(["Good evening, Smoke", "0 days in a row", "Discover", "No challenge yet. Join one and Day 1 is today."])).toBe("home");
     expect(classifyScreen(["Continue", "Day 1 is today. Enough to find out."])).toBe("onboarding");
     expect(classifyScreen(["Continue with email", "Your challenges are where you left them."])).toBe("auth");
+    expect(placeLabel(["Good evening, Smoke", "Today", "Home", "Discover"]).label).toBe("home · Good evening, Smoke");
   });
 });

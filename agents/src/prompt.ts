@@ -23,6 +23,8 @@ export function userPrompt(input: {
   history: StepLog[];
   goalStatus: string[];
   prepared: boolean;
+  handoff?: string;
+  nudge?: string;
 }): string {
   const recent = input.history.slice(-6).map((step) => {
     const err = step.error ? ` error=${step.error}` : "";
@@ -40,9 +42,12 @@ export function userPrompt(input: {
     modeLine,
     input.mode === "goal" ? `Goals:\n${input.goalStatus.map((g) => `- ${g}`).join("\n")}` : "",
     "Rules: do not use Sign in with Apple. Do not subscribe or purchase. Do not like, comment, or follow anyone except Seed GRIIT.",
+    input.handoff ? `A friend sent this invite. Open it before you do anything else: ${input.handoff}` : "",
+    input.nudge ?? "",
+    "Take at least 15 actions before you stop, unless your goal is already finished. An interview comes after you stop. Answer it as yourself.",
     input.prepared
       ? "You are already signed in and onboarding is already done. Stay on Home. Do not create another account and do not log out."
-      : "You are on a brand-new phone at the welcome screen. The account comes after the first task. Walk welcome, your goals, how it works, Start here, join a challenge you can join, then reminders. Reach Home as a guest and finish one task with a button that starts with Done. Save the account with the email below only when the app asks, after that task. Never join an invite-only group. If your tech comfort is low, give up after two failed taps on the same thing. Before you stop, put four lines in thought, each starting with the word: secured: one line. freeze: one line. self-reported: one line. tomorrow: a number from 1 to 10 for whether you would open this tomorrow, then one short reason.",
+      : "You are on a brand-new phone at the welcome screen. The account comes after the first task. Walk welcome, your goals, how it works, Start here, join a challenge you can join, then reminders. Reach Home as a guest and finish one task with a button that starts with Done. Save the account with the email below only when the app asks, after that task. Never join an invite-only group. If your tech comfort is low, give up after two failed taps on the same thing, but only after 15 actions.",
     input.prepared
       ? ""
       : "Use action type for a text field, and only once. If the field already shows the right text, move on. A short name matches the start of a longer label. Pick at least one and Lock it in do nothing until a row is selected. If the row you want is below the fold, scroll first.",

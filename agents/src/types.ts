@@ -79,4 +79,16 @@ export type AgentResult = {
   userId: string;
   isTest: boolean | null;
   cleanup: string;
+  interview: InterviewAnswers | null;
+};
+
+export type InterviewAnswers = {
+  openTomorrow: string;
+  secured: string;
+  freeze: string;
+  selfReported: string;
+  best: string;
+  worst: string;
+  tellFriend: string;
+  score: number;
 };

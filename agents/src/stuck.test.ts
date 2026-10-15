@@ -1,7 +1,7 @@
 import zlib from "zlib";
 import { describe, expect, it } from "vitest";
 import { parseHierarchy, visibleLines } from "./screen";
-import { nextStreak, selectedChip } from "./stuck";
+import { nextShotStreak, nextStreak, selectedChip, mayQuit } from "./stuck";
 import { samplePng, visualSame } from "./pixels";
 
 function png(w: number, h: number, paint: (x: number, y: number) => [number, number, number]): Buffer {
@@ -55,6 +55,17 @@ describe("stuck screens", () => {
     const first = png(80, 80, (x, y) => (y < 6 ? [x, 1, 1] : [30, 30, 30]));
     const later = png(80, 80, (x, y) => (y < 6 ? [255 - x, 2, 2] : [30, 30, 30]));
     expect(visualSame(samplePng(first), samplePng(later))).toBe(true);
+  });
+
+  it("counts three unchanged screenshots and ignores the screen name", () => {
+    const shot = png(80, 80, () => [20, 20, 20]);
+    const visual = samplePng(shot);
+    expect(nextShotStreak({ visual, lastVisual: visual, streak: 2, ignore: false })).toBe(3);
+    const moved = samplePng(png(80, 80, (x, y) => (y < 40 ? [200, 0, 0] : [20, 20, 20])));
+    expect(nextShotStreak({ visual: moved, lastVisual: visual, streak: 2, ignore: false })).toBe(0);
+    expect(mayQuit(14, false)).toBe(false);
+    expect(mayQuit(15, false)).toBe(true);
+    expect(mayQuit(2, true)).toBe(true);
   });
 
   it("tells the agent a selected chip is already selected and does not count that tap", () => {

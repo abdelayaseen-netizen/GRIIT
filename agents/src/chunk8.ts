@@ -10,10 +10,11 @@ import { loadEnv, requireEnv } from "./env";
 import { runPersona, type Spend } from "./loop";
 import { MaestroSession } from "./maestro";
 import { writeOutputs } from "./report";
+import { alreadyProved, inviteFor, loadSpend, runDirectory, saveSpend, selectedPeople } from "./run-dir";
 import type { Persona, StepLog } from "./types";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const runDir = path.join(root, "agents", "oct14");
+const runDir = runDirectory(root);
 
 const people: Persona[] = [
   {
@@ -154,16 +155,21 @@ async function main() {
   requireEnv("EXPO_PUBLIC_SUPABASE_ANON_KEY");
   fs.mkdirSync(runDir, { recursive: true });
   const maestro = new MaestroSession();
-  const spend: Spend = { usd: 0, input: 0, output: 0, calls: 0 };
+  const spend: Spend = loadSpend(runDir);
   const capUsd = 40;
   const allowedNames = ["Seed GRIIT", "seedgriit"];
-  console.log(`Chunk 8. ${people.length} first-timers. Cap $${capUsd}.`);
+  const roster = selectedPeople(people);
+  console.log(`Chunk 8. ${roster.length} first-timers. Cap $${capUsd}. Spend so far $${spend.usd.toFixed(2)}.`);
   try {
     await maestro.start();
-    for (const persona of people) {
+    for (const persona of roster) {
       if (spend.usd >= capUsd) {
         console.log(`Stopped. Spend ${spend.usd.toFixed(2)} reached the cap.`);
         break;
+      }
+      if (alreadyProved(runDir, persona.id)) {
+        console.log(`${persona.id} already has 15 steps and an interview. Skipping.`);
+        continue;
       }
       console.log(`\n${persona.id} ${persona.name}`);
       const outcome = await runPersona({
@@ -178,6 +184,7 @@ async function main() {
         compare: false,
         capUsd,
         keep: true,
+        inviteLink: inviteFor(runDir, persona.id),
       });
       writeCsv(persona.id);
       console.log(`${persona.id} done. spend $${spend.usd.toFixed(2)}. ${outcome.result.giveUp || "finished"}`);
@@ -194,6 +201,7 @@ async function main() {
       targetNote: "Build 89 simulator on port 8082. Production API.",
     });
     fs.writeFileSync(path.join(runDir, "spend.txt"), `${spend.usd.toFixed(2)}\n`);
+    saveSpend(runDir, spend);
   }
 }
 

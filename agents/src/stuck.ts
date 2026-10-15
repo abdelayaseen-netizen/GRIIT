@@ -1,6 +1,26 @@
 import type { El } from "./screen";
 import { visualSame } from "./pixels";
 
+/** How many actions in a row left the screenshot unchanged. The screen name is not part of this. */
+export function nextShotStreak(input: {
+  visual: Buffer | null;
+  lastVisual: Buffer | null;
+  streak: number;
+  ignore: boolean;
+}): number {
+  if (input.ignore) return 0;
+  if (!input.visual || !input.lastVisual) return 0;
+  if (!visualSame(input.visual, input.lastVisual)) return 0;
+  return input.streak + 1;
+}
+
+export const MIN_TESTER_STEPS = 15;
+
+/** A tester may quit after 15 steps, or sooner when the goal is already finished. */
+export function mayQuit(stepsTaken: number, goalsDone: boolean): boolean {
+  return goalsDone || stepsTaken >= MIN_TESTER_STEPS;
+}
+
 /** How many times this screen has come up unchanged. A scroll that moves the picture resets it. */
 export function nextStreak(input: {
   text: string;

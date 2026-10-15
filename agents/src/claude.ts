@@ -17,10 +17,9 @@ export async function askModel(input: {
   model: string;
   system: string;
   prompt: string;
-  imagePath: string;
+  imagePath?: string;
 }): Promise<AskResult> {
-  const bytes = fs.readFileSync(input.imagePath);
-  const data = bytes.toString("base64");
+  const image = input.imagePath && fs.existsSync(input.imagePath) ? fs.readFileSync(input.imagePath).toString("base64") : "";
   let response: Response;
   try {
     response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -38,8 +37,8 @@ export async function askModel(input: {
           {
             role: "user",
             content: [
-              { type: "image", source: { type: "base64", media_type: "image/png", data } },
-              { type: "text", text: input.prompt },
+              ...(image ? [{ type: "image" as const, source: { type: "base64" as const, media_type: "image/png" as const, data: image } }] : []),
+              { type: "text" as const, text: input.prompt },
             ],
           },
         ],

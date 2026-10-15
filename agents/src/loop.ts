@@ -15,16 +15,17 @@ import {
 } from "./account";
 import { askModel } from "./claude";
 import { HAIKU_MODEL, SONNET_MODEL } from "./cost";
-import { appContainer, actionYaml, applyPrivacy, launchYaml, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
+import { appContainer, actionYaml, applyPrivacy, launchYaml, resize, restartSimulator, setTextSize, shot, wipeAppData, UDID } from "./device";
 import { parseDecision, reviewAction } from "./gate";
 import { needsFreshSignup, specsFor, type GoalSpec } from "./goals";
 import { resolveTarget, systemAlert } from "./match";
 import { MaestroSession } from "./maestro";
+import { interviewPrompt, parseInterview } from "./interview";
 import { systemPrompt, userPrompt } from "./prompt";
 import { samplePng } from "./pixels";
-import { classifyScreen, dayClaims, isHomeScreen, isSpringboard, parseHierarchy, screenSignature, scrollMarks, visibleLines, type El } from "./screen";
-import { nextStreak, selectedChip } from "./stuck";
-import type { AgentResult, Mode, Persona, StepLog } from "./types";
+import { dayClaims, isHomeScreen, isSpringboard, parseHierarchy, placeLabel, visibleLines, type El } from "./screen";
+import { mayQuit, nextShotStreak, selectedChip } from "./stuck";
+import type { AgentResult, InterviewAnswers, Mode, Persona, StepLog } from "./types";
 
 export type Spend = { usd: number; input: number; output: number; calls: number };
 
@@ -61,6 +62,7 @@ export async function runPersona(opts: {
   compare: boolean;
   capUsd: number;
   keep: boolean;
+  inviteLink?: string;
 }): Promise<{ result: AgentResult; model: string; compareNote: string; stopAll: boolean }> {
   const persona = opts.persona;
   const dir = path.join(opts.runDir, persona.id);
@@ -192,16 +194,32 @@ export async function runPersona(opts: {
       }
     }
   } catch (err) {
-    crashes.push(err instanceof Error ? err.message : "Could not launch the app");
-    giveUp = crashes[0] ?? "launch failed";
-    textSizeApplied = textSizeApplied || "not set";
+    const message = err instanceof Error ? err.message : "Could not launch the app";
+    if (deviceDown(message)) {
+      console.log(`${persona.id} device unreachable at launch. Restarting the simulator and trying once more.`);
+      try {
+        opts.maestro.stop();
+        await restartSimulator();
+        await opts.maestro.start();
+        await openForAgent();
+        textSizeApplied = textSizeApplied || (await setTextSize(persona.textSize));
+      } catch (again) {
+        crashes.push(again instanceof Error ? again.message : message);
+        giveUp = crashes[0] ?? "launch failed";
+        textSizeApplied = textSizeApplied || "not set";
+      }
+    } else {
+      crashes.push(message);
+      giveUp = crashes[0] ?? "launch failed";
+      textSizeApplied = textSizeApplied || "not set";
+    }
   }
 
-  let lastSig = "";
   let lastVisual: Buffer | null = null;
   let same = 0;
   let ignoreStuck = false;
   let relaunch = false;
+  let deviceRestarts = 0;
 
   for (let n = 1; n <= limit && !giveUp; n++) {
     if (Date.now() > deadline) {
@@ -217,6 +235,7 @@ export async function runPersona(opts: {
     let lines: string[] = [];
     let els: El[] = [];
     let screen = "unknown";
+    let route = "unknown";
     let error = "";
     try {
       await shot(shotFile);
@@ -244,7 +263,10 @@ export async function runPersona(opts: {
         giveUp = "App did not open.";
         break;
       }
-      screen = classifyScreen(lines);
+      const place = placeLabel(lines);
+      screen = place.label;
+      route = place.route;
+      captureInvite(lines, opts.runDir);
       const alert = systemAlert(lines, persona.group === "stress");
       if (alert) {
         const hit = resolveTarget(alert, els);
@@ -253,7 +275,7 @@ export async function runPersona(opts: {
           step: n,
           timestamp: new Date().toISOString(),
           screen,
-          route: screen,
+          route,
           action: "tap",
           target: alert,
           thought: "iOS permission alert",
@@ -269,32 +291,29 @@ export async function runPersona(opts: {
         continue;
       }
       seen.push(lines.join("\n"));
-      const sig = screenSignature([...lines, ...scrollMarks(els)]);
       let visual: Buffer | null = null;
       try {
         visual = samplePng(fs.readFileSync(shotFile));
       } catch {
         visual = null;
       }
-      same = nextStreak({
-        text: sig,
+      same = nextShotStreak({
         visual,
-        lastText: lastSig,
         lastVisual,
         streak: same,
         ignore: ignoreStuck,
       });
       ignoreStuck = false;
-      lastSig = sig;
       lastVisual = visual;
-      if (same >= 3) {
-        deadEnds.push(`${screen}: the same screen came up 3 times`);
-        giveUp = `Gave up. ${screen} repeated 3 times.`;
+      const finished = goalsFinished(specs, seen.join("\n"), steps);
+      if (same >= 3 && mayQuit(steps.length, finished)) {
+        deadEnds.push("the screen did not change after 3 actions");
+        giveUp = "Gave up. The screen did not change after 3 actions.";
         const aborted: StepLog = {
           step: n,
           timestamp: new Date().toISOString(),
           screen,
-          route: screen,
+          route,
           action: "abort",
           target: "",
           thought: "",
@@ -310,13 +329,40 @@ export async function runPersona(opts: {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "step failed";
+      if (deviceDown(message) && deviceRestarts < 2) {
+        deviceRestarts += 1;
+        console.log(`${persona.id} device unreachable. Restarting the simulator. This step is not counted.`);
+        try {
+          opts.maestro.stop();
+          await restartSimulator();
+          await opts.maestro.start();
+          await openApp(opts.maestro, grants);
+          n -= 1;
+          continue;
+        } catch (again) {
+          crashes.push(again instanceof Error ? again.message : message);
+          giveUp = crashes[0] ?? message;
+          break;
+        }
+      }
       crashes.push(message);
       giveUp = message;
       break;
     }
 
+    const nudge = same >= 3 ? "The last actions did not change the screen. Choose a different control." : "";
     const goalStatus = specs.map((spec) => spec.text);
-    const prompt = userPrompt({ persona, mode: opts.mode, creds, lines, history: steps, goalStatus, prepared: !fresh });
+    const prompt = userPrompt({
+      persona,
+      mode: opts.mode,
+      creds,
+      lines,
+      history: steps,
+      goalStatus,
+      prepared: !fresh,
+      handoff: opts.inviteLink,
+      nudge,
+    });
     let ask = await askModel({ apiKey: opts.apiKey, model, system: systemPrompt(), prompt, imagePath: shotFile });
     opts.spend.usd += ask.usd;
     opts.spend.input += ask.inputTokens;
@@ -372,7 +418,11 @@ export async function runPersona(opts: {
       const gate = reviewAction({ decision, screenText: lines.join("\n"), allowedNames: opts.allowedNames, group: persona.group });
       if (!gate.ok) error = gate.reason;
       else if (decision.action === "done") {
-        giveUp = "Agent stopped on their own.";
+        if (mayQuit(steps.length, goalsFinished(specs, seen.join("\n"), steps))) {
+          giveUp = "Agent stopped on their own.";
+        } else {
+          error = "Not yet. Take at least 15 actions unless the goal is already finished.";
+        }
       } else if (decision.action === "wait") {
         await sleep(1000);
       } else if (decision.action === "kill_app") {
@@ -419,7 +469,7 @@ export async function runPersona(opts: {
       }
     }
     if (error) errors.push(`${screen}: ${error}`);
-    if (persona.tech === "low" && error && target) {
+    if (persona.tech === "low" && error && target && mayQuit(steps.length, goalsFinished(specs, seen.join("\n"), steps))) {
       const prior = steps.filter((step) => step.target === target && step.error).length;
       if (prior + 1 >= 2) {
         giveUp = "Gave up after two failed taps on the same thing.";
@@ -444,7 +494,7 @@ export async function runPersona(opts: {
     steps.push(row);
     fs.appendFileSync(path.join(dir, "steps.jsonl"), JSON.stringify(row) + "\n");
     console.log(`${persona.id} ${n}/${limit} ${screen} ${action} ${row.target} $${opts.spend.usd.toFixed(2)}`);
-    if (decision?.action === "done") break;
+    if (decision?.action === "done" && giveUp) break;
   }
 
   if (!giveUp && steps.length >= hardCap) giveUp = `Hit the ${hardCap}-step cap.`;
@@ -483,6 +533,14 @@ export async function runPersona(opts: {
   else if (!session) cleanup = "no account";
 
   const ended = new Date();
+  const interview = await askInterview({
+    persona,
+    apiKey: opts.apiKey,
+    model,
+    spend: opts.spend,
+    imagePath: lastShotPath(dir, steps),
+  });
+  if (interview) fs.writeFileSync(path.join(dir, "interview.json"), JSON.stringify(interview, null, 2));
   const result: AgentResult = {
     personaId: persona.id,
     group: persona.group,
@@ -504,6 +562,7 @@ export async function runPersona(opts: {
     userId: session?.userId ?? "",
     isTest,
     cleanup,
+    interview,
   };
   fs.writeFileSync(path.join(dir, "result.json"), JSON.stringify(result, null, 2));
   return { result, model, compareNote, stopAll };
@@ -511,6 +570,53 @@ export async function runPersona(opts: {
 
 function deviceId(): string {
   return UDID;
+}
+
+function deviceDown(message: string): boolean {
+  return /unreachable|not booted|device .*not|Maestro MCP exited|simctl/i.test(message);
+}
+
+function captureInvite(lines: string[], runDir: string): void {
+  const found = lines.join("\n").match(/griit:\/\/i\/[A-Za-z0-9_-]+/);
+  if (!found) return;
+  fs.writeFileSync(path.join(runDir, "invite-link.txt"), `${found[0]}\n`);
+}
+
+function lastShotPath(dir: string, steps: StepLog[]): string {
+  const shot = steps.length ? steps[steps.length - 1]?.shot : "";
+  if (!shot) return "";
+  return path.join(dir, shot);
+}
+
+async function askInterview(input: {
+  persona: Persona;
+  apiKey: string;
+  model: string;
+  spend: Spend;
+  imagePath: string;
+}): Promise<InterviewAnswers | null> {
+  const prompt = interviewPrompt(input.persona);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ask = await askModel({
+      apiKey: input.apiKey,
+      model: input.model,
+      system: "You are the same person who just used the app. Answer the interview in character.",
+      prompt: attempt === 0 ? prompt : `${prompt}\n\nYour last reply missed a field. Reply with one JSON object and fill every field.`,
+      imagePath: input.imagePath || undefined,
+    });
+    input.spend.usd += ask.usd;
+    input.spend.input += ask.inputTokens;
+    input.spend.output += ask.outputTokens;
+    input.spend.calls += 1;
+    const parsed = parseInterview(ask.raw);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function goalsFinished(specs: GoalSpec[], blob: string, steps: StepLog[]): boolean {
+  if (!specs.length) return false;
+  return specs.every((spec) => spec.check === "observed" && observed(spec.text, blob.toLowerCase(), steps));
 }
 
 function judge(
@@ -576,7 +682,7 @@ function stagesReached(input: {
   db: Awaited<ReturnType<typeof readOwnRows>>;
   opened: boolean;
 }): string[] {
-  const screens = new Set(input.steps.map((step) => step.screen));
+  const screens = new Set(input.steps.map((step) => step.route));
   const stages: string[] = [];
   if (input.opened) stages.push("opened");
   if (screens.has("home")) stages.push("home");

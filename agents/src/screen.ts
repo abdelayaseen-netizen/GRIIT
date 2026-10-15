@@ -76,6 +76,29 @@ export function isHomeScreen(lines: string[]): boolean {
       /days in a row/i.test(line),
   );
 }
+const CHROME = /^(home|discover|create|activity|profile|griit|feed|back|go back|close|not now|today)$/i;
+
+/** The first line that names this screen, skipping the tab bar and the status bar. */
+export function screenTitle(lines: string[]): string {
+  for (const line of lines) {
+    const clean = line.replace(/ \(selected\)$/, "").trim();
+    if (!clean || clean.length > 80) continue;
+    if (CHROME.test(clean)) continue;
+    if (/\bbattery\b|cellular|wi-fi|wifi/i.test(clean)) continue;
+    if (/^\d{1,2}:\d{2}/.test(clean)) continue;
+    return clean;
+  }
+  return "untitled";
+}
+
+/** Route plus the visible title. A bucket name alone is not a label. */
+export function placeLabel(lines: string[]): { route: string; title: string; label: string } {
+  const bucket = classifyScreen(lines);
+  const title = screenTitle(lines);
+  const route = bucket === "other" || bucket === "unknown" ? title : bucket;
+  return { route, title, label: `${route} · ${title}` };
+}
+
 export function classifyScreen(lines: string[]): string {
   const blob = lines.join("\n");
   const has = (re: RegExp) => re.test(blob);
