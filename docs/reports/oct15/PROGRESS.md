@@ -10,7 +10,7 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 4 Prove and ship | done. Build 89, commit a375b25a, EAS 2625f8b4, submission ac0d5d93 to the internal group. All 11 smokes and the timer passed. |
 | 5 Agent harness | proved on Jordan and Amina. Both passed 15 steps and answered the interview. Jordan 27 steps, score 6. Amina 22 steps, score 6. The other 34 are running in agents/oct15. |
 | 6 Personas 1–6 | done. Jordan, Amina, Robert, Casey, Priya, Sam. All 15 or more steps and an interview. Spend about $0.28. |
-| 7 Personas 7–12 | not started |
+| 7 Personas 7–12 | done. Yusuf, Helen, Noah, Diane, Leo, Maya. All 15 or more steps and an interview. Spend about $0.49. |
 | 8 Personas 13–18 | not started |
 | 9 Personas 19–24 | not started |
 | 10 Personas 25–30 | not started |
