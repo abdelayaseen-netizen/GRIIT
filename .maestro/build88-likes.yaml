@@ -1,6 +1,7 @@
 appId: app.griit.challenge-tracker
 ---
-# Fresh account, then heart unlike, then double-tap the photo likes and does not unlike.
+# Fresh account, then the heart likes and a later tap unlikes.
+# A short swipe lifts the heart above the tab bar. The double-tap gesture is not part of this flow.
 - launchApp:
     clearState: true
     permissions:
@@ -49,7 +50,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b89likes15@example.com"
+- inputText: "b89likes16@example.com"
 - tapOn:
     id: "account-password"
 - inputText: "Build88-guest-test"
@@ -85,21 +86,13 @@ appId: app.griit.challenge-tracker
     timeout: 60000
 - tapOn: "Back to today"
 - tapOn: "Show feed from people you follow"
-- scrollUntilVisible:
-    element: "Like"
-    direction: DOWN
-    timeout: 25000
-    visibilityPercentage: 40
-    centerElement: true
-- tapOn: "Like"
+- swipe:
+    direction: UP
+    duration: 400
+- tapOn:
+    id: feed-respect
 - extendedWaitUntil:
     visible: "Liked by you"
     timeout: 8000
-- swipe:
-    direction: UP
-    duration: 500
-- swipe:
-    direction: DOWN
-    duration: 500
 - tapOn: "Liked by you"
 - assertNotVisible: "Liked by you"

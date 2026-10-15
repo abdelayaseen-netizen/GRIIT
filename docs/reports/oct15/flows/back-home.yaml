@@ -1,0 +1,7 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Go back"
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn: "Home"
