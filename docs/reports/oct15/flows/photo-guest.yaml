@@ -1,0 +1,68 @@
+appId: app.griit.challenge-tracker
+---
+# Fresh guest posts a proof photo. Fails while Post stays disabled or the share says private.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- extendedWaitUntil:
+    visible: "Physical toughness.*"
+    timeout: 15000
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "Find a challenge"
+    timeout: 20000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- extendedWaitUntil:
+    visible: "Drink water and post a photo"
+    timeout: 20000
+- tapOn:
+    id: "active-task"
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post to friends"
+    timeout: 20000
+- tapOn: "Post to friends"
+- tapOn:
+    text: "Close"
+    optional: true
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 45000
+- assertNotVisible: "Couldn’t share. It’s still private."
+- assertNotVisible: "Save your account before a post is public."

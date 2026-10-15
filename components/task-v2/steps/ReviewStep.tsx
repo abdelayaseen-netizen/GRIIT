@@ -18,6 +18,8 @@ type Props = {
   onRetake: () => void;
   onPost: () => void;
   submitting?: boolean;
+  /** One line when the post cannot go out. The button stays tappable. */
+  note?: string | null;
   audience: PostAudience;
   onAudience: (audience: PostAudience) => void;
 };
@@ -29,6 +31,7 @@ export function ReviewStep({
   onRetake,
   onPost,
   submitting = false,
+  note,
   audience,
   onAudience,
 }: Props) {
@@ -64,6 +67,11 @@ export function ReviewStep({
               );
             })}
           </View>
+          {submitting ? (
+            <Text style={styles.counter}>Posting your photo.</Text>
+          ) : note ? (
+            <Text style={styles.counter}>{note}</Text>
+          ) : null}
           <Button label={postButtonLabel(audience)} submitting={submitting} disabled={submitting} onPress={onPost} />
         </View>
       }

@@ -24,6 +24,11 @@ export function shareStateForAudience(audience: PostAudience): "shared" | "kept"
   return audience === "only_me" ? "kept" : "shared";
 }
 
+/** Friends and Everyone publish the proof. Only me stays on the record. */
+export function audiencePublishes(audience: string | null | undefined): boolean {
+  return audience === "friends" || audience === "everyone";
+}
+
 export function audienceShowsInScope(
   audience: string | null | undefined,
   scope: "following" | "everyone",

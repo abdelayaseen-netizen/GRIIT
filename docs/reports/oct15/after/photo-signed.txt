@@ -1,0 +1,50 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow photo-signed
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Tap on (Optional) "http://localhost:8081"... WARNED
+Tap on (Optional) "http://localhost:8082"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Assert that "Physical toughness.*" is visible... COMPLETED
+Tap on "Physical toughness.*"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Show Up 7.*" is visible... COMPLETED
+Tap on "Set this up later"... COMPLETED
+Assert that "No reminders for now" is visible... COMPLETED
+Tap on "No reminders for now"... COMPLETED
+Assert that "Find a challenge" is visible... COMPLETED
+Tap on "Profile"... COMPLETED
+Tap on "Settings"... COMPLETED
+Assert that "You're using GRIIT as a guest.*" is visible... COMPLETED
+Tap on "You're using GRIIT as a guest.*"... COMPLETED
+Assert that "Continue with email" is visible... COMPLETED
+Tap on "Continue with email"... COMPLETED
+Tap on id: account-email... COMPLETED
+Input text b89photo15b@example.com... COMPLETED
+Tap on id: account-password... COMPLETED
+Input text Build89-photo-test... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Send it" is visible... COMPLETED
+Tap on "Send it"... COMPLETED
+Assert that "Delete account" is visible... COMPLETED
+Tap on "Go back"... COMPLETED
+Open griit://challenge/b2000001-4000-4000-8000-000000000001... COMPLETED
+Assert that "Join Drink Water Today" is visible... COMPLETED
+Tap on "Join Drink Water Today"... COMPLETED
+Assert that "Drink water and post a photo" is visible... COMPLETED
+Tap on id: active-task... COMPLETED
+Assert that "Take proof photo" is visible... COMPLETED
+Tap on "Take proof photo"... COMPLETED
+Assert that "Post to friends" is visible... COMPLETED
+Tap on "Post to friends"... COMPLETED
+Tap on (Optional) "Close"... WARNED
+Assert that "Back to today" is visible... COMPLETED
+Assert that "Couldn’t share. It’s still private." is not visible... COMPLETED
+EXIT:0

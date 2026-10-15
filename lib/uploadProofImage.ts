@@ -82,12 +82,16 @@ export async function uploadProofImageFromBase64(
   const timeout = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
   try {
-    const { data, error } = await supabase.storage
+    const uploadPromise = supabase.storage
       .from(BUCKET)
       .upload(path, buffer, {
         contentType,
         upsert: false,
       });
+    const timedOut = new Promise<never>((_, reject) => {
+      controller.signal.addEventListener("abort", () => reject(new Error("Upload timed out. Please try again.")));
+    });
+    const { data, error } = await Promise.race([uploadPromise, timedOut]);
 
     clearTimeout(timeout);
     if (error) {

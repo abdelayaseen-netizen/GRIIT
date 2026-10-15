@@ -163,6 +163,7 @@ export function TaskFlowV2() {
           onRetake={f.onRetake}
           onPost={f.onReviewPost}
           submitting={f.saving}
+          note={f.submitError}
           audience={f.audience}
           onAudience={f.setAudience}
         />

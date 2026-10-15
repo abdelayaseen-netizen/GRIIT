@@ -20,7 +20,7 @@ From `docs/reports/bugs-oct13.md`. Only Yaseen sets a bug to closed.
 | 14 Guest and signed in with email | fixed – awaiting Yaseen | Anonymous users see guest. Email shows only when one exists. |
 | 15 Share preview clips | fixed – awaiting Yaseen | The preview scales the whole card into the frame. |
 | 16 Strict vs Hard | fixed – awaiting Yaseen | Users see Strict. The stored value stays hard. |
-| 17 Photo post stays disabled | open | After Take proof photo, Post to friends stays disabled. Jordan's log said the photo failed because the account is still private. Smoke flows build87-done-photo, build87-fitness, and build87-post-photo hit the same button. |
+| 17 Photo post stays disabled | fixed – awaiting Yaseen | A guest Post to friends saved the check-in, then the secured screen still said the photo was private. shareProof rejected anonymous users at checkins.ts (the old line 1695) and ShareChoice.tsx:58 said "Couldn't share. It's still private." The day-secured path never opened the post. Signed-in, the same button stays disabled only while the upload is in flight (Button.tsx:96) with no line. Guests and signed-in accounts now open the post. Flows: docs/reports/oct15/flows/photo-guest.yaml and photo-signed.yaml. |
 | 18 Home and Discover loop | open | 26 of 38 sessions gave up because the same screen came back three times, mostly Home and Discover. |
 | 19 Check-in 429 | open | build87-done-timer reached Log it, then checkins.complete returned 429. Not retried. |
 

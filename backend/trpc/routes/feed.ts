@@ -106,8 +106,7 @@ export const feedRouter = createTRPCRouter({
     const keepEvent = (ev: EvRow): boolean => {
       if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) return false;
       if (!viewerIsTest && testAuthorIds.has(ev.user_id)) return false;
-      if (anonymousIds.has(ev.user_id)) {
-        if (input.scope === "everyone") return false;
+      if (anonymousIds.has(ev.user_id) && ev.user_id !== viewerId) {
         if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") return false;
       }
       if (input.scope === "everyone" && ev.user_id !== viewerId) {

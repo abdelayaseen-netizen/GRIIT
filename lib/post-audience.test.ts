@@ -7,6 +7,7 @@ import {
   createsActivityPost,
   postButtonLabel,
   shareStateForAudience,
+  audiencePublishes,
 } from "./post-audience";
 
 describe("post audience", () => {
@@ -14,6 +15,13 @@ describe("post audience", () => {
     expect(postButtonLabel("friends")).toBe("Post to friends");
     expect(postButtonLabel("everyone")).toBe("Post to everyone");
     expect(postButtonLabel("only_me")).toBe("Save privately");
+  });
+
+  it("publishes friends and everyone, and keeps Only me", () => {
+    expect(audiencePublishes("friends")).toBe(true);
+    expect(audiencePublishes("everyone")).toBe(true);
+    expect(audiencePublishes("only_me")).toBe(false);
+    expect(audiencePublishes(null)).toBe(false);
   });
 
   it("keeps Only me off the shared feed", () => {

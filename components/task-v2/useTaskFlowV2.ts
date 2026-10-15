@@ -33,7 +33,7 @@ import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
 import { routeAfterSave } from "@/lib/route-after-save";
-import type { PostAudience } from "@/lib/post-audience";
+import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -542,6 +542,8 @@ export function useTaskFlowV2() {
       void endLiveActivity();
       clearTimeout(slowTimer);
       const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+      const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
+      const chosenAudience = typeof body.audience === "string" ? body.audience : null;
       if (outcome === "failed") {
         submitInFlight.current = false;
         setSaving(false);
@@ -551,6 +553,21 @@ export function useTaskFlowV2() {
           setFinishSave("failed");
           setFailNote((note) => note || "Couldn't save. Try Post again.");
         }
+        return;
+      }
+      if (audiencePublishes(chosenAudience) && postedId && mountedRef.current) {
+        setFinishSave("saved");
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.replace(ROUTES.POST_ID(postedId) as never);
+        submitInFlight.current = false;
+        setSaving(false);
+        return;
+      }
+      if (audiencePublishes(chosenAudience) && !postedId && mountedRef.current) {
+        submitInFlight.current = false;
+        setSaving(false);
+        setFinishSave("failed");
+        setFailNote("The photo saved. The post did not go out.");
         return;
       }
       trackUsage("task_completed", { method: kind });
@@ -565,15 +582,6 @@ export function useTaskFlowV2() {
       }
       void postHeldShare(eventId ?? undefined);
       if (outcome === "saved") {
-        const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
-        if (typeof body.audience === "string" && postedId && mountedRef.current) {
-          setFinishSave("saved");
-          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace(ROUTES.POST_ID(postedId) as never);
-          submitInFlight.current = false;
-          setSaving(false);
-          return;
-        }
         const route = routeAfterSave({
           challengeFinished: false,
           daySecuredNow: false,
@@ -637,6 +645,8 @@ export function useTaskFlowV2() {
         if (mountedRef.current) {
           setFinishShare("none");
           setFinishSave("failed");
+          setSaving(false);
+          setFailNote((note) => note || "The post did not finish. Try again.");
         }
         return;
       }
