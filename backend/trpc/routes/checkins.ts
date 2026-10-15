@@ -98,6 +98,7 @@ import {
 import { createsActivityPost, shareStateForAudience } from "../../../lib/post-audience";
 import { cameraProofTiles } from "../../lib/proof-predicate";
 import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
+import { bundleTaskFinish } from "../../lib/finish-bundle";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -245,6 +246,28 @@ async function grantEarnedFreezeOnSecure(args: {
   return { freezeGranted: true, freezesHeld: nextHeld, freezeCap: cap, freezeAtCap: false };
 }
 
+type FinishSecureResult = {
+  success?: boolean;
+  alreadySecured?: boolean;
+  newStreakCount?: number;
+  secured?: boolean;
+  challenge_done?: boolean;
+  remaining_challenges?: number;
+  freezeGranted?: boolean;
+  freezesHeld?: number;
+  freezeCap?: number;
+  freezeAtCap?: boolean;
+};
+
+/** Filled after the router exists so complete can call secureDay and shareProof without a type cycle. */
+const finishSideEffects: {
+  secure: (ctx: unknown, activeChallengeId: string) => Promise<FinishSecureResult>;
+  share: (ctx: unknown, eventId: string) => Promise<void>;
+} = {
+  secure: () => Promise.reject(new Error("finish side effects are not ready")),
+  share: () => Promise.reject(new Error("finish side effects are not ready")),
+};
+
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
     .input(
@@ -282,6 +305,8 @@ export const checkinsRouter = createTRPCRouter({
         floor_min: z.number().nonnegative().nullable().optional(),
         /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
         shareChoicePending: z.boolean().optional(),
+        /** Build 90+. When true, this call also shares the new proof. Older builds omit it and call shareProof. */
+        applyShare: z.boolean().optional(),
         audience: z.enum(["friends", "everyone", "only_me"]).optional(),
         /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
         self_reported: z.boolean().optional(),
@@ -1136,6 +1161,13 @@ export const checkinsRouter = createTRPCRouter({
         { ms: Date.now() - completeStartedAt, userId: ctx.userId, taskId: input.taskId },
         "[checkins.complete] timing",
       );
+      const bundled = await bundleTaskFinish({
+        requiredRemaining,
+        applyShare: input.applyShare === true,
+        eventId: postedEventId,
+        secure: () => finishSideEffects.secure(ctx, input.activeChallengeId),
+        share: (eventId) => finishSideEffects.share(ctx, eventId),
+      });
       const saved = (data ?? {}) as {
         proof_url?: string | null;
         photo_url?: string | null;
@@ -1166,6 +1198,9 @@ export const checkinsRouter = createTRPCRouter({
         verificationKind,
         dayProofs: dayProofs.map((t, i) => ({ ...t, imageUrl: signedComplete[3 + i] ?? null })),
         eventId: postedEventId,
+        daySecure: bundled.daySecure,
+        daySecureAttempted: bundled.daySecureAttempted,
+        shared: bundled.shared,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
@@ -1832,3 +1867,9 @@ export const checkinsRouter = createTRPCRouter({
       return { success: true };
     }),
 });
+
+finishSideEffects.secure = (ctx, activeChallengeId) =>
+  checkinsRouter.createCaller(ctx as never).secureDay({ activeChallengeId });
+finishSideEffects.share = async (ctx, eventId) => {
+  await checkinsRouter.createCaller(ctx as never).shareProof({ eventId });
+};

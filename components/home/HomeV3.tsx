@@ -145,6 +145,9 @@ export type HomeV3Props = {
   nextTask?: HomeNextTask | null;
   /** "Thursday, Oct 8" under the greeting. */
   dateLine?: string | null;
+  /** Set when a finish was shown early and the server rejected it. */
+  saveFailed?: boolean;
+  onRetrySave?: () => void;
 };
 
 export function HomeV3({
@@ -191,6 +194,8 @@ export function HomeV3({
   bestStreak,
   nextTask = null,
   dateLine = null,
+  saveFailed = false,
+  onRetrySave,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
   const [doneOpen, setDoneOpen] = useState(false);
@@ -400,6 +405,16 @@ export function HomeV3({
         ) : null}
       </View>
 
+      {saveFailed ? (
+        <Pressable
+          testID="home-save-retry"
+          accessibilityRole="button"
+          onPress={onRetrySave}
+          style={styles.today}
+        >
+          <Text style={styles.caption}>Couldn't save. Tap to try again.</Text>
+        </Pressable>
+      ) : null}
       {proof ? (
         <View style={styles.today}>
           {proof.hasChallenge ? (

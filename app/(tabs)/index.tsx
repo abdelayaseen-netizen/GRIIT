@@ -33,6 +33,13 @@ import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
 import {
+  mergeOptimisticCheckins,
+  optimisticSaveError,
+  optimisticTaskDones,
+  runOptimisticRetry,
+  subscribeOptimisticHome,
+} from "@/lib/optimistic-home";
+import {
   closeTimeLabel,
   pickStartTask,
   startCtaLabel,
@@ -156,6 +163,8 @@ export default function HomeScreen() {
   const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
   const [saveDismissed, setSaveDismissed] = React.useState({ first: false, second: false });
   const [postGate, setPostGate] = React.useState(false);
+  const [optimisticRev, setOptimisticRev] = React.useState(0);
+  useEffect(() => subscribeOptimisticHome(() => setOptimisticRev((n) => n + 1)), []);
   const focus = useLocalSearchParams<{ focus?: string }>().focus;
   useEffect(() => {
     if (focus === "freeze") setShowFreezeSheet(true);
@@ -278,7 +287,7 @@ export default function HomeScreen() {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
       ? bootstrap.data.activeChallenges
       : []) as ActiveRow[];
-    const checkins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
+    const serverCheckins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
       ? bootstrap.data.todayCheckinsForUser
       : []) as {
       active_challenge_id?: string;
@@ -291,6 +300,7 @@ export default function HomeScreen() {
       completion_image_url?: string | null;
       proof_photo_url?: string | null;
     }[];
+    const checkins = mergeOptimisticCheckins(serverCheckins, optimisticRev >= 0 ? optimisticTaskDones() : []);
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
@@ -354,7 +364,7 @@ export default function HomeScreen() {
       }
     }
     return flat;
-  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey]);
+  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey, optimisticRev]);
 
   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
   const offerYesterdayFreeze = useMemo(() => {
@@ -924,6 +934,8 @@ export default function HomeScreen() {
                 !todaySecured && startTask ? { id: startTask.id, title: startTask.name } : null
               }
               showFirstProofSlot={firstProofEver && !todaySecured}
+              saveFailed={optimisticSaveError() != null}
+              onRetrySave={runOptimisticRetry}
             />
             </View>
           }

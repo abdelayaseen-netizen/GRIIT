@@ -54,6 +54,7 @@ type AppContextValue = {
     shareChoicePending?: boolean;
     audience?: "friends" | "everyone" | "only_me";
     self_reported?: boolean;
+    applyShare?: boolean;
   }) => Promise<{
     firstTaskOfDay?: boolean;
     completionId?: string;
@@ -67,6 +68,20 @@ type AppContextValue = {
     verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
     dayProofs?: { eventId: string | null; imageUrl: string | null }[];
     eventId?: string | null;
+    daySecure?: {
+      success?: boolean;
+      alreadySecured?: boolean;
+      newStreakCount?: number;
+      secured?: boolean;
+      challenge_done?: boolean;
+      remaining_challenges?: number;
+      freezeGranted?: boolean;
+      freezesHeld?: number;
+      freezeCap?: number;
+      freezeAtCap?: boolean;
+    } | null;
+    daySecureAttempted?: boolean;
+    shared?: boolean;
   } | void>;
   secureDay: (activeChallengeId: string) => Promise<{
     success?: boolean;

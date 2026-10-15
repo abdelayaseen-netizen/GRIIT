@@ -41,58 +41,35 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
 
 export type UploadProofResult = { url: string } | { error: string };
 
-/**
- * Upload from base64 (e.g. from ImagePicker with base64: true).
- * contentType should be image/jpeg, image/png, or image/webp.
- */
-export async function uploadProofImageFromBase64(
-  base64: string,
-  contentType: "image/jpeg" | "image/png" | "image/webp" = "image/jpeg"
+async function cachedUserId(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.id ?? null;
+}
+
+async function uploadProofBuffer(
+  userId: string,
+  buffer: ArrayBuffer,
+  contentType: "image/jpeg" | "image/png" | "image/webp",
 ): Promise<UploadProofResult> {
-  if (!base64 || base64.length === 0) {
-    return { error: "No image data" };
-  }
-  const sizeEstimate = Math.ceil((base64.length * 3) / 4);
-  if (sizeEstimate > MAX_SIZE_BYTES) {
+  if (buffer.byteLength > MAX_SIZE_BYTES) {
     return { error: "Image is too large. Maximum size is 5MB." };
-  }
-  if (!ALLOWED_TYPES.includes(contentType)) {
-    return { error: "Invalid file format. Use JPEG, PNG, or WebP." };
-  }
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.id) {
-    return { error: "You must be signed in to upload" };
-  }
-
-  const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
-  const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-
-  let buffer: ArrayBuffer;
-  try {
-    buffer = base64ToArrayBuffer(base64);
-  } catch {
-    return { error: "Invalid image data" };
   }
   if (!isPersistedProofImage(buffer)) {
     return { error: "Photo did not save. Try the camera again." };
   }
-
+  const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
-
   try {
-    const uploadPromise = supabase.storage
-      .from(BUCKET)
-      .upload(path, buffer, {
-        contentType,
-        upsert: false,
-      });
+    const uploadPromise = supabase.storage.from(BUCKET).upload(path, buffer, {
+      contentType,
+      upsert: false,
+    });
     const timedOut = new Promise<never>((_, reject) => {
       controller.signal.addEventListener("abort", () => reject(new Error("Upload timed out. Please try again.")));
     });
     const { data, error } = await Promise.race([uploadPromise, timedOut]);
-
     clearTimeout(timeout);
     if (error) {
       const msg = error.message ?? "";
@@ -105,11 +82,65 @@ export async function uploadProofImageFromBase64(
       const statusCode = (error as { statusCode?: string | number }).statusCode;
       return { error: statusCode ? `Storage ${statusCode}: ${msg}` : msg || "Upload failed" };
     }
-
     return { url: data.path };
   } catch (e: unknown) {
     clearTimeout(timeout);
-    if (e && typeof e === "object" && "name" in e && (e as { name: string }).name === "AbortError") return { error: "Upload timed out. Please try again." };
+    if (e && typeof e === "object" && "name" in e && (e as { name: string }).name === "AbortError") {
+      return { error: "Upload timed out. Please try again." };
+    }
     return { error: e instanceof Error ? e.message : "Upload failed" };
   }
+}
+
+/**
+ * Upload a resized file. The bytes are read once. There is no base64 round trip.
+ */
+export async function uploadProofImageFromFile(
+  fileUri: string,
+  contentType: "image/jpeg" | "image/png" | "image/webp" = "image/jpeg",
+): Promise<UploadProofResult> {
+  if (!fileUri) return { error: "No image data" };
+  if (!ALLOWED_TYPES.includes(contentType)) {
+    return { error: "Invalid file format. Use JPEG, PNG, or WebP." };
+  }
+  const userId = await cachedUserId();
+  if (!userId) return { error: "You must be signed in to upload" };
+  let buffer: ArrayBuffer;
+  try {
+    const response = await fetch(fileUri);
+    buffer = await response.arrayBuffer();
+  } catch {
+    return { error: "Invalid image data" };
+  }
+  return uploadProofBuffer(userId, buffer, contentType);
+}
+
+/**
+ * Upload from base64 (e.g. from ImagePicker with base64: true).
+ * contentType should be image/jpeg, image/png, or image/webp.
+ * The task flow uses uploadProofImageFromFile. This stays for older callers.
+ */
+export async function uploadProofImageFromBase64(
+  base64: string,
+  contentType: "image/jpeg" | "image/png" | "image/webp" = "image/jpeg",
+): Promise<UploadProofResult> {
+  if (!base64 || base64.length === 0) {
+    return { error: "No image data" };
+  }
+  const sizeEstimate = Math.ceil((base64.length * 3) / 4);
+  if (sizeEstimate > MAX_SIZE_BYTES) {
+    return { error: "Image is too large. Maximum size is 5MB." };
+  }
+  if (!ALLOWED_TYPES.includes(contentType)) {
+    return { error: "Invalid file format. Use JPEG, PNG, or WebP." };
+  }
+  const userId = await cachedUserId();
+  if (!userId) return { error: "You must be signed in to upload" };
+  let buffer: ArrayBuffer;
+  try {
+    buffer = base64ToArrayBuffer(base64);
+  } catch {
+    return { error: "Invalid image data" };
+  }
+  return uploadProofBuffer(userId, buffer, contentType);
 }

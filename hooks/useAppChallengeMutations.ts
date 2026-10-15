@@ -90,6 +90,7 @@ export function useAppChallengeMutations({
       shareChoicePending?: boolean;
       audience?: "friends" | "everyone" | "only_me";
       self_reported?: boolean;
+      applyShare?: boolean;
     }): Promise<{
       firstTaskOfDay?: boolean;
       completionId?: string;
@@ -103,6 +104,20 @@ export function useAppChallengeMutations({
       verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
       dayProofs?: { eventId: string | null; imageUrl: string | null }[];
       eventId?: string | null;
+      daySecure?: {
+        success?: boolean;
+        alreadySecured?: boolean;
+        newStreakCount?: number;
+        secured?: boolean;
+        challenge_done?: boolean;
+        remaining_challenges?: number;
+        freezeGranted?: boolean;
+        freezesHeld?: number;
+        freezeCap?: number;
+        freezeAtCap?: boolean;
+      } | null;
+      daySecureAttempted?: boolean;
+      shared?: boolean;
     } | void> => {
       const requiredTasks =
         (challenge?.challenge_tasks as { id: string; config?: { required?: boolean } }[] | undefined)?.filter(
@@ -134,6 +149,20 @@ export function useAppChallengeMutations({
             verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
             dayProofs?: { eventId: string | null; imageUrl: string | null }[];
             eventId?: string | null;
+            daySecure?: {
+              success?: boolean;
+              alreadySecured?: boolean;
+              newStreakCount?: number;
+              secured?: boolean;
+              challenge_done?: boolean;
+              remaining_challenges?: number;
+              freezeGranted?: boolean;
+              freezesHeld?: number;
+              freezeCap?: number;
+              freezeAtCap?: boolean;
+            } | null;
+            daySecureAttempted?: boolean;
+            shared?: boolean;
           }>(TRPC.checkins.complete, params)
         .then(async (data) => {
           const currentDay = (activeChallenge as { current_day?: number } | null)?.current_day ?? 1;
@@ -257,6 +286,9 @@ export function useAppChallengeMutations({
             verificationKind: data?.verificationKind,
             dayProofs: data?.dayProofs,
             eventId: data?.eventId ?? null,
+            daySecure: data?.daySecure ?? null,
+            daySecureAttempted: data?.daySecureAttempted,
+            shared: data?.shared,
           };
         })
         .catch((err: unknown) => {

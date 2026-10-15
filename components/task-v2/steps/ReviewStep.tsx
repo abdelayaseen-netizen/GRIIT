@@ -68,7 +68,7 @@ export function ReviewStep({
             })}
           </View>
           {submitting ? (
-            <Text style={styles.counter}>Posting your photo.</Text>
+            <Text style={styles.counter}>Posting…</Text>
           ) : note ? (
             <Text style={styles.counter}>{note}</Text>
           ) : null}
