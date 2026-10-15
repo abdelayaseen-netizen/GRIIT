@@ -44,7 +44,7 @@ appId: app.griit.challenge-tracker
     visible: "Breathe 1 minute"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible: "Done, already did it"
     timeout: 15000

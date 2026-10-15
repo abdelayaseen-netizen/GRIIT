@@ -35,12 +35,17 @@ export function chromeTitle(type: string, gates: readonly TaskGate[] = []): stri
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
+/** Home sends the normalized type `text`. Challenge detail still sends raw `journal`. */
+function isWriteType(type: string): boolean {
+  return type === "journal" || type === "text";
+}
+
 export function initialStep(type: string, gates: readonly TaskGate[] = []): TaskFlowStep {
   let step: TaskFlowStep;
   if (type === "photo") step = "capture";
   else if (type === "timer" || type === "checkin") step = "entry";
   else if (type === "run" || type === "workout") step = "log";
-  else if (type === "journal") step = "write";
+  else if (isWriteType(type)) step = "write";
   else if (type === "counter" || type === "water" || type === "reading") step = "count";
   else step = "ask";
   if (step === "ask" && gates.includes("camera")) return "capture";
@@ -94,7 +99,7 @@ export function verificationKindFor(type: string, hasPhoto: boolean): Verificati
   if (type === "photo" || (type === "reading" && hasPhoto) || type === "run" || type === "workout") return "live_photo";
   if (type === "timer") return "timer";
   if (type === "checkin") return "gps";
-  if (type === "journal") return "word_count";
+  if (isWriteType(type)) return "word_count";
   return "self_report";
 }
 
@@ -162,7 +167,7 @@ export function resolveGoBack(args: {
   if (args.step === "session") return { action: "set_step", step: "log" };
   if (args.step === "capture") {
     if (args.taskType === "run" || args.taskType === "workout") return { action: "set_step", step: "log" };
-    if (args.taskType === "journal") return { action: "set_step", step: "write" };
+    if (isWriteType(args.taskType)) return { action: "set_step", step: "write" };
     if (args.taskType === "counter" || args.taskType === "water" || args.taskType === "reading") {
       return { action: "set_step", step: "count" };
     }
@@ -184,7 +189,7 @@ export function resolveGoBackFromFailure(args: {
   if (args.requirePhoto && !args.hasPhoto) return "capture";
   if (args.hasPhoto) return "review";
   if (args.taskType === "timer" || args.taskType === "checkin") return "entry";
-  if (args.taskType === "journal") return "write";
+  if (isWriteType(args.taskType)) return "write";
   if (args.taskType === "counter" || args.taskType === "water" || args.taskType === "reading") return "count";
   if (args.taskType === "run" || args.taskType === "workout") return "log";
   return initialStep(args.taskType, args.gates);
@@ -211,7 +216,7 @@ export function resolveRetryFailedSubmit(args: {
   if (args.taskType === "timer" && !args.timerReadyToSubmit) return "start_timer";
   if (args.requirePhoto) return "capture";
   if (args.taskType === "timer") return "submit_timer";
-  if (args.taskType === "journal") return "submit_journal";
+  if (isWriteType(args.taskType)) return "submit_journal";
   if (args.taskType === "counter" || args.taskType === "water" || args.taskType === "reading") {
     return "submit_count";
   }

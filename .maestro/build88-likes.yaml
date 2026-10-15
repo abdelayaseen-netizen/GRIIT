@@ -5,6 +5,8 @@ appId: app.griit.challenge-tracker
     clearState: true
     permissions:
       notifications: deny
+      camera: allow
+      photos: allow
 - tapOn:
     text: "http://localhost:8081"
     optional: true
@@ -47,7 +49,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b88likes@example.com"
+- inputText: "b89likes15@example.com"
 - tapOn:
     id: "account-password"
 - inputText: "Build88-guest-test"
@@ -57,29 +59,47 @@ appId: app.griit.challenge-tracker
     visible: "Send it"
     timeout: 10000
 - tapOn: "Send it"
-- tapOn: "Home"
-- tapOn: "Everyone"
+- tapOn:
+    text: "Go back"
+    optional: true
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
 - extendedWaitUntil:
-    visible:
-      id: feed-respect
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- extendedWaitUntil:
+    visible: "Drink water and post a photo"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post to friends"
+    timeout: 20000
+- tapOn: "Post to friends"
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 60000
+- tapOn: "Back to today"
+- tapOn: "Show feed from people you follow"
+- scrollUntilVisible:
+    element: "Like"
+    direction: DOWN
     timeout: 25000
-- tapOn:
-    id: feed-respect
+    visibilityPercentage: 40
+    centerElement: true
+- tapOn: "Like"
 - extendedWaitUntil:
-    visible:
-      id: feed-respect-count
+    visible: "Liked by you"
     timeout: 8000
-- tapOn:
-    id: feed-respect
-- assertNotVisible:
-    id: feed-respect-count
-- doubleTapOn:
-    id: feed-photo
-- extendedWaitUntil:
-    visible:
-      id: feed-respect-count
-    timeout: 8000
-- doubleTapOn:
-    id: feed-photo
-- assertVisible:
-    id: feed-respect-count
+- swipe:
+    direction: UP
+    duration: 500
+- swipe:
+    direction: DOWN
+    duration: 500
+- tapOn: "Liked by you"
+- assertNotVisible: "Liked by you"

@@ -1,0 +1,31 @@
+appId: app.griit.challenge-tracker
+---
+# Continues on the signed-in home from build88-likes. No new account.
+- scrollUntilVisible:
+    element:
+      id: "feed-respect"
+    direction: DOWN
+    timeout: 25000
+    speed: 40
+    visibilityPercentage: 40
+    centerElement: true
+- tapOn:
+    id: feed-respect
+- extendedWaitUntil:
+    visible:
+      id: feed-respect-count
+    timeout: 8000
+- tapOn:
+    id: feed-respect
+- assertNotVisible:
+    id: feed-respect-count
+- doubleTapOn:
+    id: feed-photo
+- extendedWaitUntil:
+    visible:
+      id: feed-respect-count
+    timeout: 8000
+- doubleTapOn:
+    id: feed-photo
+- assertVisible:
+    id: feed-respect-count

@@ -1,0 +1,23 @@
+appId: app.griit.challenge-tracker
+---
+- scrollUntilVisible:
+    element:
+      id: feed-respect
+    direction: DOWN
+    timeout: 15000
+    visibilityPercentage: 40
+    centerElement: true
+- tapOn:
+    id: feed-respect
+- extendedWaitUntil:
+    visible: "Liked by you"
+    timeout: 8000
+- swipe:
+    direction: UP
+    duration: 400
+- swipe:
+    direction: DOWN
+    duration: 400
+- tapOn:
+    id: feed-respect
+- assertNotVisible: "Liked by you"

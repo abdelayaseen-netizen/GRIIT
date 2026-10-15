@@ -731,7 +731,7 @@ export function useTaskFlowV2() {
               }
             : { value: Math.floor(requiredSeconds / 60) }
           : {}),
-        ...(taskType === "journal" ? { noteText: text } : {}),
+        ...(taskType === "journal" || taskType === "text" ? { noteText: text } : {}),
         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
           ? { value: countRef.current }
           : {}),

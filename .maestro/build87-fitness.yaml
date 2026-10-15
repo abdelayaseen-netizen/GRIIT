@@ -47,9 +47,13 @@ appId: app.griit.challenge-tracker
     timeout: 15000
 - tapOn: "Take proof photo"
 - extendedWaitUntil:
-    visible: "Post proof"
+    visible: "Post to friends"
     timeout: 20000
-- tapOn: "Post proof"
+- tapOn: "Post to friends"
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 60000
+- tapOn: "Back to today"
 - extendedWaitUntil:
     visible: "Save your streak."
-    timeout: 25000
+    timeout: 20000

@@ -299,6 +299,7 @@ export function HomeV3({
         )}
         <View style={styles.taskCopy}>
           <Pressable
+            testID="home-task"
             accessibilityRole="button"
             accessibilityLabel={row.name}
             onPress={() => onPressTask?.(row.id)}

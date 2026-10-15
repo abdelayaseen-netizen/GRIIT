@@ -43,7 +43,7 @@ appId: app.griit.challenge-tracker
     visible: "Write a short journal entry"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible:
       id: "write-body"

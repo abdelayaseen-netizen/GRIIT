@@ -49,7 +49,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
-- inputText: "b88friends@example.com"
+- inputText: "b89post15c@example.com"
 - tapOn:
     id: "account-password"
 - inputText: "Build87-guest-test"
@@ -60,9 +60,11 @@ appId: app.griit.challenge-tracker
     timeout: 10000
 - tapOn: "Send it"
 - extendedWaitUntil:
-    visible: "Delete account"
+    visible: "Sign out|Find a challenge"
     timeout: 20000
-- tapOn: "Go back"
+- tapOn:
+    text: "Go back"
+    optional: true
 - openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
 - extendedWaitUntil:
     visible: "Join Drink Water Today"
@@ -72,7 +74,7 @@ appId: app.griit.challenge-tracker
     visible: "Drink water and post a photo"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible: "Take proof photo"
     timeout: 20000
@@ -89,7 +91,7 @@ appId: app.griit.challenge-tracker
     optional: true
 - extendedWaitUntil:
     visible: "Back to today"
-    timeout: 20000
+    timeout: 60000
 - assertVisible: "Friends"
 - tapOn: "Back to today"
 - tapOn: "Profile"

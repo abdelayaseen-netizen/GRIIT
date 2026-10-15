@@ -36,6 +36,7 @@ describe("initialStep", () => {
     expect(initialStep("run")).toBe("log");
     expect(initialStep("workout")).toBe("log");
     expect(initialStep("journal")).toBe("write");
+    expect(initialStep("text")).toBe("write");
     expect(initialStep("counter")).toBe("count");
     expect(initialStep("water")).toBe("count");
     expect(initialStep("reading")).toBe("count");
@@ -162,6 +163,7 @@ describe("verificationKindFor", () => {
     expect(verificationKindFor("timer", false)).toBe("timer");
     expect(verificationKindFor("checkin", false)).toBe("gps");
     expect(verificationKindFor("journal", false)).toBe("word_count");
+    expect(verificationKindFor("text", false)).toBe("word_count");
     expect(verificationKindFor("manual", false)).toBe("self_report");
     expect(verificationKindFor("water", false)).toBe("self_report");
   });
@@ -289,6 +291,7 @@ describe("resolveGoBackFromFailure", () => {
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "timer" })).toBe("entry");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "checkin" })).toBe("entry");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "journal" })).toBe("write");
+    expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "text" })).toBe("write");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "reading" })).toBe("count");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "run" })).toBe("log");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "photo" })).toBe("capture");

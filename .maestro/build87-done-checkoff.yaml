@@ -44,7 +44,7 @@ appId: app.griit.challenge-tracker
     visible: "Walk 7,000 steps"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible: "^Done$"
     timeout: 15000

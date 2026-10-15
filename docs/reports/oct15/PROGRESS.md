@@ -6,9 +6,8 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | --- | --- |
 | 1 Photo post | done. Guest and signed-in both reach Back to today. Root: secured path ignored the chosen audience, and shareProof rejected guests. |
 | 2 First task on Home | done. Join lands on Home. The task name is a button, so the tap opens the task. |
-| 2 First task on Home | not started |
 | 3 Check-in 429 | done. Shared IP limit in hono.ts. Deploy abe2e7d3 health a9c8873. Timer flow passed. |
-| 4 Prove and ship | in progress |
+| 4 Prove and ship | in progress. 10 of 11 smokes pass, plus the timer. Likes reached the heart once (like, then unlike). The saved likes log is still exit 1. Not shipping until that log is exit 0. |
 | 5 Agent harness | not started |
 | 6 Personas 1–6 | not started |
 | 7 Personas 7–12 | not started |

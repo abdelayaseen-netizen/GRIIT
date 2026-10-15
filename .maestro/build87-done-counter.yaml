@@ -53,7 +53,7 @@ appId: app.griit.challenge-tracker
     visible: "Read 10 pages"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible: "Done · 10 pages"
     timeout: 15000

@@ -1,0 +1,35 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow build87-faith
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Tap on (Optional) "http://localhost:8081"... WARNED
+Tap on (Optional) "http://localhost:8082"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Assert that "Physical toughness.*" is visible... COMPLETED
+Swiping in UP direction in 400 ms... COMPLETED
+Swiping in UP direction in 400 ms... COMPLETED
+Swiping in UP direction in 400 ms... COMPLETED
+Assert that "Faith and prayer.*" is visible... COMPLETED
+Tap on point (50%,83%)... COMPLETED
+Assert that "^Continue$" is visible... COMPLETED
+Tap on "^Continue$"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Set this up later" is visible... COMPLETED
+Tap on "Set this up later"... COMPLETED
+Assert that "No reminders for now" is visible... COMPLETED
+Tap on "No reminders for now"... COMPLETED
+Assert that "No challenge yet.*" is visible... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000007... COMPLETED
+Assert that "Join Quran Daily" is visible... COMPLETED
+Tap on "Join Quran Daily"... COMPLETED
+Assert that "Read at least 1 page of Quran" is visible... COMPLETED
+Tap on id: home-task... COMPLETED
+Assert that "^Done$" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that "Day 1 secured.*" is visible... COMPLETED
+EXIT:0

@@ -62,7 +62,7 @@ appId: app.griit.challenge-tracker
     visible: "Read at least 1 page of Quran"
     timeout: 20000
 - tapOn:
-    id: "active-task"
+    id: "home-task"
 - extendedWaitUntil:
     visible: "^Done$"
     timeout: 15000
