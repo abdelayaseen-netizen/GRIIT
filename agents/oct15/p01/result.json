@@ -1,0 +1,61 @@
+{
+  "personaId": "p01",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:35:05.869Z",
+  "endedAt": "2026-10-15T03:38:01.760Z",
+  "steps": 27,
+  "durationSec": 176,
+  "goals": [
+    {
+      "id": "p01-g1",
+      "text": "Get from the first screen to a finished task without reading paragraphs.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "onboarding · Start here.: radio button is already selected.",
+    "SHOW UP 7 · SHOW UP 7: Failed to run flow: Element not found: Text matching regex: Take proof photo"
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "f1d84f76-14fb-4684-ada9-9eb62e5b5a66",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah for sure, it's a fun little challenge thing. Shows you're actually doing something instead of just scrolling",
+    "secured": "Like it locked in your proof or whatever? So you can't cheat and change it later",
+    "freeze": "Probably like a pause button if you need a break from the challenge without quitting",
+    "selfReported": "When you just tell it yourself what you did instead of proving it with a photo, I guess",
+    "best": "Getting to post the proof pic instantly and seeing the timestamp. Felt kinda legit",
+    "worst": "The whole share thing was confusing ngl, didn't really get why I needed to pick friends or whatever",
+    "tellFriend": "Maybe? It's cool but also kinda niche. I'd be like 'yo there's this app where you prove you're doing something for a week' but they'd probably just use a notes app lol",
+    "score": 6
+  }
+}

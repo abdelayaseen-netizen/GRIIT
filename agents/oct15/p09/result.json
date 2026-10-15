@@ -1,0 +1,46 @@
+{
+  "personaId": "p09",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:59:54.336Z",
+  "endedAt": "2026-10-15T04:02:57.917Z",
+  "steps": 18,
+  "durationSec": 184,
+  "goals": [
+    {
+      "id": "p09-g1",
+      "text": "Create or join a morning routine with more than one task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "joined",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "fc1c7ed9-39ab-4394-bd03-91041ac78879",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Absolutely, yeah. I'm committed to this 7-day challenge and I just knocked out day 1. The cold shower was brutal but I felt alive after. I want to keep the momentum going tomorrow morning.",
+    "secured": "I think it means locking in or committing to the habit - like securing your commitment so you actually follow through instead of backing out.",
+    "freeze": "Maybe it's a way to pause the entire program temporarily if you need a break, without losing your progress or having to restart from day 1.",
+    "selfReported": "That's probably when you manually log or confirm that you completed something, rather than the app automatically tracking it for you.",
+    "best": "Honestly, finishing it. I wasn't sure I'd actually do a cold shower at midnight, but I pushed through. That moment when I stepped out and realized I actually did it - that felt like a win.",
+    "worst": "The actual cold shower itself, no question. Those first 30 seconds were painful. My body was fighting it hard. But I guess that's kind of the point, right?",
+    "tellFriend": "Yeah, I'd definitely tell my friend Marcus about this. I'd say something like: 'Hey, I'm doing this 7-day morning routine challenge - cold showers, journaling, working out. It's intense but I'm actually sticking with it. You should try it.' He's always talking about getting disciplined.",
+    "score": 7
+  }
+}

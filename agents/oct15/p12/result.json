@@ -1,0 +1,56 @@
+{
+  "personaId": "p12",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:09:45.132Z",
+  "endedAt": "2026-10-15T04:12:55.879Z",
+  "steps": 19,
+  "durationSec": 191,
+  "goals": [
+    {
+      "id": "p12-g1",
+      "text": "Join a challenge, then see what the app says about today.",
+      "kind": "db",
+      "pass": true,
+      "detail": "Show Up 7"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "home · Day secured: every task done.: Not yet. Take at least 15 actions unless the goal is already finished."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "joined",
+    "completed",
+    "photo",
+    "shared",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "f0d9e447-7472-4149-87bf-7af5fd34b107",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, absolutely. I'm on day 1 of my streak and I want to keep it going. Even though I'm traveling across time zones, I'll make sure to check in tomorrow to log my gym session. The streak is motivating.",
+    "secured": "It means I've locked in my commitment for today - I completed my task and it's confirmed. The app is showing me that today's challenge is done and can't be undone.",
+    "freeze": "I think it's a way to pause your streak without breaking it, like if you're sick or have an emergency. You can freeze instead of losing your progress.",
+    "selfReported": "It means I'm telling the app myself that I completed the task, rather than it being verified by some external thing. I'm being honest about doing 'Get to the gym' today.",
+    "best": "Seeing that checkmark next to day 1 and knowing my streak has started. That little flame icon and the 'Your best' label felt really good - like I'm building something.",
+    "worst": "Honestly, the travel across time zones is going to be annoying to manage. I'm worried the app might get confused about what day it is for me, or I'll mess up my routine because of the schedule changes.",
+    "tellFriend": "Yeah, I'd tell them about it. I'd say: 'There's this app that gamifies daily habits with streaks. It's simple but it actually works - seeing that fire emoji and keeping the chain going makes me want to show up. Plus the community feed is cool to see what others are doing.'",
+    "score": 7
+  }
+}

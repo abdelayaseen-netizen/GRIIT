@@ -1,0 +1,42 @@
+{
+  "personaId": "p33",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-15T05:02:18.728Z",
+  "endedAt": "2026-10-15T05:03:05.216Z",
+  "steps": 4,
+  "durationSec": 46,
+  "goals": [
+    {
+      "id": "p33-g1",
+      "text": "Find delete account and read the warning.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Stopped. This account could not be marked is_test (is_test did not stay true\n). No further agents will run.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "2d7d9163-511b-4eb6-9c5d-0b16c8729837",
+  "isTest": false,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, I'd open it tomorrow. I just deleted my account out of frustration, but honestly, the app works. I'd want to see if my data comes back clean after the reset, and maybe give it another shot with a fresh start.",
+    "secured": "I think it means my personal information and data is protected and encrypted on their servers. Like, my health metrics and account details are locked down so nobody else can access them.",
+    "freeze": "Probably means I can temporarily pause or suspend my account without deleting it completely. Like a timeout instead of going nuclear with full deletion.",
+    "selfReported": "That's when I manually input information myself rather than the app tracking it automatically. Like me telling the app how I'm feeling or what I ate, versus it measuring something for me.",
+    "best": "Getting through the initial setup and seeing the dashboard come together. It felt organized and I could tell this thing was designed to actually help people track their health seriously.",
+    "worst": "The deletion process. Having to type out DELETE, then confirming again—it felt like the app was trying too hard to stop me. I get it's a safeguard, but it made me more annoyed when I was already frustrated.",
+    "tellFriend": "I'd tell them it's solid if they're serious about tracking health metrics. I'd say: 'It's got a clean interface and actually makes you think about your data, but be aware they make you jump through hoops to delete. Just know what you're committing to before you sign up.'",
+    "score": 6
+  }
+}

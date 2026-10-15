@@ -1,0 +1,54 @@
+{
+  "personaId": "p04",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:44:28.522Z",
+  "endedAt": "2026-10-15T03:47:12.015Z",
+  "steps": 16,
+  "durationSec": 163,
+  "goals": [
+    {
+      "id": "p04-g1",
+      "text": "Look for a catch, then leave if the first task feels like a trick.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "onboarding · Start here.: radio button is already selected."
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1)."
+  ],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "fcebe2fe-6bd6-4166-884b-89c795723247",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Honestly? Probably not. I'd need to actually take the photo and post it, and that feels like friction I don't need right now. I've already quit three of these apps.",
+    "secured": "I think it means you've locked in your commitment for the day—like you've proven you're serious by completing the task. That's the whole fire emoji thing.",
+    "freeze": "I'm guessing it's a pause button? Like if life gets crazy you can freeze your streak temporarily instead of losing everything. Smart if that's real.",
+    "selfReported": "That's the photo part, right? You're telling the app you did it instead of it tracking automatically. So it's basically on the honor system.",
+    "best": "The UI is pretty clean and the notification was timely. The habit itself—drinking water—is solid. No complaints there.",
+    "worst": "The error message at the bottom. 'Uncaught (in promise, id: 4) Error'? That killed any momentum I had. Feels broken. Also the fact that I have to post a photo to prove I drank water is extra. Just let me check a box.",
+    "tellFriend": "Honestly, I'd probably skip it. I'd say 'It looks nice but it crashed on me and I'm over these apps that need social proof and photos for everything. Just use a water bottle with time markers.'",
+    "score": 4
+  }
+}

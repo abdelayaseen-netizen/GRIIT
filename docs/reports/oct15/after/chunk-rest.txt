@@ -1,0 +1,461 @@
+Chunks 10 to 13. 26 people. Cap $40. Spend so far $0.49.
+
+p13 Marcus
+p13 prepared is_test account, onboarding done
+p13 login home
+p13 session file was not readable after Home. Continuing. A different account still stops this agent.
+p13 1/60 home · Still up, Marcus tap Find a challenge $0.50
+p13 2/60 discover · For you tap Discover $0.50
+p13 3/60 discover · For you tap Fitness $0.50
+p13 4/60 challenge · For you scroll 50%,50% $0.50
+p13 5/60 challenge · For you scroll 50%,50% $0.50
+p13 6/60 challenge · For you scroll 50%,50% $0.51
+p13 7/60 challenge · For you scroll 50%,50% $0.51
+p13 8/60 challenge · For you scroll 50%,50% $0.51
+p13 9/60 challenge · For you scroll 50%,50% $0.51
+p13 10/60 challenge · For you scroll 50%,50% $0.51
+p13 11/60 challenge · For you tap Build your own $0.52
+p13 12/60 create · Cancel type Challenge title $0.52
+p13 13/60 create · Cancel tap 75 days $0.52
+p13 14/60 create · Cancel tap workweek (selected) $0.52
+p13 15/60 create · Cancel tap workweek (selected) $0.53
+p13 16/60 create · Cancel tap Fitness $0.53
+p13 17/60 create · Cancel tap Gym before workw $0.53
+p13 18/60 create · Cancel tap work $0.53
+p13 19/60 create · Cancel tap work $0.54
+p13 20/60 create · Cancel tap 75 days $0.54
+p13 21/60 create · Cancel tap workweek $0.54
+p13 22/60 create · Cancel tap Gym before workw $0.54
+p13 23/60 create · Cancel tap Looks good $0.55
+p13 24/60 create · Cancel tap Gym before works $0.55
+p13 25/60 create · Cancel tap Gym before works $0.55
+p13 26/60 create · Cancel tap Gym before works $0.55
+p13 27/60 create · Cancel tap Gym before works $0.55
+p13 done. spend $0.56. Gave up. The screen did not change after 3 actions.
+
+p14 Lina
+p14 prepared is_test account, onboarding done
+p14 device unreachable at launch. Restarting the simulator and trying once more.
+p14 login home
+p14 1/60 home · Still up, Lina tap Find a challenge $0.56
+p14 2/60 discover · For you tap Fitness $0.56
+p14 3/60 challenge · For you scroll 50%,50% $0.56
+p14 4/60 challenge · For you scroll 50%,50% $0.57
+p14 5/60 challenge · For you scroll 50%,50% $0.57
+p14 6/60 challenge · For you scroll 50%,50% $0.57
+p14 7/60 challenge · For you scroll 50%,50% $0.57
+p14 8/60 challenge · For you tap Home $0.57
+p14 9/60 home · Still up, Lina tap Discover $0.58
+p14 10/60 challenge · For you tap Home $0.58
+p14 11/60 home · Still up, Lina tap Discover $0.58
+p14 12/60 challenge · For you tap For you $0.58
+p14 13/60 discover · For you scroll 50%,50% $0.58
+p14 14/60 discover · For you scroll 50%,50% $0.59
+p14 15/60 discover · For you scroll 50%,50% $0.59
+p14 done. spend $0.59. Gave up. The screen did not change after 3 actions.
+
+p15 Chris
+p15 prepared is_test account, onboarding done
+p15 device unreachable at launch. Restarting the simulator and trying once more.
+p15 login home
+p15 1/60 home · Still up, Chris scroll 50%,50% $0.59
+p15 2/60 home · Still up, Chris tap Discover $0.59
+p15 3/60 discover · For you tap Activity $0.60
+p15 4/60 discover · Notifications tap Leaderboard $0.60
+p15 5/60 discover · Notifications tap Leaderboard $0.60
+p15 6/60 discover · Notifications scroll 50%,50% $0.60
+p15 7/60 discover · Notifications scroll 50%,50% $0.60
+p15 8/60 discover · Notifications scroll 50%,50% $0.61
+p15 done. spend $0.61. Gave up. The screen did not change after 3 actions.
+
+p16 Andre
+p16 prepared is_test account, onboarding done
+p16 login home
+p16 session file was not readable after Home. Continuing. A different account still stops this agent.
+p16 1/60 home · Still up, Andre tap Create $0.61
+p16 2/60 create · Cancel tap Challenge title $0.61
+p16 3/60 create · Cancel tap Challenge title $0.61
+p16 4/60 create · Cancel type Challenge title $0.62
+p16 5/60 create · Cancel tap Group $0.62
+p16 6/60 create · Cancel tap Group $0.62
+p16 7/60 create · Cancel tap return $0.62
+p16 8/60 create · Cancel tap Group $0.63
+p16 9/60 create · Cancel tap return $0.63
+p16 10/60 create · Cancel tap Group $0.63
+p16 11/60 create · Cancel tap Group $0.63
+p16 12/60 create · Cancel tap Group $0.63
+p16 done. spend $0.64. Gave up. The screen did not change after 3 actions.
+
+p17 Elena
+p17 prepared is_test account, onboarding done
+p17 login home
+p17 session file was not readable after Home. Continuing. A different account still stops this agent.
+p17 1/60 home · Still up, Elena tap Find a challenge $0.64
+p17 2/60 discover · For you tap Discover $0.64
+p17 3/60 discover · For you tap Fitness $0.64
+p17 4/60 challenge · For you tap Show Up 7 $0.64
+p17 5/60 FITNESS · FITNESS tap Join Show Up 7 $0.64
+p17 6/60 home · Still up, Elena tap Find a challenge $0.65
+p17 7/60 home · Still up, Elena tap Get to the gym $0.65
+p17 8/60 Cancel · Cancel tap Get to the gym $0.65
+p17 9/60 Cancel · Cancel tap 229,880 $0.65
+p17 10/60 Cancel · Cancel tap Take proof photo $0.66
+p17 11/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.66
+p17 12/60 SHOW UP 7 · SHOW UP 7 wait  $0.66
+p17 13/60 challenge · Proof tap Back to today $0.66
+p17 14/60 home · Day secured: every task done. tap Discover $0.66
+p17 15/60 discover · For you tap Fitness $0.67
+p17 16/60 challenge · For you scroll 50%,50% $0.67
+p17 17/60 challenge · For you scroll 50%,50% $0.67
+p17 18/60 challenge · For you scroll 50%,50% $0.67
+p17 done. spend $0.67. Gave up. The screen did not change after 3 actions.
+
+p18 Kai
+p18 prepared is_test account, onboarding done
+p18 device unreachable at launch. Restarting the simulator and trying once more.
+p18 login home
+p18 1/60 home · Still up, Kai tap Find a challenge $0.68
+p18 2/60 discover · For you tap For you $0.68
+p18 3/60 discover · For you tap Home $0.68
+p18 4/60 home · Still up, Kai tap Find a challenge $0.68
+p18 5/60 discover · For you tap Home $0.68
+p18 6/60 home · Still up, Kai tap Find a challenge $0.69
+p18 7/60 discover · For you tap Home $0.69
+p18 8/60 home · Still up, Kai tap Find a challenge $0.69
+p18 9/60 discover · For you tap Drink Water Today $0.69
+p18 10/60 DISCIPLINE · DISCIPLINE tap Join Drink Water Today $0.69
+p18 11/60 home · Still up, Kai tap Done Drink water and post a photo $0.70
+p18 12/60 home · Still up, Kai tap Done Drink water and post a photo $0.70
+p18 13/60 home · Still up, Kai tap Done Drink water and post a photo $0.70
+p18 14/60 home · Still up, Kai tap Done Drink water and post a photo $0.70
+p18 15/60 home · Still up, Kai tap Open Drink Water Today challenge $0.71
+p18 16/60 home · Open challenge options tap Take photo · Drink water and post a photo $0.71
+p18 17/60 Cancel · Cancel tap Take proof photo $0.71
+p18 18/60 DRINK WATER TODAY · DRINK WATER TODAY tap Post to friends $0.71
+p18 19/60 DRINK WATER TODAY · DRINK WATER TODAY tap Post to friends $0.71
+p18 20/60 DRINK WATER TODAY · DRINK WATER TODAY tap Post to friends $0.72
+p18 21/60 challenge · Proof tap Post to friends $0.72
+p18 22/60 challenge · Proof scroll 50%,60% $0.72
+p18 23/60 challenge · Proof scroll 50%,60% $0.72
+p18 done. spend $0.73. Gave up. The screen did not change after 3 actions.
+
+p19 Sasha
+p19 prepared is_test account, onboarding done
+p19 login home
+p19 session file was not readable after Home. Continuing. A different account still stops this agent.
+p19 1/60 home · Still up, Sasha tap Your first proof goes here. $0.73
+p19 2/60 home · Still up, Sasha tap Your first proof goes here. $0.73
+p19 3/60 home · Still up, Sasha scroll 50%,50% $0.73
+p19 done. spend $0.74. Gave up. The screen did not change after 3 actions.
+
+p20 Owen
+p20 prepared is_test account, onboarding done
+p20 login home
+p20 session file was not readable after Home. Continuing. A different account still stops this agent.
+p20 1/60 home · Still up, Owen tap Create $0.74
+p20 2/60 create · Cancel type Challenge title $0.74
+p20 3/60 create · Cancel tap Fitness $0.74
+p20 4/60 create · Cancel tap Continue $0.74
+p20 5/60 onboarding · Cancel tap No Days Off $0.75
+p20 6/60 onboarding · Cancel tap Continue $0.75
+p20 7/60 Cancel · Cancel tap radio button $0.75
+p20 8/60 Cancel · Cancel scroll 50%,50% $0.75
+p20 9/60 Cancel · Cancel scroll 50%,50% $0.75
+p20 10/60 Cancel · Cancel scroll 50%,50% $0.76
+p20 11/60 Cancel · Cancel scroll 50%,50% $0.76
+p20 12/60 Cancel · Cancel scroll 50%,50% $0.76
+p20 13/60 Cancel · Cancel scroll 50%,50% $0.76
+p20 14/60 Cancel · Cancel scroll 50%,50% $0.77
+p20 15/60 Cancel · Cancel scroll 50%,50% $0.77
+p20 done. spend $0.77. Gave up. The screen did not change after 3 actions.
+
+p21 Nina
+p21 prepared is_test account, onboarding done
+p21 login home
+p21 session file was not readable after Home. Continuing. A different account still stops this agent.
+p21 1/60 home · Still up, Nina tap Following $0.77
+p21 2/60 home · Still up, Nina tap Show feed from people you follow $0.77
+p21 3/60 home · Still up, Nina tap Discover $0.78
+p21 4/60 discover · For you tap Fitness $0.78
+p21 5/60 challenge · For you tap Follow Kai $0.78
+p21 6/60 challenge · For you tap Follow Elena $0.78
+p21 7/60 challenge · For you tap Follow Maya $0.78
+p21 8/60 challenge · For you back  $0.79
+p21 9/60 challenge · For you tap For you $0.79
+p21 10/60 discover · For you tap For you $0.79
+p21 11/60 discover · For you scroll 50%,50% $0.79
+p21 12/60 discover · For you scroll 50%,50% $0.79
+p21 13/60 discover · For you scroll 50%,50% $0.80
+p21 14/60 discover · For you tap Fitness $0.80
+p21 15/60 challenge · For you scroll 50%,50% $0.80
+p21 16/60 challenge · For you scroll 50%,50% $0.80
+p21 17/60 challenge · For you scroll 50%,50% $0.80
+p21 done. spend $0.81. Gave up. The screen did not change after 3 actions.
+
+p22a Alex
+p22a prepared is_test account, onboarding done
+p22a login home
+p22a session file was not readable after Home. Continuing. A different account still stops this agent.
+p22a 1/60 home · Still up, Alex tap Create $0.81
+p22a 2/60 create · Cancel type Challenge title $0.81
+p22a 3/60 create · Cancel tap Fitness $0.82
+p22a 4/60 create · Cancel tap Group $0.82
+p22a 5/60 create · Cancel tap Group $0.82
+p22a 6/60 create · Cancel tap Group $0.82
+p22a 7/60 create · Cancel tap Group $0.82
+p22a 8/60 create · Cancel tap Group $0.83
+p22a 9/60 create · Cancel tap Group $0.83
+p22a done. spend $0.83. Gave up. The screen did not change after 3 actions.
+
+p22b Blake
+p22b prepared is_test account, onboarding done
+p22b login home
+p22b session file was not readable after Home. Continuing. A different account still stops this agent.
+p22b 1/60 home · Still up, Blake tap Find a challenge $0.83
+p22b 2/60 discover · For you tap Discover $0.83
+p22b 3/60 discover · For you tap Fitness $0.83
+p22b 4/60 challenge · For you scroll 50%,50% $0.84
+p22b 5/60 challenge · For you scroll 50%,50% $0.84
+p22b 6/60 challenge · For you scroll 50%,50% $0.84
+p22b done. spend $0.84. Gave up. The screen did not change after 3 actions.
+
+p22c Casey
+p22c prepared is_test account, onboarding done
+p22c login home
+p22c session file was not readable after Home. Continuing. A different account still stops this agent.
+p22c 1/60 home · Still up, Casey scroll 50%,50% $0.85
+p22c 2/60 home · Still up, Casey tap Kai started Drink Water Today $0.85
+p22c 3/60 DISCIPLINE · DISCIPLINE tap Join Drink Water Today $0.85
+p22c 4/60 home · Still up, Casey scroll 50%,50% $0.85
+p22c 5/60 home · Still up, Casey tap Kai started Drink Water Today $0.85
+p22c 6/60 DISCIPLINE · DISCIPLINE back  $0.85
+p22c 7/60 home · Still up, Casey scroll 50%,50% $0.86
+p22c 8/60 home · Still up, Casey scroll 50%,50% $0.86
+p22c 9/60 home · Still up, Casey scroll 50%,50% $0.86
+p22c done. spend $0.86. Gave up. The screen did not change after 3 actions.
+
+p23 Rae
+p23 prepared is_test account, onboarding done
+p23 login home
+p23 session file was not readable after Home. Continuing. A different account still stops this agent.
+p23 1/60 home · Still up, Rae tap Discover $0.87
+p23 2/60 discover · For you tap Fitness $0.87
+p23 3/60 challenge · For you tap Show Up 7 $0.87
+p23 4/60 FITNESS · FITNESS tap See full details $0.87
+p23 5/60 challenge · More tap Go back $0.88
+p23 6/60 challenge · For you tap Kai $0.88
+p23 7/60 profile · More tap More $0.88
+p23 8/60 dismiss popup · dismiss popup tap Report $0.88
+p23 9/60 profile · More tap More $0.88
+p23 10/60 dismiss popup · dismiss popup tap Report $0.89
+p23 11/60 profile · More tap OK $0.89
+p23 12/60 profile · More tap More $0.89
+p23 13/60 dismiss popup · dismiss popup tap Block @ap18mv91gw0h $0.89
+p23 14/60 activity · Block @ap18mv91gw0h? tap Block $0.89
+p23 15/60 challenge · For you done  $0.90
+p23 16/60 challenge · For you done  $0.90
+p23 done. spend $0.90. Agent stopped on their own.
+
+p24 Jonah
+p24 prepared is_test account, onboarding done
+p24 login home
+p24 session file was not readable after Home. Continuing. A different account still stops this agent.
+p24 1/60 home · Still up, Jonah scroll 50%,62% $0.90
+p24 2/60 home · Still up, Jonah scroll 50%,62% $0.90
+p24 3/60 home · Still up, Jonah scroll 50%,62% $0.91
+p24 done. spend $0.91. Gave up. The screen did not change after 3 actions.
+
+p25 Tara
+p25 prepared is_test account, onboarding done
+p25 login home
+p25 session file was not readable after Home. Continuing. A different account still stops this agent.
+p25 1/60 home · Still up, Tara tap Streak $0.91
+p25 2/60 0 · 0 tap Use a freeze $0.91
+p25 3/60 0 · 0 tap Use a freeze $0.91
+p25 4/60 0 · 0 tap Use a freeze $0.92
+p25 5/60 0 · 0 tap Use a freeze $0.92
+p25 done. spend $0.92. Gave up. The screen did not change after 3 actions.
+
+p26 Victor
+p26 prepared is_test account, onboarding done
+p26 login home
+p26 session file was not readable after Home. Continuing. A different account still stops this agent.
+p26 1/60 home · Still up, Victor tap Find a challenge $0.92
+p26 2/60 discover · For you tap Fitness $0.92
+p26 3/60 challenge · For you tap Show Up 7 $0.93
+p26 4/60 FITNESS · FITNESS tap Join Show Up 7 $0.93
+p26 5/60 home · Still up, Victor tap Get to the gym $0.93
+p26 6/60 Cancel · Cancel tap Take proof photo $0.93
+p26 7/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.93
+p26 8/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.94
+p26 9/60 SHOW UP 7 · SHOW UP 7 wait  $0.94
+p26 10/60 challenge · Proof back Go back $0.94
+p26 11/60 challenge · Proof tap Go back $0.94
+p26 12/60 home · Day secured: every task done. tap Discover $0.94
+p26 13/60 challenge · For you tap Show Up 7 $0.95
+p26 14/60 FITNESS · FITNESS tap Join Show Up 7 $0.95
+p26 15/60 challenge · You're already in this challenge. back  $0.95
+p26 16/60 challenge · You're already in this challenge. tap Dismiss error $0.95
+p26 17/60 challenge · For you tap Home $0.95
+p26 18/60 home · Day secured: every task done. tap Elena, Maya and 1 other started Show Up 7 $0.96
+p26 19/60 DISCIPLINE · DISCIPLINE tap See full details $0.96
+p26 20/60 home · Open challenge options tap 50%,62% $0.96
+p26 21/60 home · Open challenge options tap Open challenge options $0.96
+p26 22/60 Leave Show Up 7? · Leave Show Up 7? tap Stay $0.97
+p26 23/60 home · Open challenge options tap Go back $0.97
+p26 24/60 home · Day secured: every task done. tap Discover $0.97
+p26 25/60 challenge · For you tap Show Up 7 $0.97
+p26 26/60 FITNESS · FITNESS tap See full details $0.98
+p26 27/60 home · Open challenge options tap Open challenge options $0.98
+p26 28/60 Leave Show Up 7? · Leave Show Up 7? tap Stay $0.98
+p26 29/60 home · Open challenge options tap F $0.98
+p26 30/60 home · Open challenge options tap F $0.98
+p26 31/60 home · Open challenge options tap F $0.99
+p26 done. spend $0.99. Gave up. The screen did not change after 3 actions.
+
+p27 Imani
+p27 prepared is_test account, onboarding done
+p27 login home
+p27 session file was not readable after Home. Continuing. A different account still stops this agent.
+p27 1/60 home · Still up, Imani tap Find a challenge $0.99
+p27 2/60 discover · For you tap For you (selected) $0.99
+p27 3/60 discover · For you tap Home $0.99
+p27 4/60 home · Still up, Imani tap Find a challenge $1.00
+p27 5/60 discover · For you tap Home $1.00
+p27 6/60 home · Still up, Imani tap Find a challenge $1.00
+p27 7/60 discover · For you tap Drink Water Today $1.00
+p27 8/60 DISCIPLINE · DISCIPLINE tap Join Drink Water Today $1.00
+p27 9/60 home · Still up, Imani tap Done Drink water and post a photo $1.01
+p27 10/60 home · Still up, Imani tap Done Drink water and post a photo $1.01
+p27 11/60 home · Still up, Imani tap Done Drink water and post a photo $1.01
+p27 12/60 home · Still up, Imani tap Open Drink Water Today challenge $1.01
+p27 13/60 home · Open challenge options tap Take photo · Drink water and post a photo $1.01
+p27 14/60 Cancel · Cancel tap Take proof photo $1.02
+p27 15/60 DRINK WATER TODAY · DRINK WATER TODAY tap Post to friends $1.02
+p27 16/60 DRINK WATER TODAY · DRINK WATER TODAY tap Post to friends $1.02
+p27 17/60 DRINK WATER TODAY · DRINK WATER TODAY wait  $1.02
+p27 18/60 challenge · Proof back Go back $1.02
+p27 19/60 challenge · Proof tap Go back $1.03
+p27 20/60 home · Open challenge options back Go back $1.03
+p27 21/60 home · Open challenge options back Go back $1.03
+p27 22/60 home · Open challenge options back Go back $1.03
+p27 done. spend $1.04. Gave up. The screen did not change after 3 actions.
+
+p28 Felix
+p28 prepared is_test account, onboarding done
+p28 login home
+p28 session file was not readable after Home. Continuing. A different account still stops this agent.
+p28 1/60 home · Still up, Felix tap Create $1.04
+p28 2/60 create · Cancel tap Challenge title $1.04
+p28 3/60 create · Cancel type Challenge title $1.04
+p28 4/60 create · Cancel tap Fitness $1.04
+p28 5/60 create · Cancel tap Continue $1.05
+p28 6/60 onboarding · Cancel tap No Days Off $1.05
+p28 7/60 onboarding · Cancel tap Continue $1.05
+p28 8/60 Cancel · Cancel tap Standard $1.05
+p28 9/60 Cancel · Cancel tap Review $1.05
+p28 10/60 settings · Review tap Start the challenge $1.06
+p28 11/60 You're in. Day 1 is today. · You're in. Day 1 is today. tap Start today: Outdoor workout $1.06
+p28 12/60 home · Still up, Felix tap Open Gym before work challenge $1.06
+p28 13/60 home · Open challenge options tap Log workout · Outdoor workout $1.06
+p28 14/60 task · GYM BEFORE WORK tap Distance $1.06
+p28 15/60 task · GYM BEFORE WORK tap Distance $1.07
+p28 16/60 task · GYM BEFORE WORK tap Distance $1.07
+p28 done. spend $1.07. Gave up. The screen did not change after 3 actions.
+
+p29 Grace
+p29 prepared is_test account, onboarding done
+p29 login home
+p29 session file was not readable after Home. Continuing. A different account still stops this agent.
+p29 1/60 home · Still up, Grace tap Find a challenge $1.07
+p29 2/60 discover · For you tap Fitness $1.07
+p29 3/60 challenge · For you scroll 50%,400% $1.08
+p29 4/60 challenge · For you tap Show Up 7 $1.08
+p29 5/60 FITNESS · FITNESS tap Join Show Up 7 $1.08
+p29 6/60 home · Still up, Grace tap Open Show Up 7 challenge $1.08
+p29 7/60 home · Open challenge options tap Check off · Get to the gym $1.08
+p29 8/60 Cancel · Cancel tap Get to the gym $1.09
+p29 9/60 Cancel · Cancel tap Get to the gym $1.09
+p29 10/60 Cancel · Cancel tap Take proof photo $1.09
+p29 11/60 SHOW UP 7 · SHOW UP 7 tap Back $1.09
+p29 12/60 Cancel · Cancel tap Cancel $1.09
+p29 13/60 home · Open challenge options done  $1.10
+p29 14/60 home · Open challenge options tap Open challenge options $1.10
+p29 15/60 Leave Show Up 7? · Leave Show Up 7? tap Stay $1.10
+p29 16/60 home · Open challenge options tap Open challenge options $1.10
+p29 17/60 Leave Show Up 7? · Leave Show Up 7? tap Stay $1.10
+p29 18/60 home · Open challenge options tap Go back $1.11
+p29 19/60 home · Still up, Grace done  $1.11
+p29 done. spend $1.11. Agent stopped on their own.
+
+p30 Hugo
+p30 prepared is_test account, onboarding done
+p30 login home
+p30 session file was not readable after Home. Continuing. A different account still stops this agent.
+p30 1/60 home · Still up, Hugo tap Find a challenge $1.11
+p30 2/60 discover · For you tap Drink Water Today $1.12
+p30 3/60 DISCIPLINE · DISCIPLINE double_tap Join Drink Water Today $1.12
+p30 4/60 home · Still up, Hugo tap Done Drink water and post a photo $1.12
+p30 5/60 home · Still up, Hugo tap Done Drink water and post a photo $1.12
+p30 6/60 home · Still up, Hugo tap Discover $1.12
+p30 7/60 home · Still up, Hugo tap Dismiss $1.13
+p30 8/60 home · Still up, Hugo tap Done Drink water and post a photo $1.13
+p30 9/60 home · Still up, Hugo tap Done Drink water and post a photo $1.13
+p30 10/60 home · Still up, Hugo tap Done Drink water and post a photo $1.13
+p30 11/60 home · Still up, Hugo tap Done Drink water and post a photo $1.14
+p30 12/60 home · Still up, Hugo tap Open Drink Water Today challenge $1.14
+p30 13/60 home · Open challenge options tap Take photo · Drink water and post a photo $1.14
+p30 14/60 Cancel · Cancel tap Take proof photo $1.14
+p30 15/60 DRINK WATER TODAY · DRINK WATER TODAY tap Add a caption $1.14
+p30 16/60 DRINK WATER TODAY · DRINK WATER TODAY type inputView $1.15
+p30 17/60 DRINK WATER TODAY · DRINK WATER TODAY type inputView $1.15
+p30 18/60 DRINK WATER TODAY · DRINK WATER TODAY tap Emoji $1.15
+p30 19/60 activity · DRINK WATER TODAY tap 😂 $1.15
+p30 20/60 activity · DRINK WATER TODAY type inputView $1.15
+p30 21/60 activity · DRINK WATER TODAY tap inputView $1.16
+p30 done. spend $1.16. Gave up. The screen did not change after 3 actions.
+
+p31 Build
+p31 prepared is_test account, onboarding done
+p31 login home
+p31 session file was not readable after Home. Continuing. A different account still stops this agent.
+p31 1/60 home · Still up, Build tap Find a challenge $1.16
+p31 2/60 discover · For you tap Home $1.16
+p31 3/60 home · Still up, Build wait  $1.17
+p31 4/60 home · Still up, Build wait  $1.17
+p31 5/60 home · Still up, Build done  $1.17
+p31 done. spend $1.17. Agent stopped on their own.
+
+p32 Guest
+p32 prepared is_test account, onboarding done
+p32 login home
+p32 session file was not readable after Home. Continuing. A different account still stops this agent.
+p32 1/60 home · Still up, Guest tap Profile $1.17
+p32 2/60 discover · @ap32mv92lpva tap Settings $1.18
+p32 3/60 settings · Settings tap Account $1.18
+p32 4/60 Account · Account tap Go back $1.18
+p32 5/60 settings · Settings tap Go back $1.18
+p32 6/60 discover · @ap32mv92lpva tap Settings $1.18
+p32 7/60 settings · Settings tap Account $1.19
+p32 8/60 Account · Account tap Go back $1.19
+p32 9/60 settings · Settings tap Account $1.19
+p32 10/60 Account · Account tap Go back $1.19
+p32 11/60 settings · Settings tap Account $1.19
+p32 12/60 Account · Account back Go back $1.20
+p32 13/60 Account · Account back Go back $1.20
+p32 14/60 Account · Account back Go back $1.20
+p32 15/60 Account · Account back Go back $1.20
+p32 done. spend $1.21. Gave up. The screen did not change after 3 actions.
+
+p33 Reed
+p33 prepared is_test account, onboarding done
+p33 login home
+p33 session file was not readable after Home. Continuing. A different account still stops this agent.
+p33 1/60 home · Still up, Reed tap Profile $1.21
+p33 2/60 discover · @ap33mv92o19l tap Settings $1.21
+p33 3/60 settings · Settings tap Delete account $1.21
+p33 4/60 Type DELETE to confirm · Type DELETE to confirm type Type DELETE to confirm $1.21
+p33 done. spend $1.21. Stopped. This account could not be marked is_test (is_test did not stay true
+). No further agents will run.
+REST_DONE
+EXIT:0

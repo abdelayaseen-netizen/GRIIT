@@ -1,0 +1,58 @@
+Chunk 8. 2 first-timers. Cap $40. Spend so far $0.00.
+
+p01 Jordan
+p01 account matches before step 1
+p01 1/60 home · Daily challenges you prove with a photo. tap Start $0.00
+p01 2/60 onboarding · What are you building? tap Physical toughness $0.00
+p01 3/60 onboarding · What are you building? tap Continue $0.01
+p01 4/60 home · How it works tap Continue $0.01
+p01 5/60 onboarding · Start here. tap Gym Buddy Challenge $0.01
+p01 6/60 onboarding · Start here. tap Join $0.01
+p01 7/60 auth · One reminder a day. tap Turn on reminders $0.01
+p01 8/60 alert Allow
+p01 9/60 home · Still up, @user_f1d84f76 tap Find a challenge $0.02
+p01 10/60 discover · For you tap Home $0.02
+p01 11/60 home · Still up, @user_f1d84f76 tap Find a challenge $0.02
+p01 12/60 discover · For you tap Home $0.02
+p01 13/60 home · Still up, @user_f1d84f76 tap Find a challenge $0.02
+p01 14/60 discover · For you tap Fitness $0.03
+p01 15/60 challenge · For you tap Show Up 7 $0.03
+p01 16/60 FITNESS · FITNESS tap Join Show Up 7 $0.03
+p01 17/60 home · Still up, @user_f1d84f76 tap Not done $0.03
+p01 18/60 Cancel · Cancel tap Take proof photo $0.04
+p01 19/60 SHOW UP 7 · SHOW UP 7 tap Take proof photo $0.04
+p01 20/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.04
+p01 21/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.04
+p01 22/60 challenge · Proof tap Share outside GRIIT $0.04
+p01 23/60 activity · dismiss popup tap Copy $0.05
+p01 24/60 challenge · Proof scroll 50%,62% $0.05
+p01 25/60 challenge · Proof scroll 50%,62% $0.05
+p01 26/60 challenge · Proof scroll 50%,62% $0.05
+p01 done. spend $0.06. Gave up. The screen did not change after 3 actions.
+
+p02 Amina
+p02 account matches before step 1
+p02 1/60 home · Daily challenges you prove with a photo. tap Start $0.06
+p02 2/60 onboarding · What are you building? tap Mental discipline $0.06
+p02 3/60 onboarding · What are you building? tap Continue $0.06
+p02 4/60 home · How it works tap Continue $0.06
+p02 5/60 onboarding · Start here. tap Join $0.07
+p02 6/60 onboarding · Start here. wait  $0.07
+p02 7/60 auth · One reminder a day. tap Turn on reminders $0.07
+p02 8/60 home · Still up, @user_d47cf81c tap Open 7-Day Gratitude Journal challenge $0.07
+p02 9/60 home · Open challenge options tap Write entry · Gratitude list (3 things) $0.07
+p02 10/60 task · 7-DAY GRATITUDE JOURNAL tap Write here $0.08
+p02 11/60 task · 7-DAY GRATITUDE JOURNAL type Write here $0.08
+p02 12/60 7-DAY GRATITUDE JOURNAL · 7-DAY GRATITUDE JOURNAL tap Done $0.08
+p02 13/60 1 · 1 tap Done $0.08
+p02 14/60 auth · Save your streak. tap Continue with email $0.09
+p02 15/60 auth · Save your streak. type Email $0.09
+p02 16/60 auth · Save your streak. tap Password $0.09
+p02 17/60 auth · Save your streak. tap Password $0.09
+p02 18/60 auth · Save your streak. tap Password $0.09
+p02 19/60 auth · Save your streak. type Password $0.10
+p02 20/60 auth · Save your streak. tap Continue $0.10
+p02 21/60 auth · Save your streak. tap Send it $0.10
+p02 22/60 home · Day secured: every task done. done  $0.10
+p02 done. spend $0.11. Agent stopped on their own.
+EXIT:0

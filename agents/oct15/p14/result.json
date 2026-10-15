@@ -1,0 +1,45 @@
+{
+  "personaId": "p14",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:17:33.328Z",
+  "endedAt": "2026-10-15T04:20:39.521Z",
+  "steps": 16,
+  "durationSec": 186,
+  "goals": [
+    {
+      "id": "p14-g1",
+      "text": "Find a run task and see if distance is recorded.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "9845596c-3216-4219-afdd-00f2b53bac55",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, absolutely. I want to log my morning run tomorrow and track my distance. It's become part of my routine now.",
+    "secured": "I think it means my data is protected and private, like my run records are safely stored and encrypted so only I can see them.",
+    "freeze": "I'm guessing it means I can pause or temporarily stop a challenge without losing progress, in case I need a break from tracking.",
+    "selfReported": "It means I manually enter my run data myself instead of it being automatically tracked by my watch or GPS app.",
+    "best": "Seeing my distance achievements displayed clearly. It's motivating to watch my mileage add up and compare it week to week.",
+    "worst": "The interface felt a bit cluttered with all these different categories - Fitness, Faith, Mind, Health. I just want to focus on my running, and it took me a minute to find where my Run task was.",
+    "tellFriend": "Yes, definitely. I'd say: 'It's a solid app if you're into fitness tracking, especially running. You can log your distances and see your progress over time. Just note that it groups a lot of different wellness stuff together, so you might need to dig a bit to find what you need.'",
+    "score": 7
+  }
+}

@@ -5,7 +5,7 @@ Shipped to internal TestFlight on Oct 14, 2026.
 - Build number: **89** (1.0.0)
 - Binary commit: `a375b25ac3e41c10f18f5d0d86b3f8a50bcf3714`
 - EAS build: `2625f8b4-8e7c-4f40-bd9d-4ef9366e57e0`
-- Submission: `ac0d5d93-c6d9-4f51-87a1-99b17b1bc4d3` (scheduled with the production profile, group Team (Expo))
+- Submission: `ac0d5d93-c6d9-4f51-87a1-99b17b1bc4d3` finished. Group Team (Expo), internal only.
 - IPA: `https://expo.dev/artifacts/eas/e74yCQBcWPhqXrf51Isr6X5E5hT4HgoZ9kGRYZSgSl4.ipa`
 - API health commit: `a9c8873`. Deployment `abe2e7d3-cf9b-42c5-9a71-a09aa40940a4`. The journal writer fix is in the client only, so this binary does not need a new server deploy.
 - About on this binary shows the EAS commit `a375b25`.

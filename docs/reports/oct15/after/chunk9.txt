@@ -1,0 +1,136 @@
+Chunk 9. 6 faith and routine accounts. Cap $40. Spend so far $0.28.
+
+p07 Yusuf
+p07 prepared is_test account, onboarding done
+p07 login home
+p07 session file was not readable after Home. Continuing. A different account still stops this agent.
+p07 1/60 home · Still up, Yusuf tap Find a challenge $0.28
+p07 2/60 discover · For you tap Faith $0.28
+p07 3/60 discover · For you tap 5-Minute Morning Prayer $0.28
+p07 4/60 FAITH · FAITH tap Join 5-Minute Morning Prayer $0.28
+p07 5/60 home · Still up, Yusuf tap Open 5-Minute Morning Prayer challenge $0.29
+p07 6/60 home · Open challenge options tap Start timer · 5-minute prayer or intention $0.29
+p07 7/60 task · 5-MINUTE MORNING PRAYER tap Start 10:00 $0.29
+p07 8/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER wait  $0.29
+p07 9/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.29
+p07 10/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.30
+p07 11/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.30
+p07 12/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.30
+p07 13/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.30
+p07 14/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.31
+p07 15/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.31
+p07 done. spend $0.31. Gave up. The screen did not change after 3 actions.
+
+p08 Helen
+p08 prepared is_test account, onboarding done
+p08 login home
+p08 session file was not readable after Home. Continuing. A different account still stops this agent.
+p08 1/60 home · Still up, Helen tap Find a challenge $0.31
+p08 2/60 discover · For you tap Faith $0.31
+p08 3/60 discover · For you tap 5-Minute Morning Prayer $0.32
+p08 4/60 FAITH · FAITH tap Join 5-Minute Morning Prayer $0.32
+p08 5/60 home · Still up, Helen tap Open 5-Minute Morning Prayer challenge $0.32
+p08 6/60 home · Open challenge options tap Start timer · 5-minute prayer or intention $0.32
+p08 7/60 task · 5-MINUTE MORNING PRAYER tap Start 10:00 $0.32
+p08 8/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.33
+p08 9/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.33
+p08 10/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.33
+p08 11/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.33
+p08 12/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.33
+p08 13/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.34
+p08 14/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.34
+p08 15/60 5-MINUTE MORNING PRAYER · 5-MINUTE MORNING PRAYER tap Done $0.34
+p08 done. spend $0.34. Gave up. The screen did not change after 3 actions.
+
+p09 Noah
+p09 prepared is_test account, onboarding done
+p09 login home
+p09 session file was not readable after Home. Continuing. A different account still stops this agent.
+p09 1/60 home · Still up, Noah tap Find a challenge $0.34
+p09 2/60 discover · For you tap Create $0.35
+p09 3/60 create · Cancel tap Challenge title $0.35
+p09 4/60 create · Cancel tap Challenge title $0.35
+p09 5/60 create · Cancel type Challenge title $0.35
+p09 6/60 create · Cancel tap Fitness $0.35
+p09 7/60 create · Cancel tap Continue $0.36
+p09 8/60 onboarding · Cancel tap Morning routine $0.36
+p09 9/60 onboarding · Cancel tap Continue $0.36
+p09 10/60 Cancel · Cancel tap Review $0.36
+p09 11/60 settings · Review tap Start the challenge $0.36
+p09 12/60 home · Still up, Noah tap Done Wake before 6am $0.37
+p09 13/60 home · Still up, Noah tap Cold shower $0.37
+p09 14/60 task · WAKE AT 5, WATER, JOURNAL, WORKOUT tap Start 02:00 $0.37
+p09 15/60 WAKE AT 5, WATER, JOURNAL, WORKOUT · WAKE AT 5, WATER, JOURNAL, WORKOUT wait  $0.37
+p09 16/60 WAKE AT 5, WATER, JOURNAL, WORKOUT · WAKE AT 5, WATER, JOURNAL, WORKOUT wait  $0.38
+p09 17/60 WAKE AT 5, WATER, JOURNAL, WORKOUT · WAKE AT 5, WATER, JOURNAL, WORKOUT wait  $0.38
+p09 done. spend $0.38. Gave up. The screen did not change after 3 actions.
+
+p10 Diane
+p10 prepared is_test account, onboarding done
+p10 login home
+p10 session file was not readable after Home. Continuing. A different account still stops this agent.
+p10 1/60 home · Still up, Diane tap Create $0.38
+p10 2/60 create · Cancel tap Challenge title $0.38
+p10 3/60 create · Cancel type Challenge title $0.39
+p10 4/60 create · Cancel tap Health $0.39
+p10 5/60 create · Cancel tap Continue $0.39
+p10 6/60 onboarding · Cancel tap No Days Off $0.39
+p10 7/60 onboarding · Cancel tap Continue $0.39
+p10 8/60 Cancel · Cancel tap Standard $0.40
+p10 9/60 Cancel · Cancel tap Review $0.40
+p10 10/60 settings · Review scroll 50%,50% $0.40
+p10 11/60 settings · Review tap Start the challenge $0.40
+p10 12/60 You're in. Day 1 is today. · You're in. Day 1 is today. tap Back to Home $0.40
+p10 13/60 home · Still up, Diane tap Open 30 days no alcohol challenge $0.41
+p10 14/60 home · Open challenge options tap Log workout · Outdoor workout $0.41
+p10 15/60 task · 30 DAYS NO ALCOHOL tap Distance $0.41
+p10 16/60 task · 30 DAYS NO ALCOHOL type Distance $0.41
+p10 17/60 task · 30 DAYS NO ALCOHOL type Distance $0.42
+p10 done. spend $0.42. Gave up. The screen did not change after 3 actions.
+
+p11 Leo
+p11 prepared is_test account, onboarding done
+p11 device unreachable at launch. Restarting the simulator and trying once more.
+p11 login home
+p11 1/60 home · Still up, Leo tap Find a challenge $0.42
+p11 2/60 discover · For you tap Discover $0.42
+p11 3/60 discover · For you tap Mind $0.42
+p11 4/60 discover · For you tap 7-Day Gratitude Journal $0.42
+p11 5/60 MIND · MIND tap See full details $0.43
+p11 6/60 More · More tap Go back $0.43
+p11 7/60 discover · For you tap Fitness $0.43
+p11 8/60 challenge · For you tap Show Up 7 $0.43
+p11 9/60 FITNESS · FITNESS tap Join Show Up 7 $0.43
+p11 10/60 home · Still up, Leo tap Open Show Up 7 challenge $0.44
+p11 11/60 home · Open challenge options tap Check off · Get to the gym $0.44
+p11 12/60 Cancel · Cancel tap Take proof photo $0.44
+p11 13/60 SHOW UP 7 · SHOW UP 7 back Back $0.44
+p11 14/60 SHOW UP 7 · SHOW UP 7 back Back $0.45
+p11 15/60 SHOW UP 7 · SHOW UP 7 done  $0.45
+p11 done. spend $0.45. Gave up. The screen did not change after 3 actions.
+
+p12 Maya
+p12 prepared is_test account, onboarding done
+p12 login home
+p12 session file was not readable after Home. Continuing. A different account still stops this agent.
+p12 1/60 home · Still up, Maya tap Find a challenge $0.45
+p12 2/60 discover · For you tap Fitness $0.45
+p12 3/60 challenge · For you tap Show Up 7 $0.46
+p12 4/60 FITNESS · FITNESS tap Join Show Up 7 $0.46
+p12 5/60 home · Still up, Maya tap Open Show Up 7 challenge $0.46
+p12 6/60 home · Open challenge options tap Check off · Get to the gym $0.46
+p12 7/60 Cancel · Cancel tap Take proof photo $0.46
+p12 8/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.47
+p12 9/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.47
+p12 10/60 challenge · Proof tap Send comment $0.47
+p12 11/60 challenge · Proof tap Go back $0.47
+p12 12/60 home · Open challenge options tap Go back $0.48
+p12 13/60 home · Day secured: every task done. done  $0.48
+p12 14/60 home · Day secured: every task done. tap Discover $0.48
+p12 15/60 challenge · For you tap Show Up 7 $0.48
+p12 16/60 FITNESS · FITNESS tap Join Show Up 7 $0.48
+p12 17/60 challenge · You're already in this challenge. tap Dismiss error $0.49
+p12 18/60 challenge · For you tap Home $0.49
+p12 19/60 home · Day secured: every task done. done  $0.49
+p12 done. spend $0.49. Agent stopped on their own.
+EXIT:0

@@ -1,0 +1,44 @@
+{
+  "personaId": "p25",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:44:42.443Z",
+  "endedAt": "2026-10-15T04:45:30.293Z",
+  "steps": 6,
+  "durationSec": 48,
+  "goals": [
+    {
+      "id": "p25-g1",
+      "text": "Find the streak and any freeze explanation.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "9f4f0d71-625f-4bc7-a1c0-4f331f08d3a8",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, I'd open it tomorrow. I deliberately missed today to test the freeze feature and see how the app handles streaks. Now I'm curious to see if using the freeze actually works and if I can get back on track without losing everything.",
+    "secured": "Secured means I've completed the daily challenge and locked in that day's progress toward my streak. It's like confirming that I showed up and did the work.",
+    "freeze": "A freeze is a safety net for when you miss a day. It lets you skip one missed day without breaking your streak, but you can only use it if you actually missed exactly one day. I have one left and can earn another at 7 days.",
+    "selfReported": "Self-reported means I'm telling the app myself that I completed the challenge for the day, rather than it tracking something automatically like steps or workouts.",
+    "best": "The best moment was realizing the app has a freeze feature built in. It makes missing a day feel less like failure and more like I have a safety buffer. That's actually smart design.",
+    "worst": "The worst moment was seeing that zero on my streak counter. Even though I did it intentionally to test things, that visual hit harder than I expected. It definitely makes you not want to miss days.",
+    "tellFriend": "I'd tell them: 'Try GRIIT if you want to build a real habit with actual consequences. It's not just about logging—it feels like you're actually accountable. Fair warning though: that broken streak will mess with your head.'",
+    "score": 7
+  }
+}

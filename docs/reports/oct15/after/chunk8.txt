@@ -1,0 +1,93 @@
+Chunk 8. 6 first-timers. Cap $40. Spend so far $0.11.
+p01 already has 15 steps and an interview. Skipping.
+p02 already has 15 steps and an interview. Skipping.
+
+p03 Robert
+p03 account matches before step 1
+p03 1/60 home · Daily challenges you prove with a photo. tap Start $0.11
+p03 2/60 onboarding · What are you building? tap Physical toughness $0.11
+p03 3/60 onboarding · What are you building? tap Mental discipline. Meditation, journaling, focus blocks $0.11
+p03 4/60 onboarding · What are you building? tap Continue $0.11
+p03 5/60 home · How it works tap Continue $0.12
+p03 6/60 onboarding · Start here. tap Join $0.12
+p03 7/60 auth · One reminder a day. tap Turn on reminders $0.12
+p03 8/60 home · Still up, @user_463f8d24 tap Find a challenge $0.12
+p03 9/60 discover · For you tap For you $0.13
+p03 10/60 discover · For you tap Home $0.13
+p03 11/60 home · Still up, @user_463f8d24 tap Find a challenge $0.13
+p03 12/60 discover · For you tap Home $0.13
+p03 13/60 home · Still up, @user_463f8d24 tap Find a challenge $0.14
+p03 14/60 discover · For you tap Drink Water Today $0.14
+p03 15/60 DISCIPLINE · DISCIPLINE tap Join Drink Water Today $0.14
+p03 16/60 home · Still up, @user_463f8d24 tap Done Drink water and post a photo $0.14
+p03 17/60 home · Still up, @user_463f8d24 tap Done Drink water and post a photo $0.15
+p03 18/60 home · Still up, @user_463f8d24 tap Done Drink water and post a photo $0.15
+p03 19/60 home · Still up, @user_463f8d24 tap Your first proof goes here. $0.15
+p03 done. spend $0.15. Gave up. The screen did not change after 3 actions.
+
+p04 Casey
+p04 account matches before step 1
+p04 1/60 home · Daily challenges you prove with a photo. tap Start $0.15
+p04 2/60 onboarding · What are you building? tap Physical toughness $0.16
+p04 3/60 onboarding · What are you building? tap Mental discipline. Meditation, journaling, focus blocks $0.16
+p04 4/60 onboarding · What are you building? tap Continue $0.16
+p04 5/60 home · How it works tap Continue $0.16
+p04 6/60 onboarding · Start here. tap radio button $0.17
+p04 7/60 onboarding · Start here. tap Join $0.17
+p04 8/60 auth · One reminder a day. tap Turn on reminders $0.17
+p04 9/60 home · Still up, @user_fcebe2fe tap Find a challenge $0.17
+p04 10/60 discover · For you tap Drink Water Today $0.17
+p04 11/60 DISCIPLINE · DISCIPLINE tap Join Drink Water Today $0.18
+p04 12/60 home · Still up, @user_fcebe2fe tap Done Drink water and post a photo $0.18
+p04 13/60 home · Still up, @user_fcebe2fe tap Done Drink water and post a photo $0.18
+p04 14/60 home · Still up, @user_fcebe2fe tap Done Drink water and post a photo $0.18
+p04 15/60 home · Still up, @user_fcebe2fe tap Done Drink water and post a photo $0.19
+p04 done. spend $0.19. Gave up. The screen did not change after 3 actions.
+
+p05 Priya
+p05 account matches before step 1
+p05 1/60 home · Daily challenges you prove with a photo. tap Start $0.19
+p05 2/60 onboarding · What are you building? tap Physical toughness. Lifting, running, no missed sessions $0.19
+p05 3/60 onboarding · What are you building? tap Mental discipline. Meditation, journaling, focus blocks $0.19
+p05 4/60 onboarding · What are you building? tap Continue $0.20
+p05 5/60 home · How it works tap Continue $0.20
+p05 6/60 onboarding · Start here. tap Join $0.20
+p05 7/60 auth · One reminder a day. tap Turn on reminders $0.20
+p05 8/60 home · Still up, @user_3423d44d tap Find a challenge $0.21
+p05 9/60 discover · For you tap For you $0.21
+p05 10/60 discover · For you scroll 50%,62% $0.21
+p05 11/60 discover · For you scroll 50%,62% $0.21
+p05 12/60 discover · For you scroll 50%,62% $0.21
+p05 13/60 discover · For you tap Fitness $0.22
+p05 14/60 challenge · For you scroll 50%,62% $0.22
+p05 15/60 challenge · For you scroll 50%,62% $0.22
+p05 16/60 challenge · For you scroll 50%,62% $0.22
+p05 done. spend $0.23. Gave up. The screen did not change after 3 actions.
+
+p06 Sam
+p06 account matches before step 1
+p06 1/60 home · Daily challenges you prove with a photo. tap Start $0.23
+p06 2/60 onboarding · What are you building? tap Physical toughness $0.23
+p06 3/60 onboarding · What are you building? tap Continue $0.23
+p06 4/60 home · How it works tap Continue $0.23
+p06 5/60 onboarding · Start here. tap Gym Buddy Challenge $0.24
+p06 6/60 onboarding · Start here. tap Join $0.24
+p06 7/60 auth · One reminder a day. tap Turn on reminders $0.24
+p06 8/60 home · Still up, @user_e53bd2de tap Find a challenge $0.24
+p06 9/60 discover · For you tap Home $0.24
+p06 10/60 home · Still up, @user_e53bd2de tap Find a challenge $0.25
+p06 11/60 discover · For you tap Home $0.25
+p06 12/60 home · Still up, @user_e53bd2de tap Find a challenge $0.25
+p06 13/60 discover · For you tap Home $0.25
+p06 14/60 home · Still up, @user_e53bd2de tap Find a challenge $0.25
+p06 15/60 discover · For you tap Show Up 7 $0.26
+p06 16/60 FITNESS · FITNESS tap Join Show Up 7 $0.26
+p06 17/60 home · Still up, @user_e53bd2de tap Not done $0.26
+p06 18/60 Cancel · Cancel tap Take proof photo $0.26
+p06 19/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.27
+p06 20/60 SHOW UP 7 · SHOW UP 7 tap Post to friends $0.27
+p06 21/60 challenge · Proof tap 416,934 $0.27
+p06 22/60 challenge · Proof tap 416,934 $0.27
+p06 23/60 challenge · Proof tap 416,934 $0.28
+p06 done. spend $0.28. Gave up. The screen did not change after 3 actions.
+EXIT:0

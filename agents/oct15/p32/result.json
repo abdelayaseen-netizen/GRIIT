@@ -1,0 +1,44 @@
+{
+  "personaId": "p32",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-15T05:00:30.645Z",
+  "endedAt": "2026-10-15T05:02:13.926Z",
+  "steps": 16,
+  "durationSec": 103,
+  "goals": [
+    {
+      "id": "p32-g1",
+      "text": "Find the save-account path from Settings.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "74dc8bc4-f9df-4d04-b4ff-0a2b080b8285",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, definitely. I want to see how my metrics improve over time and track my progress. Plus, I'm curious to see what happens when I actually create a full account instead of staying as a guest.",
+    "secured": "I think it means my data is encrypted and protected - like my workouts and personal health information won't be accessible to hackers or unauthorized people.",
+    "freeze": "I'm guessing it's a way to pause or temporarily stop tracking, maybe for when you're injured or taking a break from training so it doesn't mess up your streaks or data.",
+    "selfReported": "That's probably data I manually enter myself - like if I did a workout outside the app or added notes about how I felt, rather than data the app automatically tracked.",
+    "best": "The workout interface was really intuitive. The real-time feedback during exercises felt motivating, and I liked how the app showed me exactly what I was doing wrong with my form.",
+    "worst": "Being a guest user felt limiting. I couldn't save my progress or customize anything, which made me realize I was just testing the app instead of actually building a routine. I want to commit now.",
+    "tellFriend": "Yes, I'd tell them: 'GRIIT is actually solid if you're serious about fitness. The form correction is genuinely helpful - no more guessing if you're doing squats right. Just make sure you create an account so you can track your progress.'",
+    "score": 7
+  }
+}

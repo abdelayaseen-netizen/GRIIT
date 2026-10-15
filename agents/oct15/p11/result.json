@@ -1,0 +1,48 @@
+{
+  "personaId": "p11",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:06:41.881Z",
+  "endedAt": "2026-10-15T04:09:40.067Z",
+  "steps": 16,
+  "durationSec": 178,
+  "goals": [
+    {
+      "id": "p11-g1",
+      "text": "Find a timer task and start it.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "discover · For you: Discover is already selected.",
+    "SHOW UP 7 · SHOW UP 7: Not yet. Take at least 15 actions unless the goal is already finished."
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c9c81e70-9731-44f7-9505-02337d137212",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, definitely. I'm in exam season and I need to build a consistent study routine. This timer-based challenge is exactly what I need to stay accountable and motivated.",
+    "secured": "I think it means locking in your commitment—like securing your streak or progress so you can't back out or lose your data. It's about making your goals permanent.",
+    "freeze": "I'm guessing it's a safety feature where you can pause your streak for a day without breaking it, like if you're sick or have an emergency. Lets you keep your progress intact.",
+    "selfReported": "That's probably where you manually log or confirm your own workout/study session since the app can't track it automatically. You're being honest about what you did.",
+    "best": "Seeing that 9-minute timer tick down and actually sticking with it. The visual feedback of the orange numbers was satisfying—it made the time feel real and kept me focused.",
+    "worst": "The blank screen in the middle felt a bit empty. I wish there was something to keep me engaged visually during the session, like a motivational quote or progress bar to break up the darkness.",
+    "tellFriend": "Yeah, I'd tell my study group about it. I'd say 'This app actually works—it's got a timer that forces you to commit to specific study blocks, and you can share your streak with friends. Perfect for keeping each other accountable during exam prep.'",
+    "score": 7
+  }
+}

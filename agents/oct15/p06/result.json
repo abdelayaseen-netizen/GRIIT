@@ -1,0 +1,60 @@
+{
+  "personaId": "p06",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:49:44.902Z",
+  "endedAt": "2026-10-15T03:54:55.310Z",
+  "steps": 24,
+  "durationSec": 310,
+  "goals": [
+    {
+      "id": "p06-g1",
+      "text": "Tap through to the first task as fast as possible.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "onboarding · Start here.: radio button is already selected.",
+    "challenge · Proof: Failed to run flow: Device became unreachable during viewHierarchy",
+    "challenge · Proof: Failed to run flow: Device became unreachable during deviceInfo"
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "e53bd2de-bf9f-4e24-abbc-9fabbf0fc893",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, probably. I'm trying to build the habit and see if I can actually stick with it for the full week. Plus I'm curious if it gets easier.",
+    "secured": "I think it means like, making sure your workout is locked in or confirmed? Like you secured that you actually did it?",
+    "freeze": "No idea honestly. Maybe it's like pausing your progress for a day? Or freezing your streak if you need a break?",
+    "selfReported": "That's probably when you just tell the app you worked out instead of it tracking you automatically. Like trusting you to be honest about it.",
+    "best": "Honestly just finishing and seeing the timestamp pop up. Felt real, like I actually did something today.",
+    "worst": "Having to do it in the first place lol. Like, the whole workout was kind of a drag. But I got through it.",
+    "tellFriend": "Maybe? I'd probably say it's a decent app if you actually want to commit to something. It's not hard to use but you can't really cheat it. Good if you need accountability.",
+    "score": 6
+  }
+}

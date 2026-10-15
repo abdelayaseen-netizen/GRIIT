@@ -1,0 +1,56 @@
+{
+  "personaId": "p17",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:25:25.138Z",
+  "endedAt": "2026-10-15T04:28:41.464Z",
+  "steps": 19,
+  "durationSec": 196,
+  "goals": [
+    {
+      "id": "p17-g1",
+      "text": "Join the hardest-looking challenge and try one task.",
+      "kind": "db",
+      "pass": true,
+      "detail": "Show Up 7"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "discover · For you: Discover is already selected.",
+    "Cancel · Cancel: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "d2c77e80-39f9-4e4c-a468-f980d3133764",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Honestly, no. Not tomorrow anyway. I need to recover and maybe find a workout that's actually at my level. That was way too intense for day one.",
+    "secured": "I think it means saving your progress or locking in your commitment to the challenge so it's officially recorded in your profile.",
+    "freeze": "I'm guessing it's a way to pause or skip a day without breaking your streak if something comes up and you can't work out.",
+    "selfReported": "That's probably when you manually log that you completed a workout instead of the app tracking it automatically, like if you worked out offline.",
+    "best": "Honestly? Starting it. I felt so motivated and ready before I realized what I was getting into. That first minute felt amazing.",
+    "worst": "Around minute 15 when I realized I couldn't keep up with everyone else and felt so embarrassed and out of breath. I almost quit right there.",
+    "tellFriend": "I'd probably tell them to try it, but I'd definitely warn them to start with a beginner level first. Don't be like me and pick something too hard. The app seems really good, just match it to where you actually are.",
+    "score": 4
+  }
+}

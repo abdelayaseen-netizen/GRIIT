@@ -1,0 +1,45 @@
+{
+  "personaId": "p24",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:43:45.748Z",
+  "endedAt": "2026-10-15T04:44:37.330Z",
+  "steps": 4,
+  "durationSec": 52,
+  "goals": [
+    {
+      "id": "p24-g1",
+      "text": "Read the feed and do not start a task.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "56001215-85f4-4274-992c-3cd030d14f77",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Nah, probably not. I'd just end up scrolling through the feed anyway without actually doing anything. The app's cool for seeing what other people are up to, but I'm not really the type to commit to daily challenges.",
+    "secured": "I'm guessing it means your progress or data is locked in and safe, like it won't get deleted or something. Maybe it's about keeping your streak protected?",
+    "freeze": "That's probably a way to pause your streak without breaking it, like if you're busy and can't do the challenge but don't want to lose your days in a row.",
+    "selfReported": "That's when you tell the app you did the challenge yourself instead of it tracking automatically. Like you gotta be honest about whether you actually did it.",
+    "best": "Honestly? Just scrolling through and seeing that Casey and Kai started a Drink Water challenge. That's pretty chill, way less intense than some of the other stuff people are doing.",
+    "worst": "Seeing I have zero days in a row and it's asking me to join a challenge. Feels kinda judgmental, like the app knows I'm not actually gonna do anything.",
+    "tellFriend": "Maybe? I'd be like 'Yo, there's this app where you do challenges daily and compete with people, it's pretty social.' But I'd probably add 'Don't expect me to actually use it though.' Honestly I'd just tell them to check out the feed, that part's entertaining.",
+    "score": 5
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "personaId": "p20",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:33:31.352Z",
+  "endedAt": "2026-10-15T04:35:25.125Z",
+  "steps": 16,
+  "durationSec": 114,
+  "goals": [
+    {
+      "id": "p20-g1",
+      "text": "Set a post to Only me and confirm it is not public.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "78234ba2-e955-414b-9305-35e75e01785c",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, I'd open it tomorrow. It's just for me, so there's no pressure. I can check in privately and keep track of my routine without anyone knowing.",
+    "secured": "I think it means my data and activity are protected and private. Like, only I can see what I'm doing in the app.",
+    "freeze": "It's like a safety net. If I miss a day, I can use a freeze to buy myself time instead of losing my streak completely. You get one every week or something.",
+    "selfReported": "That means I'm telling the app myself about what I did, like checking in to confirm I completed something. It's all on my honor.",
+    "best": "Probably setting it to 'Only me' for visibility. That felt really good. I didn't have to worry about anyone seeing my progress or judging me.",
+    "worst": "Having to choose between 'Standard' and 'Strict' mode. Both felt like they were pushing me hard, and I don't like that kind of pressure. I just want something simple.",
+    "tellFriend": "No, I wouldn't tell a friend about this. It's private for me. If they asked, I might say I'm using an app to build better habits, but I wouldn't go into details or recommend it. It just feels too personal.",
+    "score": 6
+  }
+}

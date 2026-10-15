@@ -1,0 +1,54 @@
+{
+  "personaId": "p03",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:41:42.351Z",
+  "endedAt": "2026-10-15T03:44:24.046Z",
+  "steps": 20,
+  "durationSec": 162,
+  "goals": [
+    {
+      "id": "p03-g1",
+      "text": "Read each screen and reach a first task without getting lost.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "discover · For you: For you is already selected."
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1)."
+  ],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "extra-extra-large",
+  "userId": "463f8d24-2a91-4293-add2-b99a93255ef0",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, I'd open it tomorrow. I want to see if I can keep this streak going. One day down, that's a start.",
+    "secured": "I think it means I locked in my day. Like, I did the task they asked - drink water and take a picture - so the day is secure. It's safe, it's done.",
+    "freeze": "I didn't see that word, but I'm guessing it means if I mess up, I can freeze the streak instead of losing it completely. Like a timeout button.",
+    "selfReported": "That's when you tell the app yourself that you did something. You're reporting on yourself, not the app checking on you. That's what I think anyway.",
+    "best": "The best part was when it said 'Nothing to break yet.' That felt good. Simple. Just drink water and take a picture. I can do that.",
+    "worst": "The worst part was all this text to read. It's tiny and there's a lot of it. I had to put on my reading glasses. Why so many words? Just tell me what to do.",
+    "tellFriend": "I'd tell him, 'Hey, there's this app that keeps you accountable. You do small things every day and it keeps track. Could help you stay on track with something.' But I'd warn him about the small print.",
+    "score": 6
+  }
+}

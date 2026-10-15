@@ -1,0 +1,63 @@
+{
+  "personaId": "p26",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:45:35.312Z",
+  "endedAt": "2026-10-15T04:48:55.246Z",
+  "steps": 32,
+  "durationSec": 200,
+  "goals": [
+    {
+      "id": "p26-g1",
+      "text": "Look for a finished challenge or what happens on the last day.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "eab204d3-335b-4ec9-89ba-e1584fdd9545",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, absolutely. I want to keep this streak going and see that finished card again. It's motivating to complete the challenge and get that visual confirmation at the end.",
+    "secured": "It means your daily commitment is locked in and confirmed. Once you complete the challenge and see that finished card, your day is secured - you've proven you showed up and did what you committed to.",
+    "freeze": "I think it's a way to pause your streak without breaking it, like if you need a day off but don't want to lose your progress. A safety net for when life gets in the way.",
+    "selfReported": "That's when you complete a challenge but don't have photo proof, so you just tell the app you did it. Like an honor system where you report it yourself without photographic evidence.",
+    "best": "Definitely getting that finished card after completing 'Get to the gym.' There's something satisfying about seeing that confirmation - it makes the effort real and gives you that sense of accomplishment.",
+    "worst": "Having to take a photo for proof. I mean, I did it, but it feels a bit intrusive. Just let me log it and move on without needing documentation every single time.",
+    "tellFriend": "Yeah, I'd tell them about it. I'd say: 'Check out this app called GRIIT. It keeps you accountable with daily challenges and streaks. You actually see the finished card when you complete something, which is really satisfying. It's simple but effective.'",
+    "score": 7
+  }
+}

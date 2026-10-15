@@ -1,0 +1,46 @@
+{
+  "personaId": "p28",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:51:39.812Z",
+  "endedAt": "2026-10-15T04:53:34.037Z",
+  "steps": 17,
+  "durationSec": 114,
+  "goals": [
+    {
+      "id": "p28-g1",
+      "text": "Start a post and see what an error looks like.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "dc87644d-791d-4974-9b7d-368d6ce79ff1",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, I'd open it tomorrow. I'm trying to build this habit of hitting the gym before work, you know? Day 1 of 75 is just the start. The app makes it simple enough, even if the interface is a bit clunky.",
+    "secured": "I'm guessing it means like... locking in your commitment? Making sure your workout counts and can't be undone or something. Securing the data so it's official.",
+    "freeze": "Maybe it's like a pause button? If you need to take a break from the 75-day challenge without losing your streak, you can freeze it instead of starting over. That would actually be useful.",
+    "selfReported": "That means I'm just telling the app what I did without any fancy GPS or smartwatch verification. I type in the distance and time, take a photo as proof, and the app trusts me. It's on the honor system basically.",
+    "best": "Getting through Day 1 without backing out. I was skeptical about this whole thing, but I actually completed it. That felt good, honestly. The outdoor workout part was clear enough.",
+    "worst": "The input fields could be way clearer. And I lost internet halfway through trying to post about it earlier, which was frustrating. The app could handle that better—like save my progress offline or something.",
+    "tellFriend": "I'd probably say: 'Check out GRIIT if you want to commit to gym before work for 75 days. It's pretty straightforward, tracks your stuff, but yeah, the app itself is kind of basic. Works though if you're actually motivated.'",
+    "score": 6
+  }
+}

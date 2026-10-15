@@ -1,0 +1,46 @@
+{
+  "personaId": "p22c",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:40:08.754Z",
+  "endedAt": "2026-10-15T04:41:53.349Z",
+  "steps": 10,
+  "durationSec": 105,
+  "goals": [
+    {
+      "id": "p22c-g1",
+      "text": "Open the feed and like a post.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5a4e74b1-7eb4-4562-9dd1-0f20ba1b3fc8",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, definitely! I want to start a streak and see my friends doing challenges too. It seems like a good way to stay accountable and keep up with what everyone's doing.",
+    "secured": "I think it means your proof photos and progress stay private until you decide to share them publicly. Like, nobody sees your stuff unless you want them to.",
+    "freeze": "I'm guessing it's like a pause button - if you need a break from the challenge, you can freeze it without losing your streak or having to start over completely.",
+    "selfReported": "That's probably when you just tell the app you did the challenge without submitting proof. Like you're being honest on your own without showing evidence.",
+    "best": "Seeing that Kai already started a Drink Water challenge - makes me feel like people are actually using this and it's not just sitting there. Plus the whole vibe of the app is clean and easy to understand.",
+    "worst": "The fact that I have no challenge yet and I'm just sitting here looking at empty days. I want to actually start something and build a real streak with my friends, not just stare at this empty grid.",
+    "tellFriend": "For sure. I'd be like 'Yo, there's this app called GRIIT where you can create daily challenges and your friends can see them. We could all do challenges together and track our streaks' - it's perfect for our group because we're always trying to keep each other motivated.",
+    "score": 7
+  }
+}

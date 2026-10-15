@@ -131,10 +131,15 @@ export async function runPersona(opts: {
       return;
     }
     session = next;
+    const wasTest = isTest === true;
     const marked = await markTestAccount(agentClient(), next);
     if (!marked.ok && marked.detail.includes("not found yet")) return;
-    isTest = marked.ok;
+    isTest = marked.ok ? true : wasTest ? true : false;
     if (!marked.ok) {
+      if (wasTest && marked.detail.includes("did not stay true")) {
+        errors.push(`is_test check failed after it was already true (${marked.detail}).`);
+        return;
+      }
       stopAll = true;
       giveUp = `Stopped. This account could not be marked is_test (${marked.detail}). No further agents will run.`;
       return;

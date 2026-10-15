@@ -1,0 +1,45 @@
+{
+  "personaId": "p07",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-15T03:55:01.013Z",
+  "endedAt": "2026-10-15T03:57:22.612Z",
+  "steps": 16,
+  "durationSec": 142,
+  "goals": [
+    {
+      "id": "p07-g1",
+      "text": "Open Faith and join or create a prayer challenge.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "6b26cf7f-81e3-453c-935e-bd43822d2595",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yes, absolutely. I want to complete all 7 days of this morning prayer challenge. Starting my day with intention and prayer is exactly what I need, and this app makes it easy to track.",
+    "secured": "I think it means my progress is saved and protected - like my streaks and completion data won't be lost if I close the app or restart my phone.",
+    "freeze": "Maybe it's a way to pause my challenge temporarily without losing my streak? Like if I'm sick or traveling and can't do it for a few days, I can freeze instead of breaking my chain.",
+    "selfReported": "This probably means the app trusts me to honestly report whether I actually completed my prayer or intention, rather than verifying it somehow. It's based on my own integrity.",
+    "best": "Seeing the timer count down and knowing I'm dedicating these 5 minutes to prayer and setting my intention for the day. It feels powerful to have it tracked and to be on Day 1 of 7.",
+    "worst": "That the timer shows I've already used 8 minutes and 57 seconds when I just started. I wanted a full 5-minute session, so I might need to reset and start over.",
+    "tellFriend": "Yes, definitely. I'd tell them: 'This app helped me commit to morning prayer in a structured way. It's simple, it keeps you accountable with a 7-day challenge, and it continues running even if you leave, so you won't accidentally stop it. Perfect for anyone wanting to build a daily prayer habit.'",
+    "score": 7
+  }
+}

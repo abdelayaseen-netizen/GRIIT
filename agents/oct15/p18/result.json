@@ -1,0 +1,58 @@
+{
+  "personaId": "p18",
+  "group": "fitness",
+  "mode": "goal",
+  "startedAt": "2026-10-15T04:28:45.713Z",
+  "endedAt": "2026-10-15T04:32:28.797Z",
+  "steps": 24,
+  "durationSec": 223,
+  "goals": [
+    {
+      "id": "p18-g1",
+      "text": "Post a photo and look for a like.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. The screen did not change after 3 actions.",
+  "crashes": [],
+  "errors": [
+    "discover · For you: For you is already selected.",
+    "challenge · Proof: Failed to run flow: Element not found: Text matching regex: Post to friends"
+  ],
+  "deadEnds": [
+    "the screen did not change after 3 actions"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 2).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 2).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 2).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 2).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "61d9b2a2-6ac6-4b6e-8dac-3ff4e01ef2bc",
+  "isTest": true,
+  "cleanup": "kept",
+  "interview": {
+    "openTomorrow": "Yeah, definitely. I just started this challenge and I'm already getting that dopamine hit from posting the proof photo. Plus I wanna see if I can rack up more likes tomorrow.",
+    "secured": "I think it means like, locking in your commitment? Making sure nobody can say you didn't actually do it. That's why the photo proof is fire - it secures that you actually drank the water.",
+    "freeze": "Probably means you can pause the challenge if you need to, like if you're sick or traveling or whatever. Gives you a break without losing your streak completely.",
+    "selfReported": "That's when you just say you did something without proof, right? Like trusting people to be honest. Nah, I like the photo proof way better because you actually see it happened.",
+    "best": "Honestly, just posting that first proof photo and seeing it go live. The timestamp, the visual evidence - it's clean. And knowing people can see I'm actually committed to this.",
+    "worst": "Having to do it every single day. Like, what if I forget to take the photo? The pressure of needing proof every time is kinda stressful. I just wanna hydrate, not document my entire life.",
+    "tellFriend": "Yeah, I'd tell them about it. I'd be like 'Yo, there's this app where you post proof you did something and people can like it. It's fire because you actually have to prove it, not just say you did it. Plus the visual proof is satisfying to share.'",
+    "score": 7
+  }
+}
