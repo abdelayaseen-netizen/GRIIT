@@ -4,7 +4,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 
 | # | Chunk | Status | Commit | Notes |
 |---|---|---|---|---|
-| 01 | Speed | PASSED | | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
+| 01 | Speed | PASSED | 79fecc99 | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
 | 02 | First day | NOT STARTED | | |
 | 03 | Task inputs | NOT STARTED | | |
 | 04 | Posting and sharing | NOT STARTED | | |
@@ -18,10 +18,10 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 ## Item log
 (Cursor adds one line per item: `NN.N title: done / not done, sha`)
 
-01.1 Measure first: done
-01.2 Shrink photos: done
-01.3 Cached session: done
-01.4 One server call: done
-01.5 Optimistic UI: done
-01.6 Location: done
-01.7 Measure again: done
+01.1 Measure first: done, 79fecc99
+01.2 Shrink photos: done, 79fecc99
+01.3 Cached session: done, 79fecc99
+01.4 One server call: done, 79fecc99
+01.5 Optimistic UI: done, 79fecc99
+01.6 Location: done, 79fecc99
+01.7 Measure again: done, 79fecc99
