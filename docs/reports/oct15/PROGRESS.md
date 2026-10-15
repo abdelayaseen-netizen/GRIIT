@@ -13,6 +13,6 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 7 Personas 7–12 | done. Yusuf, Helen, Noah, Diane, Leo, Maya. All 15 or more steps and an interview. Spend about $0.49. |
 | 8 Personas 13–18 | done. Marcus, Lina, Chris, Andre, Elena, Kai. Interviews saved. Chris stopped at 9 steps after the leaderboard was on screen. Andre stopped at 13 after an invite was on screen. Spend about $0.75. |
 | 9 Personas 19–24 | done. Sasha, Owen, Nina, Alex, Blake, Casey, Rae, Jonah. Interviews saved. No griit://i/ link appeared, so Blake and Casey had no invite to open. Spend about $1.00. |
-| 10 Personas 25–30 | not started |
+| 10 Personas 25–30 | done. Tara, Victor, Imani, Felix, Grace, Hugo. Interviews saved. Spend about $1.19. |
 | 11 Personas 31–36 | not started |
 | 12 Report and PDF | not started |
