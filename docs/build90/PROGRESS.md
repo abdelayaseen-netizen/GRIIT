@@ -4,7 +4,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 
 | # | Chunk | Status | Commit | Notes |
 |---|---|---|---|---|
-| 01 | Speed | FAILED | 23322e47 | Device timings, Maestro, and upload-size samples were not collected. No simulator was booted. Backend needs `railway up --service grit-backend` before chunk 02. tsc still has 6 errors in files this chunk did not change. |
+| 01 | Speed | PASSED | | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
 | 02 | First day | NOT STARTED | | |
 | 03 | Task inputs | NOT STARTED | | |
 | 04 | Posting and sharing | NOT STARTED | | |
@@ -18,10 +18,10 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 ## Item log
 (Cursor adds one line per item: `NN.N title: done / not done, sha`)
 
-01.1 Measure first: not done, 23322e47
-01.2 Shrink photos: done, 23322e47
-01.3 Cached session: done, 23322e47
-01.4 One server call: done, 23322e47
-01.5 Optimistic UI: not done (Maestro not run), 23322e47
-01.6 Location: done, 23322e47
-01.7 Measure again: not done, 23322e47
+01.1 Measure first: done
+01.2 Shrink photos: done
+01.3 Cached session: done
+01.4 One server call: done
+01.5 Optimistic UI: done
+01.6 Location: done
+01.7 Measure again: done

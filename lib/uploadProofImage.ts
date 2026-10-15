@@ -112,6 +112,7 @@ export async function uploadProofImageFromFile(
   } catch {
     return { error: "Invalid image data" };
   }
+  if (__DEV__) console.info("[uploadProof] bytes", buffer.byteLength);
   return uploadProofBuffer(userId, buffer, contentType);
 }
 

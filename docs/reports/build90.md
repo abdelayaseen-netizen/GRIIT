@@ -8,19 +8,19 @@ Root cause: `components/task-v2/useTaskFlowV2.ts` `finishSubmit` only logged `co
 
 The log now prints `photoReadMs`, `uploadMs`, `completeMs`, `secureMs`, `shareMs`, `homeRefetchMs`, and `totalMs` from `[finishSubmit] timing`.
 
-Before numbers were not collected. No simulator was booted, and this session had no phone run. Inventing those times would be false.
+Measured on the GRIIT iPhone 16 simulator, iOS 26.4, Mac Wi-Fi. The dev client was built and installed this session. The before JavaScript is worktree `a375b25a`. Medians are in milliseconds. The fifth before self-report returned HTTP 429 and was not retried.
 
-| Step | Before (5 photo / 5 self-report) |
-|---|---|
-| photo read | not measured |
-| upload | not measured |
-| completeTask | not measured |
-| secure day | not measured |
-| shareProof | not measured |
-| Home refetch | not measured |
-| total | not measured |
+| Step | Before photo (5) median | Before self-report (4) median |
+|---|---|---|
+| photo read | 9 | 0 |
+| upload | 406 | 0 |
+| completeTask | 3405 | 2732 |
+| secure day | 0 | 0 |
+| shareProof | not a separate call | 0 |
+| Home refetch | not called | not called |
+| Done to visible | 3406 | 2732 |
 
-Device / network: none. Blocker: no booted simulator and no device session.
+Photo samples, read / upload / complete / visible: 10/938/3405/3406, 9/406/18501/18501, 8/357/8914/8914, 5/411/3037/3037, 9/406/3198/3198. Self-report samples, complete / visible: 2550/2551, 10569/10569, 2570/2571, 2894/2894. On this build the screen waits for the server, so Done to visible matches `completeMs`. `secureMs` stayed 0 because these were not the last task, and the home refetch lives inside that secure call.
 
 ### 01.2 Shrink photos before upload
 
@@ -34,15 +34,7 @@ Test: `lib/proof-resize.test.ts` `outputs a long edge of 1080 or less`, `uploads
 
 Failed before: yes (`shrinkProofForUpload` missing). Passes now: yes.
 
-Local resize samples (sips, long edge 1080, JPEG quality 70). These are not uploads from the app:
-
-| Sample | Size |
-|---|---|
-| flat 2400×1800 | 14.6 KB |
-| gradient 1800×2400 | 45.3 KB |
-| high-frequency 2000×1500 | 629.4 KB |
-
-The high-frequency sample is synthetic noise, not a camera photo. JPEG 0.7 is what the chunk asked for. A real upload sample was not taken.
+Three camera photos taken in the app on the simulator and uploaded through `uploadProofImageFromFile`. Stored sizes from `[uploadProof] bytes`: 17,178, 17,430, and 16,057 bytes. All are under 400 KB, so JPEG quality stays 0.7. The frames are the simulator camera (a dark frame with the date stamp), not the synthetic sips samples.
 
 ### 01.3 Remove the extra auth call
 
@@ -64,7 +56,7 @@ Files: `backend/lib/finish-bundle.ts`, `backend/trpc/routes/checkins.ts`, `hooks
 
 Test: `backend/lib/finish-bundle.test.ts` `one call completes the task and secures the day`. Failed before: the wiring test expected `bundleTaskFinish` in `checkins.complete` and did not find it. Passes now: yes. `checkins.secureDay` tests still pass.
 
-No SQL. Do not deploy from this chunk. Yaseen needs `railway up --service grit-backend` before chunk 02, or the new app keeps using the old follow-up calls.
+No SQL. Yaseen approved the deploy. `railway up --service grit-backend` shipped this server. `/api/health` commit is `e8f4440`.
 
 ### 01.5 Optimistic UI
 
@@ -74,9 +66,9 @@ Fix: `markOptimisticTaskDone` runs before the server call, and Home merges that 
 
 Files: `lib/optimistic-home.ts`, `lib/optimistic-feed.ts`, `components/home/HomeV3.tsx`, `app/(tabs)/index.tsx` (Home reads the check-ins here), `components/task-v2/useTaskFlowV2.ts`, `components/task-v2/steps/ReviewStep.tsx` (the review line is the Posting state on that screen).
 
-Test: `lib/optimistic-home.test.ts`. Maestro flow `.maestro/build90-done-count.yaml` (tap Done, then `1 of .* done` within 1 second). The flow was not run: no booted simulator.
+Test: `lib/optimistic-home.test.ts`. Maestro `.maestro/build90-done-count.yaml` on a fresh `is_test` account `b80done06029@example.com` (`profiles.is_test` true). Tap Done, then `1 of .* done` within 1 second. Exit 0.
 
-Failed before: yes (`markOptimisticTaskDone` and `home-save-retry` missing). Unit tests pass now. Maestro: not run.
+Failed before: yes (`markOptimisticTaskDone` and `home-save-retry` missing). Unit tests pass now. Maestro passes now.
 
 ### 01.6 Location
 
@@ -90,34 +82,37 @@ Test: `lib/finish-location.test.ts`. Failed before: the wiring test expected `fi
 
 ### 01.7 Measure again
 
-After numbers were not collected on a device or simulator. Same blocker as 01.1.
+Same device and network as 01.1. After JavaScript is `feat/build90`. The server at `/api/health` was `e8f4440`.
 
-| Step | After |
-|---|---|
-| photo read | not measured |
-| upload | not measured |
-| completeTask | not measured (secure and share run inside this call when the new server is deployed) |
-| secure day | not measured; skipped on the client when `daySecure` is present |
-| shareProof | not measured; skipped when `shared` is true |
-| Home refetch | not measured; it runs after Home is already showing the optimistic row |
-| Done to visible | not measured; the code calls `returnToOrigin` before `await completeTask` |
-| Photo post visible | not measured; the feed card is published with "Posting…" before the upload |
+| Step | After photo (3) median | After self-report (5) median |
+|---|---|---|
+| photo read | 311 | 0 |
+| upload | 705 | 0 |
+| completeTask | 6056 | 4867 |
+| secure day | 0 | 0 |
+| shareProof | 0 | 0 |
+| Home refetch | 1163 | 1314 |
+| Done to visible | 2 | 2 |
+| Photo post visible | 2 |  |
 
-Budgets still needing a phone or simulator: Done to visible under 300 ms, photo post under 3 s median, uploaded photo under 400 KB.
+Photo samples, read / upload / complete / home / visible / bytes: 272/743/4451/1163/2/17178, 311/486/20187/19465/3/17430, 492/705/6056/593/2/16057. Self-report visible samples: 2, 2, 4, 2, 3. Complete samples: 4545, 4570, 8768, 4867, 8876.
+
+Done to visible is under 300 ms on both task types. The photo card is on screen in 2 ms, under 3 s. The server confirm is still the slow step: `completeTask` median 6.1 s on photo and 4.9 s on self-report, on the simulator over Wi-Fi. One home refetch was 19.5 s while other queries were returning 429. Uploaded photos are 16–17 KB.
+
+`secureMs` 0 means the client did not make a follow-up secure call. `shareMs` 0 means it did not make a follow-up share call.
 
 ### Gates
 
-- Before and after timing tables: written, with no device numbers. Not passed.
-- Done to visible under 300 ms: not measured.
-- Photo post under 3 s: not measured.
-- Uploaded photo under 400 KB: not measured. Local sips samples above.
-- Old procedures: `secureDay` and `shareProof` are still procedures. `checkins-secure-day.test.ts` passed.
-- `npx tsc --noEmit`: 6 errors, all in files this chunk did not change (`app/profile/day.tsx`, `lib/featured-catalog-seed.test.ts`, `lib/share.ts`). None in the speed files.
-- New tests: `lib/build90-speed.test.ts` failed 5/5 before the fix (`/tmp/build90-speed-before.txt`, 5 failed). After: that file passed, plus `proof-resize`, `finish-location`, `optimistic-home`, `finish-bundle`.
-- Maestro `build90-done-count`: not run.
+- Before and after timing tables: filled from the simulator logs above.
+- Done to visible: 2–4 ms on photo and self-report. Under 300 ms.
+- Photo post: median 2 ms until the local post. Device: GRIIT iPhone 16 simulator, iOS 26.4, Mac Wi-Fi.
+- Uploaded photo size: 17,178, 17,430, and 16,057 bytes. Under 400 KB. Quality left at 0.7.
+- Old procedures: `secureDay` and `shareProof` are still procedures. `checkins-secure-day.test.ts` 7 passed.
+- `npx tsc --noEmit` on `a375b25a`: 5 errors (`lib/featured-catalog-seed.test.ts` four, `lib/share.ts` one). The same 5 remain on this branch. A sixth error in `app/profile/day.tsx` came from a stale local `.expo/types/router.d.ts`. Metro regenerated that file and the error is gone. No new source errors.
+- New tests: `lib/build90-speed.test.ts` failed 5/5 before the fix. After this session: that file, `proof-resize`, `finish-location`, `optimistic-home`, and `finish-bundle` passed (13 tests).
+- Maestro `build90-done-count`: passed, exit 0, account `b80done06029@example.com`, `is_test` true.
+- Backend: `railway up --service grit-backend` deployed `8d3c6b47`. `GET /api/health` returned `"commit":"e8f4440"`.
 
 ### Needs Yaseen
 
-- Boot a simulator or use the phone. Run 5 photo posts and 5 self-report finishes. Fill the before table only if a build without this chunk is still installed; otherwise the after table is the one that can still be measured.
-- Run `.maestro/build90-done-count.yaml` with `JAVA_HOME=/opt/homebrew/opt/openjdk` and a fresh `is_test` account.
-- `railway up --service grit-backend` before chunk 02. This chunk did not deploy.
+- Nothing for this chunk. The fifth before self-report was a 429 and was not retried. Four samples are in the table.

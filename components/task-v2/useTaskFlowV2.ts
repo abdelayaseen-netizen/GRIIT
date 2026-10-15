@@ -114,6 +114,7 @@ type FinishTiming = {
   secureMs: number;
   shareMs: number;
   homeRefetchMs: number;
+  doneVisibleMs: number;
 };
 
 const EMPTY_TIMING: FinishTiming = {
@@ -123,6 +124,7 @@ const EMPTY_TIMING: FinishTiming = {
   secureMs: 0,
   shareMs: 0,
   homeRefetchMs: 0,
+  doneVisibleMs: 0,
 };
 
 function readLocationFix(): Promise<Location.LocationObject> {
@@ -592,6 +594,7 @@ export function useTaskFlowV2() {
             secureMs: timingRef.current.secureMs,
             shareMs: timingRef.current.shareMs,
             homeRefetchMs: timingRef.current.homeRefetchMs,
+            doneVisibleMs: timingRef.current.doneVisibleMs,
             totalMs: Date.now() - finishStartedAt,
           });
         }
@@ -603,6 +606,10 @@ export function useTaskFlowV2() {
         });
       }
       showDoneLocally();
+      if (!timingRef.current.doneVisibleMs) {
+        timingRef.current.doneVisibleMs = Date.now() - finishStartedAt;
+        if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs });
+      }
       setOptimisticRetry(() => {
         submitInFlight.current = false;
         void finishSubmit(body, kind, true);
@@ -896,7 +903,10 @@ export function useTaskFlowV2() {
     setSaving(true);
     timingRef.current = { ...EMPTY_TIMING };
     shownLocalRef.current = false;
+    const visibleAt = Date.now();
     showDoneLocally();
+    timingRef.current.doneVisibleMs = Date.now() - visibleAt;
+    if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs, kind: "photo" });
     setOptimisticRetry(() => {
       submitInFlight.current = false;
       void submitPhoto(extra);

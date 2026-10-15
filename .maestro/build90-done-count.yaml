@@ -35,6 +35,33 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "No challenge yet.*"
     timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-done-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|No challenge yet.*"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
 - openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
 - extendedWaitUntil:
     visible: "Join 7K Steps"
