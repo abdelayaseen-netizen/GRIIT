@@ -11,7 +11,7 @@ Branch `feat/build89`. Worktree `/Users/yaseenabdela/Developer/GRIIT-build87`.
 | 5 Agent harness | proved on Jordan and Amina. Both passed 15 steps and answered the interview. Jordan 27 steps, score 6. Amina 22 steps, score 6. The other 34 are running in agents/oct15. |
 | 6 Personas 1–6 | done. Jordan, Amina, Robert, Casey, Priya, Sam. All 15 or more steps and an interview. Spend about $0.28. |
 | 7 Personas 7–12 | done. Yusuf, Helen, Noah, Diane, Leo, Maya. All 15 or more steps and an interview. Spend about $0.49. |
-| 8 Personas 13–18 | not started |
+| 8 Personas 13–18 | done. Marcus, Lina, Chris, Andre, Elena, Kai. Interviews saved. Chris stopped at 9 steps after the leaderboard was on screen. Andre stopped at 13 after an invite was on screen. Spend about $0.75. |
 | 9 Personas 19–24 | not started |
 | 10 Personas 25–30 | not started |
 | 11 Personas 31–36 | not started |
