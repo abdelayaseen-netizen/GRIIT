@@ -1,0 +1,9 @@
+node_modules
+design
+agents
+docs
+ios
+.expo
+.git
+*.png
+*.mp4
