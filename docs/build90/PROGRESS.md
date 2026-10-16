@@ -5,7 +5,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | # | Chunk | Status | Commit | Notes |
 |---|---|---|---|---|
 | 01 | Speed | PASSED | 79fecc99 | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
-| 02 | First day | PASSED | pending | Join sticks (no duo), finish opens first task, empty Home starter card, ring opens task, timer + Finished early?, How it works 3 lines. Evidence in docs/reports/build90.md. |
+| 02 | First day | PASSED | c92a7122 | Join sticks (no duo), finish opens first task, empty Home starter card, ring opens task, timer + Finished early?, How it works 3 lines. Evidence in docs/reports/build90.md. |
 | 03 | Task inputs | NOT STARTED | | |
 | 04 | Posting and sharing | NOT STARTED | | |
 | 05 | Links and numbers | NOT STARTED | | |
@@ -25,9 +25,9 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 01.5 Optimistic UI: done, 79fecc99
 01.6 Location: done, 79fecc99
 01.7 Measure again: done, 79fecc99
-02.1 Onboarding Join sticks: done, pending
-02.2 Land on first task after Join: done, pending
-02.3 No empty Home / starter card: done, pending
-02.4 Home ring opens the task: done, pending
-02.5 Timer length + Finished early?: done, pending
-02.6 Onboarding ends on a task: done, pending
+02.1 Onboarding Join sticks: done, c92a7122
+02.2 Land on first task after Join: done, c92a7122
+02.3 No empty Home / starter card: done, c92a7122
+02.4 Home ring opens the task: done, c92a7122
+02.5 Timer length + Finished early?: done, c92a7122
+02.6 Onboarding ends on a task: done, c92a7122
