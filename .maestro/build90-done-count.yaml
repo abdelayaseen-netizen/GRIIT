@@ -33,7 +33,7 @@ appId: app.griit.challenge-tracker
     timeout: 20000
 - tapOn: "No reminders for now"
 - extendedWaitUntil:
-    visible: "No challenge yet.*"
+    visible: "No challenge yet.*|Drink Water Today"
     timeout: 25000
 - tapOn: "Profile"
 - tapOn: "Settings"
@@ -54,7 +54,7 @@ appId: app.griit.challenge-tracker
 - hideKeyboard
 - tapOn: "Continue"
 - extendedWaitUntil:
-    visible: "Send it|Home|No challenge yet.*"
+    visible: "Send it|Home|No challenge yet.*|Drink Water Today"
     timeout: 20000
 - tapOn:
     text: "Send it"
@@ -67,11 +67,13 @@ appId: app.griit.challenge-tracker
     visible: "Join 7K Steps"
     timeout: 20000
 - tapOn: "Join 7K Steps"
+# Join may open the task directly (chunk 02)
 - extendedWaitUntil:
-    visible: "Walk 7,000 steps"
+    visible: "Walk 7,000 steps|^Done$"
     timeout: 20000
 - tapOn:
     id: "home-task"
+    optional: true
 - extendedWaitUntil:
     visible: "^Done$"
     timeout: 15000

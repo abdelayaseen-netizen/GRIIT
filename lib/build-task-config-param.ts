@@ -20,7 +20,13 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
         t.require_photo_proof === true ||
         cfg.photo_required === true ||
         cfg.require_photo_proof === true,
-      min_duration_minutes: t.min_duration_minutes ?? t.duration_minutes,
+      min_duration_minutes:
+        t.min_duration_minutes ??
+        t.duration_minutes ??
+        (typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : undefined),
+      duration_minutes:
+        t.duration_minutes ??
+        (typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : undefined),
       scheduled_time: typeof t.scheduled_time === "string" ? t.scheduled_time : undefined,
       min_words:
         typeof t.min_words === "number"

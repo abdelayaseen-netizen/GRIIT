@@ -203,6 +203,33 @@ describe("suggestChallengesForGoals", () => {
     expect(suggestChallengesForGoals(["daily_habits"], [prayer], 3, 7).map((c) => c.title)).toEqual(["Quran Daily"]);
   });
 
+  it("never recommends duo or shared_goal waiting rooms (no enrollment on join)", () => {
+    expect(isRecommendableChallenge({ participation_type: "duo" })).toBe(false);
+    expect(isRecommendableChallenge({ participation_type: "shared_goal" })).toBe(false);
+    const gymBuddy = {
+      id: "a2222222-0001-4000-8000-000000000002",
+      title: "Gym Buddy Challenge",
+      category: "fitness",
+      duration_days: 7,
+      participation_type: "duo",
+    };
+    const gratitude = {
+      id: "d1000001-4000-4000-8000-000000000002",
+      title: "7-Day Gratitude Journal",
+      category: "mind",
+      duration_days: 7,
+      participation_type: "solo",
+    };
+    const rows = suggestChallengesForGoals(
+      ["physical_toughness", "mental_discipline"],
+      [gymBuddy, gratitude, ...CATALOG],
+      3,
+      7,
+    );
+    expect(rows.map((c) => c.title)).not.toContain("Gym Buddy Challenge");
+    expect(rows.every((c) => isRecommendableChallenge(c))).toBe(true);
+  });
+
   it("collapses duplicate titles and keeps the row with more members", () => {
     const copy = {
       id: "a1000001-4000-4000-8000-000000000010",

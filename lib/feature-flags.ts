@@ -72,11 +72,10 @@ export const FLAGS = {
    */
   SET_MEMBER_GYM: false,
   /**
-   * First-run starter task. The table exists.
-   * The client may only SELECT its own row.
-   * Writes go through tRPC with the service role after an ownership check.
+   * Empty-Home starter challenge card (one tap → join → open task).
+   * Guests allowed. Micro-task picker stays off the first-day path.
    */
-  STARTER_TASK_ENABLED: false,
+  STARTER_TASK_ENABLED: true,
 } as const;
 
 // ============================================

@@ -34,6 +34,7 @@ function mockJoinDb(opts: {
         eqs[col] = val;
         return chain;
       },
+      order: () => chain,
       maybeSingle: () => {
         if (table === "active_challenges") {
           return Promise.resolve({ data: opts.existing ?? null, error: null });

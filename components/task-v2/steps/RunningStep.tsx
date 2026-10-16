@@ -72,6 +72,7 @@ export function RunningStep({
     rang.current = true;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [ready]);
+  // Done stays tappable while the timer runs — confirms "Finished early?"
 
   return (
     <View style={styles.root}>
@@ -110,7 +111,6 @@ export function RunningStep({
         <Button
           testID="timer-post"
           label={WORK_POST}
-          disabled={!ready}
           submitting={submitting}
           onPress={onPost}
         />

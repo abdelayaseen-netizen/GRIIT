@@ -25,10 +25,16 @@ import { homeDayLine } from "@/lib/home-day-total";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
+import {
+  FINISHED_EARLY_CONFIRM,
+  FINISHED_EARLY_MESSAGE,
+  FINISHED_EARLY_TITLE,
+} from "@/lib/timer-duration";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
   const [confirmDidIt, setConfirmDidIt] = useState(false);
+  const [confirmEarly, setConfirmEarly] = useState(false);
 
   return (
     <View
@@ -180,8 +186,14 @@ export function TaskFlowV2() {
           requiredSeconds={f.requiredSeconds}
           onPause={f.pauseTimer}
           onReset={() => void f.resetTimer()}
-          onPost={() => void f.submitTimer()}
-          onFinishEarly={f.onFinishEarly}
+          onPost={() => {
+            if (f.remainingSec > 0) {
+              setConfirmEarly(true);
+              return;
+            }
+            void f.submitTimer();
+          }}
+          onFinishEarly={() => setConfirmEarly(true)}
           onBack={f.goBack}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
@@ -319,6 +331,17 @@ export function TaskFlowV2() {
         onConfirm={() => {
           setConfirmDidIt(false);
           f.onDidIt();
+        }}
+      />
+      <ConfirmDialog
+        visible={confirmEarly}
+        title={FINISHED_EARLY_TITLE}
+        message={FINISHED_EARLY_MESSAGE}
+        confirmLabel={FINISHED_EARLY_CONFIRM}
+        onCancel={() => setConfirmEarly(false)}
+        onConfirm={() => {
+          setConfirmEarly(false);
+          f.onFinishEarly();
         }}
       />
     </View>

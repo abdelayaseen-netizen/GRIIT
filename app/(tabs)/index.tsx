@@ -94,6 +94,16 @@ import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { track, trackUsage } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
+import {
+  EMPTY_HOME_STARTER_BODY,
+  EMPTY_HOME_STARTER_CHALLENGE_ID,
+  EMPTY_HOME_STARTER_CTA,
+  EMPTY_HOME_STARTER_TITLE,
+} from "@/lib/empty-home-starter";
+import { ensureAnonymousSession } from "@/lib/anon-auth";
+import type { JoinWithFirstTask } from "@/lib/open-first-task";
+import { firstTaskHrefAfterJoin } from "@/lib/enrich-join-first-task";
+import Button from "@/components/ds/Button";
 import { computeHomeState } from "@/lib/home-state";
 import {
   MISS_ACK_STORAGE_KEY,
@@ -163,6 +173,7 @@ export default function HomeScreen() {
   const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
   const [saveDismissed, setSaveDismissed] = React.useState({ first: false, second: false });
   const [postGate, setPostGate] = React.useState(false);
+  const [starterBusy, setStarterBusy] = React.useState(false);
   const [optimisticRev, setOptimisticRev] = React.useState(0);
   useEffect(() => subscribeOptimisticHome(() => setOptimisticRev((n) => n + 1)), []);
   const focus = useLocalSearchParams<{ focus?: string }>().focus;
@@ -634,6 +645,26 @@ export default function HomeScreen() {
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
   }, [refetchBootstrap, refetchAll, queryClient]);
 
+  const onStartStarter = useCallback(async () => {
+    if (starterBusy) return;
+    setStarterBusy(true);
+    try {
+      const anon = await ensureAnonymousSession();
+      if (anon.kind !== "ok") return;
+      const result = (await trpcMutate(TRPC.challenges.join, {
+        challengeId: EMPTY_HOME_STARTER_CHALLENGE_ID,
+      })) as JoinWithFirstTask;
+      const href = await firstTaskHrefAfterJoin(result, EMPTY_HOME_STARTER_CHALLENGE_ID, "home");
+      await refresh();
+      if (href) router.replace(href as never);
+      else router.replace(ROUTES.TABS_HOME as never);
+    } catch (err) {
+      captureError(err, "HomeStarterJoin");
+    } finally {
+      setStarterBusy(false);
+    }
+  }, [starterBusy, refresh, router]);
+
   // ────────────── handlers ──────────────
 
   const onCheckOff = useCallback(
@@ -814,9 +845,22 @@ export default function HomeScreen() {
           renderItem={() => (
             <View style={[s.guestWrap, { paddingTop: insets.top + DS_V3.space.section }]}>
               <Text style={s.guestTitle}>GRIIT</Text>
-              <Text style={s.guestBody}>
-                Sign in to start your discipline streak and see what your friends are doing.
-              </Text>
+              {FLAGS.STARTER_TASK_ENABLED ? (
+                <View testID="home-starter-card">
+                  <Text style={s.guestBody}>{EMPTY_HOME_STARTER_TITLE}</Text>
+                  <Text style={s.guestBody}>{EMPTY_HOME_STARTER_BODY}</Text>
+                  <Button
+                    label={EMPTY_HOME_STARTER_CTA}
+                    onPress={() => void onStartStarter()}
+                    submitting={starterBusy}
+                    testID="home-starter-start"
+                  />
+                </View>
+              ) : (
+                <Text style={s.guestBody}>
+                  Sign in to start your discipline streak and see what your friends are doing.
+                </Text>
+              )}
             </View>
           )}
           contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
@@ -875,6 +919,8 @@ export default function HomeScreen() {
               daySecured={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
+              onStartStarter={() => void onStartStarter()}
+              starterBusy={starterBusy}
               onPressStreak={() => {
                 if (currentTaskToast()) return;
                 setFreezeError(null);

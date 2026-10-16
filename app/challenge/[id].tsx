@@ -61,7 +61,7 @@ import {
 import { anyTimeWindowClosedToday } from "@/backend/lib/late-join-window";
 import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
 
-type JoinResult = { id?: string; start_at?: string };
+type JoinResult = import("@/lib/open-first-task").JoinWithFirstTask;
 
 type ChallengeRow = {
   id: string;
@@ -348,7 +348,9 @@ export default function ChallengeDetailScreen() {
       void myActiveListQuery.refetch();
       if (result?.id) {
         void (day1StartCopy(result.start_at, timeZone) === JOIN_CAPTION_TOMORROW);
-        router.replace(ROUTES.TABS_HOME as never);
+        const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+        const taskHref = await firstTaskHrefAfterJoin(result, id, "home");
+        router.replace((taskHref ?? ROUTES.TABS_HOME) as never);
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });

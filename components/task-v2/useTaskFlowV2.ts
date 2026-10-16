@@ -23,6 +23,7 @@ import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
 import { uploadProofImageFromFile } from "@/lib/uploadProofImage";
 import { shrinkProofForUpload } from "@/lib/proof-resize";
 import { finishWaitsOnLocation, LOCATION_FIX_TIMEOUT_MS } from "@/lib/finish-location";
+import { timerRequiredSeconds } from "@/lib/timer-duration";
 import {
   confirmOptimisticTaskDone,
   markOptimisticTaskDone,
@@ -203,7 +204,7 @@ export function useTaskFlowV2() {
     dateKey,
     durationDays,
   );
-  const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
+  const requiredSeconds = timerRequiredSeconds(config);
   const minWords = journalMinWords(config.min_words);
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;

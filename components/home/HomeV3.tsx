@@ -21,6 +21,12 @@ import {
   NO_CHALLENGE_YET,
 } from "@/lib/g2b-home";
 import {
+  EMPTY_HOME_STARTER_BODY,
+  EMPTY_HOME_STARTER_CTA,
+  EMPTY_HOME_STARTER_TITLE,
+} from "@/lib/empty-home-starter";
+import { FLAGS } from "@/lib/feature-flags";
+import {
   HOME_PROOF_HEADING,
   homeChallengeOpenA11y,
   homeProofDayLine,
@@ -114,6 +120,9 @@ export type HomeV3Props = {
   onPressFollowing?: (id: string) => void;
   onFindChallenge?: () => void;
   onCreateChallenge?: () => void;
+  /** One-tap starter on empty Home. Guests allowed. */
+  onStartStarter?: () => void;
+  starterBusy?: boolean;
   onPressStreak?: () => void;
   onPressProof: () => void;
   onPressTask?: (id: string) => void;
@@ -167,10 +176,12 @@ export function HomeV3({
   onPressFollowing: _onPressFollowing,
   onFindChallenge,
   onCreateChallenge,
+  onStartStarter,
+  starterBusy = false,
   onPressStreak,
   onPressProof: _onPressProof,
   onPressTask,
-  onCheckOff,
+  onCheckOff: _onCheckOff,
   onPressChallenge,
   onPressShareToday,
   sectionChoices: _sectionChoices,
@@ -289,12 +300,13 @@ export function HomeV3({
     const meta = `${section.challenge} · ${dayLine} · ${row.caption}`;
     const inner = (
       <>
-        {row.tapDone && !row.done ? (
+        {!row.done ? (
           <Pressable
             accessible
             accessibilityRole="button"
             accessibilityLabel={`Done ${row.name}`}
-            onPress={() => onCheckOff?.(row.id)}
+            testID="home-ring-done"
+            onPress={() => onPressTask?.(row.id)}
             hitSlop={8}
           >
             <StatusRing row={row} silent />
@@ -464,6 +476,20 @@ export function HomeV3({
                 );
               })()}
             </>
+          ) : FLAGS.STARTER_TASK_ENABLED && onStartStarter ? (
+            <View style={styles.emptyChallenge} testID="home-starter-card">
+              <Text style={styles.task}>{EMPTY_HOME_STARTER_TITLE}</Text>
+              <Text style={styles.secondary}>{EMPTY_HOME_STARTER_BODY}</Text>
+              <View style={styles.emptyActions}>
+                <Button
+                  label={EMPTY_HOME_STARTER_CTA}
+                  onPress={onStartStarter}
+                  boxHeight={40}
+                  submitting={starterBusy}
+                  testID="home-starter-start"
+                />
+              </View>
+            </View>
           ) : (
             <View style={styles.emptyChallenge}>
               <Text style={styles.secondary}>{NO_CHALLENGE_YET}</Text>

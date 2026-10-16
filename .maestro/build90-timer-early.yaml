@@ -1,0 +1,69 @@
+appId: app.griit.challenge-tracker
+---
+# Timer length from config; Finished early? confirm works.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000005"
+- extendedWaitUntil:
+    visible: "Join Breathe 1 Min|Breathe 1 Min"
+    timeout: 20000
+- tapOn: "Join Breathe 1 Min"
+- extendedWaitUntil:
+    visible: "Breathe 1 minute|01:00|0:01|1:00"
+    timeout: 25000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "timer-start"
+    timeout: 20000
+- assertVisible: "01:00|1:00|0:01:00"
+- tapOn:
+    id: "timer-start"
+- extendedWaitUntil:
+    visible:
+      id: "timer-finish-early"
+    timeout: 15000
+- tapOn:
+    id: "timer-finish-early"
+- extendedWaitUntil:
+    visible: "Finished early?"
+    timeout: 10000
+- tapOn: "Yes"
+- extendedWaitUntil:
+    visible: "^Done$|Back to today|Day secured"
+    timeout: 25000

@@ -49,13 +49,17 @@ export function matchReasonForChallenge(
   return hit ? MATCH_REASON[hit] : "Popular first challenge";
 }
 
-/** Team challenges need an invite. Private rows are not a first join. */
+/**
+ * Team challenges need an invite. Duo / shared_goal waiting rooms only add a
+ * member row — no enrollment — so they are not a first join. Private rows are
+ * not a first join.
+ */
 export function isRecommendableChallenge(c: {
   participation_type?: string | null;
   visibility?: string | null;
 }): boolean {
   const part = (c.participation_type ?? "solo").toLowerCase();
-  if (part === "team") return false;
+  if (part === "team" || part === "duo" || part === "shared_goal") return false;
   const vis = (c.visibility ?? "public").toLowerCase();
   if (vis === "private" || vis === "friends") return false;
   return true;

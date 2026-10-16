@@ -1,0 +1,52 @@
+appId: app.griit.challenge-tracker
+---
+# Empty Home starter card joins and opens a task.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn:
+    id: "home-starter-start"
+- extendedWaitUntil:
+    visible: "Drink water|Take proof photo|Camera access is off|Open Settings|Done"
+    timeout: 25000
+- assertNotVisible: "No challenge yet.*"

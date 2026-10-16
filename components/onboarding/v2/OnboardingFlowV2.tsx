@@ -25,7 +25,7 @@ import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
-import { FLAGS } from "@/lib/feature-flags";
+import { takePendingFirstTaskHref } from "@/lib/open-first-task";
 import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
@@ -35,7 +35,6 @@ import GoalsScreen from "./screens/GoalsScreen";
 import HowItWorksScreen from "./screens/HowItWorksScreen";
 import RemindersScreen from "./screens/RemindersScreen";
 import FirstChallengeScreen from "./screens/FirstChallengeScreen";
-import StarterPickerScreen from "./screens/StarterPickerScreen";
 import BrowseAllPickerScreen from "./screens/BrowseAllPickerScreen";
 import { readOnboardingGoals, writeOnboardingGoals } from "@/lib/onboarding-v2-goals";
 import { readTargetStreak, writeTargetStreak } from "@/lib/onboarding-v2-target-streak";
@@ -62,7 +61,6 @@ export default function OnboardingFlowV2() {
   const setTargetStreak = useOnboardingStore((s) => s.setTargetStreak);
   const setSelectedChallenge = useOnboardingStore((s) => s.setSelectedChallenge);
   const setSelectedChallengeMeta = useOnboardingStore((s) => s.setSelectedChallengeMeta);
-  const selectedChallengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
   const step = resolveV2Step(rawStep);
   const [dbCompleted, setDbCompleted] = useState<boolean | null>(null);
   const [dbUsername, setDbUsername] = useState<string | null>(null);
@@ -71,7 +69,6 @@ export default function OnboardingFlowV2() {
   const [signInOpen, setSignInOpen] = useState(false);
   const [signInPrefill, setSignInPrefill] = useState<string | undefined>();
   const [browseOpen, setBrowseOpen] = useState(false);
-  const [starterOpen, setStarterOpen] = useState(false);
   const [stepReady, setStepReady] = useState(false);
   const [completeError, setCompleteError] = useState("");
 
@@ -221,11 +218,8 @@ export default function OnboardingFlowV2() {
     setV2Step(next);
   }, [step, setV2Step]);
 
+  /** First day wins: skip the micro-task picker and continue to reminders → first task. */
   const afterChallenge = useCallback(() => {
-    if (FLAGS.STARTER_TASK_ENABLED) {
-      setStarterOpen(true);
-      return;
-    }
     goNext();
   }, [goNext]);
 
@@ -247,16 +241,12 @@ export default function OnboardingFlowV2() {
         setBrowseOpen(next.phase === "open");
         return true;
       }
-      if (starterOpen) {
-        setStarterOpen(false);
-        return true;
-      }
       if (step === "welcome") return false;
       goBack();
       return true;
     });
     return () => sub.remove();
-  }, [step, goBack, signInOpen, browseOpen, starterOpen]);
+  }, [step, goBack, signInOpen, browseOpen]);
 
   const goToLogin = useCallback((prefill?: string) => {
     setSignInPrefill(prefill);
@@ -292,27 +282,17 @@ export default function OnboardingFlowV2() {
 
   const handleFinish = useCallback(async () => {
     setCompleteError("");
-    const result = await exitOnboardingV2(ROUTES.TABS);
+    const taskHref = takePendingFirstTaskHref();
+    const destination = taskHref ?? ROUTES.TABS;
+    const result = await exitOnboardingV2(destination);
     if (!result.ok) {
       setCompleteError(result.message);
       return;
     }
-    router.replace((peekOnboardingV2Exit() ?? ROUTES.TABS) as never);
+    router.replace((peekOnboardingV2Exit() ?? destination) as never);
   }, [router]);
 
   const renderScreen = () => {
-    if (starterOpen) {
-      return (
-        <StarterPickerScreen
-          challengeTitle={selectedChallengeTitle}
-          onBack={() => setStarterOpen(false)}
-          onContinue={() => {
-            setStarterOpen(false);
-            goNext();
-          }}
-        />
-      );
-    }
     if (signInOpen) {
       return (
         <SignInScreen
@@ -381,7 +361,7 @@ export default function OnboardingFlowV2() {
       {completeError ? <Text style={styles.completeError}>{completeError}</Text> : null}
       <StepFade
         stepKey={
-          signInOpen ? "signin" : starterOpen ? "starter" : browseOpen ? "browse-all" : step
+          signInOpen ? "signin" : browseOpen ? "browse-all" : step
         }
       >
         {renderScreen()}

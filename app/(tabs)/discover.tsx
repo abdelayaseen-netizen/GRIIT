@@ -298,10 +298,14 @@ function DiscoverScreenInner() {
         todaySecured={(securedQuery.data ?? []).includes(getTodayDateKey(getDeviceIanaTimeZone()))}
         onJoinChallenge={(challengeId) => {
           void trpcMutate(TRPC.challenges.join, { challengeId })
-            .then((result) => {
-              const startAt = (result as { start_at?: string } | null)?.start_at;
+            .then(async (result) => {
+              const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
+              const startAt = join?.start_at;
               void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
-              router.push(ROUTES.TABS_HOME as never);
+              const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+              const taskHref = await firstTaskHrefAfterJoin(join, challengeId, "discover");
+              if (taskHref) router.push(taskHref as never);
+              else router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}
@@ -314,7 +318,7 @@ function DiscoverScreenInner() {
         onRefresh={onRefresh}
         onJoinBuiltin={(item: FeaturedBuiltin) => {
           void trpcMutate(TRPC.challenges.join, { challengeId: item.id })
-            .then((result) => {
+            .then(async (result) => {
               if (needsSetGym(item)) {
                 router.push({
                   pathname: "/challenge/set-gym",
@@ -322,9 +326,13 @@ function DiscoverScreenInner() {
                 } as never);
                 return;
               }
-              const startAt = (result as { start_at?: string } | null)?.start_at;
+              const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
+              const startAt = join?.start_at;
               void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
-              router.push(ROUTES.TABS_HOME as never);
+              const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+              const taskHref = await firstTaskHrefAfterJoin(join, item.id, "discover");
+              if (taskHref) router.push(taskHref as never);
+              else router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
         }}
