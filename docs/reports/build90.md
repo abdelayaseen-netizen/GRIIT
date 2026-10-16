@@ -238,7 +238,7 @@ Other files in this chunk: `components/ds/TextField.tsx` (testID passthrough so 
 - Chunk 01–02 tests still pass: full vitest 1723 passed, the same 3 baseline failures as `34ef5003` (`challenge-detail-mapping`, `featured-catalog-seed` needs pglite, `join-challenge-error`). Maestro `build90-timer-early`, `build90-empty-starter`, `build90-first-day`, `build90-join-suggest` all exit 0 on this build. `build90-done-count` needs `MAESTRO_EMAIL` and was not run.
 - `npx tsc --noEmit`: same 5 baseline errors as a375b25a (4 in `lib/featured-catalog-seed.test.ts`, 1 in `lib/share.ts`). No new errors.
 - eslint on touched files: 0 errors.
-- Backend: Yaseen approved. See the deploy line below.
+- Backend: Yaseen approved. `railway up --service grit-backend` from `49f6ae0f`. The first upload came up with the stale Railway variable (`"commit":"5155614"`) because nothing writes `backend/deploy-sha.txt`, the file `hono.ts` reads first. Wrote the HEAD sha to that file and uploaded again: `GET /api/health` → `{"ok":true,"status":"ok","commit":"49f6ae0",…}`. The file is now in `.gitignore` so it never lands in a commit; write it before each `railway up`.
 
 ### Needs Yaseen
 
