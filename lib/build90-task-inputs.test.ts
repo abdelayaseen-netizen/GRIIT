@@ -147,12 +147,20 @@ describe("03.3 journal counts real words", () => {
     expect(s.split(/\s+/).length).toBe(20);
     expect(countJournalWords(s)).toBe(20);
     expect(wordCount(s)).toBe(20);
-    // The rule is literal: one-letter words ("I", "a") do not count.
-    expect(countJournalWords("I went to a park")).toBe(3);
+  });
+
+  it("'I went to a park' counts 5 (client and server)", () => {
+    expect(countJournalWords("I went to a park")).toBe(5);
+    expect(wordCount("I went to a park")).toBe(5);
+    expect(countJournalWords("i went to A park.")).toBe(5);
+    // Only "I" and "a" get the pass; other single letters still count 0.
+    expect(countJournalWords("b c d e")).toBe(0);
+    // The repeat cap still applies to them.
+    expect(countJournalWords("a a a a a")).toBe(3);
   });
 
   it("a word needs two letters", () => {
-    expect(countJournalWords("a b c d")).toBe(0);
+    expect(countJournalWords("x y z q")).toBe(0);
     expect(countJournalWords("I'm ok")).toBe(2);
     expect(countJournalWords("1234 5678")).toBe(0);
     expect(countJournalWords("")).toBe(0);

@@ -222,6 +222,11 @@ Files: `backend/lib/journal-verification.ts`, `lib/task-flow-state.ts`, `backend
 Test: `lib/build90-task-inputs.test.ts` "...." → 0, "my my my my my my" → 3, 20-word sentence → 20, server uses the shared function and no raw split. Maestro WRITE block: my×6 → "3 of 20", "...." → "0 of 20". Exit 0. Screenshots `build90-03-write-repeats.png` (typed line visible under the bar with the keyboard up), `build90-03-write-dots.png`.  
 Failed before: yes. Passes now: yes.
 
+**03.3 follow-up (done in the chunk 04 chat, on Yaseen's call):** "I" and "a" count as words. Root cause: `countJournalWords` (`backend/lib/journal-verification.ts` line 41) dropped every token with fewer than 2 letters, so "I went to a park" scored 3. Fix: `JOURNAL_ONE_LETTER_WORDS = {"i", "a"}`; a one-letter token counts when its lowercased key is in that set. Other single letters still count 0 and the 3-repeat cap still applies ("a a a a a" → 3). The client `wordCount` imports the same function, so nothing else changed.  
+Files: `backend/lib/journal-verification.ts`, `lib/build90-task-inputs.test.ts`, `lib/task-flow-state.test.ts`.  
+Test: `lib/build90-task-inputs.test.ts` "'I went to a park' counts 5 (client and server)" (`countJournalWords` and `wordCount` both 5, "i went to A park." 5, "b c d e" 0, "a a a a a" 3); `lib/task-flow-state.test.ts` wordCount "I went to a park" → 5.  
+Failed before: yes (`expected 3 to be 5`, test at line 153). Passes now: yes (18/18 in the file; 70 files / 464 tests across `task-flow-state`, `write-step`, `backend/lib`, `checkins`). Server deploy for this is left for a chunk that deploys; until then the server accepts one-letter words only after the next `railway up`.
+
 **03.4** `counterDoneEnabled` / `counterDoneLabel` in `lib/counter.ts`: below target the button reads "22 pages left" and is disabled; at target it reads "Done · 30 pages". `onCompleteCount` submits the real count and refuses below target. Unit comes from the task row as before. Seeded mismatch ("Read 30 min" counting pages) is live-only; read and fix SQL written to `docs/sql/build90.sql`, not run.  
 Files: `lib/counter.ts`, `components/task-v2/steps/CountStep.tsx`, `components/task-v2/useTaskFlowV2.ts`, `docs/sql/build90.sql`.  
 Test: `lib/build90-task-inputs.test.ts` `counter cannot finish below target…`. Maestro COUNT block: "30 pages left" shown and "Done · 30 pages" absent at 0; Type it → 30 → "Done · 30 pages". Exit 0. Screenshots `build90-03-counter-zero.png`, `build90-03-counter-full.png`.  
@@ -243,6 +248,6 @@ Other files in this chunk: `components/ds/TextField.tsx` (testID passthrough so 
 ### Needs Yaseen
 
 - SQL in `docs/sql/build90.sql` (chunk 03, 03.4): Step 1 lists reading / counter / water rows whose title says minutes; Step 2 converts them to `timer`. Run Step 1 first and read the list before Step 2.
-- One-letter words ("I", "a") count 0 under the literal "2 or more letters" rule, so "I went to a park" is 3. Say if you want "I" to count.
+- ~~One-letter words ("I", "a") count 0 under the literal "2 or more letters" rule, so "I went to a park" is 3. Say if you want "I" to count.~~ Resolved: "I" and "a" count (03.3 follow-up above).
 - Pre-existing, not changed: task steps add `paddingTop: insets.top` on top of `Screen`'s own safe-area padding (double top gap); ConfirmDialog backdrop covers the whole screen; water unit is "oz" on the client (`lib/counter-log.ts`) and "cups" on the server.
 - Same 3 baseline failing tests as chunk 02.

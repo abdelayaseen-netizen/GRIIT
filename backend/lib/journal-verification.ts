@@ -23,6 +23,8 @@ export type JournalLogFacts = {
 export const JOURNAL_WORD_MIN_LETTERS = 2;
 /** The same word counts at most this many times per entry, case-insensitive. */
 export const JOURNAL_WORD_REPEAT_CAP = 3;
+/** One-letter words that still count ("I went to a park" is 5 words). */
+export const JOURNAL_ONE_LETTER_WORDS: ReadonlySet<string> = new Set(["i", "a"]);
 
 const LETTER_RE = /\p{L}/gu;
 const NON_LETTER_EDGE_RE = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu;
@@ -38,8 +40,9 @@ export function countJournalWords(text: string): number {
   let total = 0;
   for (const token of trimmed.split(/\s+/)) {
     const letters = token.match(LETTER_RE);
-    if (!letters || letters.length < JOURNAL_WORD_MIN_LETTERS) continue;
+    if (!letters) continue;
     const key = token.replace(NON_LETTER_EDGE_RE, "").toLowerCase();
+    if (letters.length < JOURNAL_WORD_MIN_LETTERS && !JOURNAL_ONE_LETTER_WORDS.has(key)) continue;
     const used = seen.get(key) ?? 0;
     if (used >= JOURNAL_WORD_REPEAT_CAP) continue;
     seen.set(key, used + 1);

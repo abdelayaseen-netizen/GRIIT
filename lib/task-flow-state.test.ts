@@ -139,9 +139,11 @@ describe("wordCount", () => {
   });
 
   it("build 90: a word has 2+ letters and repeats at most 3 times (same rule as the server)", () => {
-    expect(wordCount("  a   b  ")).toBe(0);
+    expect(wordCount("  x   b  ")).toBe(0);
     expect(wordCount("....")).toBe(0);
     expect(wordCount("my my my my my my")).toBe(3);
+    // "I" and "a" are the two one-letter words that count.
+    expect(wordCount("I went to a park")).toBe(5);
   });
 });
 
