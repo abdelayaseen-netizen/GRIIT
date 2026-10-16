@@ -7,7 +7,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 01 | Speed | PASSED | 79fecc99 | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
 | 02 | First day | PASSED | c92a7122 | Join sticks (no duo), finish opens first task, empty Home starter card, ring opens task, timer + Finished early?, How it works 3 lines. Evidence in docs/reports/build90.md. |
 | 03 | Task inputs | PASSED | b2693fc3 | Workout chips + duration (distance only Cycling/Swim), pace and speed check with Save anyway, shared journal word rule client + server, counter cannot finish below target. SQL for seeded mismatch in docs/sql/build90.sql. Backend deployed, /api/health commit 49f6ae0. Evidence in docs/reports/build90.md. |
-| 04 | Posting and sharing | PASSED | SHA_PLACEHOLDER | Post-or-private sheet after every task, Proof screen Done, own post in both feeds (cold relaunch, server-sourced), share card data, 4 sticker cards, Instagram Story as sticker on every card. Backend deployed with approval, /api/health commit 804ba49. 04.7: Day secured "Couldn't load" was a 429 from a request burst after a finish; cut client-side (one bootstrap refresh per finish, planner reads the bootstrap, feed asks for a page once), 100→74–79 requests per flow, 0 × 429, Day secured first try 5 runs in a row. 29 + 15 new tests, tsc same 5 baseline errors, Maestro post-choice + post-detail + chunk 01–03 flows exit 0. Evidence in docs/reports/build90.md. |
+| 04 | Posting and sharing | PASSED | 8b491178 | Post-or-private sheet after every task, Proof screen Done, own post in both feeds (cold relaunch, server-sourced), share card data, 4 sticker cards, Instagram Story as sticker on every card. Backend deployed with approval, /api/health commit 804ba49. 04.7: Day secured "Couldn't load" was a 429 from a request burst after a finish; cut client-side (one bootstrap refresh per finish, planner reads the bootstrap, feed asks for a page once), 100→74–79 requests per flow, 0 × 429, Day secured first try 5 runs in a row. 29 + 15 new tests, tsc same 5 baseline errors, Maestro post-choice + post-detail + chunk 01–03 flows exit 0. Evidence in docs/reports/build90.md. |
 | 05 | Links and numbers | NOT STARTED | | |
 | 06 | Words and small fixes | NOT STARTED | | |
 | 07 | Safety | NOT STARTED | | |
@@ -36,10 +36,10 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 03.3 Journal counts real words: done, b2693fc3
 03.4 Counter units: done, b2693fc3
 03.3 follow-up ("I" and "a" count): done, 70b747b5
-04.1 One clear post choice after every task: done, 804ba49c (client + server, deployed), proven SHA_PLACEHOLDER
+04.1 One clear post choice after every task: done, 804ba49c (client + server, deployed), proven 8b491178
 04.2 Photo-proof tasks say so up front: done, 804ba49c
-04.3 The Proof screen has a finish: done, 804ba49c, proven SHA_PLACEHOLDER
-04.4 Your own post always shows in your feed: done, 804ba49c (server deployed), proven SHA_PLACEHOLDER
+04.3 The Proof screen has a finish: done, 804ba49c, proven 8b491178
+04.4 Your own post always shows in your feed: done, 804ba49c (server deployed), proven 8b491178
 04.5 Share card data is correct: done, 804ba49c
-04.6 Sticker set: done, 804ba49c; follow-up (Instagram Story sticker on every card): done, SHA_PLACEHOLDER
-04.7 Day secured "Couldn't load" after a finish (429 from a request burst): done, SHA_PLACEHOLDER
+04.6 Sticker set: done, 804ba49c; follow-up (Instagram Story sticker on every card): done, 8b491178
+04.7 Day secured "Couldn't load" after a finish (429 from a request burst): done, 8b491178
