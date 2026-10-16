@@ -10,10 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { firstString } from "@/lib/task-helpers";
 import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
+import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
+import { bootstrapDayOpenInput, refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import {
   proofsFromComplete,
   readSecuredHandoff,
@@ -130,20 +132,18 @@ function TaskSecuredInner() {
     let live = true;
     void (async () => {
       try {
-        await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
-        await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] });
-        await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
-        const [activeList, checkins] = await Promise.all([
-          trpcQuery(TRPC.challenges.listMyActive) as Promise<
-            Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]
-          >,
-          trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-            Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
-          >,
-        ]);
+        await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] }, { cancelRefetch: false });
+        await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] }, { cancelRefetch: false });
+        // Build 90 04.7: one bootstrap refresh (joining the one the finish started) carries
+        // listMyActive and today's check-ins; no second and third request for the same rows.
+        await refreshHomeBootstrap(queryClient);
+        const { enrollments, completed } = bootstrapDayOpenInput<
+          Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"][number],
+          Parameters<typeof dayOpenTasksFromActive>[0]["completed"][number]
+        >(user?.id ? queryClient.getQueryData(homeBootstrapQueryKey(user.id)) : undefined);
         const tasks = dayOpenTasksFromActive({
-          enrollments: Array.isArray(activeList) ? activeList : [],
-          completed: Array.isArray(checkins) ? checkins : [],
+          enrollments,
+          completed,
           todayKey: getTodayDateKey(tz),
           timeZone: tz ?? "UTC",
         });
@@ -172,7 +172,7 @@ function TaskSecuredInner() {
     return () => {
       live = false;
     };
-  }, [proofs, queryClient, tz, retryTick]);
+  }, [proofs, queryClient, tz, retryTick, user?.id]);
 
   const done = () => {
     const openPost = firstString(params.openPost);

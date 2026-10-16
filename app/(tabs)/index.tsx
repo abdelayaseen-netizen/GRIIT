@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
@@ -160,6 +161,9 @@ function durationMinutesFromTask(t: TaskRow): number | undefined {
   if (typeof fromCfg === "number" && fromCfg > 0) return fromCfg;
   return undefined;
 }
+
+/** Build 90 04.7: a bootstrap this recent is not fetched again on Home focus. */
+const HOME_FOCUS_FRESH_MS = 10_000;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -636,8 +640,10 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
-      void refetchBootstrap();
-    }, [isGuest, user?.id, refetchBootstrap]),
+      // Build 90 04.7: join a fetch in flight (a finish just started one) instead of restarting it,
+      // and skip it when the payload is seconds old (coming back from Day secured or the post).
+      void refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - HOME_FOCUS_FRESH_MS });
+    }, [isGuest, user?.id, queryClient]),
   );
 
   const refresh = useCallback(async () => {

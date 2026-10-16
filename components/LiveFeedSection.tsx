@@ -250,7 +250,8 @@ function LiveFeedSection({
           challenges?: { duration_days?: number | null } | null;
         }[]
       >(TRPC.challenges.listMyActive),
-    enabled: !!user?.id,
+    // Build 90 04.7: only read when a "started" row is opened; it refetched on every Home focus.
+    enabled: !!user?.id && !!startedPreview,
     staleTime: 30 * 1000,
   });
   const startedEnrollment = useMemo(() => {
@@ -543,21 +544,23 @@ function LiveFeedSection({
     [user?.id, handleDeletePost, reportFeedPost, applyAudience]
   );
 
-  const maybeFetchMore = useCallback(
-    (index: number) => {
-      if (index < listItems.length - 5) return;
-      if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage) return;
-      void feedQuery.fetchNextPage();
-    },
-    [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, listItems.length],
-  );
+  // Build 90 04.7: the next page is asked for once, from onEndReached. The old per-row call in
+  // renderItem ran for every row of a render with a stale isFetchingNextPage, so one scroll
+  // sent the same page five times, each cancelling the one before.
+  const nextPageInFlight = useRef(false);
+  const fetchNextFeedPage = useCallback(() => {
+    if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage || nextPageInFlight.current) return;
+    nextPageInFlight.current = true;
+    void feedQuery.fetchNextPage({ cancelRefetch: false }).finally(() => {
+      nextPageInFlight.current = false;
+    });
+  }, [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage]);
 
   const renderItem = useCallback(
-    ({ item, index }: { item: FeedListItem; index: number }) => {
+    ({ item }: { item: FeedListItem }) => {
       void previewByPostId;
       void submitComment;
       void openPostMenu;
-      maybeFetchMore(index);
       if (isJoinGroup(item)) {
         return (
           <View style={styles.v3Item}>
@@ -614,7 +617,7 @@ function LiveFeedSection({
         </View>
       );
     },
-    [maybeFetchMore, navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
+    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {
@@ -781,11 +784,7 @@ function LiveFeedSection({
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
-        onEndReached={() => {
-          if (feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
-            void feedQuery.fetchNextPage();
-          }
-        }}
+        onEndReached={fetchNextFeedPage}
         onEndReachedThreshold={0.4}
         ListFooterComponent={
           <View style={styles.feedFooter}>

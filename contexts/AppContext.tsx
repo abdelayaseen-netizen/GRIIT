@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from './AuthContext';
 import { trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
-import { HOME_BOOTSTRAP_QUERY_KEY, homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
+import { homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
+import { refreshHomeBootstrap } from '@/lib/home-bootstrap-refresh';
 import { useHomeBootstrap } from '@/lib/use-home-bootstrap';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { tasksDueTodayAcrossEnrollments } from '@/lib/notification-due-count';
@@ -204,12 +205,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, profile]);
 
+  // Build 90 04.7: one request per refresh; callers in the same tick join the fetch in flight.
   const refetchBootstrap = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: [...HOME_BOOTSTRAP_QUERY_KEY] });
-    if (user?.id) {
-      await queryClient.refetchQueries({ queryKey: homeBootstrapQueryKey(user.id) });
-    }
-  }, [queryClient, user?.id]);
+    await refreshHomeBootstrap(queryClient);
+  }, [queryClient]);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -373,6 +372,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeChallenge,
     timezone: profileTimezone,
     evening: eveningRemaining,
+    // Build 90 04.7: the planner reads these from the bootstrap instead of fetching them again.
+    enrollments: Array.isArray(bootstrap.data?.activeChallenges)
+      ? (bootstrap.data.activeChallenges as Parameters<typeof useNotificationScheduler>[0]["enrollments"])
+      : undefined,
+    securedDateKeys: Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : undefined,
+    todayCheckins: Array.isArray(bootstrap.data?.todayCheckinsForUser) ? bootstrap.data.todayCheckinsForUser : undefined,
   });
 
   const { completeTask, secureDay } = useAppChallengeMutations({

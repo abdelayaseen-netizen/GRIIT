@@ -20,6 +20,13 @@ import {
 } from "@/lib/g2a-notifications";
 import { applyG2aPlan } from "@/lib/g2a-notification-schedule";
 
+type TodayCheckinRow = {
+  task_id?: string;
+  status?: string;
+};
+
+export type G2aEnrollmentRow = EnrollmentRow;
+
 type EnrollmentRow = {
   id?: string;
   current_day?: number | null;
@@ -43,13 +50,21 @@ export async function scheduleG2aForUser(args: {
   /** Caller already knows today's remaining. Used so a stale refetch cannot raise the count. */
   remainingToday?: number;
   isCancelled?: () => boolean;
+  /**
+   * Build 90 04.7: the caller's bootstrap payload already has both lists. Given, the planner
+   * makes no request of its own; the scheduler and the finish path were each re-fetching
+   * `listMyActive` and `getTodayCheckinsForUser` right after `home.bootstrap` had returned them.
+   */
+  enrollments?: EnrollmentRow[];
+  todayCheckins?: TodayCheckinRow[];
 }): Promise<{ today: G2aPushCandidate[]; tomorrow: G2aPushCandidate[] }> {
   const todayKey = getTodayDateKey(args.timezone);
-  const myActive = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as EnrollmentRow[];
-  const todayCheckins = (await trpcQuery(TRPC.checkins.getTodayCheckinsForUser).catch(() => [])) as {
-    task_id?: string;
-    status?: string;
-  }[];
+  const myActive = Array.isArray(args.enrollments)
+    ? args.enrollments
+    : ((await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as EnrollmentRow[]);
+  const todayCheckins = Array.isArray(args.todayCheckins)
+    ? args.todayCheckins
+    : ((await trpcQuery(TRPC.checkins.getTodayCheckinsForUser).catch(() => [])) as TodayCheckinRow[]);
   const activeRows = Array.isArray(myActive) ? myActive : [];
   const dueToday = tasksDueTodayAcrossEnrollments({
     enrollments: activeRows.map((ac) => ({

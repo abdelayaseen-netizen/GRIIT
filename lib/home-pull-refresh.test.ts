@@ -94,9 +94,11 @@ describe("Home RefreshControl wiring", () => {
   it("does not list the bootstrap query result in the tab-focus refetch effect", () => {
     const start = homeSrc.indexOf("const refetchBootstrap = bootstrap.refetch");
     expect(start).toBeGreaterThan(-1);
-    const block = homeSrc.slice(start, start + 400);
-    expect(block).toContain("void refetchBootstrap()");
-    expect(block).toContain("[isGuest, user?.id, refetchBootstrap]");
+    const block = homeSrc.slice(start, start + 500);
+    // Build 90 04.7: the focus refresh goes through refreshHomeBootstrap (joins an in-flight
+    // fetch, skips a payload under ten seconds old); the deps still never list `bootstrap`.
+    expect(block).toContain("refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - HOME_FOCUS_FRESH_MS })");
+    expect(block).toContain("[isGuest, user?.id, queryClient]");
     expect(block).not.toContain("[isGuest, user?.id, bootstrap]");
   });
 

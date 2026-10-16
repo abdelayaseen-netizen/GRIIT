@@ -29,6 +29,7 @@ import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
 import { queryClient } from "@/lib/query-client";
 import { queryFocusedFromAppState } from "@/lib/query-focus";
 import {
+  checkUnseenEndingsOnHome,
   notifyAppBecameActive,
   runFinalizeEndedOnForeground,
   setFinalizeEndedForegroundHandler,
@@ -531,6 +532,16 @@ function FinalizeEndedGate() {
     setFinalizeEndedForegroundHandler(run);
     run();
     return () => setFinalizeEndedForegroundHandler(null);
+    // Build 90 04.7: mount and foreground only. With pathname here it re-ran on every route
+    // change: a finish is three routes, so three more finalizeEnded posts and bootstrap fetches.
+  }, [user, nav]);
+
+  useEffect(() => {
+    if (!user) return;
+    void checkUnseenEndingsOnHome({
+      pathname,
+      openEnd: () => nav.push(ROUTES.CHALLENGE_END as never),
+    });
   }, [user, nav, pathname]);
 
   return null;

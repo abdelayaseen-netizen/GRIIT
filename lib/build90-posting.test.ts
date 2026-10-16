@@ -6,7 +6,7 @@ import {
   createsActivityPost,
 } from "@/lib/post-audience";
 import { shareCardFromToast } from "@/lib/task-complete-toast";
-import { buildSharePaint, copyStickerAvailable, paintStrings, stylesForMoment } from "@/lib/share-image";
+import { buildSharePaint, copyStickerAvailable, paintStrings, storyUsesSticker, stylesForMoment } from "@/lib/share-image";
 import { selfReportedCardMeta } from "@/lib/feed-card-family";
 import { POST_DETAIL_DONE, POST_DETAIL_SHARE_OUTSIDE, postDetailAudience } from "@/lib/post-detail";
 import { CAPTURE_PROOF_REQUIRED, captureHeaderLine } from "@/lib/proof-capture";
@@ -266,5 +266,16 @@ describe("04.6 sticker set", () => {
     const sheet = read("components/share/ShareSystemSheet.tsx");
     expect(sheet).toContain("copyStickerAvailable(styleId)");
     expect(sheet).toContain("stylesForMoment(moment, { streak: card.streak, hasPhoto: Boolean(card.photoUri) })");
+  });
+
+  it("Instagram Story sends every card as a sticker, not as a background", () => {
+    // Every card any moment can show. B is the retired glow sticker; it stays true too.
+    for (const style of ["H", "E", "D", "A", "F", "G", "B", "C"] as const) expect(storyUsesSticker(style)).toBe(true);
+    for (const moment of ["photo_proof", "self_reported", "day_secured", "challenge_finished", "invite"] as const) {
+      for (const style of stylesForMoment(moment, { streak: 3, hasPhoto: true })) expect(storyUsesSticker(style)).toBe(true);
+    }
+    const sheet = read("components/share/ShareSystemSheet.tsx");
+    expect(sheet).toContain("asSticker: storyUsesSticker(styleId)");
+    expect(sheet).toContain("backgroundTopColor: palette.bg");
   });
 });

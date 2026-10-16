@@ -16,6 +16,7 @@ import { scheduleG2aForUser } from "@/lib/g2a-refresh";
 import { track, trackDay30Completed, trackEvent } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { TODAY_CHECKINS_QUERY_KEY } from "@/lib/today-completion";
+import { bootstrapG2aInput, readHomeBootstrap, refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { displayDay } from "@/lib/challenge-day";
 import type { ServerVerificationRow } from "@/lib/verifying-proof";
 import type {
@@ -59,9 +60,6 @@ export function useAppChallengeMutations({
   challenge,
   todayCheckins,
   setTodayCheckins,
-  fetchTodayCheckins,
-  fetchActiveChallenge,
-  fetchStats,
   stats,
   profile,
   fallbackProfile,
@@ -207,12 +205,12 @@ export function useAppChallengeMutations({
               /* non-fatal */
             }
           }
-          if (activeChallenge?.id) void fetchTodayCheckins(activeChallenge.id);
-          void fetchActiveChallenge();
-          void fetchStats();
-          void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
-          void queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
-          void queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] });
+          // Build 90 04.7: one bootstrap refresh. fetchTodayCheckins / fetchActiveChallenge / fetchStats
+          // were all the same refetch and each cancelled the one before; the server still ran every one.
+          // The bootstrap payload carries today's check-ins, the active challenge and the stats.
+          const bootstrapRefresh = refreshHomeBootstrap(queryClient);
+          void queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
+          void queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
           void queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
           void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
@@ -262,12 +260,15 @@ export function useAppChallengeMutations({
           }
           if (Platform.OS !== "web") {
             try {
+              // Build 90 04.7: plan from the bootstrap the finish just refreshed, not two more requests.
+              await bootstrapRefresh.catch(() => undefined);
               await scheduleG2aForUser({
                 timezone: (profile as { timezone?: string | null } | null)?.timezone,
                 lastCompletedDateKey: (stats as StatsFromApi | null)?.lastCompletedDateKey,
                 streakCount: data?.streakDays ?? (stats as StatsFromApi | null)?.activeStreak ?? 0,
                 activeChallengeId: params.activeChallengeId,
                 forceSecuredToday: data?.dayAlreadySecured === true,
+                ...(bootstrapG2aInput(readHomeBootstrap(queryClient, user?.id)) ?? {}),
               });
             } catch (err) {
               captureError(err, "replanG2aAfterCheckIn");
@@ -303,7 +304,7 @@ export function useAppChallengeMutations({
         });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setTodayCheckins is a stable setState dispatch
-    [activeChallenge, challenge, todayCheckins, fetchTodayCheckins, fetchActiveChallenge, fetchStats, queryClient, user?.id]
+    [activeChallenge, challenge, todayCheckins, queryClient, user?.id]
   );
 
   const secureDay = useCallback(async (activeChallengeId: string): Promise<{
@@ -337,14 +338,14 @@ export function useAppChallengeMutations({
         remaining_challenges?: number;
       };
       // After the server has written the day — not before. Home reads these keys only.
-      await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
-      await queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
-      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
-      await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
-      await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] });
-      await queryClient.refetchQueries({ queryKey: ["home", "bootstrap"] });
-      await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] });
-      await queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] });
+      // Build 90 04.7: each key once; a refetch joins the fetch its invalidate started.
+      await refreshHomeBootstrap(queryClient);
+      await queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] }, { cancelRefetch: false });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] }, { cancelRefetch: false });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getSecuredDateKeys"] }, { cancelRefetch: false });
+      await queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
+      await queryClient.refetchQueries({ queryKey: ["profiles", "getSecuredDateKeys"] }, { cancelRefetch: false });
+      await queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
       const userDaySecured = result.secured === true;
       if (userDaySecured && Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -376,8 +377,7 @@ export function useAppChallengeMutations({
           /* non-fatal */
         }
       }
-      void fetchActiveChallenge();
-      await fetchStats();
+      // Build 90 04.7: the bootstrap refresh above already brought the active challenge and the stats.
       const streakN = result?.newStreakCount;
       if (userDaySecured && typeof streakN === "number" && [7, 14, 30, 75].includes(streakN)) {
         trackEvent("streak_milestone", { days: streakN });
@@ -391,6 +391,7 @@ export function useAppChallengeMutations({
             streakCount: newStreakCount,
             activeChallengeId,
             forceSecuredToday: userDaySecured,
+            ...(bootstrapG2aInput(readHomeBootstrap(queryClient, user?.id)) ?? {}),
           });
         } catch (err) {
           captureError(err, "replanG2aAfterSecure");
@@ -414,7 +415,7 @@ export function useAppChallengeMutations({
       captureError(err, "secureDay");
       throw err;
     }
-  }, [activeChallenge, fetchActiveChallenge, fetchStats, stats, queryClient]);
+  }, [activeChallenge, stats, queryClient, user?.id]);
 
   return { completeTask, secureDay };
 }

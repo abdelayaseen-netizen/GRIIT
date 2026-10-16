@@ -243,8 +243,12 @@ export function shareMessageBody(caption: string, joinLine: string): string {
   return cap || joinLine;
 }
 
-export function storyUsesSticker(style: ShareStyleId): boolean {
-  return style === "B";
+/**
+ * Build 90 04.6 follow-up: every card is a sticker. Instagram Story gets the PNG as
+ * `stickerImage` over the palette background, never as a full-bleed `backgroundImage`.
+ */
+export function storyUsesSticker(_style: ShareStyleId): boolean {
+  return true;
 }
 
 export function shareDateLabel(date = new Date()): string {

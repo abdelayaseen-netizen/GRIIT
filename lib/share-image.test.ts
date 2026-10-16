@@ -117,9 +117,10 @@ describe("v44.1 share styles", () => {
     expect(one.wordmark?.y).toBeLessThan(200);
     expect(one.block.y + one.block.h).toBeLessThanOrEqual(1920);
     expect(sticker.transparent).toBe(true);
+    // Build 90 04.6 follow-up: every card goes to Instagram Story as a sticker.
     expect(storyUsesSticker("B")).toBe(true);
-    expect(storyUsesSticker("A")).toBe(false);
-    expect(storyUsesSticker("G")).toBe(false);
+    expect(storyUsesSticker("A")).toBe(true);
+    expect(storyUsesSticker("G")).toBe(true);
   });
 
   it("remembers a colour per style in memory and defaults to Ink", () => {

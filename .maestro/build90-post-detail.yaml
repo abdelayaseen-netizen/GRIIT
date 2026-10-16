@@ -1,11 +1,13 @@
 appId: app.griit.challenge-tracker
 ---
-# Chunk 04: Post to friends on a check-off task ends on Home with today's count moved,
-# then Share today shows the sticker set (Streak, Progress) with real challenge and day,
-# Ink / Orange / White and Copy sticker on every card.
+# Chunk 04: Post to friends on a check-off task goes Day secured → the post (Proof screen,
+# Done + Share outside GRIIT + Who sees this) → Done → Home. After a cold relaunch (no
+# in-memory optimistic post) the own post is in Everyone and in Following. Then Share today
+# shows the sticker set (Streak, Progress) with real challenge and day, Ink / Orange / White
+# and Copy sticker on every card.
 # Fresh is_test email account each run (MAESTRO_EMAIL=b89post…@example.com); a guest
 # would hit the Save your challenge sheet after the first task.
-# The post itself (Day secured → post → Done) needs the chunk 04 server on Railway.
+# Needs the chunk 04 server on Railway (checkins.ts audience, feed.ts own-post rule).
 - launchApp:
     clearState: true
     permissions:
@@ -85,20 +87,75 @@ appId: app.griit.challenge-tracker
     visible: "Who sees this"
     timeout: 10000
 
-# Post to friends ends the flow; Home shows the day moved.
+# Post to friends: the save secured the day, so Day secured comes first.
 - tapOn:
     id: "post-choice-post"
+# Day secured must load on the first try: no Retry tap here.
+- extendedWaitUntil:
+    visible: "Day 1 secured.*"
+    timeout: 20000
+- assertNotVisible: "Couldn't load.*"
+- takeScreenshot: build90-04-day-secured-post
+- tapOn: "^Done$"
+
+# 04.3 the Proof screen: Done, Share outside GRIIT, a labeled audience control.
+- extendedWaitUntil:
+    visible:
+      id: "post-done"
+    timeout: 20000
+- assertVisible: "Who sees this"
+- assertVisible: "Share outside GRIIT"
+- assertVisible:
+    id: "post-share-outside"
+- takeScreenshot: build90-04-proof-done
+- tapOn:
+    id: "post-done"
 - extendedWaitUntil:
     visible: "1 of .* done"
     timeout: 20000
+- assertNotVisible:
+    id: "post-done"
 - assertNotVisible: "Who sees this"
 - takeScreenshot: build90-04-posted-home
 
-# 04.5 / 04.6 the share cards: real challenge and day, three colours, Copy sticker on each.
-# Home re-lays out as the feed loads; let it settle before the tap.
+# 04.4 own post in both feeds. Cold relaunch first: the optimistic row lives in memory,
+# so after this what the feed shows came from the server.
+- stopApp
+- launchApp
 - extendedWaitUntil:
-    visible: "Everyone is on until.*|started 7K Steps"
+    visible: "1 of .* done"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+# The post is the first feed row, just under the fold. One short swipe brings it fully into
+# view; scrollUntilVisible's full-screen swipes carried it off the top and never came back.
+- swipe:
+    start: 50%, 80%
+    end: 50%, 40%
+    duration: 600
+# The self-reported card is one accessible element ("Walk 7,000 steps, Self-reported · 7:00 pm,
+# 7K Steps · Day 1 of 7 · 1 day in a row"), so the meta line is matched inside that label.
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
     timeout: 20000
+- takeScreenshot: build90-04-feed-everyone
+# The pills expose their accessibility labels, not the visible words.
+- tapOn: "Show feed from people you follow"
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
+    timeout: 20000
+- takeScreenshot: build90-04-feed-following
+- tapOn: "Show feed from everyone"
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "Share today"
+    direction: UP
+    timeout: 20000
+
+# 04.5 / 04.6 the share cards: real challenge and day, three colours, Copy sticker on each.
 - waitForAnimationToEnd:
     timeout: 3000
 - tapOn: "Share today"

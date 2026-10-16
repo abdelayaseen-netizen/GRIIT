@@ -4,6 +4,8 @@ import Screen from "@/components/ds/Screen";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { useIsGuest } from "@/contexts/AuthGateContext";
+import { queryClient } from "@/lib/query-client";
+import { invalidateReminderSettings } from "@/lib/home-bootstrap-refresh";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
@@ -67,6 +69,8 @@ export default function SettingsNotificationsScreen() {
     if (isGuest) return;
     try {
       await trpcMutate(TRPC.notifications.updateReminderSettings, patch);
+      // Build 90 04.7: the planner reads settings through a five-minute cache; a save empties it.
+      void invalidateReminderSettings(queryClient);
     } catch (e) {
       captureError(e, "SettingsNotificationsSave");
       void load();

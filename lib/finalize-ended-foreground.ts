@@ -6,6 +6,13 @@ import { TRPC } from "@/lib/trpc-paths";
 import { shouldPresentEndScreen, type UnseenEndingRow } from "@/lib/challenge-end";
 
 let inFlight = false;
+/** Build 90 04.7: a run that happened away from Home owes one unseen-endings check on arrival. */
+let homeCheckPending = false;
+
+async function presentUnseenEndings(openEnd: () => void): Promise<void> {
+  const unseen = await trpcQuery<UnseenEndingRow[]>(TRPC.challenges.listUnseenEndings);
+  if (unseen.length > 0) openEnd();
+}
 
 export async function runFinalizeEndedOnForeground(input: {
   userId: string;
@@ -17,15 +24,38 @@ export async function runFinalizeEndedOnForeground(input: {
   try {
     try {
       await trpcMutate(TRPC.challenges.finalizeEnded);
-      await queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(input.userId) });
+      await queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(input.userId) }, { cancelRefetch: false });
     } catch (e) {
       captureError(e, "finalizeEnded.foreground");
     }
-    if (!shouldPresentEndScreen(input.pathname)) return;
-    const unseen = await trpcQuery<UnseenEndingRow[]>(TRPC.challenges.listUnseenEndings);
-    if (unseen.length > 0) input.openEnd();
+    if (!shouldPresentEndScreen(input.pathname)) {
+      homeCheckPending = true;
+      return;
+    }
+    homeCheckPending = false;
+    try {
+      await presentUnseenEndings(input.openEnd);
+    } catch (e) {
+      // Was an unhandled rejection (a 429 here surfaced as a dev red box).
+      captureError(e, "finalizeEnded.unseen");
+    }
   } finally {
     inFlight = false;
+  }
+}
+
+/**
+ * Build 90 04.7: on a route change only the unseen check, and only when the last foreground
+ * run could not do it. Posting finalizeEnded and refetching the bootstrap on every
+ * navigation cost three more requests per finish.
+ */
+export async function checkUnseenEndingsOnHome(input: { pathname: string; openEnd: () => void }): Promise<void> {
+  if (!homeCheckPending || !shouldPresentEndScreen(input.pathname)) return;
+  homeCheckPending = false;
+  try {
+    await presentUnseenEndings(input.openEnd);
+  } catch (e) {
+    captureError(e, "finalizeEnded.homeCheck");
   }
 }
 

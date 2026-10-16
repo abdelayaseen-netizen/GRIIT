@@ -7,3 +7,4 @@ ios
 .git
 *.png
 *.mp4
+!backend/deploy-sha.txt

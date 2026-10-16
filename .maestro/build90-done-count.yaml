@@ -78,6 +78,12 @@ appId: app.griit.challenge-tracker
     visible: "^Done$"
     timeout: 15000
 - tapOn: "^Done$"
+# Chunk 04.1: every task ends with the post-or-private sheet. The 1-second rule now counts
+# from the choice; Keep it private is the no-post path this flow measured before.
+- extendedWaitUntil:
+    visible: "Keep it private"
+    timeout: 5000
+- tapOn: "Keep it private"
 - extendedWaitUntil:
     visible: "1 of .* done"
     timeout: 1000

@@ -46,6 +46,7 @@ import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-co
 import { routeAfterSave } from "@/lib/route-after-save";
 import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
 import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
+import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -601,7 +602,9 @@ export function useTaskFlowV2() {
       const writeTiming = async () => {
         const homeStarted = Date.now();
         try {
-          await queryClient.refetchQueries({ queryKey: ["home", "bootstrap"] });
+          // Build 90 04.7: joins the refresh completeTask already started instead of cancelling it,
+          // and skips the request when that refresh has already landed since the finish began.
+          await refreshHomeBootstrap(queryClient, { freshAfter: finishStartedAt });
         } catch {
           /* Home already shows the optimistic row */
         }
