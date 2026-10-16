@@ -1,0 +1,117 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 04: Post to friends on a check-off task ends on Home with today's count moved,
+# then Share today shows the sticker set (Streak, Progress) with real challenge and day,
+# Ink / Orange / White and Copy sticker on every card.
+# Fresh is_test email account each run (MAESTRO_EMAIL=b89post…@example.com); a guest
+# would hit the Save your challenge sheet after the first task.
+# The post itself (Day secured → post → Done) needs the chunk 04 server on Railway.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-post-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 10000
+
+# Post to friends ends the flow; Home shows the day moved.
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "1 of .* done"
+    timeout: 20000
+- assertNotVisible: "Who sees this"
+- takeScreenshot: build90-04-posted-home
+
+# 04.5 / 04.6 the share cards: real challenge and day, three colours, Copy sticker on each.
+# Home re-lays out as the feed loads; let it settle before the tap.
+- extendedWaitUntil:
+    visible: "Everyone is on until.*|started 7K Steps"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: "Share today"
+- extendedWaitUntil:
+    visible: "Copy sticker"
+    timeout: 10000
+- assertVisible: "Ink"
+- assertVisible: "Orange"
+- assertVisible: "White"
+- takeScreenshot: build90-04-share-streak
+- swipe:
+    direction: LEFT
+- assertVisible: "Copy sticker"
+- tapOn: "Orange"
+- takeScreenshot: build90-04-share-progress
+- tapOn: "Close"

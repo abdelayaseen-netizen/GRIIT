@@ -251,3 +251,84 @@ Other files in this chunk: `components/ds/TextField.tsx` (testID passthrough so 
 - ~~One-letter words ("I", "a") count 0 under the literal "2 or more letters" rule, so "I went to a park" is 3. Say if you want "I" to count.~~ Resolved: "I" and "a" count (03.3 follow-up above).
 - Pre-existing, not changed: task steps add `paddingTop: insets.top` on top of `Screen`'s own safe-area padding (double top gap); ConfirmDialog backdrop covers the whole screen; water unit is "oz" on the client (`lib/counter-log.ts`) and "cups" on the server.
 - Same 3 baseline failing tests as chunk 02.
+
+## 04 Posting and sharing
+
+### 04.1 One clear post choice after every task
+
+Root cause: `components/task-v2/useTaskFlowV2.ts` `submitWithoutPhoto` (line 964) hands every non-photo payload (timer, journal, counter, run, workout, Did it, check-in) straight to `finishSubmit` with no `audience`, so `audiencePublishes(null)` is false, the row is inserted `kept`, and the user lands on Home with a "Saved." toast whose only action is a sticker card. Only the photo `ReviewStep` has a chooser. On the server `backend/trpc/routes/checkins.ts` line 1006 `createsActivityPost(self_reported, hasPhoto)` writes no `activity_events` row at all for a self-reported completion without a photo, so a Did it task cannot post even when asked to. The self-reported feed card (`components/feed/FeedPostV3.tsx` line 251) prints challenge and day but no streak.
+
+### 04.2 Photo-proof tasks say so up front
+
+Root cause: `components/task-v2/TaskCapture.tsx` line 143 prints the challenge name alone; `components/task-v2/steps/CaptureStep.tsx` declares `currentDay` in its props (line 10) and never reads it, and has no `durationDays`, so the capture screen cannot say which day it is. Nothing on the screen says a photo is required; the only line is the library caption under the finder. Camera only was already true: the screen is `expo-camera` `CameraView` with no image picker anywhere in `components/task-v2`.
+
+### 04.3 The Proof screen has a finish
+
+Root cause: `app/post/[id]/index.tsx` lines 223–256: for the author, "Share outside GRIIT" and "Back to today" are bare `Text` inside unstyled `Pressable`s in the author column, and the audience row is three caption-sized `Text`s with no selected state and no label. Nothing reads as a button and nothing says which audience is current.
+
+### 04.4 Your own post always shows in your feed
+
+Root cause: `backend/trpc/routes/feed.ts` `getLiveFeed` `keepEvent` line 118–119 runs `audienceShowsInScope(audience, scope)` on every event including the viewer's own, so a Friends post is dropped from the Everyone feed right after posting ("No posts yet"). The author checks above it (lines 112, 117) already exempt `ev.user_id === viewerId`; the audience check does not.
+
+### 04.5 Share card data is correct
+
+Root cause: `app/(tabs)/_layout.tsx` lines 163–174 open `ShareSystemSheet` from the Saved toast with `challenge: ""`, `task: toast.title` ("Saved." survives the `/ (done|saved)\.$/` strip because there is no leading space), no `day`, no `durationDays` and no `streak`. `lib/share-image.ts` `buildSharePaint` then falls back to "Challenge" (shown as CHALLENGE), `day = 1`, `total = day` → "Day 1 of 1", and `streak ?? 0` → "0 days in a row". The toast (`lib/task-complete-toast.ts`) already carries `challengeName`, `currentDay`, `totalDays` from `useTaskFlowV2.ts` line 792 but has no streak field, and `_layout.tsx` passes none of them.
+
+### 04.6 Sticker set
+
+Root cause: `lib/share-image.ts` `MOMENT_STYLES` gives `photo_proof` A/B/D and `self_reported` C/B/D. B is the transparent sticker with a glow (`stickerShadow`) previewed over the stock landscape `SAMPLE_STORY` (`components/share/ShareSystemSheet.tsx` line 9, `ScaledPreview` line 78). Swiping A → B → D changes layout only slightly and the colour row re-tints the same card, so it reads as colour variants. `storyUsesSticker` (line 217) is `style === "B"`, so "Copy sticker" exists on B only, and `shareToInstagramStory` goes as a sticker only on B.
+
+### Fixes and evidence
+
+How the choice sits in the flow (decision, recorded because 04.1 "either option ends the flow" and 04.3 "lands on the post" pull two ways): Post → Day secured when the save secured the day (`openPost` param) → the post → Done → Home. If the day is not yet secured, Post → the post directly → Done → Home. Keep it private → Day secured or the Saved toast → Home, as before. Photo tasks keep the v53.1 ReviewStep chooser (Friends / Everyone / Only me, Only me is private) and do not get a second sheet.
+
+**04.1** New inline `PostChoiceSheet` (`components/task-v2/steps/PostChoiceSheet.tsx`): heading is the task name, label "Who sees this", chips Friends / Everyone (Friends selected by default), one line under them ("Your friends see it in their feed." / "Anyone on GRIIT can see it in the feed."), primary "Post to friends" / "Post to everyone" (`postButtonLabel`), secondary "Keep it private". It is an overlay, not a `ds/Sheet` Modal, because it opens in the same frame the ConfirmDialog or OptionalPhotoSheet Modal closes and iOS will not present two Modals at once. `useTaskFlowV2.ts` `submitWithoutPhoto` now stops at the sheet when the payload has no `audience` (`needsPostChoice`), and `answerPostChoice` resumes `finishSubmit` with the chosen one; the optimistic post goes out only when the choice publishes. Copy lives in `lib/post-choice.ts`. Self-reported text card: `selfReportedCardMeta` in `lib/feed-card-family.ts` prints "Challenge · Day 2 of 7 · 3 days in a row" (streak left off under 1), used by `FeedPostV3.tsx`. Server: `createsActivityPost(selfReported, hasPhoto, audience)` in `lib/post-audience.ts` returns `audiencePublishes(audience)` for a self-reported task without a photo, and `checkins.ts` line 1006 passes `input.audience` (one line).  
+Files: `components/task-v2/steps/PostChoiceSheet.tsx`, `lib/post-choice.ts`, `components/task-v2/useTaskFlowV2.ts`, `components/task-v2/TaskFlowV2.tsx`, `lib/task-secured-nav.ts` (`choiceMade` param), `app/task/secured.tsx` (no second share offer after a choice), `lib/feed-card-family.ts`, `components/feed/FeedPostV3.tsx`, `lib/post-audience.ts`, `backend/trpc/routes/checkins.ts`.  
+Test: `lib/build90-posting.test.ts` 04.1 block (sheet constants, `needsPostChoice`, hook / flow / secured wiring, `selfReportedCardMeta`, `createsActivityPost` with audience, `checkins.ts` passes `input.audience`). Maestro `.maestro/build90-post-choice.yaml` (fresh guest): 7K Steps → Done → sheet with "Who sees this", Friends, Everyone, Keep it private; Everyone flips the line; Keep it private → Day 1 secured. Exit 0. Screenshots `docs/reports/build90/build90-04-post-choice.png`, `build90-04-kept-private.png`. Maestro `.maestro/build90-post-detail.yaml` (fresh `is_test` email `b89post175142@example.com`): Post to friends → Home "1 of 1 done", sheet gone. Exit 0. Screenshot `build90-04-posted-home.png`.  
+Failed before: yes (4 of 4 tests in the block against `70b747b5`). Passes now: yes.
+
+**04.2** `captureHeaderLine(challenge, dayLine)` and `CAPTURE_PROOF_REQUIRED` ("Photo proof required.") in `lib/proof-capture.ts`. `TaskCapture` takes `dayLine` and prints "7K Steps · Day 2 of 7" with "Photo proof required." under it; `CaptureStep` builds the day line with `homeDayLine(currentDay, durationDays)`; `TaskFlowV2` passes `durationDays`. No library path added or removed: the screen was already camera only.  
+Files: `lib/proof-capture.ts`, `components/task-v2/TaskCapture.tsx`, `components/task-v2/steps/CaptureStep.tsx`, `components/task-v2/TaskFlowV2.tsx`.  
+Test: `lib/build90-posting.test.ts` 04.2 block (header line with and without a day, the three files wired, `CameraView` present and no `expo-image-picker` / `launchImageLibraryAsync`). No Maestro: the simulator has no camera, so the capture screen shows its "Camera access is off" state and never reaches the header.  
+Failed before: yes (header test). Passes now: yes.
+
+**04.3** `app/post/[id]/index.tsx` author block is now `ds/Button` Done (primary, `router.replace(TABS_HOME)`, testID `post-done`), `ds/Button` "Share outside GRIIT" (secondary, opens `ShareStickerSheet` with the post's challenge, day, task, streak and photo, testID `post-share-outside`), and a labeled `ds/SegmentedControl` "Who sees this" over Friends / Everyone / Only me that calls the existing `audienceMutation`. The small audience badge is hidden for the author since the control shows it. The `react-native` `Share` import is gone. Copy in `lib/post-detail.ts`; `postDetailAudience` reads an older post with no stored audience as Friends.  
+Files: `app/post/[id]/index.tsx`, `lib/post-detail.ts`.  
+Test: `lib/build90-posting.test.ts` 04.3 block (two Buttons with the right variants and testIDs, SegmentedControl with the label, `Share` import gone, `postDetailAudience`). Maestro: not reachable on this build, see Gates.  
+Failed before: yes (2 of 2). Passes now: yes.
+
+**04.4** `audienceShowsInScopeForViewer({ audience, scope, viewerId, authorId })` in `lib/post-audience.ts` returns true for the author's own post and falls through to `audienceShowsInScope` for everyone else. `feed.ts` `keepEvent` uses it.  
+Files: `lib/post-audience.ts`, `backend/trpc/routes/feed.ts`.  
+Test: `lib/build90-posting.test.ts` 04.4 block (own Friends post stays in Everyone, other people's posts keep the scope rule, `feed.ts` calls the viewer-aware function). Maestro: needs the server, see Gates.  
+Failed before: yes (3 of 3). Passes now: yes.
+
+**04.5** `shareCardFromToast(toast, username)` in `lib/task-complete-toast.ts` maps the toast to the card: challenge name, task name, `currentDay`, `totalDays`, streak only when ≥ 1, photo and camera seal. The toast now carries `streak` from `complete.streakDays`. `app/(tabs)/_layout.tsx` uses the mapper instead of the title strip.  
+Files: `lib/task-complete-toast.ts`, `app/(tabs)/_layout.tsx`, `components/task-v2/useTaskFlowV2.ts`.  
+Test: `lib/build90-posting.test.ts` 04.5 block (mapper; painted card says "READ 10 PAGES A DAY", "Day 2", "of 7" and never "Saved" or "1 of 1"; streak 0 left off; layout uses the mapper). Maestro `build90-post-detail.yaml` Share today on the real account: "7K Steps", "Day 1 of 7", "1 day in a row". Screenshots `build90-04-share-streak.png`, `build90-04-share-progress.png`.  
+Failed before: yes (4 of 4). Passes now: yes.
+
+**04.6** `lib/share-image.ts`: new style H "Day stamp" (challenge in caps, task, big "Day 2 of 7", seal line). `MOMENT_STYLES` is now `photo_proof` H / E / D / A, `self_reported` H / E / D, `day_secured` E / D, `challenge_finished` F / D, `invite` G. `stylesForMoment(moment, { streak, hasPhoto })` drops E (Streak) when the streak is under 1 and A (Photo) when there is no photo, so a photo task with a streak swipes through four cards and a self-reported task through three. D (Progress) for task moments paints the week dots with "Day 2 of 7" instead of "0 of due days". `copyStickerAvailable` is true for every card and the Copy target is on every page; Instagram Story was never style-bound. `ShareSystemSheet.tsx` drops `SAMPLE_STORY`, the `expo-image` import and the B background; the ViewShot background is transparent. `lib/share-colour.ts` knows H so Ink / Orange / White is remembered per card. The B paint code and `storyUsesSticker` remain in `share-image.ts` but no moment lists B; left in place so the chunk does not touch v44.1 paint it does not need.  
+Files: `lib/share-image.ts`, `lib/share-colour.ts`, `components/share/ShareSystemSheet.tsx`, `lib/share-image.test.ts` (old B expectations updated).  
+Test: `lib/build90-posting.test.ts` 04.6 block (four cards with streak and photo, Streak hidden at 0, Photo hidden without a photo, no B anywhere, no `SAMPLE_STORY` in the sheet, the four cards paint different strings, Copy sticker on every card). Maestro `build90-post-detail.yaml`: Share today → Streak card, Copy sticker and Instagram Story present with Ink / Orange / White; swipe → Progress card, Copy sticker still there, Orange applies. Exit 0.  
+Failed before: yes (5 of 5). Passes now: yes.
+
+Files outside the chunk's list, and why: `app/(tabs)/_layout.tsx` (owns the toast → share sheet handoff, 04.5), `backend/trpc/routes/checkins.ts` (one line so a self-reported task can post, 04.1), `lib/task-secured-nav.ts` and `app/task/secured.tsx` (no second share offer after the sheet, 04.1), `lib/feed-card-family.ts` and `components/feed/FeedPostV3.tsx` (the text card's streak, 04.1), `lib/post-audience.ts` (shared client / server rule, 04.1 and 04.4), `lib/task-complete-toast.ts` (04.5), `lib/proof-capture.ts` (pure helpers so 04.2 is unit-testable), `lib/share-colour.ts` (04.6), `lib/share-image.test.ts` (its B expectations contradicted 04.6).
+
+### Gates
+
+- Every task type ends with the sheet and lands on today's tasks or Day secured: `submitWithoutPhoto` is the one exit for timer, journal, counter, run, workout, Did it and check-in payloads (asserted in the test); Maestro `build90-post-choice` Keep it private → Day 1 secured, `build90-post-detail` Post to friends → Home "1 of 1 done". Exit 0 both. On this build the Post branch ends on Home with the day secured rather than on the post, because the deployed server (`70b747b5` is not on Railway) still returns no post id for a self-reported task; the client's "Saved. The post did not go out." lands on a task screen the optimistic return already closed, so what the user sees is Home with the day secured. With the chunk 04 server it goes Day secured → post → Done.
+- The Proof screen's Done works: unit-tested wiring (`post-done` → `TABS_HOME`). Not shown in Maestro: a self-reported post needs the new server, and a photo post needs a camera the simulator does not have.
+- Own post in both feeds: unit-tested rule and `feed.ts` wiring. Not shown live for the same reason (server not deployed in this chunk).
+- Share card correct, screenshots: `docs/reports/build90/build90-04-share-streak.png` ("7K Steps", "1 day in a row", real date and handle), `build90-04-share-progress.png` ("7K STEPS", "Day 1 of 7", Orange). The toast path is covered by the painted-string test.
+- 4 sticker cards, no stock photo, copy works: `stylesForMoment("photo_proof", { streak: 3, hasPhoto: true })` → H / E / D / A; `SAMPLE_STORY` gone; Copy sticker visible on both cards in the Maestro run. The copy action itself (`copyStickerPngToPasteboard`) is unchanged from v44.1.
+- Chunk 01–03 tests pass: full `npx vitest run` 1747 passed, the same 3 baseline failures as `34ef5003` (`challenge-detail-mapping`, `featured-catalog-seed` needs pglite, `join-challenge-error`). `lib/build90-posting.test.ts` 23/23, `lib/share-image.test.ts` 5/5.
+- `npx tsc --noEmit`: 5 errors, the same baseline as a375b25a (4 in `lib/featured-catalog-seed.test.ts`, 1 in `lib/share.ts`). 0 new.
+- eslint on touched files: 0 errors; 3 warnings, all present before this chunk (`comments` useMemo in `post/[id]`, `card.username` dep in `ShareSystemSheet`, `TaskCompleteToast` redeclare).
+- No deploy, no Railway or Supabase change, no SQL written this chunk.
+
+### Needs Yaseen
+
+- Deploy: 04.1 (`checkins.ts` audience on self-reported posts), 04.4 (`feed.ts` own-post rule) and the 03.3 follow-up (one-letter words) are server changes and this chunk does not deploy. Until `railway up`, a self-reported Post to friends saves the task but no post is created (the client says nothing wrong; it ends on Home as Keep it private does), and a Friends post still drops out of your own Everyone feed.
+- Pre-existing, not changed: the guest "Save your challenge" sheet (`components/home/SaveStreakSheet.tsx`) opens over Day secured after a guest's first task, and its back chevron sits under the status bar (no top inset inside the Modal), so it cannot be dismissed by tap; the flows use an email account to get past it. On Day secured the task row sits behind the Done button (`app/task/secured.tsx`, see `build90-04-kept-private.png`). `storyUsesSticker` is still B-only, so Instagram Story sends every card as a background image, not a sticker.
+- Maestro flows that post need `MAESTRO_EMAIL=b89…@example.com` (the `is_test` pattern is `^b8\d.*@example\.com`); accounts created this chunk: `b89post174553`, `b89post174717`, `b89post175001`, `b89post175142` at `@example.com`.
+- Same 3 baseline failing tests as chunk 03.
