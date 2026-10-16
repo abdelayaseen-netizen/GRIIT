@@ -96,8 +96,10 @@ import {
   fmtMmSs,
   initialStep,
   isHonest,
+  logSanityCheck,
   resolveGoBack,
   resolveGoBackFromFailure,
+  resolveLogKind,
   resolveRetryFailedSubmit,
   shouldBlockOnWindow,
   submitWithoutPhotoNext,
@@ -106,6 +108,7 @@ import {
   timerShouldAutoSubmit,
   verificationKindFor,
   wordCount,
+  type LogSanity,
 } from "@/lib/task-flow-state";
 
 type FinishTiming = {
@@ -244,8 +247,19 @@ export function useTaskFlowV2() {
   const [unit, setUnit] = useState<DistanceUnit>(() =>
     runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
   );
-  const [kind, setKind] = useState("Lift");
+  // Build 90 03.1: no preselected activity type. The chip is part of the log.
+  const [kind, setKind] = useState("");
+  const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
+  // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
+  const logKind = resolveLogKind({
+    taskType,
+    taskName,
+    trackingMode: config.tracking_mode ?? null,
+    unit: config.unit ?? null,
+    targetValue: typeof config.target_value === "number" ? config.target_value : null,
+  });
+  const isLogTask = taskType === "run" || taskType === "workout";
   const [soundOn, setSoundOn] = useState(true);
   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
   const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
@@ -1107,11 +1121,11 @@ export function useTaskFlowV2() {
     durationLabel:
       taskType === "timer"
         ? fmtMmSs(requiredSeconds)
-        : taskType === "run"
+        : isLogTask && logKind === "run"
           ? durationSec != null
             ? fmtMmSs(durationSec)
             : ""
-          : taskType === "workout"
+          : isLogTask
             ? `${workoutMin ?? 0} min`
             : undefined,
     startedAtLabel: startedAtIso ? clockLabel(startedAtIso) : undefined,
@@ -1125,15 +1139,55 @@ export function useTaskFlowV2() {
     setCount(Math.min(counterGoal, Math.max(0, v)));
   };
 
-  const onPostRun = () => {
-    void submitWithoutPhoto(
-      {
+  /**
+   * Run: distance + duration (+ value in minutes for a timed run so the floor check passes).
+   * Workout: activity type + minutes (+ optional distance for Cycling / Swim).
+   */
+  const logPayload = (): Record<string, unknown> => {
+    const entry_mode = usedSessionTimer ? "timer" : "hand";
+    if (logKind === "run") {
+      const durationMin = durationSec != null ? durationSec / 60 : undefined;
+      return {
         distance_km: distance != null ? toKilometers(distance, unit) : undefined,
-        duration_min: durationSec != null ? durationSec / 60 : undefined,
-        entry_mode: usedSessionTimer ? "timer" : "hand",
-      },
-      "self_report",
-    );
+        duration_min: durationMin,
+        entry_mode,
+        ...(config.tracking_mode === "time" && durationMin != null ? { value: durationMin } : {}),
+      };
+    }
+    return {
+      duration_min: workoutMin ?? undefined,
+      value: workoutMin ?? undefined,
+      workout_kind: kind || undefined,
+      entry_mode,
+      distance_km: distance != null && distance > 0 ? toKilometers(distance, unit) : undefined,
+    };
+  };
+
+  const onPostRun = () => {
+    void submitWithoutPhoto(logPayload(), "self_report");
+  };
+
+  /** Build 90 03.2: impossible pace / speed asks before anything is saved. */
+  const onLogContinue = () => {
+    const check = logSanityCheck({
+      logKind,
+      kind,
+      distance,
+      durationSec: logKind === "run" ? durationSec : workoutMin != null ? workoutMin * 60 : null,
+      unit,
+    });
+    if (!check.ok) {
+      setLogSanityAsk(check);
+      return;
+    }
+    if (requirePhoto) setStep("capture");
+    else onPostRun();
+  };
+
+  const onLogSaveAnyway = () => {
+    setLogSanityAsk(null);
+    if (requirePhoto) setStep("capture");
+    else onPostRun();
   };
 
   const onUseTimer = () => {
@@ -1143,7 +1197,7 @@ export function useTaskFlowV2() {
       taskId,
       taskTitle: taskName,
       challengeName,
-      timerType: taskType === "run" ? "run_gps" : "run_treadmill",
+      timerType: logKind === "run" ? "run_gps" : "run_treadmill",
       startedAtMs: Date.now(),
       route: ROUTES.TASK_COMPLETE,
     });
@@ -1152,7 +1206,7 @@ export function useTaskFlowV2() {
   const onSessionStop = () => {
     void endLiveActivity();
     setUsedSessionTimer(true);
-    if (taskType === "run") setDurationSec(Math.max(1, sessionUp));
+    if (logKind === "run") setDurationSec(Math.max(1, sessionUp));
     else setWorkoutMin(Math.max(1, Math.round(sessionUp / 60)));
     setStep("log");
   };
@@ -1164,21 +1218,11 @@ export function useTaskFlowV2() {
 
   const onReviewPost = () => {
     void submitPhoto(
-      taskType === "run"
-        ? {
-            distance_km: distance != null ? toKilometers(distance, unit) : undefined,
-            duration_min: durationSec != null ? durationSec / 60 : undefined,
-            entry_mode: usedSessionTimer ? "timer" : "hand",
-          }
-        : taskType === "workout"
-          ? {
-              duration_min: workoutMin ?? undefined,
-              workout_kind: kind,
-              entry_mode: usedSessionTimer ? "timer" : "hand",
-            }
-          : taskType === "reading"
-            ? { value: countRef.current }
-            : {}
+      isLogTask
+        ? logPayload()
+        : taskType === "reading"
+          ? { value: countRef.current }
+          : {}
     );
   };
 
@@ -1262,7 +1306,9 @@ export function useTaskFlowV2() {
           taskType === "timer"
             ? fmtMmSs(requiredSeconds)
             : taskType === "run"
-              ? fmtMmSs(durationSec ?? 0)
+              ? logKind === "run"
+                ? fmtMmSs(durationSec ?? 0)
+                : `${workoutMin ?? 0} min`
               : String(count),
         )
       : null,
@@ -1320,12 +1366,18 @@ export function useTaskFlowV2() {
     onRemoveOne: () => setCount((c) => Math.max(0, c - 1)),
     onTypeCount,
     onPostRun,
+    logKind,
+    logSanityAsk,
+    onLogContinue,
+    onLogSaveAnyway,
+    onLogEdit: () => setLogSanityAsk(null),
     onAttachPhoto: () => setStep("capture"),
     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
+    // Build 90 03.4: Done sends what was counted. The button is inactive below the goal.
     onCompleteCount: () => {
-      countRef.current = counterGoal;
-      setCount(counterGoal);
-      void submitWithoutPhoto({ value: counterGoal }, "self_report");
+      if (count < counterGoal) return;
+      countRef.current = count;
+      void submitWithoutPhoto({ value: count }, "self_report");
     },
     onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
     onHere: () => void submitWithoutPhoto({}, "gps"),

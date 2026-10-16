@@ -6,7 +6,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 |---|---|---|---|---|
 | 01 | Speed | PASSED | 79fecc99 | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
 | 02 | First day | PASSED | c92a7122 | Join sticks (no duo), finish opens first task, empty Home starter card, ring opens task, timer + Finished early?, How it works 3 lines. Evidence in docs/reports/build90.md. |
-| 03 | Task inputs | NOT STARTED | | |
+| 03 | Task inputs | PASSED | (sha below) | Workout chips + duration (distance only Cycling/Swim), pace and speed check with Save anyway, shared journal word rule client + server, counter cannot finish below target. SQL for seeded mismatch in docs/sql/build90.sql. Evidence in docs/reports/build90.md. |
 | 04 | Posting and sharing | NOT STARTED | | |
 | 05 | Links and numbers | NOT STARTED | | |
 | 06 | Words and small fixes | NOT STARTED | | |
@@ -31,3 +31,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 02.4 Home ring opens the task: done, c92a7122
 02.5 Timer length + Finished early?: done, c92a7122
 02.6 Onboarding ends on a task: done, c92a7122
+03.1 Workout is not a run: done, (sha below)
+03.2 Sanity checks: done, (sha below)
+03.3 Journal counts real words: done, (sha below)
+03.4 Counter units: done, (sha below)

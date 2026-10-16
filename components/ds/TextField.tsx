@@ -42,6 +42,7 @@ export type TextFieldProps = {
   | "maxLength"
   | "numberOfLines"
   | "inputAccessoryViewID"
+  | "testID"
 >;
 
 const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(

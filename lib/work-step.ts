@@ -205,7 +205,7 @@ export function formatShortDistance(n: number): string {
   return String(rounded);
 }
 
-/** "{pace} per {unit}." / "{pace} per {unit}. Target met." / "{pace} per {unit}. {n} {unit} short." */
+/** "{pace} per {unit}." / "{pace} per {unit}. {n} {unit} short." Nothing is met until the server saves it. */
 export function runPaceLine(
   distance: number | null,
   durationSec: number | null,
@@ -217,7 +217,7 @@ export function runPaceLine(
   if (target == null) return head;
   const short = Math.round((target - distance) * 100) / 100;
   if (short > 0) return `${head} ${formatShortDistance(short)} ${unit} short.`;
-  return `${head} Target met.`;
+  return head;
 }
 
 export function runPrimaryLabel(hasCamera: boolean): string {

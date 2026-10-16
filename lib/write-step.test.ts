@@ -42,7 +42,7 @@ describe("write CTA", () => {
 
   it("counts words the same way the submit path does", () => {
     expect(wordCount("one two three")).toBe(3);
-    expect(writeCtaLabel(wordCount("a"), 2)).toBe("Write 1 more word");
+    expect(writeCtaLabel(wordCount("ab"), 2)).toBe("Write 1 more word");
   });
 });
 

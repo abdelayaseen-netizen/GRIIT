@@ -186,3 +186,63 @@ Test: Maestro `build90-first-day.yaml` (6 taps to task). Exit 0.
 
 - Optional: deploy backend so join responses include `first_task` without the getById enrich.
 - No SQL.
+
+## 03 Task inputs
+
+### 03.1 Workout is not a run
+
+Root cause: `backend/lib/challenge-tasks.ts` `toTaskType` (line 214) and `buildTaskConfigFromInput` (line 271) store a Workout as DB `task_type: "run"`; `lib/challenge-packs.ts` line 82 sends it as `type: "run"`, `trackingMode: "time"`, `unit: "minutes"`. Home passes the raw `task_type` (`app/(tabs)/index.tsx` line 360), so `useTaskFlowV2.ts` line 171 sees `taskType === "run"` and `LogStep.tsx` line 147 renders the run branch: Distance in mi/km plus Duration. `buildTaskConfigParam` drops `tracking_mode` and `unit`, so the task screen cannot tell a workout from a run. The workout branch (line 196) has chips Lift / Push / Pull / Conditioning and no minimum line. The client never sends `value` for a run or workout, so a workout with a floor is rejected by `checkins.ts` line 677 ("You logged 0").
+
+### 03.2 Sanity checks
+
+Root cause: no pace or speed check exists. `lib/work-step.ts` `runPaceLine` (line 220) prints "Target met." as soon as distance ≥ target, before anything is saved. `CountStep.tsx` line 108 shows a check and "Target met" the moment the count reaches the goal. 3 mi in 12:50 is 4:17 per mile and is accepted.
+
+### 03.3 Journal counts real words
+
+Root cause: `lib/task-flow-state.ts` `wordCount` (line 88) is `split(/\s+/).filter(Boolean)`; "...." is 1 and "my my my my my my" is 6. `backend/trpc/routes/checkins.ts` repeats the same split at lines 520, 656, and 735, so the server accepts the same junk. `WriteStep.tsx` editor has `padding: 0` under the counter block; the first line has no clearance from the word bar.
+
+### 03.4 Counter units
+
+Root cause: `useTaskFlowV2.ts` `onCompleteCount` (line 1325) sets `count = counterGoal` and submits `value: counterGoal` no matter what was counted; `CountStep.tsx` line 164 never disables the Done button. The unit comes from `counterDisplayUnit(taskType, config)` (config `unit` / `unit_label` / `target_unit`, else `pages` for `reading`), so a `reading` task titled "Read 30 min" counts pages because that is what the row says. No repo seed carries that row (`scripts/seed-challenges.sql`, `supabase/migrations/*starter*`, `lib/featured-catalog-seed.ts`, `backend/lib/daily-challenge-templates.ts` all use `timer` for minutes); it is live-only data.
+
+### Fixes and evidence
+
+**03.1** `buildTaskConfigParam` now carries `tracking_mode` and `unit`. `resolveLogKind` in `lib/task-flow-state.ts` turns a DB `run` with `tracking_mode: "time"` (or unit minutes, or a workout name) into `workout`; a run with a distance target stays `run`. LogStep workout branch: chips Strength / Basketball / Swim / Cycling / Yoga / Sports / Other, Duration in min, "30 min minimum" in plain words, Distance (optional) only for Cycling and Swim, no mm:ss. The client sends `value` minutes for workouts and timed runs so the server floor check reads the right number.  
+Files: `lib/build-task-config-param.ts`, `lib/task-helpers.ts`, `lib/task-flow-state.ts`, `components/task-v2/steps/LogStep.tsx`, `components/task-v2/useTaskFlowV2.ts`, `components/task-v2/TaskFlowV2.tsx`.  
+Test: `lib/build90-task-inputs.test.ts` `resolveLogKind…`, `workout chips…`, `distance field…`, `minimum line…`. Maestro `.maestro/build90-task-inputs.yaml` WORKOUT block: 7 chips, Duration, "30 min minimum", no Distance; Cycling shows "Distance (optional)", Strength hides it. Exit 0. Screenshots `build90-03-workout.png`, `build90-03-workout-cycling.png`.  
+Failed before: yes (workout screen asked for Distance in mi). Passes now: yes.
+
+**03.2** `runPaceCheck` flags under 4:30 per mile or over 30:00 per mile; `cyclingSpeedCheck` flags over 35 mph (km inputs convert first). `logSanityCheck` runs on Done / Next and opens ConfirmDialog "That pace looks off." / "Check your distance and time." with Edit and Save anyway. Save anyway posts the same payload. "Target met" removed from `runPaceLine` and CountStep; nothing says met before the save.  
+Files: `lib/task-flow-state.ts`, `lib/work-step.ts`, `components/task-v2/useTaskFlowV2.ts`, `components/task-v2/TaskFlowV2.tsx`, `components/task-v2/steps/CountStep.tsx`.  
+Test: `lib/build90-task-inputs.test.ts` edge values 4:29 / 4:30 / 30:00 / 30:01 per mile, 35 / 35.01 mph, 56 / 57 km in an hour, 3 mi in 12:50. Maestro RUN block: 3 mi, 12:50 → "That pace looks off." / "Save anyway" / Edit closes it; "Target met" not on screen. Exit 0. Screenshot `build90-03-pace-off.png`.  
+Failed before: yes (3 mi in 12:50 accepted silently). Passes now: yes.
+
+**03.3** One rule, `countJournalWords` in `backend/lib/journal-verification.ts`: a word needs 2 or more letters, the same word counts at most 3 times. `lib/task-flow-state.ts` `wordCount` imports it (allowlisted in `lib/backend-client-imports.test.ts`); `checkins.ts` uses it in all three places (reject check, floor check, logged word count) and now floor-checks `text` journals too. WriteStep editor gets `paddingTop` and a three-line `minHeight`; the title and honesty line fold while the keyboard is up so the first line stays clear of the word bar.  
+Files: `backend/lib/journal-verification.ts`, `lib/task-flow-state.ts`, `backend/trpc/routes/checkins.ts`, `components/task-v2/steps/WriteStep.tsx`, `lib/backend-client-imports.test.ts`, `lib/task-flow-state.test.ts`, `lib/write-step.test.ts`.  
+Test: `lib/build90-task-inputs.test.ts` "...." → 0, "my my my my my my" → 3, 20-word sentence → 20, server uses the shared function and no raw split. Maestro WRITE block: my×6 → "3 of 20", "...." → "0 of 20". Exit 0. Screenshots `build90-03-write-repeats.png` (typed line visible under the bar with the keyboard up), `build90-03-write-dots.png`.  
+Failed before: yes. Passes now: yes.
+
+**03.4** `counterDoneEnabled` / `counterDoneLabel` in `lib/counter.ts`: below target the button reads "22 pages left" and is disabled; at target it reads "Done · 30 pages". `onCompleteCount` submits the real count and refuses below target. Unit comes from the task row as before. Seeded mismatch ("Read 30 min" counting pages) is live-only; read and fix SQL written to `docs/sql/build90.sql`, not run.  
+Files: `lib/counter.ts`, `components/task-v2/steps/CountStep.tsx`, `components/task-v2/useTaskFlowV2.ts`, `docs/sql/build90.sql`.  
+Test: `lib/build90-task-inputs.test.ts` `counter cannot finish below target…`. Maestro COUNT block: "30 pages left" shown and "Done · 30 pages" absent at 0; Type it → 30 → "Done · 30 pages". Exit 0. Screenshots `build90-03-counter-zero.png`, `build90-03-counter-full.png`.  
+Failed before: yes (Done at 0 saved 30). Passes now: yes.
+
+Other files in this chunk: `components/ds/TextField.tsx` (testID passthrough so Maestro can target inputs), `lib/counter.ts`, `lib/work-step.ts`, `lib/task-helpers.ts`, `lib/build-task-config-param.ts`, `useTaskFlowV2.ts`, `TaskFlowV2.tsx`, `checkins.ts`, `lib/backend-client-imports.test.ts`. Each is named above with the item that needed it.
+
+### Gates
+
+- Workout shows type + duration, no distance unless Cycling or Swim: unit + Maestro WORKOUT block. Exit 0.
+- Pace and speed checks with Save anyway: unit edge values + Maestro RUN block. Exit 0.
+- Journal rule identical client and server: one function, imported by both; `checkins.ts` has no raw `split(/\s+/)` left (asserted in the test).
+- Counter cannot finish below target: unit + Maestro COUNT block. Exit 0.
+- Chunk 01–02 tests still pass: full vitest 1723 passed, the same 3 baseline failures as `34ef5003` (`challenge-detail-mapping`, `featured-catalog-seed` needs pglite, `join-challenge-error`). Maestro `build90-timer-early`, `build90-empty-starter`, `build90-first-day`, `build90-join-suggest` all exit 0 on this build. `build90-done-count` needs `MAESTRO_EMAIL` and was not run.
+- `npx tsc --noEmit`: same 5 baseline errors as a375b25a (4 in `lib/featured-catalog-seed.test.ts`, 1 in `lib/share.ts`). No new errors.
+- eslint on touched files: 0 errors.
+- Backend: Yaseen approved. See the deploy line below.
+
+### Needs Yaseen
+
+- SQL in `docs/sql/build90.sql` (chunk 03, 03.4): Step 1 lists reading / counter / water rows whose title says minutes; Step 2 converts them to `timer`. Run Step 1 first and read the list before Step 2.
+- One-letter words ("I", "a") count 0 under the literal "2 or more letters" rule, so "I went to a park" is 3. Say if you want "I" to count.
+- Pre-existing, not changed: task steps add `paddingTop: insets.top` on top of `Screen`'s own safe-area padding (double top gap); ConfirmDialog backdrop covers the whole screen; water unit is "oz" on the client (`lib/counter-log.ts`) and "cups" on the server.
+- Same 3 baseline failing tests as chunk 02.

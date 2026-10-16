@@ -26,6 +26,12 @@ import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
 import {
+  LOG_SANITY_EDIT,
+  LOG_SANITY_MESSAGE,
+  LOG_SANITY_SAVE_ANYWAY,
+  LOG_SANITY_TITLE,
+} from "@/lib/task-flow-state";
+import {
   FINISHED_EARLY_CONFIRM,
   FINISHED_EARLY_MESSAGE,
   FINISHED_EARLY_TITLE,
@@ -108,7 +114,7 @@ export function TaskFlowV2() {
 
       {f.step === "log" ? (
         <LogStep
-          taskType={f.taskType}
+          taskType={f.logKind}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
           headerLabel={f.chromeTitle}
@@ -126,8 +132,8 @@ export function TaskFlowV2() {
           onDuration={f.setDurationSec}
           onMinutes={f.setWorkoutMin}
           onUseTimer={f.onUseTimer}
-          onNextPhoto={f.onNextPhoto}
-          onPost={f.onPostRun}
+          onNextPhoto={f.onLogContinue}
+          onPost={f.onLogContinue}
           onBack={f.goBack}
           fromGps={f.fromGps}
           hasCamera={f.requirePhoto}
@@ -343,6 +349,15 @@ export function TaskFlowV2() {
           setConfirmEarly(false);
           f.onFinishEarly();
         }}
+      />
+      <ConfirmDialog
+        visible={f.logSanityAsk != null && !f.logSanityAsk.ok}
+        title={f.logSanityAsk && !f.logSanityAsk.ok ? f.logSanityAsk.title : LOG_SANITY_TITLE}
+        message={f.logSanityAsk && !f.logSanityAsk.ok ? f.logSanityAsk.message : LOG_SANITY_MESSAGE}
+        cancelLabel={LOG_SANITY_EDIT}
+        confirmLabel={LOG_SANITY_SAVE_ANYWAY}
+        onCancel={f.onLogEdit}
+        onConfirm={f.onLogSaveAnyway}
       />
     </View>
   );

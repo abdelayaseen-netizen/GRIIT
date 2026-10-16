@@ -70,6 +70,14 @@ export function buildTaskConfigParam(task: Record<string, unknown> | undefined |
       minutesLeft: typeof t.minutesLeft === "number" ? t.minutesLeft : undefined,
       // Additive only — optional Ready subtype source for run (and others).
       unit_label: typeof cfg.unit_label === "string" ? cfg.unit_label : undefined,
+      // Build 90 03.1: a Workout is stored as run + tracking_mode "time" + unit "minutes".
+      tracking_mode:
+        typeof t.tracking_mode === "string"
+          ? t.tracking_mode
+          : typeof cfg.tracking_mode === "string"
+            ? cfg.tracking_mode
+            : undefined,
+      unit: typeof cfg.unit === "string" ? cfg.unit : typeof t.unit === "string" ? t.unit : undefined,
       // Counter/water/reading targets — prefer flattened, fall back to config.
       daily_target:
         typeof t.daily_target === "number"

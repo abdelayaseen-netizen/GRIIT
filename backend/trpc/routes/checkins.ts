@@ -53,6 +53,7 @@ import {
 } from "../../lib/workout-verification";
 import {
   buildJournalVerification,
+  countJournalWords,
   type JournalLogFacts,
   type JournalVerification,
 } from "../../lib/journal-verification";
@@ -515,10 +516,7 @@ export const checkinsRouter = createTRPCRouter({
         }
       } else if (!isMinimumDay && isJournalProof) {
         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
-          const rejectNote = (input.noteText ?? "").trim();
-          const rejectWords = rejectNote
-            ? rejectNote.split(/\s+/).filter(Boolean).length
-            : 0;
+          const rejectWords = countJournalWords(input.noteText ?? "");
           const rejectFloor =
             typeof input.floor_min === "number" && input.floor_min > 0
               ? input.floor_min
@@ -650,10 +648,11 @@ export const checkinsRouter = createTRPCRouter({
       ) {
         throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minDurationMinutes} minutes. You completed ${input.value} minutes.` });
       }
-      const isJournal = taskType === "journal" || taskType === "manual";
+      // "text" is the task-model name for a journal row; it was missing here, so text journals skipped the floor.
+      const isJournal = taskType === "journal" || taskType === "text" || taskType === "manual";
       if (!isMinimumDay && isJournal && minWords > 0) {
-        const text = (input.noteText ?? "").trim();
-        const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+        // Build 90 03.3: the same rule as the client (2+ letters, a word at most 3 times).
+        const wordCount = countJournalWords(input.noteText ?? "");
         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
       }
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
@@ -730,10 +729,7 @@ export const checkinsRouter = createTRPCRouter({
             }
           : null;
 
-      const journalNote = (input.noteText ?? "").trim();
-      const journalWordCount = journalNote
-        ? journalNote.split(/\s+/).filter(Boolean).length
-        : 0;
+      const journalWordCount = countJournalWords(input.noteText ?? "");
       const journalFloorMin: number | null =
         typeof input.floor_min === "number" && input.floor_min > 0
           ? input.floor_min
