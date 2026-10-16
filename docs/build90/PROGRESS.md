@@ -7,7 +7,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 01 | Speed | PASSED | 79fecc99 | Timings, Maestro, photo sizes, and the backend deploy are recorded in docs/reports/build90.md. tsc has the same 5 errors as a375b25a. |
 | 02 | First day | PASSED | c92a7122 | Join sticks (no duo), finish opens first task, empty Home starter card, ring opens task, timer + Finished early?, How it works 3 lines. Evidence in docs/reports/build90.md. |
 | 03 | Task inputs | PASSED | b2693fc3 | Workout chips + duration (distance only Cycling/Swim), pace and speed check with Save anyway, shared journal word rule client + server, counter cannot finish below target. SQL for seeded mismatch in docs/sql/build90.sql. Backend deployed, /api/health commit 49f6ae0. Evidence in docs/reports/build90.md. |
-| 04 | Posting and sharing | FAILED | 449168d1 | Code complete, 23 new tests, tsc same 5 baseline errors, Maestro build90-post-choice + build90-post-detail exit 0 with screenshots in docs/reports/build90/. Blocking: two gates (Proof screen Done, own post in both feeds) need the chunk 04 server on Railway (checkins.ts audience, feed.ts own-post rule); this chunk does not deploy. After Yaseen deploys, re-run the two flows on the post path and flip to PASSED. Evidence in docs/reports/build90.md. |
+| 04 | Posting and sharing | FAILED | de0dd8c2 | Code complete, 23 new tests, tsc same 5 baseline errors, Maestro build90-post-choice + build90-post-detail exit 0 with screenshots in docs/reports/build90/. Blocking: two gates (Proof screen Done, own post in both feeds) need the chunk 04 server on Railway (checkins.ts audience, feed.ts own-post rule); this chunk does not deploy. After Yaseen deploys, re-run the two flows on the post path and flip to PASSED. Evidence in docs/reports/build90.md. |
 | 05 | Links and numbers | NOT STARTED | | |
 | 06 | Words and small fixes | NOT STARTED | | |
 | 07 | Safety | NOT STARTED | | |
@@ -36,9 +36,9 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 03.3 Journal counts real words: done, b2693fc3
 03.4 Counter units: done, b2693fc3
 03.3 follow-up ("I" and "a" count): done, 70b747b5
-04.1 One clear post choice after every task: done (client), server part awaits deploy, 449168d1
-04.2 Photo-proof tasks say so up front: done, 449168d1
-04.3 The Proof screen has a finish: done, 449168d1
-04.4 Your own post always shows in your feed: done, server part awaits deploy, 449168d1
-04.5 Share card data is correct: done, 449168d1
-04.6 Sticker set: done, 449168d1
+04.1 One clear post choice after every task: done (client), server part awaits deploy, de0dd8c2
+04.2 Photo-proof tasks say so up front: done, de0dd8c2
+04.3 The Proof screen has a finish: done, de0dd8c2
+04.4 Your own post always shows in your feed: done, server part awaits deploy, de0dd8c2
+04.5 Share card data is correct: done, de0dd8c2
+04.6 Sticker set: done, de0dd8c2
