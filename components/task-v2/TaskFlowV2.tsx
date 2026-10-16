@@ -8,6 +8,7 @@ import { styles } from "./taskFlowStyles";
 import { useTaskFlowV2 } from "./useTaskFlowV2";
 import { AskStep } from "./steps/AskStep";
 import { OptionalPhotoSheet } from "./steps/OptionalPhotoSheet";
+import { PostChoiceSheet } from "./steps/PostChoiceSheet";
 import { BlockedStep } from "./steps/BlockedStep";
 import { CaptureStep } from "./steps/CaptureStep";
 import { CheckinEntryStep } from "./steps/CheckinEntryStep";
@@ -155,6 +156,7 @@ export function TaskFlowV2() {
           challengeName={f.challengeName}
           taskName={f.taskName}
           currentDay={f.currentDay}
+          durationDays={f.durationDays}
           workDone={f.workDone}
           photoAfter={f.photoAfter}
           windowLabel={f.windowLabel}
@@ -250,7 +252,7 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "ask" && f.photoMode === "optional" ? (
+      {f.step === "ask" && f.photoMode === "optional" && !f.postChoiceOpen ? (
         <OptionalPhotoSheet
           taskName={f.taskName}
           loading={f.saving}
@@ -323,6 +325,15 @@ export function TaskFlowV2() {
         />
       ) : null}
 
+      <PostChoiceSheet
+        visible={f.postChoiceOpen}
+        taskName={f.taskName}
+        audience={f.postChoiceAudience}
+        onAudience={f.setPostChoiceAudience}
+        onPost={f.onPostChoicePost}
+        onKeep={f.onPostChoiceKeep}
+        loading={f.saving}
+      />
       <DiscardPhotoModal
         visible={f.discardAsk}
         onDiscard={f.onDiscardPhoto}

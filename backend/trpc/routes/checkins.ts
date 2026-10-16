@@ -1003,8 +1003,8 @@ export const checkinsRouter = createTRPCRouter({
       const verificationMethod = verificationMethodFor(gatesFor(task));
       const hasPhoto = !!proofUrl;
       let postedEventId: string | null = null;
-      if (!createsActivityPost(input.self_reported === true, hasPhoto)) {
-        // Self-reported, no photo: the check-in is saved and no feed row is written.
+      if (!createsActivityPost(input.self_reported === true, hasPhoto, input.audience)) {
+        // Self-reported, no photo, no audience chosen: the check-in is saved and no feed row is written.
       } else {
       const shareCols = input.audience
         ? shareColumns(shareStateForAudience(input.audience))

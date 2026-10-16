@@ -2,12 +2,14 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
+import { homeDayLine } from "@/lib/home-day-total";
 import { TaskCapture } from "../TaskCapture";
 
 type Props = {
   challengeName: string;
   taskName: string;
   currentDay: number;
+  durationDays?: number;
   workDone?: string | null;
   photoAfter?: string | null;
   windowLabel?: string;
@@ -18,6 +20,8 @@ type Props = {
 export function CaptureStep({
   challengeName,
   taskName,
+  currentDay,
+  durationDays,
   windowLabel,
   onCancel,
   onCaptured,
@@ -28,6 +32,7 @@ export function CaptureStep({
       <TaskCapture
         challenge={challengeName}
         task={taskName}
+        dayLine={homeDayLine(currentDay, durationDays)}
         windowLabel={windowLabel}
         onCancel={onCancel}
         onCaptured={onCaptured}

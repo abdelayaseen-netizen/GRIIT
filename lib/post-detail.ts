@@ -2,6 +2,18 @@ import type { StampLabel } from "@/components/ds/Stamp";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 
 export const POST_DETAIL_TITLE = "Proof";
+/** Build 90 04.3: the author's finish on the Proof screen. */
+export const POST_DETAIL_DONE = "Done";
+export const POST_DETAIL_SHARE_OUTSIDE = "Share outside GRIIT";
+export const POST_DETAIL_AUDIENCE_LABEL = "Who sees this";
+
+/** The audience stored on the post, or Friends when an older row has none. */
+export function postDetailAudience(
+  audience: string | null | undefined,
+): "friends" | "everyone" | "only_me" {
+  if (audience === "everyone" || audience === "only_me") return audience;
+  return "friends";
+}
 export const COMMENTS_HEADING = "Comments";
 export const COMMENT_PLACEHOLDER = "Add a comment";
 export const COMMENTS_EMPTY = "No comments yet.";

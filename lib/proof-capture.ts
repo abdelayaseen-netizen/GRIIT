@@ -9,6 +9,17 @@ import { MIN_PROOF_IMAGE_BYTES } from "@/lib/proof-image-bytes";
 const MAX_EDGE = 1600;
 const MIN_EDGE = 32;
 
+/** Build 90 04.2: the capture screen says up front that this task needs a photo. */
+export const CAPTURE_PROOF_REQUIRED = "Photo proof required.";
+
+/** "Read 10 pages a day · Day 2 of 7". The day is left off when it is unknown. */
+export function captureHeaderLine(challenge: string, dayLine?: string | null): string {
+  const name = challenge.trim();
+  const day = dayLine?.trim() ?? "";
+  if (name && day) return `${name} · ${day}`;
+  return name || day;
+}
+
 export function captureEditPlan(
   width: number,
   height: number,

@@ -55,6 +55,7 @@ function TaskSecuredInner() {
     freezeCap?: string;
     freezeAtCap?: string;
     openPost?: string;
+    choiceMade?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -102,7 +103,9 @@ function TaskSecuredInner() {
       }),
   );
   const shareEventId = held?.shareEventId ?? paramEventId;
-  const offerShare = (held?.closingHasPhoto ?? closingPhoto) && proofs.length > 0;
+  // Build 90 04.1: the post-or-private choice was made before the save; do not ask again here.
+  const choiceMade = firstString(params.choiceMade) === "1";
+  const offerShare = !choiceMade && (held?.closingHasPhoto ?? closingPhoto) && proofs.length > 0;
   const [meta, setMeta] = useState<{
     taskCount: number;
     challengeCount: number;

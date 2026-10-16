@@ -36,7 +36,7 @@ import {
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
 import { isHiddenFromRealViewers, testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
-import { audienceShowsInScope, canSeePostAudience, profilePostVisible } from "../../../lib/post-audience";
+import { audienceShowsInScopeForViewer, canSeePostAudience, profilePostVisible } from "../../../lib/post-audience";
 import { localDayStartIso, pickTodayPosters } from "../../lib/today-posters";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -116,7 +116,8 @@ export const feedRouter = createTRPCRouter({
       }
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
       const audience = (ev.metadata as { audience?: string | null } | null)?.audience;
-      if (!audienceShowsInScope(audience, input.scope)) return false;
+      // Build 90 04.4: the author's own post stays in both scopes.
+      if (!audienceShowsInScopeForViewer({ audience, scope: input.scope, viewerId, authorId: ev.user_id })) return false;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
       if (ev.challenge_id && !ch) return false;
       const vis = normalizeChallengeVisibility(ch?.visibility);

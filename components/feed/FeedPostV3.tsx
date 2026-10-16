@@ -23,6 +23,7 @@ import {
   feedCardSubject,
   feedCardVariant,
   feedProofSubject,
+  selfReportedCardMeta,
 } from "@/lib/feed-card-family";
 import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
@@ -248,7 +249,9 @@ export default function FeedPostV3({
             </View>
           </View>
           <View style={styles.selfRule} />
-          <Text style={styles.selfMeta}>{`${post.challengeName} · Day ${post.currentDay} of ${post.totalDays}`}</Text>
+          <Text style={styles.selfMeta}>
+            {selfReportedCardMeta(post.challengeName, post.currentDay, post.totalDays, post.streakCount)}
+          </Text>
           {post.caption ? <Text style={styles.selfCaption}>{post.caption}</Text> : null}
         </View>
         </DoubleTapRespect>

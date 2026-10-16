@@ -63,6 +63,17 @@ export function feedProofSubject(day: number, total: number, challenge: string):
   return name ? `${name} · ${dayLine}` : dayLine;
 }
 
+/**
+ * Build 90 04.1: the self-reported text card names the challenge, the day and the
+ * streak. The streak is left off at 0.
+ */
+export function selfReportedCardMeta(challenge: string, day: number, total: number, streak: number): string {
+  const base = feedProofSubject(day, total, challenge);
+  const n = Number.isFinite(streak) ? Math.floor(streak) : 0;
+  if (n < 1) return base;
+  return `${base} · ${n} ${n === 1 ? "day" : "days"} in a row`;
+}
+
 export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string {
   if (variant === "task_camera") return "Camera · Taken in the app";
   if (variant === "task_self") {

@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
-  Share,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,6 +24,9 @@ import Divider from "@/components/ds/Divider";
 import TextField from "@/components/ds/TextField";
 import Skeleton from "@/components/ds/Skeleton";
 import CommentRow from "@/components/ds/CommentRow";
+import Button from "@/components/ds/Button";
+import SegmentedControl from "@/components/ds/SegmentedControl";
+import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
@@ -34,7 +36,11 @@ import { commentRowParts } from "@/lib/comment-row";
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
+  POST_DETAIL_AUDIENCE_LABEL,
+  POST_DETAIL_DONE,
+  POST_DETAIL_SHARE_OUTSIDE,
   POST_DETAIL_TITLE,
+  postDetailAudience,
   commentsCountLabel,
   commentsSectionKind,
   composerFieldGround,
@@ -74,6 +80,7 @@ function PostThreadScreenInner() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -217,41 +224,33 @@ function PostThreadScreenInner() {
               task: displayPost.taskName,
             })}
           </Text>
-          {audienceBadge(displayPost.audience) ? (
+          {audienceBadge(displayPost.audience) && !(user?.id && displayPost.userId === user.id) ? (
             <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
           ) : null}
           {user?.id && displayPost.userId === user.id ? (
-            <View style={styles.authorCopy}>
-              <Pressable
-                onPress={() => {
-                  void Share.share({
-                    message: displayPost.caption?.trim() || `${displayPost.challengeName} on GRIIT`,
-                  });
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Share outside GRIIT"
-              >
-                <Text style={styles.author}>Share outside GRIIT</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => router.replace(ROUTES.TABS_HOME as never)}
-                accessibilityRole="button"
-                accessibilityLabel="Back to today"
-              >
-                <Text style={styles.author}>Back to today</Text>
-              </Pressable>
-              <View style={styles.authorRow}>
-                {POST_AUDIENCES.map((choice) => (
-                  <Pressable
-                    key={choice}
-                    onPress={() => audienceMutation.mutate(choice)}
-                    accessibilityRole="button"
-                    accessibilityLabel={audienceLabel(choice)}
-                  >
-                    <Text style={styles.time}>{audienceLabel(choice)}</Text>
-                  </Pressable>
-                ))}
+            <View style={styles.finish}>
+              <View style={styles.audienceBlock}>
+                <Text style={styles.count}>{POST_DETAIL_AUDIENCE_LABEL}</Text>
+                <SegmentedControl
+                  items={POST_AUDIENCES.map((choice) => audienceLabel(choice))}
+                  value={audienceLabel(postDetailAudience(displayPost.audience))}
+                  onChange={(label) => {
+                    const choice = POST_AUDIENCES.find((a) => audienceLabel(a) === label);
+                    if (choice && choice !== postDetailAudience(displayPost.audience)) audienceMutation.mutate(choice);
+                  }}
+                />
               </View>
+              <Button
+                label={POST_DETAIL_DONE}
+                onPress={() => router.replace(ROUTES.TABS_HOME as never)}
+                testID="post-done"
+              />
+              <Button
+                label={POST_DETAIL_SHARE_OUTSIDE}
+                variant="secondary"
+                onPress={() => setShareOpen(true)}
+                testID="post-share-outside"
+              />
             </View>
           ) : null}
           {commentsCountLabel(displayPost.commentCount) ? (
@@ -267,6 +266,8 @@ function PostThreadScreenInner() {
       </View>
     );
   }, [loading, displayPost, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation]);
+
+  const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
 
   const renderCommentItem = useCallback(
     ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {
@@ -404,6 +405,25 @@ function PostThreadScreenInner() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+      {ownPost && displayPost ? (
+        <ShareStickerSheet
+          visible={shareOpen}
+          onDismiss={() => setShareOpen(false)}
+          variant="day"
+          moment={postDetailPhotoUri(displayPost) ? "photo_proof" : "self_reported"}
+          streak={displayPost.streakCount}
+          day={{
+            challenge: displayPost.challengeName,
+            task: displayPost.taskName ?? undefined,
+            day: displayPost.currentDay,
+            durationDays: displayPost.totalDays,
+            proof: postDetailPhotoUri(displayPost) ? "camera" : "self",
+            photoUri: postDetailPhotoUri(displayPost),
+            photoShared: true,
+            username: displayPost.username,
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -445,6 +465,8 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.lg,
   },
   authorCopy: { flex: 1, gap: PT },
+  finish: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.xs },
+  audienceBlock: { gap: DS_V3.space.sm, paddingBottom: DS_V3.space.sm },
   author: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,

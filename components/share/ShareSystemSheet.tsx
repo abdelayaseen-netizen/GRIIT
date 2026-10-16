@@ -2,11 +2,9 @@
  * v44.1 share sheet. Swipe styles, pick a colour, caption as text only.
  * The preview is ShareImage scaled. The file handed to every target is a
  * view-shot of that same component at 1080 × 1920.
+ * Build 90 04.6: four distinct cards per moment, no stock photo behind any of them.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Image } from "expo-image";
-
-const SAMPLE_STORY = require("../../design/handoff/v51/handoff/GRIIT-v51-handoff/atlas/assets/proofs/sunrise1.jpg");
 import {
   Modal,
   Pressable,
@@ -50,6 +48,7 @@ import {
   SHARE_TARGET_STORY,
   SHARE_W,
   colourForStyle,
+  copyStickerAvailable,
   shareJoinLine,
   shareMessageBody,
   storyUsesSticker,
@@ -75,7 +74,6 @@ function ScaledPreview({ card, frameW, frameH }: { card: ShareCardInput; frameW:
   const scaledH = SHARE_H * scale;
   return (
     <View style={[styles.previewClip, { width: frameW, height: frameH, alignItems: "center", justifyContent: "center" }]}>
-      {card.style === "B" ? <Image source={SAMPLE_STORY} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
       <View style={{ width: scaledW, height: scaledH, overflow: "hidden" }}>
         <View
           style={{
@@ -107,7 +105,10 @@ export default function ShareSystemSheet({
   const { width, height } = useWindowDimensions();
   const previewH = Math.min(SHARE_PREVIEW_H, Math.max(280, height - insets.top - insets.bottom - 360));
   const previewW = Math.round(previewH * (SHARE_W / SHARE_H));
-  const stylesFor = stylesForMoment(moment);
+  const stylesFor = useMemo(
+    () => stylesForMoment(moment, { streak: card.streak, hasPhoto: Boolean(card.photoUri) }),
+    [moment, card.streak, card.photoUri],
+  );
   const shotRef = useRef<ViewShot>(null);
   const [index, setIndex] = useState(0);
   const [memory, setMemory] = useState<ColourMemory>({});
@@ -165,7 +166,7 @@ export default function ShareSystemSheet({
           shareJoinLine({ username: card.username, inviteId: card.inviteCode }),
         );
         if (kind === "copy") {
-          if (!storyUsesSticker(styleId)) return;
+          if (!copyStickerAvailable(styleId)) return;
           await copyStickerPngToPasteboard(uri);
           setSaveStatus(STICKER.copied);
           setTimeout(() => setSaveStatus(null), 2200);
@@ -199,7 +200,7 @@ export default function ShareSystemSheet({
   );
 
   const targets = [
-    ...(storyUsesSticker(styleId)
+    ...(copyStickerAvailable(styleId)
       ? [{ id: "copy" as const, label: SHARE_TARGET_COPY, icon: Copy, primary: false }]
       : []),
     ...(showStory ? [{ id: "story" as const, label: SHARE_TARGET_STORY, icon: Instagram, primary: false }] : []),
@@ -309,7 +310,7 @@ export default function ShareSystemSheet({
           <ViewShot
             ref={shotRef}
             options={{ format: "png", quality: 1, result: "tmpfile" }}
-            style={{ width: SHARE_W, height: SHARE_H, backgroundColor: input.style === "B" ? "transparent" : "transparent" }}
+            style={{ width: SHARE_W, height: SHARE_H, backgroundColor: "transparent" }}
           >
             <ShareImage input={input} />
           </ViewShot>

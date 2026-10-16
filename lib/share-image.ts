@@ -34,7 +34,12 @@ export const SHARE_TARGET_SAVE = "Save";
 export const SHARE_TARGET_MESSAGES = "Messages";
 export const SHARE_TARGET_MORE = "More";
 
-export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G";
+/**
+ * A photo proof · B transparent glow sticker (build 90 04.6: no moment reaches it) ·
+ * C self-reported check · D progress grid · E streak · F finished · G invite ·
+ * H day stamp (build 90 04.6).
+ */
+export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
 export type ShareColourId = "ink" | "orange" | "white";
 export type ShareMoment =
   | "photo_proof"
@@ -87,10 +92,15 @@ export const SHARE_PALETTES: Record<ShareColourId, SharePalette> = {
 
 export const SHARE_COLOURS: ShareColourId[] = ["ink", "orange", "white"];
 
+/**
+ * Build 90 04.6: four different stickers, not colour variants of one.
+ * 1 Day stamp (H) · 2 Streak (E, hidden at 0) · 3 Progress (D) · 4 Photo proof (A, only with a photo).
+ * The glow / landscape sticker (B) is gone from every moment.
+ */
 export const MOMENT_STYLES: Record<ShareMoment, readonly ShareStyleId[]> = {
-  photo_proof: ["A", "B", "D"],
-  self_reported: ["C", "B", "D"],
-  day_secured: ["E", "D", "B"],
+  photo_proof: ["H", "E", "D", "A"],
+  self_reported: ["H", "E", "D"],
+  day_secured: ["E", "D"],
   challenge_finished: ["F", "D"],
   invite: ["G"],
 };
@@ -174,12 +184,31 @@ export type SharePaint = {
   };
 };
 
-export function stylesForMoment(moment: ShareMoment): readonly ShareStyleId[] {
-  return MOMENT_STYLES[moment];
+/**
+ * The cards for a moment. The Streak card needs a streak of 1 or more; the Photo
+ * card needs the user's own photo. With no facts given, the full list comes back.
+ */
+export function stylesForMoment(
+  moment: ShareMoment,
+  facts?: { streak?: number | null; hasPhoto?: boolean },
+): readonly ShareStyleId[] {
+  const all = MOMENT_STYLES[moment];
+  if (!facts) return all;
+  const streak = typeof facts.streak === "number" && Number.isFinite(facts.streak) ? Math.floor(facts.streak) : 0;
+  return all.filter((id) => {
+    if (id === "E" && (moment === "photo_proof" || moment === "self_reported")) return streak >= 1;
+    if (id === "A") return facts.hasPhoto === true;
+    return true;
+  });
 }
 
 export function defaultStyle(moment: ShareMoment): ShareStyleId {
   return MOMENT_STYLES[moment][0] ?? "A";
+}
+
+/** Build 90 04.6: "Copy sticker" copies the painted PNG of any card. */
+export function copyStickerAvailable(_style: ShareStyleId): boolean {
+  return true;
 }
 
 export function colourForStyle(memory: ColourMemory, style: ShareStyleId): ShareColourId {
@@ -398,6 +427,16 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     return base;
   }
 
+  if (input.style === "H") {
+    // Day stamp: the challenge, the task and the day on a plain Ink / Orange / White ground.
+    push(caps(challenge, 40, 48, palette.sub));
+    if (task) push(text(task, 64, 74, palette.fg));
+    push(dayRow(day, total, 200, palette.fg, palette.fg));
+    if (input.cameraSeal) push({ kind: "seal", label: "Camera", color: palette.fg });
+    push(joinItem(input, palette.fg));
+    return base;
+  }
+
   if (input.style === "B") {
     const color = "#F5F3EE";
     base.transparent = true;
@@ -460,12 +499,16 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       });
     } else {
       push(caps(challenge, 40, 48, palette.sub));
-      const secured = input.secured ?? 0;
-      push({
-        kind: "baseline",
-        lead: text(String(secured), 170, 170, palette.fg, "800"),
-        rest: text(`of ${due} days`, 60, 64, palette.fg, "500"),
-      });
+      // Build 90 04.6: a task moment knows the day, not the secured count. Dots plus "Day 2 of 7".
+      if (typeof input.secured === "number") {
+        push({
+          kind: "baseline",
+          lead: text(String(input.secured), 170, 170, palette.fg, "800"),
+          rest: text(`of ${due} days`, 60, 64, palette.fg, "500"),
+        });
+      } else {
+        push(dayRow(day, total, 150, palette.fg, palette.fg));
+      }
     }
     if (cells.length) {
       push({
@@ -479,7 +522,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
         line: palette.line,
       });
     }
-    if (input.style === "D") push(text(`Day ${day} of ${total}`, 36, 44, palette.fg));
+    if (input.style === "D" && typeof input.secured === "number") push(text(`Day ${day} of ${total}`, 36, 44, palette.fg));
     if (input.style === "F" && input.dateRange?.trim()) {
       push(text(input.dateRange.trim(), 34, 42, palette.sub));
     }

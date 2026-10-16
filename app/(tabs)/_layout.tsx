@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/routes";
 import TaskCompleteToast from "@/components/task-v2/TaskCompleteToast";
 import ShareSystemSheet from "@/components/share/ShareSystemSheet";
 import { useApp } from "@/contexts/AppContext";
-import type { TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
+import { shareCardFromToast, type TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
 
 function routeToTab(name: string | undefined): TabBarTab {
   if (name === "discover") return "discover";
@@ -164,13 +164,11 @@ export default function TabLayout() {
       visible={shareToast != null}
       onDismiss={() => setShareToast(null)}
       moment={shareToast?.photoUri ? "photo_proof" : "self_reported"}
-      card={{
-        challenge: "",
-        task: shareToast?.title.replace(/ (done|saved)\.$/, "") ?? "",
-        username: profile?.username,
-        photoUri: shareToast?.photoUri,
-        cameraSeal: shareToast?.cameraSeal === true,
-      }}
+      card={
+        shareToast
+          ? shareCardFromToast(shareToast, profile?.username)
+          : { challenge: "", username: profile?.username, cameraSeal: false }
+      }
     />
     </View>
     </Sentry.ErrorBoundary>

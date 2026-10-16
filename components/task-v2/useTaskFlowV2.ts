@@ -1,6 +1,6 @@
 import { photoModeFor } from "@/backend/lib/task-model";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Image } from "react-native";
+import { Image, Keyboard } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +45,7 @@ import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
 import { routeAfterSave } from "@/lib/route-after-save";
 import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
+import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -250,6 +251,9 @@ export function useTaskFlowV2() {
   // Build 90 03.1: no preselected activity type. The chip is part of the log.
   const [kind, setKind] = useState("");
   const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
+  // Build 90 04.1: the payload waiting on the post choice sheet.
+  const [postChoice, setPostChoice] = useState<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(null);
+  const [postChoiceAudience, setPostChoiceAudience] = useState<PostAudience>(POST_CHOICE_DEFAULT);
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
   const logKind = resolveLogKind({
@@ -477,7 +481,8 @@ export function useTaskFlowV2() {
     if (shownLocalRef.current) return;
     shownLocalRef.current = true;
     markOptimisticTaskDone({ taskId, activeChallengeId });
-    if (photoUri && audiencePublishes(audienceRef.current)) {
+    // Build 90 04.1: a text card posts too, so the optimistic row is not photo-only.
+    if (audiencePublishes(audienceRef.current)) {
       const post = optimisticTaskPost({
         eventId: postingId,
         userId,
@@ -489,7 +494,7 @@ export function useTaskFlowV2() {
         currentDay,
         totalDays: durationDays,
         photoUrl: photoUri,
-        caption: "Posting…",
+        caption: photoUri ? "Posting…" : null,
       });
       if (post) publishOptimisticFeedPost(post);
     }
@@ -741,7 +746,19 @@ export function useTaskFlowV2() {
         return;
       }
       confirmOptimisticTaskDone(taskId);
-      if (audiencePublishes(chosenAudience) && postedId) {
+      const publishing = audiencePublishes(chosenAudience);
+      if (publishing && !postedId) {
+        clearOptimisticFeedPost(postingId);
+        submitInFlight.current = false;
+        setSaving(false);
+        if (mountedRef.current) {
+          setFinishSave("failed");
+          setFailNote(hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.");
+        }
+        await writeTiming();
+        return;
+      }
+      if (publishing && postedId) {
         const posted = optimisticTaskPost({
           eventId: postedId,
           userId,
@@ -757,22 +774,16 @@ export function useTaskFlowV2() {
         if (posted) publishOptimisticFeedPost(posted);
         if (mountedRef.current) setFinishSave("saved");
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace(ROUTES.POST_ID(postedId) as never);
-        submitInFlight.current = false;
-        setSaving(false);
-        await writeTiming();
-        return;
-      }
-      if (audiencePublishes(chosenAudience) && !postedId) {
-        clearOptimisticFeedPost(postingId);
-        submitInFlight.current = false;
-        setSaving(false);
-        if (mountedRef.current) {
-          setFinishSave("failed");
-          setFailNote("The photo saved. The post did not go out.");
+        // Build 90 04.1: a post that secured the day shows Day secured first, then the post (openPost).
+        if (outcome === "saved") {
+          trackUsage("task_completed", { method: kind });
+          if (hasCameraProof) trackUsage("proof_posted");
+          router.replace(ROUTES.POST_ID(postedId) as never);
+          submitInFlight.current = false;
+          setSaving(false);
+          await writeTiming();
+          return;
         }
-        await writeTiming();
-        return;
       }
       trackUsage("task_completed", { method: kind });
       if (hasCameraProof) trackUsage("proof_posted");
@@ -801,6 +812,7 @@ export function useTaskFlowV2() {
             taskName,
             currentDay,
             totalDays: durationDays,
+            streak: typeof complete.streakDays === "number" ? complete.streakDays : undefined,
           });
           returnToOrigin();
         }
@@ -875,7 +887,9 @@ export function useTaskFlowV2() {
             closingHasPhoto: hasCameraProof,
             originTab,
             counterReachedTarget: counterTask && count >= counterGoal,
-            openPost: typeof body.audience === "string" ? (typeof complete.eventId === "string" ? complete.eventId : eventId) : null,
+            // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
+            openPost: publishing && postedId ? postedId : null,
+            choiceMade: typeof chosenAudience === "string",
           }) as never,
         );
       }
@@ -967,7 +981,24 @@ export function useTaskFlowV2() {
       setStep("capture");
       return;
     }
+    // Build 90 04.1: every task without a photo review asks once: post, or keep it private.
+    if (needsPostChoice(payload)) {
+      if (submitInFlight.current || postChoice) return;
+      Keyboard.dismiss();
+      setPostChoiceAudience(POST_CHOICE_DEFAULT);
+      setPostChoice({ payload, kind });
+      return;
+    }
     await finishSubmit(payload, kind);
+  };
+
+  const answerPostChoice = (chosen: PostAudience) => {
+    const pending = postChoice;
+    if (!pending) return;
+    setPostChoice(null);
+    audienceRef.current = chosen;
+    setAudience(chosen);
+    void finishSubmit({ ...pending.payload, audience: chosen }, pending.kind);
   };
 
   const submitTimer = async () => {
@@ -1368,6 +1399,12 @@ export function useTaskFlowV2() {
     onPostRun,
     logKind,
     logSanityAsk,
+    // Build 90 04.1: the one post choice after a task without a photo review.
+    postChoiceOpen: postChoice != null,
+    postChoiceAudience,
+    setPostChoiceAudience,
+    onPostChoicePost: () => answerPostChoice(postChoiceAudience),
+    onPostChoiceKeep: () => answerPostChoice(POST_CHOICE_PRIVATE),
     onLogContinue,
     onLogSaveAnyway,
     onLogEdit: () => setLogSanityAsk(null),

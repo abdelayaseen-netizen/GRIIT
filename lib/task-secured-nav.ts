@@ -44,6 +44,8 @@ export function taskSecuredHref(
     originTab?: string | null;
     counterReachedTarget?: boolean;
     openPost?: string | null;
+    /** Build 90 04.1: the post-or-private choice was answered before the save. */
+    choiceMade?: boolean;
   },
 ) {
   return {
@@ -67,6 +69,7 @@ export function taskSecuredHref(
       originTab: share?.originTab ?? "home",
       counterTarget: share?.counterReachedTarget ? "1" : "0",
       openPost: share?.openPost ?? "",
+      choiceMade: share?.choiceMade ? "1" : "0",
       freezeGranted: result.freezeGranted ? "1" : "0",
       freezesHeld: String(result.freezesHeld ?? 0),
       freezeCap: String(result.freezeCap ?? 0),

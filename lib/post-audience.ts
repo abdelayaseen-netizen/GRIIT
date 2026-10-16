@@ -38,6 +38,17 @@ export function audienceShowsInScope(
   return true;
 }
 
+/** Build 90 04.4: your own shared post is in both of your feeds whatever audience you picked. */
+export function audienceShowsInScopeForViewer(args: {
+  audience: string | null | undefined;
+  scope: "following" | "everyone";
+  viewerId: string;
+  authorId: string;
+}): boolean {
+  if (args.viewerId === args.authorId) return true;
+  return audienceShowsInScope(args.audience, args.scope);
+}
+
 export function canSeePostAudience(args: {
   audience: string | null | undefined;
   viewerId: string;
@@ -64,8 +75,15 @@ export function profilePostVisible(args: {
   return args.viewerId === args.authorId && args.audience === "only_me";
 }
 
-/** A self-reported completion with no photo is a private check-in, not a post. */
-export function createsActivityPost(selfReported: boolean, hasPhoto: boolean): boolean {
-  if (selfReported && !hasPhoto) return false;
+/**
+ * A self-reported completion with no photo is a private check-in, not a post,
+ * unless the user chose Friends or Everyone on the post sheet (build 90 04.1): then it is a text card.
+ */
+export function createsActivityPost(
+  selfReported: boolean,
+  hasPhoto: boolean,
+  audience?: string | null,
+): boolean {
+  if (selfReported && !hasPhoto) return audiencePublishes(audience);
   return true;
 }

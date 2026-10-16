@@ -16,13 +16,13 @@ import {
 const code = "K7Q2M";
 
 describe("v44.1 share styles", () => {
-  it("maps each moment to its styles, default first", () => {
-    expect(stylesForMoment("photo_proof")).toEqual(["A", "B", "D"]);
-    expect(stylesForMoment("self_reported")).toEqual(["C", "B", "D"]);
-    expect(stylesForMoment("day_secured")).toEqual(["E", "D", "B"]);
+  it("maps each moment to its styles, default first (build 90 04.6: day stamp, streak, progress, photo)", () => {
+    expect(stylesForMoment("photo_proof")).toEqual(["H", "E", "D", "A"]);
+    expect(stylesForMoment("self_reported")).toEqual(["H", "E", "D"]);
+    expect(stylesForMoment("day_secured")).toEqual(["E", "D"]);
     expect(stylesForMoment("challenge_finished")).toEqual(["F", "D"]);
     expect(stylesForMoment("invite")).toEqual(["G"]);
-    expect(defaultStyle("photo_proof")).toBe("A");
+    expect(defaultStyle("photo_proof")).toBe("H");
     expect(defaultStyle("invite")).toBe("G");
   });
 
@@ -63,7 +63,7 @@ describe("v44.1 share styles", () => {
     expect(paintStrings(invite).join("\n")).not.toContain("code K7Q2M");
   });
 
-  it("does not paint a caption, and B is the transparent sticker", () => {
+  it("does not paint a caption; B stays a transparent sticker in the paint but no moment lists it", () => {
     const photo = buildSharePaint({
       style: "A",
       colour: "ink",

@@ -14,7 +14,7 @@ import {
 
 export const SHARE_COLOUR_KEY = "griit.shareColour.v1";
 
-const STYLES: readonly ShareStyleId[] = ["A", "B", "C", "D", "E", "F", "G"];
+const STYLES: readonly ShareStyleId[] = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 type ColourStore = {
   getItem: (key: string) => Promise<string | null>;
