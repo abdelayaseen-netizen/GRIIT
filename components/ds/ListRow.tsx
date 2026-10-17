@@ -52,7 +52,6 @@ export default function ListRow({
     </View>
   ) : null;
   const splitIcon = Boolean(onPress && interactiveIcon && iconEl);
-  const a11y = subtitle ? `${title}. ${subtitle}` : title;
   const body = (
     <>
       {rankEl}
@@ -85,7 +84,7 @@ export default function ListRow({
           {iconEl}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={a11y}
+            accessibilityLabel={title}
             onPress={onPress}
             style={({ pressed }) => [styles.rowBody, pressed ? styles.pressed : null]}
           >
@@ -102,7 +101,7 @@ export default function ListRow({
       <View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={a11y}
+          accessibilityLabel={title}
           onPress={onPress}
           style={({ pressed }) => [
             rowStyle,

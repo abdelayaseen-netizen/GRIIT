@@ -24,6 +24,7 @@ import {
   type SecuredSelfRow,
 } from "@/lib/secured-day";
 import {
+  finishedAtFromSecuredParam,
   readSecuredDateKeysFromCache,
   submitResultFromSecuredParams,
   todayIsSecuredInCache,
@@ -60,6 +61,7 @@ function TaskSecuredInner() {
     freezeAtCap?: string;
     openPost?: string;
     choiceMade?: string;
+    finishedAt?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -83,6 +85,7 @@ function TaskSecuredInner() {
     freezeCap: firstString(params.freezeCap),
     freezeAtCap: firstString(params.freezeAtCap),
   });
+  const finishedAt = finishedAtFromSecuredParam(firstString(params.finishedAt));
   // 06.1: the first freeze ever earned says what it does, once.
   const firstFreeze = useFirstConcept("freeze", result.freezeGranted === true);
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
@@ -143,7 +146,9 @@ function TaskSecuredInner() {
         await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] }, { cancelRefetch: false });
         // Build 90 04.7: one bootstrap refresh (joining the one the finish started) carries
         // listMyActive and today's check-ins; no second and third request for the same rows.
-        await refreshHomeBootstrap(queryClient);
+        // 01b.3: the finish awaits its refresh before replacing to this screen, so by now it
+        // has usually landed. `finishedAt` lets this call skip when that payload is newer.
+        await refreshHomeBootstrap(queryClient, finishedAt ? { freshAfter: finishedAt } : undefined);
         const { enrollments, completed } = bootstrapDayOpenInput<
           Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"][number],
           Parameters<typeof dayOpenTasksFromActive>[0]["completed"][number]
@@ -184,7 +189,7 @@ function TaskSecuredInner() {
     return () => {
       live = false;
     };
-  }, [proofs, queryClient, tz, retryTick, user?.id, result.activeChallengeId]);
+  }, [proofs, queryClient, tz, retryTick, user?.id, result.activeChallengeId, finishedAt]);
 
   const done = () => {
     const openPost = firstString(params.openPost);

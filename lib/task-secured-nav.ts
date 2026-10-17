@@ -46,6 +46,11 @@ export function taskSecuredHref(
     openPost?: string | null;
     /** Build 90 04.1: the post-or-private choice was answered before the save. */
     choiceMade?: boolean;
+    /**
+     * Build 90 01b.3: when this finish began (ms epoch). Secured skips its bootstrap refresh
+     * when the finish's own refresh already landed after this time.
+     */
+    finishedAt?: number;
   },
 ) {
   return {
@@ -70,6 +75,7 @@ export function taskSecuredHref(
       counterTarget: share?.counterReachedTarget ? "1" : "0",
       openPost: share?.openPost ?? "",
       choiceMade: share?.choiceMade ? "1" : "0",
+      finishedAt: typeof share?.finishedAt === "number" ? String(share.finishedAt) : "",
       freezeGranted: result.freezeGranted ? "1" : "0",
       freezesHeld: String(result.freezesHeld ?? 0),
       freezeCap: String(result.freezeCap ?? 0),
@@ -79,6 +85,12 @@ export function taskSecuredHref(
 }
 
 const KINDS: VerificationKind[] = ["live_photo", "timer", "gps", "word_count", "self_report"];
+
+/** The `finishedAt` route param back to a number, or undefined when absent or not a time. */
+export function finishedAtFromSecuredParam(value: string | undefined): number | undefined {
+  const n = Number(value);
+  return value && Number.isFinite(n) && n > 0 ? n : undefined;
+}
 
 export function submitResultFromSecuredParams(params: {
   daySecured?: string;

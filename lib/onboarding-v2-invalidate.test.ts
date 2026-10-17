@@ -7,11 +7,16 @@ import {
 } from "./onboarding-v2-invalidate";
 
 describe("invalidateAfterOnboardingJoin", () => {
-  it("invalidates only the bootstrap (01b.3: listMyActive / getStats / getRecord live inside it)", async () => {
-    expect(ONBOARDING_JOIN_QUERY_KEYS).toEqual([["home", "bootstrap"]]);
+  it("invalidates bootstrap, listMyActive, getStats, and getRecord", async () => {
+    expect(ONBOARDING_JOIN_QUERY_KEYS).toEqual([
+      ["home", "bootstrap"],
+      ["challenge", "listMyActive"],
+      ["profiles", "getStats"],
+      ["profiles", "getRecord"],
+    ]);
     const invalidateQueries = vi.fn().mockResolvedValue(undefined);
     await invalidateAfterOnboardingJoin({ invalidateQueries });
-    expect(invalidateQueries).toHaveBeenCalledTimes(1);
+    expect(invalidateQueries).toHaveBeenCalledTimes(4);
     for (const queryKey of ONBOARDING_JOIN_QUERY_KEYS) {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [...queryKey] });
     }
@@ -21,7 +26,10 @@ describe("invalidateAfterOnboardingJoin", () => {
       "utf8",
     );
     expect(join).toContain("invalidateAfterOnboardingJoin");
-    expect(complete).toContain("invalidateAfterOnboardingJoin");
+    // Build 90 01b.3: completion no longer refetches. It writes onboarding_completed and
+    // target_streak, which Home does not read from the bootstrap; each join path refetches
+    // after its own join (see build90-signup-requests.test.ts).
+    expect(complete).not.toContain("invalidateAfterOnboardingJoin");
     const tab = readFileSync(
       resolve(__dirname, "../components/activity/NotificationsTab.tsx"),
       "utf8",

@@ -31,7 +31,6 @@ vi.mock("@/lib/notifications", () => ({
 vi.mock("@/lib/query-client", () => ({
   queryClient: {
     invalidateQueries: (...args: unknown[]) => invalidateQueries(...args),
-    getQueryCache: () => ({ findAll: () => [] }),
   },
 }));
 
@@ -65,27 +64,6 @@ function liveBootstrap() {
 }
 
 describe("04.7 one bootstrap request per finish", () => {
-  it("a refresh while a fetch is in flight does not start another", async () => {
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    let fetches = 0;
-    const observer = new QueryObserver(qc, {
-      queryKey: homeBootstrapQueryKey("u1"),
-      queryFn: async () => {
-        fetches += 1;
-        await sleep(40);
-        return { fetches };
-      },
-      staleTime: 60_000,
-    });
-    const stop = observer.subscribe(() => {});
-    await sleep(5);
-    expect(fetches).toBe(1);
-    await refreshHomeBootstrap(qc, { freshAfter: Date.now() - 10_000 });
-    await sleep(80);
-    expect(fetches).toBe(1);
-    stop();
-  });
-
   it("four refreshes in one tick share one request (the old invalidate + refetch pairs made seven)", async () => {
     const live = liveBootstrap();
     await live.observer.refetch();
@@ -137,9 +115,7 @@ describe("04.7 one bootstrap request per finish", () => {
     expect(thenBlock).not.toContain("fetchActiveChallenge()");
     expect(thenBlock).not.toContain("fetchStats()");
     expect(thenBlock).not.toContain('invalidateQueries({ queryKey: ["home", "bootstrap"] })');
-    expect(thenBlock).not.toMatch(/getRecord/);
-    expect(thenBlock).not.toMatch(/\["liveFeed"\]/);
-    expect(thenBlock).not.toMatch(/queryKey: \["profile"\]/);
+    expect(mutations).not.toContain('refetchQueries({ queryKey: ["profiles", "getRecord"] })');
     expect(mutations).not.toContain('refetchQueries({ queryKey: ["home", "bootstrap"] })');
     const context = read("contexts/AppContext.tsx");
     expect(context).toContain("refreshHomeBootstrap(queryClient)");
@@ -285,12 +261,14 @@ describe("04.7 the finalize gate runs on foreground and on arrival at Home, not 
   });
 
   it("a run on Home checks right away and leaves nothing pending", async () => {
+    // 01b.3: the bootstrap refetch is tied to a run actually ending (see build90-signup-requests).
+    trpcMutate.mockResolvedValue({ finalized: ["ac-1"], eventsEmitted: 1 });
     const openEnd = vi.fn();
     await runFinalizeEndedOnForeground({ userId: USER, pathname: "/(tabs)", openEnd });
     expect(trpcQuery).toHaveBeenCalledTimes(1);
     await checkUnseenEndingsOnHome({ pathname: "/(tabs)", openEnd });
     expect(trpcQuery).toHaveBeenCalledTimes(1);
-    expect(invalidateQueries).toHaveBeenCalled();
+    expect(invalidateQueries).toHaveBeenCalledWith(expect.anything(), { cancelRefetch: false });
   });
 
   it("the layout runs finalize on [user, nav] and the Home check on pathname", () => {

@@ -30,27 +30,12 @@ export function homeBootstrapIsFreshSince(queryClient: QueryClient, freshAfter: 
   return states.every((q) => q.state.fetchStatus === "idle" && q.state.dataUpdatedAt >= freshAfter);
 }
 
-function homeBootstrapInFlight(queryClient: QueryClient): boolean {
-  return queryClient
-    .getQueryCache()
-    .findAll({ queryKey: [...HOME_BOOTSTRAP_QUERY_KEY] })
-    .some((q) => q.state.fetchStatus === "fetching");
-}
-
 export async function refreshHomeBootstrap(
   queryClient: QueryClient,
   options: RefreshHomeBootstrapOptions = {},
 ): Promise<void> {
   const queryKey = [...HOME_BOOTSTRAP_QUERY_KEY];
   if (typeof options.freshAfter === "number" && homeBootstrapIsFreshSince(queryClient, options.freshAfter)) return;
-  if (homeBootstrapInFlight(queryClient)) {
-    // Join the in-flight fetch. Do not invalidate yet: that marks stale and refetches again
-    // when it lands. Parallel callers without freshAfter share that one fetch (04.7).
-    await queryClient.refetchQueries({ queryKey }, { cancelRefetch: false });
-    if (typeof options.freshAfter !== "number") return;
-    if (homeBootstrapIsFreshSince(queryClient, options.freshAfter)) return;
-    // freshAfter was set (a finish) and the in-flight payload is still older than the save.
-  }
   // One call: mark stale and refetch, including a cached query with no observer mounted
   // (refetchType "all"). `cancelRefetch` is the second argument; in the filters object
   // React Query ignores it. A fetch already in flight is joined, not restarted.

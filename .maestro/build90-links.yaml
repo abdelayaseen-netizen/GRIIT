@@ -246,14 +246,15 @@ appId: app.griit.challenge-tracker
 - assertVisible: "Edit profile"
 - assertNotVisible: "Follow"
 
-# 05.1 leaderboard: the board lists only members with board_opt_in, and the opt-in control is
-# not wired in this build (JOIN_THE_BOARD is voided in LeaderboardTab), so a fresh account sees
-# "A board needs two." and there is no row to tap here. The row tap (id fallback, no early
-# return) is checked in the vitest source test.
+# 05.1 leaderboard. Since chunk 08 every member is on the board (board_opt_in on join), so a
+# fresh account on 7K Steps sees the board headings, not "A board needs two.". Row labels are
+# the person's name only (ListRow's Pressable owns the label, 05.1), so "1 secured" and
+# "Rank 1" are not in the accessibility tree; the heading is, as in build90-friend-loop-b.
+# The row tap (id fallback, no early return) is checked in the vitest source test.
 - tapOn: "Activity"
 - tapOn: "Leaderboard"
 - extendedWaitUntil:
-    visible: "A board needs two.|.*1 secured"
+    visible: "A board needs two.|Top of the challenge"
     timeout: 20000
 - takeScreenshot: build90-05-leaderboard
 

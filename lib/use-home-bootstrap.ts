@@ -38,7 +38,7 @@ export function useHomeBootstrap(userId: string | undefined) {
     queryKey: homeBootstrapQueryKey(userId ?? ""),
     enabled: !!userId,
     staleTime: 60_000,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     placeholderData: (prev) => prev,
     queryFn: () => trpcQuery<HomeBootstrap>(TRPC.home.bootstrap),
   });

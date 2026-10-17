@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -189,7 +189,6 @@ function LiveFeedSection({
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: !!user?.id,
     staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
   });
   const pagePosts = useMemo(
     () => (feedQuery.data?.pages ?? []).flatMap((page) => page.posts ?? []),
@@ -205,11 +204,19 @@ function LiveFeedSection({
         firstEventId: string | null;
       }>,
     enabled: !!user?.id,
-    staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 30 * 1000,
   });
   const todayPosters = postersQuery.data?.posters ?? [];
   const firstTodayEventId = postersQuery.data?.firstEventId ?? null;
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      // Build 90 01b.3: Home can gain focus twice in one transition (two posters requests
+      // 160 ms apart in the trace). The default cancelRefetch aborts the first and starts a
+      // second, and trpcQuery ignores the abort, so the server ran both. Join it instead.
+      void postersQuery.refetch({ cancelRefetch: false });
+    }, [postersQuery.refetch, user?.id]),
+  );
 
   const followingQuery = useQuery({
     queryKey: ["profiles", "getFollowing", user?.id ?? ""],
@@ -219,7 +226,6 @@ function LiveFeedSection({
       >,
     enabled: !!user?.id,
     staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
   });
   const followedIds = useMemo(
     () => new Set((followingQuery.data ?? []).map((row) => row.user_id)),
@@ -293,9 +299,7 @@ function LiveFeedSection({
           avatarUrl: row.avatar_url ?? null,
         })) satisfies FeedCommentPreview[];
       },
-      // Build 90 01b.3: a first-day Everyone feed was 9 getComments (one per card). The sheet
-      // loads comments when opened. Previews stay empty until then.
-      enabled: false,
+      enabled: !!user?.id && p.commentCount > 0,
       staleTime: 60 * 1000,
     })),
   });

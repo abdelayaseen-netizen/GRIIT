@@ -67,12 +67,7 @@ import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
-import {
-  mergeChallengeRows,
-  rowsFromBootstrapEnrollments,
-  rowsFromProfileRecord,
-  type BootstrapEnrollmentForRow,
-} from "@/lib/profile-challenges";
+import { rowsFromProfileRecord } from "@/lib/profile-challenges";
 import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
 import {
   joinedBioLine,
@@ -117,7 +112,6 @@ export default function ProfileScreen() {
     queryKey: ["profiles", "getRecord", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getRecord) as Promise<RecordPayload>,
     staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
@@ -126,7 +120,6 @@ export default function ProfileScreen() {
     queryKey: ["profiles", "meStats", "all", user?.id ?? ""],
     queryFn: () => trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range: "all" }),
     staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
 
@@ -140,7 +133,6 @@ export default function ProfileScreen() {
         friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
       }>,
     staleTime: 60 * 1000,
-    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
 
@@ -288,25 +280,11 @@ export default function ProfileScreen() {
     todayKey,
     timeZone: homeTimeZone,
   });
-  const formatChallengeDate = (key: string) => formatDayMonthYear(key.slice(0, 10));
-  const challengeRows = mergeChallengeRows(
-    rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
-      todaySecured,
-      formatDate: formatChallengeDate,
-      leftByEnrollment: todayCounts.byEnrollment,
-    }),
-    rowsFromBootstrapEnrollments(
-      (bootstrap.data?.activeChallenges ?? []) as BootstrapEnrollmentForRow[],
-      {
-        todayKey,
-        timeZone: homeTimeZone,
-        todaySecured,
-        securedDateKeys,
-        leftByEnrollment: todayCounts.byEnrollment,
-        formatDate: formatChallengeDate,
-      },
-    ),
-  );
+  const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
+    todaySecured,
+    formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
+    leftByEnrollment: todayCounts.byEnrollment,
+  });
   // The Today tile reads the bootstrap counts (Home's source); the record query can lag a
   // join by a screen. The rows only stand in while the bootstrap has not loaded.
   const bootstrapLoaded = Array.isArray(bootstrap.data?.activeChallenges);

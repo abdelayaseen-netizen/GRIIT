@@ -67,10 +67,9 @@ export function dropTestAuthors(
   ids: readonly string[],
   testIds: ReadonlySet<string>,
   viewerIsTest: boolean,
-  viewerId?: string,
 ): string[] {
-  void viewerIsTest;
-  return ids.filter((id) => id === viewerId || !testIds.has(id));
+  if (viewerIsTest) return [...ids];
+  return ids.filter((id) => !testIds.has(id));
 }
 
 export async function viewerIsTestAccount(

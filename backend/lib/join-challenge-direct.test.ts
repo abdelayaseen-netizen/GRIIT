@@ -23,7 +23,6 @@ type AcRow = {
 function mockJoinDb(opts: {
   existing?: AcRow | null;
   insertError?: { code: string; message: string; details?: string } | null;
-  isTest?: boolean;
 }) {
   const updates: { table: string; row: Record<string, unknown> }[] = [];
   const inserts: { table: string; row: Record<string, unknown> }[] = [];
@@ -42,7 +41,7 @@ function mockJoinDb(opts: {
         }
         if (table === "profiles") {
           return Promise.resolve({
-            data: { user_id: USER, timezone: "America/New_York", is_test: opts.isTest === true },
+            data: { user_id: USER, timezone: "America/New_York" },
             error: null,
           });
         }
@@ -168,12 +167,5 @@ describe("joinChallengeDirect board opt-in (08)", () => {
     await joinChallengeDirect(supabase as never, USER, CH);
     const enrollment = inserts.find((i) => i.table === "active_challenges");
     expect(enrollment?.row).toMatchObject({ board_opt_in: true });
-  });
-
-  it("an is_test profile enrolls with board_opt_in false so a real board never lists them", async () => {
-    const { supabase, inserts } = mockJoinDb({ existing: null, isTest: true });
-    await joinChallengeDirect(supabase as never, USER, CH);
-    const enrollment = inserts.find((i) => i.table === "active_challenges");
-    expect(enrollment?.row).toMatchObject({ board_opt_in: false });
   });
 });

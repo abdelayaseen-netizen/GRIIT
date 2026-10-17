@@ -896,6 +896,7 @@ export function useTaskFlowV2() {
             // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
             openPost: publishing && postedId ? postedId : null,
             choiceMade: typeof chosenAudience === "string",
+            finishedAt: finishStartedAt,
           }) as never,
         );
       }
