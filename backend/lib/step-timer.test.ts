@@ -48,16 +48,15 @@ describe("step timer (01b.1)", () => {
   it("checkins.complete and secureDay time every Supabase step and log the map (source)", () => {
     const src = read("../trpc/routes/checkins.ts");
     expect(src).toMatch(/const t = createStepTimer\(\);/);
+    // 01b.2: the serial chain became four rounds — setup, context, upsert, finish — with the
+    // activity row, the progress write, the secure and the share timed inside the finish.
     for (const name of [
-      "ownership",
-      "profile_tz",
-      "task",
-      "challenge",
-      "anti_cheat",
+      "setup",
+      "context",
       "upsert",
+      "finish",
       "activity_event",
       "progress",
-      "day_proofs",
       "secure",
       "share",
       "sign_urls",
@@ -66,7 +65,9 @@ describe("step timer (01b.1)", () => {
     }
     expect(src).toMatch(/"\[checkins\.complete\] steps"/);
     expect(src).toMatch(/"\[checkins\.secureDay\] steps"/);
-    expect(src).toContain('t.step("secure_day_rpc"');
+    for (const name of ["secure_setup", "secure_context", "secure_day_rpc", "secure_after_rpc", "days_update", "freeze_grant"]) {
+      expect(src, name).toContain(`t.step("${name}"`);
+    }
   });
 
   it("/api/health/deep reports the Supabase round trip in ms (source)", () => {

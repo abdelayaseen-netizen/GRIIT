@@ -15,11 +15,14 @@ type ActiveChallengeRow = {
 export async function assertActiveChallengeOwnership(
   supabase: SupabaseClient,
   activeChallengeId: string,
-  userId: string
-): Promise<{ activeChallengeId: string; challenge_id: string }> {
+  userId: string,
+  /** Build 90 01b.2: extra columns to read in the same round trip (e.g. "start_at, current_day"). */
+  extraColumns?: string,
+): Promise<{ activeChallengeId: string; challenge_id: string; row: Record<string, unknown> }> {
+  const columns: string = extraColumns ? `id, user_id, challenge_id, ${extraColumns}` : "id, user_id, challenge_id";
   const { data: row, error } = await supabase
     .from("active_challenges")
-    .select("id, user_id, challenge_id")
+    .select(columns)
     .eq("id", activeChallengeId)
     .single();
 
@@ -30,7 +33,7 @@ export async function assertActiveChallengeOwnership(
     });
   }
 
-  const r = row as ActiveChallengeRow;
+  const r = row as unknown as ActiveChallengeRow;
   if (r.user_id !== userId) {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -38,5 +41,5 @@ export async function assertActiveChallengeOwnership(
     });
   }
 
-  return { activeChallengeId: r.id, challenge_id: r.challenge_id };
+  return { activeChallengeId: r.id, challenge_id: r.challenge_id, row: row as unknown as Record<string, unknown> };
 }

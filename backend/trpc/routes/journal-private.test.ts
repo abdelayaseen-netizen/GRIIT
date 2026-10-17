@@ -30,7 +30,8 @@ describe("07.4 journal text is private", () => {
 
   it("it is written to check_ins.note_text only, and the shared activity_events metadata does not carry it", () => {
     expect(checkins).toMatch(/payload\.note_text = input\.noteText/);
-    const metaStart = checkins.indexOf("const activityEventPayload = {");
+    // 01b.2: the payload is built into a `let` and written later, alongside the secure.
+    const metaStart = checkins.indexOf("activityEventPayload = {\n");
     const metaEnd = checkins.indexOf("};", metaStart);
     expect(metaStart).toBeGreaterThan(0);
     const metadata = checkins.slice(metaStart, metaEnd);

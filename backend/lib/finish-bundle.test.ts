@@ -62,4 +62,34 @@ describe("bundleTaskFinish", () => {
     expect(result.daySecure).toBeNull();
     expect(result.shared).toBe(false);
   });
+
+  it("01b.2: the secure starts before the event is written, and the share waits only for the event", async () => {
+    const order: string[] = [];
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const result = await bundleTaskFinish({
+      requiredRemaining: 0,
+      applyShare: true,
+      eventId: async () => {
+        order.push("event:start");
+        await wait(20);
+        order.push("event:done");
+        return "22222222-2222-4222-8222-222222222222";
+      },
+      secure: async () => {
+        order.push("secure:start");
+        await wait(40);
+        order.push("secure:done");
+        return securePayload;
+      },
+      share: async (id) => {
+        order.push(`share:start:${id.slice(0, 8)}`);
+      },
+    });
+    expect(order.slice(0, 2).sort()).toEqual(["event:start", "secure:start"]);
+    expect(order.indexOf("share:start:22222222")).toBeGreaterThan(order.indexOf("event:done"));
+    expect(order.indexOf("share:start:22222222")).toBeLessThan(order.indexOf("secure:done"));
+    expect(result.eventId).toBe("22222222-2222-4222-8222-222222222222");
+    expect(result.shared).toBe(true);
+    expect(result.daySecure).toEqual(securePayload);
+  });
 });
