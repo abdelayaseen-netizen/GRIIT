@@ -53,6 +53,17 @@ import {
 } from "@/lib/add-task-draft";
 import { typeCaption } from "@/lib/task-ui";
 import type { HomeProofRow } from "@/lib/home-proof-card";
+import { FLAGS } from "@/lib/feature-flags";
+import {
+  STRAVA_SPORTS,
+  STRAVA_VERIFY_CAPTION,
+  STRAVA_VERIFY_LABEL,
+  STRAVA_VERIFY_SEGMENTS,
+  showStravaVerifyOption,
+} from "@/lib/strava-verify";
+import { trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import { useQuery } from "@tanstack/react-query";
 import {
   ADD_TASK_PLACE_LIVE,
   betweenEndAfterStart,
@@ -91,6 +102,20 @@ export default function AddTaskSheet({
   const [accuracyM, setAccuracyM] = useState<number | null>(null);
   const [recent, setRecent] = useState<{ name: string }[]>([]);
   const wasVisible = useRef(false);
+  // Build 90 09.3: "Verify with Strava" only when the flag is on and this account is connected.
+  const stravaFlag: boolean = FLAGS.STRAVA_AUTO_VERIFY;
+  const stravaConnection = useQuery({
+    queryKey: ["integrations", "getStravaConnection"],
+    queryFn: () => trpcQuery<{ id: string } | null>(TRPC.integrations.getStravaConnection),
+    enabled: visible && stravaFlag,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const stravaOption = showStravaVerifyOption({
+    flag: stravaFlag,
+    connected: Boolean(stravaConnection.data?.id),
+    type: draft.type,
+  });
 
   useEffect(() => {
     if (visible && !wasVisible.current) {
@@ -138,6 +163,8 @@ export default function AddTaskSheet({
       unit: row.unit,
       locationName: draft.location && canSavePlace(draft) ? draft.placeName.trim() || undefined : undefined,
       radiusMeters: draft.location ? draft.placeRadius : undefined,
+      verificationMethod: row.verificationMethod,
+      verificationRuleJson: row.verificationRuleJson,
     });
     onClose();
   }, [draft, onSave, onClose]);
@@ -328,6 +355,34 @@ export default function AddTaskSheet({
                 onPress={() => setDraft((d) => ({ ...d, runUnit: "mi" }))}
               />
             </View>
+            {stravaOption ? (
+              <>
+                <Text style={styles.label}>{STRAVA_VERIFY_LABEL}</Text>
+                <SegmentedControl
+                  items={[...STRAVA_VERIFY_SEGMENTS]}
+                  value={draft.verify === "strava" ? STRAVA_VERIFY_SEGMENTS[1] : STRAVA_VERIFY_SEGMENTS[0]}
+                  onChange={(v) =>
+                    setDraft((d) => ({ ...d, verify: v === STRAVA_VERIFY_SEGMENTS[1] ? "strava" : "self" }))
+                  }
+                />
+                {draft.verify === "strava" ? (
+                  <View style={styles.chips}>
+                    {STRAVA_SPORTS.map((sport) => (
+                      <Chip
+                        key={sport}
+                        label={sport}
+                        variant="form"
+                        selected={draft.stravaSport === sport}
+                        onPress={() => setDraft((d) => ({ ...d, stravaSport: sport }))}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+                <Text style={styles.caption}>
+                  {draft.verify === "strava" ? STRAVA_VERIFY_CAPTION.strava : STRAVA_VERIFY_CAPTION.self}
+                </Text>
+              </>
+            ) : null}
           </View>
         ) : null}
 

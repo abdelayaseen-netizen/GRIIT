@@ -57,6 +57,8 @@ export type StreakHeroV4Task = {
   windowState?: import("@/backend/lib/task-time-gate").WindowState;
   minutesLeft?: number | null;
   hasCameraProof?: boolean;
+  /** Build 90 09.3: completion verified by an integration (check_ins.proof_source). */
+  verifiedBy?: import("@/lib/strava-verify").VerifiedBy | null;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';

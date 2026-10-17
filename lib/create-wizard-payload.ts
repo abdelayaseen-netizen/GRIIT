@@ -19,6 +19,9 @@ export type WizardTaskPayloadSource = {
   gates?: TaskGate[];
   gateTime?: GateTime;
   unit?: string;
+  /** Build 90 09.3: Strava verification on a run. */
+  verificationMethod?: string;
+  verificationRuleJson?: Record<string, unknown>;
 };
 
 export function mapWizardTaskToCreateInput(
@@ -56,5 +59,7 @@ export function mapWizardTaskToCreateInput(
     config: t.config,
     gates,
     gateTime: t.gateTime,
+    ...(t.verificationMethod ? { verificationMethod: t.verificationMethod } : {}),
+    ...(t.verificationRuleJson ? { verificationRuleJson: t.verificationRuleJson } : {}),
   };
 }

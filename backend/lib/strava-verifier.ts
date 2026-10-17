@@ -28,7 +28,8 @@ function parseDateKey(dateKey: string): { after: number; before: number } {
   return { after, before };
 }
 
-function activityMatchesRule(activity: StravaActivity, rule: VerificationRuleStrava): boolean {
+/** Sport, minimum distance and minimum moving time. Shared with the webhook (build 90 09.1). */
+export function activityMatchesRule(activity: StravaActivity, rule: VerificationRuleStrava): boolean {
   const sport = (rule.sport ?? "Run").toLowerCase();
   const typeLower = (activity.type ?? "").toLowerCase();
   const sportTypeLower = (activity.sport_type ?? "").toLowerCase();

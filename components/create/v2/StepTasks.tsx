@@ -59,6 +59,9 @@ export type WizardTask = {
   gates?: TaskGate[];
   gateTime?: GateTime;
   unit?: string;
+  /** Build 90 09.3: "strava_activity" on a run verified by Strava. */
+  verificationMethod?: string;
+  verificationRuleJson?: Record<string, unknown>;
 };
 
 export type WizardPack = {

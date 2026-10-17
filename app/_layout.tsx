@@ -345,6 +345,13 @@ function RootLayoutNav() {
           presentation: "card",
         }}
       />
+      <Stack.Screen
+        name="task/strava"
+        options={{
+          headerShown: false,
+          presentation: "card",
+        }}
+      />
       <Stack.Screen 
         name="challenge/complete" 
         options={{ 
@@ -411,6 +418,11 @@ function RootLayout() {
         }
         if (data?.focus === "freeze" || data?.reminder_type === "morning_miss") {
           router.push({ pathname: "/(tabs)", params: { focus: "freeze" } } as never);
+          return;
+        }
+        // Build 90 09.2: "Strava run logged." opens the post-or-private choice for that completion.
+        if (data?.type === "strava_verified" && typeof data.route === "string" && data.route.startsWith(ROUTES.TASK_STRAVA)) {
+          router.push(data.route as never);
           return;
         }
         if (data?.type === "active_task_timer" && typeof data.route === "string") {

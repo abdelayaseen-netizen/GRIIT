@@ -69,6 +69,8 @@ export const ROUTES = {
   TASK_COMPLETE: "/task/complete",
   /** Secured / self-reported moment. Push only after secureDay refetch. */
   TASK_SECURED: "/task/secured",
+  /** Build 90 09.2: post-or-private choice for a task Strava completed. Opened from its notification. */
+  TASK_STRAVA: "/task/strava",
   CHALLENGE_COMPLETE: "/challenge/complete",
   CHALLENGE_END: "/challenge/end",
   PAYWALL: "/paywall",

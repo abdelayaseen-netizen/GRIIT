@@ -130,6 +130,8 @@ function draftFor(spec: FeaturedSeedSpec): AddTaskDraft {
     placeLat: null,
     placeLng: null,
     placeRadius: 100,
+    verify: "self",
+    stravaSport: "Run",
   };
 }
 

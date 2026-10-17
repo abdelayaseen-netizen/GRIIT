@@ -12,6 +12,7 @@ import {
   notifAsOfKey,
   notifEnrollmentId,
   notifProofDay,
+  notifRoute,
   notifTitle,
 } from "@/lib/notification-title";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -130,7 +131,9 @@ function NotificationsBody({
                 ? item.actorId
                   ? () => openActor(item)
                   : undefined
-                : undefined
+                : notifRoute(item.metadata)
+                  ? () => router.push(notifRoute(item.metadata) as never)
+                  : undefined
           }
         />
       );

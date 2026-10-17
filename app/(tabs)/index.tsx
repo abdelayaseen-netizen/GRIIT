@@ -55,6 +55,7 @@ import { dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
 import { completedTaskIds } from "@/lib/today-completion";
 import { enrollmentStarted, requiredTasks } from "@/lib/today-counts";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
+import { stravaVerifiedBy } from "@/lib/strava-verify";
 import { StreakSheet } from "@/components/home/StreakSheet";
 import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
 import { canOfferYesterdayFreeze, weekdayLongForDateKey } from "@/lib/freeze-recovery";
@@ -318,6 +319,7 @@ export default function HomeScreen() {
       proof_url?: string | null;
       completion_image_url?: string | null;
       proof_photo_url?: string | null;
+      proof_source?: string | null;
     }[];
     const checkins = mergeOptimisticCheckins(serverCheckins, optimisticRev >= 0 ? optimisticTaskDones() : []);
     const flat: StreakHeroV4Task[] = [];
@@ -339,6 +341,8 @@ export default function HomeScreen() {
           }),
         ]),
       );
+      // 09.3: a Strava-verified completion says "Verified by Strava" in place of "Self-reported".
+      const verifiedByTask = new Map(doneRows.map((c) => [String(c.task_id), stravaVerifiedBy(c)]));
       const challengeName = ac.challenges?.title ?? "Challenge";
       const durationDays = ac.challenges?.duration_days ?? 14;
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
@@ -377,6 +381,7 @@ export default function HomeScreen() {
           windowState: t.windowState ?? null,
           minutesLeft: t.minutesLeft ?? null,
           hasCameraProof: proofByTask.get(t.id) === true,
+          verifiedBy: verifiedByTask.get(t.id) ?? null,
         });
       }
     }

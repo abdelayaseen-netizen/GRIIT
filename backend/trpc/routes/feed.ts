@@ -433,6 +433,8 @@ export const feedRouter = createTRPCRouter({
     return {
       id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, longestStreak: finishCard?.longestStreak, heldDays: finishCard?.heldDays, startedOn: enrollment?.start_at ?? null, startedLabel: finishStartedLabel(enrollment?.start_at, tz), totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: signed.photoUrl, proofPhotoUrl: signed.proofPhotoUrl, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
+      // Build 90 09.3: who verified it ("Verified by Strava" once on the card). Additive.
+      verifiedBy: md.verification_method === "strava_activity" ? ("strava" as const) : null,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,
       respectCount: reactionCount,

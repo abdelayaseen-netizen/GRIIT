@@ -1501,7 +1501,7 @@ export const checkinsRouter = createTRPCRouter({
       }
     }
     const rows = await Promise.all(
-      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
+      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status, proof_source").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
     const merged: Record<string, unknown>[] = [];
     for (const { data, error } of rows) {
@@ -1725,7 +1725,15 @@ export const checkinsRouter = createTRPCRouter({
     });
   }),
 
-  shareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+  shareProof: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        /** Build 90 09.2: a server-written completion (Strava) has no audience yet; the post choice sets it here. Older builds omit it. */
+        audience: z.enum(["friends", "everyone"]).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
     const svc = getSupabaseServer();
     if (!svc) {
       logger.error({ eventId: input.eventId }, "[checkins.shareProof] service role missing");
@@ -1754,7 +1762,10 @@ export const checkinsRouter = createTRPCRouter({
     }
     const nowIso = new Date().toISOString();
     const patch = flipSharePatch(ev.shared === true, nowIso, ev.shared_at ?? null);
-    const { error: upErr } = await svc.from("activity_events").update(patch as never).eq("id", ev.id);
+    const withAudience = input.audience
+      ? { ...patch, metadata: { ...(ev.metadata ?? {}), audience: input.audience } }
+      : patch;
+    const { error: upErr } = await svc.from("activity_events").update(withAudience as never).eq("id", ev.id);
     if (upErr) {
       logger.error({ err: upErr, code: upErr.code, message: upErr.message, details: upErr.details }, "[checkins.shareProof] update");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });

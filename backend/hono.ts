@@ -207,6 +207,28 @@ app.get("/api/auth/strava/callback", async (c) => {
   return c.redirect(result.redirect, 302);
 });
 
+/** Build 90 09.1: Strava webhook handshake. Strava calls this once when the subscription is created. */
+app.get("/api/strava/webhook", async (c) => {
+  const url = new URL(c.req.url);
+  const { handleStravaWebhookHandshake } = await import("./lib/strava-webhook");
+  const result = handleStravaWebhookHandshake(url.searchParams);
+  return c.json(result.body, result.status);
+});
+
+/** Build 90 09.1: Strava activity events. Acknowledged at once (Strava retries after 2 s), processed after. */
+app.post("/api/strava/webhook", async (c) => {
+  let body: unknown = null;
+  try {
+    body = await c.req.json();
+  } catch {
+    body = null;
+  }
+  const { handleStravaWebhookPost } = await import("./lib/strava-webhook");
+  const { getSupabaseServer } = await import("./lib/supabase-server");
+  const result = handleStravaWebhookPost(body, getSupabaseServer());
+  return c.json(result.body, result.status);
+});
+
 /** Adds X-Request-ID, enforces body size limit, rate limits by IP. Runs before tRPC. */
 async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
   const req = c.req.raw;

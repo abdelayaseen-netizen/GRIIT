@@ -76,6 +76,13 @@ export const FLAGS = {
    * Guests allowed. Micro-task picker stays off the first-day path.
    */
   STARTER_TASK_ENABLED: true,
+  /**
+   * Build 90 chunk 09: a run or ride logged in Strava completes the matching
+   * task on its own (webhook), with a notification that opens the post choice.
+   * Off by default. The server also reads env STRAVA_AUTO_VERIFY=true.
+   * Off: no "Verify with Strava" option, webhook events are acknowledged and dropped.
+   */
+  STRAVA_AUTO_VERIFY: false,
 } as const;
 
 // ============================================

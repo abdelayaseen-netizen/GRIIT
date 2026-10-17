@@ -18,6 +18,7 @@ import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { calendarDateLabel, formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
+import { verifiedLine } from "@/lib/strava-verify";
 import {
   feedCardMeta,
   feedCardSubject,
@@ -181,7 +182,7 @@ export default function FeedPostV3({
         dayN={post.currentDay}
         dayOf={post.totalDays}
         challenge={post.challengeName}
-        gateLine={meta || "Self-reported"}
+        gateLine={verifiedLine(post.verifiedBy) ?? (meta || "Self-reported")}
         respects={post.respectCount}
         respected={post.reactedByMe}
         comments={post.commentCount}
@@ -249,7 +250,8 @@ export default function FeedPostV3({
             </View>
             <View style={styles.taskCopy}>
               <Text style={styles.taskTitle}>{subject}</Text>
-              <Text style={styles.gate}>{selfReportedLine(post.createdAt)}</Text>
+              {/* 09.3: a Strava completion names its verifier once (lib/strava-verify), in place of Self-reported. */}
+              <Text style={styles.gate}>{verifiedLine(post.verifiedBy) ?? selfReportedLine(post.createdAt)}</Text>
             </View>
           </View>
           <View style={styles.selfRule} />

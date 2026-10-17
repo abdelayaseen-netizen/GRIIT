@@ -125,3 +125,50 @@ WHERE status = 'active' AND board_opt_in = false;
 SELECT count(*) AS active_off_board_after
 FROM public.active_challenges
 WHERE status = 'active' AND board_opt_in = false;
+
+-- ============================================================
+-- Chunk 09, item 09.1 "secure the day if it was the last task" from the Strava webhook.
+-- secure_day(uuid) reads auth.uid() and raises UNAUTHORIZED when it is null. A webhook request
+-- carries no user JWT, so the backend (service role) calls this wrapper, which sets the JWT
+-- claim for the duration of the transaction and then runs the same secure_day. No streak or
+-- date logic is copied; the one function stays the source of truth.
+-- Until this runs, the webhook completes the task, writes the post and the notification, and
+-- logs "secure skipped: secure_day_for_user missing"; the app secures the day on its next open.
+-- Review step 1 (read only), then run step 2.
+-- ============================================================
+
+-- Step 1 (read only): the wrapper does not exist yet.
+SELECT proname, prosecdef FROM pg_proc WHERE proname IN ('secure_day', 'secure_day_for_user');
+
+-- Step 2: the wrapper. service_role only; authenticated users keep calling secure_day(uuid).
+CREATE OR REPLACE FUNCTION public.secure_day_for_user(p_user_id uuid, p_active_challenge_id uuid)
+RETURNS TABLE(streak int, secured boolean, challenge_done boolean, remaining_challenges int)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+  -- The enrollment must belong to the user; secure_day checks this too, after the claim is set.
+  IF NOT EXISTS (SELECT 1 FROM active_challenges ac WHERE ac.id = p_active_challenge_id AND ac.user_id = p_user_id) THEN
+    RAISE EXCEPTION 'FORBIDDEN';
+  END IF;
+  -- auth.uid() reads request.jwt.claim.sub, then request.jwt.claims->>'sub'. Transaction-local (is_local = true).
+  PERFORM set_config('request.jwt.claim.sub', p_user_id::text, true);
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', p_user_id::text, 'role', 'authenticated')::text, true);
+  RETURN QUERY SELECT * FROM public.secure_day(p_active_challenge_id);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.secure_day_for_user(uuid, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.secure_day_for_user(uuid, uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.secure_day_for_user(uuid, uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.secure_day_for_user(uuid, uuid) TO service_role;
+
+COMMENT ON FUNCTION public.secure_day_for_user(uuid, uuid) IS
+  'Build 90 09.1. Service-role wrapper: sets the JWT sub claim for the transaction and runs secure_day(uuid). Strava webhook only.';
+
+-- Step 3 (read only): confirm.
+SELECT proname, prosecdef FROM pg_proc WHERE proname IN ('secure_day', 'secure_day_for_user');

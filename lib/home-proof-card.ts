@@ -3,6 +3,7 @@ import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { SELF_REPORTED, closedWindowCaption, closedWindowTime, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
 import { countdownSuffix } from "@/lib/g2a-home";
+import { verifiedLine, type VerifiedBy } from "@/lib/strava-verify";
 import {
   shareTodayCaption,
   shareTodayChallenges,
@@ -116,6 +117,8 @@ export type HomeProofTask = {
   minutesLeft?: number | null;
   hasCameraProof?: boolean;
   taskConfig?: string;
+  /** Build 90 09.3: the completion was verified by an integration (check_ins.proof_source). */
+  verifiedBy?: VerifiedBy | null;
 };
 
 export type HomeProofRow = {
@@ -195,10 +198,14 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const counterLine = !closed && !task.done
     ? counterCameraGateLine(task.type ?? task.taskType, gates)
     : null;
+  // 09.3: a completion verified by Strava says so once, where "Self-reported" would be.
+  const verified = task.done ? verifiedLine(task.verifiedBy) : null;
   const proofLine = closed
     ? closedWindowCaption(task.gateTime)
     : counterLine
       ? counterLine
+      : verified
+        ? verified
       : task.done && task.hasCameraProof !== true
         ? SELF_REPORTED
         : gateLabel({
