@@ -976,7 +976,7 @@ Needs a decision from Yaseen, one of:
 - tsc: the same 5 baseline errors, 0 new.
 - Maestro `build90-links.yaml` exit 0 (above). `build90-post-detail.yaml` ×5 exit 0 (01b.3). Connect Strava not on device (flag off).
 - No SQL.
-- Backend deploy: see the line appended below after `railway up`.
+- Backend deploy: HEAD `0d368214` written to `backend/deploy-sha.txt` (gitignored), `railway up --service grit-backend`, `GET /api/health` → `{"ok":true,"commit":"0d36821"}`. The server tree equals `59e7b633` plus nothing; this deploy only replaces Grok's `85a8790`.
 
 ### Needs Yaseen
 
