@@ -52,6 +52,7 @@ import {
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
 import { dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
 import { completedTaskIds } from "@/lib/today-completion";
+import { enrollmentStarted, requiredTasks } from "@/lib/today-counts";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
 import { StreakSheet } from "@/components/home/StreakSheet";
 import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
@@ -319,11 +320,9 @@ export default function HomeScreen() {
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
-      const tasks = ac.challenges?.challenge_tasks ?? [];
-      const required = tasks.filter((t) => {
-        const cfg = t.config as { required?: boolean } | undefined;
-        return (cfg?.required ?? true) === true;
-      });
+      // 05.4: same "started" and "required" rules as todayTaskCounts, so Home and Profile agree.
+      if (!enrollmentStarted(ac, todayKey, homeTimeZone)) continue;
+      const required = requiredTasks(ac.challenges?.challenge_tasks ?? []);
       const doneRows = checkins.filter(
         (c) => c.active_challenge_id === ac.id && c.status === "completed",
       );

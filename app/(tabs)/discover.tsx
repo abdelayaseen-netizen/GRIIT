@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
@@ -224,8 +224,7 @@ function DiscoverScreenInner() {
       const person = (peopleQuery.data ?? []).find((p) => p.user_id === userId);
       if (!person) return;
       const u = (person.username ?? "").trim();
-      const target = u ? encodeURIComponent(u) : encodeURIComponent(person.user_id);
-      router.push(ROUTES.PROFILE_USERNAME(target) as never);
+      router.push(userProfile(u || person.user_id) as never);
     },
     [peopleQuery.data, router],
   );

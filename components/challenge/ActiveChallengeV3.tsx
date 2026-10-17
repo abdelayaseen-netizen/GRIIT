@@ -194,7 +194,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
           <Text style={styles.ofLabel}>of {p.durationDays}</Text>
           {p.loading ? null : (
             <Text style={styles.metaLine}>
-              {`${p.dueCount ?? 0} days done · ${p.securedCount ?? 0} secured`}
+              {recordOfDue(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}
             </Text>
           )}
         </View>

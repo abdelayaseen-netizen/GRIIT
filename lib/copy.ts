@@ -1,4 +1,5 @@
 // v48 single-source copy. Home and challenge detail import the SAME strings (Part 4: freeze copy).
+import { formatOfDays } from "@/lib/format-days";
 export const FREEZE = {
   title: (day: string) => `${day} wasn’t secured.`,
   offer: (left: number) => `A freeze can hold it until midnight. ${left} left.`,
@@ -22,7 +23,7 @@ export const HOME = {
   offline: (t: string) => `Offline. Showing what was saved at ${t}.`,
 };
 export const WINDOW = { opensAt: (start: string) => `Opens at ${start}`, closed: (a: string, b: string) => `Window closed · ${a}–${b}` };
-export const WEEK = { line: (s: number, closed: number) => `This week: ${s} of ${closed} days secured` };  // the only week count (StreakSheet)
+export const WEEK = { line: (s: number, closed: number) => `This week: ${formatOfDays(s, closed)} secured` };  // the only week count (StreakSheet)
 export const FEED = { everyoneHint: (n: number) => `Showing everyone until you follow 3 people. You follow ${n}.` }; // render only when Everyone is selected
 
 const IRREG: Record<string, string> = { person: "people" };

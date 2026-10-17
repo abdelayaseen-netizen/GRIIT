@@ -616,6 +616,7 @@ export const groupsRouter = createTRPCRouter({
         return {
           userId: m.user_id,
           displayName: p?.display_name ?? p?.username ?? "Member",
+          username: p?.username ?? null,
           avatar: p?.avatar_url ?? null,
           role: m.role,
           currentStreak: streakMap.get(m.user_id) ?? 0,

@@ -87,6 +87,14 @@ export function homeChallengeOpenA11y(challenge: string): string {
   return `Open ${challenge} challenge`;
 }
 
+/**
+ * Build 90 05.2: the one-line tappable header above each challenge's tasks on Home.
+ * "7K Steps · Day 1 of 7". Same day line the rows use, so the numbers agree.
+ */
+export function homeChallengeHeaderLine(challenge: string, day: number, dayTotal: number | null | undefined): string {
+  return `${challenge} · ${homeProofDayLine(day, dayTotal)}`;
+}
+
 export type HomeProofTask = {
   id?: string;
   name: string;

@@ -2,6 +2,8 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import type { PgError } from "../../types/db";
+import { getSupabaseServer } from "../../lib/supabase-server";
+import { testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
 
 const PUSH_TOKEN_MAX = 500;
 const DEVICE_ID_MAX = 256;
@@ -126,9 +128,22 @@ export const notificationsRouter = createTRPCRouter({
     const uRows = (unread ?? []) as DbNotifRow[];
     const eRows = (earlier ?? []) as DbNotifRow[];
 
+    // Build 90 05.3: a real viewer does not see notifications from is_test accounts.
+    // Rows without an actor (reminders, rank) stay. A test viewer sees everything.
+    const reader = getSupabaseServer() ?? ctx.supabase;
+    const unreadMapped = uRows.map(mapDbRow);
+    const earlierMapped = eRows.map(mapDbRow);
+    const viewerIsTest = await viewerIsTestAccount(reader, ctx.userId);
+    if (viewerIsTest) return { unread: unreadMapped, earlier: earlierMapped };
+    const actorIds = [...unreadMapped, ...earlierMapped]
+      .map((n) => n.actorId)
+      .filter((id): id is string => Boolean(id) && id !== ctx.userId);
+    const testIds = actorIds.length > 0 ? await testAuthorIdSet(reader, actorIds) : new Set<string>();
+    const keep = (n: { actorId: string | null }) => !n.actorId || !testIds.has(n.actorId);
+
     return {
-      unread: uRows.map(mapDbRow),
-      earlier: eRows.map(mapDbRow),
+      unread: unreadMapped.filter(keep),
+      earlier: earlierMapped.filter(keep),
     };
   }),
 

@@ -14,6 +14,7 @@
 import { INVITE_BASE } from "@/lib/config";
 import { streakInARow } from "@/lib/task-complete-toast";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { formatDays } from "@/lib/format-days";
 import { dayParts, inviteUrl } from "@/lib/story-card";
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
@@ -491,14 +492,14 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       push({
         kind: "baseline",
         lead: text(String(secured), 200, 190, palette.fg, "800"),
-        rest: text(`of ${due} days secured`, 44, 52, palette.fg, "500"),
+        rest: text(`of ${formatDays(due)} secured`, 44, 52, palette.fg, "500"),
       });
       push({
         kind: "row",
         gap: 16,
         items: [
           { kind: "flame", size: 44, color: palette.accent },
-          text(`Longest streak ${input.longestStreak ?? 0} days`, 44, 52, palette.fg),
+          text(`Longest streak ${formatDays(input.longestStreak ?? 0)}`, 44, 52, palette.fg),
         ],
       });
     } else {
@@ -508,7 +509,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
         push({
           kind: "baseline",
           lead: text(String(input.secured), 170, 170, palette.fg, "800"),
-          rest: text(`of ${due} days`, 60, 64, palette.fg, "500"),
+          rest: text(`of ${formatDays(due)}`, 60, 64, palette.fg, "500"),
         });
       } else {
         push(dayRow(day, total, 150, palette.fg, palette.fg));

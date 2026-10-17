@@ -1,7 +1,10 @@
 import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { ArrowUp } from "lucide-react-native";
+import { useAuth } from "@/contexts/AuthContext";
+import { feedAuthorHref } from "@/lib/feed-tap-targets";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_V3 } from "@/lib/design-system";
@@ -43,7 +46,20 @@ type Props = {
 
 export function CommentsSheet({ visible, eventId, onClose }: Props) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { user } = useAuth();
   const [draft, setDraft] = useState("");
+
+  // 05.1: a comment author opens their profile. The sheet closes first so the
+  // profile is not pushed under a Modal.
+  const openAuthor = useCallback(
+    (item: Pick<CommentItem, "user_id" | "username">) => {
+      const href = feedAuthorHref({ viewerUserId: user?.id, authorUserId: item.user_id, username: item.username });
+      onClose();
+      router.push(href as never);
+    },
+    [onClose, router, user?.id],
+  );
 
   const query = useQuery({
     queryKey: ["feed", "comments", eventId],
@@ -147,6 +163,7 @@ export function CommentsSheet({ visible, eventId, onClose }: Props) {
                   time={parts.time}
                   body={parts.body}
                   avatarUri={item.avatar_url}
+                  onPressAuthor={() => openAuthor(item)}
                 />
                 {index < rows.length - 1 ? <Divider /> : null}
               </View>

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { RefreshControl, SectionList, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, SectionList, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Bell } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { relativeTime } from "@/lib/utils/relativeTime";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
+import { usableHandle } from "@/lib/feed-tap-targets";
 import {
   challengeIdFromInviteNotification,
   challengeInviteFromNotification,
@@ -75,6 +76,19 @@ function NotificationsBody({
     return s;
   }, [query.data?.unread, query.data?.earlier]);
 
+  // 05.1: the person behind any notification opens their profile. Own rows go to the own tab.
+  const openActor = useCallback(
+    (item: NotifRow) => {
+      if (!item.actorId) return;
+      if (item.actorId === userId) {
+        router.push(ROUTES.TABS_PROFILE as never);
+        return;
+      }
+      router.push(userProfile(usableHandle(item.actorUsername) ?? item.actorId) as never);
+    },
+    [router, userId],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: NotifRow }) => {
       if (isChallengeInviteNotification(item)) {
@@ -108,26 +122,20 @@ function NotificationsBody({
           })}
           onFollow={onFollow}
           userId={userId}
+          onPressActor={item.actorId ? () => openActor(item) : undefined}
           onPress={
             (item.type === "respect" || item.type === "comment") && item.metadata?.event_id
               ? () => router.push(ROUTES.POST_ID(String(item.metadata.event_id)) as never)
               : item.type === "follow" || item.type === "follow_request"
                 ? item.actorId
-                  ? () => {
-                      const uname = item.actorUsername?.trim();
-                      if (uname && uname !== "?" && uname.length >= 2) {
-                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(uname)) as never);
-                      } else if (item.actorId) {
-                        router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.actorId)) as never);
-                      }
-                    }
+                  ? () => openActor(item)
                   : undefined
                 : undefined
           }
         />
       );
     },
-    [onFollow, userId, router, startAtById, timeZone],
+    [onFollow, userId, router, startAtById, timeZone, openActor],
   );
 
   if (query.isPending) {
@@ -203,12 +211,15 @@ const NotificationRow = React.memo(function NotificationRow({
   onFollow,
   userId,
   onPress,
+  onPressActor,
 }: {
   n: NotifRow;
   day: number | null;
   onFollow: (id: string) => void;
   userId: string;
   onPress?: () => void;
+  /** 05.1: the avatar opens the person even when the row opens the post. */
+  onPressActor?: () => void;
 }) {
   const qc = useQueryClient();
   const [frDone, setFrDone] = useState<"accepted" | "declined" | null>(null);
@@ -273,14 +284,30 @@ const NotificationRow = React.memo(function NotificationRow({
     );
   }
 
+  const avatar = (
+    <Avatar
+      size={DS_V3.size.avatar.sm}
+      uri={n.actorAvatarUrl}
+      displayName={who}
+    />
+  );
+
   return (
     <ListRow
       icon={
-        <Avatar
-          size={DS_V3.size.avatar.sm}
-          uri={n.actorAvatarUrl}
-          displayName={who}
-        />
+        onPressActor ? (
+          <Pressable
+            testID="notif-actor"
+            accessibilityRole="button"
+            accessibilityLabel={`${who ?? "Member"} profile`}
+            hitSlop={8}
+            onPress={onPressActor}
+          >
+            {avatar}
+          </Pressable>
+        ) : (
+          avatar
+        )
       }
       title={title}
       subtitle={relativeTime(n.createdAt)}

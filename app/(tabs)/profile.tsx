@@ -68,6 +68,7 @@ import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
 import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
 import {
   joinedBioLine,
   nextUnearnedBadge,
@@ -272,9 +273,17 @@ export default function ProfileScreen() {
   const consistencySubFromU = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
     : "";
+  // 05.4: one source of truth for "tasks left today", shared with Home's card.
+  const todayCounts = todayTaskCounts({
+    activeChallenges: (bootstrap.data?.activeChallenges ?? []) as CountableEnrollment[],
+    todayCheckins: bootstrap.data?.todayCheckinsForUser ?? [],
+    todayKey,
+    timeZone: homeTimeZone,
+  });
   const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
     todaySecured,
     formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
+    leftByEnrollment: todayCounts.byEnrollment,
   });
   const tasksLeft = challengeRows
     .filter((r) => r.status === "active")

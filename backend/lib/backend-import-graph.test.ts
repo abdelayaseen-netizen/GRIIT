@@ -89,6 +89,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/consistency.ts",
       "lib/date-utils.ts",
       "lib/day-secure-ui.ts",
+      "lib/format-days.ts",
       "lib/free-challenge-limit.ts",
       "lib/freeze-earn.ts",
       "lib/group-nudge.ts",

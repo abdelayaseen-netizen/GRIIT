@@ -15,7 +15,7 @@ import { ChevronLeft } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
 import { DS_V3 } from "@/lib/design-system";
 import { useAuth } from "@/contexts/AuthContext";
 import { invalidateAfterFollow } from "@/lib/follow-invalidate";
@@ -155,7 +155,7 @@ export default function FollowListScreen() {
               if (item.user_id === user?.id) {
                 router.push(ROUTES.TABS_PROFILE as never);
               } else {
-                router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(item.username)) as never);
+                router.push(userProfile(item.username || item.user_id) as never);
               }
             }}
             accessibilityLabel={`View ${item.username}'s profile`}

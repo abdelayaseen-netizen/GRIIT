@@ -52,6 +52,7 @@ import {
 } from "@/lib/post-detail";
 import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
 import { ROUTES } from "@/lib/routes";
+import { feedAuthorHref } from "@/lib/feed-tap-targets";
 import { POST_AUDIENCES, audienceBadge, audienceLabel, type PostAudience } from "@/lib/post-audience";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
@@ -176,6 +177,14 @@ function PostThreadScreenInner() {
     commentMutation.mutate({ text: t, parentId: replyTo?.id });
   }, [draft, id, commentMutation, replyTo]);
 
+  // 05.1: the author header and every comment author open the person.
+  const openPerson = useCallback(
+    (authorUserId: string, username: string | null | undefined) => {
+      router.push(feedAuthorHref({ viewerUserId: user?.id, authorUserId, username }) as never);
+    },
+    [router, user?.id],
+  );
+
   const listHeader = useMemo(() => {
     if (loading) {
       return (
@@ -205,7 +214,13 @@ function PostThreadScreenInner() {
       <View>
         <View style={styles.gutter}>
           {proofUri ? <ProofImage uri={proofUri} size="feed" stamp={stamp} /> : null}
-          <View style={styles.authorRow}>
+          <Pressable
+            testID="post-author"
+            accessibilityRole="button"
+            accessibilityLabel={`${author} profile`}
+            onPress={() => openPerson(displayPost.userId, displayPost.username)}
+            style={styles.authorRow}
+          >
             <Avatar
               size={DS_V3.size.avatar.sm}
               uri={displayPost.avatarUrl}
@@ -215,7 +230,7 @@ function PostThreadScreenInner() {
               <Text style={styles.author}>{author}</Text>
               <Text style={styles.time}>{relativeTime(displayPost.createdAt)}</Text>
             </View>
-          </View>
+          </Pressable>
           <Text style={styles.completion}>
             {completionLine({
               challenge: displayPost.challengeName,
@@ -265,7 +280,7 @@ function PostThreadScreenInner() {
         ) : null}
       </View>
     );
-  }, [loading, displayPost, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation]);
+  }, [loading, displayPost, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
 
   const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
 
@@ -301,6 +316,7 @@ function PostThreadScreenInner() {
               time={parts.time}
               body={parts.body}
               avatarUri={item.avatar_url}
+              onPressAuthor={() => openPerson(item.user_id, item.username)}
             />
           </Pressable>
           {deleteCommentTargetId === item.id ? (
@@ -327,7 +343,7 @@ function PostThreadScreenInner() {
         </View>
       );
     },
-    [user?.id, deleteCommentTargetId, deleteCommentMutation, rows],
+    [user?.id, deleteCommentTargetId, deleteCommentMutation, rows, openPerson],
   );
 
   return (

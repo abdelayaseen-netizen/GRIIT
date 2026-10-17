@@ -1,4 +1,5 @@
 import { joinMeOnGriitCode } from "@/lib/deep-links";
+import { formatOfDays } from "@/lib/format-days";
 
 /** Share-sheet sentence. The link is inviteDeepLink / inviteUrl, never a hard-coded host. */
 export function challengeInviteShareText(name: string, link: string): string {
@@ -37,5 +38,5 @@ export function challengeCompleteShareText(data: {
   isHardMode?: boolean;
 }): string {
   const hardLine = data.isHardMode ? " Strict." : "";
-  return `I completed "${data.name}" on GRIIT. ${data.daysCompleted} of ${data.duration} days secured.${hardLine}`;
+  return `I completed "${data.name}" on GRIIT. ${formatOfDays(data.daysCompleted, data.duration)} secured.${hardLine}`;
 }

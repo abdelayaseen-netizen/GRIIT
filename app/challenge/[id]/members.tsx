@@ -8,7 +8,8 @@ import { UserPlus } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
+import { usableHandle } from "@/lib/feed-tap-targets";
 import { NUDGE_MESSAGES } from "@/lib/group-nudge";
 import { DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
@@ -37,7 +38,7 @@ type MembersPayload = {
   cap: number;
   groupStreak: number;
   groupStreakBrokeBy?: string | null;
-  members: (RosterMember & { avatar?: string | null })[];
+  members: (RosterMember & { avatar?: string | null; username?: string | null })[];
   pendingInvites: {
     inviteId: string;
     userId: string;
@@ -82,6 +83,18 @@ export default function ChallengeMembersScreen() {
     if (router.canGoBack()) router.back();
     else router.replace(ROUTES.TABS_HOME as never);
   }, [router]);
+
+  // 05.1: a member row opens that person. Own row goes to the own tab.
+  const openMember = useCallback(
+    (m: { userId: string; username?: string | null }) => {
+      if (m.userId === user?.id) {
+        router.push(ROUTES.TABS_PROFILE as never);
+        return;
+      }
+      router.push(userProfile(usableHandle(m.username) ?? m.userId) as never);
+    },
+    [router, user?.id],
+  );
 
   const isCreator = useMemo(() => {
     const members = membersQuery.data?.members ?? [];
@@ -170,6 +183,7 @@ export default function ChallengeMembersScreen() {
                       }
                       avatarUri={(m as { avatar?: string | null }).avatar}
                       nameAside={m.userId === user?.id ? "You" : m.role === "creator" ? "Creator" : undefined}
+                      onPress={() => openMember(m)}
                       trailing={rosterTrailing({
                         securedToday: m.securedToday,
                         yesterdayState: m.yesterdayState,

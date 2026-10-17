@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { consistencyScore } from "@/lib/scoring";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
+import { usableHandle } from "@/lib/feed-tap-targets";
 import { inviteToChallenge } from "@/lib/share";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
@@ -338,10 +339,8 @@ function useOpenLeaderboardProfile() {
         router.push(ROUTES.TABS_PROFILE as never);
         return;
       }
-      const u = entry.username?.trim();
-      if (!u || u === "?") return;
-      if (/^user_[0-9a-f]+$/i.test(u)) return;
-      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      // 05.1: every row opens a profile; rows without a usable handle open by id.
+      router.push(userProfile(usableHandle(entry.username) ?? entry.userId) as never);
     },
     [router],
   );

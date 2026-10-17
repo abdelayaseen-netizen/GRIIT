@@ -161,7 +161,12 @@ function asStatus(status: string): ChallengeStatus {
 
 export function rowsFromProfileRecord(
   record: Pick<ProfileRecord, "runs" | "completed">,
-  opts?: { todaySecured?: boolean; formatDate?: (key: string) => string },
+  opts?: {
+    todaySecured?: boolean;
+    formatDate?: (key: string) => string;
+    /** Build 90 05.4: today's open count per enrollment from `todayTaskCounts`, the same source Home reads. */
+    leftByEnrollment?: Record<string, { left: number }>;
+  },
 ): ChallengeRow[] {
   const fmt = opts?.formatDate ?? ((key: string) => key);
   const active: ChallengeRow[] = record.runs.map((r) => {
@@ -183,7 +188,12 @@ export function rowsFromProfileRecord(
       range: start && exclusive ? finishedDateRangeLine(start, exclusive, fmt) : "",
       startsTomorrow,
       startDateLabel: start ? fmt(start) : undefined,
-      tasksLeft: opts?.todaySecured === true ? 0 : r.tasksPerDay,
+      tasksLeft:
+        opts?.todaySecured === true
+          ? 0
+          : opts?.leftByEnrollment
+            ? (opts.leftByEnrollment[r.id]?.left ?? 0)
+            : r.tasksPerDay,
     };
   });
   const finished: ChallengeRow[] = record.completed.map((c) => ({

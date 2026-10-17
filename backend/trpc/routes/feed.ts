@@ -63,6 +63,21 @@ function hoursUntilLocalMidnight(timezone: string): number {
   }
 }
 
+/**
+ * Build 90 05.3: ids among `userIds` that a real viewer must not see
+ * (profiles.is_test). The viewer's own id is never hidden. Empty for a test viewer.
+ */
+async function hiddenTestAuthorIds(
+  ctx: { supabase: Parameters<typeof viewerIsTestAccount>[0]; userId: string },
+  userIds: readonly string[],
+): Promise<Set<string>> {
+  const others = [...new Set(userIds.filter((id) => id && id !== ctx.userId))];
+  if (others.length === 0) return new Set();
+  const reader = getSupabaseServer() ?? ctx.supabase;
+  if (await viewerIsTestAccount(reader, ctx.userId)) return new Set();
+  return testAuthorIdSet(reader, others);
+}
+
 export const feedRouter = createTRPCRouter({
   getLiveFeed: protectedProcedure.input(z.object({ scope: z.enum(["following", "everyone"]), limit: z.number().min(1).max(30).default(20), cursor: z.string().min(1).optional() })).query(async ({ ctx, input }) => {
     const server = getSupabaseServer() ?? ctx.supabase;
@@ -807,9 +822,17 @@ export const feedRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
       }
       const blockedCommentIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
-      const visibleComments = blockedCommentIds.size > 0
+      const unblocked = blockedCommentIds.size > 0
         ? (comments ?? []).filter((c: { user_id: string }) => !blockedCommentIds.has(c.user_id))
         : (comments ?? []);
+      // Build 90 05.3: a real viewer does not see comments from is_test accounts.
+      const testIds = await hiddenTestAuthorIds(
+        ctx,
+        unblocked.map((c: { user_id: string }) => c.user_id),
+      );
+      const visibleComments = testIds.size > 0
+        ? unblocked.filter((c: { user_id: string }) => !testIds.has(c.user_id))
+        : unblocked;
       const userIds = [...new Set(visibleComments.map((c: { user_id: string }) => c.user_id))];
       const { data: profiles } = userIds.length
         ? await ctx.supabase
@@ -1011,7 +1034,11 @@ export const feedRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load reactions." });
       }
-      const userIds = [...new Set((reactions ?? []).map((r: { user_id: string }) => r.user_id))];
+      const allIds = [...new Set((reactions ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (allIds.length === 0) return [];
+      // Build 90 05.3: a real viewer's likes list does not show is_test accounts.
+      const testIds = await hiddenTestAuthorIds(ctx, allIds);
+      const userIds = testIds.size > 0 ? allIds.filter((id) => !testIds.has(id)) : allIds;
       if (userIds.length === 0) return [];
       const { data: profiles } = await ctx.supabase
         .from("profiles")

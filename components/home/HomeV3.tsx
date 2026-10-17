@@ -28,6 +28,7 @@ import {
 import { FLAGS } from "@/lib/feature-flags";
 import {
   HOME_PROOF_HEADING,
+  homeChallengeHeaderLine,
   homeChallengeOpenA11y,
   homeProofDayLine,
   homeRingA11y,
@@ -438,9 +439,32 @@ export function HomeV3({
                 </Text>
               </View>
               {firstDayLine ? <Text style={styles.caption}>{firstDayLine}</Text> : null}
-              {proof.sections.flatMap((section) =>
-                section.rows.filter((row) => !row.done).map((row) => renderRow(section, row)),
-              )}
+              {proof.sections.map((section) => {
+                const open = section.rows.filter((row) => !row.done);
+                if (open.length === 0) return null;
+                const headerLine = homeChallengeHeaderLine(section.challenge, section.day, section.dayTotal);
+                return (
+                  <View key={section.challengeId ?? section.challenge}>
+                    {section.challengeId ? (
+                      <Pressable
+                        testID="home-challenge-header"
+                        accessibilityRole="button"
+                        accessibilityLabel={homeChallengeOpenA11y(section.challenge)}
+                        onPress={() => onPressChallenge?.(section.challengeId!)}
+                        style={styles.challengeHead}
+                      >
+                        <Text style={styles.challengeHeadTxt} numberOfLines={1}>{headerLine}</Text>
+                        <ChevronRight size={RING} color={DS_V3.color.textSecondary} />
+                      </Pressable>
+                    ) : (
+                      <View style={styles.challengeHead}>
+                        <Text style={styles.challengeHeadTxt} numberOfLines={1}>{headerLine}</Text>
+                      </View>
+                    )}
+                    {open.map((row) => renderRow(section, row))}
+                  </View>
+                );
+              })}
               {(() => {
                 const done = proof.sections.flatMap((section) =>
                   section.rows.filter((row) => row.done).map((row) => ({ section, row })),
@@ -851,6 +875,23 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  challengeHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: DS_V3.space.md,
+    minHeight: DS_V3.size.tap,
+    paddingVertical: DS_V3.space.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DS_V3.color.hairline,
+  },
+  challengeHeadTxt: {
+    flex: 1,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   done: {
     minHeight: DS_V3.size.button,

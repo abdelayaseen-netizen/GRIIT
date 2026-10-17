@@ -1,5 +1,6 @@
 import type { ProofsHeader } from "@/backend/lib/proofs-days";
 import { consistencyHeadline, type Consistency } from "@/lib/consistency";
+import { formatOfDays } from "@/lib/format-days";
 
 export type { ProofsHeader };
 
@@ -49,7 +50,7 @@ export function securedSinceLine(header: ProofsHeader): string {
     return header.dueToday ? "First day is today." : "No days yet.";
   }
   const since = header.firstDueDate ? ` since ${formatSinceDate(header.firstDueDate)}` : "";
-  return `${header.secured} of ${header.days} days secured${since}`;
+  return `${formatOfDays(header.secured, header.days)} secured${since}`;
 }
 
 export function calendarHeaderLine(header: ProofsHeader): string {

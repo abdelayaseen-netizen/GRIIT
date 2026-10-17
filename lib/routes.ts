@@ -2,6 +2,15 @@
  * Centralized route paths for type-safe navigation.
  * Use these constants instead of string literals. Use `as never` only when expo-router Href requires it.
  */
+
+/**
+ * Build 90 05.1: the one way to open a person. Takes a username or, when the
+ * row has none, the user id (`profiles.getPublicByUsername` accepts both).
+ */
+export function userProfile(usernameOrId: string): string {
+  return `/profile/${encodeURIComponent(usernameOrId.trim())}`;
+}
+
 export const ROUTES = {
   AUTH: "/auth",
   AUTH_LOGIN: "/auth/login",
@@ -47,6 +56,7 @@ export const ROUTES = {
   CHALLENGE_INVITE: (id: string) => `/challenge/${id}/invite` as const,
   /** Active challenge detail (post-join); use activeChallengeId from active_challenges.id */
   CHALLENGE_ACTIVE: (activeChallengeId: string) => `/challenge/active/${activeChallengeId}` as const,
+  /** Prefer `userProfile(usernameOrId)`; it encodes. This one takes an already-encoded segment. */
   PROFILE_USERNAME: (username: string) => `/profile/${username}` as const,
   FOLLOW_LIST: (userId: string, mode: "followers" | "following" | "friends", username: string) =>
     `/follow-list?userId=${encodeURIComponent(userId)}&mode=${mode}&username=${encodeURIComponent(username)}` as const,

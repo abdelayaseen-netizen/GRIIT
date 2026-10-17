@@ -104,11 +104,13 @@ export default function FeedPostV3({
         <PostHeader
           name={name}
           subject={`Finished ${post.challengeName}`}
+          challenge={post.challengeName}
           when={calendarDateLabel(post.createdAt)}
           userId={post.userId}
           username={post.username}
           avatarUri={avatarUri}
           onProfilePress={onProfilePress}
+          onChallengePress={onChallengePress}
           onMenu={onMenu}
         />
         <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
@@ -198,11 +200,13 @@ export default function FeedPostV3({
       <PostHeader
         name={name}
         subject={daySubject}
+        challenge={post.challengeName}
         when={when}
         userId={post.userId}
         username={post.username}
         avatarUri={avatarUri}
         onProfilePress={onProfilePress}
+        onChallengePress={onChallengePress}
         onMenu={onMenu}
       />
       {variant === "task_camera" ? (
@@ -289,22 +293,28 @@ function selfReportedLine(iso: string): string {
 function PostHeader({
   name,
   subject,
+  challenge,
   when,
   userId,
   username,
   avatarUri,
   onProfilePress,
+  onChallengePress,
   onMenu,
 }: {
   name: string;
   subject: string;
+  /** 05.2: the challenge the subject line names; the subject opens it when `onChallengePress` is set. */
+  challenge?: string;
   when: string;
   userId: string;
   username: string;
   avatarUri: string | null | undefined;
   onProfilePress?: () => void;
+  onChallengePress?: () => void;
   onMenu?: () => void;
 }) {
+  const subjectText = <Text style={styles.subject} numberOfLines={2}>{subject}</Text>;
   return (
     <View style={styles.header}>
       <Pressable
@@ -315,16 +325,36 @@ function PostHeader({
       >
         <Avatar size={32} userId={userId} uri={avatarUri} displayName={name} username={username} />
       </Pressable>
-      <Pressable
-        onPress={onProfilePress}
-        accessibilityRole="button"
-        accessibilityLabel={`${name} profile`}
-        hitSlop={FEED_TAP_HIT_SLOP}
-        style={styles.flex}
-      >
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <Text style={styles.subject} numberOfLines={2}>{subject}</Text>
-      </Pressable>
+      <View style={styles.flex}>
+        <Pressable
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel={`${name} profile`}
+          hitSlop={{ top: FEED_TAP_HIT_SLOP.top, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: 0 }}
+        >
+          <Text style={styles.name} numberOfLines={1}>{name}</Text>
+        </Pressable>
+        {onChallengePress && challenge ? (
+          <Pressable
+            testID="feed-post-challenge"
+            onPress={onChallengePress}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${challenge} challenge`}
+            hitSlop={{ top: 0, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: FEED_TAP_HIT_SLOP.bottom }}
+          >
+            {subjectText}
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={onProfilePress}
+            accessibilityRole="button"
+            accessibilityLabel={`${name} profile`}
+            hitSlop={{ top: 0, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: FEED_TAP_HIT_SLOP.bottom }}
+          >
+            {subjectText}
+          </Pressable>
+        )}
+      </View>
       <Text style={styles.when}>{when}</Text>
       <Pressable
         accessibilityRole="button"
