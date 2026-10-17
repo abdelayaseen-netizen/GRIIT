@@ -1,7 +1,9 @@
 /**
  * Build 90 10.4: the combined morning report.
  *
- *   npx tsx agents/src/build90-report.ts --out /path/to/docs/reports/oct-build90 [--sha 5d3de5b] [--build 91]
+ *   npx tsx agents/src/build90-report.ts --out /path/to/docs/reports/oct-build90 [--sha 5d3de5b] [--build 91] [--notes <out>/NOTES.md]
+ *
+ * NOTES.md (hand-written, optional) goes in as "What the screenshots show" after the scorecard.
  *
  * Reads <out>/<chunk>/ (result.json, steps.jsonl, summary.json) and writes REPORT.md, REPORT.html and
  * REPORT.pdf (WebKit, agents/tools/html2pdf.swift). Scores in the 10-category scorecard are rules from the
@@ -11,7 +13,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { CHUNKS, cleanTiming } from "./build90";
+import { CHUNKS, cleanTiming, rescored } from "./build90";
 import { tomorrowScore } from "./interview";
 import type { AgentResult, Persona, StepLog } from "./types";
 
@@ -30,7 +32,7 @@ function readAll(out: string): Run[] {
     for (const persona of chunk.personas) {
       const file = path.join(out, chunk.slug, persona.id, "result.json");
       if (!fs.existsSync(file)) continue;
-      const result = JSON.parse(fs.readFileSync(file, "utf8")) as AgentResult;
+      const result = rescored(JSON.parse(fs.readFileSync(file, "utf8")) as AgentResult);
       const stepsFile = path.join(out, chunk.slug, persona.id, "steps.jsonl");
       const steps = fs.existsSync(stepsFile) ? fs.readFileSync(stepsFile, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as StepLog) : [];
       runs.push({ result, steps, persona, chunk: chunk.slug });
@@ -50,7 +52,7 @@ const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)}%` : "�
 const ms = (v: number | null | undefined) => (v == null ? "—" : `${v} ms`);
 const sawText = (run: Run, re: RegExp) => run.steps.some((step) => re.test(`${step.screenName} ${step.target} ${step.thought} ${step.error} ${step.confusion}`));
 
-export function buildReport(out: string, sha: string, build: string): string {
+export function buildReport(out: string, sha: string, build: string, notes = ""): string {
   const runs = readAll(out);
   const fresh = runs.filter((r) => r.persona.fresh);
   const secured = (r: Run) => sawText(r, /day secured/i) || r.result.doneTimings.some((t) => /day secured/i.test(t.marker));
@@ -110,17 +112,26 @@ export function buildReport(out: string, sha: string, build: string): string {
   const dataScore = wrongNumbers === 0 ? 8 : wrongNumbers <= 2 ? 6 : 4;
   const safetyRuns = runs.filter((r) => r.chunk === "5-safety-edge");
   const blockedSeen = safetyRuns.filter((r) => sawText(r, /not allowed|isn.?t allowed|can.?t use|blocked|try another|pick another|language|contains|inappropriate|choose a different|that word/i)).length;
-  const securityScore = safetyRuns.length ? (blockedSeen >= 3 ? 8 : blockedSeen >= 1 ? 6 : 4) : 5;
+  const rude = /shit|bullshit|fuck|\bass\b/i;
+  // The server filter only answers when the text is submitted: a type step with a rude word followed by a
+  // save/create/post/comment tap. Typing alone (step 1 of Create says "Looks good" for length) is not a test.
+  const submittedRude = safetyRuns.filter((r) => {
+    const typedAt = r.steps.findIndex((s) => s.action === "type" && rude.test(s.text ?? ""));
+    return typedAt >= 0 && r.steps.slice(typedAt + 1).some((s) => s.action === "tap" && /^(save|create|post|publish|comment|send|start challenge|done)/i.test(s.target));
+  });
+  const typedRude = safetyRuns.filter((r) => r.steps.some((s) => s.action === "type" && rude.test(s.text ?? "")));
+  // Nothing submitted means the filter was not exercised; that is "not measured" (5), not a failure.
+  const securityScore = !submittedRude.length && blockedSeen === 0 ? 5 : blockedSeen >= 3 ? 8 : blockedSeen >= 1 ? 6 : 4;
   const conceptScoreBand = concept >= 60 ? 8 : concept >= 35 ? 6 : concept > 0 ? 4 : 2;
   const rows: [string, number, string][] = [
     ["Product loop", loopScore, `${completed.length} of ${runs.length} finished a task, ${photo.length} with a photo.`],
     ["UX and onboarding", onboardingScore, `${freshSecured.length} of ${fresh.length} fresh personas reached Day secured; ${welcome.length} of ${fresh.length} started at Welcome.`],
     ["Frontend", Math.min(8, Math.max(4, Math.round((loopScore + perfScore) / 2))), `Done → sheet median ${ms(doneToSheet)}; ${gaveUpRepeat.length} sessions ended on a repeated screen after 15 steps.`],
-    ["Backend", reliabilityScore, `${crashes.length} crashes; server at ${sha}; 429s and server errors are in the per-step errors below if any.`],
-    ["Data integrity", dataScore, `${wrongNumbers} day-number mismatches between the screen and the database.`],
-    ["Performance", perfScore, `Median sheet choice → done marker ${ms(doneToVisible)}; photo post ${ms(photoPost)}. Release build on the simulator.`],
+    ["Backend", reliabilityScore, `${crashes.length} crashes; server /api/health 0d36821; 429s and server errors are in the per-step errors below if any.`],
+    ["Data integrity", dataScore, `${wrongNumbers} day-number mismatches between the screen and the database (a secured day showing current_day − 1 is the app's displayDay rule and is not counted).`],
+    ["Performance", perfScore, `Median sheet choice → done marker ${ms(doneToVisible)}; photo post ${ms(photoPost)}. Release build on the simulator; measured by polling the view hierarchy (one poll ≈ 0.5–1 s, so read ± 1 s). Done → sheet ${ms(doneToSheet)} is the pure UI step.`],
     ["Reliability", reliabilityScore, `${crashes.length} of ${runs.length} sessions hit a launch or step crash.`],
-    ["Security and privacy", securityScore, `${blockedSeen} of ${safetyRuns.length} safety personas saw a blocked-word message. is_test on every account.`],
+    ["Security and privacy", securityScore, `${blockedSeen} of ${safetyRuns.length} safety personas saw a blocked-word message; ${typedRude.length} typed a rude word (${typedRude.map((r) => r.result.personaId).join(", ") || "none"}), ${submittedRude.length} submitted it to the server. ${submittedRude.length ? "" : "Not measured in this run; the filter is covered by chunk 07 tests. "}is_test on every account.`],
     ["Tests", 7, "Chunk 01–09 vitest files 469/469 in one run; full vitest the 4 baseline failures only; tsc 5 baseline errors."],
     ["Words (concept)", conceptScoreBand, `Concept score ${concept}%: secured ${right("securedRight")}, freeze ${right("freezeRight")}, self-reported ${right("selfReportedRight")} of ${asked.length}.`],
   ];
@@ -156,6 +167,15 @@ export function buildReport(out: string, sha: string, build: string): string {
   lines.push(`| Stopped on their own (after 15 steps) | ${stoppedOwn.length} |`);
   lines.push(`| Crashes | ${crashes.length} |`);
   lines.push("");
+  const invalidJson = runs.map((r) => [r.result.personaId, r.steps.filter((s) => /not valid JSON/.test(s.error ?? "")).length] as const).filter(([, n]) => n > 0);
+  lines.push("## Read with this in mind");
+  lines.push("");
+  lines.push(`- The agents are Haiku 4.5 on a simulator, not people. A photo finish uses the simulator camera, which returns a stand-in image, and ${invalidJson.length ? `they refused to type the rude words the safety personas were given (${invalidJson.map(([id, n]) => `${id}: ${n} empty replies`).join(", ")})` : "they typed every word they were given"}. The server-side filter itself is covered by chunk 07's vitest and the build90-safety Maestro flow, not by this run.`);
+  lines.push(`- "Ended on a repeated screen" counts sessions the harness stopped after 15 steps because the same screen came back three times. ${gaveUpRepeat.length} of ${runs.length} here. It is a harness stop rule as much as a product signal; read the per-session rows before treating it as a dead end.`);
+  lines.push(`- Done timing: Done → sheet is measured on every self-reported finish (${timings.filter((t) => t.toSheetMs != null).length}). Choice → done marker is only counted when the marker showed inside the 20 s watch window (${timings.filter((t) => t.toVisibleMs != null).length}); "only after more taps" rows mean the agent left the screen before the marker was seen, not that the app was slow.`);
+  lines.push(`- Day-number check: ${runs.reduce((n, r) => n + r.result.wrongNumbers.length, 0)} real mismatches. The 202 raw entries in result.json are "Day 1 on screen, current_day 2 stored" on a secured day, which is lib/challenge-day.ts displayDay (current_day points at tomorrow once today is secured); they are dropped when the report reads the runs.`);
+  lines.push(`- Offline (p5-06) was not applied: no network conditioner on this Mac's simulator. p5-06 ran as a normal post.`);
+  lines.push("");
   lines.push("## Scorecard");
   lines.push("");
   lines.push(`Overall **${overall}** (product loop, onboarding and data integrity weighted double, as on 12 and 14 Oct; 14 Oct was 5.2). Scores are rules from the numbers in this run; the why column says which.`);
@@ -164,6 +184,7 @@ export function buildReport(out: string, sha: string, build: string): string {
   lines.push("|---|---|---|---|");
   rows.forEach((row, i) => lines.push(`| ${i + 1} | ${row[0]} | ${row[1]} | ${row[2]} |`));
   lines.push("");
+  if (notes.trim()) lines.push("## What the screenshots show", "", notes.trim(), "");
   lines.push("## Chunks");
   lines.push("");
   for (const chunk of CHUNKS) {
@@ -266,7 +287,9 @@ if (/build90-report\.ts$/.test(process.argv[1] ?? "")) {
   const out = path.resolve(arg("out") ?? path.join(root, "docs", "reports", "oct-build90"));
   const sha = arg("sha") ?? "5d3de5b";
   const build = arg("build") ?? "91";
-  const md = buildReport(out, sha, build);
+  const notesFile = arg("notes") ?? path.join(out, "NOTES.md");
+  const notes = fs.existsSync(notesFile) ? fs.readFileSync(notesFile, "utf8") : "";
+  const md = buildReport(out, sha, build, notes);
   fs.writeFileSync(path.join(out, "REPORT.md"), md);
   const html = markdownToHtml(md);
   fs.writeFileSync(path.join(out, "REPORT.html"), html);

@@ -132,6 +132,8 @@ describe("exit interview", () => {
   it("scores secured", () => {
     expect(securedRight("It means I finished every task for today so the day counts.")).toBe(true);
     expect(securedRight("All of today's tasks are done.")).toBe(true);
+    expect(securedRight("Day secured means you've completed the daily challenge requirement and it's been recorded for that day.")).toBe(true);
+    expect(securedRight("Day secured means you completed your daily challenge goal of no screens for 60 minutes before bed.")).toBe(false);
     expect(securedRight("It means my account is safe with a password.")).toBe(false);
     expect(securedRight("The app never explained it.")).toBe(false);
   });
@@ -139,6 +141,7 @@ describe("exit interview", () => {
   it("scores freeze", () => {
     expect(freezeRight("A freeze lets me miss a day without losing my streak.")).toBe(true);
     expect(freezeRight("A pass that keeps the streak when you skip a day.")).toBe(true);
+    expect(freezeRight("A freeze can cover a missed day so you don't break your streak.")).toBe(true);
     expect(freezeRight("It pauses the timer on a task.")).toBe(false);
     expect(freezeRight("I don't know, I didn't see it.")).toBe(false);
   });
@@ -157,5 +160,17 @@ describe("exit interview", () => {
     expect(scored.selfReportedRight).toBe(true);
     expect(tomorrowScore(scored.tomorrow)).toBe(7);
     expect(scoreInterview("not json").asked).toBe(false);
+  });
+});
+
+describe("reading recorded runs", () => {
+  it("drops the secured-day display shape from wrong numbers and keeps real mismatches", async () => {
+    const { cleanTiming, isSecuredDayShape } = await import("./build90");
+    expect(isSecuredDayShape("Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).")).toBe(true);
+    expect(isSecuredDayShape("Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).")).toBe(true);
+    expect(isSecuredDayShape("Screen said Day 3 of 7. Enrollment day is 1 (stored current_day 1).")).toBe(false);
+    expect(isSecuredDayShape("Screen said Day 1 of 7. Enrollment day is 5 (stored current_day 5).")).toBe(false);
+    expect(cleanTiming({ toVisibleMs: 153037, marker: "Day secured" }).toVisibleMs).toBeNull();
+    expect(cleanTiming({ toVisibleMs: 2411, marker: "Day secured" }).toVisibleMs).toBe(2411);
   });
 });

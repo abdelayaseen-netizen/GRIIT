@@ -13,7 +13,7 @@ import { fileURLToPath } from "url";
 import { agentClient, readOwnRows, signInAgent } from "./account";
 import { HAIKU_MODEL } from "./cost";
 import { loadEnv, requireEnv, safeText } from "./env";
-import { tomorrowScore } from "./interview";
+import { freezeRight, securedRight, selfReportedRight, tomorrowScore } from "./interview";
 import { runPersona, type Spend } from "./loop";
 import { MaestroSession } from "./maestro";
 import { writeOutputs } from "./report";
@@ -142,12 +142,30 @@ function readRuns(dir: string, personas: Persona[]): Run[] {
   for (const persona of personas) {
     const file = path.join(dir, persona.id, "result.json");
     if (!fs.existsSync(file)) continue;
-    const result = JSON.parse(fs.readFileSync(file, "utf8")) as AgentResult;
+    const result = rescored(JSON.parse(fs.readFileSync(file, "utf8")) as AgentResult);
     const stepsFile = path.join(dir, persona.id, "steps.jsonl");
     const steps = fs.existsSync(stepsFile) ? fs.readFileSync(stepsFile, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as StepLog) : [];
     out.push({ result, steps, persona });
   }
   return out;
+}
+
+/** The interview text is the record; right/wrong is re-derived from it with the current rules in interview.ts. */
+export function rescored(result: AgentResult): AgentResult {
+  // Runs recorded before the display-day rule was in loop.ts: "Day 1" on screen with current_day 2 is
+  // the app's own displayDay (current_day points at tomorrow once today is secured), not a mismatch.
+  const wrongNumbers = (result.wrongNumbers ?? []).filter((line) => !isSecuredDayShape(line));
+  const i = result.interview;
+  if (!i) return { ...result, wrongNumbers };
+  return { ...result, wrongNumbers, interview: { ...i, securedRight: securedRight(i.secured), freezeRight: freezeRight(i.freeze), selfReportedRight: selfReportedRight(i.selfReported) } };
+}
+
+export function isSecuredDayShape(line: string): boolean {
+  const m = line.match(/^Screen said Day (\d+) of \d+\. Enrollment day is ([\d, /]+) \(stored current_day ([\d, ?]+)\)\.?$/);
+  if (!m) return false;
+  const shown = Number(m[1]);
+  const stored = m[3]!.split(",").map((s) => Number(s.trim()));
+  return stored.length > 0 && stored.every((n) => Number.isFinite(n) && n === shown + 1);
 }
 
 function sawText(run: Run, re: RegExp): boolean {
@@ -387,6 +405,20 @@ async function main() {
     return;
   }
   if (!selected.length) throw new Error(`No chunk ${which}`);
+  if (process.argv.includes("--summarize")) {
+    // Rewrite summary.md / summary.json from the results already on disk. No device, no model calls.
+    for (const chunk of selected) {
+      const runDir = path.join(out, chunk.slug);
+      if (!fs.existsSync(runDir)) continue;
+      const previous = fs.existsSync(path.join(runDir, "summary.json")) ? (JSON.parse(fs.readFileSync(path.join(runDir, "summary.json"), "utf8")) as Record<string, unknown>) : {};
+      const summary = summarize(chunk.slug, readRuns(runDir, chunk.personas), chunk.pairs);
+      fs.writeFileSync(path.join(runDir, "summary.md"), summary.md);
+      fs.writeFileSync(path.join(runDir, "summary.json"), JSON.stringify({ ...summary.json, startedAt: previous.startedAt, endedAt: previous.endedAt, spendUsd: previous.spendUsd, resummarizedAt: new Date().toISOString() }, null, 2) + "\n");
+      console.log(`Chunk ${chunk.slug} summary rewritten`);
+    }
+    if (which === "all") writeWords(out);
+    return;
+  }
   const maestro = new MaestroSession();
   const spend: Spend = { usd: 0, input: 0, output: 0, calls: 0 };
   try {

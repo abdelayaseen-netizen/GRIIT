@@ -252,7 +252,7 @@ export async function prepareAgentAccount(
 }
 
 export type DbSnapshot = {
-  enrollments: { id: string; challenge_id: string; status: string; current_day: number | null; title: string; duration_days: number | null }[];
+  enrollments: { id: string; challenge_id: string; status: string; current_day: number | null; last_secured_date_key?: string | null; title: string; duration_days: number | null }[];
   checkins: { id: string; active_challenge_id: string; task_id: string | null; date_key: string | null; status: string | null; proof_url: string | null }[];
   shares: { id: string; share_state: string | null; event_type: string | null; challenge_id: string | null }[];
   created: { id: string; title: string | null }[];
@@ -263,11 +263,11 @@ export async function readOwnRows(client: SupabaseClient, userId: string): Promi
   const empty: DbSnapshot = { enrollments: [], checkins: [], shares: [], created: [], error: "" };
   const { data: enrollments, error: enrErr } = await client
     .from("active_challenges")
-    .select("id, challenge_id, status, current_day")
+    .select("id, challenge_id, status, current_day, last_secured_date_key")
     .eq("user_id", userId)
     .limit(20);
   if (enrErr) empty.error = safeText(enrErr.message);
-  const rows = (enrollments ?? []) as { id: string; challenge_id: string; status: string; current_day: number | null }[];
+  const rows = (enrollments ?? []) as { id: string; challenge_id: string; status: string; current_day: number | null; last_secured_date_key: string | null }[];
   const challengeIds = [...new Set(rows.map((row) => row.challenge_id).filter(Boolean))];
   let titles = new Map<string, { title: string; duration_days: number | null }>();
   if (challengeIds.length) {

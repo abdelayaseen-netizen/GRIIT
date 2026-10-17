@@ -631,8 +631,14 @@ export async function runPersona(opts: {
   if (db.enrollments.length) {
     for (const claim of dayClaims(blob.split("\n"))) {
       const sameTotal = db.enrollments.filter((row) => row.duration_days === claim.total);
-      if (sameTotal.length && sameTotal.every((row) => shownEnrollmentDay(row.current_day, claim.total) !== claim.n)) {
-        wrongNumbers.push(`Screen said Day ${claim.n} of ${claim.total}. Enrollment day is ${sameTotal.map((row) => shownEnrollmentDay(row.current_day, claim.total)).join(", ")} (stored current_day ${sameTotal.map((row) => row.current_day ?? "?").join(", ")}).`);
+      // lib/challenge-day.ts displayDay: after secure_day, current_day already points at tomorrow, so the
+      // screen shows current_day - 1 for the rest of a secured day. Both values are right on that day.
+      const shownDays = (row: (typeof sameTotal)[number]) => {
+        const stored = shownEnrollmentDay(row.current_day, claim.total);
+        return row.last_secured_date_key ? [stored, Math.max(1, stored - 1)] : [stored];
+      };
+      if (sameTotal.length && sameTotal.every((row) => !shownDays(row).includes(claim.n))) {
+        wrongNumbers.push(`Screen said Day ${claim.n} of ${claim.total}. Enrollment day is ${sameTotal.map((row) => shownDays(row).join("/")).join(", ")} (stored current_day ${sameTotal.map((row) => row.current_day ?? "?").join(", ")}${sameTotal.some((row) => row.last_secured_date_key) ? ", secured" : ""}).`);
       }
     }
   }
