@@ -104,9 +104,13 @@ app.get("/api/config", (c) => {
 /** Deep health: live Supabase query. For monitoring, not for Railway liveness. */
 async function healthDeepJson(c: Context) {
   const checks: Record<string, "ok" | "error"> = {};
+  // 01b.1: the round trip of one trivial query from this host to Supabase.
+  let supabaseMs: number | null = null;
   try {
     const { getSupabase } = await import("./lib/supabase");
+    const t0 = Date.now();
     const { error } = await getSupabase().from("challenges").select("id").limit(1);
+    supabaseMs = Date.now() - t0;
     checks.supabase = error ? "error" : "ok";
   } catch {
     checks.supabase = "error";
@@ -121,6 +125,7 @@ async function healthDeepJson(c: Context) {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV ?? "development",
       checks,
+      supabase_ms: supabaseMs,
       commitSha: commitShaValue,
       commit: commitShaValue,
       service: "backend",
