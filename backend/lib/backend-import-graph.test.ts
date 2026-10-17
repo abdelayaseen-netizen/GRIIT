@@ -97,6 +97,7 @@ describe("backend import graph (Railway tsx)", () => {
       "lib/group-nudge.ts",
       "lib/home-day-total.ts",
       "lib/iana-timezone-core.ts",
+      "lib/invite-code.ts",
       "lib/maestro-account.ts",
       "lib/post-audience.ts",
       "lib/profile-privacy.ts",

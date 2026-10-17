@@ -127,12 +127,36 @@ export function normalizeForMatch(text: string): string {
 }
 
 /** The first blocked word found as a whole word in the normalized text, or null. */
+// Chunk 08: a blocked word glued to another ("fuckyou", "bullshit", "retarded").
+// Anywhere in a token: words no ordinary word contains.
+const GLUED_ANYWHERE = ["fuck", "bitch", "pussy", "whore", "nigger", "nigga", "bastard", "twat", "slut"];
+// Start or end of a token only: "Matsushita" and "Scunthorpe" carry these in the middle.
+const GLUED_EDGE = ["shit", "cunt", "retard"];
+// Ordinary words a glued rule would otherwise catch.
+const GLUED_ALLOW = new Set(["niggardly", "retardant", "retardants", "shitake"]);
+// Short words that sit inside too many ordinary words (class, cocktail, Dickens) stay whole-word.
+
+function gluedWord(token: string): string | null {
+  if (GLUED_ALLOW.has(token)) return null;
+  for (const word of GLUED_ANYWHERE) {
+    if (token.includes(word)) return word;
+  }
+  for (const word of GLUED_EDGE) {
+    if (token.startsWith(word) || token.endsWith(word)) return word;
+  }
+  return null;
+}
+
 export function blockedWord(text: string): string | null {
   const normalized = normalizeForMatch(text);
   if (!normalized) return null;
   const tokens = new Set(normalized.split(" "));
   for (const word of PROFANITY_WORDS) {
     if (tokens.has(word)) return word;
+  }
+  for (const token of tokens) {
+    const glued = gluedWord(token);
+    if (glued) return glued;
   }
   return null;
 }

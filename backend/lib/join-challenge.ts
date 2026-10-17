@@ -143,6 +143,8 @@ export async function joinChallengeDirect(
   });
 
   // Insert only columns that exist in all environments (some DBs lack current_day, progress_percent)
+  // Build 90 chunk 08: a member is on the challenge board from the day they join
+  // (board_opt_in was DEFAULT false and nothing ever set it, so every board said "A board needs two").
   const { data: activeChallenge, error: insertErr } = await supabase
     .from("active_challenges")
     .insert({
@@ -153,6 +155,7 @@ export async function joinChallengeDirect(
       end_at: endAt.toISOString(),
       current_day: 1,
       progress_percent: 0,
+      board_opt_in: true,
     })
     .select("id, user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, created_at")
     .single();

@@ -220,7 +220,7 @@ export type OpenLinkRoute =
 
 export function openLinkRoute(
   challengeId: string,
-  result: { state?: "full" | "ended"; invite?: { id?: string; status?: string } },
+  result: { state?: "full" | "ended" | "open"; invite?: { id?: string; status?: string } },
 ): OpenLinkRoute {
   if (result.state === "full") return { kind: "full" };
   if (result.state === "ended") return { kind: "ended" };

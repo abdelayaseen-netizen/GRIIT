@@ -63,8 +63,36 @@ const DODGES = [
   "s.h.i.t",
 ] as const;
 
+// Chunk 08: a blocked word glued to another word.
+const GLUED = [
+  "fuckyou",
+  "youfuck",
+  "fuckoff",
+  "motherfucker",
+  "fuckyou123",
+  "bullshit",
+  "shithead",
+  "shitty",
+  "horseshit",
+  "retarded",
+  "bitches",
+  "bitchy",
+  "cunts",
+  "sluts",
+  "twats",
+  "whores",
+  "bastards",
+  "FuckYou",
+  "fuck_you_all",
+  "fuckyou!!!",
+  "fúckyou",
+] as const;
+
 // Whole-word matching: these contain a blocked word as a substring and must pass.
 const CLEAN = [
+  "fire retardant",
+  "niggardly",
+  "shitake",
   "class",
   "classic",
   "assess",
@@ -174,6 +202,20 @@ describe("blockedPlainText dodges (07.2)", () => {
       expect(blockedPlainText(text)).toBeNull();
     });
   }
+});
+
+describe("blockedPlainText glued words (08)", () => {
+  for (const text of GLUED) {
+    it(`blocks ${JSON.stringify(text)}`, () => {
+      expect(blockedPlainText(text)).toBe(BLOCKED_TEXT);
+    });
+  }
+  it("keeps the short words whole-word only", () => {
+    for (const text of ["dumbass", "classy", "cockatoo", "damnation", "dickhead"]) {
+      // Not caught: ass / cock / damn / dick sit inside too many ordinary words.
+      expect(blockedPlainText(text)).toBeNull();
+    }
+  });
 });
 
 describe("blockedPlainText field messages (07.1)", () => {

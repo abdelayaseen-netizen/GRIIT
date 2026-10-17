@@ -18,6 +18,7 @@ import { consistencyScore } from "@/lib/scoring";
 import { ROUTES, userProfile } from "@/lib/routes";
 import { usableHandle } from "@/lib/feed-tap-targets";
 import { inviteToChallenge } from "@/lib/share";
+import InviteLinkRow from "@/components/InviteLinkRow";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
 import Chip from "@/components/ds/Chip";
@@ -251,6 +252,14 @@ function LeaderboardBody({
               });
             }}
           />
+          {/* Build 90 08.1: the link itself, with Copy and Share. */}
+          <View style={styles.inviteLink}>
+            <InviteLinkRow
+              challengeId={selectedChallengeId}
+              challengeName={challengeBoard.data?.challengeTitle ?? "this challenge"}
+              refUserId={userId}
+            />
+          </View>
         </View>
       ) : emptyCopy && showEmpty ? (
         <View style={styles.emptyPad}>
@@ -544,6 +553,9 @@ const styles = StyleSheet.create({
   emptyPad: {
     paddingTop: DS_V3.space.section,
     paddingHorizontal: DS_V3.space.gutter,
+  },
+  inviteLink: {
+    marginTop: DS_V3.space.lg,
   },
   board: {
     paddingTop: DS_V3.space.md,

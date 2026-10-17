@@ -413,6 +413,20 @@ export const groupsRouter = createTRPCRouter({
   openLink: protectedProcedure
     .input(z.object({ challengeId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
+      // Build 90 08.2: a griit://i/<id> link is shared for every challenge, not only groups.
+      // Anything that is not a team run opens the challenge page as it is (Join, or the duo
+      // waiting room); older clients treat an unknown state as "open the challenge" too.
+      const { data: anyRow, error: anyErr } = await challengeReader(ctx.supabase)
+        .from("challenges")
+        .select("id, participation_type")
+        .eq("id", input.challengeId)
+        .maybeSingle();
+      if (anyErr || !anyRow) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      }
+      if ((anyRow as { participation_type?: string | null }).participation_type !== "team") {
+        return { state: "open" as const };
+      }
       const challenge = await loadTeamChallenge(challengeReader(ctx.supabase), input.challengeId);
       if (challenge.run_status !== "active") {
         return { state: "ended" as const };

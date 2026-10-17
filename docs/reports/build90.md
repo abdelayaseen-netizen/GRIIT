@@ -630,3 +630,34 @@ Fix (tests only, `backend/trpc/routes/journal-private.test.ts`): the Write step 
 - The spec's stop note ("the backend needs `railway up` before chunk 08") is already satisfied tonight under the standing approval: the server runs `b61ab41`. Nothing further to deploy from this chunk.
 - Reports still land in `user_reports` as "a report of this user with the comment in details"; a moderator sees one row per (reporter, reported) pair. If you want per-comment rows and a server-only hide, a `comment_reports` table is the next step (not written: the chunk passes without it).
 - Dev-only: the LogBox toast for a refused comment (`captureError` → console) shows in the dev client; not in release.
+
+## 08 Friend loop
+
+Branch `feat/build90`, started from `919988f0`. Root causes written before any code change; the Fix lines, tests, deploy sha and gate evidence are filled in below as each item lands.
+
+### 08.1 Invite link visible
+
+Root cause: the link exists only inside a share sheet. `lib/share.ts:71-89` `inviteToChallenge` builds `griit://i/<challenge id>` (there is no `challenges.invite_code` column; the code is the challenge uuid) and hands it to `Share.share`; `copyChallengeInvite` exists but no screen calls it. `components/create/v2/LaunchedScreen.tsx:95-97` shows only an "Invite friends" button, and only when `group` is true (so a solo creator sees nothing). `components/task-v2/SecuredDayScreen.tsx:240` offers the proof post / Instagram story share, no invite. `components/activity/LeaderboardTab.tsx:241-252` renders "A board needs two." with one `EmptyState` action that opens the share sheet. Nowhere is the link visible as text, nowhere is there a Copy button.
+
+### 08.2 Opening an invite
+
+Root cause, three parts:
+1. `backend/trpc/routes/groups.ts:413-419` `openLink` calls `loadTeamChallenge` (`groups.ts:52-69`), which throws `BAD_REQUEST "Not a group challenge."` for anything but `participation_type = 'team'`. `app/invite/[code].tsx:52-55` catches every error as `state = "ended"`, so a `griit://i/<id>` link for a normal (solo) or duo challenge shows "This challenge has ended." to every signed-in recipient.
+2. `app/invite/[code].tsx:27` `if (!user) return;` — a recipient with no session sees the spinner for good; and before that `lib/auth-redirect.ts:60-63` `resolveAuthRedirect` sends any sessionless or not-yet-onboarded person who is not on an onboarding/auth route to `/onboarding`, dropping the link (nothing stores a pending path; `lib/onboarding-pending.ts` `setPendingChallengeId` is write-only, no reader anywhere).
+3. `app/challenge/[id].tsx:314-355` `onJoin` does handle a sessionless viewer (`ensureAnonymousSession`), but the new guest's profile has `onboarding_completed = false`, so the moment the session exists `AuthRedirector` replaces the screen with onboarding while the join is in flight, and after the join the first-task route is also replaced.
+
+### 08.3 Discover search
+
+Root cause: `app/(tabs)/discover.tsx` and `components/discover/DiscoverV3.tsx` contain no `TextInput`; `challenges.getDiscoverHome` (`challenges-discover.ts:670-678`, `q` → title ilike) and `challenges.getFeatured` (`search`) accept a search string but nothing in the app calls either with one. Nothing resolves an invite code (challenge uuid, or a pasted `griit://i/<uuid>` link) to a challenge.
+
+### Leaderboard `board_opt_in` is never set
+
+Root cause: `supabase/migrations/20260923120000_chunk_u_share_state.sql:51-55` added `active_challenges.board_opt_in boolean NOT NULL DEFAULT false`. `backend/trpc/routes/leaderboard.ts:291` lists a member only when `board_opt_in === true` (or it is the viewer). The only writer is `leaderboard.setBoardOptIn` (`leaderboard.ts:437-459`), and no client code calls it (`LeaderboardTab.tsx:193` `void JOIN_THE_BOARD;` — the toggle was never built). `backend/lib/join-challenge.ts:147-155` inserts the enrollment without the column, so every enrollment is `false` and every challenge board says "A board needs two." however many people are in it.
+
+### Duo challenge waiting room from Discover
+
+Root cause: `backend/trpc/routes/challenges-join.ts:114-158`. A duo challenge is created with `run_status = 'waiting'` and no enrollment for the creator (`challenges-create.ts:288-290, 380`). When the second person joins, the route inserts `challenge_members`, counts 2 ≥ `team_size`, and calls `rpc("start_team_challenge")` without reading the error (`:152-156`). The function (`supabase/migrations/20250312000001_team_challenge_rpcs.sql:32-34`) raises `NOT_TEAM_CHALLENGE` for `participation_type = 'duo'` (it accepts only `team` and `shared_goal`, and even for `shared_goal` it creates no `active_challenges`). The route then returns `{ joined: true, runStatus: "active" }` with no enrollment; `lib/open-first-task.ts` `joinHasEnrollment` is false, so Discover (`app/(tabs)/discover.tsx:305-307`) pushes Home and the detail (`app/challenge/[id].tsx:349`) does nothing. The challenge stays `waiting`, neither person ever gets an enrollment, and while only one is in there is no screen that says so.
+
+### Glued profanity
+
+Root cause: `backend/lib/content-moderation.ts:130-138` `blockedWord` splits the normalized text on spaces and matches whole tokens only (the chunk 07 rule that keeps "class", "assess", "Scunthorpe", "Dickens" clean). So "fuckyou", "bullshit", "retarded", "fuckoff" pass.

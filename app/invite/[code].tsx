@@ -17,21 +17,31 @@ type ScreenState = "loading" | "full" | "ended";
 function InviteLinkScreenInner() {
   const { code, ref: refParam } = useLocalSearchParams<{ code: string; ref?: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<ScreenState>("loading");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!code) {
       router.replace(ROUTES.TABS_DISCOVER as never);
       return;
     }
-    if (!user) return;
     const challengeId = decodeURIComponent(code);
+    // Build 90 08.2: `invite=1` tells the challenge page the link is the key (an invite-only
+    // challenge opens and joins through it).
+    const guestQuery = new URLSearchParams({ invite: "1" });
+    if (refParam) guestQuery.set("ref", typeof refParam === "string" ? refParam : refParam[0] ?? "");
+    if (!user) {
+      // No session yet (a brand-new guest opened the link). The challenge page is public and
+      // its Join creates the guest session; openLink needs a user, so skip it.
+      router.replace(`${ROUTES.CHALLENGE_ID(challengeId)}?${guestQuery.toString()}` as never);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       try {
         const result = (await trpcMutate(TRPC.groups.openLink, { challengeId })) as {
-          state?: "full" | "ended";
+          state?: "full" | "ended" | "open";
           invite?: { id?: string; status?: string };
         };
         if (cancelled) return;
@@ -44,7 +54,7 @@ function InviteLinkScreenInner() {
           setState("ended");
           return;
         }
-        const q = new URLSearchParams();
+        const q = new URLSearchParams({ invite: "1" });
         if (route.inviteId) q.set("inviteId", route.inviteId);
         if (refParam) q.set("ref", typeof refParam === "string" ? refParam : refParam[0] ?? "");
         const suffix = q.toString() ? `?${q.toString()}` : "";
@@ -57,7 +67,7 @@ function InviteLinkScreenInner() {
     return () => {
       cancelled = true;
     };
-  }, [code, user, refParam, router]);
+  }, [code, user, authLoading, refParam, router]);
 
   const goDiscover = () => router.replace(ROUTES.TABS_DISCOVER as never);
 

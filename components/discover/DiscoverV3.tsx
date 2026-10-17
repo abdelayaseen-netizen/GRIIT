@@ -45,6 +45,7 @@ import {
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
+import DiscoverSearch from "@/components/discover/DiscoverSearch";
 import { difficultyChip } from "@/lib/discover-preview-tasks";
 
 const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
@@ -90,6 +91,8 @@ export type DiscoverV3Props = {
   refreshing?: boolean;
   onRefresh?: () => void;
   onJoinBuiltin?: (item: FeaturedBuiltin) => void;
+  /** Build 90 08.3: search by name or invite code; `viaInvite` when the query was a code. */
+  onOpenSearchResult?: (challengeId: string, viaInvite: boolean) => void;
 };
 
 const CHIPS: { id: DiscoverCategory; label: string }[] = [
@@ -136,6 +139,7 @@ export function DiscoverV3({
   refreshing,
   onRefresh,
   onJoinBuiltin,
+  onOpenSearchResult,
 }: DiscoverV3Props) {
   const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
@@ -176,6 +180,7 @@ export function DiscoverV3({
 
   const header = (
     <>
+      {onOpenSearchResult ? <DiscoverSearch onOpen={onOpenSearchResult} /> : null}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

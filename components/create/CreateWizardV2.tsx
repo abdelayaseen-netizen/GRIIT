@@ -384,6 +384,7 @@ export function CreateWizardV2() {
     return (
       <LaunchedScreen
         title={launched.title}
+        challengeId={launched.challengeId}
         days={launched.days}
         group={launched.group}
         tomorrow={tomorrow}

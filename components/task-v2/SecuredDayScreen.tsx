@@ -34,6 +34,8 @@ import {
   type SecuredProof,
   type SecuredSelfRow,
 } from "@/lib/secured-day";
+import InviteLinkRow from "@/components/InviteLinkRow";
+import { INVITE_AFTER_FIRST_DAY_BODY, INVITE_AFTER_FIRST_DAY_HEADING } from "@/lib/invite-link";
 
 const PT = DS_V3.space.xs / 4;
 const TILE_GAP = 6;
@@ -61,6 +63,7 @@ export default function SecuredDayScreen({
   onDone,
   username,
   freezeNote,
+  invite,
 }: {
   streak: number;
   proofs: SecuredProof[];
@@ -83,6 +86,8 @@ export default function SecuredDayScreen({
   onDone: () => void;
   username?: string | null;
   freezeNote?: string | null;
+  /** Build 90 08.1: after the first secured day, the invite link with Copy and Share. */
+  invite?: { challengeId: string; challengeName: string } | null;
 }) {
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
@@ -231,6 +236,13 @@ export default function SecuredDayScreen({
             </View>
             <Text style={styles.photoCap}>{names}</Text>
           </>
+        ) : null}
+        {invite ? (
+          <View style={styles.invite} testID="secured-invite">
+            <Text style={styles.inviteHeading}>{INVITE_AFTER_FIRST_DAY_HEADING}</Text>
+            <Text style={styles.caption}>{INVITE_AFTER_FIRST_DAY_BODY}</Text>
+            <InviteLinkRow challengeId={invite.challengeId} challengeName={invite.challengeName} />
+          </View>
         ) : null}
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </ScrollView>
@@ -423,6 +435,16 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  invite: {
+    gap: DS_V3.space.sm,
+    marginTop: DS_V3.space.md,
+  },
+  inviteHeading: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   fail: {
     fontSize: DS_V3.type.caption.fontSize,

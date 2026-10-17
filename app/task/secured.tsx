@@ -32,6 +32,7 @@ import { afterSecuredNext } from "@/lib/moment-queue";
 import { freezeEarnedNote } from "@/lib/freeze-earn";
 import { useFirstConcept } from "@/lib/concept-seen";
 import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
+import { showInviteAfterSecured } from "@/lib/invite-link";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -118,6 +119,8 @@ function TaskSecuredInner() {
     allSelfReported: boolean;
     ready: boolean;
     error: boolean;
+    /** 08.1: the challenge id of the enrollment this screen is for (from the bootstrap). */
+    challengeId: string | null;
   }>({
     taskCount: 0,
     challengeCount: 0,
@@ -125,6 +128,7 @@ function TaskSecuredInner() {
     allSelfReported: false,
     ready: false,
     error: false,
+    challengeId: null,
   });
   const [retryTick, setRetryTick] = useState(0);
   const [shareFailed, setShareFailed] = useState(false);
@@ -152,6 +156,9 @@ function TaskSecuredInner() {
         });
         if (!live) return;
         const next = selectSecuredDayMeta({ tasks, proofs });
+        const own = (enrollments as { id?: string; challenge_id?: string }[]).find(
+          (e) => e.id === result.activeChallengeId,
+        );
         setMeta({
           taskCount: next.taskCount,
           challengeCount: next.challengeCount,
@@ -159,6 +166,7 @@ function TaskSecuredInner() {
           allSelfReported: next.allSelfReported,
           ready: true,
           error: false,
+          challengeId: typeof own?.challenge_id === "string" ? own.challenge_id : null,
         });
       } catch {
         if (!live) return;
@@ -169,13 +177,14 @@ function TaskSecuredInner() {
           allSelfReported: false,
           ready: false,
           error: true,
+          challengeId: null,
         });
       }
     })();
     return () => {
       live = false;
     };
-  }, [proofs, queryClient, tz, retryTick, user?.id]);
+  }, [proofs, queryClient, tz, retryTick, user?.id, result.activeChallengeId]);
 
   const done = () => {
     const openPost = firstString(params.openPost);
@@ -211,6 +220,16 @@ function TaskSecuredInner() {
     <SecuredDayScreen
       streak={result.streakDays}
       freezeNote={freezeEarnedNote(result, firstFreeze === true)}
+      invite={
+        meta.challengeId &&
+        showInviteAfterSecured({
+          challengeDay: result.challengeDay,
+          daySecured: result.daySecured,
+          challengeDone: result.challengeDone,
+        })
+          ? { challengeId: meta.challengeId, challengeName: result.challengeName }
+          : null
+      }
       proofs={proofs}
       selfReported={meta.selfReported}
       taskCount={meta.ready ? meta.taskCount : undefined}

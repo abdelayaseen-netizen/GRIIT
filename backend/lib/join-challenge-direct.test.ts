@@ -160,3 +160,12 @@ describe("joinChallengeDirect start-again", () => {
     });
   });
 });
+
+describe("joinChallengeDirect board opt-in (08)", () => {
+  it("enrolls on the challenge board (board_opt_in true) so the leaderboard lists the member", async () => {
+    const { supabase, inserts } = mockJoinDb({ existing: null });
+    await joinChallengeDirect(supabase as never, USER, CH);
+    const enrollment = inserts.find((i) => i.table === "active_challenges");
+    expect(enrollment?.row).toMatchObject({ board_opt_in: true });
+  });
+});

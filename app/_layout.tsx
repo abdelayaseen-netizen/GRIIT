@@ -46,7 +46,7 @@ import {
   setKnownOnboardingCompleted,
   shouldSelfHealOnboardingFlag,
 } from "@/lib/onboarding-v2-routing";
-import { resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
+import { isInviteLinkSegment, resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
 import { checkProfile, selfHealOnboardingCompleted } from "@/lib/check-profile";
 import { recordAppOpen } from "@/lib/app-open-tracking";
 import { initialiseSentry } from "@/lib/sentry";
@@ -220,6 +220,7 @@ function AuthRedirector() {
     onCreateProfile: first === SEGMENTS.CREATE_PROFILE,
     inTabs: first === SEGMENTS.TABS,
     exitHref: peekOnboardingV2Exit(),
+    onInviteLink: isInviteLinkSegment(first),
   });
 
   const replaceHref = decision.action === "replace" ? decision.href : null;

@@ -21,8 +21,11 @@ import {
   launchedReminderLabel,
 } from "@/lib/late-join-copy";
 import type { WizardTask } from "@/components/create/v2/StepTasks";
+import InviteLinkRow from "@/components/InviteLinkRow";
 
 export function LaunchedScreen({
+  title,
+  challengeId,
   group,
   tomorrow,
   tasks,
@@ -33,6 +36,8 @@ export function LaunchedScreen({
   onStartToday,
 }: {
   title: string;
+  /** Build 90 08.1: the invite link (griit://i/<id>) is shown as text with Copy and Share. */
+  challengeId?: string;
   days: number;
   group: boolean;
   tomorrow: boolean;
@@ -78,6 +83,7 @@ export function LaunchedScreen({
             />
           </View>
         ))}
+        {challengeId ? <InviteLinkRow challengeId={challengeId} challengeName={title} /> : null}
         {tomorrow && reminderTime ? (
           <View style={styles.remind}>
             <View style={styles.remindCopy}>

@@ -38,6 +38,9 @@ import { formatTRPCError } from "@/lib/api";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { setPendingChallengeId } from "@/lib/onboarding-pending";
+import { setKnownOnboardingCompleted } from "@/lib/onboarding-v2-routing";
+import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
+import { joinLeftWaitingRoom, viewerInWaitingRoom } from "@/lib/invite-link";
 import { DS_V3 } from "@/lib/design-system";
 import {
   GROUP_CAP,
@@ -84,6 +87,7 @@ type ChallengeRow = {
   teamMembers?: {
     user_id: string;
     role?: string | null;
+    status?: string | null;
     profiles?: { display_name?: string | null; username?: string | null } | null;
   }[];
   tasks?: DetailTask[];
@@ -107,6 +111,8 @@ export default function ChallengeDetailScreen() {
       : Array.isArray(params.inviter)
         ? params.inviter[0]
         : undefined;
+  // Build 90 08.2: opened through griit://i/<id> (or an exact code in Discover search).
+  const viaInvite = (Array.isArray(params.invite) ? params.invite[0] : params.invite) === "1";
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
@@ -171,8 +177,9 @@ export default function ChallengeDetailScreen() {
   }, [activeChallengeId, router, pathname]);
 
   const challengeQuery = useQuery({
-    queryKey: ["challenge", id],
-    queryFn: () => trpcQuery(TRPC.challenges.getById, { id: id! }) as Promise<ChallengeRow>,
+    queryKey: ["challenge", id, viaInvite ? "invite" : ""],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.getById, viaInvite ? { id: id!, viaInvite: true } : { id: id! }) as Promise<ChallengeRow>,
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
@@ -231,6 +238,13 @@ export default function ChallengeDetailScreen() {
     viewerInviteStatus: challenge?.viewerInviteStatus,
     participationType,
     state,
+  });
+  // Build 90 08: a member of a duo / shared-goal run that has not started sees the waiting room.
+  const waitingRoom = viewerInWaitingRoom({
+    participationType: challenge?.participation_type,
+    runStatus: challenge?.run_status,
+    viewerId: user?.id,
+    memberIds: (challenge?.teamMembers ?? []).filter((m) => (m.status ?? "active") === "active").map((m) => m.user_id),
   });
   const creatorName = (() => {
     const members = challenge?.teamMembers ?? [];
@@ -314,17 +328,28 @@ export default function ChallengeDetailScreen() {
   const onJoin = useCallback(async () => {
     if (!id || joining) return;
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Build 90 08.2: a brand-new guest who opened an invite link. The join is their first day;
+    // onboarding is skipped (first day simpler wins). The in-memory flag goes first so
+    // AuthRedirector does not replace this screen with onboarding while the join is in flight.
+    let linkGuest = false;
     if (!user) {
       const anon = await ensureAnonymousSession();
       if (anon.kind !== "ok") {
         showError(anon.message ?? "Could not start a guest session.");
         return;
       }
+      if (anon.user?.id) {
+        setKnownOnboardingCompleted(anon.user.id, true);
+        linkGuest = true;
+      }
       await setPendingChallengeId(id);
     }
     setJoining(true);
     try {
-      const result = (await trpcMutate(TRPC.challenges.join, { challengeId: id })) as JoinResult;
+      const result = (await trpcMutate(
+        TRPC.challenges.join,
+        viaInvite ? { challengeId: id, viaInvite: true } : { challengeId: id },
+      )) as JoinResult;
       void trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id }).catch((refErr: unknown) => {
         captureError(refErr, "ChallengeDetailMarkJoinedChallenge");
       });
@@ -350,7 +375,14 @@ export default function ChallengeDetailScreen() {
         void (day1StartCopy(result.start_at, timeZone) === JOIN_CAPTION_TOMORROW);
         const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
         const taskHref = await firstTaskHrefAfterJoin(result, id, "home");
+        if (linkGuest) {
+          await completeOnboardingV2({ destination: taskHref ?? ROUTES.TABS_HOME });
+        }
         router.replace((taskHref ?? ROUTES.TABS_HOME) as never);
+      } else if (joinLeftWaitingRoom(result)) {
+        // Duo / shared goal with a seat still open: this page becomes the waiting room.
+        if (linkGuest) await completeOnboardingV2({ destination: ROUTES.CHALLENGE_ID(id) });
+        await challengeQuery.refetch();
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
@@ -376,7 +408,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setJoining(false);
     }
-  }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall, timeZone]);
+  }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall, timeZone, challengeQuery, viaInvite]);
 
   const resolveInviteId = useCallback(async (): Promise<string | null> => {
     if (inviteIdParam) return inviteIdParam;
@@ -537,6 +569,7 @@ export default function ChallengeDetailScreen() {
           peopleNames={(challenge?.teamMembers ?? [])
             .map((m) => (m.profiles?.display_name ?? m.profiles?.username ?? "").trim())
             .filter((n) => n.length > 0 && !/^user_/i.test(n))}
+          waitingRoom={waitingRoom && id && !finished ? { challengeId: id } : undefined}
         />
         <Sheet
           visible={limitOpen}

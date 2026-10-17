@@ -102,3 +102,26 @@ WHERE title ~* '\meveryday\M';
 
 -- Step 3 (read only): confirm nothing is left.
 SELECT c.id, c.title FROM public.challenges c WHERE c.title ~* '\meveryday\M';
+
+-- ============================================================
+-- Chunk 08, "leaderboard board_opt_in is never set".
+-- active_challenges.board_opt_in (chunk U, DEFAULT false) was never written by any code path,
+-- so every challenge board said "A board needs two". From chunk 08 the server inserts new
+-- enrollments with board_opt_in = true. This backfills the enrollments that already exist.
+-- Review step 1 first; step 2 touches the flag only, on active enrollments only.
+-- ============================================================
+
+-- Step 1 (read only): how many active enrollments are off the board today.
+SELECT count(*) AS active_off_board
+FROM public.active_challenges
+WHERE status = 'active' AND board_opt_in = false;
+
+-- Step 2: put every active enrollment on its challenge board.
+UPDATE public.active_challenges
+SET board_opt_in = true
+WHERE status = 'active' AND board_opt_in = false;
+
+-- Step 3 (read only): confirm.
+SELECT count(*) AS active_off_board_after
+FROM public.active_challenges
+WHERE status = 'active' AND board_opt_in = false;
