@@ -5,7 +5,7 @@ appId: app.griit.challenge-tracker
 # /tmp/b90-08-link.txt), lands on that invite-only challenge with Join, joins, and lands on
 # the first task. No onboarding first: the link is the way in. Run build90-friend-loop.yaml
 # first (it creates the challenge), then:
-#   maestro test -e INVITE_LINK="$(cat /tmp/b90-08-link.txt)" .maestro/build90-friend-loop-b.yaml
+#   maestro test -e INVITE_LINK="$(cat /tmp/b90-08-link.txt)" -e MAESTRO_EMAIL=b8908b<ts>@example.com .maestro/build90-friend-loop-b.yaml
 - launchApp:
     clearState: true
     permissions:
@@ -42,16 +42,56 @@ appId: app.griit.challenge-tracker
     visible: "Not yet"
     timeout: 15000
 - tapOn: "Not yet"
-# board_opt_in: both members are on the board the moment B joins (no "A board needs two").
 - extendedWaitUntil:
     visible: "Home"
     timeout: 20000
+# Account A is is_test, and is_test accounts are hidden from everyone who is not is_test
+# (RULES). B is still an anonymous guest here, so before the board check B becomes an
+# is_test email account too (MAESTRO_EMAIL=b8908b…@example.com). Real users are never is_test,
+# so two real members always see each other.
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-friend-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Home"
+# board_opt_in: both members are on the board the moment B joins (no "A board needs two").
 - tapOn: "Activity"
 - tapOn: "Leaderboard"
 - extendedWaitUntil:
-    visible: "Rank 1|Friend loop walk"
+    visible: "Top of the challenge|A board needs two."
     timeout: 20000
 - assertNotVisible: "A board needs two."
-- assertVisible: "Rank 1"
-- assertVisible: "Rank 2"
+# Account A (the creator) and B (this run) are both on the board.
+- assertVisible: "Top of the challenge"
+- assertVisible: "b8908a.*"
+- assertVisible: "b8908b.*"
 - takeScreenshot: build90-08-board-two

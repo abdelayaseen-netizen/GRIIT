@@ -398,7 +398,10 @@ export interface LeaderboardTabProps {
 export function LeaderboardTab({ userId }: LeaderboardTabProps) {
   const [scope, setScope] = useState<LeaderScope>("challenge");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
-  const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("friends");
+  // Build 90 08: a challenge board is the challenge's members. "friends" (viewer + mutual
+  // follows) left every link-invited member off the board, so it stayed at "A board needs two."
+  // There is no scope toggle in this tab yet.
+  const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("everyone");
 
   const friendsBoard = useQuery({
     queryKey: ["activity", "leaderboard", "friends", userId],

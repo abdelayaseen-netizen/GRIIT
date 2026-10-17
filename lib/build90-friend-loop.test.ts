@@ -60,6 +60,14 @@ describe("08.1 invite link visible (source)", () => {
     expect(tab).toMatch(/A board needs two|boardEmptyState/);
     expect(tab).toMatch(/<InviteLinkRow[\s\S]*?challengeId=\{selectedChallengeId\}/);
   });
+  it("the challenge board lists the challenge's members, not only mutual follows", () => {
+    // Seen live in flow B: after the link invitee joined, the board still said "A board needs
+    // two." because the tab asked the server for scope "friends" (viewer + mutual follows) and
+    // has no scope toggle. The copy promises "Their days count here from the day they join".
+    const tab = read("components/activity/LeaderboardTab.tsx");
+    expect(tab).toMatch(/useState<"friends" \| "everyone">\("everyone"\)/);
+    expect(tab).not.toMatch(/useState<"friends" \| "everyone">\("friends"\)/);
+  });
   it("showInviteAfterSecured: day 1, secured, not finished", () => {
     expect(showInviteAfterSecured({ challengeDay: 1, daySecured: true })).toBe(true);
     expect(showInviteAfterSecured({ challengeDay: 2, daySecured: true })).toBe(false);
