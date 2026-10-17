@@ -10,13 +10,20 @@ import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
+import { clearWrittenDeviceTimezone, noteWrittenDeviceTimezone, timezoneWriteSkipped } from "@/lib/timezone-heal";
+
+export { noteWrittenDeviceTimezone, timezoneHealSkipped, timezoneWriteSkipped, writtenDeviceTimezone } from "@/lib/timezone-heal";
 
 export async function writeDeviceTimezone(): Promise<string | null> {
   try {
     const timezone = getDeviceIanaTimeZone();
+    if (timezoneWriteSkipped(timezone)) return timezone;
+    // Claim before the POST so AppContext heal cannot race a second update.
+    noteWrittenDeviceTimezone(timezone);
     await trpcMutate(TRPC.profiles.update, { timezone });
     return timezone;
   } catch (err) {
+    clearWrittenDeviceTimezone();
     captureError(err, "writeDeviceTimezone");
     return null;
   }

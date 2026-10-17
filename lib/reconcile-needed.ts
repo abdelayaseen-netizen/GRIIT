@@ -32,8 +32,13 @@ export function reconcileStreakNeeded(input: {
   }
 
   const keys = input.securedDateKeys;
+  // A brand-new person has no history: empty keys, or only today's secure, is not a miss.
   if (input.yesterdayKey && keys != null && !keys.includes(input.yesterdayKey)) {
-    return true;
+    const last = input.stats?.lastCompletedDateKey ?? null;
+    const wasAroundYesterday =
+      keys.some((k) => k <= input.yesterdayKey!) ||
+      (last != null && last <= input.yesterdayKey);
+    if (wasAroundYesterday) return true;
   }
   if (keys != null && keys.length > 0) {
     const latest = keys.reduce((a, b) => (a > b ? a : b));

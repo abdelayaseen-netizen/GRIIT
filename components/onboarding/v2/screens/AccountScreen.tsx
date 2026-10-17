@@ -15,7 +15,8 @@ import {
   surfaceAccountAuthKind,
   surfaceCaughtAuthError,
 } from "@/lib/onboarding-v2-account-session";
-import { writeDeviceTimezone } from "@/lib/write-device-timezone";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { noteWrittenDeviceTimezone, writtenDeviceTimezone } from "@/lib/timezone-heal";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -23,7 +24,9 @@ import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
 import { displayNameFromAccount } from "@/lib/account-display-name";
 import { adoptExistingAccount } from "@/lib/adopt-existing-account";
 import { CHECK_EMAIL_TO_SAVE } from "@/lib/email-save-pending";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { useQuery } from "@tanstack/react-query";
+import { trpcMutate } from "@/lib/trpc";
+import { STARTER_TODAY_QUERY_KEY, loadStarterTodayRow } from "@/components/home/StarterTodayRow";
 import { isMaestroTestEmail } from "@/lib/maestro-account";
 import { TRPC } from "@/lib/trpc-paths";
 import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
@@ -61,9 +64,15 @@ async function flagMaestroProfile(emailAddr?: string): Promise<void> {
 
 async function saveDerivedDisplayName(appleName?: string, emailAddr?: string): Promise<void> {
   const name = displayNameFromAccount({ appleName, email: emailAddr });
-  if (!name) return;
+  const timezone = getDeviceIanaTimeZone();
+  const tzAlready = writtenDeviceTimezone() === timezone;
+  if (tzAlready && !name) return;
   try {
-    await trpcMutate(TRPC.profiles.update, { display_name: name });
+    await trpcMutate(TRPC.profiles.update, {
+      ...(tzAlready ? {} : { timezone }),
+      ...(name ? { display_name: name } : {}),
+    });
+    if (!tzAlready) noteWrittenDeviceTimezone(timezone);
   } catch (e) {
     captureError(e, "AccountDisplayName");
   }
@@ -101,25 +110,19 @@ export default function AccountScreen({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [starterDone, setStarterDone] = useState(false);
+  const starterQuery = useQuery({
+    queryKey: [...STARTER_TODAY_QUERY_KEY],
+    queryFn: loadStarterTodayRow,
+    enabled: FLAGS.STARTER_TASK_ENABLED,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const starterDone = starterQuery.data?.status === "done_now";
 
   useEffect(() => {
     if (Platform.OS === "ios") {
       void AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
     }
-  }, []);
-
-  useEffect(() => {
-    if (!FLAGS.STARTER_TASK_ENABLED) return;
-    let cancelled = false;
-    void trpcQuery<{ status?: string } | null>(TRPC.starterTask.get)
-      .then((row) => {
-        if (!cancelled) setStarterDone(row?.status === "done_now");
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const saved = accountSavedLines({
@@ -215,7 +218,6 @@ export default function AccountScreen({
         setError("Sign in failed. Please try again.");
         return;
       }
-      await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
       const appleKind = classifyAccountAuth({
@@ -223,9 +225,10 @@ export default function AccountScreen({
         createdAt: data.user.created_at,
         lastSignInAt: data.user.last_sign_in_at,
       });
-      if (appleKind === "new_account") {
-        await saveDerivedDisplayName(displayNameFromApple, credential.email ?? undefined);
-      }
+      await saveDerivedDisplayName(
+        appleKind === "new_account" ? displayNameFromApple : undefined,
+        appleKind === "new_account" ? credential.email ?? undefined : undefined,
+      );
       onAuthSuccess(appleKind);
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
@@ -316,7 +319,6 @@ export default function AccountScreen({
         setError("Please try again or check your email.");
         return;
       }
-      await writeDeviceTimezone();
       setProfileSetupHints({ email: trimmed });
       track({ name: "signup_completed", method: "email" });
       track({ name: "account_created", method: "email" });

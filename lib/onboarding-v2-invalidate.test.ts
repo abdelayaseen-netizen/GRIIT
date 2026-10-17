@@ -7,16 +7,11 @@ import {
 } from "./onboarding-v2-invalidate";
 
 describe("invalidateAfterOnboardingJoin", () => {
-  it("invalidates bootstrap, listMyActive, getStats, and getRecord", async () => {
-    expect(ONBOARDING_JOIN_QUERY_KEYS).toEqual([
-      ["home", "bootstrap"],
-      ["challenge", "listMyActive"],
-      ["profiles", "getStats"],
-      ["profiles", "getRecord"],
-    ]);
+  it("invalidates only the bootstrap (01b.3: listMyActive / getStats / getRecord live inside it)", async () => {
+    expect(ONBOARDING_JOIN_QUERY_KEYS).toEqual([["home", "bootstrap"]]);
     const invalidateQueries = vi.fn().mockResolvedValue(undefined);
     await invalidateAfterOnboardingJoin({ invalidateQueries });
-    expect(invalidateQueries).toHaveBeenCalledTimes(4);
+    expect(invalidateQueries).toHaveBeenCalledTimes(1);
     for (const queryKey of ONBOARDING_JOIN_QUERY_KEYS) {
       expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: [...queryKey] });
     }

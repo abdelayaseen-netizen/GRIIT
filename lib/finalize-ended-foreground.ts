@@ -1,9 +1,9 @@
 import { queryClient } from "@/lib/query-client";
-import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
 import { captureError } from "@/lib/sentry";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { shouldPresentEndScreen, type UnseenEndingRow } from "@/lib/challenge-end";
+import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 
 let inFlight = false;
 /** Build 90 04.7: a run that happened away from Home owes one unseen-endings check on arrival. */
@@ -24,7 +24,8 @@ export async function runFinalizeEndedOnForeground(input: {
   try {
     try {
       await trpcMutate(TRPC.challenges.finalizeEnded);
-      await queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(input.userId) }, { cancelRefetch: false });
+      // Build 90 01b.3: skip when bootstrap just loaded (guest start, sign-in, join).
+      await refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - 10_000 });
     } catch (e) {
       captureError(e, "finalizeEnded.foreground");
     }

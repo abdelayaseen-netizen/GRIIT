@@ -112,6 +112,7 @@ export default function ProfileScreen() {
     queryKey: ["profiles", "getRecord", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getRecord) as Promise<RecordPayload>,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
@@ -120,6 +121,7 @@ export default function ProfileScreen() {
     queryKey: ["profiles", "meStats", "all", user?.id ?? ""],
     queryFn: () => trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range: "all" }),
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
 
@@ -133,6 +135,7 @@ export default function ProfileScreen() {
         friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
       }>,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
 

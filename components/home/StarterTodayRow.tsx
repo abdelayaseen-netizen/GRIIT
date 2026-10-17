@@ -2,20 +2,26 @@
  * Home row for an unfinished starter. Shown only when STARTER_TASK_ENABLED is on.
  * Completing it goes through starterTask.completeNow. The client never writes the table.
  */
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DS_V3 } from "@/lib/design-system";
 import { FLAGS } from "@/lib/feature-flags";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 
 const GRATEFUL = "Write one thing you’re grateful for";
+export const STARTER_TODAY_QUERY_KEY = ["starterTask", "row"] as const;
 
-type StarterRow = {
+export type StarterRow = {
   title: string;
   status: "pending" | "done_now" | "later" | "expired";
 };
+
+export async function loadStarterTodayRow(): Promise<StarterRow | null> {
+  await trpcMutate(TRPC.starterTask.expire, {});
+  return trpcQuery<StarterRow | null>(TRPC.starterTask.get);
+}
 
 export function StarterTodayRow({
   challengeTitle,
@@ -26,36 +32,20 @@ export function StarterTodayRow({
   durationDays: number | null;
   onChanged: () => void;
 }) {
-  const [row, setRow] = useState<StarterRow | null>(null);
+  const queryClient = useQueryClient();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const rowQuery = useQuery({
+    queryKey: [...STARTER_TODAY_QUERY_KEY],
+    queryFn: loadStarterTodayRow,
+    enabled: FLAGS.STARTER_TASK_ENABLED,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const row = rowQuery.data ?? null;
 
-  const load = useCallback(async () => {
-    if (!FLAGS.STARTER_TASK_ENABLED) {
-      setRow(null);
-      return;
-    }
-    try {
-      await trpcMutate(TRPC.starterTask.expire, {});
-      const next = await trpcQuery<StarterRow | null>(TRPC.starterTask.get);
-      if (!next || next.status === "done_now" || next.status === "expired") {
-        setRow(null);
-        return;
-      }
-      setRow(next);
-    } catch {
-      setRow(null);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [load]),
-  );
-
-  if (!FLAGS.STARTER_TASK_ENABLED || !row) return null;
+  if (!FLAGS.STARTER_TASK_ENABLED || !row || row.status === "done_now" || row.status === "expired") return null;
 
   const grateful = row.title === GRATEFUL;
   const noteOk = !grateful || note.trim().length >= 1;
@@ -68,7 +58,7 @@ export function StarterTodayRow({
     setError("");
     try {
       await trpcMutate(TRPC.starterTask.completeNow, { title: row.title });
-      setRow(null);
+      queryClient.setQueryData([...STARTER_TODAY_QUERY_KEY], { ...row, status: "done_now" });
       onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save the starter.");

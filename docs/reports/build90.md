@@ -827,10 +827,115 @@ Branch `feat/build90`, started from `53ea6237`. Root causes written before any c
 
 Root cause: `checkins.complete` (`backend/trpc/routes/checkins.ts:316-1210`) logs one number, `[checkins.complete] timing` `ms` (`:1159`), taken before the secure and share steps, so the 4.9–6.1 s medians from chunk 01.7 cannot be split. Read in order, the procedure awaits these Supabase round trips one after another: `assertActiveChallengeOwnership` (`active_challenges`), `getProfileTimeZoneForUser` (`profiles`), `challenge_tasks` by id, `active_challenges.start_at`, `challenges` (duration, hard mode), the 10-second anti-cheat `check_ins` read, (timer only) the session `check_ins` read, the `check_ins` upsert, **`challenges.title` again** (`:1003`, the same row as `:353` without `title` in the select), the `activity_events` insert, `profiles.total_days_secured`, `streaks`, `checkAndUnlockAchievements` (`backend/lib/achievements.ts`: `streaks` again, `activity_events` completed_challenge, `user_follows` ×2, `activity_events` ids (up to 500) + `feed_reactions` count, `feed_comments` count, `challenges` created count, then the unlock read/insert), `challenge_tasks` + `check_ins` (parallel), `active_challenges.progress_percent` update, `day_secures`, **`active_challenges.current_day`** (`:1093`, third read of the same row), **`streaks` again** (`:1098`), the three day-proof reads (parallel), `challenges` + `challenge_tasks` for the day proofs (parallel), then `bundleTaskFinish` → the `secureDay` procedure, which starts over: `assertActiveChallengeOwnership`, `getProfileTimeZoneForUser`, `challenges`, `day_secures`, the `secure_day` RPC, `active_challenges`, `challenges` (team), `profiles`, (first secure) `day_secures` count + `profiles` update, `challenges` (title) again, `checkAndUnlockAchievements` a second time (~8 more), `grantEarnedFreezeOnSecure`; then `signProofPaths` → one storage `createSignedUrls` call. That is roughly 35 sequential round trips on a first-day self-reported finish and the same plus the storage call on a photo finish; none is timed on its own. Network: Railway runs the service in `us-west2` (California; `railway status --json` `multiRegionConfig`), the Supabase database host resolves to `2600:1f13::/36`, AWS `us-west-2` (Oregon; `ip-ranges.json`). `/api/health/deep` (`backend/hono.ts:105`) runs one trivial query but reports only ok/error, so the Railway→Supabase round trip is not measured anywhere.
 
+Fix: `backend/lib/step-timer.ts` (new) — `createStepTimer()` wraps each awaited Supabase/storage/secure call in `t.step(name, fn)` and `t.finish()` returns `{steps, totalMs, gapMs}`; `complete` logs one `[checkins.complete] steps` line with the map, `secureDay` logs `[checkins.secureDay] steps`. `/api/health/deep` now returns `supabase_ms` for its one trivial query. Deployed as `b06ae29`. Measurement: `/tmp/b90-01b-finish.mjs` makes a fresh `is_test` account (`b8901b…@example.com`), joins the 7K Steps challenge, uploads a photo (photo mode) and calls `checkins.complete` once; 5 photo + 5 self-reported runs; the server lines come from `railway logs -n 3000 --json`.
+
+Regions and round trip: Railway `grit-backend` runs in `us-west2` (California); Supabase is in AWS `us-west-2` (Oregon). One trivial query from Railway (`/api/health/deep` `supabase_ms`): 155–236 ms steady, 334 ms after an idle, 854 ms cold start. Inside a procedure each supabase-js round trip is 45–70 ms once the connection is warm. Distance is not the cost; the count of round trips is.
+
+Before (`b06ae29`, server medians, n=5 each):
+
+| | photo | self |
+|---|---|---|
+| client `completeMs` median | 3851 | 3100 |
+| **server total median** | **3614** | **2879** |
+| `secure` (the inner `secureDay`) | 1597 | 1373 |
+| &nbsp;&nbsp;of which `achievements` (second pass) | 740 | 591 |
+| `achievements` in `complete` (first pass) | 562 | 469 |
+| `task` | 114 | 72 |
+| `day_proofs` + `day_proofs_meta` | 96 + 98 | 88 + 70 |
+| `required_count` | 78 | 83 |
+| `sign_urls` | 76 | 0 |
+| every other step (`ownership`, `profile_tz`, `enrollment_start`, `challenge`, `anti_cheat`, `upsert`, `challenge_title`, `activity_event`, `ach_profile`, `ach_streak`, `progress`, `day_secure_read`, `current_day`, `streak`) | 47–73 each | 44–67 each |
+| secureDay inner steps (`ownership`, `profile_tz`, `challenge`, `day_secure_read`, `secure_day_rpc`, `enrollment`, `challenge_team`, `profile_days`, `days_count`, `days_update`, `challenge_title`) | 49–82 each | 41–80 each |
+
+Full step tables: `/tmp/b90-01b-before-table.md` (copied below in 01b.2 for the after comparison). 43 sequential round trips on the fake client (`checkins-complete-rounds.test.ts` before the fix), ~45 steps in the server log; the two achievement passes alone were 1.3 s of the 3.6 s.
+
 ### 01b.2 Cut the slow steps
 
 Root cause: the same list. Three classes: (a) rows read twice or three times (`challenges` at `:353`, `:1003`, and in `secureDay` `:1559`, `:1589`, `:1632`; `active_challenges` at `guards.ts`, `:349`, `:1093`, and `secureDay`; `streaks` at `:1065`, `:1098` and inside both `checkAndUnlockAchievements`; `profiles` at `getProfileTimeZoneForUser` ×2, `:1063`, `:1602`; `day_secures` at `:1087` and `:1567`); (b) independent reads awaited in sequence (the five setup reads; `profiles`/`streaks` before achievements; `day_secures`/`current_day`/`streaks`; the achievements function's own nine reads); (c) work that is not needed to answer the request: `checkAndUnlockAchievements` in `complete` (`:1062-1071`, result discarded, ~9 reads), the `progress_percent` update (`:1080`), and the achievements pass after a secure (result only used to insert unlock events). `secureDay` is also its own procedure for older builds, so `complete` cannot change its shape; it can pass what it already knows into a shared inner function.
 
+Fix (`59e7b63`): `checkins.complete` now runs in four rounds — `setup` (enrollment with `start_at, current_day` through `assertActiveChallengeOwnership(…, extraColumns)`, profile time zone, task, streak, the person's enrollments and completed posts for the day-proof tiles — all in one `Promise.all`), `context` (one `challenges` read covering this challenge and the day-proof set, the anti-cheat read, the challenge's tasks, today's completed check-ins, the timer session when needed, today's `day_secures` row, today's check-in rows and the day-proof tasks), `upsert`, then `finish` (`bundleTaskFinish` with the activity-row insert, the share chained on it, the secure, and the `progress_percent` update, all concurrent). The required-task count uses the pre-upsert rows plus this task; the day-proof tiles use the pre-upsert rows plus the row just written and its post. `secureDayCore(ctx, activeChallengeId, t, known?)` is shared by the `secureDay` procedure (older builds; same output) and `complete`, which passes in the challenge row, time zone and "already secured" so the secure reads nothing it already has: RPC → [`current_day`, day count or stored total] → days update → freeze grant. The two `checkAndUnlockAchievements` passes became one `unlockAchievementsAfterFinish` pass scheduled with `setTimeout(…, 0)` after the answer (its result was never in the response). `bundleTaskFinish` takes the event as a thunk and starts secure and share concurrently; its three tests kept their intent and a fourth checks the ordering. `.in("metadata->>achievement_key")` dedupe of unlock events kept. No SQL, no index change: every read already hits a primary key or an indexed `(user_id, date_key)`.
+
+Round trips on the fake client (`backend/trpc/routes/checkins-complete-rounds.test.ts`): 43 → **5** self-reported, **6** photo (20–22 queries total, run in parallel). After (`59e7b63`, server medians, n=5 each, same script, same challenge, same minute):
+
+| | photo before → after | self before → after |
+|---|---|---|
+| client `completeMs` median | 3851 → **1017** | 3100 → **757** |
+| **server total median** | **3614 → 626** | **2879 → 533** |
+| `setup` (6 reads, one round) | — → 125 | — → 135 |
+| `context` (8–9 reads, one round) | — → 143 | — → 89 |
+| `upsert` | 73 → 58 | 61 → 47 |
+| `finish` (event + share ∥ progress ∥ secure) | — → 225 | — → 197 |
+| &nbsp;&nbsp;`secure` inside finish | 1597 → 225 | 1373 → 197 |
+| &nbsp;&nbsp;&nbsp;&nbsp;`secure_day_rpc` | 82 → 66 | 61 → 39 |
+| &nbsp;&nbsp;&nbsp;&nbsp;`secure_after_rpc` (current_day ∥ count) | 55 + 50 → 74 | 44 + 69 → 57 |
+| &nbsp;&nbsp;&nbsp;&nbsp;`days_update` | 62 → 45 | 44 → 45 |
+| `activity_event` | 67 → 53 | 53 → 54 |
+| `progress` | 72 → 53 | 67 → 55 |
+| `sign_urls` | 76 → 76 | 0 → 0 |
+| `achievements` ×2 | 562 + 740 → off the response path | 469 + 591 → off the response path |
+| steps on the response path | 34 (+13 in secure) → 12 | 34 (+13 in secure) → 12 |
+
+Server samples after: photo [791, 590, 661, 626, 546], self [533, 389, 720, 625, 407]. Target was under 1.5 s for both; both are under 0.8 s. The remaining ~550 ms is 4 round trips to Oregon (~60 ms each) plus the storage sign on photo and the RPC's own work; the client's extra ~300 ms is the Mac→Railway hop. Observed and not touched: the measurement script's `user.completeOnboarding` call returns INTERNAL_SERVER_ERROR for these anonymous→email accounts in both the before and after runs (the finish does not depend on it); noted under Needs Yaseen.
+
+Tests: `checkins-complete-rounds.test.ts` (4): self ≤ 8 rounds, photo ≤ 8 rounds with a signed `photo_url`, no `user_follows`/`feed_comments`/`feed_reactions` read before the answer, no table read twice for the same data (`active_challenges` ≤ 3: ownership, enrollment list, `current_day` after the RPC changed it; `day_secures` ≤ 2: today's row before, exact count after). Failed before: 4/4 at 43 rounds (`/tmp/b90-01b-2-before.txt`). Passes now: 4/4. `finish-bundle.test.ts` 4/4, `step-timer.test.ts` 5/5 (step-name pins updated to the four rounds), `checkins-secure-day.test.ts` 7/7, `journal-private.test.ts` 6/6 (its source pin on `activityEventPayload = {` updated to the `let` form; the metadata it inspects is unchanged).
+
 ### 01b.3 Request budget in sign-up and join
 
-Root cause (from the chunk 04 trace, `docs/reports/build90.md` "04.7", and to be confirmed with a trace this chunk): after sign-in `home.bootstrap` is requested four times inside two seconds (the session change in `AppContext`, the redirector landing on Home, `FinalizeEndedGate` mount, Home focus), `profiles.update` runs twice in onboarding (the commitment / reminder screens each write), `challenges.listMyActive` + `getSecuredDateKeys` run on the challenge page though the bootstrap carries both, and the join path refetches the bootstrap and `profiles.getRecord` separately. A fresh-user flow used 74–79 requests in its busiest minute after chunk 04, under the 100 limit but with no room for retries on a weak signal.
+Root cause (measured on this branch, `build90-post-detail`, account `b8901bm115758`, server `59e7b63`, `/tmp/b90-01b-3-before-http.json`): 82 tRPC requests, busiest minute **78** starting 15:58:26, 0 × 429. Not the commitment / reminder screens (those write nothing). The duplicates are:
+
+- `home.bootstrap` ×11. After the guest session: AppContext mount, `FinalizeEndedGate` invalidate (`lib/finalize-ended-foreground.ts:28`), timezone-heal `fetchProfile` (`contexts/AppContext.tsx:277-281`), Home focus. After email upgrade and after join: `refetchAll` plus a second `invalidateQueries(["home","bootstrap"])` in `app/challenge/[id].tsx` (`:366-373`). `invalidateAfterOnboardingJoin` also invalidates bootstrap + `listMyActive` + `getStats` + `getRecord`.
+- `profiles.update` ×4. Guest `writeDeviceTimezone` (`lib/anon-auth.ts:208`), then AppContext heal because bootstrap raced the write and still had a null timezone, then AccountScreen `writeDeviceTimezone` + `saveDerivedDisplayName` as two calls (`AccountScreen.tsx:319-323`).
+- Challenge page always fetches `challenges.listMyActive` and `profiles.getSecuredDateKeys` (`app/challenge/[id].tsx:126-171`) even though `home.bootstrap` already carries `activeChallenges` and `securedDateKeys`. Join then refetches `listMyActive` and `getById` again.
+- `profiles.reconcileStreak` on a brand-new guest: `reconcileStreakNeeded` treats "yesterday not in an empty key list" as a miss (`lib/reconcile-needed.ts:35-36`), then invalidates bootstrap.
+- Home focus: `StarterTodayRow` `expire` + `get` on every focus (`components/home/StarterTodayRow.tsx:33-36`); the Everyone feed fetches `feed.getComments` for every card with a count (`components/LiveFeedSection.tsx:284-301`). Those two sit outside the chunk's listed folders; they are the rest of the minute and are cut here so the flow can land under 50 (see Files outside the item list).
+
+First cut of those (bootstrap from enrollments, one AccountScreen `profiles.update`, no reconcile on empty keys, no per-card `getComments`, starter row not on every focus) still missed the target. After Maestro `build90-post-detail` account `b8901ba125605`, `/tmp/b90-01b-3-after-http.json`: 62 tRPC requests, busiest minute **58** starting 16:56:30.057, 0 × 429. Remaining duplicates in that minute:
+
+- `home.bootstrap` ×8. `refreshHomeBootstrap` calls `invalidateQueries` while the first fetch is in flight (`lib/home-bootstrap-refresh.ts`). That marks the query stale, so React Query refetches again when the in-flight one lands (guest start 33.445 then 34.108; finish 07.039 then 08.073). `useHomeBootstrap` `refetchOnWindowFocus: true` adds another.
+- `profiles.update` ×3. Guest `writeDeviceTimezone` already wrote this session's timezone; `upgradeAnonymousWithEmail` writes it again (`lib/anon-auth.ts:334`) then `saveDerivedDisplayName` writes timezone + name (53.963 and 54.371).
+- Finish still `invalidate`+`refetch` `profiles.getRecord`, `invalidate` `liveFeed` and `["profile"]` (`hooks/useAppChallengeMutations.ts:212-220`) while Home and Profile stay mounted under the task stack: extra `getRecord`, `getLiveFeed`, `getFollowCounts`.
+- Join still `invalidateQueries({ queryKey: ["challenge", id] })` (`app/challenge/[id].tsx` `onJoin`) which refetches `getById` before `replace`.
+- AccountScreen fetches `starterTask.get` although Home already loaded `["starterTask","row"]` (`AccountScreen.tsx:117-128`).
+- `feed.todayPosters` `useFocusEffect` refetch plus `getLiveFeed` default window-focus refetch (`components/LiveFeedSection.tsx`). The Maestro flow's `stopApp`+`launchApp` then double-fetches the feed on cold start (19.430 then 20.482).
+
+Fix:
+
+- `refreshHomeBootstrap` returns when a bootstrap fetch is already in flight, so `invalidateQueries` cannot mark it stale and refetch when it lands. FinalizeEnded uses that helper with `freshAfter` 10 s.
+- `writeDeviceTimezone` claims the timezone in `timezone-heal` before the POST and no-ops when this session already wrote it, so AppContext heal and the anonymous upgrade cannot POST it again. AccountScreen `saveDerivedDisplayName` sends timezone + display name in one call, and skips timezone when it is already written.
+- Challenge page reads `activeChallenges` and `securedDateKeys` from `home.bootstrap`; join no longer invalidates `["challenge", id]` or a second bootstrap.
+- `reconcileStreakNeeded` does not treat an empty history as a miss.
+- Finish path keeps one bootstrap refresh and drops `getRecord` / `liveFeed` / `["profile"]` invalidates (Home and Profile stay mounted; the feed already has the optimistic post).
+- `useHomeBootstrap`, Home `getRecord`, Profile `meStats`/`getFollowCounts`, and the live feed / today-posters queries set `refetchOnWindowFocus: false`. Today-posters no longer refetch on every Home focus. Per-card `getComments` is off; the sheet loads comments when opened.
+- StarterTodayRow loads once (`staleTime` 60 s). AccountScreen reads that same query cache instead of calling `starterTask.get`.
+
+Files: `lib/home-bootstrap-refresh.ts`, `lib/timezone-heal.ts` (new), `lib/write-device-timezone.ts`, `lib/reconcile-needed.ts`, `lib/onboarding-v2-invalidate.ts`, `lib/finalize-ended-foreground.ts`, `lib/use-home-bootstrap.ts`, `hooks/useAppChallengeMutations.ts`, `app/challenge/[id].tsx`, `components/onboarding/v2/screens/AccountScreen.tsx`, `contexts/AppContext.tsx`.
+
+Files outside the item list (needed to land under 50): `components/LiveFeedSection.tsx`, `components/home/StarterTodayRow.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/profile.tsx`.
+
+Tests: `lib/build90-signup-requests.test.ts` (12) and the new in-flight / finish-path pins in `lib/build90-finish-requests.test.ts`. Failed before: yes (`/tmp/b90-01b-3-fail.txt`, 6 failed). Passes now: 12/12 and 16/16 (`/tmp/b90-01b-3-pass.txt`).
+
+Maestro `.maestro/build90-post-detail.yaml` (fresh `is_test` email each run), Railway edge HTTP `railway logs --http --json` counted by `/tmp/b90-01b-minute.py`:
+
+| When | Account | Total | Busiest minute | 429 |
+|---|---|---|---|---|
+| Before | b8901bm115758 | 82 | **78** | 0 |
+| First cut | b8901ba125605 | 62 | **58** | 0 |
+| After | b8901be130731 | 52 | **48** | 0 |
+
+Five full-flow runs on the after code, all Maestro exit 0, all 0 × 429:
+
+| Run | Account | Busiest minute | Statuses |
+|---|---|---|---|
+| 1 | b8901be130731 | 48 | 200×52 |
+| 2 | b8901bf130936r1 | 47 | 200×52 |
+| 3 | b8901bg131132r2 | 48 | 200×52 |
+| 4 | b8901bg131332r3 | 48 | 200×52 |
+| 5 | b8901bg131524r4 | 48 | 200×52 |
+
+(A sixth, b8901bh131742, also 48 / 200×52.) Target was under 50 in the busiest minute.
+
+`npx tsc --noEmit`: the same 5 baseline errors (4 in `lib/featured-catalog-seed.test.ts`, 1 in `lib/share.ts`). 0 new (`/tmp/b90-01b-3-tsc.txt`).
+
+Chunk 01–09 related vitest: 18 files, 206 passed (`/tmp/b90-01b-3-vitest.txt`).
+
+No SQL. Backend deploy is the 01b.1/01b.2 server plus this client; sha written at the end of the chunk.

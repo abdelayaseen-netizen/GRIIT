@@ -1,9 +1,4 @@
-export const ONBOARDING_JOIN_QUERY_KEYS = [
-  ["home", "bootstrap"],
-  ["challenge", "listMyActive"],
-  ["profiles", "getStats"],
-  ["profiles", "getRecord"],
-] as const;
+export const ONBOARDING_JOIN_QUERY_KEYS = [["home", "bootstrap"]] as const;
 
 export async function invalidateAfterOnboardingJoin(queryClient: {
   invalidateQueries: (opts: { queryKey: string[] }) => Promise<unknown> | unknown;

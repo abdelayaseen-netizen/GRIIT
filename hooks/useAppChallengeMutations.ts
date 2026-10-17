@@ -209,15 +209,11 @@ export function useAppChallengeMutations({
           // were all the same refetch and each cancelled the one before; the server still ran every one.
           // The bootstrap payload carries today's check-ins, the active challenge and the stats.
           const bootstrapRefresh = refreshHomeBootstrap(queryClient);
-          void queryClient.invalidateQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
-          void queryClient.refetchQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false });
           void queryClient.invalidateQueries({ queryKey: [...TODAY_CHECKINS_QUERY_KEY] });
-          void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "myActive", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["discover", "completed", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "activeChallenges", user?.id ?? ""] });
           void queryClient.invalidateQueries({ queryKey: ["community", "feed", user?.id] });
-          void queryClient.invalidateQueries({ queryKey: ["profile"] });
           void queryClient.invalidateQueries({ queryKey: ["activeChallenge", params.activeChallengeId] });
           const tasks = (challenge?.challenge_tasks as ChallengeTaskFromApi[] | undefined) ?? [];
           const taskType = tasks.find((t) => t.id === params.taskId)?.type ?? "unknown";

@@ -17,6 +17,7 @@ import { identify, resetAnalytics, setUsageTestAccount, trackEvent } from '@/lib
 import { noteGuestDistinctId, peekGuestDistinctId } from '@/lib/analytics-identity';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import { getDeviceIanaTimeZone } from '@/lib/iana-timezone';
+import { noteWrittenDeviceTimezone, timezoneHealSkipped } from '@/lib/timezone-heal';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import type { ServerVerificationRow } from '@/lib/verifying-proof';
 
@@ -273,18 +274,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const profileTzRaw = (p as { timezone?: string | null }).timezone;
     const profileTz =
       typeof profileTzRaw === "string" ? profileTzRaw.trim() : "";
-    const needsHeal = !profileTz || profileTz !== deviceTz;
-    if (needsHeal && timezoneHealForDeviceRef.current !== deviceTz) {
-      timezoneHealForDeviceRef.current = deviceTz;
-      void trpcMutate(TRPC.profiles.update, { timezone: deviceTz })
-        .then(() => {
-          void fetchProfile();
-        })
-        .catch((err: unknown) => {
-          captureError(err, "TimezoneSelfHeal");
-          timezoneHealForDeviceRef.current = null;
-        });
-    }
+    if (timezoneHealSkipped({ profileTz, deviceTz })) return;
+    if (timezoneHealForDeviceRef.current === deviceTz) return;
+    timezoneHealForDeviceRef.current = deviceTz;
+    void trpcMutate(TRPC.profiles.update, { timezone: deviceTz })
+      .then(() => {
+        noteWrittenDeviceTimezone(deviceTz);
+        void fetchProfile();
+      })
+      .catch((err: unknown) => {
+        captureError(err, "TimezoneSelfHeal");
+        timezoneHealForDeviceRef.current = null;
+      });
   }, [user?.id, user?.email, profile, bootstrap.isFetched, isPremium, stats, fetchProfile]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;

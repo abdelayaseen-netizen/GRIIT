@@ -253,6 +253,7 @@ export default function HomeScreen() {
         earliestStartKey?: string | null;
       }>,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     enabled: !isGuest && !!user?.id,
   });
   const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
