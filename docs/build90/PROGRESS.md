@@ -48,12 +48,12 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 05.3 Hide test accounts: done, ea97ee14 (server deployed, ea97ee1)
 05.4 Numbers agree everywhere: done, ea97ee14; follow-up (Profile Today tile from the bootstrap, "First day is today.", challenge page reads bootstrap keys, "Finish the task"): done, 82475753
 06.1 Definitions where the thing happens: done, 66765c0f
-06.2 "Self-reported" at most once per screen: done, 66765c0f; follow-up (Join sheet builtin row, Day secured caption): done, see chunk 06 follow-up commit
+06.2 "Self-reported" at most once per screen: done, 66765c0f; follow-up (Join sheet builtin row, Day secured caption): done, 3750526c
 06.3 Greeting: done, 66765c0f
 06.4 Copy fixes: done, 66765c0f (feed hint); "Workout everyday" SQL written, not run
 06.5 Password label focuses the field: done, 66765c0f
 06.6 Guest Save your streak loop / Skip reaches Home: done, 66765c0f
-06.7 Freeze feedback: done, 66765c0f (result line); harness flow in the follow-up commit
+06.7 Freeze feedback: done, 66765c0f (result line); harness flow 3750526c
 06.8 Create step 1: done, 66765c0f
 06.9 App Review login persists: done, 66765c0f
 06.bugs Save sheet dismiss, Day secured row under Done, water oz/cups (server deployed 66765c0), double top padding, ConfirmDialog scrim: done, 66765c0f
