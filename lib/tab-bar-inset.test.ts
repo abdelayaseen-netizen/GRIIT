@@ -5,7 +5,9 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 
 describe("tab bar scroll inset", () => {
   it("clears the pill, dock, and home indicator", () => {
-    expect(tabBarContentPad(34)).toBe(96);
+    // 06.4: pill 64 + dock max(inset, 12) + 16 of air; the pill top sits at 64 + dock.
+    expect(tabBarContentPad(34)).toBe(114);
+    expect(tabBarContentPad(34)).toBeGreaterThan(64 + 34);
     expect(tabBarContentPad(0)).toBe(96);
     expect(tabBarContentPad()).toBe(96);
   });

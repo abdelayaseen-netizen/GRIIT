@@ -33,7 +33,8 @@ import { discoverCategoryMatches, discoverSectionItems } from "@/lib/discover-pe
 import {
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
-  MODE_STANDARD_DETAIL,
+  MODE_STANDARD_JOIN,
+  joinModeLine,
 } from "@/lib/challenge-detail-mapping";
 import {
   DISCOVER_LOAD_ERROR,
@@ -152,7 +153,7 @@ export function DiscoverV3({
       window: item.rule,
       tasks: [{ title: item.task, gate: [featuredProofLabel(item.proof), item.rule].filter(Boolean).join(" · ") }],
       difficulty: "Standard",
-      modeLine: MODE_STANDARD_DETAIL,
+      modeLine: MODE_STANDARD_JOIN,
       day1Line,
       builtin: item,
     });
@@ -167,9 +168,7 @@ export function DiscoverV3({
       people: item.participantCount,
       tasks: item.tasks ?? [],
       difficulty: difficultyChip(item.difficulty),
-      modeLine: item.difficulty === "HARD"
-        ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
-        : MODE_STANDARD_DETAIL,
+      modeLine: joinModeLine(item.difficulty),
       day1Line,
     });
   }
@@ -212,9 +211,7 @@ export function DiscoverV3({
                 people: featured.circleCount,
                 tasks: featured.tasks ?? [],
                 difficulty: difficultyChip(featured.difficulty),
-                modeLine: featured.difficulty === "HARD"
-                  ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
-                  : MODE_STANDARD_DETAIL,
+                modeLine: joinModeLine(featured.difficulty),
                 day1Line,
               });
             }}

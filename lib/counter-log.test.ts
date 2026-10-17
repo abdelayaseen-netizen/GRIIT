@@ -15,7 +15,7 @@ describe("formatCounterSecuredMeta", () => {
 describe("counterUnitFromTaskType", () => {
   it("maps reading to pages, water to oz, and leaves a generic counter blank", () => {
     expect(counterUnitFromTaskType("reading")).toBe("pages");
-    expect(counterUnitFromTaskType("water")).toBe("oz");
+    expect(counterUnitFromTaskType("water")).toBe("cups");
     expect(counterUnitFromTaskType("counter")).toBe("");
   });
 });

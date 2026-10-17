@@ -798,14 +798,17 @@ export const checkinsRouter = createTRPCRouter({
         (typeof cfg.target_count === "number" ? cfg.target_count : null) ??
         (typeof cfg.target_pages === "number" ? cfg.target_pages : null) ??
         0;
+      // 06: the task's own unit first, then the same defaults the app uses (water = cups).
       const counterUnitPlural =
-        taskType === "water"
-          ? "cups"
-          : taskType === "reading"
-            ? "pages"
-            : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
-              ? cfg.unit_label.trim()
-              : "units";
+        typeof cfg.unit === "string" && cfg.unit.trim()
+          ? cfg.unit.trim()
+          : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
+            ? cfg.unit_label.trim()
+            : taskType === "water"
+              ? "cups"
+              : taskType === "reading"
+                ? "pages"
+                : "units";
       const counterLogFacts: CounterLogFacts | null =
         isCounterProof &&
         typeof input.value === "number" &&

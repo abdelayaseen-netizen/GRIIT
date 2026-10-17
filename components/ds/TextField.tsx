@@ -2,7 +2,7 @@
  * TextField — Chunk K auth inputs.
  * surface, radius.input, 1pt border, type.body. No focus token in DS_V3.
  */
-import React, { forwardRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -60,12 +60,24 @@ const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
   },
   ref
 ) {
+  // Build 90 06.5: the label is part of the control. Tapping it focuses the input, so a
+  // finger on "Password" opens the keyboard instead of doing nothing.
+  const inputRef = useRef<TextInput>(null);
+  useImperativeHandle(ref, () => inputRef.current as TextInput, []);
   return (
     <View>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <Text
+          style={styles.label}
+          onPress={editable ? () => inputRef.current?.focus() : undefined}
+          suppressHighlighting
+        >
+          {label}
+        </Text>
+      ) : null}
       <View style={[styles.field, ground === "canvas" && styles.fieldCanvas]}>
         <TextInput
-          ref={ref}
+          ref={inputRef}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}

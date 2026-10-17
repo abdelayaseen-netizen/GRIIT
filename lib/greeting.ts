@@ -15,12 +15,44 @@ export function hourInTimeZone(now: Date, timeZone: string): number {
   return Number(h);
 }
 
-/** First word of the display name, otherwise @handle. No emoji. */
-export function greetingName(displayName: string | null | undefined, username: string): string {
+/** The handle the server mints at sign-up (`user_` + 8 hex). Never a greeting. */
+export function isMachineHandle(username: string | null | undefined): boolean {
+  return /^@?user_[0-9a-f]{8}$/i.test((username ?? "").trim());
+}
+
+/**
+ * First word of the auth profile's full name (Apple / sign-up metadata), if any.
+ * Build 90 06.3: the last fallback before greeting with no name at all.
+ */
+export function firstNameFromAuth(
+  user: { user_metadata?: Record<string, unknown> | null } | null | undefined,
+): string | null {
+  const md = user?.user_metadata ?? {};
+  const candidates = [md.given_name, md.first_name, md.full_name, md.name];
+  for (const c of candidates) {
+    if (typeof c !== "string") continue;
+    const first = c.trim().split(/\s+/)[0];
+    if (first) return first;
+  }
+  return null;
+}
+
+/**
+ * Build 90 06.3: display name's first word, then @username, then the first name.
+ * A machine handle (`@user_xxxxxxxx`) is skipped; with nothing usable return null and
+ * the greeting stands alone. No emoji.
+ */
+export function greetingName(
+  displayName: string | null | undefined,
+  username: string,
+  firstName?: string | null,
+): string | null {
   const first = displayName?.trim().split(/\s+/)[0];
   if (first) return first;
   const handle = username.trim().replace(/^@/, "");
-  return handle ? `@${handle}` : "there";
+  if (handle && !isMachineHandle(handle)) return `@${handle}`;
+  const given = firstName?.trim().split(/\s+/)[0];
+  return given || null;
 }
 
 /**
@@ -31,13 +63,15 @@ export function greeting(
   displayName: string | null | undefined,
   username: string,
   timeZone = "UTC",
+  firstName?: string | null,
 ): string {
   const h = hourInTimeZone(now, timeZone);
-  const name = greetingName(displayName, username);
-  if (h >= 4 && h < 12) return `Good morning, ${name}`;
-  if (h >= 12 && h < 17) return `Good afternoon, ${name}`;
-  if (h >= 17 && h < 22) return `Good evening, ${name}`;
-  return `Still up, ${name}`;
+  const name = greetingName(displayName, username, firstName);
+  const suffix = name ? `, ${name}` : "";
+  if (h >= 4 && h < 12) return `Good morning${suffix}`;
+  if (h >= 12 && h < 17) return `Good afternoon${suffix}`;
+  if (h >= 17 && h < 22) return `Good evening${suffix}`;
+  return `Still up${suffix}`;
 }
 
 /** "Thursday, Oct 8" in the profile time zone. */

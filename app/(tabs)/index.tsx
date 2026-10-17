@@ -25,7 +25,8 @@ import { StarterTodayRow } from "@/components/home/StarterTodayRow";
 import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
 import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
 import { conceptLine, type ConceptKind } from "@/lib/concept-once";
-import { earliestEnrollmentStart, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
+import { FREEZE } from "@/lib/copy";
+import { earliestEnrollmentStart, firstNameFromAuth, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
 import { currentTaskToast, publishTaskToast, setToastAction, subscribeTaskToast } from "@/lib/task-complete-toast";
@@ -176,7 +177,9 @@ export default function HomeScreen() {
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
   const [conceptSeen, setConceptSeen] = React.useState<ReadonlySet<ConceptKind>>(new Set());
   const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
-  const [saveDismissed, setSaveDismissed] = React.useState({ first: false, second: false });
+  // null until the flags are read, so a cold start cannot flash the sheet before the
+  // stored "Later" is known (06.6).
+  const [saveDismissed, setSaveDismissed] = React.useState<{ first: boolean; second: boolean } | null>(null);
   const [postGate, setPostGate] = React.useState(false);
   const [starterBusy, setStarterBusy] = React.useState(false);
   const [optimisticRev, setOptimisticRev] = React.useState(0);
@@ -609,12 +612,12 @@ export default function HomeScreen() {
       trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
         dateKeyToFreeze: yesterdayKey,
       }),
-      onSuccess: () => {
+      onSuccess: (data) => {
+      // 06.7: the result shows every time; the definition joins it the first time.
       const line = conceptLine("freeze", conceptSeen);
-      if (line) {
-        setConceptBanner(line);
-        markConcept("freeze");
-      }
+      const result = FREEZE.result(data?.restoredStreak ?? 0, data?.remaining ?? 0);
+      setConceptBanner(line ? `${line} ${result}` : result);
+      if (line) markConcept("freeze");
       trackUsage("freeze_used");
       setFreezeSpent(true);
       setStreakHeld(true);
@@ -643,6 +646,16 @@ export default function HomeScreen() {
       // and skip it when the payload is seconds old (coming back from Day secured or the post).
       void refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - HOME_FOCUS_FRESH_MS });
     }, [isGuest, user?.id, queryClient]),
+  );
+
+  // Build 90 06.6: Home stays mounted under a pushed route and its Modal would open over
+  // Day secured. The save sheet only shows while Home itself is the screen on top.
+  const [homeFocused, setHomeFocused] = React.useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setHomeFocused(true);
+      return () => setHomeFocused(false);
+    }, []),
   );
 
   const refresh = useCallback(async () => {
@@ -908,6 +921,7 @@ export default function HomeScreen() {
                 profile?.display_name,
                 profile?.username ?? "",
                 homeTimeZone,
+                firstNameFromAuth(user),
               )}
               dateLine={homeScreenDate(new Date(), homeTimeZone)}
               streak={streak}
@@ -992,7 +1006,7 @@ export default function HomeScreen() {
           }
         />
         <SaveStreakSheet
-          visible={shouldShowSaveStreak({
+          visible={homeFocused && saveDismissed != null && shouldShowSaveStreak({
             isAnonymous: user?.is_anonymous === true,
             firstTaskDone: heroMetrics.tasksDoneToday > 0 || todaySecured,
             securedDays: resolvedStats?.totalDaysSecured ?? 0,
@@ -1003,11 +1017,11 @@ export default function HomeScreen() {
           onLater={() => {
             setPostGate(false);
             if ((resolvedStats?.totalDaysSecured ?? 0) >= 2) {
-              setSaveDismissed((prev) => ({ ...prev, second: true }));
+              setSaveDismissed((prev) => ({ first: prev?.first ?? false, second: true }));
               void AsyncStorage.setItem("griit.saveStreak.dismissedSecond", "1");
               return;
             }
-            setSaveDismissed((prev) => ({ ...prev, first: true }));
+            setSaveDismissed((prev) => ({ first: true, second: prev?.second ?? false }));
             void AsyncStorage.setItem("griit.saveStreak.dismissedFirst", "1");
           }}
           onSaved={() => setPostGate(false)}

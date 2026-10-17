@@ -30,6 +30,7 @@ import {
 } from "@/lib/task-secured-nav";
 import { afterSecuredNext } from "@/lib/moment-queue";
 import { freezeEarnedNote } from "@/lib/freeze-earn";
+import { useFirstConcept } from "@/lib/concept-seen";
 import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
 
 function TaskSecuredInner() {
@@ -81,6 +82,8 @@ function TaskSecuredInner() {
     freezeCap: firstString(params.freezeCap),
     freezeAtCap: firstString(params.freezeAtCap),
   });
+  // 06.1: the first freeze ever earned says what it does, once.
+  const firstFreeze = useFirstConcept("freeze", result.freezeGranted === true);
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
   const statsRow = stats as { frozenDateKeys?: string[]; lastStandDateKeys?: string[] } | null;
@@ -207,7 +210,7 @@ function TaskSecuredInner() {
   return (
     <SecuredDayScreen
       streak={result.streakDays}
-      freezeNote={freezeEarnedNote(result)}
+      freezeNote={freezeEarnedNote(result, firstFreeze === true)}
       proofs={proofs}
       selfReported={meta.selfReported}
       taskCount={meta.ready ? meta.taskCount : undefined}

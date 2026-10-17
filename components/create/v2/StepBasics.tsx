@@ -30,6 +30,7 @@ export type StepBasicsProps = {
   onChangeCategory: (v: WizardCategory) => void;
   onTitleFocus?: () => void;
   onCategoryLayout?: (y: number) => void;
+  onTitleLayout?: (y: number) => void;
   durationDays: number | null;
   onChangeDuration: (days: number | null) => void;
   customDuration: string;
@@ -64,6 +65,7 @@ export function StepBasics({
   onChangeCategory,
   onTitleFocus,
   onCategoryLayout,
+  onTitleLayout,
   durationDays,
   onChangeDuration,
   customDuration,
@@ -89,7 +91,7 @@ export function StepBasics({
         <Text style={styles.secondary}>One sentence. Be specific.</Text>
       </Pressable>
 
-      <View style={styles.fieldBlock}>
+      <View style={styles.fieldBlock} onLayout={(e) => onTitleLayout?.(e.nativeEvent.layout.y)}>
         <Card
           style={overLimit ? styles.inputDanger : undefined}
         >

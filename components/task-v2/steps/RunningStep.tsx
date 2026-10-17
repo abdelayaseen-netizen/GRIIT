@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
@@ -57,7 +56,6 @@ export function RunningStep({
   submitting = false,
   error,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const endsAt = startedAtIso
     ? clockLabel(Date.parse(startedAtIso) + requiredSeconds * 1000)
     : "";
@@ -76,7 +74,7 @@ export function RunningStep({
 
   return (
     <View style={styles.root}>
-      <View style={{ paddingTop: insets.top }}>
+      <View>
         <PushedHeader
           title={headerTitle}
           label={headerLabel}
@@ -100,7 +98,7 @@ export function RunningStep({
           </View>
         )}
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button
           testID="timer-finish-early"
           label={TIMER_FINISH_EARLY}
@@ -170,6 +168,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

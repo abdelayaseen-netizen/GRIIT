@@ -102,7 +102,7 @@ export type AddTaskStarter = {
 export const ADD_TASK_STARTERS: AddTaskStarter[] = [
   { label: "Pray", name: "Pray", type: "check_off" },
   { label: "Read", name: "Read", type: "counter", counterTarget: "10", counterUnit: "pages" },
-  { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "oz" },
+  { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "cups" },
   { label: "Journal", name: "Journal", type: "text", minWords: "30" },
   { label: "Workout", name: "Workout", type: "check_off" },
   { label: "Stretch", name: "Stretch", type: "check_off" },

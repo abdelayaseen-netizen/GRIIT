@@ -147,7 +147,7 @@ describe("add-task draft", () => {
     const water = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Water")!);
     expect(water.name).toBe("Water");
     expect(water.type).toBe("counter");
-    expect(water.counterUnit).toBe("oz");
+    expect(water.counterUnit).toBe("cups");
     const read = applyStarter(ADD_TASK_STARTERS.find((s) => s.label === "Read")!);
     expect(read.name).toBe("Read");
     expect(read.type).toBe("counter");

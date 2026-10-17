@@ -92,6 +92,11 @@ export function ChallengePreviewSheet({
           </Text>
         ))}
         {item.difficulty ? <Chip label={item.difficulty} /> : null}
+        {/* Build 90 06.1: the chip alone said "Strict" and nothing else; the line
+            under it says what it does. */}
+        {item.difficulty && item.modeLine ? (
+          <Text style={styles.mode} testID="join-mode-line">{item.modeLine}</Text>
+        ) : null}
       </ScrollView>
     </Sheet>
   );

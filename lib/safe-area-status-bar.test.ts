@@ -3,16 +3,19 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("safe area and status bar", () => {
-  it("keeps Capture Cancel and titles below the top inset", () => {
+  it("keeps Capture Cancel and titles below the top inset (the task route's Screen owns it)", () => {
+    // Build 90 06: `app/task/complete.tsx` wraps the flow in Screen with all edges, so the
+    // steps no longer add insets.top themselves (that doubled the top padding).
+    const route = readFileSync(resolve(__dirname, "../app/task/complete.tsx"), "utf8");
     const capture = readFileSync(
       resolve(__dirname, "../components/task-v2/steps/CaptureStep.tsx"),
       "utf8",
     );
-    expect(capture).toContain("useSafeAreaInsets");
-    expect(capture).toContain("paddingTop: insets.top");
+    expect(route).toContain("<Screen>");
+    expect(capture).not.toContain("paddingTop: insets.top");
   });
 
-  it("covers the status bar with ScreenChrome so Home, Profile, Activity, and Finish scroll under a solid canvas band", () => {
+  it("covers the status bar with ScreenChrome so Home, Profile, and Activity scroll under a solid canvas band", () => {
     const chrome = readFileSync(
       resolve(__dirname, "../components/ds/ScreenChrome.tsx"),
       "utf8",
@@ -28,8 +31,9 @@ describe("safe area and status bar", () => {
     expect(chrome).toContain("DS_V3.color.canvas");
     expect(chrome).toContain('position: "absolute"');
     expect(chrome).not.toContain("marginTop");
-    expect(finish).toContain("ScreenChrome");
-    expect(finish).toContain("paddingTop: insets.top");
+    // Finish lives on the task route, whose Screen owns the inset; no band or inset of its own (06).
+    expect(finish).not.toContain("ScreenChrome");
+    expect(finish).not.toContain("paddingTop: insets.top");
     expect(home).toContain("paddingTop: insets.top");
     expect(tab).toContain("ScreenChrome");
     expect(tab).toContain('edges={["left", "right"]}');

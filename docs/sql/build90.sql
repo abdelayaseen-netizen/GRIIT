@@ -71,3 +71,34 @@ FROM public.challenge_tasks t
 JOIN public.challenges c ON c.id = t.challenge_id
 WHERE t.title ~* '\m[0-9]+\s*(min|mins|minute|minutes)\M'
 ORDER BY c.title, t.order_index;
+
+-- ============================================================
+-- Chunk 06, item 06.4: "Workout everyday" → "Workout every day" in seeded content.
+-- The challenge lives in public.challenges (title) and may be repeated in its tasks.
+-- Review step 1 first; step 2 changes titles and descriptions only.
+-- ============================================================
+
+-- Step 1 (read only): what carries the word.
+SELECT 'challenges' AS tbl, c.id, c.title AS text
+FROM public.challenges c
+WHERE c.title ~* '\meveryday\M' OR coalesce(c.description, '') ~* '\meveryday\M'
+UNION ALL
+SELECT 'challenge_tasks', t.id, t.title
+FROM public.challenge_tasks t
+WHERE t.title ~* '\meveryday\M'
+ORDER BY 1, 3;
+
+-- Step 2: the word is "every day" (two words) in a title or a description.
+-- "everyday" as an adjective ("everyday habits") does not occur in the seeds; if step 1
+-- shows one, add "AND id <> '<that id>'" before running.
+UPDATE public.challenges
+SET title = regexp_replace(title, '\meveryday\M', 'every day', 'gi'),
+    description = regexp_replace(coalesce(description, ''), '\meveryday\M', 'every day', 'gi')
+WHERE title ~* '\meveryday\M' OR coalesce(description, '') ~* '\meveryday\M';
+
+UPDATE public.challenge_tasks
+SET title = regexp_replace(title, '\meveryday\M', 'every day', 'gi')
+WHERE title ~* '\meveryday\M';
+
+-- Step 3 (read only): confirm nothing is left.
+SELECT c.id, c.title FROM public.challenges c WHERE c.title ~* '\meveryday\M';

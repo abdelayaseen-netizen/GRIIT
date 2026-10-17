@@ -14,6 +14,7 @@ import KeyboardDock, { NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { nextStepAfterPrimary, pressIsEcho } from "@/lib/create-step-advance";
 
 import { DS_V3 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
@@ -119,7 +120,7 @@ function canLaunch(s: WizardState): boolean {
 
 export function CreateWizardV2() {
   const scrollRef = useRef<ScrollView>(null);
-  const categoryY = useRef(0);
+  const titleY = useRef(0);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
@@ -244,22 +245,25 @@ export function CreateWizardV2() {
     }
   }, [isDirty, reviewing, router, setStep, state.step]);
 
+  // 06.8: one press, one step. Computed from the previous state (not the closed-over
+  // one) and a short lock drops the second tap of a double-tap.
+  const lastAdvanceAt = useRef(0);
   const handlePrimary = useCallback(() => {
-    if (state.step === 1) {
-      if (canAdvanceStep1(state)) setStep(2);
-      return;
-    }
-    if (state.step === 2) {
-      if (canAdvanceStep2(state)) setStep(3);
-      return;
-    }
+    const now = Date.now();
+    if (pressIsEcho(lastAdvanceAt.current, now)) return;
+    lastAdvanceAt.current = now;
     if (state.step === 3) {
       if (canLaunch(state)) {
         setLaunchError("");
         setReviewing(true);
       }
+      return;
     }
-  }, [state, setStep]);
+    setState((p) => {
+      const next = nextStepAfterPrimary(p, { step1: canAdvanceStep1, step2: canAdvanceStep2 });
+      return next === p.step ? p : { ...p, step: next };
+    });
+  }, [state]);
 
   const primaryDisabled =
     (state.step === 1 && !canAdvanceStep1(state)) ||
@@ -466,11 +470,13 @@ export function CreateWizardV2() {
               onChangeTitle={setTitle}
               category={state.category}
               onChangeCategory={setCategory}
-              onCategoryLayout={(y) => {
-                categoryY.current = y;
+              onTitleLayout={(y) => {
+                titleY.current = y;
               }}
               onTitleFocus={() => {
-                scrollRef.current?.scrollTo({ y: Math.max(0, categoryY.current - 8), animated: true });
+                // 06.8: keep the field you are typing in on screen. Scrolling to the
+                // category block pushed the title above the top edge mid-word.
+                scrollRef.current?.scrollTo({ y: Math.max(0, titleY.current - 8), animated: true });
               }}
               durationDays={state.durationDays}
               onChangeDuration={setDuration}

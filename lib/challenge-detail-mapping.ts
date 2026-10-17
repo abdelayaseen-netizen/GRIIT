@@ -237,6 +237,12 @@ export const JOIN_CAPTION_TOMORROW = "Day 1 is tomorrow.";
 export const MODE_STANDARD_DETAIL = "Standard. A freeze can cover a missed day.";
 export const MODE_STRICT_DETAIL =
   "Strict. A missed day resets your streak in this challenge to 0. No freezes.";
+/** Build 90 06.1: the one line under the difficulty chip on the Join sheet. */
+export const MODE_STRICT_JOIN = "Miss a day and the streak resets.";
+export const MODE_STANDARD_JOIN = "A freeze can cover a missed day.";
+export function joinModeLine(difficulty: string | null | undefined): string {
+  return String(difficulty ?? "").toUpperCase() === "HARD" ? MODE_STRICT_JOIN : MODE_STANDARD_JOIN;
+}
 export const JOIN_CAPTION_INVITE =
   "Join opens the invite step. You need a partner before Day 1.";
 

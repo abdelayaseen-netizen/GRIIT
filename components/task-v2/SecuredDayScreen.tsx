@@ -23,6 +23,7 @@ import { PROOF_SHARE_FAILED } from "@/lib/proof-moment";
 import {
   SECURED_LOAD_ERROR,
   SECURED_LOAD_RETRY,
+  SECURED_MEANS,
   SECURED_PHOTO_H,
   SECURED_SELF,
   SECURED_TILE,
@@ -141,7 +142,7 @@ export default function SecuredDayScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.body,
-          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.lg },
+          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section },
         ]}
       >
         <Pressable
@@ -165,6 +166,7 @@ export default function SecuredDayScreen({
         </View>
         <View style={styles.center}>
           <Text style={styles.today}>{title}</Text>
+          <Text style={styles.caption}>{SECURED_MEANS}</Text>
           {lines.map((line) => (
             <Text key={line} style={styles.caption}>{line}</Text>
           ))}
@@ -194,10 +196,11 @@ export default function SecuredDayScreen({
         {n === 0 && selfReported.length > 0 ? (
           <Card>
             {selfReported.map((c) => (
-              <View key={c.name} style={styles.selfRow}>
+              // 06.2: the caption above already says "Self-reported." once; the row
+              // keeps the glyph and the challenge line only.
+              <View key={c.name} style={styles.selfRow} accessibilityLabel={`${securedChallengeLine(c.name, c.day, c.length)}, ${SECURED_SELF}`}>
                 <ShieldOff size={ICON} color={DS_V3.color.textSecondary} />
                 <Text style={styles.selfName}>{securedChallengeLine(c.name, c.day, c.length)}</Text>
-                <Text style={styles.selfTag}>{SECURED_SELF}</Text>
               </View>
             ))}
           </Card>
@@ -231,7 +234,9 @@ export default function SecuredDayScreen({
         ) : null}
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </ScrollView>
-      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
+      {/* Build 90 06: the footer used to carry `bottom: gutter` on a relatively
+          positioned View, which slid it up over the last row of the scroll content. */}
+      <View style={styles.footer}>
         {offerShare ? (
           <>
             <ShareChoice
@@ -417,12 +422,6 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,
     fontWeight: DS_V3.type.secondary.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  selfTag: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
   },
   fail: {

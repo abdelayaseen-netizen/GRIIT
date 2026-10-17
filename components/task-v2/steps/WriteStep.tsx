@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from "react";
 import { Keyboard, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import KeyboardDock from "@/components/ds/KeyboardDock";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -57,7 +56,6 @@ export function WriteStep({
   submitting = false,
   fieldMounted = true,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const written = wordCount(text);
   const met = writeCounterMet(written, minWords);
   const fill = writeCounterFill(written, minWords);
@@ -80,7 +78,7 @@ export function WriteStep({
     <View style={styles.root}>
       <KeyboardDock
         footer={
-          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+          <View style={styles.footer}>
             <Button
               label={writeCtaLabel(written, minWords)}
               variant="primary"
@@ -92,9 +90,7 @@ export function WriteStep({
           </View>
         }
       >
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
-      </View>
+      <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
       <View style={styles.body}>
         {keyboardUp ? null : (
           <>
@@ -203,6 +199,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -46,10 +45,9 @@ export function TimerEntryStep({
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
 }: Props) {
-  const insets = useSafeAreaInsets();
   return (
     <View style={styles.root}>
-      <View style={{ paddingTop: insets.top }}>
+      <View>
         <PushedHeader
           title={headerTitle}
           label={headerLabel}
@@ -68,7 +66,7 @@ export function TimerEntryStep({
           <Switch value={soundOn} onValueChange={onSoundOn} accessibilityLabel={TIMER_SOUND} />
         </View>
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button testID="timer-start" label={timerStartLabel(requiredSeconds)} onPress={onStart} />
         <Button
           testID="timer-already"
@@ -150,6 +148,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

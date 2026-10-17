@@ -145,9 +145,7 @@ export function LogStep({
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
-      </View>
+      <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.body}
@@ -274,7 +272,7 @@ export function LogStep({
           )}
         </Pressable>
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button
           label={cta}
           variant="primary"
@@ -385,6 +383,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

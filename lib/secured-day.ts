@@ -8,6 +8,8 @@ import { countNoun } from "@/lib/onboarding-v2-suggest";
 
 export const SECURED_TODAY = "Today is secured.";
 export const SECURED_SELF = "Self-reported";
+/** Build 90 06.1: what "secured" means, shown under the title the moment it happens. */
+export const SECURED_MEANS = "Every task today is done. Your streak goes up by one.";
 export const SECURED_TILE_MAX = 3;
 export const SECURED_PHOTO_H = 240;
 export const SECURED_TILE = 112;

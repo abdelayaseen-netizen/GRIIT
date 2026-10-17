@@ -8,6 +8,9 @@ export const FREEZE = {
   sheetTitle: (day: string) => `Use a freeze on ${day}?`,
   sheetBody: (day: string, streak: number, left: number, next: string) => `${day} shows as held and your ${streak}-day streak continues. This uses ${left === 1 ? 'your 1 freeze' : `1 of ${left} freezes`}; the next arrives ${next}.`,
   used: (day: string) => `${day} is held by a freeze.`,
+  /** Build 90 06.7: the result line after "Use a freeze" succeeds, every time. */
+  result: (streak: number, left: number) =>
+    `Freeze used. Yesterday is held and your streak is ${streak}. ${left === 1 ? "1 freeze" : `${left} freezes`} left.`,
 } as const;
 
 /** The only freeze explanation. Earned on a 7-day streak, spent on yesterday until midnight. */

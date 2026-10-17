@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import KeyboardDock, { NUMBER_PAD_ACCESSORY_ID, NumberPadDoneBar } from "@/components/ds/KeyboardDock";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
@@ -65,7 +64,6 @@ export function CountStep({
   onComplete,
   onBack,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
   const atTarget = counterGoal > 0 && count >= counterGoal;
@@ -81,7 +79,7 @@ export function CountStep({
     <View style={styles.root}>
       <NumberPadDoneBar />
       <KeyboardDock>
-      <View style={{ paddingTop: insets.top }}>
+      <View>
         <PushedHeader
           title={header?.title ?? headerTitle}
           label={header?.label ?? headerLabel}
@@ -154,7 +152,7 @@ export function CountStep({
         )}
       </View>
       </KeyboardDock>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button
           testID="count-complete"
           label={counterDoneLabel(count, counterGoal, counterUnit)}
@@ -251,6 +249,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

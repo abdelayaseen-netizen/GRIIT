@@ -7,6 +7,21 @@ export const SIMPLE_ASK_HEADING = "Did you do it today?" as const;
 
 export const SIMPLE_ASK_HONESTY = "Self-reported." as const;
 
+/** Build 90 06.1: the first self-reported task says what the word means. */
+export const SELF_REPORT_FIRST = "You're telling us you did it. No photo needed." as const;
+
+/**
+ * Build 90 06.2: the honesty line under the title is the screen's one "Self-reported".
+ * The footer caption only appears when it says something else (a closing window).
+ */
+export function askHonestyLine(first: boolean | null): string {
+  return first ? SELF_REPORT_FIRST : SIMPLE_ASK_HONESTY;
+}
+export function askFooterCaption(caption: string | undefined): string | null {
+  const c = (caption ?? "").trim();
+  return c && c !== SIMPLE_ASK_CAPTION ? c : null;
+}
+
 export const SIMPLE_ASK_CTA = "Done" as const;
 
 export const SIMPLE_ASK_SAVING = "Saving…" as const;
@@ -21,7 +36,7 @@ export const SELF_REPORT_RECORDS_HEADING = "What this records" as const;
 
 export const SELF_REPORT_RECORDS_ROWS = [
   "Today is marked done for this task",
-  "Your challenge sees it as self-reported",
+  "Your challenge shows it without a photo",
   "No camera, no time window, no location",
 ] as const;
 
@@ -38,7 +53,8 @@ export const SECURED_TODAY_PROOF = "Today's proof" as const;
 export const SECURED_DONE = "Done" as const;
 
 export function formatSecuredStateLine(day: number, camera: boolean): string {
-  return camera ? `Day ${day}. Camera proof.` : `Day ${day}. Self reported.`;
+  // 06.2: the chip under this line already says "Self-reported."; say it once.
+  return camera ? `Day ${day}. Camera proof.` : `Day ${day}.`;
 }
 
 export function formatSecuredKeepCount(remaining: number): string {

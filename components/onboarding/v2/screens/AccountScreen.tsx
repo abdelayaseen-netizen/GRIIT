@@ -79,11 +79,14 @@ export default function AccountScreen({
   onSkip,
   onSignInWithAccount,
   onBack,
+  alwaysOfferSkip = false,
 }: {
   onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
   onSignInWithAccount: (email?: string) => void;
   onBack: () => void;
+  /** Build 90 06.6: the Home save sheet always shows Later, whatever the starter flag says. */
+  alwaysOfferSkip?: boolean;
 }) {
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
   const challengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
@@ -344,7 +347,8 @@ export default function AccountScreen({
       ? "Your first day is secured. Sign in so it’s still here tomorrow."
       : "Sign in so your challenge and today’s starter are kept."
     : accountInLine(challengeTitle);
-  const skip = FLAGS.STARTER_TASK_ENABLED ? null : <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const skip =
+    FLAGS.STARTER_TASK_ENABLED && !alwaysOfferSkip ? null : <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
   const applePrimary = Platform.OS === "ios" && appleAvailable;
   const footer =
     state === "default" ? (

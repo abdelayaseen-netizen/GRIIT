@@ -9,10 +9,12 @@ import {
   SELF_REPORT_RECORDS_ROWS,
   SIMPLE_ASK_CAPTION,
   SIMPLE_ASK_CTA,
-  SIMPLE_ASK_HONESTY,
   SIMPLE_ASK_NOT_YET,
   SIMPLE_ASK_SAVING,
+  askFooterCaption,
+  askHonestyLine,
 } from "@/lib/simple-log";
+import { useFirstConcept } from "@/lib/concept-seen";
 
 const ICON = DS_V3.space.gutter;
 const ROW_ICONS = [Check, Users, ShieldOff] as const;
@@ -34,10 +36,13 @@ export function AskStep({
   onDidIt,
   onNotYet,
 }: Props) {
+  // 06.1: the first self-reported task explains the word; 06.2: it is said once here.
+  const firstSelf = useFirstConcept("self");
+  const caption = askFooterCaption(footerCaption);
   return (
     <View style={styles.body}>
       <Text style={styles.title}>{taskName}</Text>
-      <Text style={styles.honesty}>{SIMPLE_ASK_HONESTY}</Text>
+      <Text style={styles.honesty} testID="ask-honesty">{askHonestyLine(firstSelf)}</Text>
       <Text style={styles.recordsLabel}>{SELF_REPORT_RECORDS_HEADING}</Text>
       <Card>
         <View style={styles.rows}>
@@ -54,7 +59,9 @@ export function AskStep({
       </Card>
       <View style={styles.footer}>
         <Button label={loading ? SIMPLE_ASK_SAVING : SIMPLE_ASK_CTA} loading={loading} onPress={onDidIt} />
-        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+        {caption ? (
+          <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{caption}</Text>
+        ) : null}
         <Button
           label={SIMPLE_ASK_NOT_YET}
           variant="secondary"

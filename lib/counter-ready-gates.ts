@@ -2,6 +2,7 @@
  * Gate rows + subtype + helper for Counter/Water/Reading · Ready (task-states-v2).
  * No time-window gate — counters are all-day / midnight-reset types.
  */
+import { WATER_UNIT } from "@/lib/counter-log";
 
 export type CounterReadyGateData = {
   key: string;
@@ -41,7 +42,7 @@ export function resolveCounterReadySubtype(
 }
 
 export function counterUnitPlural(variant: "counter" | "water" | "reading"): string {
-  if (variant === "water") return "cups";
+  if (variant === "water") return WATER_UNIT;
   if (variant === "reading") return "pages";
   return "units";
 }

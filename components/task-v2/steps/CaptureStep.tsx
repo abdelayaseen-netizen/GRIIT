@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { homeDayLine } from "@/lib/home-day-total";
 import { TaskCapture } from "../TaskCapture";
@@ -26,9 +25,8 @@ export function CaptureStep({
   onCancel,
   onCaptured,
 }: Props) {
-  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={styles.root}>
       <TaskCapture
         challenge={challengeName}
         task={taskName}
