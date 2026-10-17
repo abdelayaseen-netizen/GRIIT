@@ -53,6 +53,8 @@ export type TaskCompleteConfig = {
   unit_label?: string;
   unit?: string;
   target_unit?: string;
+  /** Build 90 03.1 — run rows: "distance" or "time" (a Workout is time). */
+  tracking_mode?: string;
   /** Counter/water/reading target fields (additive). */
   daily_target?: number;
   goal?: number;

@@ -32,3 +32,25 @@ export function sessionExpiredMessageForAuthState(
 export function shouldNotifySessionExpired(hasSession: boolean): boolean {
   return hasSession;
 }
+
+export type RefreshVerdict = "keep" | "sign_out";
+
+/**
+ * Build 90 06.9: a single 401 used to sign the person out on the spot. A stale access
+ * token on a slow or flaky connection (the app reopened a day later, refresh not yet
+ * through) produced exactly that, so the App Review account "forgot" its login.
+ * After a 401 we refresh once. Only a refresh the auth server rejects (the refresh token
+ * is gone or revoked) ends the session. A network failure keeps it; the next call retries.
+ */
+export function refreshVerdictAfter401(result: {
+  session: unknown | null;
+  error: { name?: string; status?: number } | null;
+}): RefreshVerdict {
+  if (result.session) return "keep";
+  const error = result.error;
+  if (!error) return "sign_out";
+  if (error.name === "AuthRetryableFetchError") return "keep";
+  if (error.name === "AuthSessionMissingError") return "sign_out";
+  if (typeof error.status === "number" && error.status >= 400 && error.status < 500) return "sign_out";
+  return "keep";
+}

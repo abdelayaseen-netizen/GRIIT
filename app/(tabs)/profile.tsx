@@ -2,7 +2,7 @@
  * Own profile v2 — identity, streak, consistency, Challenges / Proofs / Badges.
  * Record strings come from profiles.getRecord. No proof CTA except empty Proofs tab.
  */
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,14 @@ import Screen from "@/components/ds/Screen";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { cachedProofUrl, proofPrefetchUrls } from "@/lib/proof-url-cache";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
@@ -66,6 +68,7 @@ import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
 import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
 import {
   joinedBioLine,
   nextUnearnedBadge,
@@ -88,6 +91,10 @@ type RecordPayload = ProfileRecord & {
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
   return value === "challenges" || value === "proofs" || value === "data" || value === "badges";
+}
+
+function isEventId(id: string | null | undefined): id is string {
+  return typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
 export default function ProfileScreen() {
@@ -138,6 +145,27 @@ export default function ProfileScreen() {
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
+  const proofTiles = useMemo(
+    () =>
+      proofs.map((p, i) => {
+        const id = isEventId(p.eventId) ? p.eventId : `no-event-${p.dateKey}-${i}`;
+        return {
+          id,
+          dateKey: p.dateKey,
+          imageUrl: cachedProofUrl(id, p.imageUrl) ?? p.imageUrl,
+          taskName: p.taskName ?? p.challengeName,
+          shared: p.shared,
+          shareState: p.shareState,
+          bytes: p.bytes,
+        };
+      }),
+    [proofs],
+  );
+  useEffect(() => {
+    for (const url of proofPrefetchUrls(proofTiles.map((tile) => tile.imageUrl))) {
+      void Image.prefetch(url);
+    }
+  }, [proofTiles]);
 
   const handleShare = useCallback(async () => {
     if (!profile?.username) return;
@@ -245,14 +273,26 @@ export default function ProfileScreen() {
   const consistencySubFromU = firstJoin
     ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
     : "";
+  // 05.4: one source of truth for "tasks left today", shared with Home's card.
+  const todayCounts = todayTaskCounts({
+    activeChallenges: (bootstrap.data?.activeChallenges ?? []) as CountableEnrollment[],
+    todayCheckins: bootstrap.data?.todayCheckinsForUser ?? [],
+    todayKey,
+    timeZone: homeTimeZone,
+  });
   const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
     todaySecured,
     formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
+    leftByEnrollment: todayCounts.byEnrollment,
   });
-  const tasksLeft = challengeRows
-    .filter((r) => r.status === "active")
-    .reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
-  const todayOpen = !todaySecured && (record?.runs.length ?? 0) > 0;
+  // The Today tile reads the bootstrap counts (Home's source); the record query can lag a
+  // join by a screen. The rows only stand in while the bootstrap has not loaded.
+  const bootstrapLoaded = Array.isArray(bootstrap.data?.activeChallenges);
+  const tasksLeft = bootstrapLoaded
+    ? todayCounts.left
+    : challengeRows.filter((r) => r.status === "active").reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
+  const todayOpen =
+    !todaySecured && (bootstrapLoaded ? todayCounts.total > 0 : (record?.runs.length ?? 0) > 0);
   const bioPlaceholder = showJoinedBioPlaceholder({
     bio,
     createdAt: profile.created_at,
@@ -334,6 +374,9 @@ export default function ProfileScreen() {
             onFollowing={() =>
               router.push(ROUTES.FOLLOW_LIST(user.id, "following", handle) as never)
             }
+            onFriends={() =>
+              router.push(ROUTES.FOLLOW_LIST(user.id, "friends", handle) as never)
+            }
             onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
             onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
             onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
@@ -365,27 +408,17 @@ export default function ProfileScreen() {
           {v3Tab === "Your data" ? <YourDataTab /> : null}
           {v3Tab === "Proofs" ? (
             <ProfileProofs
-              proofs={proofs.map((p, i) => ({
-                id: p.eventId ?? `${p.dateKey}-${i}`,
-                dateKey: p.dateKey,
-                imageUrl: p.imageUrl,
-                taskName: p.taskName ?? p.challengeName,
-                shared: p.shared,
-                shareState: p.shareState,
-                bytes: p.bytes,
-              }))}
+              proofs={proofTiles}
               isOwner
               todayOpen={todayOpen}
               tasksLeft={tasksLeft}
               monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
               days={record?.days ?? []}
               header={header}
-              onOpenDay={(tile) =>
-                router.push({
-                  pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
-                  params: { at: tile.id },
-                } as never)
-              }
+              onOpenDay={(tile) => {
+                if (!isEventId(tile.id)) return;
+                router.push(ROUTES.PROFILE_POSTS(user.id, tile.id) as never);
+              }}
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
               securedDays={header.secured}

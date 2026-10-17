@@ -54,8 +54,9 @@ function selectPersonas(all: Persona[]): Persona[] {
     return picked;
   }
   const group = arg("group");
+  const groups = group ? group.split(",").map((name) => name.trim()).filter(Boolean) : [];
   const count = Number(arg("count") ?? "1");
-  const modePool = group ? all.filter((persona) => persona.group === group) : all;
+  const modePool = groups.length ? all.filter((persona) => groups.includes(persona.group)) : all;
   if (!modePool.length) throw new Error(`No personas for group ${group ?? "(all)"}`);
   return modePool.slice(0, Number.isFinite(count) ? count : 1);
 }
@@ -135,10 +136,22 @@ async function main() {
   const allowedNames = ["Seed GRIIT", "seedgriit"];
   const apiKey = requireEnv("ANTHROPIC_API_KEY");
   console.log(`\nRunning ${selected.length} agents on simulator ${UDID}, one at a time. Mode ${mode}.`);
+  // Supabase allows 30 anonymous sign-ins per IP per hour unless that limit was raised.
+  // Fresh agents each mint one. Keep at least 2 minutes between those starts.
+  const anonGapMs = 2 * 60 * 1000;
+  let lastAnonStart = 0;
   try {
     await maestro.start();
     for (let i = 0; i < selected.length; i++) {
       const persona = selected[i]!;
+      if (process.env.AGENTS_FRESH === "1") {
+        const wait = anonGapMs - (Date.now() - lastAnonStart);
+        if (lastAnonStart > 0 && wait > 0) {
+          console.log(`Waiting ${Math.ceil(wait / 1000)}s so anonymous sign-ins stay under 30 an hour.`);
+          await new Promise((resolve) => setTimeout(resolve, wait));
+        }
+        lastAnonStart = Date.now();
+      }
       console.log(`\n${persona.id} ${persona.name} (${persona.group})`);
       const outcome = await runPersona({
         persona,

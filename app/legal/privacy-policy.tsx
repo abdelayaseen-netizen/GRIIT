@@ -5,7 +5,7 @@ import { DS_V3, DS_SPACING, DS_TYPOGRAPHY } from "@/lib/design-system"
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const CONTENT = [
-  { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications; usage analytics (anonymized)." },
+  { heading: "Information We Collect", body: "Account information (email, username, display name); challenge activity and progress data; device information for push notifications. Usage analytics is on by default and can be turned off in Settings → Privacy. It sends your user id and events such as which screen you opened and whether a task was completed. It does not send photos, captions, emails, names, or locations." },
   { heading: "How We Use Your Information", body: "To provide and improve the GRIIT service; to track your challenge progress and streaks; to send push notifications you've opted into; to display leaderboards and social features." },
   { heading: "Data Storage", body: "Your data is stored securely on Supabase (cloud infrastructure). We use industry-standard encryption for data in transit." },
   { heading: "Your Rights", body: "You can request deletion of your account and data. You can opt out of push notifications at any time. You can contact us at griit.health@gmail.com for any privacy concerns." },
@@ -19,7 +19,7 @@ function PrivacyPolicyScreenInner() {
     <Screen style={styles.container} edges={["bottom"]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>GRIIT Privacy Policy</Text>
-        <Text style={styles.updated}>Last updated: September 2026</Text>
+        <Text style={styles.updated}>Last updated: October 2026</Text>
         {CONTENT.map((section, i) => (
           <View key={i} style={styles.section}>
             <Text style={styles.heading}>{section.heading}</Text>

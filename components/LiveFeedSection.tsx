@@ -19,12 +19,14 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { fetchComments } from "@/lib/hidden-comments";
 import { ROUTES } from "@/lib/routes";
 import { feedAuthorHref, feedChallengeHref } from "@/lib/feed-tap-targets";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
 import { captureError } from "@/lib/sentry";
-import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
+import { optimisticRespect, patchLiveFeedCache, rollbackRespect, settleRespect } from "@/lib/feed-respect";
+import { logLikeFailure } from "@/lib/like-error";
 import { SkeletonFeedCard } from "@/components/skeletons/SkeletonFeedCard";
 import ProofPost from "@/components/feed/ProofPost";
 import FeedEvent from "@/components/feed/FeedEvent";
@@ -209,7 +211,10 @@ function LiveFeedSection({
   useFocusEffect(
     useCallback(() => {
       if (!user?.id) return;
-      void postersQuery.refetch();
+      // Build 90 01b.3: Home can gain focus twice in one transition (two posters requests
+      // 160 ms apart in the trace). The default cancelRefetch aborts the first and starts a
+      // second, and trpcQuery ignores the abort, so the server ran both. Join it instead.
+      void postersQuery.refetch({ cancelRefetch: false });
     }, [postersQuery.refetch, user?.id]),
   );
 
@@ -242,9 +247,15 @@ function LiveFeedSection({
     queryKey: ["challenges", "listMyActive", user?.id ?? ""],
     queryFn: () =>
       trpcQuery<
-        { challenge_id?: string; start_at?: string | null; challenges?: { duration_days?: number | null } | null }[]
+        {
+          challenge_id?: string;
+          start_at?: string | null;
+          current_day?: number | null;
+          challenges?: { duration_days?: number | null } | null;
+        }[]
       >(TRPC.challenges.listMyActive),
-    enabled: !!user?.id,
+    // Build 90 04.7: only read when a "started" row is opened; it refetched on every Home focus.
+    enabled: !!user?.id && !!startedPreview,
     staleTime: 30 * 1000,
   });
   const startedEnrollment = useMemo(() => {
@@ -255,6 +266,7 @@ function LiveFeedSection({
         challengeId: String(row.challenge_id ?? ""),
         startAt: row.start_at ?? null,
         durationDays: row.challenges?.duration_days ?? 1,
+        currentDay: row.current_day,
       })),
       startedPreview.id,
       getTodayDateKey(zone),
@@ -276,14 +288,8 @@ function LiveFeedSection({
     queries: postsWithComments.map((p) => ({
       queryKey: ["feedCommentPreview", p.id],
       queryFn: async () => {
-        const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: p.id, limit: 100 })) as {
-          user_id: string;
-          text: string;
-          created_at: string;
-          display_name: string;
-          username: string;
-          avatar_url: string | null;
-        }[];
+        // 07.3: the shared fetch drops comments this viewer reported.
+        const rows = await fetchComments(p.id, 100);
         return rows.slice(0, 2).map((row) => ({
           userId: row.user_id,
           username: row.username,
@@ -311,13 +317,8 @@ function LiveFeedSection({
     (postId: string, updater: (p: LiveFeedPost) => LiveFeedPost) => {
       queryClient.setQueryData(
         ["liveFeed", scope, user?.id ?? ""],
-        (old: LiveFeedResponse | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            posts: old.posts.map((p) => (p.id === postId ? updater(p) : p)),
-          };
-        }
+        (old: { pages?: { posts?: LiveFeedPost[] }[]; pageParams?: unknown[] } | undefined) =>
+          patchLiveFeedCache(old, postId, (post) => updater(post as LiveFeedPost)),
       );
     },
     [queryClient, scope, user?.id]
@@ -355,6 +356,7 @@ function LiveFeedSection({
         }
         void queryClient.invalidateQueries({ queryKey: ["whoRespected", post.id] });
       } catch (e) {
+        logLikeFailure(e, "LiveFeedRespect");
         captureError(e, "LiveFeedRespect");
         updatePost(post.id, (p) => ({ ...p, ...rollbackRespect(prev) }));
       }
@@ -454,18 +456,61 @@ function LiveFeedSection({
     }
   }, [blockTarget, pagePosts, queryClient]);
 
+  const reportFeedPost = useCallback(
+    async (post: LiveFeedPost) => {
+      if (!post.userId || post.userId === user?.id) return;
+      try {
+        const result = await trpcMutate<{ alreadyReported?: boolean }>(TRPC.reports.reportUser, {
+          userId: post.userId,
+          reason: "other",
+          details: post.id,
+        });
+        setFeedSnack(result?.alreadyReported ? "Already reported" : "Reported. Thanks for helping keep GRIIT safe.");
+      } catch (e) {
+        captureError(e, "LiveFeedReportPost");
+        setFeedSnack("Couldn't send the report. Try again.");
+      }
+      setTimeout(() => setFeedSnack(null), 2500);
+    },
+    [user?.id]
+  );
+
+  const applyAudience = useCallback((post: LiveFeedPost, audience: "friends" | "everyone" | "only_me") => {
+    void trpcMutate(TRPC.checkins.setPostAudience, { eventId: post.id, audience }).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    });
+  }, [queryClient]);
+
   const openPostMenu = useCallback(
     (post: LiveFeedPost) => {
       if (!user?.id) return;
       const isOwn = post.userId === user.id;
+      const canRetarget = isOwn && (post.audience === "friends" || post.audience === "everyone" || post.audience === "only_me");
+
+      const pickAudience = () => {
+        const choices = ["Friends", "Everyone", "Only me", "Cancel"] as const;
+        const map = ["friends", "everyone", "only_me"] as const;
+        if (Platform.OS === "ios") {
+          ActionSheetIOS.showActionSheetWithOptions(
+            { options: [...choices], cancelButtonIndex: 3 },
+            (buttonIndex) => {
+              const next = map[buttonIndex];
+              if (next) applyAudience(post, next);
+            },
+          );
+        }
+      };
 
       const runOwn = (index: number) => {
-        if (index === 0) void handleDeletePost(post);
+        if (canRetarget && index === 0) {
+          pickAudience();
+          return;
+        }
+        if (index === (canRetarget ? 1 : 0)) void handleDeletePost(post);
       };
       const runOther = (index: number) => {
         if (index === 0) {
-          setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
-          setTimeout(() => setFeedSnack(null), 2500);
+          void reportFeedPost(post);
         } else if (index === 1) {
           setBlockTarget(post);
         } else if (index === 2) {
@@ -475,13 +520,15 @@ function LiveFeedSection({
 
       if (Platform.OS === "ios") {
         const options = isOwn
-          ? ["Delete from the feed", "Cancel"]
+          ? canRetarget
+            ? ["Who can see this", "Delete from the feed", "Cancel"]
+            : ["Delete from the feed", "Cancel"]
           : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
         ActionSheetIOS.showActionSheetWithOptions(
           {
             options,
             cancelButtonIndex: options.length - 1,
-            destructiveButtonIndex: isOwn ? 0 : 1,
+            destructiveButtonIndex: isOwn ? (canRetarget ? 1 : 0) : 1,
           },
           (buttonIndex) => {
             if (isOwn) runOwn(buttonIndex);
@@ -492,24 +539,26 @@ function LiveFeedSection({
         setAndroidMenuPost(post);
       }
     },
-    [user?.id, handleDeletePost]
+    [user?.id, handleDeletePost, reportFeedPost, applyAudience]
   );
 
-  const maybeFetchMore = useCallback(
-    (index: number) => {
-      if (index < listItems.length - 5) return;
-      if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage) return;
-      void feedQuery.fetchNextPage();
-    },
-    [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage, listItems.length],
-  );
+  // Build 90 04.7: the next page is asked for once, from onEndReached. The old per-row call in
+  // renderItem ran for every row of a render with a stale isFetchingNextPage, so one scroll
+  // sent the same page five times, each cancelling the one before.
+  const nextPageInFlight = useRef(false);
+  const fetchNextFeedPage = useCallback(() => {
+    if (!feedQuery.hasNextPage || feedQuery.isFetchingNextPage || nextPageInFlight.current) return;
+    nextPageInFlight.current = true;
+    void feedQuery.fetchNextPage({ cancelRefetch: false }).finally(() => {
+      nextPageInFlight.current = false;
+    });
+  }, [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage]);
 
   const renderItem = useCallback(
-    ({ item, index }: { item: FeedListItem; index: number }) => {
+    ({ item }: { item: FeedListItem }) => {
       void previewByPostId;
       void submitComment;
       void openPostMenu;
-      maybeFetchMore(index);
       if (isJoinGroup(item)) {
         return (
           <View style={styles.v3Item}>
@@ -566,7 +615,7 @@ function LiveFeedSection({
         </View>
       );
     },
-    [maybeFetchMore, navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
+    [navigateProfile, onRespect, onShare, previewByPostId, submitComment, openPostMenu, router, user?.id, viewerTargetStreak]
   );
 
   const goToDiscover = useCallback(() => {
@@ -683,7 +732,7 @@ function LiveFeedSection({
             </Pressable>
           </View>
         </View>
-          {followingCount < 3 ? (
+          {scope === "everyone" && followingCount < 3 ? (
             <Text style={styles.untilThree}>{EVERYONE_UNTIL_THREE}</Text>
           ) : null}
         </View>
@@ -733,11 +782,7 @@ function LiveFeedSection({
         ItemSeparatorComponent={FeedSeparator}
         ListHeaderComponent={composedHeader}
         ListEmptyComponent={listEmpty}
-        onEndReached={() => {
-          if (feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
-            void feedQuery.fetchNextPage();
-          }
-        }}
+        onEndReached={fetchNextFeedPage}
         onEndReachedThreshold={0.4}
         ListFooterComponent={
           <View style={styles.feedFooter}>
@@ -796,6 +841,25 @@ function LiveFeedSection({
           <View style={styles.androidMenuSheet}>
             {androidMenuPost && androidMenuPost.userId === user.id ? (
               <>
+                {androidMenuPost.audience === "friends" || androidMenuPost.audience === "everyone" || androidMenuPost.audience === "only_me" ? (
+                  <>
+                    {(["friends", "everyone", "only_me"] as const).map((choice) => (
+                      <TouchableOpacity
+                        key={choice}
+                        style={styles.androidMenuRow}
+                        onPress={() => {
+                          const target = androidMenuPost;
+                          setAndroidMenuPost(null);
+                          applyAudience(target, choice);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={choice === "friends" ? "Friends" : choice === "everyone" ? "Everyone" : "Only me"}
+                      >
+                        <Text style={styles.androidMenuCancel}>{choice === "friends" ? "Friends" : choice === "everyone" ? "Everyone" : "Only me"}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </>
+                ) : null}
                 <TouchableOpacity
                   style={styles.androidMenuRow}
                   onPress={() => {
@@ -821,9 +885,9 @@ function LiveFeedSection({
                 <TouchableOpacity
                   style={styles.androidMenuRow}
                   onPress={() => {
+                    const reported = androidMenuPost;
                     setAndroidMenuPost(null);
-                    setFeedSnack("Reported. Thanks for helping keep GRIIT safe.");
-                    setTimeout(() => setFeedSnack(null), 2500);
+                    if (reported) void reportFeedPost(reported);
                   }}
                   accessibilityRole="button"
                   accessibilityLabel="Report post"

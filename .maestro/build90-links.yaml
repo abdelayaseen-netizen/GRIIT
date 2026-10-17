@@ -1,0 +1,268 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 05: every name links to what it names, and the numbers agree.
+# Fresh is_test email account each run (MAESTRO_EMAIL=b89links…@example.com).
+#   05.2 Home shows a one-line tappable challenge header; it opens the challenge page.
+#   05.4 Home, Profile and the challenge page show the same counts the moment after
+#        Day 1 is secured (screenshots build90-05-counts-*).
+#   05.2 profile Challenges card and the feed subject line open the challenge page.
+#   05.1 the feed author opens the profile; a leaderboard row and a Discover person open
+#        the right profile (someone else's: the Follow control is there).
+# Needs the chunk 05 server on Railway (groups.members username, is_test filters).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-links-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+# Joining lands on the first task (02.2). "Not yet" leaves it for Home.
+- extendedWaitUntil:
+    visible: "Not yet"
+    timeout: 15000
+- tapOn: "Not yet"
+# The stack under the task is Settings (the account screen opened from there).
+- extendedWaitUntil:
+    visible: "Go back|Home"
+    timeout: 15000
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Home"
+
+# 05.2 Home: one tappable header line per challenge, above its tasks.
+- extendedWaitUntil:
+    visible:
+      id: "home-challenge-header"
+    timeout: 20000
+# The header is one Pressable labelled "Open 7K Steps challenge"; the line it shows
+# ("7K Steps · Day 1 of 7") is in the screenshot.
+- assertVisible: "Day 1 is today. Finish the task to secure it."
+- assertNotVisible: ".*all 1 tasks.*"
+- takeScreenshot: build90-05-home-header
+- tapOn:
+    id: "home-challenge-header"
+- extendedWaitUntil:
+    visible: "of 7"
+    timeout: 20000
+- assertVisible: "7K Steps"
+# 05.4 before the finish: nothing is due yet, so the record line is Home's first-day line,
+# never "0 of 0 days secured" or "0 days done".
+- assertVisible: "First day is today."
+- assertNotVisible: ".*days done.*"
+- assertNotVisible: "0 of 0 days.*"
+- takeScreenshot: build90-05-open-challenge
+- tapOn: "Go back"
+
+# 05.4 before the finish: Home says 0 of 1 done and Profile's Today tile says 1 task left.
+- extendedWaitUntil:
+    visible: "0 of 1 done"
+    timeout: 20000
+- takeScreenshot: build90-05-open-home
+- tapOn: "Profile"
+# The Today tile is one accessible element: "Today. 1 task left".
+- extendedWaitUntil:
+    visible: "Today. 1 task left"
+    timeout: 20000
+- assertNotVisible: ".*tasks left.*"
+- takeScreenshot: build90-05-open-profile
+- tapOn: "Home"
+
+# Finish the one task so Day 1 is secured, then compare the three screens again.
+- extendedWaitUntil:
+    visible:
+      id: "home-task"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 10000
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Day 1 secured.*"
+    timeout: 20000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible:
+      id: "post-done"
+    timeout: 20000
+# Open the post to Everyone so build90-links-people (account B, not a friend) can find it.
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: "Everyone"
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "post-done"
+    timeout: 10000
+- tapOn:
+    id: "post-done"
+# If the layout shifted under the tap and the share sheet opened instead, close it and tap Done again.
+- runFlow:
+    when:
+      visible: "Copy sticker"
+    commands:
+      - tapOn: "Close"
+      - extendedWaitUntil:
+          visible:
+            id: "post-done"
+          timeout: 10000
+      - tapOn:
+          id: "post-done"
+
+# 05.4 Home says 1 of 1 done.
+- extendedWaitUntil:
+    visible: "1 of 1 done"
+    timeout: 20000
+- takeScreenshot: build90-05-counts-home
+
+# 05.4 Profile after the finish: the Today tile is gone (nothing left), Days secured is 1,
+# and the Challenges card says Day 1 of 7.
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Days secured"
+    timeout: 20000
+- assertNotVisible: "Today\\. .*"
+- takeScreenshot: build90-05-counts-profile
+- tapOn: "Challenges"
+- extendedWaitUntil:
+    visible: "Open 7K Steps challenge"
+    timeout: 15000
+# The card is one accessible element; its "Day 1 of 7" line is in the screenshot.
+- takeScreenshot: build90-05-counts-profile-challenges
+# 05.2 the profile Challenges card opens the challenge page.
+- tapOn: "Open 7K Steps challenge"
+- extendedWaitUntil:
+    visible: "of 7"
+    timeout: 20000
+# 05.4 the challenge page: "1 of 1 day secured", never "1 days done".
+- extendedWaitUntil:
+    visible: "1 of 1 day secured"
+    timeout: 20000
+- assertNotVisible: ".*days done.*"
+- assertNotVisible: "1 days.*"
+- takeScreenshot: build90-05-counts-challenge
+- tapOn: "Go back"
+
+# 05.2 / 05.1 the feed post: subject line opens the challenge, name opens the profile.
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "1 of 1 done"
+    timeout: 20000
+- swipe:
+    start: 50%, 80%
+    end: 50%, 40%
+    duration: 600
+- extendedWaitUntil:
+    visible:
+      id: "feed-post-challenge"
+    timeout: 20000
+- tapOn:
+    id: "feed-post-challenge"
+- extendedWaitUntil:
+    visible: "1 of 1 day secured"
+    timeout: 20000
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible:
+      id: "feed-post-challenge"
+    timeout: 20000
+# Own post: the author name opens the own Profile tab.
+- tapOn: ".* profile"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 15000
+- assertVisible: "Edit profile"
+- assertNotVisible: "Follow"
+
+# 05.1 leaderboard. Since chunk 08 every member is on the board (board_opt_in on join), so a
+# fresh account on 7K Steps sees the board headings, not "A board needs two.". Row labels are
+# the person's name only (ListRow's Pressable owns the label, 05.1), so "1 secured" and
+# "Rank 1" are not in the accessibility tree; the heading is, as in build90-friend-loop-b.
+# The row tap (id fallback, no early return) is checked in the vitest source test.
+- tapOn: "Activity"
+- tapOn: "Leaderboard"
+- extendedWaitUntil:
+    visible: "A board needs two.|Top of the challenge"
+    timeout: 20000
+- takeScreenshot: build90-05-leaderboard
+
+# 05.1 Discover people (the app has no search screen; this is the people list). The card's
+# label is the person's name, so the tap target is checked in the vitest source test
+# (`userProfile(` in discover.tsx); here the list is only shown.
+- tapOn: "Discover"
+- extendedWaitUntil:
+    visible: "Build your own|People|Discover"
+    timeout: 20000
+- takeScreenshot: build90-05-discover

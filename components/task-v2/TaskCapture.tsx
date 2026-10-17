@@ -9,7 +9,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as ImageManipulator from "expo-image-manipulator";
 import { SwitchCamera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
-import { captureEditPlan, chooseCaptureFile } from "@/lib/proof-capture";
+import { CAPTURE_PROOF_REQUIRED, captureEditPlan, captureHeaderLine, chooseCaptureFile } from "@/lib/proof-capture";
 import { createCameraCaptureMeta } from "@/lib/photo-capture-meta";
 import { cameraPermissionGate } from "@/lib/camera-permission-gate";
 import Button from "@/components/ds/Button";
@@ -25,6 +25,7 @@ export const CAPTURE_LIBRARY_CAPTION = "Taken in the app. The library is not an 
 export function TaskCapture({
   challenge,
   task,
+  dayLine,
   windowLabel,
   timerLabel,
   onCancel,
@@ -32,6 +33,8 @@ export function TaskCapture({
 }: {
   challenge: string;
   task: string;
+  /** "Day 2 of 7" from the enrollment. */
+  dayLine?: string | null;
   windowLabel?: string;
   timerLabel?: string;
   onCancel: () => void;
@@ -140,7 +143,8 @@ export function TaskCapture({
         </Pressable>
       </View>
       <View style={styles.meta}>
-        <Text style={styles.challenge}>{challenge}</Text>
+        <Text style={styles.challenge}>{captureHeaderLine(challenge, dayLine)}</Text>
+        <Text style={styles.timer}>{CAPTURE_PROOF_REQUIRED}</Text>
         {timerLabel ? <Text style={styles.timer}>{timerLabel}</Text> : null}
       </View>
       <View style={styles.finderWrap}>

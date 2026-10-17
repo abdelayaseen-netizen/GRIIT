@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text } from "react-native";
 import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   Bell,
   Camera,
   CreditCard,
@@ -17,7 +19,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useApp } from "@/contexts/AppContext";
 import { ROUTES } from "@/lib/routes";
-import { SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
+import { FLAGS } from "@/lib/feature-flags";
+import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
+import { captureError } from "@/lib/sentry";
+import {
+  GUEST_SETTINGS_LINE,
+  SETTINGS_NOTIFICATIONS_SUB,
+  STRAVA_DISCONNECT,
+  STRAVA_DISCONNECT_BODY,
+  STRAVA_DISCONNECT_TITLE,
+  settingsPrivacySub,
+  stravaSettingsRow,
+} from "@/lib/settings-rows";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import ListRow from "@/components/ds/ListRow";
@@ -26,6 +40,8 @@ import { AccountDangerZone } from "@/components/settings/AccountDangerZone";
 import { useInlineError } from "@/hooks/useInlineError";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
+import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 const ABOUT_LINE = aboutVersionLine({
   version: Constants.expoConfig?.version,
@@ -34,10 +50,11 @@ const ABOUT_LINE = aboutVersionLine({
 });
 const ICON = DS_V3.space.xs * 6;
 
-function accountSubtitle(email: string | null | undefined): string {
+function accountSubtitle(email: string | null | undefined, anonymous: boolean): string {
+  if (anonymous) return "guest";
   const trimmed = email?.trim() ?? "";
   if (trimmed) return trimmed;
-  return "Signed in with email";
+  return "guest";
 }
 
 export default function SettingsScreen() {
@@ -46,6 +63,21 @@ export default function SettingsScreen() {
   const isGuest = useIsGuest();
   const { isPremium, profile } = useApp();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saveStreak, setSaveStreak] = useState(false);
+  const [stravaLeave, setStravaLeave] = useState(false);
+  const anonymous = user?.is_anonymous === true;
+  const queryClient = useQueryClient();
+  const stravaConnection = useQuery({
+    queryKey: ["integrations", "getStravaConnection", user?.id ?? ""],
+    queryFn: () => trpcQuery<{ id: string } | null>(TRPC.integrations.getStravaConnection),
+    enabled: FLAGS.STRAVA_AUTO_VERIFY && !!user?.id && !anonymous,
+    staleTime: 60_000,
+  });
+  const stravaRow = stravaSettingsRow({
+    flagOn: FLAGS.STRAVA_AUTO_VERIFY,
+    connected: Boolean(stravaConnection.data?.id),
+    guest: anonymous,
+  });
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const { error: deleteAccountError, showError: showDeleteAccountError, clearError: clearDeleteAccountError } =
@@ -60,11 +92,16 @@ export default function SettingsScreen() {
         <SettingsNav title="Settings" />
         <GriitFade fadeKey="settings">
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          {anonymous ? (
+            <Text style={styles.guest} onPress={() => setSaveStreak(true)}>
+              {GUEST_SETTINGS_LINE}
+            </Text>
+          ) : null}
           <Card style={styles.card}>
             <ListRow
               icon={<User size={ICON} color={DS_V3.color.textPrimary} />}
               title="Account"
-              subtitle={accountSubtitle(email)}
+              subtitle={accountSubtitle(email, anonymous)}
               onPress={() => router.push(ROUTES.SETTINGS_ACCOUNT as never)}
             />
             <ListRow
@@ -93,6 +130,24 @@ export default function SettingsScreen() {
                 router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
               }
             />
+            {stravaRow ? (
+              <ListRow
+                icon={<Activity size={ICON} color={DS_V3.color.textPrimary} />}
+                title={stravaRow.title}
+                subtitle={stravaRow.subtitle ?? undefined}
+                onPress={() => {
+                  if (stravaRow.action === "disconnect") {
+                    setStravaLeave(true);
+                    return;
+                  }
+                  void trpcQuery<{ url: string }>(TRPC.integrations.getStravaAuthUrl)
+                    .then((res) => {
+                      if (res?.url) return Linking.openURL(res.url);
+                    })
+                    .catch((err: unknown) => captureError(err, "SettingsConnectStrava"));
+                }}
+              />
+            ) : null}
             <ListRow
               icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}
               title="About"
@@ -118,6 +173,27 @@ export default function SettingsScreen() {
           <Text style={styles.ver}>{ABOUT_LINE}</Text>
         </ScrollView>
         </GriitFade>
+        <SaveStreakSheet
+          visible={saveStreak}
+          onLater={() => setSaveStreak(false)}
+          onSaved={() => setSaveStreak(false)}
+        />
+        <ConfirmDialog
+          visible={stravaLeave}
+          title={STRAVA_DISCONNECT_TITLE}
+          message={STRAVA_DISCONNECT_BODY}
+          confirmLabel={STRAVA_DISCONNECT}
+          destructive
+          onCancel={() => setStravaLeave(false)}
+          onConfirm={() => {
+            setStravaLeave(false);
+            void trpcMutate(TRPC.integrations.disconnectStrava, {})
+              .then(() =>
+                queryClient.invalidateQueries({ queryKey: ["integrations", "getStravaConnection"] }),
+              )
+              .catch((err: unknown) => captureError(err, "SettingsDisconnectStrava"));
+          }}
+        />
       </Screen>
     </ErrorBoundary>
   );
@@ -133,6 +209,13 @@ const styles = StyleSheet.create({
   card: {
     padding: 0,
     overflow: "hidden",
+  },
+  guest: {
+    marginBottom: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.secondary.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   ver: {
     marginTop: DS_V3.space.section,

@@ -1,8 +1,6 @@
 import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Check } from "lucide-react-native";
 import KeyboardDock, { NUMBER_PAD_ACCESSORY_ID, NumberPadDoneBar } from "@/components/ds/KeyboardDock";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
@@ -18,7 +16,7 @@ import {
   counterHeaderWhenReady,
   counterSubline,
 } from "@/lib/work-step";
-import { completeLabel, showLogPartial } from "@/lib/counter";
+import { counterDoneEnabled, counterDoneLabel, showLogPartial } from "@/lib/counter";
 
 type Props = {
   count: number;
@@ -66,7 +64,6 @@ export function CountStep({
   onComplete,
   onBack,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
   const atTarget = counterGoal > 0 && count >= counterGoal;
@@ -82,7 +79,7 @@ export function CountStep({
     <View style={styles.root}>
       <NumberPadDoneBar />
       <KeyboardDock>
-      <View style={{ paddingTop: insets.top }}>
+      <View>
         <PushedHeader
           title={header?.title ?? headerTitle}
           label={header?.label ?? headerLabel}
@@ -102,12 +99,6 @@ export function CountStep({
         {showLogPartial(count, counterGoal) ? (
           <Text style={styles.partial}>{countCtaLabel(count, counterGoal)}</Text>
         ) : null}
-        {atTarget ? (
-          <View style={styles.met}>
-            <Check size={16} color={DS_V3.color.brand} />
-            <Text style={styles.metText}>Target met</Text>
-          </View>
-        ) : null}
         {keypadOpen ? (
           <View style={styles.typeField}>
             <TextField
@@ -120,6 +111,7 @@ export function CountStep({
               keyboardType="number-pad"
               inputAccessoryViewID={NUMBER_PAD_ACCESSORY_ID}
               accessibilityLabel="Count"
+              testID="count-type"
             />
           </View>
         ) : (
@@ -160,11 +152,12 @@ export function CountStep({
         )}
       </View>
       </KeyboardDock>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button
           testID="count-complete"
-          label={completeLabel(counterGoal, counterUnit, hasCamera)}
+          label={counterDoneLabel(count, counterGoal, counterUnit)}
           variant="primary"
+          disabled={!counterDoneEnabled(count, counterGoal)}
           onPress={onComplete}
         />
       </View>
@@ -223,16 +216,6 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     color: DS_V3.color.textTertiary,
   },
-  met: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.sm,
-  },
-  metText: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    color: DS_V3.color.textPrimary,
-  },
   dim: { opacity: 0.4 },
   typeField: {
     alignSelf: "stretch",
@@ -266,6 +249,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

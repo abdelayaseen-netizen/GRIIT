@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollBody: {
-    paddingBottom: DS_V3.size.button + DS_V3.space.lg + FOOTER_BOTTOM,
+    paddingBottom: DS_V3.space.lg,
   },
   titleBlock: {
     paddingTop: TITLE_TOP,
@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.title.lineHeight,
     fontWeight: DS_V3.type.title.fontWeight,
     color: DS_V3.color.textPrimary,
+    flexShrink: 1,
   },
   subtitle: {
     fontSize: DS_V3.type.secondary.fontSize,
@@ -273,6 +274,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   optionTitle: {
+    flexShrink: 1,
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,

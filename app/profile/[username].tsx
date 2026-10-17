@@ -2,7 +2,7 @@
  * Visitor profile v2 — identity always; record gated server-side.
  * Public: Follow / Following. Friends/Private: Request to follow / Requested / Following.
  */
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActionSheetIOS,
   Alert,
@@ -16,11 +16,13 @@ import ScreenChrome from "@/components/ds/ScreenChrome";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Image } from "expo-image";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
+import { cachedProofUrl, proofPrefetchUrls } from "@/lib/proof-url-cache";
 import { captureError } from "@/lib/sentry";
 import { shareProfile } from "@/lib/share";
 import { DS_V3 } from "@/lib/design-system";
@@ -219,7 +221,7 @@ export default function VisitorProfileScreen() {
   };
 
   const onMore = () => {
-    const opts = isSelf ? ["Share", "Cancel"] : ["Share", `Block @${handle}`, "Cancel"];
+    const opts = isSelf ? ["Share", "Cancel"] : ["Share", "Report", `Block @${handle}`, "Cancel"];
     const run = (i: number) => {
       if (i === 0) {
         void shareProfile({
@@ -228,14 +230,26 @@ export default function VisitorProfileScreen() {
           totalDaysSecured: rec?.detail.totalVerified ?? 0,
           tier: "Starter",
         });
-      } else if (!isSelf && i === 1) setShowBlock(true);
+      } else if (!isSelf && i === 1 && ownerId) {
+        void trpcMutate<{ alreadyReported?: boolean }>(TRPC.reports.reportUser, {
+          userId: ownerId,
+          reason: "other",
+        })
+          .then((result) => {
+            if (result?.alreadyReported) Alert.alert("Already reported");
+          })
+          .catch((err) => {
+            captureError(err, "ReportUser");
+            Alert.alert("Couldn't send the report", "Try again.");
+          });
+      } else if (!isSelf && i === 2) setShowBlock(true);
     };
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options: opts,
           cancelButtonIndex: opts.length - 1,
-          ...(isSelf ? {} : { destructiveButtonIndex: 1 }),
+          ...(isSelf ? {} : { destructiveButtonIndex: 2 }),
         },
         run
       );
@@ -243,7 +257,10 @@ export default function VisitorProfileScreen() {
       Alert.alert("More", undefined, [
         { text: "Share", onPress: () => run(0) },
         ...(!isSelf
-          ? [{ text: `Block @${handle}`, style: "destructive" as const, onPress: () => run(1) }]
+          ? [
+              { text: "Report", onPress: () => run(1) },
+              { text: `Block @${handle}`, style: "destructive" as const, onPress: () => run(2) },
+            ]
           : []),
         { text: "Cancel", style: "cancel" },
       ]);
@@ -256,6 +273,27 @@ export default function VisitorProfileScreen() {
   const locked = gate.profile ? null : { heading: lockTitle, body: lockBody };
 
   const proofs = rec?.proofs ?? [];
+  const proofTiles = useMemo(
+    () =>
+      proofs.map((p, i) => {
+        const id = p.eventId ?? `${p.dateKey}-${i}`;
+        return {
+          id,
+          dateKey: p.dateKey,
+          imageUrl: cachedProofUrl(id, p.imageUrl) ?? p.imageUrl,
+          taskName: p.taskName ?? p.challengeName,
+          shared: p.shared,
+          shareState: p.shareState,
+          bytes: p.bytes,
+        };
+      }),
+    [proofs],
+  );
+  useEffect(() => {
+    for (const url of proofPrefetchUrls(proofTiles.map((tile) => tile.imageUrl))) {
+      void Image.prefetch(url);
+    }
+  }, [proofTiles]);
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
   const header = rec?.header ?? EMPTY_SECURED_HEADER;
@@ -341,6 +379,11 @@ export default function VisitorProfileScreen() {
                   ? router.push(ROUTES.FOLLOW_LIST(ownerId, "following", handle) as never)
                   : undefined
               }
+              onFriends={() =>
+                ownerId
+                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "friends", handle) as never)
+                  : undefined
+              }
               onSeeRecord={() =>
                 router.push({
                   pathname: ROUTES.PROFILE_CONSISTENCY as never,
@@ -388,25 +431,16 @@ export default function VisitorProfileScreen() {
             ListFooterComponent={
               tab === "Proofs" && !locked ? (
                 <ProfileProofs
-                  proofs={proofs.map((p, i) => ({
-                    id: p.eventId ?? `${p.dateKey}-${i}`,
-                    dateKey: p.dateKey,
-                    imageUrl: p.imageUrl,
-                    taskName: p.taskName ?? p.challengeName,
-                    shared: p.shared,
-                    shareState: p.shareState,
-                    bytes: p.bytes,
-                  }))}
+                  proofs={proofTiles}
                   isOwner={false}
                   monthKey={rec?.monthKey ?? rec?.todayKey?.slice(0, 7) ?? ""}
                   days={rec?.days ?? []}
                   header={header}
                   securedDays={header.secured}
                   onOpenDay={(tile) =>
-                    router.push({
-                      pathname: ROUTES.PROFILE_PROOF(tile.dateKey) as never,
-                      params: { at: tile.id, userId: isSelf ? undefined : ownerId },
-                    } as never)
+                    ownerId
+                      ? router.push(ROUTES.PROFILE_POSTS(ownerId, tile.id) as never)
+                      : undefined
                   }
                 />
               ) : null

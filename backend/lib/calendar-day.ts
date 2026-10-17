@@ -62,8 +62,11 @@ export function calendarDay(
   return clampCalendarDay(calendarDayCount(startDateKey, todayKey), durationDays);
 }
 
-/** v28.2 / v35: every on-screen Day n is this reduction — never current_day or event index. */
-export function calendarDayFromStartAt(
+/**
+ * The only "Day n of N".
+ * n = local date − enrollment start + 1, capped at N, in the user's time zone.
+ */
+export function shownChallengeDay(
   startAt: string | null | undefined,
   timeZone: string,
   todayKey: string,
@@ -71,6 +74,16 @@ export function calendarDayFromStartAt(
 ): number {
   const startKey = startAt ? dateKeyFromIso(startAt, timeZone) : todayKey;
   return calendarDay(startKey, todayKey, durationDays);
+}
+
+/** Same day. Kept so older call sites stay on this function. */
+export function calendarDayFromStartAt(
+  startAt: string | null | undefined,
+  timeZone: string,
+  todayKey: string,
+  durationDays?: number | null,
+): number {
+  return shownChallengeDay(startAt, timeZone, todayKey, durationDays);
 }
 
 export function homeDayLine(day: number, durationDays: number | null | undefined): string {

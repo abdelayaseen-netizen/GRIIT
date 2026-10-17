@@ -1,0 +1,26 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp
+- tapOn:
+    text: "Dismiss"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn: "Discover"
+- extendedWaitUntil:
+    visible: "Featured"
+    timeout: 15000
+- tapOn: "Faith"
+- assertNotVisible: "Show Up 7"
+- assertNotVisible: "7K Steps"
+- assertVisible: "Fajr Before Sunrise"
+- assertVisible: "Quran Daily"
+- tapOn: "Mind"
+- assertNotVisible: "Fajr Before Sunrise"
+- assertNotVisible: "Show Up 7"
+- assertVisible: "3 Good Things"
+- tapOn: "Fitness"
+- assertVisible: "Show Up 7"
+- assertNotVisible: "Fajr Before Sunrise"
+- assertNotVisible: "Quran Daily"

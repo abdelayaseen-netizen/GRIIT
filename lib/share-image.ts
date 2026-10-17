@@ -14,6 +14,7 @@
 import { INVITE_BASE } from "@/lib/config";
 import { streakInARow } from "@/lib/task-complete-toast";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
+import { formatDays } from "@/lib/format-days";
 import { dayParts, inviteUrl } from "@/lib/story-card";
 export const SHARE_W = 1080;
 export const SHARE_H = 1920;
@@ -34,7 +35,12 @@ export const SHARE_TARGET_SAVE = "Save";
 export const SHARE_TARGET_MESSAGES = "Messages";
 export const SHARE_TARGET_MORE = "More";
 
-export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G";
+/**
+ * A photo proof · B transparent glow sticker (build 90 04.6: no moment reaches it) ·
+ * C self-reported check · D progress grid · E streak · F finished · G invite ·
+ * H day stamp (build 90 04.6).
+ */
+export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
 export type ShareColourId = "ink" | "orange" | "white";
 export type ShareMoment =
   | "photo_proof"
@@ -87,10 +93,15 @@ export const SHARE_PALETTES: Record<ShareColourId, SharePalette> = {
 
 export const SHARE_COLOURS: ShareColourId[] = ["ink", "orange", "white"];
 
+/**
+ * Build 90 04.6: four different stickers, not colour variants of one.
+ * 1 Day stamp (H) · 2 Streak (E, hidden at 0) · 3 Progress (D) · 4 Photo proof (A, only with a photo).
+ * The glow / landscape sticker (B) is gone from every moment.
+ */
 export const MOMENT_STYLES: Record<ShareMoment, readonly ShareStyleId[]> = {
-  photo_proof: ["A", "B", "D"],
-  self_reported: ["C", "B", "D"],
-  day_secured: ["E", "D", "B"],
+  photo_proof: ["H", "E", "D", "A"],
+  self_reported: ["H", "E", "D"],
+  day_secured: ["E", "D"],
   challenge_finished: ["F", "D"],
   invite: ["G"],
 };
@@ -108,6 +119,8 @@ export type ShareCardInput = {
   inviteCode?: string | null;
   streak?: number;
   secured?: number;
+  /** Days due so far. The "of N days" fraction uses this, not the full length. */
+  due?: number;
   longestStreak?: number;
   activeLine?: string;
   dateLabel?: string;
@@ -167,16 +180,36 @@ export type SharePaint = {
     plate: { color: string; radius: number; pad: number } | null;
     gap: number;
     shadow: { color: string; radius: number } | null;
+    justify: "flex-start" | "center" | "flex-end";
     items: ShareItem[];
   };
 };
 
-export function stylesForMoment(moment: ShareMoment): readonly ShareStyleId[] {
-  return MOMENT_STYLES[moment];
+/**
+ * The cards for a moment. The Streak card needs a streak of 1 or more; the Photo
+ * card needs the user's own photo. With no facts given, the full list comes back.
+ */
+export function stylesForMoment(
+  moment: ShareMoment,
+  facts?: { streak?: number | null; hasPhoto?: boolean },
+): readonly ShareStyleId[] {
+  const all = MOMENT_STYLES[moment];
+  if (!facts) return all;
+  const streak = typeof facts.streak === "number" && Number.isFinite(facts.streak) ? Math.floor(facts.streak) : 0;
+  return all.filter((id) => {
+    if (id === "E" && (moment === "photo_proof" || moment === "self_reported")) return streak >= 1;
+    if (id === "A") return facts.hasPhoto === true;
+    return true;
+  });
 }
 
 export function defaultStyle(moment: ShareMoment): ShareStyleId {
   return MOMENT_STYLES[moment][0] ?? "A";
+}
+
+/** Build 90 04.6: "Copy sticker" copies the painted PNG of any card. */
+export function copyStickerAvailable(_style: ShareStyleId): boolean {
+  return true;
 }
 
 export function colourForStyle(memory: ColourMemory, style: ShareStyleId): ShareColourId {
@@ -211,8 +244,12 @@ export function shareMessageBody(caption: string, joinLine: string): string {
   return cap || joinLine;
 }
 
-export function storyUsesSticker(style: ShareStyleId): boolean {
-  return style === "B";
+/**
+ * Build 90 04.6 follow-up: every card is a sticker. Instagram Story gets the PNG as
+ * `stickerImage` over the palette background, never as a full-bleed `backgroundImage`.
+ */
+export function storyUsesSticker(_style: ShareStyleId): boolean {
+  return true;
 }
 
 export function shareDateLabel(date = new Date()): string {
@@ -347,6 +384,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   const box = SHARE_CONTENT;
   const day = input.day ?? 1;
   const total = input.durationDays ?? day;
+  const due = input.due ?? total;
   const challenge = input.challenge.trim() || "Challenge";
   const task = input.task?.trim() ?? "";
   const base: SharePaint = {
@@ -372,6 +410,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       plate: null,
       gap: 24,
       shadow: null,
+      justify: "flex-end",
       items: [],
     },
   };
@@ -390,6 +429,16 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
     push(dayRow(day, total, 150, palette.fg, palette.fg));
     if (input.cameraSeal) push({ kind: "seal", label: "Camera", color: palette.fg });
     push(joinItem(input, "#F5F3EE"));
+    return base;
+  }
+
+  if (input.style === "H") {
+    // Day stamp: the challenge, the task and the day on a plain Ink / Orange / White ground.
+    push(caps(challenge, 40, 48, palette.sub));
+    if (task) push(text(task, 64, 74, palette.fg));
+    push(dayRow(day, total, 200, palette.fg, palette.fg));
+    if (input.cameraSeal) push({ kind: "seal", label: "Camera", color: palette.fg });
+    push(joinItem(input, palette.fg));
     return base;
   }
 
@@ -443,24 +492,28 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
       push({
         kind: "baseline",
         lead: text(String(secured), 200, 190, palette.fg, "800"),
-        rest: text(`of ${total} days secured`, 44, 52, palette.fg, "500"),
+        rest: text(`of ${formatDays(due)} secured`, 44, 52, palette.fg, "500"),
       });
       push({
         kind: "row",
         gap: 16,
         items: [
           { kind: "flame", size: 44, color: palette.accent },
-          text(`Longest streak ${input.longestStreak ?? 0} days`, 44, 52, palette.fg),
+          text(`Longest streak ${formatDays(input.longestStreak ?? 0)}`, 44, 52, palette.fg),
         ],
       });
     } else {
       push(caps(challenge, 40, 48, palette.sub));
-      const secured = input.secured ?? 0;
-      push({
-        kind: "baseline",
-        lead: text(String(secured), 170, 170, palette.fg, "800"),
-        rest: text(`of ${total} days`, 60, 64, palette.fg, "500"),
-      });
+      // Build 90 04.6: a task moment knows the day, not the secured count. Dots plus "Day 2 of 7".
+      if (typeof input.secured === "number") {
+        push({
+          kind: "baseline",
+          lead: text(String(input.secured), 170, 170, palette.fg, "800"),
+          rest: text(`of ${formatDays(due)}`, 60, 64, palette.fg, "500"),
+        });
+      } else {
+        push(dayRow(day, total, 150, palette.fg, palette.fg));
+      }
     }
     if (cells.length) {
       push({
@@ -474,7 +527,7 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
         line: palette.line,
       });
     }
-    if (input.style === "D") push(text(`Day ${day} of ${total}`, 36, 44, palette.fg));
+    if (input.style === "D" && typeof input.secured === "number") push(text(`Day ${day} of ${total}`, 36, 44, palette.fg));
     if (input.style === "F" && input.dateRange?.trim()) {
       push(text(input.dateRange.trim(), 34, 42, palette.sub));
     }
@@ -483,6 +536,10 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   }
 
   if (input.style === "E") {
+    if (base.wordmark) base.wordmark.y = 140;
+    base.block.y = 280;
+    base.block.h = SHARE_H - 280 - 140;
+    base.block.justify = "center";
     push({ kind: "flame", size: 140, color: palette.accent });
     push(text(String(input.streak ?? 0), 520, 470, palette.fg, "800", -0.02 * 520));
     push(text(streakInARow(input.streak ?? 0), 72, 84, palette.fg));

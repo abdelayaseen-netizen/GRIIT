@@ -1,0 +1,12 @@
+appId: app.griit.challenge-tracker
+---
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 20%"
+    duration: 350
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 20%"
+    duration: 350
+- tapOn: "Liked by you"
+- assertNotVisible: "Liked by you"

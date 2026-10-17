@@ -6,6 +6,7 @@ export {
   calendarDayCount,
   calendarDayFromStartAt,
   clampCalendarDay,
+  shownChallengeDay,
   dateKeyFromIso,
   homeDayLine,
   homeDayTotal,

@@ -8,6 +8,7 @@ import { styles } from "./taskFlowStyles";
 import { useTaskFlowV2 } from "./useTaskFlowV2";
 import { AskStep } from "./steps/AskStep";
 import { OptionalPhotoSheet } from "./steps/OptionalPhotoSheet";
+import { PostChoiceSheet } from "./steps/PostChoiceSheet";
 import { BlockedStep } from "./steps/BlockedStep";
 import { CaptureStep } from "./steps/CaptureStep";
 import { CheckinEntryStep } from "./steps/CheckinEntryStep";
@@ -21,13 +22,26 @@ import { ReviewStep } from "./steps/ReviewStep";
 import { RunningStep } from "./steps/RunningStep";
 import { SessionStep } from "./steps/SessionStep";
 import { TimerEntryStep } from "./steps/TimerEntryStep";
+import { homeDayLine } from "@/lib/home-day-total";
 import { WindowClosedStep } from "./steps/WindowClosedStep";
 import { WriteStep } from "./steps/WriteStep";
 import { counterHeaderLines, workStepOwnsChrome } from "@/lib/work-step";
+import {
+  LOG_SANITY_EDIT,
+  LOG_SANITY_MESSAGE,
+  LOG_SANITY_SAVE_ANYWAY,
+  LOG_SANITY_TITLE,
+} from "@/lib/task-flow-state";
+import {
+  FINISHED_EARLY_CONFIRM,
+  FINISHED_EARLY_MESSAGE,
+  FINISHED_EARLY_TITLE,
+} from "@/lib/timer-duration";
 
 export function TaskFlowV2() {
   const f = useTaskFlowV2();
   const [confirmDidIt, setConfirmDidIt] = useState(false);
+  const [confirmEarly, setConfirmEarly] = useState(false);
 
   return (
     <View
@@ -75,8 +89,9 @@ export function TaskFlowV2() {
       {f.step === "entry" && f.taskType === "timer" ? (
         <TimerEntryStep
           taskName={f.taskName}
-          headerTitle={f.headerTitle}
+          headerTitle={homeDayLine(f.currentDay, f.durationDays)}
           headerLabel={f.chromeTitle}
+          dayReady={f.dayReady}
           requiredSeconds={f.requiredSeconds}
           soundOn={f.soundOn}
           onSoundOn={f.setSoundOn}
@@ -100,7 +115,7 @@ export function TaskFlowV2() {
 
       {f.step === "log" ? (
         <LogStep
-          taskType={f.taskType}
+          taskType={f.logKind}
           taskName={f.taskName}
           headerTitle={f.headerTitle}
           headerLabel={f.chromeTitle}
@@ -118,8 +133,8 @@ export function TaskFlowV2() {
           onDuration={f.setDurationSec}
           onMinutes={f.setWorkoutMin}
           onUseTimer={f.onUseTimer}
-          onNextPhoto={f.onNextPhoto}
-          onPost={f.onPostRun}
+          onNextPhoto={f.onLogContinue}
+          onPost={f.onLogContinue}
           onBack={f.goBack}
           fromGps={f.fromGps}
           hasCamera={f.requirePhoto}
@@ -141,6 +156,7 @@ export function TaskFlowV2() {
           challengeName={f.challengeName}
           taskName={f.taskName}
           currentDay={f.currentDay}
+          durationDays={f.durationDays}
           workDone={f.workDone}
           photoAfter={f.photoAfter}
           windowLabel={f.windowLabel}
@@ -160,6 +176,10 @@ export function TaskFlowV2() {
           onCaption={f.setCaption}
           onRetake={f.onRetake}
           onPost={f.onReviewPost}
+          submitting={f.saving}
+          note={f.submitError}
+          audience={f.audience}
+          onAudience={f.setAudience}
         />
       ) : null}
 
@@ -169,11 +189,19 @@ export function TaskFlowV2() {
           taskName={f.taskName}
           headerTitle={f.headerTitle}
           headerLabel={f.chromeTitle}
+          dayReady={f.dayReady}
           startedAtIso={f.startedAtIso}
           requiredSeconds={f.requiredSeconds}
           onPause={f.pauseTimer}
           onReset={() => void f.resetTimer()}
-          onPost={() => void f.submitTimer()}
+          onPost={() => {
+            if (f.remainingSec > 0) {
+              setConfirmEarly(true);
+              return;
+            }
+            void f.submitTimer();
+          }}
+          onFinishEarly={() => setConfirmEarly(true)}
           onBack={f.goBack}
           footerCaption={f.footerCaption}
           footerBrand={f.footerBrand}
@@ -195,6 +223,8 @@ export function TaskFlowV2() {
           onChangeText={f.setText}
           onPost={f.onJournalPost}
           onBack={f.goBack}
+          submitting={f.saving}
+          fieldMounted={f.journalFieldOn}
         />
       ) : null}
 
@@ -222,7 +252,7 @@ export function TaskFlowV2() {
         />
       ) : null}
 
-      {f.step === "ask" && f.photoMode === "optional" ? (
+      {f.step === "ask" && f.photoMode === "optional" && !f.postChoiceOpen ? (
         <OptionalPhotoSheet
           taskName={f.taskName}
           loading={f.saving}
@@ -295,6 +325,15 @@ export function TaskFlowV2() {
         />
       ) : null}
 
+      <PostChoiceSheet
+        visible={f.postChoiceOpen}
+        taskName={f.taskName}
+        audience={f.postChoiceAudience}
+        onAudience={f.setPostChoiceAudience}
+        onPost={f.onPostChoicePost}
+        onKeep={f.onPostChoiceKeep}
+        loading={f.saving}
+      />
       <DiscardPhotoModal
         visible={f.discardAsk}
         onDiscard={f.onDiscardPhoto}
@@ -310,6 +349,26 @@ export function TaskFlowV2() {
           setConfirmDidIt(false);
           f.onDidIt();
         }}
+      />
+      <ConfirmDialog
+        visible={confirmEarly}
+        title={FINISHED_EARLY_TITLE}
+        message={FINISHED_EARLY_MESSAGE}
+        confirmLabel={FINISHED_EARLY_CONFIRM}
+        onCancel={() => setConfirmEarly(false)}
+        onConfirm={() => {
+          setConfirmEarly(false);
+          f.onFinishEarly();
+        }}
+      />
+      <ConfirmDialog
+        visible={f.logSanityAsk != null && !f.logSanityAsk.ok}
+        title={f.logSanityAsk && !f.logSanityAsk.ok ? f.logSanityAsk.title : LOG_SANITY_TITLE}
+        message={f.logSanityAsk && !f.logSanityAsk.ok ? f.logSanityAsk.message : LOG_SANITY_MESSAGE}
+        cancelLabel={LOG_SANITY_EDIT}
+        confirmLabel={LOG_SANITY_SAVE_ANYWAY}
+        onCancel={f.onLogEdit}
+        onConfirm={f.onLogSaveAnyway}
       />
     </View>
   );

@@ -1,0 +1,12 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Profile"
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element: "Sign out"
+    direction: DOWN
+    timeout: 15000
+- tapOn: "Sign out"
+- extendedWaitUntil:
+    visible: "Continue with email|Start|Email address"
+    timeout: 20000

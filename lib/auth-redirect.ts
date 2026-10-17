@@ -29,6 +29,12 @@ export function resolveAuthRedirect(input: {
   onCreateProfile: boolean;
   inTabs: boolean;
   exitHref?: string | null;
+  /**
+   * Build 90 08.2: the person arrived on an invite link (`/i/<code>`, `/invite/<code>`) or a
+   * challenge page. With no session, or a guest who never finished onboarding, they stay
+   * there and see Join instead of being sent to onboarding (the link would be lost).
+   */
+  onInviteLink?: boolean;
 }): AuthRedirectDecision {
   if (input.loading) return { action: "wait" };
   if (input.sessionKind !== "none" && !input.profileChecked) return { action: "wait" };
@@ -59,10 +65,19 @@ export function resolveAuthRedirect(input: {
     return { action: "retry" };
   }
 
+  if (input.onInviteLink) return { action: "stay" };
+
   if (!input.inOnboarding && !input.inAuth) {
     return { action: "replace", href: ROUTES.ONBOARDING };
   }
   return { action: "stay" };
+}
+
+/** First route segment of an invite link or a challenge page. */
+export const INVITE_LINK_SEGMENTS: readonly string[] = ["i", "invite", "challenge"];
+
+export function isInviteLinkSegment(first: string | undefined): boolean {
+  return typeof first === "string" && INVITE_LINK_SEGMENTS.includes(first);
 }
 
 /** Spinner overlay. Same conditions as AuthRedirector in _layout.tsx. */

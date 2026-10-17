@@ -3,7 +3,13 @@ export const WRITE_WORDS_LABEL = "Words";
 export const WRITE_FOOTER_CAPTION = "Self-reported.";
 
 export function writeStepHeader(day: number): string {
-  return `Day ${day} · Write`;
+  const n = Number.isFinite(day) ? Math.max(1, Math.floor(day)) : 1;
+  return `Day ${n} · Write`;
+}
+
+/** Word target when a journal task leaves min_words blank. An explicit count is kept. */
+export function journalMinWords(configured: number | null | undefined): number {
+  return configured ?? 10;
 }
 
 export function writeHonestyLine(target: number): string {
@@ -25,12 +31,14 @@ export function writeCounterFill(written: number, target: number): number {
 }
 
 export function writeCtaLabel(written: number, target: number): string {
+  if (target <= 0) return written >= 1 ? "Done" : "Write here";
   const remaining = target - written;
-  if (remaining <= 0) return "Post";
+  if (remaining <= 0) return "Done";
   if (remaining === 1) return "Write 1 more word";
   return `Write ${remaining} more words`;
 }
 
 export function writeCtaEnabled(written: number, target: number): boolean {
+  if (target <= 0) return written >= 1;
   return writeCounterMet(written, target);
 }

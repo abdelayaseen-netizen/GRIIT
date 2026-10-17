@@ -54,11 +54,7 @@ export function YourDataTab() {
   const stats = query.data;
   const pct = stats ? consistencyPct(stats.user_stats.secured_days, stats.user_stats.due_days) : null;
   const hour = stats ? usualHour(stats.user_stats.proof_hour_histogram) : null;
-  const proofs = stats
-    ? stats.user_stats.proofs_by_method.camera +
-      stats.user_stats.proofs_by_method.self_reported +
-      stats.user_stats.proofs_by_method.apple_health
-    : 0;
+  const proofs = stats ? stats.user_stats.proof_count : 0;
 
   return (
     <View style={styles.wrap}>
@@ -97,7 +93,22 @@ export function YourDataTab() {
           </Card>
           <Card title="Days">
             <Heat days={stats.day_secures} />
-            <Text style={styles.secondary}>Secured, Missed, Held, Today, Not due</Text>
+            <View style={styles.legend}>
+              {(
+                [
+                  ["Secured", "secured", false],
+                  ["Missed", "missed", false],
+                  ["Held", "held", false],
+                  ["Today", "none", true],
+                  ["Not due", "none", false],
+                ] as const
+              ).map(([word, state, today]) => (
+                <View key={word} style={styles.legendItem}>
+                  <View style={[styles.legendSwatch, heatStyle(state, today)]} />
+                  <Text style={styles.secondary}>{word}</Text>
+                </View>
+              ))}
+            </View>
           </Card>
           <Card title="Streaks">
             <Text style={styles.body}>{stats.user_stats.current_streak}-day streak</Text>
@@ -112,9 +123,7 @@ export function YourDataTab() {
             {proofs === 0 ? (
               <Text style={styles.body}>{EMPTY_STATS_COPY.proofs}</Text>
             ) : (
-              <Text style={styles.body}>
-                {`${stats.user_stats.proofs_by_method.camera} camera · ${stats.user_stats.proofs_by_method.self_reported} self-reported · ${stats.user_stats.proofs_by_method.apple_health} Apple Health`}
-              </Text>
+              <Text style={styles.body}>{`${proofs} proofs`}</Text>
             )}
           </Card>
           <Card title="When you post">
@@ -210,6 +219,9 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: DS_V3.space.gutter, paddingTop: DS_V3.space.lg, gap: DS_V3.space.md },
+  legend: { flexDirection: "row", flexWrap: "wrap", gap: DS_V3.space.sm, marginTop: DS_V3.space.sm },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.xs },
+  legendSwatch: { width: 10, height: 10, borderRadius: 2 },
   seg: {
     flexDirection: "row",
     backgroundColor: DS_V3.color.border,

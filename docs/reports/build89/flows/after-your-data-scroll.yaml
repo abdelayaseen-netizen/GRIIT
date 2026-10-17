@@ -1,0 +1,15 @@
+appId: app.griit.challenge-tracker
+---
+- scrollUntilVisible:
+    element: "18 proofs"
+    direction: DOWN
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Most often around 8 pm."
+    direction: DOWN
+    timeout: 20000
+- scrollUntilVisible:
+    element: "6 of 7 days. Today counts."
+    direction: DOWN
+    timeout: 20000
+- assertNotVisible: "Most often around 12 am."

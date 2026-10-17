@@ -26,6 +26,8 @@ export type LiveFeedPost = {
   /** Proof image URL when distinct from `photoUrl` (task completion). */
   proofPhotoUrl?: string | null;
   verified: boolean;
+  /** Build 90 09.3: "strava" when the completion came from the Strava webhook. */
+  verifiedBy?: "strava" | null;
   caption: string | null;
   createdAt: string;
   respectCount: number;
@@ -34,6 +36,7 @@ export type LiveFeedPost = {
   commentCount: number;
   shareCount?: number;
   visibility: "public" | "friends" | "private";
+  audience?: "friends" | "everyone" | "only_me" | string | null;
 };
 
 export type FeedCommentPreview = {

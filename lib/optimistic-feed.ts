@@ -26,6 +26,7 @@ export type OptimisticTaskPostInput = {
   totalDays?: number | null;
   photoUrl?: string | null;
   createdAt?: string;
+  caption?: string | null;
 };
 
 /**
@@ -57,7 +58,7 @@ export function optimisticTaskPost(input: OptimisticTaskPostInput): LiveFeedPost
     photoUrl: photo,
     proofPhotoUrl: photo,
     verified: false,
-    caption: null,
+    caption: input.caption ?? null,
     createdAt: input.createdAt ?? new Date().toISOString(),
     respectCount: 0,
     reactedByMe: false,

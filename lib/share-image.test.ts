@@ -16,13 +16,13 @@ import {
 const code = "K7Q2M";
 
 describe("v44.1 share styles", () => {
-  it("maps each moment to its styles, default first", () => {
-    expect(stylesForMoment("photo_proof")).toEqual(["A", "B", "D"]);
-    expect(stylesForMoment("self_reported")).toEqual(["C", "B", "D"]);
-    expect(stylesForMoment("day_secured")).toEqual(["E", "D", "B"]);
+  it("maps each moment to its styles, default first (build 90 04.6: day stamp, streak, progress, photo)", () => {
+    expect(stylesForMoment("photo_proof")).toEqual(["H", "E", "D", "A"]);
+    expect(stylesForMoment("self_reported")).toEqual(["H", "E", "D"]);
+    expect(stylesForMoment("day_secured")).toEqual(["E", "D"]);
     expect(stylesForMoment("challenge_finished")).toEqual(["F", "D"]);
     expect(stylesForMoment("invite")).toEqual(["G"]);
-    expect(defaultStyle("photo_proof")).toBe("A");
+    expect(defaultStyle("photo_proof")).toBe("H");
     expect(defaultStyle("invite")).toBe("G");
   });
 
@@ -63,7 +63,7 @@ describe("v44.1 share styles", () => {
     expect(paintStrings(invite).join("\n")).not.toContain("code K7Q2M");
   });
 
-  it("does not paint a caption, and B is the transparent sticker", () => {
+  it("does not paint a caption; B stays a transparent sticker in the paint but no moment lists it", () => {
     const photo = buildSharePaint({
       style: "A",
       colour: "ink",
@@ -113,10 +113,14 @@ describe("v44.1 share styles", () => {
     });
     expect(paintStrings(one)).toContain("day in a row");
     expect(paintStrings(one)).not.toContain("days in a row");
+    expect(one.block.justify).toBe("center");
+    expect(one.wordmark?.y).toBeLessThan(200);
+    expect(one.block.y + one.block.h).toBeLessThanOrEqual(1920);
     expect(sticker.transparent).toBe(true);
+    // Build 90 04.6 follow-up: every card goes to Instagram Story as a sticker.
     expect(storyUsesSticker("B")).toBe(true);
-    expect(storyUsesSticker("A")).toBe(false);
-    expect(storyUsesSticker("G")).toBe(false);
+    expect(storyUsesSticker("A")).toBe(true);
+    expect(storyUsesSticker("G")).toBe(true);
   });
 
   it("remembers a colour per style in memory and defaults to Ink", () => {

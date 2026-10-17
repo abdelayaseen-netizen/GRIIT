@@ -24,17 +24,28 @@ import Divider from "@/components/ds/Divider";
 import TextField from "@/components/ds/TextField";
 import Skeleton from "@/components/ds/Skeleton";
 import CommentRow from "@/components/ds/CommentRow";
+import Button from "@/components/ds/Button";
+import SegmentedControl from "@/components/ds/SegmentedControl";
+import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { commentRowParts } from "@/lib/comment-row";
+import { fetchComments } from "@/lib/hidden-comments";
+import { useReportComment } from "@/components/feed/useReportComment";
+import { CANCEL_REPORT_LABEL, REPORT_COMMENT_LABEL, REPORT_COMMENT_PROMPT, commentLongPressAction } from "@/lib/comment-report";
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
+  POST_DETAIL_AUDIENCE_LABEL,
+  POST_DETAIL_DONE,
+  POST_DETAIL_SHARE_OUTSIDE,
   POST_DETAIL_TITLE,
+  postDetailAudience,
   commentsCountLabel,
+  visibleCommentCount,
   commentsSectionKind,
   composerFieldGround,
   completionLine,
@@ -44,6 +55,9 @@ import {
   sendComposerArmed,
 } from "@/lib/post-detail";
 import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
+import { ROUTES } from "@/lib/routes";
+import { feedAuthorHref } from "@/lib/feed-tap-targets";
+import { POST_AUDIENCES, audienceBadge, audienceLabel, type PostAudience } from "@/lib/post-audience";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -71,6 +85,11 @@ function PostThreadScreenInner() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
+  // 07.3: long press on someone else's comment offers a report; 07.1: a refused comment says why.
+  const [reportCommentTargetId, setReportCommentTargetId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const reportComment = useReportComment(id);
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -99,12 +118,12 @@ function PostThreadScreenInner() {
 
   const commentsQuery = useQuery({
     queryKey: ["feed", "comments", id],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getComments, { eventId: id, limit: 100 }) as Promise<CommentItem[]>,
+    queryFn: () => fetchComments(id, 100) as Promise<CommentItem[]>,
     enabled: !!id,
   });
 
   const comments = commentsQuery.data ?? [];
+  const visibleCount = visibleCommentCount(commentsQuery.data ? comments.length : null, displayPost?.commentCount ?? 0);
   const rows = useMemo(
     () => threadRows(comments.map((item) => ({ ...item, parent_id: item.parent_id ?? null }))),
     [comments],
@@ -125,6 +144,7 @@ function PostThreadScreenInner() {
         ...(input.parentId ? { parentId: input.parentId } : {}),
       }),
     onSuccess: async () => {
+      setSendError(null);
       await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
       await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -134,6 +154,8 @@ function PostThreadScreenInner() {
     },
     onError: (e) => {
       captureError(e, "PostThreadComment");
+      // The text stays in the field; the line under it says what the server refused.
+      setSendError(e instanceof Error && e.message ? e.message : "Couldn't send. Try again.");
     },
   });
 
@@ -151,11 +173,28 @@ function PostThreadScreenInner() {
     },
   });
 
+  const audienceMutation = useMutation({
+    mutationFn: (audience: PostAudience) =>
+      trpcMutate(TRPC.checkins.setPostAudience, { eventId: id, audience }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["feed", "post", id] });
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    },
+  });
+
   const onSend = useCallback(() => {
     const t = draft.trim();
     if (!t || !id) return;
     commentMutation.mutate({ text: t, parentId: replyTo?.id });
   }, [draft, id, commentMutation, replyTo]);
+
+  // 05.1: the author header and every comment author open the person.
+  const openPerson = useCallback(
+    (authorUserId: string, username: string | null | undefined) => {
+      router.push(feedAuthorHref({ viewerUserId: user?.id, authorUserId, username }) as never);
+    },
+    [router, user?.id],
+  );
 
   const listHeader = useMemo(() => {
     if (loading) {
@@ -186,7 +225,13 @@ function PostThreadScreenInner() {
       <View>
         <View style={styles.gutter}>
           {proofUri ? <ProofImage uri={proofUri} size="feed" stamp={stamp} /> : null}
-          <View style={styles.authorRow}>
+          <Pressable
+            testID="post-author"
+            accessibilityRole="button"
+            accessibilityLabel={`${author} profile`}
+            onPress={() => openPerson(displayPost.userId, displayPost.username)}
+            style={styles.authorRow}
+          >
             <Avatar
               size={DS_V3.size.avatar.sm}
               uri={displayPost.avatarUrl}
@@ -196,7 +241,7 @@ function PostThreadScreenInner() {
               <Text style={styles.author}>{author}</Text>
               <Text style={styles.time}>{relativeTime(displayPost.createdAt)}</Text>
             </View>
-          </View>
+          </Pressable>
           <Text style={styles.completion}>
             {completionLine({
               challenge: displayPost.challengeName,
@@ -205,8 +250,37 @@ function PostThreadScreenInner() {
               task: displayPost.taskName,
             })}
           </Text>
-          {commentsCountLabel(displayPost.commentCount) ? (
-            <Text style={styles.count}>{commentsCountLabel(displayPost.commentCount)}</Text>
+          {audienceBadge(displayPost.audience) && !(user?.id && displayPost.userId === user.id) ? (
+            <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
+          ) : null}
+          {user?.id && displayPost.userId === user.id ? (
+            <View style={styles.finish}>
+              <View style={styles.audienceBlock}>
+                <Text style={styles.count}>{POST_DETAIL_AUDIENCE_LABEL}</Text>
+                <SegmentedControl
+                  items={POST_AUDIENCES.map((choice) => audienceLabel(choice))}
+                  value={audienceLabel(postDetailAudience(displayPost.audience))}
+                  onChange={(label) => {
+                    const choice = POST_AUDIENCES.find((a) => audienceLabel(a) === label);
+                    if (choice && choice !== postDetailAudience(displayPost.audience)) audienceMutation.mutate(choice);
+                  }}
+                />
+              </View>
+              <Button
+                label={POST_DETAIL_DONE}
+                onPress={() => router.replace(ROUTES.TABS_HOME as never)}
+                testID="post-done"
+              />
+              <Button
+                label={POST_DETAIL_SHARE_OUTSIDE}
+                variant="secondary"
+                onPress={() => setShareOpen(true)}
+                testID="post-share-outside"
+              />
+            </View>
+          ) : null}
+          {commentsCountLabel(visibleCount) ? (
+            <Text style={styles.count}>{commentsCountLabel(visibleCount)}</Text>
           ) : null}
         </View>
         {section === "loading" ? (
@@ -217,12 +291,15 @@ function PostThreadScreenInner() {
         ) : null}
       </View>
     );
-  }, [loading, displayPost, postQuery.isError, postQuery.error, section]);
+  }, [loading, displayPost, visibleCount, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
+
+  const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
 
   const renderCommentItem = useCallback(
     ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {
       const item = row.item;
       const isMine = Boolean(user?.id && item.user_id === user.id);
+      const longPress = commentLongPressAction(user?.id, item.user_id);
       const parts = commentRowParts({
         displayName: item.display_name,
         username: item.username,
@@ -237,13 +314,23 @@ function PostThreadScreenInner() {
           <View style={styles.replyBody}>
           <Pressable
             onPress={() => setReplyTo({ id: item.id, name: parts.name })}
-            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
+            onLongPress={
+              longPress === "delete"
+                ? () => setDeleteCommentTargetId(item.id)
+                : longPress === "report"
+                  ? () => setReportCommentTargetId(item.id)
+                  : undefined
+            }
             delayLongPress={450}
+            // 05.1: not an accessible element itself, so the author tap target and the
+            // comment text inside stay reachable (an accessible wrapper flattens them
+            // into one "Reply to" button for VoiceOver and UI tests).
+            accessible={false}
             accessibilityRole="button"
             accessibilityLabel={
               isMine
                 ? "Your comment — long press to delete"
-                : `Reply to ${parts.name}`
+                : `Reply to ${parts.name} — long press to report`
             }
           >
             <CommentRow
@@ -251,8 +338,32 @@ function PostThreadScreenInner() {
               time={parts.time}
               body={parts.body}
               avatarUri={item.avatar_url}
+              onPressAuthor={() => openPerson(item.user_id, item.username)}
             />
           </Pressable>
+          {reportCommentTargetId === item.id ? (
+            <View style={styles.deleteBar}>
+              <Text style={styles.deleteCancel}>{REPORT_COMMENT_PROMPT}</Text>
+              <Pressable
+                onPress={() => setReportCommentTargetId(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel report"
+              >
+                <Text style={styles.deleteCancel}>{CANCEL_REPORT_LABEL}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setReportCommentTargetId(null);
+                  reportComment.report(item.id);
+                }}
+                disabled={reportComment.pending}
+                accessibilityRole="button"
+                accessibilityLabel={REPORT_COMMENT_LABEL}
+              >
+                <Text style={styles.deleteConfirm}>Report</Text>
+              </Pressable>
+            </View>
+          ) : null}
           {deleteCommentTargetId === item.id ? (
             <View style={styles.deleteBar}>
               <Pressable
@@ -277,7 +388,7 @@ function PostThreadScreenInner() {
         </View>
       );
     },
-    [user?.id, deleteCommentTargetId, deleteCommentMutation, rows],
+    [user?.id, deleteCommentTargetId, reportCommentTargetId, deleteCommentMutation, reportComment, rows, openPerson],
   );
 
   return (
@@ -318,6 +429,15 @@ function PostThreadScreenInner() {
           keyboardShouldPersistTaps="handled"
         />
 
+        {reportComment.notice || sendError ? (
+          <Text
+            style={[styles.composerNote, sendError ? styles.composerNoteError : null]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {sendError ?? reportComment.notice}
+          </Text>
+        ) : null}
         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.lg) }]}>
           {replyTo ? (
             <Pressable
@@ -331,7 +451,10 @@ function PostThreadScreenInner() {
           <View style={styles.field}>
             <TextField
               value={draft}
-              onChangeText={setDraft}
+              onChangeText={(t) => {
+                setDraft(t);
+                if (sendError) setSendError(null);
+              }}
               placeholder={placeholder}
               accessibilityLabel={placeholder}
               ground={composerFieldGround("route")}
@@ -355,6 +478,25 @@ function PostThreadScreenInner() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+      {ownPost && displayPost ? (
+        <ShareStickerSheet
+          visible={shareOpen}
+          onDismiss={() => setShareOpen(false)}
+          variant="day"
+          moment={postDetailPhotoUri(displayPost) ? "photo_proof" : "self_reported"}
+          streak={displayPost.streakCount}
+          day={{
+            challenge: displayPost.challengeName,
+            task: displayPost.taskName ?? undefined,
+            day: displayPost.currentDay,
+            durationDays: displayPost.totalDays,
+            proof: postDetailPhotoUri(displayPost) ? "camera" : "self",
+            photoUri: postDetailPhotoUri(displayPost),
+            photoShared: true,
+            username: displayPost.username,
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -396,6 +538,8 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.lg,
   },
   authorCopy: { flex: 1, gap: PT },
+  finish: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.xs },
+  audienceBlock: { gap: DS_V3.space.sm, paddingBottom: DS_V3.space.sm },
   author: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
@@ -463,6 +607,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.md,
     backgroundColor: DS_V3.color.canvas,
+  },
+  composerNote: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    backgroundColor: DS_V3.color.canvas,
+  },
+  composerNoteError: {
+    color: DS_V3.color.danger,
   },
   field: { flex: 1 },
   send: {

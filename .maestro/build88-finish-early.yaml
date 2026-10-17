@@ -1,0 +1,62 @@
+appId: app.griit.challenge-tracker
+---
+# Start the one-minute timer and finish early. Do not wait for zero.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000005"
+- extendedWaitUntil:
+    visible: "Join Breathe 1 Min"
+    timeout: 20000
+- tapOn: "Join Breathe 1 Min"
+- extendedWaitUntil:
+    visible: "Breathe 1 minute"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+- extendedWaitUntil:
+    visible:
+      id: "timer-start"
+    timeout: 15000
+- tapOn:
+    id: "timer-start"
+- extendedWaitUntil:
+    visible:
+      id: "timer-finish-early"
+    timeout: 15000
+- tapOn:
+    id: "timer-finish-early"
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 25000

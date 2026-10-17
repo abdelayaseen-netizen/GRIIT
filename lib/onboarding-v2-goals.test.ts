@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeGoalsIntoAnswers, parseGoalsFromAnswers } from "@/lib/onboarding-v2-goals-core";
+import { mergeGoalsIntoAnswers, parseGoalsFromAnswers, toggleOnboardingGoal } from "@/lib/onboarding-v2-goals-core";
 
 describe("parseGoalsFromAnswers", () => {
   it("reads a goals array and drops unknowns", () => {
@@ -35,6 +35,22 @@ describe("parseGoalsFromAnswers", () => {
       "cold_exposure",
       "sleep_recovery",
       "faith_prayer",
+    ]);
+  });
+});
+
+describe("toggleOnboardingGoal", () => {
+  it("keeps the only selected goal when it is tapped again", () => {
+    expect(toggleOnboardingGoal(["faith_prayer"], "faith_prayer", 3)).toEqual(["faith_prayer"]);
+  });
+
+  it("adds until the cap and drops a goal when another is still selected", () => {
+    expect(toggleOnboardingGoal(["faith_prayer"], "reading_learning", 3)).toEqual([
+      "faith_prayer",
+      "reading_learning",
+    ]);
+    expect(toggleOnboardingGoal(["faith_prayer", "reading_learning"], "faith_prayer", 3)).toEqual([
+      "reading_learning",
     ]);
   });
 });

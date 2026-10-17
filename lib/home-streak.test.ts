@@ -3,12 +3,24 @@ import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  fillTodayOnStrip,
   homeStreakLine,
   resolveDisplayedStreak,
   resolveHomeStatsReady,
   resolveHomeTimeZone,
   streakLineFor,
 } from "@/lib/home-streak";
+
+describe("fillTodayOnStrip", () => {
+  it("fills today's circle when the day is secured and the row is still empty", () => {
+    const days = [
+      { letter: "M", filled: false, state: "missed" },
+      { letter: "T", filled: false, state: "today" },
+    ];
+    expect(fillTodayOnStrip(days, 1, true)[1]).toEqual({ letter: "T", filled: true, state: "secured" });
+    expect(fillTodayOnStrip(days, 1, false)[1]?.filled).toBe(false);
+  });
+});
 
 describe("resolveDisplayedStreak", () => {
   it("stays null while getStats has not succeeded", () => {

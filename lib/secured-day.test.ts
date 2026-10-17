@@ -48,7 +48,7 @@ describe("secured day copy", () => {
         cameraProofs: 0,
         allSelfReported: true,
       }),
-    ).toBe("3 tasks across 2 challenges. Self-reported.");
+    ).toBe("3 tasks across 2 challenges.");
     expect(
       securedDayCaption({
         taskCount: 2,
@@ -56,10 +56,11 @@ describe("secured day copy", () => {
         cameraProofs: 0,
         allSelfReported: true,
       }),
-    ).toBe("2 tasks. Self-reported.");
+    ).toBe("2 tasks.");
+    // 06.2: the sticker preview says Self-reported; the caption does not repeat it.
     expect(
       securedDayCaption({ taskCount: 3, challengeCount: 2, cameraProofs: 0 }),
-    ).toBe("3 tasks across 2 challenges. Self-reported.");
+    ).toBe("3 tasks across 2 challenges.");
   });
 
   it("three tiles and +n", () => {
@@ -95,7 +96,7 @@ describe("secured day data", () => {
       challengeCount: onlySelf.challengeCount,
       cameraProofs: 0,
       allSelfReported: onlySelf.allSelfReported,
-    })).toContain("Self-reported.");
+    })).toBe("1 task.");
   });
 
   it("lists self-reported challenges and never invents a photo", () => {

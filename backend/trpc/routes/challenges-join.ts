@@ -2,6 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../create-context";
 import { joinChallengeDirect } from "../../lib/join-challenge";
+import { startWaitingRoom } from "../../lib/start-waiting-room";
 import {
   CREATOR_LEAVE_BLOCKED_MESSAGE,
   decideLeaveChallenge,
@@ -19,6 +20,7 @@ import { ensureProfile } from "../../lib/ensure-profile";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import {
   canJoinPrivateChallenge,
+  canOpenViaInviteLink,
   canViewChallenge,
   PRIVATE_CHALLENGE_MESSAGE,
 } from "../../lib/can-view-challenge";
@@ -37,7 +39,14 @@ async function syncChallengeParticipantsCount(supabase: SupabaseClient, challeng
 
 export const challengesJoinProcedures = {
   join: protectedProcedure
-    .input(z.object({ challengeId: z.string().uuid() }))
+    .input(
+      z.object({
+        challengeId: z.string().uuid(),
+        startTomorrow: z.boolean().optional(),
+        /** Build 90 08.2: opened through griit://i/<id>; the link is the key to an invite-only challenge. */
+        viaInvite: z.boolean().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       logger.info({ input, userId: ctx.userId }, "[JOIN-BACKEND] Join procedure called");
       await ensureProfile(getSupabaseServer() ?? ctx.supabase, ctx.userId);
@@ -80,7 +89,7 @@ export const challengesJoinProcedures = {
       const reader = getSupabaseServer() ?? ctx.supabase;
       const { data: challenge, error: challengeError } = await reader
         .from("challenges")
-        .select("id, participation_type, team_size, run_status, visibility, creator_id")
+        .select("id, participation_type, team_size, run_status, visibility, status, creator_id")
         .eq("id", input.challengeId)
         .single();
 
@@ -96,10 +105,11 @@ export const challengesJoinProcedures = {
         visibility?: string | null;
         creator_id?: string | null;
       };
-      if (!canJoinPrivateChallenge(ctx.userId, ch)) {
+      const viaInvite = input.viaInvite === true && canOpenViaInviteLink(ch);
+      if (!viaInvite && !canJoinPrivateChallenge(ctx.userId, ch)) {
         throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
       }
-      const mayView = await canViewChallenge(reader, ctx.userId, ch);
+      const mayView = viaInvite || (await canViewChallenge(reader, ctx.userId, ch));
       if (!mayView) {
         throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
       }
@@ -149,9 +159,40 @@ export const challengesJoinProcedures = {
           .eq("challenge_id", input.challengeId);
 
         if ((memberCount ?? 0) >= teamSize) {
-          await ctx.supabase.rpc("start_team_challenge", {
-            p_challenge_id: input.challengeId,
+          // Build 90 08: the SQL start rejects `duo` and enrolls nobody; start in code and
+          // return the joiner's enrollment so the client opens the first task.
+          const service = getSupabaseServer();
+          if (!service) {
+            logger.error({ challengeId: input.challengeId }, "[JOIN-BACKEND] waiting room full, no service client");
+            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: JOIN_FAILED_FALLBACK });
+          }
+          const started = await startWaitingRoom({
+            service,
+            challengeId: input.challengeId,
+            joinerId: ctx.userId,
+            log: logger,
           });
+          const { data: chTitle } = await reader
+            .from("challenges")
+            .select("title")
+            .eq("id", input.challengeId)
+            .maybeSingle();
+          await ctx.supabase.from("activity_events").insert({
+            user_id: ctx.userId,
+            event_type: "joined_challenge",
+            challenge_id: input.challengeId,
+            shared: true,
+            share_state: "shared",
+            metadata: { challenge_name: (chTitle as { title?: string } | null)?.title ?? "Challenge" },
+          });
+          await syncChallengeParticipantsCount(ctx.supabase, input.challengeId);
+          logger.info(
+            { challengeId: input.challengeId, enrolled: started.enrolled.length },
+            "[JOIN-BACKEND] waiting room started",
+          );
+          if (started.joiner) {
+            return { ...started.joiner, joined: true, runStatus: "active" as const };
+          }
           return { joined: true, runStatus: "active" as const };
         }
 
@@ -186,7 +227,9 @@ export const challengesJoinProcedures = {
       logger.debug({ challengeId: input.challengeId }, "[JOIN-BACKEND] Calling joinChallengeDirect");
       try {
         const [activeChallenge, chResult] = await Promise.all([
-          joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId),
+          joinChallengeDirect(ctx.supabase, ctx.userId, input.challengeId, {
+            startTomorrow: input.startTomorrow === true,
+          }),
           ctx.supabase.from("challenges").select("title").eq("id", input.challengeId).single(),
         ]);
         const { data: ch } = chResult;

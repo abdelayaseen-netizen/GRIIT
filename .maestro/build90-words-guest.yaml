@@ -1,0 +1,135 @@
+appId: app.griit.challenge-tracker
+---
+# Build 90 chunk 06, guest path.
+# 06.1 the first self-reported task explains the word; Day secured says what secured means;
+#      the Join sheet carries the mode line.
+# 06.2 Self-reported once on the ask screen (footer caption dropped).
+# 06.3 the greeting never shows @user_xxxxxxxx.
+# 06.6 the Save your streak sheet does not open over Day secured, and Later leaves the person on Home.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today"
+    timeout: 25000
+
+# 06.3: a guest's handle is user_xxxxxxxx; the greeting must not show it.
+- assertNotVisible: "Good (morning|afternoon|evening), @user_.*"
+- assertNotVisible: "Good (morning|afternoon|evening), user_.*"
+- takeScreenshot: build90-06-greeting-guest
+
+# 06.1 Join sheet mode line (Discover grid card → preview sheet).
+- tapOn: "Discover"
+- extendedWaitUntil:
+    visible: "Build your own|People|Discover"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "7K Steps.*|Drink Water Today.*|Walk 7,000.*"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "7K Steps.*|Drink Water Today.*|Walk 7,000.*"
+- extendedWaitUntil:
+    visible:
+      id: "join-mode-line"
+    timeout: 15000
+- assertVisible: "Miss a day and the streak resets.|A freeze can cover a missed day."
+# 06.2: one "Self-reported" per task row (the builtin row used to say it twice).
+- assertNotVisible: ".*Self-reported · Self-reported.*"
+- takeScreenshot: build90-06-def-join-mode
+# The sheet's scrim is the "Close" element; the sheet itself covers the lower part.
+- tapOn:
+    point: "50%,8%"
+- extendedWaitUntil:
+    notVisible:
+      id: "join-mode-line"
+    timeout: 10000
+- tapOn: "Home"
+
+# Join 7K Steps as a guest and open the task.
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+
+# 06.1 + 06.2: the first self-reported task explains itself, once.
+- assertVisible: "You're telling us you did it. No photo needed."
+- assertNotVisible: "Self-reported."
+- takeScreenshot: build90-06-def-self
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Keep it private"
+    timeout: 10000
+- tapOn: "Keep it private"
+
+# Day secured: the definition under the title; no Save your streak sheet on top of it (06.6).
+- extendedWaitUntil:
+    visible: "Day secured|Day 1 secured.*"
+    timeout: 20000
+- assertVisible: "Every task today is done. Your streak goes up by one."
+- assertNotVisible: "Save your (streak|challenge)."
+- assertNotVisible: "Continue with email"
+- assertVisible: "^Done$"
+- takeScreenshot: build90-06-def-secured
+# The challenge row lives in the scroll area above the footer (it used to sit under Done).
+# One swipe on the list brings it fully into view with Done still below it.
+- swipe:
+    start: "50%,60%"
+    end: "50%,20%"
+    duration: 400
+- assertVisible: "7K Steps · Day 1 of 7.*"
+- assertVisible: "^Done$"
+- takeScreenshot: build90-06-secured-row
+- tapOn: "^Done$"
+
+# Home: the sheet shows now, under the status bar, with Later. Later leaves the person on Home.
+- extendedWaitUntil:
+    visible: "Save your (streak|challenge)."
+    timeout: 15000
+- assertVisible: "Later"
+- takeScreenshot: build90-06-save-sheet
+- tapOn: "Later"
+- extendedWaitUntil:
+    visible: "1 of .* done|Day secured.*"
+    timeout: 15000
+- assertNotVisible: "Save your (streak|challenge)."
+- assertNotVisible: "Good (morning|afternoon|evening), @user_.*"
+- takeScreenshot: build90-06-save-later-home

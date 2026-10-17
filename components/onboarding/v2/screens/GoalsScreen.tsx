@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { useOnboardingStore, type OnboardingGoal } from "@/store/onboardingStore";
+import { toggleOnboardingGoal } from "@/lib/onboarding-v2-goals-core";
 import { track } from "@/lib/analytics";
 import { DS_V3 } from "@/lib/design-system";
 import { ChromePrimary, OnboardingScreen, OptionRow } from "../OnboardingChrome";
@@ -31,12 +32,7 @@ export default function GoalsScreen({
 
   const toggle = useCallback(
     (id: OnboardingGoal) => {
-      if (selectedGoals.includes(id)) {
-        setSelectedGoals(selectedGoals.filter((g) => g !== id));
-        return;
-      }
-      if (selectedGoals.length >= MAX_GOALS) return;
-      setSelectedGoals([...selectedGoals, id]);
+      setSelectedGoals(toggleOnboardingGoal(selectedGoals, id, MAX_GOALS));
     },
     [selectedGoals, setSelectedGoals]
   );
@@ -97,15 +93,13 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.gutter,
+    paddingBottom: 280,
     gap: DS_V3.space.sm,
   },
   grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     gap: DS_V3.space.md,
   },
   cell: {
-    width: "48%",
-    flexGrow: 1,
+    width: "100%",
   },
 });

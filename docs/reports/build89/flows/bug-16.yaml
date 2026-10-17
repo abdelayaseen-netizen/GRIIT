@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "How strict?"
+- assertVisible: "Hard"
+- tapOn: "Discover"
+- assertNotVisible: "Strict"

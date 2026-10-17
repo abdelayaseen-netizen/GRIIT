@@ -32,6 +32,7 @@ export default function Build81TimerHarness() {
         startedAtIso={new Date(Date.now() - 2000).toISOString()}
         requiredSeconds={2}
         onPause={() => undefined}
+        onFinishEarly={() => setLeft(0)}
         onReset={() => setLeft(2)}
         submitting={saving}
         error={error}

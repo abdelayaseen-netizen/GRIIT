@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { displayDay, uiChallengeDay } from "./challenge-day";
+import { displayDay, enrollmentDayIndex, uiChallengeDay } from "./challenge-day";
 import { feedNoPhotoCopy } from "./feed-copy";
 import { calendarDayFromStartAt } from "./home-day-total";
 import { workStepDay } from "./work-step";
@@ -26,7 +26,7 @@ describe("displayDay", () => {
     expect(displayDay(2, false)).toBe(2);
   });
 
-  it("UI Day n is calendar — TZ != UTC, and day does not jump after secure", () => {
+  it("calendar helpers still differ by timezone", () => {
     const startAt = "2026-09-17T02:00:00.000Z";
     const today = "2026-09-23";
     const ny = uiChallengeDay(startAt, "America/New_York", today, 14);
@@ -36,14 +36,24 @@ describe("displayDay", () => {
     expect(ny).not.toBe(utc);
     expect(workStepDay(startAt, "America/New_York", today, 14)).toBe(8);
     expect(calendarDayFromStartAt(startAt, "America/New_York", today, 14)).toBe(8);
+  });
+
+  it("live Day n is the local calendar day, capped at the challenge length", () => {
+    expect(enrollmentDayIndex({ currentDay: 2, durationDays: 7 })).toBe(2);
+    expect(enrollmentDayIndex({ currentDay: 2, durationDays: 1 })).toBe(1);
+    expect(enrollmentDayIndex({ currentDay: 0, durationDays: 7 })).toBe(1);
+    expect(enrollmentDayIndex({ currentDay: null, durationDays: 7 })).toBe(1);
     const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
-    const work = readFileSync(resolve(__dirname, "./work-step.ts"), "utf8");
-    expect(flow).toContain("workStepDay(startAt, timeZone, dateKey, durationDays)");
+    expect(flow).toContain("shownChallengeDay");
+    expect(flow).toContain("start_at");
+    expect(flow).not.toContain("workStepDay(");
     expect(flow).not.toContain("firstString(params.currentDay)");
-    expect(work).toContain("calendarDayFromStartAt");
     const dayOpen = readFileSync(resolve(__dirname, "./day-open-active.ts"), "utf8");
-    expect(dayOpen).toContain("calendarDayFromStartAt(startAt, args.timeZone, args.todayKey, durationDays)");
-    expect(dayOpen).not.toContain("ac.current_day");
+    expect(dayOpen).toContain("shownChallengeDay");
+    expect(dayOpen).toContain("ac.start_at");
+    const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
+    expect(home).toContain("shownChallengeDay");
+    expect(home).not.toContain("enrollmentDayIndex");
     const src = readFileSync(resolve(__dirname, "./challenge-day.ts"), "utf8");
     expect(src).not.toMatch(/from ["']@\//);
     expect(src).toContain('from "../backend/lib/calendar-day"');

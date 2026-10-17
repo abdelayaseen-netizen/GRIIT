@@ -214,7 +214,7 @@ export default function FirstChallengeScreen({
             <View style={styles.emptyRow}>
               <SearchX size={ICON} color={DS_V3.color.textPrimary} />
               <View style={styles.emptyCopy}>
-                <Text style={styles.emptyTitle}>No suggestions for those goals</Text>
+                <Text style={styles.emptyTitle}>Couldn't load challenges</Text>
                 <Text style={styles.emptyBody}>
                   Browse the full catalogue, or start without one and join later from Discover.
                 </Text>

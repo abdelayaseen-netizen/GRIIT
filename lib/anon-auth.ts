@@ -13,6 +13,7 @@ import { STORAGE_KEYS } from "@/lib/constants/storage-keys";
 import { captureError } from "@/lib/sentry";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 import { ensureOwnProfile } from "@/lib/ensure-own-profile";
+import { CHECK_EMAIL_TO_SAVE, emailSaveStillPending } from "@/lib/email-save-pending";
 
 /** Shared by identity-taken copy so AccountScreen can make this phrase a link. */
 export const SIGN_IN_WITH_THAT_ACCOUNT = "Sign in with that account";
@@ -21,6 +22,7 @@ export type AnonAuthKind =
   | "ok"
   | "no_anon_session"
   | "identity_taken"
+  | "confirm_email"
   | "offline"
   | "provider_error"
   | "cancelled";
@@ -65,7 +67,7 @@ function isOfflineError(err: unknown): boolean {
 }
 
 /** True when the current session user is an anonymous Supabase user. */
-export function isAnonymousUser(user: User | null | undefined): boolean {
+export function isAnonymousUser(user: User | null | undefined): user is User {
   return user?.is_anonymous === true;
 }
 
@@ -95,6 +97,23 @@ export async function clearRememberedAnonUserId(): Promise<void> {
   } catch {
     /* non-fatal */
   }
+}
+
+/**
+ * After an anonymous user is upgraded, the stored JWT still carries
+ * `is_anonymous: true`, which profiles RLS reads. Mint a new token; if the
+ * refresh fails (offline, revoked) keep the stored session so the upgrade still
+ * reports success — the claim corrects itself on the next scheduled refresh.
+ */
+async function refreshedOrStoredSession(): Promise<Session | null> {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (!error && data.session) return data.session;
+  } catch {
+    /* fall through to the stored session */
+  }
+  const { data } = await supabase.auth.getSession();
+  return data.session;
 }
 
 /**
@@ -435,13 +454,29 @@ export async function upgradeAnonymousWithEmail(params: {
       };
     }
 
-    const { data: refreshed } = await supabase.auth.getSession();
+    // Build 90 05.1: updateUser flips auth.users.is_anonymous, but the stored access
+    // token still says `is_anonymous: true`. RLS (profiles_select_authenticated) reads
+    // the token, so until it is refreshed the new account cannot read any other
+    // profile: comment authors show "Someone" and a tapped name opens a page with a
+    // raw uuid. Mint a fresh token now; fall back to the stored session if that fails.
+    const refreshed = await refreshedOrStoredSession();
+
+    if (emailSaveStillPending(nextUser)) {
+      return {
+        kind: "confirm_email",
+        user: nextUser,
+        session: refreshed,
+        message: CHECK_EMAIL_TO_SAVE,
+        previousAnonUserId: user.id,
+      };
+    }
+
     await clearRememberedAnonUserId();
     await writeDeviceTimezone();
     return {
       kind: "ok",
       user: nextUser,
-      session: refreshed.session,
+      session: refreshed,
       message: null,
       previousAnonUserId: user.id,
     };

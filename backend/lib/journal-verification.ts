@@ -19,6 +19,38 @@ export type JournalLogFacts = {
   floor_min: number | null;
 };
 
+/** A word has at least this many letters. Punctuation-only tokens count as 0. */
+export const JOURNAL_WORD_MIN_LETTERS = 2;
+/** The same word counts at most this many times per entry, case-insensitive. */
+export const JOURNAL_WORD_REPEAT_CAP = 3;
+/** One-letter words that still count ("I went to a park" is 5 words). */
+export const JOURNAL_ONE_LETTER_WORDS: ReadonlySet<string> = new Set(["i", "a"]);
+
+const LETTER_RE = /\p{L}/gu;
+const NON_LETTER_EDGE_RE = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu;
+
+/**
+ * The one journal word rule. The client (`lib/task-flow-state.ts` wordCount)
+ * and `checkins.complete` both call this, so the server rejects what the client rejects.
+ */
+export function countJournalWords(text: string): number {
+  const trimmed = (text ?? "").trim();
+  if (!trimmed) return 0;
+  const seen = new Map<string, number>();
+  let total = 0;
+  for (const token of trimmed.split(/\s+/)) {
+    const letters = token.match(LETTER_RE);
+    if (!letters) continue;
+    const key = token.replace(NON_LETTER_EDGE_RE, "").toLowerCase();
+    if (letters.length < JOURNAL_WORD_MIN_LETTERS && !JOURNAL_ONE_LETTER_WORDS.has(key)) continue;
+    const used = seen.get(key) ?? 0;
+    if (used >= JOURNAL_WORD_REPEAT_CAP) continue;
+    seen.set(key, used + 1);
+    total += 1;
+  }
+  return total;
+}
+
 export function formatSavedWindowLabel(hhmm: string, inside: boolean): string {
   return inside
     ? `Saved ${hhmm} — inside the window`

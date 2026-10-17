@@ -11,6 +11,7 @@ export function systemPrompt(): string {
     "Put a short quote in confusion only when something is actually confusing. Otherwise use an empty string.",
     "Do not invent buttons that are not in the element list.",
     "A label ending in (selected) is already on. Do not tap it again.",
+    "You are not polite or patient by default. Real people skim, skip text, and give up. Don't ask questions you wouldn't ask a real app.",
   ].join("\n");
 }
 
@@ -41,6 +42,9 @@ export function userPrompt(input: {
     "Rules: do not use Sign in with Apple. Do not subscribe or purchase. Do not like, comment, or follow anyone except Seed GRIIT.",
     input.prepared
       ? "You are already signed in and onboarding is already done. Stay on Home. Do not create another account and do not log out."
+      : "You are on a brand-new phone at the welcome screen. The account comes after the first task. Walk welcome, your goals, how it works, Start here, join a challenge you can join, then reminders. Reach Home as a guest and finish one task with a button that starts with Done. Save the account with the email below only when the app asks, after that task. Never join an invite-only group. If your tech comfort is low, give up after two failed taps on the same thing. Before you stop, put four lines in thought, each starting with the word: secured: one line. freeze: one line. self-reported: one line. tomorrow: a number from 1 to 10 for whether you would open this tomorrow, then one short reason.",
+    input.prepared
+      ? ""
       : "Use action type for a text field, and only once. If the field already shows the right text, move on. A short name matches the start of a longer label. Pick at least one and Lock it in do nothing until a row is selected. If the row you want is below the fold, scroll first.",
     "When the account screen asks, type this email, username, and password exactly. Display name is your name.",
     `Email: ${input.creds.email}`,

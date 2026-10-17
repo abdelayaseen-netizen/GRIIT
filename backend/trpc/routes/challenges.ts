@@ -27,7 +27,8 @@ import { logger } from "../../lib/logger";
 import { filterDiscoverCatalog } from "../../lib/discover-catalog";
 import { escapeLikeWildcards } from "../../lib/sanitize-search";
 import { GROUP_MAX_MEMBERS, shouldEvaluateTeamDay } from "../../lib/group-challenges";
-import { canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
+import { canOpenViaInviteLink, canViewChallenge, PRIVATE_CHALLENGE_MESSAGE } from "../../lib/can-view-challenge";
+import { parseInviteCode } from "../../../lib/invite-code";
 import { viewerCanSee } from "../../lib/is-friend";
 
 /** Map UI task type to DB enum (e.g. "simple" -> "manual", "photo" -> "manual" for backward compat). Exported for tests. */
@@ -143,7 +144,7 @@ export const challengesRouter = createTRPCRouter({
 
   /** Featured challenges for Discover tab with pagination. Backward compatible. Shows PUBLIC or current user's own challenges. */
   getById: publicProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: z.string().uuid(), viaInvite: z.boolean().optional() }))
     .query(async ({ input, ctx }) => {
       const service = getSupabaseServer();
       const server = service ?? ctx.supabase;
@@ -178,19 +179,26 @@ export const challengesRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
       }
 
-      const allowed = await canViewChallenge(server, ctx.userId, {
+      const accessRow = {
         id: (data as { id: string }).id,
         visibility: (data as { visibility?: string | null }).visibility,
         status: (data as { status?: string | null }).status,
         creator_id: (data as { creator_id?: string | null }).creator_id,
-      });
+      };
+      // Build 90 08.2: opened through its invite link (the id is the code), the row is visible.
+      const allowed =
+        (input.viaInvite === true && canOpenViaInviteLink(accessRow)) ||
+        (await canViewChallenge(server, ctx.userId, accessRow));
       if (!allowed) {
         throw new TRPCError({ code: "FORBIDDEN", message: PRIVATE_CHALLENGE_MESSAGE });
       }
 
       const participationType = (data as { participation_type?: string }).participation_type;
       const runStatus = (data as { run_status?: string }).run_status;
-      const isTeam = participationType === "team" || participationType === "shared_goal";
+      // Build 90 08: duo members are loaded too, so the page can show the waiting room
+      // (one seat open) to the person already in it. Additive for older clients.
+      const isTeam =
+        participationType === "team" || participationType === "shared_goal" || participationType === "duo";
 
       if (isTeam && runStatus === "active" && participationType === "team") {
         if (shouldEvaluateTeamDay(participationType)) {
@@ -387,6 +395,67 @@ export const challengesRouter = createTRPCRouter({
     }),
 
   /** All active challenges for the current user (for home Daily Status + Active Challenges). */
+  /**
+   * Build 90 08.3: Discover search. A pasted invite code (challenge id, or a link carrying one)
+   * resolves to that challenge whatever its visibility; words search public titles.
+   */
+  search: publicProcedure
+    .input(z.object({ q: z.string().min(1).max(200) }))
+    .query(async ({ input, ctx }) => {
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const select =
+        "id, title, duration_days, difficulty, is_hard_mode, category, status, visibility, participants_count, creator_id, participation_type, team_size, run_status";
+      type SearchRow = {
+        id: string;
+        title: string | null;
+        duration_days: number | null;
+        difficulty: string | null;
+        is_hard_mode: boolean | null;
+        category: string | null;
+        status: string | null;
+        visibility: string | null;
+        participants_count: number | null;
+        creator_id: string | null;
+        participation_type: string | null;
+        team_size: number | null;
+        run_status: string | null;
+      };
+      const code = parseInviteCode(input.q);
+      if (code) {
+        const { data, error } = await server.from("challenges").select(select).eq("id", code).maybeSingle();
+        requireNoError(error, "Failed to search challenges.");
+        const row = (data ?? null) as SearchRow | null;
+        if (!row || !canOpenViaInviteLink(row)) return { code, exact: null, results: [] as SearchRow[] };
+        return { code, exact: row, results: [] as SearchRow[] };
+      }
+      const safe = escapeLikeWildcards(input.q.trim());
+      if (!safe || safe.length < 2) return { code: null, exact: null, results: [] as SearchRow[] };
+      const { data, error } = await server
+        .from("challenges")
+        .select(select)
+        .eq("status", "published")
+        .ilike("visibility", "public")
+        .ilike("title", `%${safe}%`)
+        .order("participants_count", { ascending: false })
+        .limit(40);
+      requireNoError(error, "Failed to search challenges.");
+      const rows = (data ?? []) as SearchRow[];
+      // Catalog rows (no creator) as Discover lists them, plus people's own public challenges
+      // that are not from a test account.
+      const creatorIds = [...new Set(rows.map((r) => r.creator_id).filter((c): c is string => Boolean(c)))];
+      let testCreators = new Set<string>();
+      if (creatorIds.length > 0) {
+        const { data: testRows } = await server
+          .from("profiles")
+          .select("user_id")
+          .in("user_id", creatorIds)
+          .eq("is_test", true);
+        testCreators = new Set(((testRows ?? []) as { user_id: string }[]).map((r) => r.user_id));
+      }
+      const results = rows.filter((r) => !r.creator_id || !testCreators.has(r.creator_id)).slice(0, 20);
+      return { code: null, exact: null, results };
+    }),
+
   listMyActive: protectedProcedure
     .query(async ({ ctx }) => {
       try {

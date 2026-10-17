@@ -13,7 +13,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
+import { joinLeftWaitingRoom } from "@/lib/invite-link";
+import { openHrefForResult } from "@/lib/discover-search";
 import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { captureError } from "@/lib/sentry";
@@ -213,6 +215,14 @@ function DiscoverScreenInner() {
     [router],
   );
 
+  // Build 90 08.3: a search result; an exact invite code opens the page as the link would.
+  const handleOpenSearchResult = useCallback(
+    (challengeId: string, viaInvite: boolean) => {
+      router.push(openHrefForResult(ROUTES.CHALLENGE_ID(challengeId), viaInvite) as never);
+    },
+    [router],
+  );
+
   const handleStartFeatured = useCallback(() => {
     const data = featuredQuery.data;
     if (!data?.id) return;
@@ -224,8 +234,7 @@ function DiscoverScreenInner() {
       const person = (peopleQuery.data ?? []).find((p) => p.user_id === userId);
       if (!person) return;
       const u = (person.username ?? "").trim();
-      const target = u ? encodeURIComponent(u) : encodeURIComponent(person.user_id);
-      router.push(ROUTES.PROFILE_USERNAME(target) as never);
+      router.push(userProfile(u || person.user_id) as never);
     },
     [peopleQuery.data, router],
   );
@@ -294,18 +303,19 @@ function DiscoverScreenInner() {
           void recommendedQuery.refetch();
         }}
         onOpenChallenge={handleOpenChallenge}
+        onOpenSearchResult={handleOpenSearchResult}
         onStartFeatured={handleStartFeatured}
         todaySecured={(securedQuery.data ?? []).includes(getTodayDateKey(getDeviceIanaTimeZone()))}
         onJoinChallenge={(challengeId) => {
           void trpcMutate(TRPC.challenges.join, { challengeId })
-            .then((result) => {
-              const startAt = (result as { start_at?: string } | null)?.start_at;
-              const activeId = (result as { id?: string } | null)?.id;
-              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
-                router.push(ROUTES.TABS_HOME as never);
-                return;
-              }
-              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
+            .then(async (result) => {
+              const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
+              const startAt = join?.start_at;
+              void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
+              const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+              const taskHref = await firstTaskHrefAfterJoin(join, challengeId, "discover");
+              if (taskHref) router.push(taskHref as never);
+              else if (joinLeftWaitingRoom(join)) router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
               else router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
@@ -319,7 +329,7 @@ function DiscoverScreenInner() {
         onRefresh={onRefresh}
         onJoinBuiltin={(item: FeaturedBuiltin) => {
           void trpcMutate(TRPC.challenges.join, { challengeId: item.id })
-            .then((result) => {
+            .then(async (result) => {
               if (needsSetGym(item)) {
                 router.push({
                   pathname: "/challenge/set-gym",
@@ -327,13 +337,13 @@ function DiscoverScreenInner() {
                 } as never);
                 return;
               }
-              const startAt = (result as { start_at?: string } | null)?.start_at;
-              const activeId = (result as { id?: string } | null)?.id;
-              if (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW) {
-                router.push(ROUTES.TABS_HOME as never);
-                return;
-              }
-              if (activeId) router.push(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
+              const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
+              const startAt = join?.start_at;
+              void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
+              const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+              const taskHref = await firstTaskHrefAfterJoin(join, item.id, "discover");
+              if (taskHref) router.push(taskHref as never);
+              else if (joinLeftWaitingRoom(join)) router.push(ROUTES.CHALLENGE_ID(item.id) as never);
               else router.push(ROUTES.TABS_HOME as never);
             })
             .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));

@@ -9,7 +9,6 @@ import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import Switch from "@/components/ds/Switch";
 import { StatusRing } from "@/components/home/HomeV3";
-import type { HomeProofRow } from "@/lib/home-proof-card";
 import { launchedFirstCard } from "@/lib/create-launched";
 import { gateLabel } from "@/lib/task-ui";
 import { fmt12 } from "@/lib/time-gate-picker";
@@ -20,28 +19,31 @@ import {
   LAUNCHED_TODAY_TITLE,
   LAUNCHED_TOMORROW_TITLE,
   launchedReminderLabel,
-  launchedTodayLine,
-  launchedTomorrowBody,
 } from "@/lib/late-join-copy";
 import type { WizardTask } from "@/components/create/v2/StepTasks";
+import InviteLinkRow from "@/components/InviteLinkRow";
 
 export function LaunchedScreen({
   title,
-  days,
+  challengeId,
   group,
   tomorrow,
   tasks,
   timeZone,
+  day1Line,
   onHome,
   onInvite,
   onStartToday,
 }: {
   title: string;
+  /** Build 90 08.1: the invite link (griit://i/<id>) is shown as text with Copy and Share. */
+  challengeId?: string;
   days: number;
   group: boolean;
   tomorrow: boolean;
   tasks: WizardTask[];
   timeZone: string;
+  day1Line: string;
   onHome: () => void;
   onInvite?: () => void;
   onStartToday?: () => void;
@@ -49,23 +51,6 @@ export function LaunchedScreen({
   const card = launchedFirstCard({ tasks, timeZone });
   const first = card.first;
   const [remind, setRemind] = useState(true);
-  const previewRow: HomeProofRow | null = first
-    ? {
-        id: "first",
-        name: first.name,
-        type: "check_off",
-        caption: gateLabel(first),
-        done: false,
-        closed: false,
-        hasCameraProof: false,
-      }
-    : null;
-  const window =
-    first?.gateTime?.mode === "between" && first.gateTime.start && first.gateTime.end
-      ? { a: fmt12(first.gateTime.start), b: fmt12(first.gateTime.end) }
-      : first?.gateTime?.mode === "by" && first.gateTime.start
-        ? { a: fmt12("00:00"), b: fmt12(first.gateTime.start) }
-        : null;
   const reminderTime =
     first?.gateTime?.start != null
       ? fmt12(minusMinutes(first.gateTime.start, 15))
@@ -75,21 +60,30 @@ export function LaunchedScreen({
     <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
       <View style={styles.body}>
         <Text style={styles.title}>{tomorrow ? LAUNCHED_TOMORROW_TITLE : LAUNCHED_TODAY_TITLE}</Text>
-        <Text style={styles.secondary}>
-          {tomorrow && first && window
-            ? launchedTomorrowBody(first.name, window.a, window.b)
-            : launchedTodayLine(title, days)}
-        </Text>
-        {previewRow ? (
-          <View style={styles.card}>
+        <Text style={styles.secondary}>{day1Line}</Text>
+        {tasks.map((task, index) => (
+          <View key={`${task.name}-${index}`} style={styles.card}>
             <ListRow
-              icon={<StatusRing row={previewRow} />}
-              title={previewRow.name}
-              subtitle={card.opensAt ?? previewRow.caption}
+              icon={
+                <StatusRing
+                  row={{
+                    id: task.name,
+                    name: task.name,
+                    type: "check_off",
+                    caption: gateLabel(task),
+                    done: false,
+                    closed: false,
+                    hasCameraProof: false,
+                  }}
+                />
+              }
+              title={task.name}
+              subtitle={index === 0 ? card.opensAt ?? gateLabel(task) : gateLabel(task)}
               divider={false}
             />
           </View>
-        ) : null}
+        ))}
+        {challengeId ? <InviteLinkRow challengeId={challengeId} challengeName={title} /> : null}
         {tomorrow && reminderTime ? (
           <View style={styles.remind}>
             <View style={styles.remindCopy}>

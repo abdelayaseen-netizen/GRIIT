@@ -1,0 +1,10 @@
+node_modules
+design
+agents
+docs
+ios
+.expo
+.git
+*.png
+*.mp4
+!backend/deploy-sha.txt

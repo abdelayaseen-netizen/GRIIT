@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -19,6 +18,7 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
+  dayReady?: boolean;
   requiredSeconds: number;
   soundOn: boolean;
   onSoundOn: (v: boolean) => void;
@@ -35,6 +35,7 @@ export function TimerEntryStep({
   taskName,
   headerTitle,
   headerLabel,
+  dayReady = true,
   requiredSeconds,
   soundOn,
   onSoundOn,
@@ -44,11 +45,15 @@ export function TimerEntryStep({
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
 }: Props) {
-  const insets = useSafeAreaInsets();
   return (
     <View style={styles.root}>
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
+      <View>
+        <PushedHeader
+          title={headerTitle}
+          label={headerLabel}
+          titleSlot={dayReady ? undefined : <View style={styles.daySkeleton} accessibilityLabel="Loading day" />}
+          onBack={onBack}
+        />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -61,11 +66,11 @@ export function TimerEntryStep({
           <Switch value={soundOn} onValueChange={onSoundOn} accessibilityLabel={TIMER_SOUND} />
         </View>
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button testID="timer-start" label={timerStartLabel(requiredSeconds)} onPress={onStart} />
         <Button
           testID="timer-already"
-          label="Already did it"
+          label="Done, already did it"
           variant="secondary"
           onPress={onAlready}
         />
@@ -76,6 +81,12 @@ export function TimerEntryStep({
 }
 
 const styles = StyleSheet.create({
+  daySkeleton: {
+    width: 140,
+    height: 22,
+    borderRadius: DS_V3.radius.thumb,
+    backgroundColor: DS_V3.color.surface,
+  },
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
@@ -137,6 +148,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

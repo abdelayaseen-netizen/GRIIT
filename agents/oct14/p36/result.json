@@ -1,0 +1,38 @@
+{
+  "personaId": "p36",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:41:00.158Z",
+  "endedAt": "2026-10-14T23:43:26.634Z",
+  "steps": 16,
+  "durationSec": 146,
+  "goals": [
+    {
+      "id": "p36-g1",
+      "text": "Open Settings, Account, privacy, and a report control. Do not break the account.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. profile repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "profile: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "cb050ad9-643b-43c6-b3bf-1af60b9c048e",
+  "isTest": true,
+  "cleanup": "kept"
+}

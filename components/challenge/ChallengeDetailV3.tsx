@@ -27,6 +27,8 @@ import { catalogCoverCategory } from "@/lib/catalog-cover";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
+import InviteLinkRow from "@/components/InviteLinkRow";
+import { WAITING_FOR_PARTNER_BODY, WAITING_FOR_PARTNER_HEADING } from "@/lib/invite-link";
 import {
   JOIN_CAPTION_TOMORROW,
   joinCaption,
@@ -104,6 +106,8 @@ export type ChallengeDetailV3Props = {
   windowClosed?: boolean;
   category?: string | null;
   peopleNames?: string[];
+  /** Build 90 08: viewer is in a duo / shared-goal run with a seat still open. Link instead of Join. */
+  waitingRoom?: { challengeId: string };
 };
 
 function peopleLabel(n: number): string {
@@ -297,6 +301,12 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           </>
         ) : inviteOnly ? (
           <Text style={styles.joinCaption}>{GROUP_INVITE_ONLY_CAPTION}</Text>
+        ) : p.waitingRoom ? (
+          <View style={styles.waiting} testID="waiting-room">
+            <Text style={styles.waitingHeading}>{WAITING_FOR_PARTNER_HEADING}</Text>
+            <Text style={styles.joinCaption}>{WAITING_FOR_PARTNER_BODY}</Text>
+            <InviteLinkRow challengeId={p.waitingRoom.challengeId} challengeName={p.title} />
+          </View>
         ) : (
           <>
             {blocked ? (
@@ -576,6 +586,16 @@ const styles = StyleSheet.create({
   },
   joinPressed: {
     opacity: 0.8,
+  },
+  waiting: {
+    gap: DS_V3.space.sm,
+    alignSelf: "stretch",
+  },
+  waitingHeading: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   joinLabel: {
     fontSize: DS_V3.type.bodyStrong.fontSize,

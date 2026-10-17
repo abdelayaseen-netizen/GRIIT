@@ -1,0 +1,36 @@
+{
+  "personaId": "p30",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:31:09.138Z",
+  "endedAt": "2026-10-14T23:34:39.530Z",
+  "steps": 18,
+  "durationSec": 210,
+  "goals": [
+    {
+      "id": "p30-g1",
+      "text": "Type an emoji into a name field and double-tap a button.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. create repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "create: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "20aab681-b0aa-49fc-8fc9-2cd279281b93",
+  "isTest": true,
+  "cleanup": "kept"
+}

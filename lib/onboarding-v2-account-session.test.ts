@@ -28,6 +28,10 @@ describe("surfaceAccountAuthKind", () => {
       kind: "message",
       message: "Please confirm your email address first. Check your inbox.",
     });
+    expect(surfaceAccountAuthKind("confirm_email", null)).toEqual({
+      kind: "confirm_email",
+      message: "Check your email to save your streak",
+    });
     expect(surfaceAccountAuthKind("cancelled", "x")).toEqual({ kind: "silent" });
   });
 });

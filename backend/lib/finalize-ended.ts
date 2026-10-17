@@ -148,7 +148,7 @@ export async function applyFinalizeEnded(
       event_type: "completed_challenge",
       challenge_id: row.challenge_id,
       shared: sharedFinish,
-      share_state: sharedFinish ? "shared" : "private",
+      share_state: sharedFinish ? "shared" : "unanswered",
       metadata: {
         active_challenge_id: row.id,
         challenge_name: ch?.title ?? "Challenge",

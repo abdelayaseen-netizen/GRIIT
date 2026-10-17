@@ -21,12 +21,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:create-challenge": "node scripts/verify-create-challenge.js",
-    "agents": "tsx agents/src/cli.ts",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
   "dependencies": {
-    "@expo-google-fonts/barlow-condensed": "^0.4.1",
     "@expo-google-fonts/inter": "^0.2.3",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hono/node-server": "^1.0.0",

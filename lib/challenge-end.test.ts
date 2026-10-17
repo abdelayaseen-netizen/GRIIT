@@ -53,7 +53,7 @@ describe("factLine", () => {
 
   it("failed copy", () => {
     expect(factLine({ status: "failed", days: ["camera", "missed"] })).toBe(
-      "Hard mode has no freezes, so one unsecured day ends the run.",
+      "Strict mode has no freezes, so one unsecured day ends the run.",
     );
   });
 

@@ -37,6 +37,7 @@ export type ProofsGridItem = {
   challengeName: string;
   taskName: string;
   capturedAt: string | null;
+  startDateKey?: string | null;
   gates: TaskGate[];
   gateTime: GateTime | null;
   eventId: string | null;
@@ -143,6 +144,7 @@ export function itemsFromRecordProofs(
     eventId?: string | null;
     durationDays?: number;
     capturedAt?: string | null;
+    startDateKey?: string | null;
     taskName?: string;
     gateTime?: GateTime | null;
     shared?: boolean;
@@ -167,6 +169,7 @@ export function itemsFromRecordProofs(
       challengeName: p.challengeName ?? "Challenge",
       taskName: (p.taskName ?? "").trim() || "Untitled task",
       capturedAt: p.capturedAt ?? null,
+      startDateKey: p.startDateKey ?? null,
       gates,
       gateTime: p.gateTime ?? null,
       eventId: p.eventId ?? null,

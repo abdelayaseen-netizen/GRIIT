@@ -1,8 +1,9 @@
-import { calendarDay, clampCalendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
+import { calendarDay, homeDayLine, homeDayTotal } from "@/lib/home-day-total";
 import type { GateTime, TaskGate } from "@/backend/lib/task-model";
 import type { WindowState } from "@/backend/lib/task-time-gate";
 import { SELF_REPORTED, closedWindowCaption, closedWindowTime, counterCameraGateLine, gateLabel } from "@/lib/task-ui";
 import { countdownSuffix } from "@/lib/g2a-home";
+import { verifiedLine, type VerifiedBy } from "@/lib/strava-verify";
 import {
   shareTodayCaption,
   shareTodayChallenges,
@@ -87,6 +88,14 @@ export function homeChallengeOpenA11y(challenge: string): string {
   return `Open ${challenge} challenge`;
 }
 
+/**
+ * Build 90 05.2: the one-line tappable header above each challenge's tasks on Home.
+ * "7K Steps · Day 1 of 7". Same day line the rows use, so the numbers agree.
+ */
+export function homeChallengeHeaderLine(challenge: string, day: number, dayTotal: number | null | undefined): string {
+  return `${challenge} · ${homeProofDayLine(day, dayTotal)}`;
+}
+
 export type HomeProofTask = {
   id?: string;
   name: string;
@@ -108,6 +117,8 @@ export type HomeProofTask = {
   minutesLeft?: number | null;
   hasCameraProof?: boolean;
   taskConfig?: string;
+  /** Build 90 09.3: the completion was verified by an integration (check_ins.proof_source). */
+  verifiedBy?: VerifiedBy | null;
 };
 
 export type HomeProofRow = {
@@ -120,6 +131,7 @@ export type HomeProofRow = {
   /** Close time for HOME.lost, for example "6:30 am". */
   closedAt?: string;
   hasCameraProof: boolean;
+  tapDone?: boolean;
 };
 
 export function homeProofTitleMuted(row: Pick<HomeProofRow, "done" | "closed">): boolean {
@@ -174,16 +186,26 @@ export function homeWindowClosed(task: {
   return task.windowState === "closed" && task.done !== true;
 }
 
+export function homeCheckOffTap(task: Pick<HomeProofTask, "type" | "taskType" | "requirePhoto" | "done" | "windowState">): boolean {
+  if (task.done || task.requirePhoto || task.windowState === "closed") return false;
+  const t = (task.type ?? task.taskType ?? "").toLowerCase();
+  return t === "check_off" || t === "checkoff" || t === "manual";
+}
+
 export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const closed = homeWindowClosed(task);
   const gates = rowGates(task);
   const counterLine = !closed && !task.done
     ? counterCameraGateLine(task.type ?? task.taskType, gates)
     : null;
+  // 09.3: a completion verified by Strava says so once, where "Self-reported" would be.
+  const verified = task.done ? verifiedLine(task.verifiedBy) : null;
   const proofLine = closed
     ? closedWindowCaption(task.gateTime)
     : counterLine
       ? counterLine
+      : verified
+        ? verified
       : task.done && task.hasCameraProof !== true
         ? SELF_REPORTED
         : gateLabel({
@@ -205,6 +227,7 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
     closed,
     closedAt: closed ? closedWindowTime(task.gateTime) || undefined : undefined,
     hasCameraProof: task.hasCameraProof === true,
+    tapDone: homeCheckOffTap(task),
   };
 }
 
@@ -235,7 +258,7 @@ function sectionFromTasks(
   const day =
     first.startDateKey && todayKey
       ? calendarDay(first.startDateKey, todayKey, first.durationDays)
-      : clampCalendarDay(first.currentDay, first.durationDays);
+      : Math.max(1, first.currentDay);
   const rows = tasks.map(homeProofRow);
   return {
     id,

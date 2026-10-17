@@ -71,6 +71,18 @@ export const FLAGS = {
    * save anything without new storage. Leave the screen in the tree.
    */
   SET_MEMBER_GYM: false,
+  /**
+   * Empty-Home starter challenge card (one tap → join → open task).
+   * Guests allowed. Micro-task picker stays off the first-day path.
+   */
+  STARTER_TASK_ENABLED: true,
+  /**
+   * Build 90 chunk 09: a run or ride logged in Strava completes the matching
+   * task on its own (webhook), with a notification that opens the post choice.
+   * Off by default. The server also reads env STRAVA_AUTO_VERIFY=true.
+   * Off: no "Verify with Strava" option, webhook events are acknowledged and dropped.
+   */
+  STRAVA_AUTO_VERIFY: false,
 } as const;
 
 // ============================================

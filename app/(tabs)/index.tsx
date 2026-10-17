@@ -12,21 +12,35 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/contexts/AppContext";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
-import { earliestEnrollmentStart, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
+import { StarterTodayRow } from "@/components/home/StarterTodayRow";
+import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
+import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
+import { conceptLine, type ConceptKind } from "@/lib/concept-once";
+import { FREEZE } from "@/lib/copy";
+import { earliestEnrollmentStart, firstNameFromAuth, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
-import { currentTaskToast, subscribeTaskToast } from "@/lib/task-complete-toast";
+import { currentTaskToast, publishTaskToast, setToastAction, subscribeTaskToast } from "@/lib/task-complete-toast";
 import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
+import {
+  mergeOptimisticCheckins,
+  optimisticSaveError,
+  optimisticTaskDones,
+  runOptimisticRetry,
+  subscribeOptimisticHome,
+} from "@/lib/optimistic-home";
 import {
   closeTimeLabel,
   pickStartTask,
@@ -37,9 +51,11 @@ import {
   windowClosesBanner,
 } from "@/lib/g2a-home";
 import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
-import { calendarDayFromStartAt, dateKeyFromIso } from "@/lib/home-day-total";
+import { dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
 import { completedTaskIds } from "@/lib/today-completion";
+import { enrollmentStarted, requiredTasks } from "@/lib/today-counts";
 import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
+import { stravaVerifiedBy } from "@/lib/strava-verify";
 import { StreakSheet } from "@/components/home/StreakSheet";
 import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
 import { canOfferYesterdayFreeze, weekdayLongForDateKey } from "@/lib/freeze-recovery";
@@ -80,8 +96,18 @@ import { inlineServerError } from "@/lib/inline-server-error";
 import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
 import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { track } from "@/lib/analytics";
+import { track, trackUsage } from "@/lib/analytics";
 import { FLAGS } from "@/lib/feature-flags";
+import {
+  EMPTY_HOME_STARTER_BODY,
+  EMPTY_HOME_STARTER_CHALLENGE_ID,
+  EMPTY_HOME_STARTER_CTA,
+  EMPTY_HOME_STARTER_TITLE,
+} from "@/lib/empty-home-starter";
+import { ensureAnonymousSession } from "@/lib/anon-auth";
+import type { JoinWithFirstTask } from "@/lib/open-first-task";
+import { firstTaskHrefAfterJoin } from "@/lib/enrich-join-first-task";
+import Button from "@/components/ds/Button";
 import { computeHomeState } from "@/lib/home-state";
 import {
   MISS_ACK_STORAGE_KEY,
@@ -139,18 +165,58 @@ function durationMinutesFromTask(t: TaskRow): number | undefined {
   return undefined;
 }
 
+/** Build 90 04.7: a bootstrap this recent is not fetched again on Home focus. */
+const HOME_FOCUS_FRESH_MS = 10_000;
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const isGuest = useIsGuest();
-  const { stats, refetchAll, profile: contextProfile } = useApp();
+  const { stats, refetchAll, profile: contextProfile, completeTask } = useApp();
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
+  const [conceptSeen, setConceptSeen] = React.useState<ReadonlySet<ConceptKind>>(new Set());
+  const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
+  // null until the flags are read, so a cold start cannot flash the sheet before the
+  // stored "Later" is known (06.6).
+  const [saveDismissed, setSaveDismissed] = React.useState<{ first: boolean; second: boolean } | null>(null);
+  const [postGate, setPostGate] = React.useState(false);
+  const [starterBusy, setStarterBusy] = React.useState(false);
+  const [optimisticRev, setOptimisticRev] = React.useState(0);
+  useEffect(() => subscribeOptimisticHome(() => setOptimisticRev((n) => n + 1)), []);
   const focus = useLocalSearchParams<{ focus?: string }>().focus;
   useEffect(() => {
     if (focus === "freeze") setShowFreezeSheet(true);
   }, [focus]);
+
+  useEffect(() => {
+    void AsyncStorage.getItem("griit.concept.seen").then((raw) => {
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw) as ConceptKind[];
+        if (Array.isArray(parsed)) setConceptSeen(new Set(parsed));
+      } catch {
+        /* ignore a bad flag */
+      }
+    });
+    void Promise.all([
+      AsyncStorage.getItem("griit.saveStreak.dismissedFirst"),
+      AsyncStorage.getItem("griit.saveStreak.dismissedSecond"),
+    ]).then(([first, second]) => {
+      setSaveDismissed({ first: first === "1", second: second === "1" });
+    });
+  }, []);
+
+  const markConcept = useCallback((kind: ConceptKind) => {
+    setConceptSeen((prev) => {
+      if (prev.has(kind)) return prev;
+      const next = new Set(prev);
+      next.add(kind);
+      void AsyncStorage.setItem("griit.concept.seen", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
   const [taskToastUp, setTaskToastUp] = React.useState(false);
   React.useEffect(
@@ -241,7 +307,7 @@ export default function HomeScreen() {
     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
       ? bootstrap.data.activeChallenges
       : []) as ActiveRow[];
-    const checkins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
+    const serverCheckins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
       ? bootstrap.data.todayCheckinsForUser
       : []) as {
       active_challenge_id?: string;
@@ -253,15 +319,15 @@ export default function HomeScreen() {
       proof_url?: string | null;
       completion_image_url?: string | null;
       proof_photo_url?: string | null;
+      proof_source?: string | null;
     }[];
+    const checkins = mergeOptimisticCheckins(serverCheckins, optimisticRev >= 0 ? optimisticTaskDones() : []);
     const flat: StreakHeroV4Task[] = [];
 
     for (const ac of activeList) {
-      const tasks = ac.challenges?.challenge_tasks ?? [];
-      const required = tasks.filter((t) => {
-        const cfg = t.config as { required?: boolean } | undefined;
-        return (cfg?.required ?? true) === true;
-      });
+      // 05.4: same "started" and "required" rules as todayTaskCounts, so Home and Profile agree.
+      if (!enrollmentStarted(ac, todayKey, homeTimeZone)) continue;
+      const required = requiredTasks(ac.challenges?.challenge_tasks ?? []);
       const doneRows = checkins.filter(
         (c) => c.active_challenge_id === ac.id && c.status === "completed",
       );
@@ -275,14 +341,16 @@ export default function HomeScreen() {
           }),
         ]),
       );
+      // 09.3: a Strava-verified completion says "Verified by Strava" in place of "Self-reported".
+      const verifiedByTask = new Map(doneRows.map((c) => [String(c.task_id), stravaVerifiedBy(c)]));
       const challengeName = ac.challenges?.title ?? "Challenge";
       const durationDays = ac.challenges?.duration_days ?? 14;
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
       const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
       if (startDateKey > todayKey) continue;
-      const currentDay = calendarDayFromStartAt(startIso, homeTimeZone, todayKey, durationDays);
       const challengeSecuredToday =
         required.length > 0 && required.every((t) => doneSet.has(t.id));
+      const currentDay = shownChallengeDay(startIso || null, homeTimeZone, todayKey, durationDays);
 
       for (const t of required) {
         const tType = String(t.type ?? "manual").toLowerCase();
@@ -313,11 +381,12 @@ export default function HomeScreen() {
           windowState: t.windowState ?? null,
           minutesLeft: t.minutesLeft ?? null,
           hasCameraProof: proofByTask.get(t.id) === true,
+          verifiedBy: verifiedByTask.get(t.id) ?? null,
         });
       }
     }
     return flat;
-  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey]);
+  }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey, optimisticRev]);
 
   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
   const offerYesterdayFreeze = useMemo(() => {
@@ -385,6 +454,14 @@ export default function HomeScreen() {
     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
     [securedDateKeys, homeTimeZone]
   );
+
+  useEffect(() => {
+    if (!todaySecured) return;
+    const line = conceptLine("secured", conceptSeen);
+    if (!line) return;
+    setConceptBanner(line);
+    markConcept("secured");
+  }, [todaySecured, conceptSeen, markConcept]);
 
   const morningAfter = useMemo(() => {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
@@ -540,7 +617,13 @@ export default function HomeScreen() {
       trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
         dateKeyToFreeze: yesterdayKey,
       }),
-    onSuccess: () => {
+      onSuccess: (data) => {
+      // 06.7: the result shows every time; the definition joins it the first time.
+      const line = conceptLine("freeze", conceptSeen);
+      const result = FREEZE.result(data?.restoredStreak ?? 0, data?.remaining ?? 0);
+      setConceptBanner(line ? `${line} ${result}` : result);
+      if (line) markConcept("freeze");
+      trackUsage("freeze_used");
       setFreezeSpent(true);
       setStreakHeld(true);
       setShowFreezeSheet(false);
@@ -564,8 +647,20 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isGuest || !user?.id) return;
-      void refetchBootstrap();
-    }, [isGuest, user?.id, refetchBootstrap]),
+      // Build 90 04.7: join a fetch in flight (a finish just started one) instead of restarting it,
+      // and skip it when the payload is seconds old (coming back from Day secured or the post).
+      void refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - HOME_FOCUS_FRESH_MS });
+    }, [isGuest, user?.id, queryClient]),
+  );
+
+  // Build 90 06.6: Home stays mounted under a pushed route and its Modal would open over
+  // Day secured. The save sheet only shows while Home itself is the screen on top.
+  const [homeFocused, setHomeFocused] = React.useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setHomeFocused(true);
+      return () => setHomeFocused(false);
+    }, []),
   );
 
   const refresh = useCallback(async () => {
@@ -573,7 +668,62 @@ export default function HomeScreen() {
     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
   }, [refetchBootstrap, refetchAll, queryClient]);
 
+  const onStartStarter = useCallback(async () => {
+    if (starterBusy) return;
+    setStarterBusy(true);
+    try {
+      const anon = await ensureAnonymousSession();
+      if (anon.kind !== "ok") return;
+      const result = (await trpcMutate(TRPC.challenges.join, {
+        challengeId: EMPTY_HOME_STARTER_CHALLENGE_ID,
+      })) as JoinWithFirstTask;
+      const href = await firstTaskHrefAfterJoin(result, EMPTY_HOME_STARTER_CHALLENGE_ID, "home");
+      await refresh();
+      if (href) router.replace(href as never);
+      else router.replace(ROUTES.TABS_HOME as never);
+    } catch (err) {
+      captureError(err, "HomeStarterJoin");
+    } finally {
+      setStarterBusy(false);
+    }
+  }, [starterBusy, refresh, router]);
+
   // ────────────── handlers ──────────────
+
+  const onCheckOff = useCallback(
+    (taskId: string) => {
+      const task = heroTasks.find((row) => row.id === taskId);
+      if (!task || task.done) return;
+      void (async () => {
+        const result = await completeTask({
+          activeChallengeId: task.activeChallengeId,
+          taskId: task.id,
+        });
+        const completionId = result?.completionId;
+        setToastAction(() => {
+          if (!completionId) return;
+          void supabase.from("check_ins").delete().eq("id", completionId).then(() => {
+            void refresh();
+          });
+        });
+        const selfLine = conceptLine("self", conceptSeen);
+        if (selfLine) markConcept("self");
+        publishTaskToast({
+          taskId: task.id,
+          title: "Saved.",
+          body: selfLine ?? "Self-reported.",
+          photoUri: null,
+          cameraSeal: false,
+          actionLabel: "Undo",
+          lifeMs: 5000,
+          challengeName: task.challengeName,
+          taskName: task.name,
+        });
+        void refresh();
+      })();
+    },
+    [heroTasks, completeTask, refresh, conceptSeen, markConcept],
+  );
 
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
@@ -718,9 +868,22 @@ export default function HomeScreen() {
           renderItem={() => (
             <View style={[s.guestWrap, { paddingTop: insets.top + DS_V3.space.section }]}>
               <Text style={s.guestTitle}>GRIIT</Text>
-              <Text style={s.guestBody}>
-                Sign in to start your discipline streak and see what your friends are doing.
-              </Text>
+              {FLAGS.STARTER_TASK_ENABLED ? (
+                <View testID="home-starter-card">
+                  <Text style={s.guestBody}>{EMPTY_HOME_STARTER_TITLE}</Text>
+                  <Text style={s.guestBody}>{EMPTY_HOME_STARTER_BODY}</Text>
+                  <Button
+                    label={EMPTY_HOME_STARTER_CTA}
+                    onPress={() => void onStartStarter()}
+                    submitting={starterBusy}
+                    testID="home-starter-start"
+                  />
+                </View>
+              ) : (
+                <Text style={s.guestBody}>
+                  Sign in to start your discipline streak and see what your friends are doing.
+                </Text>
+              )}
             </View>
           )}
           contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
@@ -748,15 +911,26 @@ export default function HomeScreen() {
           inviteChallenge={inviteTarget ? { id: inviteTarget.id, name: inviteTarget.name } : null}
           showInvite={showInvite}
           ListHeaderComponent={
+            <View>
+            {conceptBanner ? (
+              <Text style={s.concept} accessibilityRole="text">{conceptBanner}</Text>
+            ) : null}
+            <StarterTodayRow
+              challengeTitle={inviteTarget?.name ?? null}
+              durationDays={null}
+              onChanged={refresh}
+            />
             <HomeV3
               title={greeting(
                 new Date(),
                 profile?.display_name,
                 profile?.username ?? "",
                 homeTimeZone,
+                firstNameFromAuth(user),
               )}
               dateLine={homeScreenDate(new Date(), homeTimeZone)}
               streak={streak}
+              streakToKeep={recon.result?.lostStreak ?? null}
               streakLine={streakLine}
               morningAfter={morningAfter}
               proof={proof}
@@ -769,6 +943,8 @@ export default function HomeScreen() {
               daySecured={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
+              onStartStarter={() => void onStartStarter()}
+              starterBusy={starterBusy}
               onPressStreak={() => {
                 if (currentTaskToast()) return;
                 setFreezeError(null);
@@ -781,8 +957,15 @@ export default function HomeScreen() {
                 if (!next || next.done) return;
                 onPressTask(next);
               }}
+              onCheckOff={onCheckOff}
               onPressChallenge={onPressChallenge}
-              onPressShareToday={() => setShareTodayOpen(true)}
+              onPressShareToday={() => {
+                if (user?.is_anonymous) {
+                  setPostGate(true);
+                  return;
+                }
+                setShareTodayOpen(true);
+              }}
               sectionChoices={sectionChoices}
               onToggleSection={onToggleSection}
               freezesLeft={freezeStatus?.remaining ?? 0}
@@ -821,8 +1004,32 @@ export default function HomeScreen() {
                 !todaySecured && startTask ? { id: startTask.id, title: startTask.name } : null
               }
               showFirstProofSlot={firstProofEver && !todaySecured}
+              saveFailed={optimisticSaveError() != null}
+              onRetrySave={runOptimisticRetry}
             />
+            </View>
           }
+        />
+        <SaveStreakSheet
+          visible={homeFocused && saveDismissed != null && shouldShowSaveStreak({
+            isAnonymous: user?.is_anonymous === true,
+            firstTaskDone: heroMetrics.tasksDoneToday > 0 || todaySecured,
+            securedDays: resolvedStats?.totalDaysSecured ?? 0,
+            aboutToPostPublic: postGate,
+            dismissedAfterFirst: saveDismissed.first,
+            dismissedAfterSecond: saveDismissed.second,
+          })}
+          onLater={() => {
+            setPostGate(false);
+            if ((resolvedStats?.totalDaysSecured ?? 0) >= 2) {
+              setSaveDismissed((prev) => ({ first: prev?.first ?? false, second: true }));
+              void AsyncStorage.setItem("griit.saveStreak.dismissedSecond", "1");
+              return;
+            }
+            setSaveDismissed((prev) => ({ first: true, second: prev?.second ?? false }));
+            void AsyncStorage.setItem("griit.saveStreak.dismissedFirst", "1");
+          }}
+          onSaved={() => setPostGate(false)}
         />
         <DayStickerSheet
           visible={shareTodayOpen}
@@ -914,6 +1121,13 @@ const s = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   guestList: {},
+  concept: {
+    marginHorizontal: 20,
+    marginBottom: 8,
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#F5F3EE",
+  },
   guestTitle: {
     fontSize: DS_V3.type.display.fontSize,
     lineHeight: DS_V3.type.display.lineHeight,

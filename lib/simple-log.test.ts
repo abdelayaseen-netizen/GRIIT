@@ -23,14 +23,14 @@ describe("simple Ask copy", () => {
   it("locks Ask strings verbatim", () => {
     expect(SIMPLE_ASK_HEADING).toBe("Did you do it today?");
     expect(SIMPLE_ASK_HONESTY).toBe("Self-reported.");
-    expect(SIMPLE_ASK_CTA).toBe("I did it");
+    expect(SIMPLE_ASK_CTA).toBe("Done");
     expect(SIMPLE_ASK_SAVING).toBe("Saving…");
     expect(SIMPLE_ASK_CAPTION).toBe("Self-reported.");
     expect(SIMPLE_ASK_NOT_YET).toBe("Not yet");
     expect(SELF_REPORT_RECORDS_HEADING).toBe("What this records");
     expect(SELF_REPORT_RECORDS_ROWS).toEqual([
       "Today is marked done for this task",
-      "Your challenge sees it as self-reported",
+      "Your challenge shows it without a photo",
       "No camera, no time window, no location",
     ]);
   });
@@ -39,7 +39,7 @@ describe("simple Ask copy", () => {
 describe("secured copy", () => {
   it("locks Secured strings verbatim", () => {
     expect(SECURED_STREAK_LABEL).toBe("Current streak");
-    expect(formatSecuredStateLine(3, false)).toBe("Day 3. Self reported.");
+    expect(formatSecuredStateLine(3, false)).toBe("Day 3.");
     expect(formatSecuredStateLine(3, true)).toBe("Day 3. Camera proof.");
     expect(SECURED_PILL_SELF).toBe("Self-reported.");
     expect(SECURED_PILL_CAMERA).toBe("Camera proof. Checked on the server.");

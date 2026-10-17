@@ -5,6 +5,7 @@ import { CREATE_CATEGORIES } from "@/lib/challenge-category";
 import {
   discoverCategoryMatches,
   discoverFeaturedChip,
+  discoverSectionItems,
   discoverGridWithoutHero,
   discoverPeopleVisible,
   discoverPeopleWithoutSelf,
@@ -44,7 +45,19 @@ describe("discover people and chips", () => {
     expect(discoverCategoryMatches("learning", "mind")).toBe(false);
     expect(discoverFeaturedChip("fitness")).toBe("body");
     expect(discoverFeaturedChip("for_you")).toBe("all");
+    expect(
+      discoverSectionItems(
+        [
+          { title: "Show Up 7", category: "fitness" },
+          { title: "Fajr", category: "faith" },
+          { title: "7K Steps", category: "health" },
+        ],
+        "faith",
+      ).map((item) => item.title),
+    ).toEqual(["Fajr"]);
     const v3 = readFileSync(resolve(__dirname, "../components/discover/DiscoverV3.tsx"), "utf8");
+    expect(v3).toContain("discoverSectionItems");
+    expect(v3).toContain("gridData.length === 0");
     expect(v3).toContain("CREATE_CATEGORIES");
     expect(CREATE_CATEGORIES.map((c) => c.id)).toEqual([
       "fitness",

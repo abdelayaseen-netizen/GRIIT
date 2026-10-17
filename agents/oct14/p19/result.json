@@ -1,0 +1,35 @@
+{
+  "personaId": "p19",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:57:14.576Z",
+  "endedAt": "2026-10-14T22:58:14.074Z",
+  "steps": 3,
+  "durationSec": 59,
+  "goals": [
+    {
+      "id": "p19-g1",
+      "text": "Open the share card and look at it.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "141e31f9-4e45-4268-8909-8f37c9168a30",
+  "isTest": true,
+  "cleanup": "kept"
+}

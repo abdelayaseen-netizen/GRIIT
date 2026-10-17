@@ -10,30 +10,30 @@ import {
   shouldShowAccountNameStep,
 } from "@/lib/onboarding-v2-account-name";
 
-describe("new email account → name step", () => {
-  it("anon→email upgrade always opens the name step", () => {
+describe("new email account does not ask for a name", () => {
+  it("anon→email upgrade skips the name step", () => {
     const kind = classifyAccountAuth({ path: "anon_upgrade_email" });
     expect(kind).toBe("new_account");
-    expect(shouldShowAccountNameStep(kind)).toBe(true);
-    expect(nextAfterAccountAuth(kind)).toBe("account_name");
+    expect(shouldShowAccountNameStep(kind)).toBe(false);
+    expect(nextAfterAccountAuth(kind)).toBe("invite");
   });
 
-  it("cold email signUp always opens the name step", () => {
+  it("cold email signUp skips the name step", () => {
     const kind = classifyAccountAuth({ path: "signup_email" });
     expect(kind).toBe("new_account");
-    expect(nextAfterAccountAuth(kind)).toBe("account_name");
+    expect(nextAfterAccountAuth(kind)).toBe("invite");
   });
 });
 
-describe("new Apple account → name step", () => {
-  it("anon→Apple upgrade always opens the name step", () => {
+describe("new Apple account does not ask for a name", () => {
+  it("anon→Apple upgrade skips the name step", () => {
     const kind = classifyAccountAuth({ path: "anon_upgrade_apple" });
     expect(kind).toBe("new_account");
-    expect(shouldShowAccountNameStep(kind)).toBe(true);
-    expect(nextAfterAccountAuth(kind)).toBe("account_name");
+    expect(shouldShowAccountNameStep(kind)).toBe(false);
+    expect(nextAfterAccountAuth(kind)).toBe("invite");
   });
 
-  it("first Apple id_token session opens the name step", () => {
+  it("first Apple id_token session skips the name step", () => {
     const created = "2026-09-04T20:00:00.000Z";
     const kind = classifyAccountAuth({
       path: "apple_id_token",
@@ -42,7 +42,7 @@ describe("new Apple account → name step", () => {
       nowMs: Date.parse("2026-09-04T20:00:10.000Z"),
     });
     expect(kind).toBe("new_account");
-    expect(nextAfterAccountAuth(kind)).toBe("account_name");
+    expect(nextAfterAccountAuth(kind)).toBe("invite");
   });
 });
 
@@ -98,5 +98,9 @@ describe("AccountScreen Apple errors", () => {
     );
     expect(account).toContain("setError(mapAuthError(idError))");
     expect(account).not.toContain("if (idError || !data?.user?.id) return;");
+    expect(account).not.toContain('label="Display name"');
+    expect(account).toContain("upgradeAnonymousWithApple");
+    expect(account).toContain("upgradeAnonymousWithEmail");
+    expect(account).toContain("saveDerivedDisplayName");
   });
 });

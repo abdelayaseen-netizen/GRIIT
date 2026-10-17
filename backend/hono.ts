@@ -1,4 +1,7 @@
 import "./ensure-backend-modules";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { trpcServer } from "@hono/trpc-server";
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
@@ -7,7 +10,7 @@ import * as Sentry from "@sentry/node";
 import { appRouter } from "./trpc/app-router";
 import { createContext } from "./trpc/create-context";
 import { getSupabaseConfigStatus } from "./lib/supabase";
-import { checkRateLimit, getClientIp } from "./lib/rate-limit";
+import { checkRateLimit, getClientIp, rateLimitSubject } from "./lib/rate-limit";
 
 const REQUEST_BODY_MAX_BYTES = Number(process.env.REQUEST_BODY_MAX_BYTES) || 1_000_000; // 1MB
 
@@ -50,13 +53,31 @@ app.use("*", async (c, next) => {
 
 app.get("/", (c) => c.json({ status: "ok", message: "GRIIT API is running" }));
 
+/** SHA written next to this file at deploy time. Wins over a stale Railway git variable. */
+function bakedCommit(): string | null {
+  try {
+    const path = join(dirname(fileURLToPath(import.meta.url)), "deploy-sha.txt");
+    const text = readFileSync(path, "utf8").trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+function commitSha(): string | null {
+  return (
+    bakedCommit() ??
+    process.env.RAILWAY_GIT_COMMIT_SHA ??
+    process.env.VERCEL_GIT_COMMIT_SHA ??
+    process.env.GIT_COMMIT_SHA ??
+    null
+  );
+}
+
 /** Liveness: no external I/O. Use for Railway / load balancer probes. */
 function livenessJson(c: Context) {
   const supa = getSupabaseConfigStatus();
-  const sha =
-    process.env.RAILWAY_GIT_COMMIT_SHA ??
-    process.env.VERCEL_GIT_COMMIT_SHA ??
-    process.env.GIT_COMMIT_SHA;
+  const sha = commitSha();
   return c.json({
     ok: true,
     status: "ok",
@@ -83,19 +104,19 @@ app.get("/api/config", (c) => {
 /** Deep health: live Supabase query. For monitoring, not for Railway liveness. */
 async function healthDeepJson(c: Context) {
   const checks: Record<string, "ok" | "error"> = {};
+  // 01b.1: the round trip of one trivial query from this host to Supabase.
+  let supabaseMs: number | null = null;
   try {
     const { getSupabase } = await import("./lib/supabase");
+    const t0 = Date.now();
     const { error } = await getSupabase().from("challenges").select("id").limit(1);
+    supabaseMs = Date.now() - t0;
     checks.supabase = error ? "error" : "ok";
   } catch {
     checks.supabase = "error";
   }
   const allOk = Object.values(checks).every((v) => v === "ok");
-  const commitSha =
-    process.env.RAILWAY_GIT_COMMIT_SHA ??
-    process.env.VERCEL_GIT_COMMIT_SHA ??
-    process.env.GIT_COMMIT_SHA ??
-    "unknown";
+  const commitShaValue = commitSha() ?? "unknown";
   return c.json(
     {
       ok: allOk,
@@ -104,8 +125,9 @@ async function healthDeepJson(c: Context) {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV ?? "development",
       checks,
-      commitSha,
-      commit: commitSha,
+      supabase_ms: supabaseMs,
+      commitSha: commitShaValue,
+      commit: commitShaValue,
       service: "backend",
     },
     allOk ? 200 : 503
@@ -190,6 +212,28 @@ app.get("/api/auth/strava/callback", async (c) => {
   return c.redirect(result.redirect, 302);
 });
 
+/** Build 90 09.1: Strava webhook handshake. Strava calls this once when the subscription is created. */
+app.get("/api/strava/webhook", async (c) => {
+  const url = new URL(c.req.url);
+  const { handleStravaWebhookHandshake } = await import("./lib/strava-webhook");
+  const result = handleStravaWebhookHandshake(url.searchParams);
+  return c.json(result.body, result.status);
+});
+
+/** Build 90 09.1: Strava activity events. Acknowledged at once (Strava retries after 2 s), processed after. */
+app.post("/api/strava/webhook", async (c) => {
+  let body: unknown = null;
+  try {
+    body = await c.req.json();
+  } catch {
+    body = null;
+  }
+  const { handleStravaWebhookPost } = await import("./lib/strava-webhook");
+  const { getSupabaseServer } = await import("./lib/supabase-server");
+  const result = handleStravaWebhookPost(body, getSupabaseServer());
+  return c.json(result.body, result.status);
+});
+
 /** Adds X-Request-ID, enforces body size limit, rate limits by IP. Runs before tRPC. */
 async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
   const req = c.req.raw;
@@ -216,7 +260,7 @@ async function trpcPreMiddleware(c: Context, next: () => Promise<void>) {
     }
   }
 
-  const key = `ip:${ip}`;
+  const key = rateLimitSubject(req.headers.get("authorization"), ip);
   const { allowed, resetAt } = await checkRateLimit(key);
   if (!allowed) {
     const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);

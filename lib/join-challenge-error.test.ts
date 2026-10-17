@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FREE_ACTIVE_LIMIT_MESSAGE } from "@/lib/free-challenge-limit";
 import { PRIVATE_CHALLENGE_MESSAGE } from "@/backend/lib/can-view-challenge";
@@ -37,5 +39,16 @@ describe("classifyJoinChallengeError", () => {
       message: ALREADY_JOINED_MESSAGE,
     });
     expect(classifyJoinChallengeError(err).kind).not.toBe("limit");
+  });
+
+  it("onboarding join moves on when the person is already in the challenge", () => {
+    const src = readFileSync(resolve(__dirname, "onboarding-v2-join.ts"), "utf8");
+    expect(src).toContain('classified.kind === "already"');
+    expect(src).toContain("return { ok: true }");
+  });
+
+  it("pins the onboarding footer outside the scroll view", () => {
+    const src = readFileSync(resolve(__dirname, "../components/onboarding/v2/OnboardingChrome.tsx"), "utf8");
+    expect(src.indexOf("</ScrollView>")).toBeLessThan(src.indexOf("{footer ?"));
   });
 });

@@ -21,6 +21,7 @@ export type ChallengeCardProps = {
   joined?: boolean;
   onStart?: () => void;
   onPress?: () => void;
+  testID?: string;
 };
 
 function caption(people: number | undefined, gate: string): string {
@@ -39,6 +40,7 @@ export default function ChallengeCard({
   proofType,
   people,
   onPress,
+  testID,
 }: ChallengeCardProps) {
   const [width, setWidth] = React.useState(0);
   const coverH = width > 0 ? Math.round(width * 1.25) : 0;
@@ -47,6 +49,7 @@ export default function ChallengeCard({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={title || "Challenge"}
       onPress={onPress}
@@ -74,7 +77,7 @@ export default function ChallengeCard({
       ) : null}
       {hard ? (
         <View style={styles.hard}>
-          <Text style={styles.hardText}>Hard</Text>
+          <Text style={styles.hardText}>Strict</Text>
         </View>
       ) : null}
     </Pressable>

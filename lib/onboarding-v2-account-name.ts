@@ -1,8 +1,8 @@
 /**
- * Account-screen name sub-step.
+ * Account auth classification.
  *
- * Shown only for a newly created account (email Create account or Apple).
- * Never after Skip, guest, or an existing account signing in.
+ * The account sheet does not ask for a display name. A new account takes
+ * the name from Apple, or the email prefix, and Settings can change it later.
  */
 
 export type AccountAuthPath =
@@ -60,7 +60,7 @@ export function classifyAccountAuth(input: {
 }
 
 export function shouldShowAccountNameStep(kind: AccountAuthKind): boolean {
-  return kind === "new_account";
+  return kind !== "new_account" && kind !== "existing_account";
 }
 
 /** Flow branch after AccountScreen auth resolves. */

@@ -8,6 +8,8 @@ export const TRPC = {
     signIn: 'auth.signIn',
     signOut: 'auth.signOut',
     getSession: 'auth.getSession',
+    prepareGuestMerge: 'auth.prepareGuestMerge',
+    claimGuestMerge: 'auth.claimGuestMerge',
   },
   profiles: {
     get: 'profiles.get',
@@ -29,6 +31,7 @@ export const TRPC = {
     getWeeklyTrend: 'profiles.getWeeklyTrend',
     search: 'profiles.search',
     deleteAccount: 'profiles.deleteAccount',
+    claimMaestroTest: 'profiles.claimMaestroTest',
     followUser: 'profiles.followUser',
     unfollowUser: 'profiles.unfollowUser',
     sendFollowRequest: 'profiles.sendFollowRequest',
@@ -41,6 +44,7 @@ export const TRPC = {
     getFollowCounts: 'profiles.getFollowCounts',
     getFollowers: 'profiles.getFollowers',
     getFollowing: 'profiles.getFollowing',
+    getFriends: 'profiles.getFriends',
     isFollowing: 'profiles.isFollowing',
     suggested: 'profiles.suggested',
     getMutualFollowers: 'profiles.getMutualFollowers',
@@ -52,6 +56,7 @@ export const TRPC = {
   challenges: {
     list: 'challenges.list',
     getFeatured: 'challenges.getFeatured',
+    search: 'challenges.search',
     getDiscoverFeed: 'challenges.getDiscoverFeed',
     getDiscoverFeatured: 'challenges.getDiscoverFeatured',
     getDiscoverGrid: 'challenges.getDiscoverGrid',
@@ -93,6 +98,7 @@ export const TRPC = {
     complete: 'checkins.complete',
     shareProof: 'checkins.shareProof',
     unshareProof: 'checkins.unshareProof',
+    setPostAudience: 'checkins.setPostAudience',
     startSession: 'checkins.startSession',
     saveProgress: 'checkins.saveProgress',
     secureDay: 'checkins.secureDay',
@@ -104,6 +110,12 @@ export const TRPC = {
   starters: {
     getChallengeIdByStarterId: 'starters.getChallengeIdByStarterId',
     join: 'starters.join',
+  },
+  starterTask: {
+    get: 'starterTask.get',
+    saveLater: 'starterTask.saveLater',
+    completeNow: 'starterTask.completeNow',
+    expire: 'starterTask.expire',
   },
   streaks: {
     getFreezeStatus: 'streaks.getFreezeStatus',
@@ -148,6 +160,8 @@ export const TRPC = {
   },
   reports: {
     create: 'reports.create',
+    reportUser: 'reports.reportUser',
+    reportComment: 'reports.reportComment',
   },
   feed: {
     list: 'feed.list',

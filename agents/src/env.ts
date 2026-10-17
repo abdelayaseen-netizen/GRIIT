@@ -5,7 +5,7 @@ function applyFile(file: string) {
   if (!fs.existsSync(file)) return;
   const text = fs.readFileSync(file, "utf8");
   for (const line of text.split("\n")) {
-    const trimmed = line.trim();
+    const trimmed = line.trim().replace(/^export\s+/, "");
     if (!trimmed || trimmed.startsWith("#")) continue;
     const eq = trimmed.indexOf("=");
     if (eq < 0) continue;

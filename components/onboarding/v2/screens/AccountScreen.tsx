@@ -15,12 +15,22 @@ import {
   surfaceAccountAuthKind,
   surfaceCaughtAuthError,
 } from "@/lib/onboarding-v2-account-session";
-import { writeDeviceTimezone } from "@/lib/write-device-timezone";
+import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
+import { noteWrittenDeviceTimezone, writtenDeviceTimezone } from "@/lib/timezone-heal";
 import { track } from "@/lib/analytics";
 import { captureError } from "@/lib/sentry";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { accountSavedLines } from "@/lib/onboarding-v2-account-saved";
+import { displayNameFromAccount } from "@/lib/account-display-name";
+import { adoptExistingAccount } from "@/lib/adopt-existing-account";
+import { CHECK_EMAIL_TO_SAVE } from "@/lib/email-save-pending";
+import { useQuery } from "@tanstack/react-query";
+import { trpcMutate } from "@/lib/trpc";
+import { STARTER_TODAY_QUERY_KEY, loadStarterTodayRow } from "@/components/home/StarterTodayRow";
+import { isMaestroTestEmail } from "@/lib/maestro-account";
+import { TRPC } from "@/lib/trpc-paths";
 import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
+import { FLAGS } from "@/lib/feature-flags";
 import {
   CONFIRM_EMAIL_NOTICE,
   EMAIL_TAKEN_NOTICE,
@@ -38,6 +48,36 @@ import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
+async function flagMaestroProfile(emailAddr?: string): Promise<void> {
+  const email = (emailAddr ?? "").trim();
+  if (!isMaestroTestEmail(email)) return;
+  try {
+    await trpcMutate(TRPC.profiles.claimMaestroTest, {});
+    return;
+  } catch {
+    const { data } = await supabase.auth.getUser();
+    const id = data.user?.id;
+    if (!id) return;
+    await supabase.from("profiles").update({ is_test: true }).eq("user_id", id);
+  }
+}
+
+async function saveDerivedDisplayName(appleName?: string, emailAddr?: string): Promise<void> {
+  const name = displayNameFromAccount({ appleName, email: emailAddr });
+  const timezone = getDeviceIanaTimeZone();
+  const tzAlready = writtenDeviceTimezone() === timezone;
+  if (tzAlready && !name) return;
+  try {
+    await trpcMutate(TRPC.profiles.update, {
+      ...(tzAlready ? {} : { timezone }),
+      ...(name ? { display_name: name } : {}),
+    });
+    if (!tzAlready) noteWrittenDeviceTimezone(timezone);
+  } catch (e) {
+    captureError(e, "AccountDisplayName");
+  }
+}
+
 const ICON = DS_V3.space.xs * 5;
 const CHECK = DS_V3.space.lg;
 const PT = DS_V3.space.xs / 4;
@@ -48,11 +88,14 @@ export default function AccountScreen({
   onSkip,
   onSignInWithAccount,
   onBack,
+  alwaysOfferSkip = false,
 }: {
   onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
   onSignInWithAccount: (email?: string) => void;
   onBack: () => void;
+  /** Build 90 06.6: the Home save sheet always shows Later, whatever the starter flag says. */
+  alwaysOfferSkip?: boolean;
 }) {
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
   const challengeTitle = useOnboardingStore((s) => s.selectedChallengeTitle);
@@ -67,6 +110,14 @@ export default function AccountScreen({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const starterQuery = useQuery({
+    queryKey: [...STARTER_TODAY_QUERY_KEY],
+    queryFn: loadStarterTodayRow,
+    enabled: FLAGS.STARTER_TASK_ENABLED,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const starterDone = starterQuery.data?.status === "done_now";
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -118,8 +169,25 @@ export default function AccountScreen({
           identityToken: credential.identityToken,
         });
         if (upgraded.kind === "identity_taken") {
-          setEmail(credential.email ?? "");
-          setState("email_taken");
+          const moved = await adoptExistingAccount({
+            guestUserId: sessionUser.id,
+            signIn: async () => {
+              const { data, error: signError } = await supabase.auth.signInWithIdToken({
+                provider: "apple",
+                token: credential.identityToken!,
+              });
+              if (signError || !data.user || !data.session) {
+                return { ok: false, message: signError ? mapAuthError(signError) : "Sign in failed. Please try again." };
+              }
+              return { ok: true };
+            },
+          });
+          if (!moved.ok) {
+            setError(moved.message);
+            return;
+          }
+          track({ name: "signup_completed", method: "apple" });
+          onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
           return;
         }
         const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
@@ -133,6 +201,7 @@ export default function AccountScreen({
         }
         track({ name: "signup_completed", method: "apple" });
         track({ name: "account_created", method: "apple" });
+        await saveDerivedDisplayName(displayNameFromApple, credential.email ?? undefined);
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_apple" }));
         return;
       }
@@ -149,16 +218,18 @@ export default function AccountScreen({
         setError("Sign in failed. Please try again.");
         return;
       }
-      await writeDeviceTimezone();
       track({ name: "signup_completed", method: "apple" });
       track({ name: "account_created", method: "apple" });
-      onAuthSuccess(
-        classifyAccountAuth({
-          path: "apple_id_token",
-          createdAt: data.user.created_at,
-          lastSignInAt: data.user.last_sign_in_at,
-        })
+      const appleKind = classifyAccountAuth({
+        path: "apple_id_token",
+        createdAt: data.user.created_at,
+        lastSignInAt: data.user.last_sign_in_at,
+      });
+      await saveDerivedDisplayName(
+        appleKind === "new_account" ? displayNameFromApple : undefined,
+        appleKind === "new_account" ? credential.email ?? undefined : undefined,
       );
+      onAuthSuccess(appleKind);
     } catch (e: unknown) {
       if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "ERR_REQUEST_CANCELED") {
         return;
@@ -183,8 +254,29 @@ export default function AccountScreen({
           email: trimmed,
           password,
         });
+        if (upgraded.kind === "confirm_email") {
+          setState("awaiting_confirm");
+          setError("");
+          return;
+        }
         if (upgraded.kind === "identity_taken") {
-          setState("email_taken");
+          const moved = await adoptExistingAccount({
+            guestUserId: sessionUser.id,
+            signIn: async () => {
+              const { error: signError } = await supabase.auth.signInWithPassword({
+                email: trimmed,
+                password,
+              });
+              if (signError) return { ok: false, message: mapAuthError(signError) };
+              return { ok: true };
+            },
+          });
+          if (!moved.ok) {
+            setError(moved.message);
+            return;
+          }
+          track({ name: "signup_completed", method: "email" });
+          onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
           return;
         }
         const surface = surfaceAccountAuthKind(upgraded.kind, upgraded.message);
@@ -199,6 +291,8 @@ export default function AccountScreen({
         setProfileSetupHints({ email: trimmed });
         track({ name: "signup_completed", method: "email" });
         track({ name: "account_created", method: "email" });
+        await saveDerivedDisplayName(undefined, trimmed);
+        await flagMaestroProfile(trimmed);
         onAuthSuccess(classifyAccountAuth({ path: "anon_upgrade_email" }));
         return;
       }
@@ -225,10 +319,11 @@ export default function AccountScreen({
         setError("Please try again or check your email.");
         return;
       }
-      await writeDeviceTimezone();
       setProfileSetupHints({ email: trimmed });
       track({ name: "signup_completed", method: "email" });
       track({ name: "account_created", method: "email" });
+      await saveDerivedDisplayName(undefined, trimmed);
+      await flagMaestroProfile(trimmed);
       onAuthSuccess(classifyAccountAuth({ path: "signup_email" }));
     } catch (e: unknown) {
       captureError(e, "OnboardingV2Email");
@@ -244,11 +339,41 @@ export default function AccountScreen({
     }
   };
 
-  const skip = <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const accountTitle = FLAGS.STARTER_TASK_ENABLED
+    ? starterDone
+      ? "Save your streak and your freeze."
+      : "Save your challenge."
+    : ACCOUNT_TITLE;
+  const accountSubtitle = FLAGS.STARTER_TASK_ENABLED
+    ? starterDone
+      ? "Your first day is secured. Sign in so it’s still here tomorrow."
+      : "Sign in so your challenge and today’s starter are kept."
+    : accountInLine(challengeTitle);
+  const skip =
+    FLAGS.STARTER_TASK_ENABLED && !alwaysOfferSkip ? null : <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const applePrimary = Platform.OS === "ios" && appleAvailable;
   const footer =
     state === "default" ? (
       <>
-        <ChromePrimary label="Continue" onPress={() => setState("email_entry")} />
+        {applePrimary ? (
+          <Button
+            label="Continue with Apple"
+            icon={<Apple size={ICON} color={DS_V3.color.onBrand} />}
+            onPress={() => void handleApple()}
+            disabled={loading}
+          />
+        ) : (
+          <ChromePrimary label="Continue with email" onPress={() => setState("email_entry")} />
+        )}
+        {applePrimary ? (
+          <Button
+            label="Continue with email"
+            variant="secondary"
+            icon={<Mail size={ICON} color={DS_V3.color.textPrimary} />}
+            onPress={() => setState("email_entry")}
+            disabled={loading}
+          />
+        ) : null}
         {skip}
       </>
     ) : (
@@ -259,29 +384,13 @@ export default function AccountScreen({
     <OnboardingScreen
       step={6}
       onBack={onBack}
-      title={ACCOUNT_TITLE}
-      subtitle={accountInLine(challengeTitle)}
+      title={accountTitle}
+      subtitle={accountSubtitle}
       footer={footer}
     >
       <View style={styles.body}>
         {state === "default" ? (
           <View style={styles.auth}>
-            {Platform.OS === "ios" && appleAvailable ? (
-              <Button
-                label="Continue with Apple"
-                variant="secondary"
-                icon={<Apple size={ICON} color={DS_V3.color.textPrimary} />}
-                onPress={() => void handleApple()}
-                disabled={loading}
-              />
-            ) : null}
-            <Button
-              label="Continue with email"
-              variant="secondary"
-              icon={<Mail size={ICON} color={DS_V3.color.textPrimary} />}
-              onPress={() => setState("email_entry")}
-              disabled={loading}
-            />
             <Text style={styles.phone}>{ACCOUNT_PHONE_LINE}</Text>
             <TextLink
               label="Have an account? Log in"
@@ -364,6 +473,12 @@ export default function AccountScreen({
           </View>
         ) : null}
 
+        {state === "awaiting_confirm" ? (
+          <View style={styles.auth}>
+            <Notice icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}>{CHECK_EMAIL_TO_SAVE}</Notice>
+          </View>
+        ) : null}
+
         {state === "email_taken" ? (
           <View style={styles.auth}>
             <Field label="Email" value={email} editable={false} />
@@ -426,6 +541,7 @@ function Field({
         placeholder={placeholder ?? label}
         placeholderTextColor={DS_V3.color.textSecondary}
         accessibilityLabel={label}
+        testID={label === "Email" ? "account-email" : label === "Password" ? "account-password" : undefined}
         style={[styles.input, error && styles.inputError]}
       />
     </View>

@@ -17,6 +17,7 @@ const FRESH_SIGNUP = new Set(["lowtech-01", "teen-01", "stress-01"]);
 
 /** These three still walk real sign-up and onboarding. Everyone else logs in ready. */
 export function needsFreshSignup(id: string): boolean {
+  if (process.env.AGENTS_FRESH === "1") return true;
   return FRESH_SIGNUP.has(id);
 }
 

@@ -6,7 +6,8 @@ import { getVisibleUserIds } from "../../lib/get-visible-user-ids";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
-import { moderateContent } from "../../lib/content-moderation";
+import { blockedPlainText } from "../../lib/content-moderation";
+import { commentIdFromReportDetails } from "../../../lib/comment-report";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import {
   LIVE_FEED_TYPES,
@@ -18,6 +19,7 @@ import {
   type EvRow,
 } from "../../lib/feed-activity-hydrate";
 import { getBlockedUserIds, isBlockRelationship } from "../../lib/get-blocked-user-ids";
+import { flipSharePatch } from "../../lib/activity-share";
 import { deriveProofType } from "../../lib/task-model";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
 import { dateKeyFromIso } from "../../lib/calendar-day";
@@ -34,7 +36,8 @@ import {
 } from "../../lib/live-feed-page";
 
 import { anonymousUserIdSet } from "../../lib/anonymous-authors";
-import { testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
+import { isHiddenFromRealViewers, testAuthorIdSet, viewerIsTestAccount } from "../../lib/test-authors";
+import { audienceShowsInScopeForViewer, canSeePostAudience, profilePostVisible } from "../../../lib/post-audience";
 import { localDayStartIso, pickTodayPosters } from "../../lib/today-posters";
 import { getSupabaseAdmin, hasSupabaseAdmin } from "../../lib/supabase-admin";
 
@@ -59,6 +62,45 @@ function hoursUntilLocalMidnight(timezone: string): number {
   } catch {
     return 24;
   }
+}
+
+/**
+ * Build 90 05.3: ids among `userIds` that a real viewer must not see
+ * (profiles.is_test). The viewer's own id is never hidden. Empty for a test viewer.
+ */
+async function hiddenTestAuthorIds(
+  ctx: { supabase: Parameters<typeof viewerIsTestAccount>[0]; userId: string },
+  userIds: readonly string[],
+): Promise<Set<string>> {
+  const others = [...new Set(userIds.filter((id) => id && id !== ctx.userId))];
+  if (others.length === 0) return new Set();
+  const reader = getSupabaseServer() ?? ctx.supabase;
+  if (await viewerIsTestAccount(reader, ctx.userId)) return new Set();
+  return testAuthorIdSet(reader, others);
+}
+
+/**
+ * Build 90 07.3: comment ids the viewer reported (`user_reports.details` starts with
+ * `comment:<id>`, written by reports.reportComment). user_reports has no select policy
+ * for the reporter, so this reads with the service client; without one it is empty and
+ * the client's own hidden set still covers the reporter's screen.
+ */
+async function reportedCommentIds(viewerId: string): Promise<Set<string>> {
+  const server = getSupabaseServer();
+  if (!server) return new Set();
+  const { data, error } = await server
+    .from("user_reports")
+    .select("details")
+    .eq("reporter_user_id", viewerId)
+    .like("details", "comment:%")
+    .limit(500);
+  if (error || !data) return new Set();
+  const ids = new Set<string>();
+  for (const row of data as { details?: string | null }[]) {
+    const id = commentIdFromReportDetails(row.details);
+    if (id) ids.add(id);
+  }
+  return ids;
 }
 
 export const feedRouter = createTRPCRouter({
@@ -104,8 +146,7 @@ export const feedRouter = createTRPCRouter({
     const keepEvent = (ev: EvRow): boolean => {
       if (ev.user_id !== viewerId && blockedIds.has(ev.user_id)) return false;
       if (!viewerIsTest && testAuthorIds.has(ev.user_id)) return false;
-      if (anonymousIds.has(ev.user_id)) {
-        if (input.scope === "everyone") return false;
+      if (anonymousIds.has(ev.user_id) && ev.user_id !== viewerId) {
         if (ev.event_type === "joined_challenge" || ev.event_type === "challenge_created") return false;
       }
       if (input.scope === "everyone" && ev.user_id !== viewerId) {
@@ -114,6 +155,9 @@ export const feedRouter = createTRPCRouter({
         if (!canSeeProfileContent(viewerId, owner, { isMutual: friendIds.has(ev.user_id), isCoMember })) return false;
       }
       if (input.scope === "following" && ev.user_id !== viewerId && !followingIds.has(ev.user_id)) return false;
+      const audience = (ev.metadata as { audience?: string | null } | null)?.audience;
+      // Build 90 04.4: the author's own post stays in both scopes.
+      if (!audienceShowsInScopeForViewer({ audience, scope: input.scope, viewerId, authorId: ev.user_id })) return false;
       const ch = ev.challenge_id ? challengeMap.get(ev.challenge_id) : undefined;
       if (ev.challenge_id && !ch) return false;
       const vis = normalizeChallengeVisibility(ch?.visibility);
@@ -146,7 +190,7 @@ export const feedRouter = createTRPCRouter({
       ];
       const [visResult, chResult] = await Promise.all([
         eventUserIds.length > 0
-          ? server.from("profiles").select("user_id, profile_visibility, challenge_visibility, activity_visibility, is_test").in("user_id", eventUserIds).limit(200)
+          ? server.from("profiles").select("user_id, username, profile_visibility, challenge_visibility, activity_visibility, is_test, display_name").in("user_id", eventUserIds).limit(200)
           : Promise.resolve({ data: [] }),
         challengeIds.length > 0
           ? server.from("challenges").select("id, title, visibility, duration_days").in("id", challengeIds).limit(200)
@@ -154,7 +198,7 @@ export const feedRouter = createTRPCRouter({
       ]);
       for (const r of ((visResult.data ?? []) as (PrivacyProfileFields & { is_test?: boolean })[])) {
         if (r.user_id) authorProfiles.set(r.user_id, r);
-        if (r.user_id && r.is_test === true) testAuthorIds.add(r.user_id);
+        if (r.user_id && isHiddenFromRealViewers(r)) testAuthorIds.add(r.user_id);
       }
       for (const c of ((chResult.data ?? []) as { id: string; title?: string; visibility?: string; duration_days?: number }[])) {
         challengeMap.set(c.id, c);
@@ -208,9 +252,26 @@ export const feedRouter = createTRPCRouter({
       return { posts: [] as Awaited<ReturnType<typeof hydrateActivityEventsToPosts>> };
     }
     const coMemberIds = await coMemberChallengeIds(ctx.supabase, viewerId);
-    const { data: rawEvents, error: evErr } = await server.from("activity_events").select("id, user_id, event_type, challenge_id, metadata, created_at, shared, share_state").eq("user_id", input.userId).in("event_type", [...LIVE_FEED_TYPES]).eq("share_state", "shared").order("created_at", { ascending: false }).limit(Math.min(80, input.limit * 3));
+    let evQuery = server
+      .from("activity_events")
+      .select("id, user_id, event_type, challenge_id, metadata, created_at, shared, share_state")
+      .eq("user_id", input.userId)
+      .in("event_type", [...LIVE_FEED_TYPES])
+      .order("created_at", { ascending: false })
+      .limit(Math.min(80, input.limit * 3));
+    if (input.userId !== viewerId) evQuery = evQuery.eq("share_state", "shared");
+    const { data: rawEvents, error: evErr } = await evQuery;
     if (evErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: evErr.message });
-    const events = (rawEvents ?? []) as EvRow[];
+    const events = ((rawEvents ?? []) as EvRow[]).filter((ev) => {
+      const audience = (ev.metadata as { audience?: string | null } | null)?.audience;
+      return profilePostVisible({
+        shareState: ev.share_state,
+        audience,
+        viewerId,
+        authorId: ev.user_id,
+        isFriend: friendIds.has(ev.user_id),
+      });
+    });
     const posts = await hydrateActivityEventsToPosts(events, viewerId, friendIds, ctx, server, coMemberIds);
     return { posts: posts.slice(0, input.limit) };
   }),
@@ -250,6 +311,15 @@ export const feedRouter = createTRPCRouter({
     const vis = normalizeChallengeVisibility(ch?.visibility);
     const postFriendIds = new Set<string>();
     if (ev.user_id !== viewerId && (await isFriend(ctx.supabase, viewerId, ev.user_id))) postFriendIds.add(ev.user_id);
+    const postAudience = (ev.metadata as { audience?: string | null } | null)?.audience;
+    if (!canSeePostAudience({
+      audience: postAudience,
+      viewerId,
+      authorId: ev.user_id,
+      isFriend: postFriendIds.has(ev.user_id),
+    })) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+    }
     if (!canSeeContent(viewerId, ev.user_id, vis, postFriendIds, {
       challengeId: ev.challenge_id,
       coMemberChallengeIds: postCoMembers,
@@ -363,6 +433,8 @@ export const feedRouter = createTRPCRouter({
     return {
       id: ev.id, userId: ev.user_id, username, displayName, avatarUrl: profile?.avatar_url ?? null, streakCount: mdStreak ?? streakFromDb, challengeId: ev.challenge_id, challengeName, currentDay: Math.max(1, currentDay), securedDays, longestStreak: finishCard?.longestStreak, heldDays: finishCard?.heldDays, startedOn: enrollment?.start_at ?? null, startedLabel: finishStartedLabel(enrollment?.start_at, tz), totalDays: Math.max(1, finishedRun?.elapsed ?? durationDays), eventType: ev.event_type,
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: signed.photoUrl, proofPhotoUrl: signed.proofPhotoUrl, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
+      // Build 90 09.3: who verified it ("Verified by Strava" once on the card). Additive.
+      verifiedBy: md.verification_method === "strava_activity" ? ("strava" as const) : null,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,
       respectCount: reactionCount,
@@ -371,6 +443,7 @@ export const feedRouter = createTRPCRouter({
       commentCount: commentTotal ?? 0,
       shareCount,
       visibility: vis,
+      audience: typeof md.audience === "string" ? md.audience : null,
     };
   }),
 
@@ -528,21 +601,18 @@ export const feedRouter = createTRPCRouter({
   }),
 
   shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().max(2000).optional() })).mutation(async ({ input, ctx }) => {
-    const server = getSupabaseServer();
-    if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
-      const captionCheck = moderateContent(input.caption.trim());
-      if (!captionCheck.allowed) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: captionCheck.reason ?? "Caption content is not allowed.",
-        });
+      const captionBlock = blockedPlainText(input.caption.trim(), "caption");
+      if (captionBlock) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: captionBlock });
       }
     }
+    const server = getSupabaseServer();
+    if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     type ActivityEventsWriter = {
       from: (table: "activity_events") => {
         insert: (row: { user_id: string; event_type: string; challenge_id: string; metadata: Record<string, unknown> }) => { select: (cols: "id, metadata") => { single: () => Promise<{ data: { id: string; metadata?: Record<string, unknown> } | null; error: { message: string } | null }> } };
-        update: (row: { metadata: Record<string, unknown> }) => { eq: (col: "id", value: string) => Promise<{ error: { message: string } | null }> };
+        update: (row: { metadata: Record<string, unknown>; shared: true; share_state: "shared"; shared_at: string }) => { eq: (col: "id", value: string) => Promise<{ error: { message: string } | null }> };
       };
     };
     const activityEventsWriter = server as unknown as ActivityEventsWriter;
@@ -605,7 +675,8 @@ export const feedRouter = createTRPCRouter({
       prevMeta = ins.metadata ?? {};
     }
     const nextMeta = { ...prevMeta, caption: input.caption?.trim() || null, proof_photo_url: ownedProofWrite(input.proofPhotoUrl, ctx.userId), feed_shared: true };
-    const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta }).eq("id", eventId);
+    const sharePatch = flipSharePatch(false, new Date().toISOString(), null);
+    const { error: uErr } = await activityEventsWriter.from("activity_events").update({ metadata: nextMeta, ...sharePatch }).eq("id", eventId);
     if (uErr) {
       logger.error({ err: uErr }, "[shareCompletion] update failed");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: uErr.message });
@@ -778,9 +849,22 @@ export const feedRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load comments." });
       }
       const blockedCommentIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
-      const visibleComments = blockedCommentIds.size > 0
+      const unblocked = blockedCommentIds.size > 0
         ? (comments ?? []).filter((c: { user_id: string }) => !blockedCommentIds.has(c.user_id))
         : (comments ?? []);
+      // Build 90 05.3: a real viewer does not see comments from is_test accounts.
+      const testIds = await hiddenTestAuthorIds(
+        ctx,
+        unblocked.map((c: { user_id: string }) => c.user_id),
+      );
+      const notTest = testIds.size > 0
+        ? unblocked.filter((c: { user_id: string }) => !testIds.has(c.user_id))
+        : unblocked;
+      // Build 90 07.3: a comment the viewer reported stays hidden for them.
+      const reportedIds = await reportedCommentIds(ctx.userId);
+      const visibleComments = reportedIds.size > 0
+        ? notTest.filter((c: { id: string }) => !reportedIds.has(c.id))
+        : notTest;
       const userIds = [...new Set(visibleComments.map((c: { user_id: string }) => c.user_id))];
       const { data: profiles } = userIds.length
         ? await ctx.supabase
@@ -817,12 +901,9 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const commentCheck = moderateContent(input.text);
-      if (!commentCheck.allowed) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: commentCheck.reason ?? "Comment content is not allowed.",
-        });
+      const commentBlock = blockedPlainText(input.text, "comment");
+      if (commentBlock) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: commentBlock });
       }
       const { data: inserted, error } = await ctx.supabase.from("feed_comments").insert({
         user_id: ctx.userId,
@@ -985,7 +1066,11 @@ export const feedRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error.message || "Failed to load reactions." });
       }
-      const userIds = [...new Set((reactions ?? []).map((r: { user_id: string }) => r.user_id))];
+      const allIds = [...new Set((reactions ?? []).map((r: { user_id: string }) => r.user_id))];
+      if (allIds.length === 0) return [];
+      // Build 90 05.3: a real viewer's likes list does not show is_test accounts.
+      const testIds = await hiddenTestAuthorIds(ctx, allIds);
+      const userIds = testIds.size > 0 ? allIds.filter((id) => !testIds.has(id)) : allIds;
       if (userIds.length === 0) return [];
       const { data: profiles } = await ctx.supabase
         .from("profiles")

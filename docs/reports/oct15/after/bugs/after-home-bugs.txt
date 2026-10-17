@@ -1,0 +1,26 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @7f1302d6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow after-home-bugs
+Tap on "Home"... COMPLETED
+Tap on "Show feed from people you follow"... COMPLETED
+Assert that "Everyone is on until you follow 3 people." is not visible... COMPLETED
+Tap on "Show feed from everyone"... COMPLETED
+Assert that "Everyone is on until you follow 3 people." is visible... COMPLETED
+Assert that "b87.*" is not visible... COMPLETED
+Assert that "b88.*" is not visible... FAILED
+
+Assertion is false: "b88.*" is not visible
+
+Assertion '"b88.*" is not visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-14_230855
+EXIT:1

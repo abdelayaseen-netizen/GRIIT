@@ -50,8 +50,10 @@ describe("consistency builders", () => {
     expect(profile).toContain("daysFromSource");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
-    expect(mutations).toContain('invalidateQueries({ queryKey: ["profiles", "getRecord"] })');
-    expect(mutations).toContain('refetchQueries({ queryKey: ["profiles", "getRecord"] })');
+    // Build 90 04.7: the same invalidate + refetch pair, joining an in-flight fetch instead of cancelling it.
+    expect(mutations).toContain('invalidateQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false })');
+    expect(mutations.match(/invalidateQueries\(\{ queryKey: \["profiles", "getRecord"\] \}, \{ cancelRefetch: false \}\)/g)?.length).toBeGreaterThan(1);
+    expect(mutations).toContain('refetchQueries({ queryKey: ["profiles", "getRecord"] }, { cancelRefetch: false })');
   });
 
   it("day array with 3 secured of 7 closed days, plus a new enrollment starting today → still \"3 of 7\"", () => {

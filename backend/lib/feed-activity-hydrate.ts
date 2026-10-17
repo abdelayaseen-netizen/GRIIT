@@ -184,6 +184,7 @@ export async function hydrateActivityEventsToPosts(
     lastReactorName: string | null;
     commentCount: number;
     visibility: "public" | "friends" | "private";
+    audience?: string | null;
   }[]
 > {
   if (events.length === 0) return [];
@@ -390,6 +391,8 @@ export async function hydrateActivityEventsToPosts(
       photoUrl: typeof md.photo_url === "string" ? md.photo_url : null,
       proofPhotoUrl: typeof md.proof_photo_url === "string" ? md.proof_photo_url : null,
       verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
+      // Build 90 09.3: who verified it, so the card can say "Verified by Strava" once. Additive.
+      verifiedBy: md.verification_method === "strava_activity" ? ("strava" as const) : null,
       caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
       createdAt: ev.created_at,
       respectCount: stat?.count ?? 0,
@@ -399,6 +402,7 @@ export async function hydrateActivityEventsToPosts(
         : null,
       commentCount: commentCounts.get(ev.id) ?? 0,
       visibility,
+      audience: typeof md.audience === "string" ? md.audience : null,
     };
   });
   const dropped = new Set<string>();

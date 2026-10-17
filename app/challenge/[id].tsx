@@ -12,6 +12,8 @@ import { trpcQuery, trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
 import { useProStatus } from "@/hooks/useProStatus";
 import { supabase } from "@/lib/supabase";
 import { calendarDay, dateKeyFromIso } from "@/lib/home-day-total";
@@ -38,6 +40,9 @@ import { formatTRPCError } from "@/lib/api";
 import { captureError } from "@/lib/sentry";
 import { ROUTES } from "@/lib/routes";
 import { setPendingChallengeId } from "@/lib/onboarding-pending";
+import { setKnownOnboardingCompleted } from "@/lib/onboarding-v2-routing";
+import { completeOnboardingV2 } from "@/components/onboarding/v2/completeOnboarding";
+import { joinLeftWaitingRoom, viewerInWaitingRoom } from "@/lib/invite-link";
 import { DS_V3 } from "@/lib/design-system";
 import {
   GROUP_CAP,
@@ -61,7 +66,7 @@ import {
 import { anyTimeWindowClosedToday } from "@/backend/lib/late-join-window";
 import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
 
-type JoinResult = { id?: string; start_at?: string };
+type JoinResult = import("@/lib/open-first-task").JoinWithFirstTask;
 
 type ChallengeRow = {
   id: string;
@@ -84,6 +89,7 @@ type ChallengeRow = {
   teamMembers?: {
     user_id: string;
     role?: string | null;
+    status?: string | null;
     profiles?: { display_name?: string | null; username?: string | null } | null;
   }[];
   tasks?: DetailTask[];
@@ -107,35 +113,45 @@ export default function ChallengeDetailScreen() {
       : Array.isArray(params.inviter)
         ? params.inviter[0]
         : undefined;
+  // Build 90 08.2: opened through griit://i/<id> (or an exact code in Discover search).
+  const viaInvite = (Array.isArray(params.invite) ? params.invite[0] : params.invite) === "1";
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
   const { activeChallenge, refetchAll, profile } = useApp();
+  const bootstrap = useHomeBootstrap(user?.id);
   const { isPro } = useProStatus();
   const queryClient = useQueryClient();
   const { error, showError, clearError } = useInlineError();
   const [joining, setJoining] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
 
+  const bootstrapEnrollments = Array.isArray(bootstrap.data?.activeChallenges)
+    ? (bootstrap.data.activeChallenges as { id?: string; challenge_id?: string; status?: string }[])
+    : null;
+  const activeChallengesFailed = (bootstrap.data?.failed ?? []).includes("activeChallenges");
   const myActiveListQuery = useQuery({
     queryKey: ["challenge", "listMyActive", id],
     queryFn: () => trpcQuery(TRPC.challenges.listMyActive) as Promise<unknown[]>,
-    enabled: !!user && !!id,
+    enabled: !!user && !!id && bootstrap.isFetched && activeChallengesFailed,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
+  const myActiveList = bootstrapEnrollments ?? (Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data : null);
+
   const activeChallengeId = useMemo(() => {
-    const list = myActiveListQuery.data;
+    const list = myActiveList;
     if (!id || !Array.isArray(list)) return undefined;
     const match = list.find((r) => (r as { challenge_id?: string }).challenge_id === id) as
       | { id?: string }
       | undefined;
     return match?.id;
-  }, [id, myActiveListQuery.data]);
+  }, [id, myActiveList]);
 
   const enrollmentsReady =
     !user ||
+    bootstrap.isFetched ||
     myActiveListQuery.isFetched ||
     myActiveListQuery.isError ||
     !!(id && activeChallenge?.challenge_id === id);
@@ -157,12 +173,17 @@ export default function ChallengeDetailScreen() {
     },
   });
 
+  const bootstrapSecuredKeys = Array.isArray(bootstrap.data?.securedDateKeys)
+    ? bootstrap.data.securedDateKeys
+    : null;
+  const securedKeysFailed = (bootstrap.data?.failed ?? []).includes("securedDateKeys");
   const securedKeysQuery = useQuery({
     queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
-    enabled: !!user,
+    enabled: !!user && bootstrap.isFetched && (securedKeysFailed || bootstrapSecuredKeys == null),
     staleTime: 5 * 60 * 1000,
   });
+  const securedDateKeys = bootstrapSecuredKeys ?? securedKeysQuery.data ?? [];
 
   useEffect(() => {
     if (!activeChallengeId) return;
@@ -171,8 +192,9 @@ export default function ChallengeDetailScreen() {
   }, [activeChallengeId, router, pathname]);
 
   const challengeQuery = useQuery({
-    queryKey: ["challenge", id],
-    queryFn: () => trpcQuery(TRPC.challenges.getById, { id: id! }) as Promise<ChallengeRow>,
+    queryKey: ["challenge", id, viaInvite ? "invite" : ""],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.getById, viaInvite ? { id: id!, viaInvite: true } : { id: id! }) as Promise<ChallengeRow>,
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
@@ -212,7 +234,7 @@ export default function ChallengeDetailScreen() {
     isError: challengeQuery.isError && !privateLocked,
   });
   const myActiveCount = countActiveEnrollments(
-    (Array.isArray(myActiveListQuery.data) ? myActiveListQuery.data : []) as { status?: string }[],
+    (Array.isArray(myActiveList) ? myActiveList : []) as { status?: string }[],
   );
   const tasks = catalog.tasks;
   const participationType = mapParticipationType(challenge?.participation_type);
@@ -231,6 +253,13 @@ export default function ChallengeDetailScreen() {
     viewerInviteStatus: challenge?.viewerInviteStatus,
     participationType,
     state,
+  });
+  // Build 90 08: a member of a duo / shared-goal run that has not started sees the waiting room.
+  const waitingRoom = viewerInWaitingRoom({
+    participationType: challenge?.participation_type,
+    runStatus: challenge?.run_status,
+    viewerId: user?.id,
+    memberIds: (challenge?.teamMembers ?? []).filter((m) => (m.status ?? "active") === "active").map((m) => m.user_id),
   });
   const creatorName = (() => {
     const members = challenge?.teamMembers ?? [];
@@ -280,7 +309,7 @@ export default function ChallengeDetailScreen() {
           exclusiveEndDateKey: exclusiveEnd,
           status: ended.status === "failed" ? "completed" : ended.status,
           todayKey,
-          securedDateKeys: securedKeysQuery.data ?? [],
+          securedDateKeys,
           durationDays,
         })
       : null;
@@ -290,7 +319,7 @@ export default function ChallengeDetailScreen() {
     : 1;
   const isAbandoned = ended?.status === "abandoned";
   const finishedLine =
-    finished && score && (securedKeysQuery.isFetched || securedKeysQuery.isError)
+    finished && score && (bootstrapSecuredKeys != null || securedKeysQuery.isFetched || securedKeysQuery.isError)
       ? isAbandoned
         ? leftRecordLine(endedOnDay, score.secured, score.elapsed)
         : finishedHeaderLine({
@@ -314,17 +343,28 @@ export default function ChallengeDetailScreen() {
   const onJoin = useCallback(async () => {
     if (!id || joining) return;
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Build 90 08.2: a brand-new guest who opened an invite link. The join is their first day;
+    // onboarding is skipped (first day simpler wins). The in-memory flag goes first so
+    // AuthRedirector does not replace this screen with onboarding while the join is in flight.
+    let linkGuest = false;
     if (!user) {
       const anon = await ensureAnonymousSession();
       if (anon.kind !== "ok") {
         showError(anon.message ?? "Could not start a guest session.");
         return;
       }
+      if (anon.user?.id) {
+        setKnownOnboardingCompleted(anon.user.id, true);
+        linkGuest = true;
+      }
       await setPendingChallengeId(id);
     }
     setJoining(true);
     try {
-      const result = (await trpcMutate(TRPC.challenges.join, { challengeId: id })) as JoinResult;
+      const result = (await trpcMutate(
+        TRPC.challenges.join,
+        viaInvite ? { challengeId: id, viaInvite: true } : { challengeId: id },
+      )) as JoinResult;
       void trpcMutate(TRPC.referrals.markJoinedChallenge, { challengeId: id }).catch((refErr: unknown) => {
         captureError(refErr, "ChallengeDetailMarkJoinedChallenge");
       });
@@ -341,15 +381,33 @@ export default function ChallengeDetailScreen() {
       void refetchAll().catch((e: unknown) => {
         captureError(e, "ChallengeDetailRefetchAfterJoin");
       });
-      void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
-      void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
-      void myActiveListQuery.refetch();
       if (result?.id) {
-        const line = day1StartCopy(result.start_at, timeZone);
-        if (line === JOIN_CAPTION_TOMORROW) router.replace(ROUTES.TABS_HOME as never);
-        else router.replace(ROUTES.CHALLENGE_ACTIVE(result.id) as never);
+        void (day1StartCopy(result.start_at, timeZone) === JOIN_CAPTION_TOMORROW);
+        const { firstTaskHrefAfterJoin } = await import("@/lib/enrich-join-first-task");
+        const taskHref = await firstTaskHrefAfterJoin(result, id, "home");
+        if (linkGuest) {
+          await completeOnboardingV2({ destination: taskHref ?? ROUTES.TABS_HOME });
+          // On a cold start the redirector sent the sessionless app to onboarding before the
+          // link resolved, so this page sits on a stale `onboarding` entry. Seen live: "Not yet"
+          // on the first task popped to it and it replayed the exit href (the task again).
+          // Drop everything under this page so the task is the only screen.
+          if (router.canDismiss()) router.dismissAll();
+        }
+        router.replace((taskHref ?? ROUTES.TABS_HOME) as never);
+      } else if (joinLeftWaitingRoom(result)) {
+        // Duo / shared goal with a seat still open: this page becomes the waiting room.
+        if (linkGuest) {
+          await completeOnboardingV2({ destination: ROUTES.CHALLENGE_ID(id) });
+          if (router.canDismiss()) {
+            // Same stale `onboarding` entry as above: make the waiting room the only screen.
+            router.dismissAll();
+            router.replace(`${ROUTES.CHALLENGE_ID(id)}?invite=1` as never);
+            return;
+          }
+        }
+        await challengeQuery.refetch();
       }
     } catch (err: unknown) {
       captureError(err, { flow: "challenge_join", challengeId: id });
@@ -375,7 +433,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setJoining(false);
     }
-  }, [id, joining, user, showError, refetchAll, queryClient, myActiveListQuery, router, goPaywall, timeZone]);
+  }, [id, joining, user, showError, refetchAll, queryClient, router, goPaywall, timeZone, challengeQuery, viaInvite]);
 
   const resolveInviteId = useCallback(async (): Promise<string | null> => {
     if (inviteIdParam) return inviteIdParam;
@@ -404,15 +462,18 @@ export default function ChallengeDetailScreen() {
       void registerPushTokenWithBackend().catch(() => {
         /* non-fatal */
       });
-      void refetchAll().catch((e: unknown) => {
+      await refetchAll().catch((e: unknown) => {
         captureError(e, "ChallengeDetailRefetchAfterAccept");
       });
-      void queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
       void queryClient.invalidateQueries({ queryKey: ["profile", user?.id, "activeChallenges"] });
       void queryClient.invalidateQueries({ queryKey: ["discover"] });
       void queryClient.invalidateQueries({ queryKey: ["challenge", id] });
-      const refreshed = await myActiveListQuery.refetch();
-      const list = Array.isArray(refreshed.data) ? (refreshed.data as { challenge_id?: string; id?: string }[]) : [];
+      const boot = user?.id
+        ? queryClient.getQueryData<{ activeChallenges?: { challenge_id?: string; id?: string }[] }>(
+            homeBootstrapQueryKey(user.id),
+          )
+        : undefined;
+      const list = Array.isArray(boot?.activeChallenges) ? boot.activeChallenges : [];
       const activeId = afterAcceptActiveId(result, list, id);
       if (activeId) {
         router.replace(ROUTES.CHALLENGE_ACTIVE(activeId) as never);
@@ -428,7 +489,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setJoining(false);
     }
-  }, [id, joining, resolveInviteId, showError, refetchAll, queryClient, user?.id, myActiveListQuery, router]);
+  }, [id, joining, resolveInviteId, showError, refetchAll, queryClient, user?.id, router]);
 
   const onNotNow = useCallback(() => {
     goBack();
@@ -526,7 +587,7 @@ export default function ChallengeDetailScreen() {
           onNotNow={onNotNow}
           onUpgrade={goPaywall}
           onRetry={() => void challengeQuery.refetch()}
-          todayAlreadySecured={(securedKeysQuery.data ?? []).includes(todayKey)}
+          todayAlreadySecured={securedDateKeys.includes(todayKey)}
           windowClosed={anyTimeWindowClosedToday(
             (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[],
             new Date(),
@@ -536,6 +597,7 @@ export default function ChallengeDetailScreen() {
           peopleNames={(challenge?.teamMembers ?? [])
             .map((m) => (m.profiles?.display_name ?? m.profiles?.username ?? "").trim())
             .filter((n) => n.length > 0 && !/^user_/i.test(n))}
+          waitingRoom={waitingRoom && id && !finished ? { challengeId: id } : undefined}
         />
         <Sheet
           visible={limitOpen}

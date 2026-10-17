@@ -4,6 +4,7 @@
 
 import type { GateTime, PhotoMode, TaskGate, TaskModelType } from "@/backend/lib/task-model";
 import { SELF_REPORTED, taskQuantityLine, wizardGateLine } from "@/lib/task-ui";
+import { VERIFIED_BY_STRAVA, type StravaSport, type TaskVerify } from "@/lib/strava-verify";
 import {
   DEFAULT_BETWEEN_END_HHMM,
   DEFAULT_BETWEEN_START_HHMM,
@@ -102,7 +103,7 @@ export type AddTaskStarter = {
 export const ADD_TASK_STARTERS: AddTaskStarter[] = [
   { label: "Pray", name: "Pray", type: "check_off" },
   { label: "Read", name: "Read", type: "counter", counterTarget: "10", counterUnit: "pages" },
-  { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "oz" },
+  { label: "Water", name: "Water", type: "counter", counterTarget: "8", counterUnit: "cups" },
   { label: "Journal", name: "Journal", type: "text", minWords: "30" },
   { label: "Workout", name: "Workout", type: "check_off" },
   { label: "Stretch", name: "Stretch", type: "check_off" },
@@ -130,6 +131,9 @@ export type AddTaskDraft = {
   placeLat: number | null;
   placeLng: number | null;
   placeRadius: number;
+  /** Build 90 09.3: run tasks only. "strava" stores verification_method strava_activity. */
+  verify: TaskVerify;
+  stravaSport: StravaSport;
 };
 
 export const ADD_TASK_DEFAULT: AddTaskDraft = {
@@ -154,7 +158,22 @@ export const ADD_TASK_DEFAULT: AddTaskDraft = {
   placeLat: null,
   placeLng: null,
   placeRadius: 100,
+  verify: "self",
+  stravaSport: "Run",
 };
+
+/** Build 90 09.3: the Strava rule for a run draft. Only when the task verifies with Strava. */
+export function stravaRuleFromDraft(
+  draft: Pick<AddTaskDraft, "type" | "verify" | "runDistance" | "runUnit" | "stravaSport">,
+): { sport: StravaSport; min_distance_m?: number } | null {
+  if (draft.type !== "run" || draft.verify !== "strava") return null;
+  const distance = parseFloat(draft.runDistance);
+  const rule: { sport: StravaSport; min_distance_m?: number } = { sport: draft.stravaSport ?? "Run" };
+  if (Number.isFinite(distance) && distance > 0) {
+    rule.min_distance_m = Math.round(distance * (draft.runUnit === "mi" ? 1609.344 : 1000));
+  }
+  return rule;
+}
 
 export function proofFromDraft(draft: Pick<AddTaskDraft, "camera" | "time" | "location">): AddTaskProof {
   if (draft.location) return "photo_place";
@@ -294,12 +313,17 @@ export function previewFromDraft(draft: AddTaskDraft): { title: string; caption:
   ) {
     return {
       title,
-      caption: [taskQuantityLine(task), photoPreviewLabel(mode), "Time window not set"]
+      caption: [taskQuantityLine(task), stravaRuleFromDraft(draft) ? VERIFIED_BY_STRAVA : photoPreviewLabel(mode), "Time window not set"]
         .filter(Boolean)
         .join(" · "),
     };
   }
-  return { title, caption: wizardGateLine(task) };
+  const caption = wizardGateLine(task);
+  // 09.3: a Strava-verified run says so once, where "Self-reported" would be.
+  if (stravaRuleFromDraft(draft)) {
+    return { title, caption: caption.includes(SELF_REPORTED) ? caption.replace(SELF_REPORTED, VERIFIED_BY_STRAVA) : `${caption} · ${VERIFIED_BY_STRAVA}` };
+  }
+  return { title, caption };
 }
 
 export function placeAccuracyLine(meters: number): string {
@@ -328,6 +352,9 @@ export type AddTaskPayload = {
   requirePhoto: boolean;
   photoMode: PhotoMode;
   unit?: string;
+  /** Build 90 09.3: "strava_activity" with a rule, or absent (self-reported). */
+  verificationMethod?: "strava_activity";
+  verificationRuleJson?: { sport: StravaSport; min_distance_m?: number };
 };
 
 export function payloadFromDraft(draft: AddTaskDraft): AddTaskPayload {
@@ -342,6 +369,7 @@ export function payloadFromDraft(draft: AddTaskDraft): AddTaskPayload {
         ? config.distance
         : undefined;
   const unit = typeof config.unit === "string" && config.unit ? config.unit : undefined;
+  const stravaRule = stravaRuleFromDraft(draft);
   return {
     name: draft.name.trim(),
     type: draft.type,
@@ -354,6 +382,7 @@ export function payloadFromDraft(draft: AddTaskDraft): AddTaskPayload {
     requirePhoto: photoModeFromDraft(draft) === "required",
     photoMode: photoModeFromDraft(draft),
     unit,
+    ...(stravaRule ? { verificationMethod: "strava_activity" as const, verificationRuleJson: stravaRule } : {}),
   };
 }
 
@@ -371,6 +400,8 @@ export function draftFromWizardTask(task: {
   photoMode?: PhotoMode;
   locationName?: string;
   radiusMeters?: number;
+  verificationMethod?: string | null;
+  verificationRuleJson?: Record<string, unknown> | null;
 }): AddTaskDraft {
   const type: TaskModelType =
     task.type === "timer" || task.type === "counter" || task.type === "text" || task.type === "run"
@@ -433,6 +464,8 @@ export function draftFromWizardTask(task: {
     placeLat,
     placeLng,
     placeRadius,
+    verify: type === "run" && task.verificationMethod === "strava_activity" ? "strava" : "self",
+    stravaSport: task.verificationRuleJson?.sport === "Ride" ? "Ride" : "Run",
   };
 }
 

@@ -15,11 +15,12 @@ import {
 import { eventIsShared } from "./is-friend";
 
 describe("sharedOnInsert R2", () => {
-  it("old-client omit writes shared; shareChoicePending true writes unshared", () => {
-    expect(sharedOnInsert(undefined)).toBe(true);
-    expect(sharedOnInsert(false)).toBe(true);
+  it("a completion insert stays unanswered until an explicit share tap", () => {
+    expect(sharedOnInsert(undefined)).toBe(false);
+    expect(sharedOnInsert(false)).toBe(false);
     expect(sharedOnInsert(true)).toBe(false);
-    expect(shareStateOnInsert(undefined)).toBe("shared");
+    expect(shareStateOnInsert(undefined)).toBe("unanswered");
+    expect(shareStateOnInsert(false)).toBe("unanswered");
     expect(shareStateOnInsert(true)).toBe("unanswered");
     expect(shareColumns("shared").shared).toBe(true);
     expect(shareColumns("kept").shared).toBe(false);
@@ -66,18 +67,18 @@ describe("feed vs record", () => {
 });
 
 describe("source: complete, flip, feed, record/roster/grid", () => {
-  it("self-report with the flag is unshared; omit stays shared for old clients", () => {
+  it("every completion insert is unanswered, including when the flag is omitted", () => {
     expect(shareColumnsForComplete(true)).toMatchObject({
       shared: false,
       share_state: "unanswered",
     });
     expect(shareColumnsForComplete(undefined)).toMatchObject({
-      shared: true,
-      share_state: "shared",
+      shared: false,
+      share_state: "unanswered",
     });
     expect(shareColumnsForComplete(false)).toMatchObject({
-      shared: true,
-      share_state: "shared",
+      shared: false,
+      share_state: "unanswered",
     });
   });
 
@@ -90,6 +91,7 @@ describe("source: complete, flip, feed, record/roster/grid", () => {
     expect(before).not.toContain("if (isPhotoProof)");
     expect(before).not.toContain('taskType === "photo"');
     expect(src).toContain("...shareCols");
+    expect(src).toContain('shareColumns("unanswered")');
     expect(src).toContain("shareProof:");
     expect(src).toContain("getSupabaseServer()");
     expect(src).toContain("canFlipShare");

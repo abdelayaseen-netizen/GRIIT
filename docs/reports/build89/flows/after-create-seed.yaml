@@ -1,0 +1,33 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "7 days. Day 1 is tomorrow."
+- tapOn: "Continue"
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- tapOn: "e.g. Read 10 pages"
+- inputText: "Evening journal"
+- tapOn: "What you do"
+- scrollUntilVisible:
+    element: "Add task"
+    direction: DOWN
+    timeout: 15000
+- tapOn: "Add task"
+- tapOn: "Starter packs"
+- tapOn: "Athlete"
+- tapOn: "Continue"
+- assertVisible: "How strict?"
+- assertVisible: "Strict"
+- assertNotVisible: "Hard"
+- tapOn: "Invite.*"
+- tapOn: "Review"
+- assertVisible: "Evening journal"
+- assertVisible: "Only people you invite"
+- assertNotVisible: "Day 1 of 7 is today"
+- tapOn: "Start the challenge"
+- extendedWaitUntil:
+    visible: "Evening journal"
+    timeout: 20000
+- assertVisible: "Morning run"
+- assertVisible: "Workout"
+- assertVisible: "Body check-in"
+- assertNotVisible: "Day 1 of 7 is today"

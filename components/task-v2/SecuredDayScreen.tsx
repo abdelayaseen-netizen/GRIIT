@@ -23,6 +23,7 @@ import { PROOF_SHARE_FAILED } from "@/lib/proof-moment";
 import {
   SECURED_LOAD_ERROR,
   SECURED_LOAD_RETRY,
+  SECURED_MEANS,
   SECURED_PHOTO_H,
   SECURED_SELF,
   SECURED_TILE,
@@ -33,6 +34,8 @@ import {
   type SecuredProof,
   type SecuredSelfRow,
 } from "@/lib/secured-day";
+import InviteLinkRow from "@/components/InviteLinkRow";
+import { INVITE_AFTER_FIRST_DAY_BODY, INVITE_AFTER_FIRST_DAY_HEADING } from "@/lib/invite-link";
 
 const PT = DS_V3.space.xs / 4;
 const TILE_GAP = 6;
@@ -60,6 +63,7 @@ export default function SecuredDayScreen({
   onDone,
   username,
   freezeNote,
+  invite,
 }: {
   streak: number;
   proofs: SecuredProof[];
@@ -82,6 +86,8 @@ export default function SecuredDayScreen({
   onDone: () => void;
   username?: string | null;
   freezeNote?: string | null;
+  /** Build 90 08.1: after the first secured day, the invite link with Copy and Share. */
+  invite?: { challengeId: string; challengeName: string } | null;
 }) {
   const n = proofs.length;
   const overflow = securedOverflowLabel(n);
@@ -141,7 +147,7 @@ export default function SecuredDayScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.body,
-          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.lg },
+          { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section },
         ]}
       >
         <Pressable
@@ -165,6 +171,7 @@ export default function SecuredDayScreen({
         </View>
         <View style={styles.center}>
           <Text style={styles.today}>{title}</Text>
+          <Text style={styles.caption}>{SECURED_MEANS}</Text>
           {lines.map((line) => (
             <Text key={line} style={styles.caption}>{line}</Text>
           ))}
@@ -194,10 +201,11 @@ export default function SecuredDayScreen({
         {n === 0 && selfReported.length > 0 ? (
           <Card>
             {selfReported.map((c) => (
-              <View key={c.name} style={styles.selfRow}>
+              // 06.2: the caption above already says "Self-reported." once; the row
+              // keeps the glyph and the challenge line only.
+              <View key={c.name} style={styles.selfRow} accessibilityLabel={`${securedChallengeLine(c.name, c.day, c.length)}, ${SECURED_SELF}`}>
                 <ShieldOff size={ICON} color={DS_V3.color.textSecondary} />
                 <Text style={styles.selfName}>{securedChallengeLine(c.name, c.day, c.length)}</Text>
-                <Text style={styles.selfTag}>{SECURED_SELF}</Text>
               </View>
             ))}
           </Card>
@@ -229,9 +237,18 @@ export default function SecuredDayScreen({
             <Text style={styles.photoCap}>{names}</Text>
           </>
         ) : null}
+        {invite ? (
+          <View style={styles.invite} testID="secured-invite">
+            <Text style={styles.inviteHeading}>{INVITE_AFTER_FIRST_DAY_HEADING}</Text>
+            <Text style={styles.caption}>{INVITE_AFTER_FIRST_DAY_BODY}</Text>
+            <InviteLinkRow challengeId={invite.challengeId} challengeName={invite.challengeName} />
+          </View>
+        ) : null}
         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
       </ScrollView>
-      <View style={[styles.footer, { bottom: DS_V3.space.gutter }]}>
+      {/* Build 90 06: the footer used to carry `bottom: gutter` on a relatively
+          positioned View, which slid it up over the last row of the scroll content. */}
+      <View style={styles.footer}>
         {offerShare ? (
           <>
             <ShareChoice
@@ -419,11 +436,15 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
-  selfTag: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
+  invite: {
+    gap: DS_V3.space.sm,
+    marginTop: DS_V3.space.md,
+  },
+  inviteHeading: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   fail: {
     fontSize: DS_V3.type.caption.fontSize,

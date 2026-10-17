@@ -1,0 +1,35 @@
+{
+  "personaId": "p23",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:18:16.662Z",
+  "endedAt": "2026-10-14T23:19:38.043Z",
+  "steps": 6,
+  "durationSec": 81,
+  "goals": [
+    {
+      "id": "p23-g1",
+      "text": "Find report and block on a post or profile.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "e3febfdd-a07d-4a47-bc18-e0fb6863f87b",
+  "isTest": true,
+  "cleanup": "kept"
+}

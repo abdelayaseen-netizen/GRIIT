@@ -1,0 +1,64 @@
+appId: app.griit.challenge-tracker
+---
+# Camera capture on the simulator. Email account so a later post can be public.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- extendedWaitUntil:
+    visible: "Drink water and post a photo"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post to friends"
+    timeout: 20000
+- tapOn: "Post to friends"
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 60000
+- tapOn: "Back to today"
+- extendedWaitUntil:
+    visible: "Save your streak."
+    timeout: 20000

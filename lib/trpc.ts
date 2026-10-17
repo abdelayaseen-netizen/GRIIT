@@ -1,13 +1,37 @@
 import { serialize, deserialize } from "superjson";
 import { supabase } from "./supabase";
 import { getTrpcUrl, fetchWithRetry } from "./api";
-import { notifySessionExpired, shouldNotifySessionExpired } from "./auth-expiry";
+import { notifySessionExpired, refreshVerdictAfter401, shouldNotifySessionExpired } from "./auth-expiry";
 import { captureError } from "@/lib/sentry";
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   return token ? { authorization: `Bearer ${token}` } : {};
+}
+
+/**
+ * 401 from the API. Refresh once; sign out only when the auth server rejects the
+ * refresh (06.9). A refresh that fails on the network keeps the session.
+ */
+async function handleUnauthorized(): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!shouldNotifySessionExpired(!!session)) return;
+  let verdict: ReturnType<typeof refreshVerdictAfter401> = "keep";
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    verdict = refreshVerdictAfter401({ session: data.session, error });
+  } catch {
+    verdict = "keep";
+  }
+  if (verdict === "keep") return;
+  const userId = session?.user?.id;
+  await supabase.auth.signOut();
+  const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
+  await runClientSignOutCleanup(userId);
+  const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+  await clearOnboardingStorage();
+  notifySessionExpired();
 }
 
 export async function trpcQuery<T = unknown>(
@@ -31,16 +55,7 @@ export async function trpcQuery<T = unknown>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (shouldNotifySessionExpired(!!session)) {
-        const userId = session?.user?.id;
-        await supabase.auth.signOut();
-        const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-        await runClientSignOutCleanup(userId);
-        const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-        await clearOnboardingStorage();
-        notifySessionExpired();
-      }
+      await handleUnauthorized();
     }
     let errorMessage = `tRPC query failed: ${path} (${response.status})`;
     let errorData: Record<string, unknown> | undefined;
@@ -73,34 +88,32 @@ export async function trpcMutate<T = unknown>(
   input?: unknown,
 ): Promise<T> {
   const url = getTrpcUrl();
-  const fullUrl = `${url}/${path}`;
   const authHeaders = await getAuthHeaders();
 
-  const body = JSON.stringify(serialize(input ?? {}));
+  const response = await postTrpc(path, input, authHeaders);
 
-  const response = await fetchWithRetry(fullUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders,
-    },
-    body,
-  });
+  async function postTrpc(procedure: string, payload: unknown, headers: Record<string, string>): Promise<Response> {
+    const init: RequestInit = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: JSON.stringify(serialize(payload ?? {})),
+    };
+    let next = await fetchWithRetry(`${url}/${procedure}`, init);
+    if (next.status === 429 && procedure === "checkins.complete") {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      next = await fetchWithRetry(`${url}/${procedure}`, init);
+    }
+    return next;
+  }
 
   const responseText = await response.text().catch(() => "");
 
   if (!response.ok) {
     if (response.status === 401) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (shouldNotifySessionExpired(!!session)) {
-        const userId = session?.user?.id;
-        await supabase.auth.signOut();
-        const { runClientSignOutCleanup } = await import("@/lib/signout-cleanup");
-        await runClientSignOutCleanup(userId);
-        const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-        await clearOnboardingStorage();
-        notifySessionExpired();
-      }
+      await handleUnauthorized();
     }
     let errorMessage = `tRPC mutation failed: ${path} (${response.status})`;
     let errorData: Record<string, unknown> | undefined;

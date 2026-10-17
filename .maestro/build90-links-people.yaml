@@ -1,0 +1,261 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 05.1: tapping a person opens that person, from someone else's point of view.
+# Run after build90-links.yaml: account A (MAESTRO_EMAIL, password Build90-links-test)
+# has posted in 7K Steps. This flow:
+#   1. creates account B (MAESTRO_EMAIL_B), opens the Everyone feed, taps A's name on
+#      A's post → A's profile (Follow is there), then likes and comments on A's post;
+#   2. signs out, signs back in as A, opens Activity → Notifications, taps the avatar on
+#      B's like → B's profile; opens the post from the comment row and taps B's name on
+#      the comment → B's profile.
+# Needs the chunk 05 server (notifications and comments keep is_test actors for a test viewer).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL_B}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-links-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- extendedWaitUntil:
+    visible: "Not yet"
+    timeout: 15000
+- tapOn: "Not yet"
+# The stack under the task is Settings (the account screen opened from there).
+- extendedWaitUntil:
+    visible: "Go back|Home"
+    timeout: 15000
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "0 of 1 done"
+    timeout: 20000
+# The feed page in memory was fetched while B was still a guest (an anonymous viewer is not
+# a test account, so every b89 author was filtered out). A cold relaunch fetches it as B.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "0 of 1 done"
+    timeout: 60000
+# The wait matches views mounted behind the splash (SPLASH_MAX_MS 1800); pause before the next
+# gesture so it lands on Home, not the splash (08 follow-up, from /tmp/b90-08-relaunch.yaml).
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
+
+# The Everyone feed: A's post is the newest row. The author name opens A's profile.
+- swipe:
+    start: 50%, 80%
+    end: 50%, 40%
+    duration: 600
+- extendedWaitUntil:
+    visible:
+      id: "feed-post-challenge"
+    timeout: 20000
+- takeScreenshot: build90-05-people-feed
+- tapOn:
+    text: ".* profile"
+    index: 0
+- extendedWaitUntil:
+    visible: "Follow"
+    timeout: 20000
+- assertVisible: "Go back"
+# The page must resolve A, not show the raw uuid (an unrefreshed guest token hid every
+# other profile behind RLS before the 05.1 fix in lib/anon-auth.ts).
+- extendedWaitUntil:
+    visible: ${MAESTRO_EMAIL.split('@')[0]}
+    timeout: 20000
+- takeScreenshot: build90-05-people-feed-author
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible:
+      id: "feed-post-challenge"
+    timeout: 20000
+
+# Like and comment on A's post so A gets two notifications from B.
+- tapOn:
+    text: "Like"
+    index: 0
+- tapOn:
+    text: "Comment"
+    index: 0
+- extendedWaitUntil:
+    visible: "Add a comment.*"
+    timeout: 15000
+- tapOn: "Add a comment.*"
+- inputText: "nice walk"
+- tapOn: "Send comment"
+- extendedWaitUntil:
+    visible: "nice walk"
+    timeout: 15000
+- takeScreenshot: build90-05-people-comment
+- assertNotVisible: "Someone"
+# In the comments sheet every author is tappable; it closes the sheet and opens the
+# person. Earlier runs left other test accounts' comments above B's, so index 0 is
+# another person: their profile must resolve (Follow, a @handle, no uuid).
+# Chunk 07: `hideKeyboard` is unreliable on this keyboard (two runs in a row could not
+# dismiss it); a tap on the sheet heading closes it the same way a finger would.
+- tapOn: "Comments"
+- tapOn:
+    text: ".* profile"
+    index: 0
+- extendedWaitUntil:
+    visible: "Follow|Edit profile"
+    timeout: 20000
+- assertVisible: "@.*"
+- takeScreenshot: build90-05-people-comment-author
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 15000
+
+# Sign out B.
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      text: "Sign out"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Sign out"
+- extendedWaitUntil:
+    visible: "I already have an account|Log in to GRIIT"
+    timeout: 30000
+
+# Sign in as A. Sign out lands on either the welcome screen or the login form.
+- tapOn:
+    text: "I already have an account"
+    optional: true
+- tapOn:
+    text: "Continue with email"
+    optional: true
+# app/auth/login.tsx: tap the inputs (placeholder "Email address"; the second "Password" is
+# the field), not the labels (06.5 is the label-focus fix, next chunk).
+- extendedWaitUntil:
+    visible: "Log in to GRIIT"
+    timeout: 15000
+- tapOn: "Email address"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    text: "Password"
+    index: 1
+- inputText: "Build90-links-test"
+- hideKeyboard
+- tapOn: "Log in to GRIIT"
+- extendedWaitUntil:
+    visible: "1 of 1 done|Activity.*"
+    timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
+
+# Notifications: the avatar on B's like opens B's profile, even though the row opens the post.
+# A has B's like and comment waiting, so the tab reads "Activity, unread" (08 follow-up).
+- tapOn: "Activity.*"
+- extendedWaitUntil:
+    visible:
+      id: "notif-actor"
+    timeout: 30000
+- takeScreenshot: build90-05-people-notifications
+- tapOn:
+    id: "notif-actor"
+    index: 0
+- extendedWaitUntil:
+    visible: "Follow"
+    timeout: 20000
+- assertVisible: "Go back"
+- takeScreenshot: build90-05-people-notif-actor
+- tapOn: "Go back"
+
+# The comment row opens the post; on the post, B's name on the comment opens B.
+- extendedWaitUntil:
+    visible: ".*commented.*|.*comment.*"
+    timeout: 20000
+- tapOn: ".*commented.*|.*comment.*"
+- extendedWaitUntil:
+    visible: "nice walk"
+    timeout: 20000
+- takeScreenshot: build90-05-people-post-detail
+# The first ".* profile" on the post screen is the author header (A, own tab); the comment
+# author is the next one.
+- tapOn:
+    text: ".* profile"
+    index: 1
+- extendedWaitUntil:
+    visible: "Follow"
+    timeout: 20000
+- assertVisible: "Go back"
+- takeScreenshot: build90-05-people-post-comment-author

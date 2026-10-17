@@ -1,0 +1,36 @@
+{
+  "personaId": "p11",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:42:11.938Z",
+  "endedAt": "2026-10-14T22:43:06.747Z",
+  "steps": 7,
+  "durationSec": 55,
+  "goals": [
+    {
+      "id": "p11-g1",
+      "text": "Find a timer task and start it.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "087c4f7a-c03c-4061-af4d-f8fb06fe8974",
+  "isTest": true,
+  "cleanup": "kept"
+}

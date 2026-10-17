@@ -1,12 +1,14 @@
 import { photoModeFor } from "@/backend/lib/task-model";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Image, Keyboard } from "react-native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import * as FileSystem from "expo-file-system/legacy";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { useApp } from "@/contexts/AppContext";
+import { trackUsage } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -18,7 +20,17 @@ import { evaluateScheduleWindow } from "@/lib/schedule-window";
 import { haversineDistance } from "@/lib/geo";
 import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
 import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
-import { uploadProofImageFromBase64 } from "@/lib/uploadProofImage";
+import { uploadProofImageFromFile } from "@/lib/uploadProofImage";
+import { shrinkProofForUpload } from "@/lib/proof-resize";
+import { finishWaitsOnLocation, LOCATION_FIX_TIMEOUT_MS } from "@/lib/finish-location";
+import { timerRequiredSeconds } from "@/lib/timer-duration";
+import {
+  confirmOptimisticTaskDone,
+  markOptimisticTaskDone,
+  rollbackOptimisticTaskDone,
+  setOptimisticRetry,
+} from "@/lib/optimistic-home";
+import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
 import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
@@ -32,6 +44,9 @@ import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
 import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
 import { routeAfterSave } from "@/lib/route-after-save";
+import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
+import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
+import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { shareProgressImage } from "@/lib/share";
 import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
 import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
@@ -41,7 +56,7 @@ import {
   saveLocalTimerSession,
 } from "@/lib/task-session-store";
 import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
-import { startLiveActivity, endLiveActivity } from "@/lib/live-activity";
+import { startLiveActivity, endLiveActivity, showLiveActivityDone } from "@/lib/live-activity";
 import {
   FINISH_SLOW_MS,
   finishAfterMutation,
@@ -50,21 +65,22 @@ import {
   type SaveState,
   type ShareIntent,
 } from "@/lib/finish-moment";
-import { WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
+import { homeDayLine, shownChallengeDay } from "@/lib/home-day-total";
+import { prepareJournalUnmount } from "@/lib/journal-leave";
 import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
 import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
 import {
   RUN_PHOTO_AFTER,
   TIMER_PHOTO_AFTER,
+  timerElapsedSeconds,
   workDoneLine,
-  workStepDay,
   workThenCamera,
 } from "@/lib/work-step";
 import {
   flowAllowsSubmit,
   flowFooterBrand,
   flowFooterCaption,
-  flowHeaderTitle,
   gateTimeFromConfig,
   withRequiredPhotoGate,
   isWindowClosedError,
@@ -82,8 +98,10 @@ import {
   fmtMmSs,
   initialStep,
   isHonest,
+  logSanityCheck,
   resolveGoBack,
   resolveGoBackFromFailure,
+  resolveLogKind,
   resolveRetryFailedSubmit,
   shouldBlockOnWindow,
   submitWithoutPhotoNext,
@@ -92,7 +110,43 @@ import {
   timerShouldAutoSubmit,
   verificationKindFor,
   wordCount,
+  type LogSanity,
 } from "@/lib/task-flow-state";
+
+type FinishTiming = {
+  photoReadMs: number;
+  uploadMs: number;
+  completeMs: number;
+  secureMs: number;
+  shareMs: number;
+  homeRefetchMs: number;
+  doneVisibleMs: number;
+};
+
+const EMPTY_TIMING: FinishTiming = {
+  photoReadMs: 0,
+  uploadMs: 0,
+  completeMs: 0,
+  secureMs: 0,
+  shareMs: 0,
+  homeRefetchMs: 0,
+  doneVisibleMs: 0,
+};
+
+function readLocationFix(): Promise<Location.LocationObject> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Couldn't read your location.")), LOCATION_FIX_TIMEOUT_MS);
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      .then((loc) => {
+        clearTimeout(timer);
+        resolve(loc);
+      })
+      .catch((err: unknown) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error("Couldn't read your location."));
+      });
+  });
+}
 
 export function useTaskFlowV2() {
   const router = useRouter();
@@ -108,10 +162,17 @@ export function useTaskFlowV2() {
     originTab?: string;
   }>();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { completeTask, secureDay, profile } = useApp();
+  const timingRef = useRef<FinishTiming>({ ...EMPTY_TIMING });
+  const shownLocalRef = useRef(false);
 
   const taskId = firstString(params.taskId);
   const activeChallengeId = firstString(params.activeChallengeId);
+  useEffect(() => {
+    if (!taskId) return;
+    trackUsage("task_started");
+  }, [taskId]);
   const taskType = (firstString(params.taskType) || "manual").toLowerCase();
   const taskName = firstString(params.taskName) || "Untitled task";
   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
@@ -120,19 +181,17 @@ export function useTaskFlowV2() {
   const originTab = originTabFromParam(firstString(params.originTab));
   const userId = user?.id ?? "";
   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
-  const timeZone = profile?.timezone?.trim() || "UTC";
   const enrollmentQ = useQuery({
     queryKey: ["activeChallenge", "startAt", activeChallengeId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("active_challenges")
-        .select("start_at, started_at, created_at, challenge_id")
+        .select("start_at, created_at, challenge_id")
         .eq("id", activeChallengeId)
         .maybeSingle();
       if (error) throw error;
       return data as {
         start_at?: string | null;
-        started_at?: string | null;
         created_at?: string | null;
         challenge_id?: string | null;
       } | null;
@@ -140,12 +199,18 @@ export function useTaskFlowV2() {
     enabled: !!activeChallengeId,
     staleTime: 60 * 1000,
   });
-  const startAt =
-    enrollmentQ.data?.start_at ?? enrollmentQ.data?.started_at ?? enrollmentQ.data?.created_at ?? null;
-  const dayReady = !activeChallengeId || enrollmentQ.isFetched;
-  const currentDay = dayReady ? workStepDay(startAt, timeZone, dateKey, durationDays) : 0;
-  const requiredSeconds = Math.max(1, (config.min_duration_minutes ?? 10) * 60);
-  const minWords = config.min_words ?? 150;
+  const dayReady = !activeChallengeId || enrollmentQ.isSuccess;
+  const startAt = enrollmentQ.isSuccess
+    ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.created_at ?? null)
+    : null;
+  const currentDay = shownChallengeDay(
+    startAt,
+    profile?.timezone ?? "UTC",
+    dateKey,
+    durationDays,
+  );
+  const requiredSeconds = timerRequiredSeconds(config);
+  const minWords = journalMinWords(config.min_words);
   const counterGoal = resolveConfigCounterTarget(config) || 8;
   const taskRequired = config.required !== false;
   const gates = useMemo(
@@ -165,12 +230,17 @@ export function useTaskFlowV2() {
     windowState === "closed" ? "window_closed" : initialStep(taskType, withRequiredPhotoGate(config as Record<string, unknown>)),
   );
   const [caption, setCaption] = useState("");
+  const [audience, setAudience] = useState<PostAudience>("friends");
+  const audienceRef = useRef(audience);
+  audienceRef.current = audience;
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [discardAsk, setDiscardAsk] = useState(false);
   const [text, setText] = useState("");
+  const [journalFieldOn, setJournalFieldOn] = useState(true);
   const [count, setCount] = useState(0);
   const countRef = useRef(count);
+  const finishEarlyRef = useRef<{ seconds: number } | null>(null);
   countRef.current = count;
   const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
@@ -179,8 +249,22 @@ export function useTaskFlowV2() {
   const [unit, setUnit] = useState<DistanceUnit>(() =>
     runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
   );
-  const [kind, setKind] = useState("Lift");
+  // Build 90 03.1: no preselected activity type. The chip is part of the log.
+  const [kind, setKind] = useState("");
+  const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
+  // Build 90 04.1: the payload waiting on the post choice sheet.
+  const [postChoice, setPostChoice] = useState<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(null);
+  const [postChoiceAudience, setPostChoiceAudience] = useState<PostAudience>(POST_CHOICE_DEFAULT);
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
+  // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
+  const logKind = resolveLogKind({
+    taskType,
+    taskName,
+    trackingMode: config.tracking_mode ?? null,
+    unit: config.unit ?? null,
+    targetValue: typeof config.target_value === "number" ? config.target_value : null,
+  });
+  const isLogTask = taskType === "run" || taskType === "workout";
   const [soundOn, setSoundOn] = useState(true);
   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
   const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
@@ -257,7 +341,7 @@ export function useTaskFlowV2() {
   const refreshGps = useCallback(async () => {
     const perm = await Location.requestForegroundPermissionsAsync();
     if (perm.status !== "granted") return;
-    const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const loc = await readLocationFix();
     const lat = config.location_latitude;
     const lng = config.location_longitude;
     if (lat == null || lng == null) return;
@@ -338,8 +422,24 @@ export function useTaskFlowV2() {
   const uploadPhoto = async (): Promise<string | null> => {
     if (!photoUri) return null;
     try {
-      const b64 = await FileSystem.readAsStringAsync(photoUri, { encoding: "base64" as never });
-      const uploaded = await uploadProofImageFromBase64(b64, "image/jpeg");
+      const readStarted = Date.now();
+      const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        Image.getSize(photoUri, (width, height) => resolve({ width, height }), reject);
+      });
+      const shrunk = await shrinkProofForUpload({
+        uri: photoUri,
+        width: size.width,
+        height: size.height,
+        manipulate: (uri, actions, options) =>
+          ImageManipulator.manipulateAsync(uri, actions, {
+            compress: options.compress,
+            format: ImageManipulator.SaveFormat.JPEG,
+          }),
+      });
+      timingRef.current.photoReadMs = Date.now() - readStarted;
+      const uploadStarted = Date.now();
+      const uploaded = await uploadProofImageFromFile(shrunk.uri);
+      timingRef.current.uploadMs = Date.now() - uploadStarted;
       if ("error" in uploaded) {
         setFailCode(undefined);
         setFailNote(uploaded.error);
@@ -376,8 +476,47 @@ export function useTaskFlowV2() {
     }
   };
 
-  const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind) => {
-    if (submitInFlight.current) return;
+  const postingId = `posting-${taskId}`;
+
+  const showDoneLocally = () => {
+    if (shownLocalRef.current) return;
+    shownLocalRef.current = true;
+    markOptimisticTaskDone({ taskId, activeChallengeId });
+    // Build 90 04.1: a text card posts too, so the optimistic row is not photo-only.
+    if (audiencePublishes(audienceRef.current)) {
+      const post = optimisticTaskPost({
+        eventId: postingId,
+        userId,
+        username: profile?.username ?? "you",
+        displayName: profile?.display_name ?? profile?.username ?? "You",
+        avatarUrl: profile?.avatar_url ?? null,
+        // 05.2: the optimistic row's subject line opens the challenge too.
+        challengeId: enrollmentQ.data?.challenge_id ?? null,
+        challengeName,
+        taskName,
+        currentDay,
+        totalDays: durationDays,
+        photoUrl: photoUri,
+        caption: photoUri ? "Posting…" : null,
+      });
+      if (post) publishOptimisticFeedPost(post);
+    }
+    returnToOrigin();
+  };
+
+  const failLocalSave = () => {
+    if (!shownLocalRef.current) return;
+    shownLocalRef.current = false;
+    rollbackOptimisticTaskDone(taskId);
+    clearOptimisticFeedPost(postingId);
+  };
+
+  const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind, heldLock = false) => {
+    if (submitInFlight.current && !heldLock) return;
+    if (!heldLock) {
+      timingRef.current = { ...EMPTY_TIMING };
+      shownLocalRef.current = false;
+    }
     if (!flowAllowsSubmit(windowState)) {
       setWindowForbidden(true);
       setStep("window_closed");
@@ -385,8 +524,11 @@ export function useTaskFlowV2() {
     }
     const hasTarget =
       typeof config.location_latitude === "number" && typeof config.location_longitude === "number";
-    const locationGated =
-      hasTarget && (taskType === "checkin" || config.require_location === true);
+    const locationGated = finishWaitsOnLocation({
+      taskType,
+      requireLocation: config.require_location === true,
+      hasTarget,
+    });
     const body: Record<string, unknown> = { ...payload };
     delete body.location_latitude;
     delete body.location_longitude;
@@ -394,6 +536,10 @@ export function useTaskFlowV2() {
       try {
         const perm = await Location.requestForegroundPermissionsAsync();
         if (perm.status !== "granted") {
+          if (heldLock) {
+            submitInFlight.current = false;
+            failLocalSave();
+          }
           if (mountedRef.current) {
             setFailNote("Couldn't read your location.");
             setFailCode(undefined);
@@ -401,7 +547,7 @@ export function useTaskFlowV2() {
           }
           return;
         }
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const loc = await readLocationFix();
         const lat = loc.coords.latitude;
         const lng = loc.coords.longitude;
         const accuracyM = loc.coords.accuracy;
@@ -419,6 +565,10 @@ export function useTaskFlowV2() {
           capturedAt: new Date().toISOString(),
         };
       } catch (err) {
+        if (heldLock) {
+          submitInFlight.current = false;
+          failLocalSave();
+        }
         if (mountedRef.current) {
           setFailNote(err instanceof Error ? err.message : "Couldn't read your location.");
           setFailCode(undefined);
@@ -428,6 +578,9 @@ export function useTaskFlowV2() {
       }
     }
     lastSubmitRef.current = { payload: body, kind };
+    const shareNow =
+      finishShareRef.current === "feed_held" ||
+      audiencePublishes(typeof body.audience === "string" ? body.audience : null);
     submitInFlight.current = true;
     setSaving(true);
     finishShareRef.current = "none";
@@ -448,21 +601,64 @@ export function useTaskFlowV2() {
             : undefined;
       const hasCameraProof = Boolean(proofUrl);
       const finishStartedAt = Date.now();
+      const writeTiming = async () => {
+        const homeStarted = Date.now();
+        try {
+          // Build 90 04.7: joins the refresh completeTask already started instead of cancelling it,
+          // and skips the request when that refresh has already landed since the finish began.
+          await refreshHomeBootstrap(queryClient, { freshAfter: finishStartedAt });
+        } catch {
+          /* Home already shows the optimistic row */
+        }
+        timingRef.current.homeRefetchMs = Date.now() - homeStarted;
+        if (__DEV__) {
+          console.info("[finishSubmit] timing", {
+            photoReadMs: timingRef.current.photoReadMs,
+            uploadMs: timingRef.current.uploadMs,
+            completeMs: timingRef.current.completeMs,
+            secureMs: timingRef.current.secureMs,
+            shareMs: timingRef.current.shareMs,
+            homeRefetchMs: timingRef.current.homeRefetchMs,
+            doneVisibleMs: timingRef.current.doneVisibleMs,
+            totalMs: Date.now() - finishStartedAt,
+          });
+        }
+      };
+      if (kind === "word_count") {
+        await prepareJournalUnmount({
+          clear: () => setText(""),
+          unmountField: () => setJournalFieldOn(false),
+        });
+      }
+      showDoneLocally();
+      if (!timingRef.current.doneVisibleMs) {
+        timingRef.current.doneVisibleMs = Date.now() - finishStartedAt;
+        if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs });
+      }
+      setOptimisticRetry(() => {
+        submitInFlight.current = false;
+        void finishSubmit(body, kind, true);
+      });
+      const completeStartedAt = Date.now();
       const complete = await completeTask({
         activeChallengeId,
         taskId,
         ...body,
         shareChoicePending: true,
+        applyShare: shareNow,
       });
+      timingRef.current.completeMs = Date.now() - completeStartedAt;
       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
         clearTimeout(slowTimer);
         submitInFlight.current = false;
         setSaving(false);
         finishShareRef.current = "none";
+        failLocalSave();
         if (mountedRef.current) {
           setFinishShare("none");
           setFinishSave("failed");
         }
+        await writeTiming();
         return;
       }
       let secure: {
@@ -477,33 +673,9 @@ export function useTaskFlowV2() {
         freezeCap?: number;
         freezeAtCap?: boolean;
       } | null = null;
-      const completeMs = Date.now() - finishStartedAt;
-      const secureStartedAt = Date.now();
-      const after = await attemptSecureDayAfterComplete({
-        requiredRemaining: complete.requiredRemaining,
-        activeChallengeId,
-        challengeTitle: complete.challengeName ?? challengeName,
-        secureDay,
-      });
-      if (__DEV__) {
-        console.info(
-          "[finishSubmit] timing",
-          { completeMs, secureMs: Date.now() - secureStartedAt, totalMs: Date.now() - finishStartedAt },
-        );
-      }
-      if (after.result) {
-        const r = after.result as {
-          success?: boolean;
-          alreadySecured?: boolean;
-          newStreakCount?: number;
-          secured?: boolean;
-          challenge_done?: boolean;
-          remaining_challenges?: number;
-          freezeGranted?: boolean;
-          freezesHeld?: number;
-          freezeCap?: number;
-          freezeAtCap?: boolean;
-        };
+      let secureDaySecured = complete.daySecure?.secured === true;
+      if (complete.daySecure) {
+        const r = complete.daySecure;
         secure = {
           success: r.success === true,
           alreadySecured: r.alreadySecured,
@@ -516,28 +688,114 @@ export function useTaskFlowV2() {
           freezeCap: r.freezeCap,
           freezeAtCap: r.freezeAtCap,
         };
+        timingRef.current.secureMs = 0;
+      } else if (complete.requiredRemaining === 0) {
+        const secureStartedAt = Date.now();
+        const after = await attemptSecureDayAfterComplete({
+          requiredRemaining: complete.requiredRemaining,
+          activeChallengeId,
+          challengeTitle: complete.challengeName ?? challengeName,
+          secureDay,
+        });
+        timingRef.current.secureMs = Date.now() - secureStartedAt;
+        secureDaySecured = after.ui.kind === "secured" || after.result?.secured === true;
+        if (after.result) {
+          const r = after.result as {
+            success?: boolean;
+            alreadySecured?: boolean;
+            newStreakCount?: number;
+            secured?: boolean;
+            challenge_done?: boolean;
+            remaining_challenges?: number;
+            freezeGranted?: boolean;
+            freezesHeld?: number;
+            freezeCap?: number;
+            freezeAtCap?: boolean;
+          };
+          secure = {
+            success: r.success === true,
+            alreadySecured: r.alreadySecured,
+            newStreakCount: r.newStreakCount,
+            secured: r.secured,
+            challenge_done: r.challenge_done,
+            remaining_challenges: r.remaining_challenges,
+            freezeGranted: r.freezeGranted,
+            freezesHeld: r.freezesHeld,
+            freezeCap: r.freezeCap,
+            freezeAtCap: r.freezeAtCap,
+          };
+        }
       }
       const securedToday = serverSecuredToday({
         dayAlreadySecured: complete.dayAlreadySecured === true,
-        secureDaySecured: after.ui.kind === "secured" || after.result?.secured === true,
+        secureDaySecured,
       });
       const outcome = finishAfterMutation({ complete, securedToday });
       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
       void endLiveActivity();
       clearTimeout(slowTimer);
       const eventId = closingProofEventId(complete.dayProofs, proofUrl);
+      const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
+      const chosenAudience = typeof body.audience === "string" ? body.audience : null;
       if (outcome === "failed") {
         submitInFlight.current = false;
         setSaving(false);
         finishShareRef.current = "none";
+        failLocalSave();
         if (mountedRef.current) {
           setFinishShare("none");
           setFinishSave("failed");
           setFailNote((note) => note || "Couldn't save. Try Post again.");
         }
+        await writeTiming();
         return;
       }
-      void postHeldShare(eventId ?? undefined);
+      confirmOptimisticTaskDone(taskId);
+      const publishing = audiencePublishes(chosenAudience);
+      if (publishing && !postedId) {
+        clearOptimisticFeedPost(postingId);
+        submitInFlight.current = false;
+        setSaving(false);
+        if (mountedRef.current) {
+          setFinishSave("failed");
+          setFailNote(hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.");
+        }
+        await writeTiming();
+        return;
+      }
+      if (publishing && postedId) {
+        const posted = optimisticTaskPost({
+          eventId: postedId,
+          userId,
+          username: profile?.username ?? "you",
+          displayName: profile?.display_name ?? profile?.username ?? "You",
+          avatarUrl: profile?.avatar_url ?? null,
+          challengeId: enrollmentQ.data?.challenge_id ?? null,
+          challengeName,
+          taskName,
+          currentDay,
+          totalDays: durationDays,
+          photoUrl: photoUri ?? proofUrl ?? null,
+        });
+        if (posted) publishOptimisticFeedPost(posted);
+        if (mountedRef.current) setFinishSave("saved");
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Build 90 04.1: a post that secured the day shows Day secured first, then the post (openPost).
+        if (outcome === "saved") {
+          trackUsage("task_completed", { method: kind });
+          if (hasCameraProof) trackUsage("proof_posted");
+          router.replace(ROUTES.POST_ID(postedId) as never);
+          submitInFlight.current = false;
+          setSaving(false);
+          await writeTiming();
+          return;
+        }
+      }
+      trackUsage("task_completed", { method: kind });
+      if (hasCameraProof) trackUsage("proof_posted");
+      const shareStartedAt = Date.now();
+      if (complete.shared !== true) await postHeldShare(eventId ?? undefined);
+      timingRef.current.shareMs = Date.now() - shareStartedAt;
       if (outcome === "saved") {
         const route = routeAfterSave({
           challengeFinished: false,
@@ -560,11 +818,13 @@ export function useTaskFlowV2() {
             taskName,
             currentDay,
             totalDays: durationDays,
+            streak: typeof complete.streakDays === "number" ? complete.streakDays : undefined,
           });
           returnToOrigin();
         }
         submitInFlight.current = false;
         setSaving(false);
+        await writeTiming();
         return;
       }
       setSaving(false);
@@ -599,15 +859,19 @@ export function useTaskFlowV2() {
       ) {
         submitInFlight.current = false;
         finishShareRef.current = "none";
+        failLocalSave();
         if (mountedRef.current) {
           setFinishShare("none");
           setFinishSave("failed");
+          setSaving(false);
+          setFailNote((note) => note || "The post did not finish. Try again.");
         }
+        await writeTiming();
         return;
       }
       assembled.challengeDone = secure?.challenge_done === true;
       assembled.activeChallengeId = activeChallengeId;
-      if (mountedRef.current && securedNavOnce() === "replace") {
+      if (securedNavOnce() === "replace") {
         setResult(assembled);
         setSecuredHandoff({
           proofs: proofsFromComplete({
@@ -629,14 +893,20 @@ export function useTaskFlowV2() {
             closingHasPhoto: hasCameraProof,
             originTab,
             counterReachedTarget: counterTask && count >= counterGoal,
+            // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
+            openPost: publishing && postedId ? postedId : null,
+            choiceMade: typeof chosenAudience === "string",
+            finishedAt: finishStartedAt,
           }) as never,
         );
       }
       submitInFlight.current = false;
+      await writeTiming();
     } catch (err) {
       clearTimeout(slowTimer);
       submitInFlight.current = false;
       setSaving(false);
+      failLocalSave();
       const msg = err instanceof Error ? err.message : "";
       const code = failureErrorCode(err);
       if (mountedRef.current) {
@@ -659,24 +929,57 @@ export function useTaskFlowV2() {
   };
 
   const submitPhoto = async (extra: Record<string, unknown> = {}) => {
+    if (submitInFlight.current) return;
+    if (!flowAllowsSubmit(windowState)) {
+      setWindowForbidden(true);
+      setStep("window_closed");
+      return;
+    }
+    submitInFlight.current = true;
+    setSaving(true);
+    timingRef.current = { ...EMPTY_TIMING };
+    shownLocalRef.current = false;
+    const visibleAt = Date.now();
+    showDoneLocally();
+    timingRef.current.doneVisibleMs = Date.now() - visibleAt;
+    if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs, kind: "photo" });
+    setOptimisticRetry(() => {
+      submitInFlight.current = false;
+      void submitPhoto(extra);
+    });
     const url = await uploadPhoto();
-    if (!url) return;
+    if (!url) {
+      failLocalSave();
+      submitInFlight.current = false;
+      if (mountedRef.current) setSaving(false);
+      return;
+    }
     await finishSubmit(
       {
         proofUrl: url,
         photo_url: url,
         noteText: caption.trim() || undefined,
+        audience: audienceRef.current,
         proof_payload_json: capturedAt
           ? { capturedAt, captured_in_app: true }
           : undefined,
         ...extra,
-        ...(taskType === "timer" ? { value: Math.floor(requiredSeconds / 60) } : {}),
-        ...(taskType === "journal" ? { noteText: text } : {}),
+        ...(taskType === "timer"
+          ? finishEarlyRef.current
+            ? {
+                value: finishEarlyRef.current.seconds / 60,
+                timer_seconds_on_screen: finishEarlyRef.current.seconds,
+                self_reported: true,
+              }
+            : { value: Math.floor(requiredSeconds / 60) }
+          : {}),
+        ...(taskType === "journal" || taskType === "text" ? { noteText: text } : {}),
         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
           ? { value: countRef.current }
           : {}),
       },
-      verificationKindFor(taskType, true)
+      verificationKindFor(taskType, true),
+      true,
     );
   };
 
@@ -685,7 +988,24 @@ export function useTaskFlowV2() {
       setStep("capture");
       return;
     }
+    // Build 90 04.1: every task without a photo review asks once: post, or keep it private.
+    if (needsPostChoice(payload)) {
+      if (submitInFlight.current || postChoice) return;
+      Keyboard.dismiss();
+      setPostChoiceAudience(POST_CHOICE_DEFAULT);
+      setPostChoice({ payload, kind });
+      return;
+    }
     await finishSubmit(payload, kind);
+  };
+
+  const answerPostChoice = (chosen: PostAudience) => {
+    const pending = postChoice;
+    if (!pending) return;
+    setPostChoice(null);
+    audienceRef.current = chosen;
+    setAudience(chosen);
+    void finishSubmit({ ...pending.payload, audience: chosen }, pending.kind);
   };
 
   const submitTimer = async () => {
@@ -820,6 +1140,7 @@ export function useTaskFlowV2() {
 
   useEffect(() => {
     if (timerShouldAutoSubmit(step, remainingSec, !!startedAtIso)) {
+      showLiveActivityDone();
       void submitTimer();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -838,11 +1159,11 @@ export function useTaskFlowV2() {
     durationLabel:
       taskType === "timer"
         ? fmtMmSs(requiredSeconds)
-        : taskType === "run"
+        : isLogTask && logKind === "run"
           ? durationSec != null
             ? fmtMmSs(durationSec)
             : ""
-          : taskType === "workout"
+          : isLogTask
             ? `${workoutMin ?? 0} min`
             : undefined,
     startedAtLabel: startedAtIso ? clockLabel(startedAtIso) : undefined,
@@ -856,15 +1177,55 @@ export function useTaskFlowV2() {
     setCount(Math.min(counterGoal, Math.max(0, v)));
   };
 
-  const onPostRun = () => {
-    void submitWithoutPhoto(
-      {
+  /**
+   * Run: distance + duration (+ value in minutes for a timed run so the floor check passes).
+   * Workout: activity type + minutes (+ optional distance for Cycling / Swim).
+   */
+  const logPayload = (): Record<string, unknown> => {
+    const entry_mode = usedSessionTimer ? "timer" : "hand";
+    if (logKind === "run") {
+      const durationMin = durationSec != null ? durationSec / 60 : undefined;
+      return {
         distance_km: distance != null ? toKilometers(distance, unit) : undefined,
-        duration_min: durationSec != null ? durationSec / 60 : undefined,
-        entry_mode: usedSessionTimer ? "timer" : "hand",
-      },
-      "self_report",
-    );
+        duration_min: durationMin,
+        entry_mode,
+        ...(config.tracking_mode === "time" && durationMin != null ? { value: durationMin } : {}),
+      };
+    }
+    return {
+      duration_min: workoutMin ?? undefined,
+      value: workoutMin ?? undefined,
+      workout_kind: kind || undefined,
+      entry_mode,
+      distance_km: distance != null && distance > 0 ? toKilometers(distance, unit) : undefined,
+    };
+  };
+
+  const onPostRun = () => {
+    void submitWithoutPhoto(logPayload(), "self_report");
+  };
+
+  /** Build 90 03.2: impossible pace / speed asks before anything is saved. */
+  const onLogContinue = () => {
+    const check = logSanityCheck({
+      logKind,
+      kind,
+      distance,
+      durationSec: logKind === "run" ? durationSec : workoutMin != null ? workoutMin * 60 : null,
+      unit,
+    });
+    if (!check.ok) {
+      setLogSanityAsk(check);
+      return;
+    }
+    if (requirePhoto) setStep("capture");
+    else onPostRun();
+  };
+
+  const onLogSaveAnyway = () => {
+    setLogSanityAsk(null);
+    if (requirePhoto) setStep("capture");
+    else onPostRun();
   };
 
   const onUseTimer = () => {
@@ -874,7 +1235,7 @@ export function useTaskFlowV2() {
       taskId,
       taskTitle: taskName,
       challengeName,
-      timerType: taskType === "run" ? "run_gps" : "run_treadmill",
+      timerType: logKind === "run" ? "run_gps" : "run_treadmill",
       startedAtMs: Date.now(),
       route: ROUTES.TASK_COMPLETE,
     });
@@ -883,7 +1244,7 @@ export function useTaskFlowV2() {
   const onSessionStop = () => {
     void endLiveActivity();
     setUsedSessionTimer(true);
-    if (taskType === "run") setDurationSec(Math.max(1, sessionUp));
+    if (logKind === "run") setDurationSec(Math.max(1, sessionUp));
     else setWorkoutMin(Math.max(1, Math.round(sessionUp / 60)));
     setStep("log");
   };
@@ -895,21 +1256,11 @@ export function useTaskFlowV2() {
 
   const onReviewPost = () => {
     void submitPhoto(
-      taskType === "run"
-        ? {
-            distance_km: distance != null ? toKilometers(distance, unit) : undefined,
-            duration_min: durationSec != null ? durationSec / 60 : undefined,
-            entry_mode: usedSessionTimer ? "timer" : "hand",
-          }
-        : taskType === "workout"
-          ? {
-              duration_min: workoutMin ?? undefined,
-              workout_kind: kind,
-              entry_mode: usedSessionTimer ? "timer" : "hand",
-            }
-          : taskType === "reading"
-            ? { value: countRef.current }
-            : {}
+      isLogTask
+        ? logPayload()
+        : taskType === "reading"
+          ? { value: countRef.current }
+          : {}
     );
   };
 
@@ -951,10 +1302,13 @@ export function useTaskFlowV2() {
     photoUri,
     caption,
     setCaption,
+    audience,
+    setAudience,
     remainingSec,
     startedAtIso,
     text,
     setText,
+    journalFieldOn,
     minWords,
     count,
     counterGoal,
@@ -980,7 +1334,7 @@ export function useTaskFlowV2() {
     fromGps: false,
     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
     chromeTitle: challengeName.trim() || "Challenge",
-    headerTitle: flowHeaderTitle(challengeName, currentDay, durationDays),
+    headerTitle: homeDayLine(currentDay, durationDays),
     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
     footerBrand: flowFooterBrand(windowState),
@@ -990,7 +1344,9 @@ export function useTaskFlowV2() {
           taskType === "timer"
             ? fmtMmSs(requiredSeconds)
             : taskType === "run"
-              ? fmtMmSs(durationSec ?? 0)
+              ? logKind === "run"
+                ? fmtMmSs(durationSec ?? 0)
+                : `${workoutMin ?? 0} min`
               : String(count),
         )
       : null,
@@ -1029,6 +1385,16 @@ export function useTaskFlowV2() {
     pauseTimer,
     resetTimer,
     submitTimer,
+    onFinishEarly: () => {
+      const seconds = timerElapsedSeconds(requiredSeconds, remainingSec);
+      finishEarlyRef.current = { seconds };
+      setPausedRemaining(remainingSec);
+      void endLiveActivity();
+      void submitWithoutPhoto(
+        { self_reported: true, timer_seconds_on_screen: seconds, value: seconds / 60 },
+        "self_report",
+      );
+    },
     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
     onAddAmount: (n: number) => setCount((c) => Math.min(counterGoal, c + Math.max(0, Math.floor(n)))),
     dayReady,
@@ -1038,14 +1404,26 @@ export function useTaskFlowV2() {
     onRemoveOne: () => setCount((c) => Math.max(0, c - 1)),
     onTypeCount,
     onPostRun,
+    logKind,
+    logSanityAsk,
+    // Build 90 04.1: the one post choice after a task without a photo review.
+    postChoiceOpen: postChoice != null,
+    postChoiceAudience,
+    setPostChoiceAudience,
+    onPostChoicePost: () => answerPostChoice(postChoiceAudience),
+    onPostChoiceKeep: () => answerPostChoice(POST_CHOICE_PRIVATE),
+    onLogContinue,
+    onLogSaveAnyway,
+    onLogEdit: () => setLogSanityAsk(null),
     onAttachPhoto: () => setStep("capture"),
     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
+    // Build 90 03.4: Done sends what was counted. The button is inactive below the goal.
     onCompleteCount: () => {
-      countRef.current = counterGoal;
-      setCount(counterGoal);
-      void submitWithoutPhoto({ value: counterGoal }, "self_report");
+      if (count < counterGoal) return;
+      countRef.current = count;
+      void submitWithoutPhoto({ value: count }, "self_report");
     },
-    onDidIt: () => void submitWithoutPhoto({}, "self_report"),
+    onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
     onHere: () => void submitWithoutPhoto({}, "gps"),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
     goNextTask,
@@ -1065,6 +1443,7 @@ export function useTaskFlowV2() {
       setSharing(true);
       void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
         .then(() => {
+          trackUsage("proof_shared");
           setSharing(false);
           returnToOrigin();
         })

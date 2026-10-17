@@ -178,7 +178,7 @@ export function validateTimeEnforcement(config: Partial<TimeEnforcementConfig>):
     config.hardWindowEndOffsetMin != null
   ) {
     if (config.hardWindowEndOffsetMin <= config.hardWindowStartOffsetMin) {
-      return { valid: false, error: "Hard mode window end must be after start" };
+      return { valid: false, error: "Strict window end must be after start" };
     }
     if (
       config.hardWindowStartOffsetMin < config.windowStartOffsetMin ||
@@ -186,7 +186,7 @@ export function validateTimeEnforcement(config: Partial<TimeEnforcementConfig>):
     ) {
       return {
         valid: false,
-        error: "Hard mode window must be equal or stricter than normal window",
+        error: "Strict window must be equal or stricter than normal window",
       };
     }
   }

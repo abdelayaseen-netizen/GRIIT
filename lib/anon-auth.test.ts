@@ -8,6 +8,7 @@ const getSession = vi.fn();
 const signInAnonymously = vi.fn();
 const linkIdentity = vi.fn();
 const updateUser = vi.fn();
+const refreshSession = vi.fn();
 const setItem = vi.fn(async (_key: string, _value: string) => undefined);
 const getItem = vi.fn(async (_key: string): Promise<string | null> => null);
 const removeItem = vi.fn(async (_key: string) => undefined);
@@ -27,6 +28,7 @@ vi.mock("@/lib/supabase", () => ({
       signInAnonymously: (...args: unknown[]) => signInAnonymously(...args),
       linkIdentity: (...args: unknown[]) => linkIdentity(...args),
       updateUser: (...args: unknown[]) => updateUser(...args),
+      refreshSession: (...args: unknown[]) => refreshSession(...args),
     },
   },
 }));
@@ -277,6 +279,46 @@ describe("upgradeAnonymousWithEmail", () => {
   });
 
   /**
+   * Build 90 05.1: updateUser flips auth.users.is_anonymous but the stored access
+   * token still carries `is_anonymous: true`, so RLS (profiles_select_authenticated)
+   * hides every other profile until the token is refreshed — comment authors read
+   * "Someone" and tapping a name opens a profile page showing a raw uuid. Mint a new
+   * token right after the upgrade.
+   */
+  it("refreshes the session after updateUser so RLS sees a non-anonymous token", async () => {
+    getSession.mockResolvedValueOnce({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({ data: { user: permanentUser }, error: null });
+    refreshSession.mockResolvedValue({
+      data: { session: { user: permanentUser, access_token: "fresh" }, user: permanentUser },
+      error: null,
+    });
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+    expect(res.kind).toBe("ok");
+    expect(refreshSession).toHaveBeenCalledOnce();
+    expect(res.session?.access_token).toBe("fresh");
+  });
+
+  it("falls back to the stored session when refreshSession fails", async () => {
+    getSession
+      .mockResolvedValueOnce({
+        data: { session: { user: anonUser, access_token: "t" } },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { session: { user: permanentUser, access_token: "t2" } },
+        error: null,
+      });
+    updateUser.mockResolvedValue({ data: { user: permanentUser }, error: null });
+    refreshSession.mockResolvedValue({ data: { session: null, user: null }, error: { message: "nope" } });
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+    expect(res.kind).toBe("ok");
+    expect(res.session?.access_token).toBe("t2");
+  });
+
+  /**
    * Identity gap — typo: no format/existence check before updateUser.
    * A free but wrong address (e.g. gmial.com) attaches to the anon uid.
    * Day 1 stays on that uid; it is not merged into any prior account.
@@ -335,8 +377,8 @@ describe("upgradeAnonymousWithEmail", () => {
   });
 
   /**
-   * Identity gap — existing email: GoTrue rejects; we surface identity_taken.
-   * No merge into the other account; anon session (and Day 1) stay on anon-uid-1.
+   * GoTrue rejects the attach and leaves the guest session in place.
+   * The account sheet signs into the existing account and moves the rows after this.
    */
   it("existing email: returns identity_taken, does not merge, keeps anon uid", async () => {
     getSession.mockResolvedValue({
@@ -367,6 +409,22 @@ describe("upgradeAnonymousWithEmail", () => {
       password: "secret1",
     });
     expect(linkIdentity).not.toHaveBeenCalled();
+    expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  it("stays a guest when email confirmation is still required", async () => {
+    const pending = { ...anonUser, email: "a@b.com", email_confirmed_at: null };
+    getSession.mockResolvedValue({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({ data: { user: pending }, error: null });
+
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+
+    expect(res.kind).toBe("confirm_email");
+    expect(res.message).toBe("Check your email to save your streak");
+    expect(res.user?.is_anonymous).toBe(true);
     expect(removeItem).not.toHaveBeenCalled();
   });
 });

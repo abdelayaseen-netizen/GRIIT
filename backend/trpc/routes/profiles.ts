@@ -22,6 +22,10 @@ import { profileUpdateInputSchema } from "../../../lib/profile-update-schema";
 import { ensureProfile } from "../../lib/ensure-profile";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { applyEnrollmentWindow } from "../../lib/enrollment-window";
+import { blockedPlainText } from "../../lib/content-moderation";
+import { isHiddenFromRealViewers, viewerIsTestAccount } from "../../lib/test-authors";
+import { mutualFriendIds } from "../../lib/is-friend";
+import { isMaestroTestEmail } from "../../../lib/maestro-account";
 
 /** Must match the entitlement identifier in RevenueCat dashboard exactly. */
 const RC_ENTITLEMENT_ID = "GRIIT Pro";
@@ -65,6 +69,15 @@ export const profilesRouter = createTRPCRouter({
       timezone: z.string().max(64).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Build 90 07.1: the legacy /create-profile screen comes through here now.
+      for (const [value, field] of [
+        [input.username, "username"],
+        [input.display_name, "display name"],
+        [input.bio, "bio"],
+      ] as const) {
+        const blocked = typeof value === "string" ? blockedPlainText(value, field) : null;
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
       const timezone = resolveIanaTimeZone(input.timezone, "UTC");
       const { data, error } = await ctx.supabase
         .from('profiles')
@@ -229,7 +242,7 @@ export const profilesRouter = createTRPCRouter({
       const { data, error } = await ctx.supabase
         .from("profiles")
         .select(
-          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit, target_streak"
+          "user_id, username, display_name, bio, avatar_url, tier, subscription_status, subscription_expiry, total_days_secured, created_at, updated_at, profile_visibility, challenge_visibility, activity_visibility, timezone, distance_unit, target_streak, is_test"
         )
         .eq("user_id", ctx.userId)
         .single();
@@ -351,8 +364,19 @@ export const profilesRouter = createTRPCRouter({
       if (typeof updatePayload.timezone === "string") {
         updatePayload.timezone = resolveIanaTimeZone(updatePayload.timezone, "UTC");
       }
+      // Build 90 07.1: every public field, before any write, naming the field.
+      if (typeof updatePayload.username === "string") {
+        const blocked = blockedPlainText(updatePayload.username, "username");
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
       if (typeof updatePayload.display_name === "string") {
         updatePayload.display_name = updatePayload.display_name.trim().replace(/\s+/g, " ");
+        const blocked = blockedPlainText(String(updatePayload.display_name), "display name");
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
+      if (typeof updatePayload.bio === "string") {
+        const blocked = blockedPlainText(String(updatePayload.bio), "bio");
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
       }
       if (Object.keys(updatePayload).length === 0) {
         const { data } = await ctx.supabase
@@ -391,15 +415,19 @@ export const profilesRouter = createTRPCRouter({
       if (!q) return [];
       const escapedSafe = sanitizeSearchQuery(q);
       if (!escapedSafe) return [];
-      const { data, error } = await ctx.supabase
+      const viewerIsTest = await viewerIsTestAccount(ctx.supabase, ctx.userId);
+      let people = ctx.supabase
         .from("profiles")
-        .select("user_id, username, display_name, avatar_url")
+        .select("user_id, username, display_name, avatar_url, is_test")
         .neq("user_id", ctx.userId)
-        .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`)
-        .limit(20);
+        .or(`username.ilike.%${escapedSafe}%,display_name.ilike.%${escapedSafe}%`);
+      if (!viewerIsTest) people = people.eq("is_test", false);
+      const { data, error } = await people.limit(20);
       requireNoError(error, "Failed to search profiles.");
       const blockedIds = await getBlockedUserIds(ctx.supabase, ctx.userId);
-      const rows = ((data ?? []) as ProfileRow[]).filter((r) => !blockedIds.has(r.user_id));
+      const rows = ((data ?? []) as (ProfileRow & { is_test?: boolean | null })[]).filter(
+        (r) => !blockedIds.has(r.user_id) && (viewerIsTest || !isHiddenFromRealViewers(r)),
+      );
       const ids = rows.map((r) => r.user_id);
       const { data: streakRows } =
         ids.length > 0
@@ -515,6 +543,38 @@ export const profilesRouter = createTRPCRouter({
       });
     }),
 
+  getFriends: publicProcedure
+    .input(z.object({ userId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      const mutual = await mutualFriendIds(ctx.supabase, input.userId);
+      const ids = [...mutual].slice(0, 50);
+      if (ids.length === 0) {
+        return [] as {
+          user_id: string;
+          username: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          is_following: boolean;
+        }[];
+      }
+      const { data: profiles } = await ctx.supabase
+        .from("profiles")
+        .select("user_id, username, display_name, avatar_url")
+        .in("user_id", ids)
+        .limit(50);
+      const pmap = new Map((profiles ?? []).map((p: { user_id: string }) => [p.user_id, p]));
+      return ids.map((id) => {
+        const p = pmap.get(id) as { username?: string; display_name?: string | null; avatar_url?: string | null } | undefined;
+        return {
+          user_id: id,
+          username: p?.username ?? "unknown",
+          display_name: p?.display_name ?? null,
+          avatar_url: p?.avatar_url ?? null,
+          is_following: true,
+        };
+      });
+    }),
+
   /** Whether the current user follows the given profile (for public profile UI). */
   isFollowing: protectedProcedure
     .input(z.object({ userId: z.string().uuid() }))
@@ -532,21 +592,33 @@ export const profilesRouter = createTRPCRouter({
       return { isFollowing: Boolean(data) };
     }),
 
+  /** Maestro addresses only. Service role sets is_test after the email is checked. */
+  claimMaestroTest: protectedProcedure.mutation(async ({ ctx }) => {
+    const email = ctx.email ?? "";
+    if (!isMaestroTestEmail(email)) return { ok: false as const };
+    const svc = getSupabaseServer();
+    if (!svc) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not mark the test account." });
+    }
+    const { error } = await svc.from("profiles").update({ is_test: true } as never).eq("user_id", ctx.userId);
+    if (error) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not mark the test account." });
+    }
+    return { ok: true as const };
+  }),
+
   deleteAccount: protectedProcedure
     .input(z.object({}))
     .mutation(async ({ ctx }) => {
-      const { error: profileError } = await ctx.supabase
-        .from("profiles")
-        .delete()
-        .eq("user_id", ctx.userId);
-      if (profileError) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete account data." });
-      }
       const { hasSupabaseAdmin, getSupabaseAdmin } = await import("../../lib/supabase-admin");
-      if (hasSupabaseAdmin()) {
-        const admin = getSupabaseAdmin();
-        await admin.auth.admin.deleteUser(ctx.userId);
+      if (!hasSupabaseAdmin()) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Couldn't delete the account. Try again.",
+        });
       }
+      const { eraseUserData } = await import("../../lib/delete-account");
+      await eraseUserData(getSupabaseAdmin() as never, ctx.userId);
       return { ok: true };
     }),
 });

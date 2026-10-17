@@ -4,6 +4,7 @@ import {
   TIMER_SESSION_NOT_FOUND,
   assertTimerSessionElapsed,
   parseTimerSession,
+  timerSelfReportSkipsSession,
 } from "./timer-session";
 
 describe("parseTimerSession", () => {
@@ -38,6 +39,12 @@ describe("assertTimerSessionElapsed", () => {
   it("fails while the wall clock has not reached started_at + required", () => {
     const result = assertTimerSessionElapsed(session, new Date("2026-09-06T01:09:59.000Z"));
     expect(result).toEqual({ ok: false, code: "NOT_ELAPSED", message: TIMER_SESSION_NOT_ELAPSED });
+  });
+
+  it("lets an explicit self-report skip the session, and keeps the clock path on the session", () => {
+    expect(timerSelfReportSkipsSession(true)).toBe(true);
+    expect(timerSelfReportSkipsSession(false)).toBe(false);
+    expect(timerSelfReportSkipsSession(undefined)).toBe(false);
   });
 
   it("passes at and after the required duration", () => {

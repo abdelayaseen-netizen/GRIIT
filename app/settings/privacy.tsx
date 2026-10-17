@@ -18,6 +18,7 @@ import {
   SEE_STRANGER,
   SWITCH_NEVER_SHARES_KEPT,
 } from "@/lib/g3-profile";
+import { loadUsageConsent, setUsageConsent } from "@/lib/analytics";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -27,6 +28,11 @@ export default function SettingsPrivacyScreen() {
   const router = useRouter();
   const { profile } = useApp();
   const [isPrivate, setIsPrivate] = useState(false);
+  const [shareUsage, setShareUsage] = useState(true);
+
+  useEffect(() => {
+    void loadUsageConsent().then((on) => setShareUsage(on));
+  }, []);
 
   const load = useCallback(async () => {
     if (isGuest) return;
@@ -80,6 +86,23 @@ export default function SettingsPrivacyScreen() {
                 value={isPrivate}
                 onValueChange={(v) => void onToggle(v)}
                 accessibilityLabel="Private account"
+              />
+            </View>
+
+            <View style={styles.switchRow}>
+              <View style={styles.switchCopy}>
+                <Text style={styles.switchTitle}>Share anonymous usage data</Text>
+                <Text style={styles.switchSub}>
+                  On by default. Sends your user id and which screens and tasks you use. Photos, captions, email, name, and location stay on your phone.
+                </Text>
+              </View>
+              <Switch
+                value={shareUsage}
+                onValueChange={(next) => {
+                  setShareUsage(next);
+                  void setUsageConsent(next);
+                }}
+                accessibilityLabel="Share anonymous usage data"
               />
             </View>
 

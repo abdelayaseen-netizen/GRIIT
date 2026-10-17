@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Show feed from everyone"
+- tapOn: "Like"
+- assertVisible: "Liked by you.*"

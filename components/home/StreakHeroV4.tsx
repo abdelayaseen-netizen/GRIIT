@@ -26,7 +26,6 @@ import {
   Snowflake,
 } from 'lucide-react-native';
 import { DS_V3, DS_RADIUS_V2 } from '@/lib/design-system';
-import { calendarDay, clampCalendarDay } from '@/lib/home-day-total';
 import { dayWord, formatDays } from '@/lib/format-days';
 import { StreakFlame, type StreakFlameState } from './StreakFlame';
 
@@ -58,6 +57,8 @@ export type StreakHeroV4Task = {
   windowState?: import("@/backend/lib/task-time-gate").WindowState;
   minutesLeft?: number | null;
   hasCameraProof?: boolean;
+  /** Build 90 09.3: completion verified by an integration (check_ins.proof_source). */
+  verifiedBy?: import("@/lib/strava-verify").VerifiedBy | null;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';
@@ -455,11 +456,7 @@ export function StreakHeroV4(props: StreakHeroV4Props) {
         : "Post today's proof";
 
   const firstTask = props.tasks[0];
-  const heroDay = firstTask
-    ? firstTask.startDateKey && props.todayKey
-      ? calendarDay(firstTask.startDateKey, props.todayKey, firstTask.durationDays)
-      : clampCalendarDay(firstTask.currentDay, firstTask.durationDays)
-    : 1;
+  const heroDay = firstTask ? Math.max(1, firstTask.currentDay) : 1;
   const subtitle =
     firstTask != null ? `${firstTask.challengeName} · Day ${heroDay}` : undefined;
 

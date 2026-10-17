@@ -26,7 +26,10 @@ describe("invalidateAfterOnboardingJoin", () => {
       "utf8",
     );
     expect(join).toContain("invalidateAfterOnboardingJoin");
-    expect(complete).toContain("invalidateAfterOnboardingJoin");
+    // Build 90 01b.3: completion no longer refetches. It writes onboarding_completed and
+    // target_streak, which Home does not read from the bootstrap; each join path refetches
+    // after its own join (see build90-signup-requests.test.ts).
+    expect(complete).not.toContain("invalidateAfterOnboardingJoin");
     const tab = readFileSync(
       resolve(__dirname, "../components/activity/NotificationsTab.tsx"),
       "utf8",

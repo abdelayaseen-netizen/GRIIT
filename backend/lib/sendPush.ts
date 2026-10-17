@@ -1,6 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import Expo from "expo-server-sdk";
+import ExpoSdk from "expo-server-sdk";
 
+type ExpoClient = {
+  chunkPushNotifications: (messages: object[]) => object[][];
+  sendPushNotificationsAsync: (messages: object[]) => Promise<unknown>;
+};
+type ExpoCtor = (new (options?: object) => ExpoClient) & {
+  isExpoPushToken: (token: unknown) => boolean;
+};
+
+/** CJS default is the class under Bun. Node ESM hands back `{ Expo, default }`. */
+function expoCtor(): ExpoCtor {
+  if (typeof ExpoSdk === "function") return ExpoSdk as ExpoCtor;
+  const mod = ExpoSdk as unknown as { Expo?: ExpoCtor; default?: ExpoCtor };
+  const ctor = mod.Expo ?? mod.default;
+  if (typeof ctor !== "function") throw new Error("expo-server-sdk Expo client missing");
+  return ctor;
+}
+
+const Expo = expoCtor();
 const expo = new Expo();
 
 export async function sendPush(params: {

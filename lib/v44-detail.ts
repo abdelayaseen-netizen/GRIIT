@@ -13,7 +13,8 @@ export function detailMetaLine(args: {
 }): string {
   const who = args.group ? "Group" : "Solo";
   const mode = args.hard ? MODE_HARD_TITLE : MODE_STANDARD_TITLE;
-  return `Day ${Math.max(0, Math.floor(args.day))} of ${Math.max(1, Math.floor(args.total))} · ${who} · ${mode}`;
+  const day = Number.isFinite(args.day) ? Math.max(1, Math.floor(args.day)) : 1;
+  return `Day ${day} of ${Math.max(1, Math.floor(args.total))} · ${who} · ${mode}`;
 }
 
 export const NO_SHARED_PROOFS_IN_CHALLENGE = "No shared proofs in this challenge yet.";
@@ -26,7 +27,18 @@ export const COPY_LINK = "Copy link";
 export const PEOPLE_SOLO = "Just you so far · 1 of 10";
 
 export function recordOfDue(secured: number, due: number): string {
-  return `${formatOfDays(Math.max(0, Math.floor(secured)), Math.max(0, Math.floor(due)))} secured`;
+  const denom = Math.max(0, Math.floor(due));
+  const numer = Math.min(Math.max(0, Math.floor(secured)), denom);
+  return `${formatOfDays(numer, denom)} secured`;
+}
+
+/**
+ * Build 90 05.4: the challenge page's record line. Nothing due yet (Day 1, still open)
+ * reads the same as Home's hero for that state instead of "0 of 0 days secured".
+ */
+export const FIRST_DAY_LINE = "First day is today.";
+export function recordLine(secured: number, due: number): string {
+  return Math.floor(due) <= 0 ? FIRST_DAY_LINE : recordOfDue(secured, due);
 }
 
 export function streakSheetMissBody(args: {

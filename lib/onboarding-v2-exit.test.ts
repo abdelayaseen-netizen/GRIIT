@@ -55,4 +55,22 @@ describe("exitOnboardingV2", () => {
     expect(res).toEqual({ ok: false, message: "You're offline. Connect and try again." });
     expect(completeOnboardingV2).not.toHaveBeenCalled();
   });
+
+  it("surfaces a failed completion write", async () => {
+    ensureAnonymousSession.mockResolvedValue({
+      kind: "ok",
+      user: { id: "anon-1", is_anonymous: true },
+      session: {},
+      message: null,
+      previousAnonUserId: "anon-1",
+    });
+    completeOnboardingV2.mockResolvedValue({
+      ok: false,
+      message: "Couldn't save your setup. Try again.",
+    });
+
+    const res = await exitOnboardingV2(ROUTES.TABS);
+
+    expect(res).toEqual({ ok: false, message: "Couldn't save your setup. Try again." });
+  });
 });

@@ -10,6 +10,16 @@ export function notifEnrollmentId(md: Record<string, unknown> | null | undefined
   return typeof id === "string" && id.length > 0 ? id : null;
 }
 
+/**
+ * Build 90 09.2: a server-sent row (Strava) carries the screen it opens. Only in-app task
+ * routes are allowed, so a bad row can never send the app somewhere else.
+ */
+export function notifRoute(md: Record<string, unknown> | null | undefined): string | null {
+  const route = md?.route;
+  if (typeof route !== "string") return null;
+  return route.startsWith("/task/strava") ? route : null;
+}
+
 export function notifAsOfKey(
   md: Record<string, unknown> | null | undefined,
   createdAt: string,

@@ -1,0 +1,33 @@
+{
+  "personaId": "p25",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:20:41.019Z",
+  "endedAt": "2026-10-14T23:21:25.333Z",
+  "steps": 2,
+  "durationSec": 44,
+  "goals": [
+    {
+      "id": "p25-g1",
+      "text": "Find the streak and any freeze explanation.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "e9980cfb-8ac2-4650-ab33-43ce950941e7",
+  "isTest": true,
+  "cleanup": "kept"
+}

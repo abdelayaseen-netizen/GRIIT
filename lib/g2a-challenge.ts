@@ -6,6 +6,7 @@ import { dueKeysForRange } from "@/backend/lib/due-keys";
 import { enrollmentSecuredDateKeys } from "@/backend/lib/secured-elapsed";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "@/lib/date-utils";
 import { FREEZE } from "@/lib/copy";
+import { formatOfDays } from "@/lib/format-days";
 
 export const THIS_WEEK = "This week";
 export const A_BOARD_NEEDS_TWO = "A board needs two.";
@@ -61,7 +62,8 @@ export function weekSecuredOfDue(args: {
     due += 1;
     if (secured.has(key)) n += 1;
   }
-  return { secured: n, due, line: `${n} of ${due} days` };
+  const securedCount = Math.min(n, due);
+  return { secured: securedCount, due, line: formatOfDays(securedCount, due) };
 }
 
 export function freezeDetailCopy(args: {

@@ -10,10 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { firstString } from "@/lib/task-helpers";
 import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
-import { trpcMutate, trpcQuery } from "@/lib/trpc";
+import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { dayOpenTasksFromActive } from "@/lib/day-open-active";
+import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
+import { bootstrapDayOpenInput, refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import {
   proofsFromComplete,
   readSecuredHandoff,
@@ -22,13 +24,16 @@ import {
   type SecuredSelfRow,
 } from "@/lib/secured-day";
 import {
+  finishedAtFromSecuredParam,
   readSecuredDateKeysFromCache,
   submitResultFromSecuredParams,
   todayIsSecuredInCache,
 } from "@/lib/task-secured-nav";
 import { afterSecuredNext } from "@/lib/moment-queue";
 import { freezeEarnedNote } from "@/lib/freeze-earn";
+import { useFirstConcept } from "@/lib/concept-seen";
 import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
+import { showInviteAfterSecured } from "@/lib/invite-link";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -54,6 +59,9 @@ function TaskSecuredInner() {
     freezesHeld?: string;
     freezeCap?: string;
     freezeAtCap?: string;
+    openPost?: string;
+    choiceMade?: string;
+    finishedAt?: string;
   }>();
   const { user } = useAuth();
   const { profile, stats } = useApp();
@@ -77,6 +85,9 @@ function TaskSecuredInner() {
     freezeCap: firstString(params.freezeCap),
     freezeAtCap: firstString(params.freezeAtCap),
   });
+  const finishedAt = finishedAtFromSecuredParam(firstString(params.finishedAt));
+  // 06.1: the first freeze ever earned says what it does, once.
+  const firstFreeze = useFirstConcept("freeze", result.freezeGranted === true);
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
   const statsRow = stats as { frozenDateKeys?: string[]; lastStandDateKeys?: string[] } | null;
@@ -101,7 +112,9 @@ function TaskSecuredInner() {
       }),
   );
   const shareEventId = held?.shareEventId ?? paramEventId;
-  const offerShare = (held?.closingHasPhoto ?? closingPhoto) && proofs.length > 0;
+  // Build 90 04.1: the post-or-private choice was made before the save; do not ask again here.
+  const choiceMade = firstString(params.choiceMade) === "1";
+  const offerShare = !choiceMade && (held?.closingHasPhoto ?? closingPhoto) && proofs.length > 0;
   const [meta, setMeta] = useState<{
     taskCount: number;
     challengeCount: number;
@@ -109,6 +122,8 @@ function TaskSecuredInner() {
     allSelfReported: boolean;
     ready: boolean;
     error: boolean;
+    /** 08.1: the challenge id of the enrollment this screen is for (from the bootstrap). */
+    challengeId: string | null;
   }>({
     taskCount: 0,
     challengeCount: 0,
@@ -116,6 +131,7 @@ function TaskSecuredInner() {
     allSelfReported: false,
     ready: false,
     error: false,
+    challengeId: null,
   });
   const [retryTick, setRetryTick] = useState(0);
   const [shareFailed, setShareFailed] = useState(false);
@@ -126,25 +142,28 @@ function TaskSecuredInner() {
     let live = true;
     void (async () => {
       try {
-        await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
-        await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] });
-        await queryClient.invalidateQueries({ queryKey: ["home", "bootstrap"] });
-        const [activeList, checkins] = await Promise.all([
-          trpcQuery(TRPC.challenges.listMyActive) as Promise<
-            Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"]
-          >,
-          trpcQuery(TRPC.checkins.getTodayCheckinsForUser) as Promise<
-            Parameters<typeof dayOpenTasksFromActive>[0]["completed"]
-          >,
-        ]);
+        await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] }, { cancelRefetch: false });
+        await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] }, { cancelRefetch: false });
+        // Build 90 04.7: one bootstrap refresh (joining the one the finish started) carries
+        // listMyActive and today's check-ins; no second and third request for the same rows.
+        // 01b.3: the finish awaits its refresh before replacing to this screen, so by now it
+        // has usually landed. `finishedAt` lets this call skip when that payload is newer.
+        await refreshHomeBootstrap(queryClient, finishedAt ? { freshAfter: finishedAt } : undefined);
+        const { enrollments, completed } = bootstrapDayOpenInput<
+          Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"][number],
+          Parameters<typeof dayOpenTasksFromActive>[0]["completed"][number]
+        >(user?.id ? queryClient.getQueryData(homeBootstrapQueryKey(user.id)) : undefined);
         const tasks = dayOpenTasksFromActive({
-          enrollments: Array.isArray(activeList) ? activeList : [],
-          completed: Array.isArray(checkins) ? checkins : [],
+          enrollments,
+          completed,
           todayKey: getTodayDateKey(tz),
           timeZone: tz ?? "UTC",
         });
         if (!live) return;
         const next = selectSecuredDayMeta({ tasks, proofs });
+        const own = (enrollments as { id?: string; challenge_id?: string }[]).find(
+          (e) => e.id === result.activeChallengeId,
+        );
         setMeta({
           taskCount: next.taskCount,
           challengeCount: next.challengeCount,
@@ -152,6 +171,7 @@ function TaskSecuredInner() {
           allSelfReported: next.allSelfReported,
           ready: true,
           error: false,
+          challengeId: typeof own?.challenge_id === "string" ? own.challenge_id : null,
         });
       } catch {
         if (!live) return;
@@ -162,15 +182,21 @@ function TaskSecuredInner() {
           allSelfReported: false,
           ready: false,
           error: true,
+          challengeId: null,
         });
       }
     })();
     return () => {
       live = false;
     };
-  }, [proofs, queryClient, tz, retryTick]);
+  }, [proofs, queryClient, tz, retryTick, user?.id, result.activeChallengeId, finishedAt]);
 
   const done = () => {
+    const openPost = firstString(params.openPost);
+    if (openPost) {
+      router.replace(ROUTES.POST_ID(openPost) as never);
+      return;
+    }
     const next = afterSecuredNext({
       challengeDone: result.challengeDone,
       challengeDay: result.challengeDay,
@@ -198,7 +224,18 @@ function TaskSecuredInner() {
   return (
     <SecuredDayScreen
       streak={result.streakDays}
-      freezeNote={freezeEarnedNote(result)}
+      freezeNote={freezeEarnedNote(result, firstFreeze === true)}
+      invite={
+        meta.challengeId &&
+        showInviteAfterSecured({
+          challengeDay: result.challengeDay,
+          challengeLength: result.challengeLength,
+          daySecured: result.daySecured,
+          challengeDone: result.challengeDone,
+        })
+          ? { challengeId: meta.challengeId, challengeName: result.challengeName }
+          : null
+      }
       proofs={proofs}
       selfReported={meta.selfReported}
       taskCount={meta.ready ? meta.taskCount : undefined}

@@ -1,0 +1,17 @@
+appId: app.griit.challenge-tracker
+---
+- scrollUntilVisible:
+    element: "Edit Evening journal"
+    direction: DOWN
+    visibilityPercentage: 20
+- assertVisible: "Edit Evening journal"
+- assertVisible: "Only people you invite"
+- assertVisible: "Day 1 is today."
+- assertNotVisible: "Day 1 of 7 is today"
+- assertNotVisible: "Anyone can find and join"
+- tapOn: "Start the challenge"
+- assertVisible: "Morning run"
+- assertVisible: "Workout"
+- assertVisible: "Body check-in"
+- assertVisible: "Evening journal"
+- assertNotVisible: "Day 1 of 7 is today"

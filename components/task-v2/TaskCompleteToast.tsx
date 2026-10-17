@@ -10,6 +10,7 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   clearTaskCompleteFlash,
   dismissTaskToast,
+  runToastAction,
   subscribeTaskToast,
   taskCompleteFlashId,
   type TaskCompleteToast,
@@ -55,7 +56,7 @@ export default function TaskCompleteToast({
     if (!toast) return;
     slide.setValue(24);
     Animated.spring(slide, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
-    const life = shared ? UNDO_MS : toast.cameraSeal ? PHOTO_LIFE_MS : LIFE_MS;
+    const life = toast.lifeMs ?? (shared ? UNDO_MS : toast.cameraSeal ? PHOTO_LIFE_MS : LIFE_MS);
     const timer = setTimeout(() => dismissTaskToast(), life);
     return () => clearTimeout(timer);
   }, [toast, slide, shared]);
@@ -84,7 +85,6 @@ export default function TaskCompleteToast({
         { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] },
       ]}
     >
-      {toast.cameraSeal ? null : (
       <View style={styles.thumb}>
         {toast.photoUri ? (
           <Image source={{ uri: toast.photoUri }} style={styles.thumb} />
@@ -92,7 +92,6 @@ export default function TaskCompleteToast({
           <Check size={22} color={DS_V3.color.textPrimary} />
         )}
       </View>
-      )}
       <View style={styles.copy}>
         <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
         {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
@@ -111,10 +110,21 @@ export default function TaskCompleteToast({
             setShared(true);
             void Promise.resolve(onShareFeed?.(toast)).catch(() => setShared(false));
           }}
-          style={styles.photoPill}
+          style={styles.pill}
         >
-          {toast.photoUri ? <Image source={{ uri: toast.photoUri }} style={styles.photo} /> : null}
           <Text style={styles.pillTxt}>{shared ? "Undo" : "Share"}</Text>
+        </Pressable>
+      ) : toast.actionLabel ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={toast.actionLabel}
+          onPress={() => {
+            runToastAction();
+            dismissTaskToast();
+          }}
+          style={styles.pill}
+        >
+          <Text style={styles.pillTxt}>{toast.actionLabel}</Text>
         </Pressable>
       ) : (
         <Pressable
@@ -162,21 +172,9 @@ const styles = StyleSheet.create({
     height: 32,
     paddingHorizontal: 12,
     borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.primary,
+    backgroundColor: DS_V3.color.textPrimary,
     alignItems: "center",
     justifyContent: "center",
   },
-  pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.onBrand },
-  photoPill: {
-    height: 40,
-    paddingLeft: 4,
-    paddingRight: 12,
-    borderRadius: DS_V3.radius.pill,
-    borderWidth: 1,
-    borderColor: DS_V3.color.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  photo: { width: 28, height: 32, borderRadius: 6 },
+  pillTxt: { fontSize: 13, lineHeight: 16, fontWeight: "500", color: DS_V3.color.canvas },
 });

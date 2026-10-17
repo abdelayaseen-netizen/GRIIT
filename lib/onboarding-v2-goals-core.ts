@@ -24,6 +24,20 @@ export function parseGoalsFromAnswers(answers: unknown): OnboardingGoal[] {
   return out;
 }
 
+/** A second tap on the only selected goal keeps it. Continue stays enabled. */
+export function toggleOnboardingGoal<T extends string>(
+  selected: readonly T[],
+  id: T,
+  max: number
+): T[] {
+  if (selected.includes(id)) {
+    if (selected.length === 1) return [...selected];
+    return selected.filter((goal) => goal !== id);
+  }
+  if (selected.length >= max) return [...selected];
+  return [...selected, id];
+}
+
 export function mergeGoalsIntoAnswers(
   existing: Record<string, unknown> | null | undefined,
   goals: OnboardingGoal[]

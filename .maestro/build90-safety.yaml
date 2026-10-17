@@ -1,0 +1,160 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 07: safety. Runs after build90-links.yaml + build90-links-people.yaml with the same
+# accounts: A (MAESTRO_EMAIL, password Build90-links-test) has a post in 7K Steps and
+# B (MAESTRO_EMAIL_B) commented "nice walk" on it.
+#   1. 07.3: long press on B's comment → Report comment → the comment is gone at once
+#      with the "hidden for you" line; after a cold relaunch it is still gone.
+#   2. 07.1 / 07.2: as A, a dodged word in a comment ("sh1t post") is refused by the
+#      server and the reason shows under the field, naming the field; a clean comment posts.
+#      A dodged word in the bio is refused on Edit profile with the bio message.
+# Each A/B pair works once: after the report the server hides B's comment from A for good
+# (run 2026-10-17_034234 showed exactly that on a fresh install).
+# Needs the chunk 07 server (/api/health commit b61ab41 or later).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|I already have an account"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "I already have an account"
+    timeout: 60000
+- tapOn: "I already have an account"
+- tapOn:
+    text: "Continue with email"
+    optional: true
+# A fresh install opens the "Welcome back." form (button "Sign in"); after a sign-out the
+# form is "Log in to GRIIT". Both take the same fields.
+- extendedWaitUntil:
+    visible: "Log in to GRIIT|Welcome back."
+    timeout: 15000
+- tapOn: "Email address"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    text: "Password"
+    index: 0
+- inputText: "Build90-links-test"
+- tapOn: "Log in to GRIIT|^Sign in$"
+- extendedWaitUntil:
+    visible: "1 of 1 done|0 of 1 done|Activity.*"
+    timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Activity → B's comment row → the post. The tab reads "Activity, unread" when the dot shows
+# (08 follow-up).
+- tapOn: "Activity.*"
+- extendedWaitUntil:
+    visible: ".*commented.*|.*comment.*"
+    timeout: 30000
+- tapOn: ".*commented.*|.*comment.*"
+- extendedWaitUntil:
+    visible: "nice walk"
+    timeout: 20000
+- takeScreenshot: build90-07-post-before
+
+# 07.3: report B's comment. It is gone at once.
+# Reported before anything is typed, so no keyboard sits over the list. A long press
+# that lands on a row mid-render is dropped, so try up to three times.
+- repeat:
+    times: 3
+    while:
+      notVisible: "Report this comment?"
+    commands:
+      - longPressOn: "nice walk"
+      - waitForAnimationToEnd:
+          timeout: 1500
+- assertVisible: "Report this comment?"
+- takeScreenshot: build90-07-report-prompt
+- tapOn: "Report comment"
+- extendedWaitUntil:
+    visible: "Reported. The comment is hidden for you."
+    timeout: 15000
+- assertNotVisible: "nice walk"
+- takeScreenshot: build90-07-report-hidden
+
+# 07.1 / 07.2: a dodge is refused and the field says why.
+- tapOn: "Add a comment.*"
+- inputText: "sh1t post"
+- tapOn: "Send comment"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a comment. Try different ones."
+    timeout: 15000
+# The draft stays in the field so it can be changed (it is the only "sh1t post" on screen).
+- assertVisible: "sh1t post"
+- takeScreenshot: build90-07-comment-blocked
+- eraseText: 20
+- inputText: "well done"
+- assertNotVisible: "Those words aren't allowed in a comment. Try different ones."
+- tapOn: "Send comment"
+- extendedWaitUntil:
+    visible: "well done"
+    timeout: 20000
+- assertNotVisible: "nice walk"
+- takeScreenshot: build90-07-comment-clean
+
+# Still hidden after a cold start (the phone's hidden set, and the server filter).
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "1 of 1 done|0 of 1 done|Activity.*"
+    timeout: 60000
+# The wait matches views mounted behind the splash (SPLASH_MAX_MS 1800); pause before the tap
+# so it lands on the tab, not the splash (08 follow-up, from /tmp/b90-08-relaunch.yaml).
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
+- tapOn: "Activity.*"
+- extendedWaitUntil:
+    visible: ".*commented.*|.*comment.*"
+    timeout: 30000
+- tapOn: ".*commented.*|.*comment.*"
+- extendedWaitUntil:
+    visible: "well done"
+    timeout: 20000
+- assertNotVisible: "nice walk"
+- takeScreenshot: build90-07-report-relaunch
+
+# 07.1: the bio on Edit profile is refused with the bio message.
+# The relaunch path may have opened the Comments sheet instead of the post (the Activity
+# regex also matches a feed "Comment" button); both hide the reported comment. Close
+# whichever is open.
+- runFlow:
+    when:
+      visible: "Comments"
+    commands:
+      - tapOn:
+          point: "50%,8%"
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Profile"
+    timeout: 15000
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Edit profile"
+    timeout: 15000
+- tapOn: "Edit profile"
+- extendedWaitUntil:
+    visible: "Shown to anyone who can see your profile."
+    timeout: 15000
+- tapOn: "Shown to anyone who can see your profile."
+- inputText: "f u c k this"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a bio. Try different ones."
+    timeout: 15000
+- takeScreenshot: build90-07-bio-blocked

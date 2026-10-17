@@ -202,6 +202,8 @@ function joinCaller(supabase: ReturnType<typeof createLeaveMock>) {
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
+    isAnonymous: false,
+    email: null,
   });
 }
 
@@ -213,6 +215,8 @@ function listCaller(supabase: ReturnType<typeof createLeaveMock>) {
     req: {} as Request,
     requestId: "test",
     clientIp: "127.0.0.1",
+    isAnonymous: false,
+    email: null,
   });
 }
 

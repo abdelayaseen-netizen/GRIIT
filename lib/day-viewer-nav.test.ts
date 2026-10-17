@@ -93,6 +93,8 @@ describe("day viewer paging", () => {
     expect(src).not.toContain("Swipe left at the last photo");
     const screen = readFileSync(resolve(__dirname, "../app/profile/proof/[date].tsx"), "utf8");
     expect(screen).toContain("countLabel");
-    expect(screen).toContain("proofsDateLabel");
+    expect(screen).toContain("viewerDays");
+    const viewer = readFileSync(resolve(__dirname, "../components/profile/ProofViewer.tsx"), "utf8");
+    expect(viewer).toContain("proofsDateLabel");
   });
 });

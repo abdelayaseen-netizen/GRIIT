@@ -16,13 +16,22 @@ export const MORNING_MISS = {
   without: "Secure today and you’re back at 1.",
 } as const;
 
-export function freezeEarnedNote(input: {
-  freezeGranted?: boolean;
-  freezeAtCap?: boolean;
-  freezesHeld?: number;
-  freezeCap?: number;
-}): string | null {
-  if (input.freezeGranted) return EARNED_FREEZE.earned(input.freezesHeld ?? 0);
+/** Build 90 06.1: what a freeze does, said once, the first time one is earned. */
+export const FREEZE_MEANS = "It covers one missed day so your streak holds.";
+
+export function freezeEarnedNote(
+  input: {
+    freezeGranted?: boolean;
+    freezeAtCap?: boolean;
+    freezesHeld?: number;
+    freezeCap?: number;
+  },
+  firstTime = false,
+): string | null {
+  if (input.freezeGranted) {
+    const base = EARNED_FREEZE.earned(input.freezesHeld ?? 0);
+    return firstTime ? `${base} ${FREEZE_MEANS}` : base;
+  }
   if (input.freezeAtCap && (input.freezeCap ?? 0) > 0) return EARNED_FREEZE.atCap(input.freezeCap ?? 0);
   return null;
 }

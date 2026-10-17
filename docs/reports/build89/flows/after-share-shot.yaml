@@ -1,0 +1,7 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Share today"
+- extendedWaitUntil:
+    visible: "Share"
+    timeout: 10000
+- assertNotVisible: "griit.app"

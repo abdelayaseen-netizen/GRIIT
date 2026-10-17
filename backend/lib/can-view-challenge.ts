@@ -58,6 +58,16 @@ export async function canViewChallenge(
   return Boolean(invite);
 }
 
+/**
+ * Build 90 08.2: the invite link (griit://i/<id>) is the key to an invite-only challenge.
+ * "Only people with your link can join." — a published challenge opened through its link can
+ * be viewed and joined by whoever holds the link. Drafts and ended runs stay closed.
+ */
+export function canOpenViaInviteLink(challenge: ChallengeAccessRow): boolean {
+  const status = String(challenge.status ?? "published").toLowerCase();
+  return status === "published";
+}
+
 /** PRIVATE join is creator-only. Invitees accept via groups.respond. */
 export function canJoinPrivateChallenge(
   viewerId: string,

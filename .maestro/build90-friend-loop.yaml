@@ -1,0 +1,231 @@
+appId: app.griit.challenge-tracker
+---
+# Build 90 chunk 08 Friend loop, account A (fresh is_test email: MAESTRO_EMAIL=b8908a…@example.com).
+#   08.1 the invite link is visible text with Copy and Share on create-success, on Day secured
+#        after the first secured day, and on the board's "A board needs two."
+#   08.3 Discover search finds a challenge by name and opens one by invite code.
+# The created challenge is invite-only (the wizard default), so the link written for account B
+# (build90-friend-loop-b.yaml) is the only way in. Needs the chunk 08 server on Railway.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-friend-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+# Account creation can land on Settings (pushed, no tab bar) or its Account page.
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Home"
+
+# 08.1 create-success: the wizard, one self-reported task, invite-only (default).
+- tapOn: "Create"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 15000
+- tapOn: "Challenge title"
+- inputText: "Friend loop walk"
+- tapOn: "Name your challenge"
+- tapOn: "Fitness"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "What must get done daily?"
+    timeout: 10000
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- extendedWaitUntil:
+    visible: "Task name"
+    timeout: 10000
+- tapOn: "e.g. Read 10 pages"
+- inputText: "Walk ten minutes"
+- tapOn: "Task name"
+- tapOn: "Add task"
+- extendedWaitUntil:
+    visible: "Walk ten minutes"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How strict?"
+    timeout: 10000
+- tapOn: "Standard.*"
+# Visibility stays on Invite (the default): only people with the link can join.
+- tapOn: "Review"
+- extendedWaitUntil:
+    visible: "Start the challenge"
+    timeout: 10000
+- tapOn: "Start the challenge"
+- extendedWaitUntil:
+    visible: "You're in. Day 1 is.*"
+    timeout: 25000
+# 08.1 create-success: the link is visible text, Copy flips to Copied, Share is there.
+- assertVisible: "Invite link"
+- assertVisible: ".*griit://i/.*"
+- assertVisible:
+    id: "invite-link-share"
+- tapOn:
+    id: "invite-link-copy"
+- extendedWaitUntil:
+    visible: "Copied"
+    timeout: 5000
+- takeScreenshot: build90-08-create-success-link
+- tapOn: "Back to today|Back to Home"
+
+# 08.1 after the first secured day: finish the only task, keep it private, Day secured shows
+# the invite block with the same link row.
+- extendedWaitUntil:
+    visible: "Walk ten minutes"
+    timeout: 20000
+- tapOn: "Walk ten minutes"
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 10000
+- tapOn:
+    id: "post-choice-keep"
+- extendedWaitUntil:
+    visible: "Today is secured.|Day 1 secured.*"
+    timeout: 20000
+# The block sits under the share card; two swipes bring it on screen (the hierarchy lists
+# ScrollView children before they scroll in, so scrollUntilVisible would stop early).
+- swipe:
+    start: "50%,75%"
+    end: "50%,20%"
+    duration: 600
+- swipe:
+    start: "50%,75%"
+    end: "50%,20%"
+    duration: 600
+- assertVisible: "Day 1 is yours. Bring a friend."
+- assertVisible: "Invite link"
+- assertVisible: ".*griit://i/.*"
+- assertVisible:
+    id: "invite-link-copy"
+- assertVisible:
+    id: "invite-link-share"
+- takeScreenshot: build90-08-secured-link
+- tapOn: "^Done$"
+
+# 08.1 the board with one member: "A board needs two." and the link row under it.
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Activity"
+- tapOn: "Leaderboard"
+- extendedWaitUntil:
+    visible: "A board needs two."
+    timeout: 20000
+- assertVisible: "Invite link"
+- assertVisible: ".*griit://i/.*"
+- assertVisible:
+    id: "invite-link-copy"
+- assertVisible:
+    id: "invite-link-share"
+- takeScreenshot: build90-08-board-link
+
+# 08.3 Discover search by name: "7K" finds 7K Steps and opens its page.
+- tapOn: "Discover"
+- extendedWaitUntil:
+    visible:
+      id: "discover-search-field"
+    timeout: 20000
+- tapOn:
+    id: "discover-search-field"
+- inputText: "7K"
+- extendedWaitUntil:
+    visible: "Results"
+    timeout: 15000
+- assertVisible: "7K Steps"
+- takeScreenshot: build90-08-search-name
+# The Featured card is also titled 7K Steps; the result row (one accessible element
+# labelled by its title) comes first in the tree.
+- tapOn:
+    text: "7K Steps"
+    index: 0
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Go back"
+# 08.3 by invite code: the exact code opens that challenge.
+- extendedWaitUntil:
+    visible:
+      id: "discover-search-field"
+    timeout: 15000
+- tapOn:
+    id: "discover-search-field"
+- eraseText: 10
+- inputText: "e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "From your invite code"
+    timeout: 15000
+- assertVisible: "Show Up 7"
+- takeScreenshot: build90-08-search-code
+- tapOn:
+    text: "Show Up 7"
+    index: 0
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 20000
+- takeScreenshot: build90-08-search-code-opened

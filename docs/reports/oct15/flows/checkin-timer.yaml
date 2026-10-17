@@ -1,0 +1,58 @@
+appId: app.griit.challenge-tracker
+---
+# Timer Done uses the app's "already did it" button. A 20-minute clock is not waited out.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000005"
+- extendedWaitUntil:
+    visible: "Join Breathe 1 Min"
+    timeout: 20000
+- tapOn: "Join Breathe 1 Min"
+- extendedWaitUntil:
+    visible: "Breathe 1 minute"
+    timeout: 20000
+- assertVisible: "Home"
+- tapOn: "Breathe 1 minute"
+- extendedWaitUntil:
+    visible: "Done, already did it"
+    timeout: 15000
+- tapOn: "Done, already did it"
+- extendedWaitUntil:
+    visible: "^Log it$"
+    timeout: 10000
+- tapOn: "^Log it$"
+- extendedWaitUntil:
+    visible: "Day 1 secured.*"
+    timeout: 20000

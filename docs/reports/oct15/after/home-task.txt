@@ -1,0 +1,29 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow home-task
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Tap on (Optional) "http://localhost:8081"... WARNED
+Tap on (Optional) "http://localhost:8082"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Assert that "Physical toughness.*" is visible... COMPLETED
+Tap on "Physical toughness.*"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Show Up 7.*" is visible... COMPLETED
+Tap on "Set this up later"... COMPLETED
+Assert that "No reminders for now" is visible... COMPLETED
+Tap on "No reminders for now"... COMPLETED
+Assert that "Find a challenge" is visible... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000003... COMPLETED
+Assert that "Join Early Riser 7" is visible... COMPLETED
+Tap on "Join Early Riser 7"... COMPLETED
+Assert that "Up and out of bed" is visible... COMPLETED
+Assert that "Home" is visible... COMPLETED
+Tap on "Up and out of bed"... COMPLETED
+Assert that "Take proof photo|Window closed.*" is visible... COMPLETED
+EXIT:0

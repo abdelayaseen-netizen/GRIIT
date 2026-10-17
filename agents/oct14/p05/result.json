@@ -1,0 +1,38 @@
+{
+  "personaId": "p05",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:28:42.348Z",
+  "endedAt": "2026-10-14T22:31:03.757Z",
+  "steps": 16,
+  "durationSec": 141,
+  "goals": [
+    {
+      "id": "p05-g1",
+      "text": "Find a way to join a friend's challenge.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "discover: For you is already selected."
+  ],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "91e16c6e-26e7-4c65-999b-137147d8eb51",
+  "isTest": true,
+  "cleanup": "kept"
+}

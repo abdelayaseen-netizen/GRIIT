@@ -1,0 +1,19 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn: "Create"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 15000
+- assertVisible: "Name your challenge"
+- tapOn: "Challenge title"
+- inputText: "Morning run"
+- tapOn: "Name your challenge"
+- swipe:
+    direction: UP
+- assertVisible: "Fitness"
+- assertVisible: "Learning"
+- tapOn: "Learning"

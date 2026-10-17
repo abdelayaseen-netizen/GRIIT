@@ -26,6 +26,7 @@ export default function DoubleTapRespect({
   accessibilityLabel?: string;
   children: React.ReactNode;
 }) {
+  void onOpen;
   const [reduce, setReduce] = useState(false);
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
@@ -58,23 +59,16 @@ export default function DoubleTapRespect({
     scale.value = withSequence(withTiming(1.15, { duration: 120 }), withTiming(1, { duration: 300 }));
   };
 
-  const gesture = Gesture.Exclusive(
-    Gesture.Tap()
-      .numberOfTaps(2)
-      .maxDelay(WINDOW_MS)
-      .onEnd((e) => {
-        runOnJS(onDouble)(e.x, e.y);
-      }),
-    Gesture.Tap()
-      .numberOfTaps(1)
-      .onEnd(() => {
-        runOnJS(onOpen)();
-      }),
-  );
+  const gesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(WINDOW_MS)
+    .onEnd((e) => {
+      runOnJS(onDouble)(e.x, e.y);
+    });
 
   return (
     <GestureDetector gesture={gesture}>
-      <View accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
+      <View testID="feed-photo" accessible accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
         {children}
         <Animated.View pointerEvents="none" style={burstStyle}>
           <View style={{ width: burstSize, height: burstSize, alignItems: "center", justifyContent: "center" }}>

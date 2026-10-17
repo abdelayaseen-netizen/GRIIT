@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "Morning Prayer"
+- assertVisible: "6 of 7"
+- tapOn: "Your data"
+- assertVisible: "6 of 7"

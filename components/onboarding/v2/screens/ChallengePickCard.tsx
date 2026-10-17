@@ -27,7 +27,6 @@ export default function ChallengePickCard({
       accessibilityLabel={challenge.title ?? "Suggested challenge"}
       accessibilityState={{ selected }}
     >
-      <View style={styles.thumb} />
       <View style={styles.cardText}>
         <Text style={styles.cardTitle}>{challenge.title ?? "Challenge"}</Text>
         <Text style={styles.cardMeta}>{challengeDetailLine(challenge)}</Text>
@@ -58,12 +57,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 14,
     elevation: 3,
-  },
-  thumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 13,
-    backgroundColor: OBV2_COLOR.sunken,
   },
   cardText: { flex: 1, gap: 4 },
   cardTitle: { fontSize: 16, fontWeight: "500", color: OBV2_COLOR.ink },

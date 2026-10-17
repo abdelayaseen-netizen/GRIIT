@@ -15,7 +15,7 @@ import {
 } from "./account";
 import { askModel } from "./claude";
 import { HAIKU_MODEL, SONNET_MODEL } from "./cost";
-import { appContainer, actionYaml, applyPrivacy, launchYaml, resize, setTextSize, shot, wipeAppData } from "./device";
+import { appContainer, actionYaml, applyPrivacy, launchYaml, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
 import { parseDecision, reviewAction } from "./gate";
 import { needsFreshSignup, specsFor, type GoalSpec } from "./goals";
 import { resolveTarget, systemAlert } from "./match";
@@ -79,12 +79,24 @@ export async function runPersona(opts: {
   let model = opts.model;
   let compareNote = "";
   let compared = false;
-  const hardCap = opts.mode === "free" ? 120 : 80;
+  const hardCap = 60;
   const limit = hardCap;
+  const deadline = started.getTime() + 20 * 60 * 1000;
   const specs = opts.mode === "goal" ? specsFor(persona) : [];
   let creds = makeCredentials(persona.id);
   let installedSession: Record<string, unknown> | null = null;
-  if (!fresh && !giveUp) {
+  if (!fresh && persona.id === "p36") {
+    const email = process.env.APP_REVIEW_LOGIN?.trim() ?? "";
+    const password = process.env.APP_REVIEW_PASSWORD?.trim() ?? "";
+    if (!email || !password) {
+      giveUp = "Review login is missing from the environment.";
+      stopAll = true;
+    } else {
+      creds = { email, password, username: "review" };
+      isTest = true;
+      console.log("p36 using the review login");
+    }
+  } else if (!fresh && !giveUp) {
     const prepared = await prepareAgentAccount(persona.id, persona.name);
     if (!prepared.ok || !prepared.creds) {
       giveUp = `Could not prepare an is_test account (${prepared.detail}).`;
@@ -192,6 +204,10 @@ export async function runPersona(opts: {
   let relaunch = false;
 
   for (let n = 1; n <= limit && !giveUp; n++) {
+    if (Date.now() > deadline) {
+      giveUp = "Stopped at 20 minutes.";
+      break;
+    }
     if (opts.spend.usd >= opts.capUsd) {
       giveUp = `Stopped because measured API spend hit the $${opts.capUsd} cap.`;
       break;
@@ -403,6 +419,12 @@ export async function runPersona(opts: {
       }
     }
     if (error) errors.push(`${screen}: ${error}`);
+    if (persona.tech === "low" && error && target) {
+      const prior = steps.filter((step) => step.target === target && step.error).length;
+      if (prior + 1 >= 2) {
+        giveUp = "Gave up after two failed taps on the same thing.";
+      }
+    }
 
     const row: StepLog = {
       step: n,
@@ -448,8 +470,8 @@ export async function runPersona(opts: {
   if (db.enrollments.length) {
     for (const claim of dayClaims(blob.split("\n"))) {
       const sameTotal = db.enrollments.filter((row) => row.duration_days === claim.total);
-      if (sameTotal.length && sameTotal.every((row) => row.current_day !== claim.n)) {
-        wrongNumbers.push(`Screen said Day ${claim.n} of ${claim.total}. Database current_day is ${sameTotal.map((row) => row.current_day ?? "?").join(", ")}.`);
+      if (sameTotal.length && sameTotal.every((row) => shownEnrollmentDay(row.current_day, claim.total) !== claim.n)) {
+        wrongNumbers.push(`Screen said Day ${claim.n} of ${claim.total}. Enrollment day is ${sameTotal.map((row) => shownEnrollmentDay(row.current_day, claim.total)).join(", ")} (stored current_day ${sameTotal.map((row) => row.current_day ?? "?").join(", ")}).`);
       }
     }
   }
@@ -488,7 +510,7 @@ export async function runPersona(opts: {
 }
 
 function deviceId(): string {
-  return "B10E65A0-C453-4E58-97BD-A3696ED848AE";
+  return UDID;
 }
 
 function judge(
@@ -541,6 +563,12 @@ function observed(text: string, blob: string, steps: StepLog[]): boolean {
   if (/leave the paywall/i.test(text)) return /premium|restore purchases/.test(blob);
   if (/wording|font|largest text/i.test(text)) return blob.length > 20;
   return false;
+}
+
+function shownEnrollmentDay(currentDay: number | null | undefined, durationDays: number): number {
+  const n = typeof currentDay === "number" && Number.isFinite(currentDay) ? Math.max(1, Math.floor(currentDay)) : 1;
+  const total = Number.isFinite(durationDays) ? Math.max(1, Math.floor(durationDays)) : 1;
+  return Math.min(n, total);
 }
 
 function stagesReached(input: {

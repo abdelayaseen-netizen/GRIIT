@@ -1,0 +1,126 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 03: workout log (type + duration, distance only for Cycling / Swim), run pace check
+# with Edit / Save anyway, counter Done inactive below target, journal word rule.
+# Task screens open by deep link with placeholder ids; nothing is saved.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+
+# 03.1 Workout stored as run + tracking_mode time → type chips + Duration, no Distance.
+- openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Athlete&currentDay=1&durationDays=14&originTab=home&taskType=run&taskName=Workout&taskConfig=%7B%22min_duration_minutes%22%3A30%2C%22duration_minutes%22%3A30%2C%22tracking_mode%22%3A%22time%22%2C%22unit%22%3A%22minutes%22%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
+- extendedWaitUntil:
+    visible: "Strength"
+    timeout: 20000
+- assertVisible: "Basketball"
+- assertVisible: "Swim"
+- assertVisible: "Cycling"
+- assertVisible: "Yoga"
+- assertVisible: "Sports"
+- assertVisible: "Other"
+- assertVisible: "Duration"
+- assertVisible: "30 min minimum"
+- assertNotVisible: "Distance.*"
+- assertNotVisible: "mm:ss"
+- takeScreenshot: build90-03-workout
+- tapOn: "Cycling"
+- assertVisible: "Distance \\(optional\\)"
+- takeScreenshot: build90-03-workout-cycling
+- tapOn: "Strength"
+- assertNotVisible: "Distance.*"
+- tapOn: "Go back"
+
+# 03.2 Run: 3 mi in 12:50 → "That pace looks off." with Edit and Save anyway.
+- openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Athlete&currentDay=1&durationDays=14&originTab=home&taskType=run&taskName=Morning%20run&taskConfig=%7B%22tracking_mode%22%3A%22distance%22%2C%22target_value%22%3A3%2C%22unit%22%3A%22miles%22%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
+- extendedWaitUntil:
+    visible: "mm:ss"
+    timeout: 20000
+- assertVisible: "Distance"
+- tapOn:
+    id: "log-distance"
+- inputText: "3"
+- tapOn:
+    id: "log-duration"
+- inputText: "1250"
+- tapOn: "Morning run"
+- assertNotVisible: "Target met.*"
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "That pace looks off."
+    timeout: 10000
+- assertVisible: "Check your distance and time."
+- assertVisible: "Save anyway"
+- takeScreenshot: build90-03-pace-off
+- tapOn: "Edit"
+- assertNotVisible: "That pace looks off."
+- assertVisible: "mm:ss"
+- tapOn: "Go back"
+
+# 03.4 Counter: Done is inactive below target and says what is left.
+- openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Athlete&currentDay=1&durationDays=14&originTab=home&taskType=reading&taskName=Read%2030%20pages&taskConfig=%7B%22target_pages%22%3A30%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
+- extendedWaitUntil:
+    visible: "30 pages left"
+    timeout: 20000
+- assertNotVisible: "Done · 30 pages"
+- assertNotVisible: "Target met"
+- takeScreenshot: build90-03-counter-zero
+- tapOn: "Type it"
+- tapOn:
+    id: "count-type"
+- inputText: "30"
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Done · 30 pages"
+    timeout: 5000
+- assertNotVisible: "Target met"
+- takeScreenshot: build90-03-counter-full
+- tapOn: "Go back"
+
+# 03.3 Journal: repeats cap at 3, punctuation is 0, the first line stays visible.
+- openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Athlete&currentDay=1&durationDays=14&originTab=home&taskType=text&taskName=Key%20takeaway%20journal&taskConfig=%7B%22min_words%22%3A20%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
+- extendedWaitUntil:
+    visible:
+      id: "write-body"
+    timeout: 20000
+- tapOn:
+    id: "write-body"
+- inputText: "my my my my my my"
+- assertVisible: "3 of 20"
+- assertVisible: "my my my my my my"
+- takeScreenshot: build90-03-write-repeats
+- eraseText: 20
+- inputText: "...."
+- assertVisible: "0 of 20"
+- takeScreenshot: build90-03-write-dots

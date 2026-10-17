@@ -15,8 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { consistencyScore } from "@/lib/scoring";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, userProfile } from "@/lib/routes";
+import { usableHandle } from "@/lib/feed-tap-targets";
 import { inviteToChallenge } from "@/lib/share";
+import InviteLinkRow from "@/components/InviteLinkRow";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
 import Chip from "@/components/ds/Chip";
@@ -250,6 +252,14 @@ function LeaderboardBody({
               });
             }}
           />
+          {/* Build 90 08.1: the link itself, with Copy and Share. */}
+          <View style={styles.inviteLink}>
+            <InviteLinkRow
+              challengeId={selectedChallengeId}
+              challengeName={challengeBoard.data?.challengeTitle ?? "this challenge"}
+              refUserId={userId}
+            />
+          </View>
         </View>
       ) : emptyCopy && showEmpty ? (
         <View style={styles.emptyPad}>
@@ -338,10 +348,8 @@ function useOpenLeaderboardProfile() {
         router.push(ROUTES.TABS_PROFILE as never);
         return;
       }
-      const u = entry.username?.trim();
-      if (!u || u === "?") return;
-      if (/^user_[0-9a-f]+$/i.test(u)) return;
-      router.push(ROUTES.PROFILE_USERNAME(encodeURIComponent(u)) as never);
+      // 05.1: every row opens a profile; rows without a usable handle open by id.
+      router.push(userProfile(usableHandle(entry.username) ?? entry.userId) as never);
     },
     [router],
   );
@@ -390,7 +398,10 @@ export interface LeaderboardTabProps {
 export function LeaderboardTab({ userId }: LeaderboardTabProps) {
   const [scope, setScope] = useState<LeaderScope>("challenge");
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
-  const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("friends");
+  // Build 90 08: a challenge board is the challenge's members. "friends" (viewer + mutual
+  // follows) left every link-invited member off the board, so it stayed at "A board needs two."
+  // There is no scope toggle in this tab yet.
+  const [challengeScope, setChallengeScope] = useState<"friends" | "everyone">("everyone");
 
   const friendsBoard = useQuery({
     queryKey: ["activity", "leaderboard", "friends", userId],
@@ -545,6 +556,9 @@ const styles = StyleSheet.create({
   emptyPad: {
     paddingTop: DS_V3.space.section,
     paddingHorizontal: DS_V3.space.gutter,
+  },
+  inviteLink: {
+    marginTop: DS_V3.space.lg,
   },
   board: {
     paddingTop: DS_V3.space.md,

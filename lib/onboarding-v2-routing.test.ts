@@ -19,17 +19,13 @@ import {
 } from "@/lib/onboarding-v2-routing";
 
 describe("ONBOARDING_V2_ORDER", () => {
-  it("is welcome, goals, why_proof, why_circle, commitment, first_challenge, reminders, account, profile", () => {
+  it("is welcome, goals, how, first_challenge, reminders", () => {
     expect(ONBOARDING_V2_ORDER).toEqual([
       "welcome",
       "goals",
-      "why_proof",
-      "why_circle",
-      "commitment",
+      "how",
       "first_challenge",
       "reminders",
-      "account",
-      "profile",
     ]);
   });
 
@@ -38,17 +34,15 @@ describe("ONBOARDING_V2_ORDER", () => {
     expect(ONBOARDING_V2_ORDER.includes("mode" as (typeof ONBOARDING_V2_ORDER)[number])).toBe(false);
   });
 
-  it("has eight progress segments after welcome", () => {
-    expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(8);
+  it("has four progress segments after welcome", () => {
+    expect(ONBOARDING_V2_PROGRESS_SEGMENTS).toBe(4);
   });
 
   it("chromeStep starts at Goals", () => {
     expect(chromeStep("goals")).toBe(0);
-    expect(chromeStep("why_proof")).toBe(1);
-    expect(chromeStep("why_circle")).toBe(2);
-    expect(chromeStep("commitment")).toBe(3);
-    expect(chromeStep("first_challenge")).toBe(4);
-    expect(chromeStep("profile")).toBe(7);
+    expect(chromeStep("how")).toBe(1);
+    expect(chromeStep("first_challenge")).toBe(2);
+    expect(chromeStep("reminders")).toBe(3);
   });
 });
 
@@ -56,16 +50,18 @@ describe("resolveV2Step", () => {
   it("returns a known key unchanged", () => {
     expect(resolveV2Step("goals")).toBe("goals");
     expect(resolveV2Step("first_challenge")).toBe("first_challenge");
-    expect(resolveV2Step("profile")).toBe("profile");
+    expect(resolveV2Step("how")).toBe("how");
   });
 
-  it("maps stale v4 keys to Chunk A steps; unknown resumes at welcome", () => {
-    expect(resolveV2Step("proof")).toBe("why_proof");
-    expect(resolveV2Step("circle")).toBe("why_circle");
+  it("maps stale v4 keys onto the shorter flow; unknown resumes at welcome", () => {
+    expect(resolveV2Step("proof")).toBe("how");
+    expect(resolveV2Step("why_proof")).toBe("how");
+    expect(resolveV2Step("circle")).toBe("how");
+    expect(resolveV2Step("commitment")).toBe("how");
     expect(resolveV2Step("challenge")).toBe("first_challenge");
     expect(resolveV2Step("reminder")).toBe("reminders");
-    expect(resolveV2Step("invite")).toBe("account");
-    expect(resolveV2Step("dayone")).toBe("profile");
+    expect(resolveV2Step("account")).toBe("reminders");
+    expect(resolveV2Step("profile")).toBe("reminders");
     expect(resolveV2Step("paywall")).toBe("first_challenge");
     expect(resolveV2Step("nope")).toBe("welcome");
     expect(resolveV2Step(null)).toBe("welcome");
@@ -78,12 +74,12 @@ describe("v2 progress chrome", () => {
     expect(v2SegmentFilled("welcome", 1)).toBe(false);
     expect(v2SegmentFilled("goals", 1)).toBe(true);
     expect(v2SegmentFilled("goals", 2)).toBe(false);
-    expect(v2SegmentFilled("account", 7)).toBe(true);
-    expect(v2SegmentFilled("profile", 1)).toBe(true);
-    expect(v2SegmentFilled("profile", 8)).toBe(true);
+    expect(v2SegmentFilled("reminders", 4)).toBe(true);
+    expect(v2SegmentFilled("how", 1)).toBe(true);
+    expect(v2SegmentFilled("how", 3)).toBe(false);
     expect(v2ProgressLabel("welcome")).toBe("");
     expect(v2ProgressLabel("goals")).toBe("");
-    expect(v2ProgressLabel("profile")).toBe("");
+    expect(v2ProgressLabel("reminders")).toBe("");
   });
 });
 

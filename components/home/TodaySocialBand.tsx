@@ -2,7 +2,7 @@
  * v48.2 option C. None is one text line. A photo row only when someone posted.
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { Image } from "expo-image";
 import { ChevronRight } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
@@ -35,9 +35,7 @@ export default function TodaySocialBand({
     >
       {newest?.photoUrl ? (
         <Image source={{ uri: newest.photoUrl }} style={styles.thumb} contentFit="cover" />
-      ) : (
-        <View style={styles.thumb} />
-      )}
+      ) : null}
       <Text style={styles.copy} numberOfLines={2}>{copy}</Text>
       <ChevronRight size={18} color={DS_V3.color.textSecondary} />
     </Pressable>

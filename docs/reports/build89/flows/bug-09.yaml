@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- assertVisible: "Best 6"
+- tapOn: "Your data"
+- assertVisible: "Best 6"

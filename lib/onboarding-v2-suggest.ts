@@ -1,7 +1,8 @@
 import type { OnboardingGoal } from "@/store/onboardingStore";
-import { inferChallengeGoalTags } from "@/lib/goal-challenge-map";
+import { goalFromCategory, goalFromTitle, inferChallengeGoalTags } from "@/lib/goal-challenge-map";
 import { parseTargetStreak } from "@/lib/onboarding-v2-target-streak-parse";
 import type { SuggestionTask } from "@/lib/onboarding-v2-first-challenge";
+import { dedupeChallengesByTitle } from "@/lib/challenge-dedupe";
 
 export const DEFAULT_ONBOARDING_LINE = 7;
 export const NO_DAYS_OFF_TITLE = "No Days Off";
@@ -14,6 +15,7 @@ export type SuggestableChallenge = {
   duration_days?: number | null;
   is_hard_mode?: boolean | null;
   participation_type?: string | null;
+  visibility?: string | null;
   participants_count?: number | null;
   tasks?: SuggestionTask[] | { length?: number };
 };
@@ -33,25 +35,53 @@ const MATCH_REASON: Record<OnboardingGoal, string> = {
 
 export { inferChallengeGoalTags };
 
-/** First intersecting inferred tag, else "Popular first challenge". */
+/** Named titles and the stored category win. Keywords fill in only when those miss. */
 export function matchReasonForChallenge(
   c: SuggestableChallenge,
   goals: readonly OnboardingGoal[]
 ): string {
+  const titled = goalFromTitle(c.title);
+  if (titled) return MATCH_REASON[titled];
+  const fromCategory = goalFromCategory(c.category);
+  if (fromCategory && goals.includes(fromCategory)) return MATCH_REASON[fromCategory];
   const selected = new Set(goals);
   const hit = inferChallengeGoalTags(c).find((tag) => selected.has(tag));
   return hit ? MATCH_REASON[hit] : "Popular first challenge";
+}
+
+/**
+ * Team challenges need an invite. Duo / shared_goal waiting rooms only add a
+ * member row — no enrollment — so they are not a first join. Private rows are
+ * not a first join.
+ */
+export function isRecommendableChallenge(c: {
+  participation_type?: string | null;
+  visibility?: string | null;
+}): boolean {
+  const part = (c.participation_type ?? "solo").toLowerCase();
+  if (part === "team" || part === "duo" || part === "shared_goal") return false;
+  const vis = (c.visibility ?? "public").toLowerCase();
+  if (vis === "private" || vis === "friends") return false;
+  return true;
 }
 
 export function countNoun(n: number, singular: string, plural: string): string {
   return n === 1 ? `1 ${singular}` : `${n} ${plural}`;
 }
 
+/** Stored participants_count. Hidden under 10. The column is not split by is_test. */
+export function doingItLine(count: number | null | undefined): string | null {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 10) return null;
+  return `${Math.floor(n).toLocaleString("en-US")} doing it`;
+}
+
 export function challengeDetailLine(c: SuggestableChallenge): string {
   const days = c.duration_days != null ? countNoun(c.duration_days, "day", "days") : null;
   const taskCount = Array.isArray(c.tasks) ? c.tasks.length : 0;
   const tasks = taskCount > 0 ? countNoun(taskCount, "task", "tasks") : null;
-  const line = [days, tasks, "daily"].filter(Boolean).join(" · ");
+  const doing = doingItLine(c.participants_count);
+  const line = [days, tasks, doing, "daily"].filter(Boolean).join(" · ");
   return line || c.category || "Starter";
 }
 
@@ -79,8 +109,13 @@ export function meetsOnboardingDuration(
 
 function goalScore(c: SuggestableChallenge, goals: readonly OnboardingGoal[]): number {
   if (goals.length === 0) return 0;
+  const titled = goalFromTitle(c.title);
+  if (titled) return goals.includes(titled) ? 2 : 0;
+  const fromCategory = goalFromCategory(c.category);
   const selected = new Set(goals);
-  return inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
+  const keyword = inferChallengeGoalTags(c).filter((tag) => selected.has(tag)).length;
+  if (fromCategory && selected.has(fromCategory)) return 2 + keyword;
+  return keyword;
 }
 
 /** First card that is not No Days Off. Null when the list is empty or only NDO. */
@@ -104,11 +139,14 @@ export function suggestChallengesForGoals(
   line?: number | null,
 ): SuggestableChallenge[] {
   const resolved = resolveOnboardingLine(line);
-  const joinable = catalog.filter(
-    (c) =>
-      typeof c.id === "string" &&
-      isJoinableChallengeId(c.id) &&
-      meetsOnboardingDuration(c.duration_days, resolved),
+  const joinable = dedupeChallengesByTitle(
+    catalog.filter(
+      (c) =>
+        typeof c.id === "string" &&
+        isJoinableChallengeId(c.id) &&
+        isRecommendableChallenge(c) &&
+        meetsOnboardingDuration(c.duration_days, resolved),
+    ),
   );
   if (joinable.length === 0) return [];
 
@@ -128,7 +166,13 @@ export function suggestChallengesForGoals(
 
   const ndo = noDaysOff[0];
   const regularLimit = ndo ? Math.max(0, limit - 1) : limit;
-  const regular = ranked.slice(0, regularLimit);
+  const popular = [...rest].sort((a, b) => {
+    const count = (Number(b.participants_count) || 0) - (Number(a.participants_count) || 0);
+    if (count !== 0) return count;
+    return a.id.localeCompare(b.id);
+  });
+  const pool = ranked.length > 0 ? ranked : popular;
+  const regular = pool.slice(0, regularLimit);
   if (!ndo) return regular;
   return [...regular, ndo];
 }

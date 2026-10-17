@@ -3,7 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from './AuthContext';
 import { trpcMutate } from '@/lib/trpc';
 import { TRPC } from '@/lib/trpc-paths';
-import { HOME_BOOTSTRAP_QUERY_KEY, homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
+import { homeBootstrapQueryKey } from '@/lib/home-bootstrap-key';
+import { refreshHomeBootstrap } from '@/lib/home-bootstrap-refresh';
 import { useHomeBootstrap } from '@/lib/use-home-bootstrap';
 import { getTodayDateKey } from '@/lib/date-utils';
 import { tasksDueTodayAcrossEnrollments } from '@/lib/notification-due-count';
@@ -12,9 +13,11 @@ import { useAppChallengeMutations } from '@/hooks/useAppChallengeMutations';
 import { AnalyticsBootstrap } from '@/components/AnalyticsBootstrap';
 import { setSubscriptionState } from '@/lib/premium';
 import { initSubscription, clearSubscription, checkPremiumStatus, getCustomerInfo, addSubscriptionChangeListener, ENTITLEMENT_ID } from '@/lib/subscription';
-import { identify, resetAnalytics, trackEvent } from '@/lib/analytics';
+import { identify, resetAnalytics, setUsageTestAccount, trackEvent } from '@/lib/analytics';
+import { noteGuestDistinctId, peekGuestDistinctId } from '@/lib/analytics-identity';
 import { setSentryUser, captureError } from '@/lib/sentry';
 import { getDeviceIanaTimeZone } from '@/lib/iana-timezone';
+import { noteWrittenDeviceTimezone, timezoneHealSkipped } from '@/lib/timezone-heal';
 import type { ProfileFromApi, StatsFromApi, ActiveChallengeFromApi, TodayCheckinForUser, ChallengeTaskFromApi } from '@/types';
 import type { ServerVerificationRow } from '@/lib/verifying-proof';
 
@@ -51,6 +54,9 @@ type AppContextValue = {
     workout_kind?: string;
     floor_min?: number | null;
     shareChoicePending?: boolean;
+    audience?: "friends" | "everyone" | "only_me";
+    self_reported?: boolean;
+    applyShare?: boolean;
   }) => Promise<{
     firstTaskOfDay?: boolean;
     completionId?: string;
@@ -63,6 +69,21 @@ type AppContextValue = {
     challengeName?: string;
     verificationKind?: "live_photo" | "timer" | "gps" | "word_count" | "self_report";
     dayProofs?: { eventId: string | null; imageUrl: string | null }[];
+    eventId?: string | null;
+    daySecure?: {
+      success?: boolean;
+      alreadySecured?: boolean;
+      newStreakCount?: number;
+      secured?: boolean;
+      challenge_done?: boolean;
+      remaining_challenges?: number;
+      freezeGranted?: boolean;
+      freezesHeld?: number;
+      freezeCap?: number;
+      freezeAtCap?: boolean;
+    } | null;
+    daySecureAttempted?: boolean;
+    shared?: boolean;
   } | void>;
   secureDay: (activeChallengeId: string) => Promise<{
     success?: boolean;
@@ -164,7 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user?.id) {
       setSubscriptionState(null, null);
       clearSubscription();
-      resetAnalytics();
+      if (!peekGuestDistinctId()) resetAnalytics();
       timezoneHealForDeviceRef.current = null;
       subscriptionInitedForUser.current = null;
       setTodayCheckins(null);
@@ -185,12 +206,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, profile]);
 
+  // Build 90 04.7: one request per refresh; callers in the same tick join the fetch in flight.
   const refetchBootstrap = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: [...HOME_BOOTSTRAP_QUERY_KEY] });
-    if (user?.id) {
-      await queryClient.refetchQueries({ queryKey: homeBootstrapQueryKey(user.id) });
-    }
-  }, [queryClient, user?.id]);
+    await refreshHomeBootstrap(queryClient);
+  }, [queryClient]);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.id) return;
@@ -243,8 +262,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!p) return;
     const rawTier = (stats as StatsFromApi)?.tier ?? (p as ProfileFromApi)?.tier;
     const tier = typeof rawTier === "string" ? rawTier : undefined;
+    setUsageTestAccount((p as { is_test?: boolean }).is_test === true);
+    if (user.is_anonymous) noteGuestDistinctId(user.id);
     identify(user.id, {
-      email: user.email ?? undefined,
       isPremium,
       tier,
     });
@@ -254,18 +274,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const profileTzRaw = (p as { timezone?: string | null }).timezone;
     const profileTz =
       typeof profileTzRaw === "string" ? profileTzRaw.trim() : "";
-    const needsHeal = !profileTz || profileTz !== deviceTz;
-    if (needsHeal && timezoneHealForDeviceRef.current !== deviceTz) {
-      timezoneHealForDeviceRef.current = deviceTz;
-      void trpcMutate(TRPC.profiles.update, { timezone: deviceTz })
-        .then(() => {
-          void fetchProfile();
-        })
-        .catch((err: unknown) => {
-          captureError(err, "TimezoneSelfHeal");
-          timezoneHealForDeviceRef.current = null;
-        });
-    }
+    if (timezoneHealSkipped({ profileTz, deviceTz })) return;
+    if (timezoneHealForDeviceRef.current === deviceTz) return;
+    timezoneHealForDeviceRef.current = deviceTz;
+    void trpcMutate(TRPC.profiles.update, { timezone: deviceTz })
+      .then(() => {
+        noteWrittenDeviceTimezone(deviceTz);
+        void fetchProfile();
+      })
+      .catch((err: unknown) => {
+        captureError(err, "TimezoneSelfHeal");
+        timezoneHealForDeviceRef.current = null;
+      });
   }, [user?.id, user?.email, profile, bootstrap.isFetched, isPremium, stats, fetchProfile]);
 
   const challenge = (activeChallenge?.challenges ?? null) as Record<string, unknown> | null;
@@ -353,6 +373,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activeChallenge,
     timezone: profileTimezone,
     evening: eveningRemaining,
+    // Build 90 04.7: the planner reads these from the bootstrap instead of fetching them again.
+    enrollments: Array.isArray(bootstrap.data?.activeChallenges)
+      ? (bootstrap.data.activeChallenges as Parameters<typeof useNotificationScheduler>[0]["enrollments"])
+      : undefined,
+    securedDateKeys: Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : undefined,
+    todayCheckins: Array.isArray(bootstrap.data?.todayCheckinsForUser) ? bootstrap.data.todayCheckinsForUser : undefined,
   });
 
   const { completeTask, secureDay } = useAppChallengeMutations({

@@ -10,7 +10,6 @@ import {
   FOLLOW,
   MESSAGE,
   SHARE_PROFILE,
-  ownerShareLabel,
 } from "@/lib/g3-profile";
 
 export function ProfileHeader(p: {
@@ -42,10 +41,8 @@ export function ProfileHeader(p: {
   onFollowing?: () => void;
   onFriends?: () => void;
 }) {
-  const shareLabel = p.isOwner ? ownerShareLabel(p.friends) : SHARE_PROFILE;
-  const onShareOrFind = p.isOwner && p.friends <= 0 ? (p.onFindFriends ?? p.onShare) : p.onShare;
+  const shareLabel = SHARE_PROFILE;
   const handle = p.username.replace(/^@/, "");
-  const friendLabel = p.friends === 0 ? FIND_FRIENDS : p.friends === 1 ? "1 friend" : `${p.friends} friends`;
   return (
     <View style={styles.wrap}>
       <Avatar
@@ -58,29 +55,6 @@ export function ProfileHeader(p: {
       <View style={styles.who}>
         <Text style={styles.name}>{p.displayName}</Text>
         <Text style={styles.handle}>@{handle}</Text>
-        <Pressable
-          testID="profile-friends"
-          accessibilityRole="button"
-          accessibilityLabel={friendLabel}
-          onPress={p.friends === 0 ? onShareOrFind : p.onFriends}
-          style={styles.friendsRow}
-        >
-          <Text style={styles.handle}>{friendLabel}</Text>
-          {p.friends > 0 ? (
-            <View style={styles.faces}>
-              {(p.friendFaces ?? []).slice(0, 3).map((face) => (
-                <Avatar
-                  key={face.userId}
-                  userId={face.userId}
-                  uri={face.avatarUrl}
-                  displayName={face.displayName}
-                  username={face.username}
-                  size={20}
-                />
-              ))}
-            </View>
-          ) : null}
-        </Pressable>
         {p.bio ? (
           <Text style={styles.bio}>{p.bio}</Text>
         ) : p.isOwner ? (
@@ -88,7 +62,10 @@ export function ProfileHeader(p: {
         ) : null}
       </View>
       {p.isOwner ? (
-        <Btn label={EDIT_PROFILE} onPress={p.onEdit} />
+        <View style={styles.btns}>
+          <Btn label={EDIT_PROFILE} onPress={p.onEdit} />
+          <Btn label={FIND_FRIENDS} onPress={p.onFindFriends ?? p.onShare} />
+        </View>
       ) : (
         <View style={styles.btns}>
           <Btn
@@ -96,9 +73,14 @@ export function ProfileHeader(p: {
             onPress={p.onFollow}
           />
           {p.isFriend ? <Btn label={MESSAGE} onPress={p.onMessage ?? (() => undefined)} /> : null}
-          <Btn label={shareLabel} onPress={onShareOrFind} />
+          <Btn label={shareLabel} onPress={p.onShare} />
         </View>
       )}
+      <View style={styles.social}>
+        <Count n={p.followers ?? 0} label="Followers" onPress={p.onFollowers} />
+        <Count n={p.following ?? 0} label="Following" onPress={p.onFollowing} />
+        <Count n={p.friends} label="Friends" onPress={p.onFriends} />
+      </View>
       {p.locked ? null : (
         <View style={styles.stats}>
           <Stat n={p.streakDays} l="Streak" earned flame />
@@ -107,6 +89,20 @@ export function ProfileHeader(p: {
         </View>
       )}
     </View>
+  );
+}
+
+function Count({ n, label, onPress }: { n: number; label: string; onPress?: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${compact(n)} ${label}`}
+      style={styles.count}
+    >
+      <Text style={styles.num}>{compact(n)}</Text>
+      <Text numberOfLines={1} style={styles.cap}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -150,7 +146,7 @@ function Btn({ label, onPress }: { label: string; onPress: () => void }) {
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: DS_V3.space.gutter, paddingTop: 10 },
   top: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.lg },
-  stats: { flex: 1, flexDirection: "row" },
+  stats: { flexDirection: "row", marginTop: 16 },
   statFlex: { flex: 1 },
   stat: { flex: 1, alignItems: "center", gap: 1 },
   statNum: { flexDirection: "row", alignItems: "center", gap: 3 },
@@ -161,7 +157,7 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   cap: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
-  who: { paddingTop: 10, gap: 1 },
+  who: { paddingTop: 12, gap: 6 },
   name: {
     fontSize: DS_V3.type.title.fontSize,
     lineHeight: DS_V3.type.title.lineHeight,
@@ -172,9 +168,11 @@ const styles = StyleSheet.create({
   friendsRow: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 },
   faces: { flexDirection: "row", gap: 4 },
   statHair: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: DS_V3.color.hairline },
-  bio: { fontSize: 13, lineHeight: 18, color: DS_V3.color.textPrimary, paddingTop: 4 },
-  addBio: { fontSize: 13, lineHeight: 18, color: DS_V3.color.textSecondary, paddingTop: 4 },
-  btns: { flexDirection: "row", gap: 8, paddingTop: 12 },
+  bio: { fontSize: 13, lineHeight: 18, color: DS_V3.color.textPrimary, marginTop: 8 },
+  addBio: { fontSize: 13, lineHeight: 18, color: DS_V3.color.textSecondary, marginTop: 8 },
+  social: { flexDirection: "row", marginTop: 16 },
+  count: { flex: 1, alignItems: "center", gap: 2, minHeight: 44, justifyContent: "center" },
+  btns: { flexDirection: "row", gap: 8, marginTop: 16 },
   btn: {
     flex: 1,
     height: 36,

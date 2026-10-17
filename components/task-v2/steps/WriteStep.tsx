@@ -2,10 +2,9 @@
  * Writing task step — Chunk M frame 40.
  * Bare TextInput on canvas. PushedHeader owns the chrome. Submit stays onPost.
  */
-import React from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Keyboard, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import KeyboardDock from "@/components/ds/KeyboardDock";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import PushedHeader from "@/components/ds/PushedHeader";
@@ -35,6 +34,9 @@ type Props = {
   onChangeText: (t: string) => void;
   onPost: () => void;
   onBack: () => void;
+  submitting?: boolean;
+  /** False after a save, so the native field is gone before the screen leaves. */
+  fieldMounted?: boolean;
 };
 
 const RULE = DS_V3.space.xs / 2;
@@ -51,34 +53,51 @@ export function WriteStep({
   onChangeText,
   onPost,
   onBack,
+  submitting = false,
+  fieldMounted = true,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const written = wordCount(text);
   const met = writeCounterMet(written, minWords);
   const fill = writeCounterFill(written, minWords);
   const enabled = writeCtaEnabled(written, minWords);
+  // Build 90 03.3: with the keyboard up, header + title + word bar + footer leave the editor
+  // about one line on an iPhone 16, so line 1 scrolls behind the bar. Fold the title while typing.
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const showEvt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvt, () => setKeyboardUp(true));
+    const hide = Keyboard.addListener(hideEvt, () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   return (
     <View style={styles.root}>
       <KeyboardDock
         footer={
-          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+          <View style={styles.footer}>
             <Button
               label={writeCtaLabel(written, minWords)}
               variant="primary"
-              disabled={!enabled}
+              disabled={!enabled || submitting}
+              submitting={submitting}
               onPress={onPost}
             />
             <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
           </View>
         }
       >
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
-      </View>
+      <PushedHeader title={headerTitle ?? writeStepHeader(currentDay)} label={headerLabel} onBack={onBack} />
       <View style={styles.body}>
-        <Text style={styles.title}>{taskName}</Text>
-        <Text style={styles.honesty}>{writeHonestyLine(minWords)}</Text>
+        {keyboardUp ? null : (
+          <>
+            <Text style={styles.title}>{taskName}</Text>
+            <Text style={styles.honesty}>{writeHonestyLine(minWords)}</Text>
+          </>
+        )}
         <Text style={styles.wordsLabel}>{WRITE_WORDS_LABEL}</Text>
         <View style={styles.counterBlock}>
           <Text style={[styles.counter, met ? styles.counterMet : null]}>
@@ -88,15 +107,21 @@ export function WriteStep({
             <View style={[styles.fill, { width: `${Math.round(fill * 100)}%` }]} />
           </View>
         </View>
-        <TextInput
-          value={text}
-          onChangeText={onChangeText}
-          multiline
-          style={styles.editor}
-          placeholder={WRITE_PLACEHOLDER}
-          placeholderTextColor={DS_V3.color.textSecondary}
-          textAlignVertical="top"
-        />
+        {fieldMounted ? (
+          <TextInput
+            testID="write-body"
+            accessibilityLabel="Write your entry"
+            value={text}
+            onChangeText={onChangeText}
+            multiline
+            style={styles.editor}
+            placeholder={WRITE_PLACEHOLDER}
+            placeholderTextColor={DS_V3.color.textSecondary}
+            textAlignVertical="top"
+          />
+        ) : (
+          <View style={styles.editor} />
+        )}
       </View>
       </KeyboardDock>
     </View>
@@ -159,17 +184,22 @@ const styles = StyleSheet.create({
   },
   editor: {
     flex: 1,
+    // Build 90 03.3: at least three lines, and the first line starts below the word bar.
+    minHeight: DS_V3.type.body.lineHeight * 3,
     fontSize: DS_V3.type.body.fontSize,
     lineHeight: DS_V3.type.body.lineHeight,
     fontWeight: DS_V3.type.body.fontWeight,
     color: DS_V3.color.textPrimary,
-    padding: 0,
+    paddingTop: DS_V3.space.sm,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
     margin: 0,
     textAlignVertical: "top",
   },
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

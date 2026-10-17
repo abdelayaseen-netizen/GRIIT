@@ -24,8 +24,14 @@ import {
   sanitizeDistanceInput,
   sanitizeMinutesInput,
 } from "@/lib/keypad-masks";
-import { logReady } from "@/lib/task-flow-state";
 import {
+  WORKOUT_TYPES,
+  logReady,
+  workoutDistanceField,
+  workoutMinimumLine,
+} from "@/lib/task-flow-state";
+import {
+  RUN_HONESTY_TYPED_NO_CAMERA,
   RUN_PHOTO_AFTER,
   WORK_SECURED_CAPTION,
   WORKOUT_HONESTY,
@@ -102,11 +108,18 @@ export function LogStep({
     durationSec,
     workoutMin,
     minDurationMinutes,
+    kind,
   });
   const isRun = taskType === "run";
-  const honesty = isRun ? runHonestyLine(fromGps, hasCamera) : WORKOUT_HONESTY;
+  const honesty = isRun
+    ? runHonestyLine(fromGps, hasCamera)
+    : hasCamera
+      ? WORKOUT_HONESTY
+      : RUN_HONESTY_TYPED_NO_CAMERA;
   const pace = isRun ? runPaceLine(distance, durationSec, unit, targetDistance) : null;
-  const cta = isRun ? runPrimaryLabel(hasCamera) : WORKOUT_NEXT_PHOTO;
+  const cta = isRun ? runPrimaryLabel(hasCamera) : hasCamera ? WORKOUT_NEXT_PHOTO : runPrimaryLabel(false);
+  const workoutDistance = !isRun && workoutDistanceField(kind) === "optional";
+  const minimumLine = isRun ? null : workoutMinimumLine(minDurationMinutes);
   const [distanceText, setDistanceText] = useState(distance != null ? String(distance) : "");
   const [durationDigits, setDurationDigits] = useState(
     durationSec != null ? durationDigitsFromSec(durationSec) : "",
@@ -132,16 +145,14 @@ export function LogStep({
       behavior="padding"
       keyboardVerticalOffset={insets.top}
     >
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
-      </View>
+      <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
       >
-        <Pressable onPress={Keyboard.dismiss} style={styles.tapAway}>
+        <Pressable onPress={Keyboard.dismiss} style={styles.tapAway} accessible={false}>
           <Text style={styles.title}>{taskName}</Text>
           <Text style={styles.honesty}>{honesty}</Text>
           {isRun ? (
@@ -159,6 +170,7 @@ export function LogStep({
                     keyboardType="decimal-pad"
                     inputAccessoryViewID={padAccessory}
                     accessibilityLabel="Distance"
+                    testID="log-distance"
                     trailing={
                       <Pressable
                         onPress={onToggleUnit}
@@ -185,6 +197,7 @@ export function LogStep({
                     keyboardType="number-pad"
                     inputAccessoryViewID={padAccessory}
                     accessibilityLabel="Duration"
+                    testID="log-duration"
                     trailing={<Text style={styles.trail}>mm:ss</Text>}
                   />
                 </View>
@@ -194,8 +207,28 @@ export function LogStep({
             </>
           ) : (
             <>
+              <View style={styles.chips}>
+                {WORKOUT_TYPES.map((k) => (
+                  <Pressable
+                    key={k}
+                    onPress={() => {
+                      onKind(k);
+                      if (workoutDistanceField(k) === "none") {
+                        setDistanceText("");
+                        onDistance(null);
+                      }
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={k}
+                    accessibilityState={{ selected: kind === k }}
+                    style={[styles.chip, kind === k && styles.chipOn]}
+                  >
+                    <Text style={[styles.chipText, kind === k && styles.chipTextOn]}>{k}</Text>
+                  </Pressable>
+                ))}
+              </View>
               <TextField
-                label="Minutes"
+                label="Duration"
                 value={minutesText}
                 onChangeText={(t) => {
                   const next = sanitizeMinutesInput(t);
@@ -204,33 +237,47 @@ export function LogStep({
                 }}
                 keyboardType="number-pad"
                 inputAccessoryViewID={padAccessory}
-                accessibilityLabel="Minutes"
+                accessibilityLabel="Duration"
+                testID="log-minutes"
                 trailing={<Text style={styles.trail}>min</Text>}
               />
-              <View style={styles.chips}>
-                {["Lift", "Push", "Pull", "Conditioning"].map((k) => (
-                  <Pressable
-                    key={k}
-                    onPress={() => onKind(k)}
-                    accessibilityRole="button"
-                    accessibilityLabel={k}
-                    style={[styles.chip, kind === k && styles.chipOn]}
-                  >
-                    <Text style={[styles.chipText, kind === k && styles.chipTextOn]}>{k}</Text>
-                  </Pressable>
-                ))}
-              </View>
+              {minimumLine ? <Text style={styles.pace}>{minimumLine}</Text> : null}
+              {workoutDistance ? (
+                <TextField
+                  label="Distance (optional)"
+                  value={distanceText}
+                  onChangeText={(t) => {
+                    const next = sanitizeDistanceInput(t);
+                    setDistanceText(next);
+                    onDistance(parseDistanceInput(next));
+                  }}
+                  keyboardType="decimal-pad"
+                  inputAccessoryViewID={padAccessory}
+                  accessibilityLabel="Distance"
+                  testID="log-workout-distance"
+                  trailing={
+                    <Pressable
+                      onPress={onToggleUnit}
+                      accessibilityRole="button"
+                      accessibilityLabel="Toggle distance unit"
+                      hitSlop={DS_V3.space.sm}
+                    >
+                      <Text style={styles.trail}>{unit}</Text>
+                    </Pressable>
+                  }
+                />
+              ) : null}
               <Button label={WORKOUT_USE_TIMER} variant="tertiary" flush onPress={onUseTimer} />
             </>
           )}
         </Pressable>
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
         <Button
           label={cta}
           variant="primary"
           disabled={!ready}
-          onPress={isRun && !hasCamera ? onPost : onNextPhoto}
+          onPress={hasCamera ? onNextPhoto : onPost}
           icon={
             isRun && hasCamera ? (
               <Camera size={CAMERA} color={ready ? DS_V3.color.onBrand : DS_V3.color.textSecondary} />
@@ -321,7 +368,7 @@ const styles = StyleSheet.create({
   },
   chipOn: {
     backgroundColor: DS_V3.color.surface,
-    borderColor: DS_V3.color.border,
+    borderColor: DS_V3.color.textPrimary,
   },
   chipText: {
     fontSize: DS_V3.type.caption.fontSize,
@@ -331,10 +378,12 @@ const styles = StyleSheet.create({
   },
   chipTextOn: {
     color: DS_V3.color.textPrimary,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
   },
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

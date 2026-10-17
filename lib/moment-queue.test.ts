@@ -27,6 +27,9 @@ describe("moment queue", () => {
     expect(gate).toContain("pathname");
     expect(secured).toContain("afterSecuredNext");
     expect(secured).toContain("CHALLENGE_COMPLETE");
+    const done = secured.slice(secured.indexOf("const done = ()"));
+    expect(done.indexOf("POST_ID(openPost)")).toBeGreaterThan(-1);
+    expect(done.indexOf("POST_ID(openPost)")).toBeLessThan(done.indexOf("CHALLENGE_COMPLETE"));
   });
 
   it("finishes only when the last day was secured, never from the day index or a counter target", () => {

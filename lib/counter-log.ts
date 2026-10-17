@@ -11,10 +11,16 @@ export function formatCounterSecuredMeta(
   return `${n} of ${t} ${unit}`;
 }
 
-/** Caption unit after a counter goal. Generic counter has no default word. */
-export function counterUnitFromTaskType(taskType: string): "pages" | "oz" | "" {
+/**
+ * Caption unit after a counter goal. Generic counter has no default word.
+ * Water is "cups" everywhere (06 bug: the app said oz, the server said cups for the same
+ * 8-a-day target). A task's own `config.unit` still wins in `counterDisplayUnit`.
+ */
+export const WATER_UNIT = "cups";
+
+export function counterUnitFromTaskType(taskType: string): "pages" | typeof WATER_UNIT | "" {
   if (taskType === "reading") return "pages";
-  if (taskType === "water") return "oz";
+  if (taskType === "water") return WATER_UNIT;
   return "";
 }
 

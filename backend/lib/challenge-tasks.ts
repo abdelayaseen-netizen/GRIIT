@@ -143,9 +143,11 @@ function mapTaskRowToApi(row: ChallengeTaskRowRaw | null | undefined): Challenge
       (typeof config.location_radius_meters === "number" ? config.location_radius_meters : 200),
     min_duration_minutes:
       r.min_duration_minutes ??
-      (type === "run" && config.tracking_mode === "time" && typeof config.duration_minutes === "number"
+      (typeof config.duration_minutes === "number"
         ? config.duration_minutes
-        : null),
+        : type === "run" && config.tracking_mode === "time" && typeof config.duration_minutes === "number"
+          ? config.duration_minutes
+          : null),
     anchorTimeLocal: r.anchor_time_local ?? (typeof config.anchorTimeLocal === "string" ? config.anchorTimeLocal : null),
     windowStartOffsetMin:
       r.window_start_offset_min ??

@@ -29,19 +29,23 @@ import type { HeroFeaturedData } from "@/components/challenges/HeroFeaturedCard"
 import type { RecommendedChallenge } from "@/components/discover/grid/ChallengeGridCard";
 import { catalogCoverCategory } from "@/lib/catalog-cover";
 import { discoverProofLabel } from "@/lib/discover-proof-label";
+import { discoverCategoryMatches, discoverSectionItems } from "@/lib/discover-people";
 import {
   JOIN_CAPTION_TODAY,
   JOIN_CAPTION_TOMORROW,
-  MODE_STANDARD_DETAIL,
+  MODE_STANDARD_JOIN,
+  joinModeLine,
 } from "@/lib/challenge-detail-mapping";
 import {
   DISCOVER_LOAD_ERROR,
   FEATURED_BUILTINS,
   featuredProofLabel,
+  featuredTaskGate,
   needsSetGym,
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
+import DiscoverSearch from "@/components/discover/DiscoverSearch";
 import { difficultyChip } from "@/lib/discover-preview-tasks";
 
 const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
@@ -87,6 +91,8 @@ export type DiscoverV3Props = {
   refreshing?: boolean;
   onRefresh?: () => void;
   onJoinBuiltin?: (item: FeaturedBuiltin) => void;
+  /** Build 90 08.3: search by name or invite code; `viaInvite` when the query was a code. */
+  onOpenSearchResult?: (challengeId: string, viaInvite: boolean) => void;
 };
 
 const CHIPS: { id: DiscoverCategory; label: string }[] = [
@@ -96,7 +102,7 @@ const CHIPS: { id: DiscoverCategory; label: string }[] = [
 
 function difficultyLabel(d: RecommendedChallenge["difficulty"]): string {
   if (d === "EASY") return "Easy";
-  if (d === "HARD") return "Hard";
+  if (d === "HARD") return "Strict";
   return "Medium";
 }
 
@@ -133,10 +139,11 @@ export function DiscoverV3({
   refreshing,
   onRefresh,
   onJoinBuiltin,
+  onOpenSearchResult,
 }: DiscoverV3Props) {
   const insets = useSafeAreaInsets();
   const circle = circleCaption(circleCount);
-  const gridData = challengesLoading ? [] : challenges;
+  const gridData = challengesLoading ? [] : discoverSectionItems(challenges, category);
   const [preview, setPreview] = React.useState<ChallengePreview | null>(null);
   const day1Line = todaySecured ? JOIN_CAPTION_TOMORROW : JOIN_CAPTION_TODAY;
 
@@ -149,9 +156,9 @@ export function DiscoverV3({
       taskTitle: item.task,
       proof: featuredProofLabel(item.proof),
       window: item.rule,
-      tasks: [{ title: item.task, gate: [featuredProofLabel(item.proof), item.rule].filter(Boolean).join(" · ") }],
+      tasks: [{ title: item.task, gate: featuredTaskGate(item) }],
       difficulty: "Standard",
-      modeLine: MODE_STANDARD_DETAIL,
+      modeLine: MODE_STANDARD_JOIN,
       day1Line,
       builtin: item,
     });
@@ -166,15 +173,14 @@ export function DiscoverV3({
       people: item.participantCount,
       tasks: item.tasks ?? [],
       difficulty: difficultyChip(item.difficulty),
-      modeLine: item.difficulty === "HARD"
-        ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
-        : MODE_STANDARD_DETAIL,
+      modeLine: joinModeLine(item.difficulty),
       day1Line,
     });
   }
 
   const header = (
     <>
+      {onOpenSearchResult ? <DiscoverSearch onOpen={onOpenSearchResult} /> : null}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -193,8 +199,9 @@ export function DiscoverV3({
       <Text style={[styles.heading, styles.featuredHeading]}>Featured</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
         {featuredLoading ? <Skeleton variant="proof" /> : null}
-        {featured && !FEATURED_BUILTINS.some((b) => b.id === featured.id) ? (
+        {featured && discoverCategoryMatches(featured.category, category) && !FEATURED_BUILTINS.some((b) => b.id === featured.id) ? (
           <Pressable
+            testID={`discover-card-${featured.id}`}
             accessibilityRole="button"
             accessibilityLabel={featured.name}
             onPress={() => {
@@ -210,9 +217,7 @@ export function DiscoverV3({
                 people: featured.circleCount,
                 tasks: featured.tasks ?? [],
                 difficulty: difficultyChip(featured.difficulty),
-                modeLine: featured.difficulty === "HARD"
-                  ? "Strict. A missed day resets your streak in this challenge to 0. No freezes."
-                  : MODE_STANDARD_DETAIL,
+                modeLine: joinModeLine(featured.difficulty),
                 day1Line,
               });
             }}
@@ -230,9 +235,10 @@ export function DiscoverV3({
             </Text>
           </Pressable>
         ) : null}
-        {FEATURED_BUILTINS.map((item) => (
+        {discoverSectionItems(FEATURED_BUILTINS, category).map((item) => (
           <Pressable
             key={item.id}
+            testID={`discover-card-${item.id}`}
             accessibilityRole="button"
             accessibilityLabel={item.title}
             onPress={() => openBuiltin(item)}
@@ -252,10 +258,12 @@ export function DiscoverV3({
         ))}
       </ScrollView>
 
-      <View style={styles.popularHead}>
-        <Text style={styles.heading}>Popular</Text>
-        <Text style={styles.caption}>this week</Text>
-      </View>
+      {!challengesLoading && gridData.length === 0 ? null : (
+        <View style={styles.popularHead}>
+          <Text style={styles.heading}>Popular</Text>
+          <Text style={styles.caption}>this week</Text>
+        </View>
+      )}
 
       {circle ? (
         <View style={styles.section}>
@@ -337,6 +345,9 @@ export function DiscoverV3({
           numColumns={2}
           keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
+          // Build 90 08.3: with the search keyboard up, the first tap on a result only
+          // closed the keyboard ("never" is the default); "handled" lets the row take it.
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           columnWrapperStyle={styles.gridRow}
           ListHeaderComponent={header}
@@ -344,6 +355,7 @@ export function DiscoverV3({
           renderItem={({ item }) => (
             <View style={styles.col}>
               <ChallengeCard
+                testID={`discover-card-${item.id}`}
                 title={item.title}
                 category={item.category}
                 days={item.duration}

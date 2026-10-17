@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>Build 89 simulator on port 8082. Production API.</p>
+<p>Haiku for chunk 8.</p>
+<p>is_test is set with railway run on the server.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>6</td></tr>
+<tr><th>Steps</th><td>108</td></tr>
+<tr><th>Measured API cost</th><td>$0.21</td></tr>
+<tr><th>Database goals passed</th><td>0 / 0</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>6</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>4</td><td>67%</td><td>2 did not reach it</td></tr><tr><td>challenge</td><td>1</td><td>17%</td><td>5 did not reach it</td></tr><tr><td>joined</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>task</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr><tr><td>completed</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>photo</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>shared</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>social</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>first-timers</td><td>0% (0/0)</td><td>17</td><td>discover: the same screen came up 3 times<br>Failed to run flow: Device became unreachable during viewHierarchy<br>Gave up. discover repeated 3 times.</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>home</td><td>29</td><td>34</td><td>283s</td><td>0</td></tr><tr><td>onboarding</td><td>14</td><td>26</td><td>145s</td><td>0</td></tr><tr><td>discover</td><td>10</td><td>18</td><td>155s</td><td>5</td></tr><tr><td>auth</td><td>7</td><td>14</td><td>154s</td><td>0</td></tr><tr><td>other</td><td>4</td><td>14</td><td>149s</td><td>0</td></tr><tr><td>settings</td><td>1</td><td>1</td><td>4s</td><td>0</td></tr><tr><td>challenge</td><td>1</td><td>1</td><td>6s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>Gave up. discover repeated 3 times. (2)</p><p>Gave up. home repeated 3 times. (1)</p><p>Gave up. other repeated 3 times. (1)</p>
+<h2>Confusion</h2>
+<ul><li><strong>first-timers</strong> · home · The previous step said &#39;No reminders for now&#39; but I&#39;m already on the Home screen. It seems the reminder screen was passed. Now I need to find the first task to complete.</li></ul>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>home</td><td>15%</td></tr><tr><td>onboarding</td><td>0%</td></tr><tr><td>auth</td><td>0%</td></tr><tr><td>settings</td><td>0%</td></tr><tr><td>discover</td><td>28%</td></tr><tr><td>other</td><td>7%</td></tr><tr><td>challenge</td><td>0%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. discover: the same screen came up 3 times</h3><p>2 agents. Screen: discover</p><ol><li>p04: discover: the same screen came up 3 times</li><li>p05: discover: the same screen came up 3 times</li></ol></section><section><h3>2. Failed to run flow: Device became unreachable during viewHierarchy</h3><p>2 agents. Screen: home</p><div><img src="p04/shots/007.png" alt=""></div><ol><li>p04: tap Turn on reminders</li><li>p06: tap Retry</li><li>p06: tap Post to friends</li></ol></section><section><h3>3. Gave up. discover repeated 3 times.</h3><p>2 agents. Screen: discover</p><div><img src="p04/shots/011.png" alt=""></div><ol><li>p04: abort</li><li>p04: Gave up. discover repeated 3 times.</li><li>p05: abort</li><li>p05: Gave up. discover repeated 3 times.</li></ol></section><section><h3>4. radio button is already selected.</h3><p>2 agents. Screen: onboarding</p><div><img src="p01/shots/005.png" alt=""></div><ol><li>p01: tap radio button</li><li>p01: tap Gym Buddy Challenge</li><li>p03: tap Gym Buddy Challenge</li></ol></section><section><h3>5. For you is already selected.</h3><p>1 agents. Screen: discover</p><div><img src="p05/shots/008.png" alt=""></div><ol><li>p05: tap For you</li></ol></section><section><h3>6. Gave up. home repeated 3 times.</h3><p>1 agents. Screen: home</p><div><img src="p02/shots/010.png" alt=""></div><ol><li>p02: abort</li><li>p02: Gave up. home repeated 3 times.</li></ol></section><section><h3>7. Gave up. other repeated 3 times.</h3><p>1 agents. Screen: other</p><div><img src="p01/shots/028.png" alt=""></div><ol><li>p01: abort</li><li>p01: Gave up. other repeated 3 times.</li></ol></section><section><h3>8. Home is already selected.</h3><p>1 agents. Screen: home</p><div><img src="p06/shots/008.png" alt=""></div><ol><li>p06: tap Home (selected)</li></ol></section><section><h3>9. home: the same screen came up 3 times</h3><p>1 agents. Screen: joined</p><ol><li>p02: home: the same screen came up 3 times</li></ol></section><section><h3>10. other: the same screen came up 3 times</h3><p>1 agents. Screen: shared</p><ol><li>p01: other: the same screen came up 3 times</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/p01.html">p01</a> Jordan · shared · 28 steps</li><li><a href="report/agents/p02.html">p02</a> Amina · joined · 10 steps</li><li><a href="report/agents/p03.html">p03</a> Robert · home · 9 steps</li><li><a href="report/agents/p04.html">p04</a> Casey · discover · 11 steps</li><li><a href="report/agents/p05.html">p05</a> Priya · discover · 16 steps</li><li><a href="report/agents/p06.html">p06</a> Sam · shared · 28 steps</li></ul>
+</body></html>

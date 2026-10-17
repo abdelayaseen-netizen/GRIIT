@@ -16,6 +16,8 @@ export type MeStatsEnrollment = {
 export type MeStatsProof = {
   atIso: string;
   method: ProofMethod;
+  /** Same photo on two events counts once. */
+  photoKey?: string | null;
 };
 
 export type MeStatsInput = {
@@ -39,6 +41,8 @@ export type UserStats = {
   best_streak_start: string | null;
   best_streak_end: string | null;
   proofs_by_method: { camera: number; self_reported: number; apple_health: number };
+  /** Lifetime photo proofs. A photo on a self-reported task counts once. */
+  proof_count: number;
   proof_hour_histogram: number[];
   lifetime_secured_days: number;
 };
@@ -62,13 +66,13 @@ function nextKey(key: string): string {
   return addCalendarDaysToDateKey(key, 1);
 }
 
-/** Longest run of consecutive secured days. The inclusive span equals the count. */
-export function bestStreakRun(securedKeys: readonly string[]): {
+/** Longest run of consecutive secured or freeze-held days. The inclusive span equals the count. */
+export function bestStreakRun(securedKeys: readonly string[], heldKeys: readonly string[] = []): {
   count: number;
   start: string;
   end: string;
 } | null {
-  const keys = [...new Set(securedKeys)].filter(Boolean).sort();
+  const keys = [...new Set([...securedKeys, ...heldKeys])].filter(Boolean).sort();
   if (keys.length === 0) return null;
   let best = { count: 1, start: keys[0]!, end: keys[0]! };
   let runStart = keys[0]!;
@@ -97,11 +101,18 @@ export function consistencyPct(secured: number, due: number): number | null {
   return Math.round((secured / due) * 100);
 }
 
-/** Profile zone when it is stored. Otherwise the device zone. Never invent UTC over a known device zone. */
+function isUtcZone(zone: string): boolean {
+  const value = zone.trim().toUpperCase();
+  return value === "UTC" || value === "ETC/UTC" || value === "ETC/GMT";
+}
+
+/** Phone zone wins over a stored UTC default. A real stored zone still wins over the phone. */
 export function resolveStatsTimeZone(stored: string | null | undefined, device: string | null | undefined): string {
-  const profile = stored?.trim();
+  const profile = stored?.trim() ?? "";
+  const fromDevice = device?.trim() ?? "";
+  if (profile && !isUtcZone(profile)) return profile;
+  if (fromDevice && !isUtcZone(fromDevice)) return fromDevice;
   if (profile) return profile;
-  const fromDevice = device?.trim();
   if (fromDevice) return fromDevice;
   return "UTC";
 }
@@ -120,13 +131,13 @@ export function usualHour(histogram: readonly number[]): number | null {
   return idx;
 }
 
-/** The proof's recorded method. A photo URL does not turn a self-reported task into camera. */
+/** A photo counts once, as a photo, even when the task was self-reported. */
 export function proofMethodFromMetadata(metadata: Record<string, unknown> | null | undefined): ProofMethod {
+  if (metadata?.photo_url || metadata?.proof_photo_url) return "camera";
   const method = metadata?.verification_method;
   if (method === "apple_health") return "apple_health";
-  if (method === "self_reported" || method === "manual") return "self_reported";
   if (method === "photo") return "camera";
-  if (metadata?.photo_url || metadata?.proof_photo_url) return "camera";
+  if (method === "self_reported" || method === "manual") return "self_reported";
   return "self_reported";
 }
 
@@ -193,10 +204,19 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
   const rangeSecured = rangeDue.filter((k) => secured.has(k));
   const rangeHeld = rangeDue.filter((k) => held.has(k));
   const rangeMissed = rangeDue.filter((k) => !secured.has(k) && !held.has(k));
-  const best = bestStreakRun([...secured]);
+  const best = bestStreakRun([...secured], [...held]);
   const histogram = Array.from({ length: 24 }, () => 0);
   const methods = { camera: 0, self_reported: 0, apple_health: 0 };
+  const seenPhotos = new Set<string>();
+  let proofCount = 0;
   for (const proof of input.proofs) {
+    if (proof.method === "camera") {
+      const key = proof.photoKey?.trim() || proof.atIso;
+      if (!seenPhotos.has(key)) {
+        seenPhotos.add(key);
+        proofCount += 1;
+      }
+    }
     const day = dateInZone(proof.atIso, input.timeZone);
     if (day < start || day > input.todayKey) continue;
     methods[proof.method] += 1;
@@ -220,21 +240,24 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
     return { date, state };
   });
   const enrollments = input.enrollments.map((row) => {
-    const days = keysFrom(row.startKey, enrollmentEnd(row)).filter((k) => k < input.todayKey && inRange(k));
-    const securedDays = days.filter((k) => secured.has(k)).length;
-    const heldDays = days.filter((k) => held.has(k)).length;
-    const dueDays = days.length;
-    const heldLine = heldDays > 0 ? ` ${heldDays} ${heldDays === 1 ? "day" : "days"} held by a freeze.` : "";
+    const duration = Math.max(1, row.durationDays);
+    const end = enrollmentEnd(row);
+    const started = Boolean(row.startKey) && input.todayKey >= row.startKey;
+    const last = !started ? row.startKey : input.todayKey <= end ? input.todayKey : end;
+    const day = started && last ? Math.min(duration, inclusiveDayCount(row.startKey, last)) : 0;
+    const todayCounts = started && input.todayKey <= end;
+    const unit = duration === 1 ? "day" : "days";
+    const todayBit = todayCounts ? "Today counts." : "Today does not count.";
     return {
       id: row.id,
       title: row.title,
-      secured_days: securedDays,
-      due_days: dueDays,
+      secured_days: day,
+      due_days: duration,
       status: row.status,
       finished_at: row.finishedAt,
-      line: `${securedDays} of ${dueDays} ${dueDays === 1 ? "day" : "days"} secured.${heldLine}`,
+      line: `${day} of ${duration} ${unit}. ${todayBit}`,
     };
-  }).filter((row) => row.due_days > 0);
+  });
   return {
     range: input.range,
     user_stats: {
@@ -247,6 +270,7 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
       best_streak_start: best?.start ?? null,
       best_streak_end: best?.end ?? null,
       proofs_by_method: methods,
+      proof_count: proofCount,
       proof_hour_histogram: histogram,
       lifetime_secured_days: [...secured].filter((k) => k <= input.todayKey).length,
     },

@@ -1,0 +1,7 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Athlete"
+- tapOn: "Start the challenge"
+- assertVisible: "Morning run"
+- assertVisible: "Workout"
+- assertVisible: "Body check-in"

@@ -49,4 +49,12 @@ describe("task complete toast copy", () => {
     expect(flow).not.toContain("await loadAlsoToday");
     expect(flow).not.toContain('setStep("finish")');
   });
+
+  it("keeps the photo beside Share, and Share stays up for 4 seconds", () => {
+    const src = readFileSync(resolve(__dirname, "../components/task-v2/TaskCompleteToast.tsx"), "utf8");
+    const share = src.slice(src.indexOf('testID="toast-share"'), src.indexOf("toast.actionLabel"));
+    expect(share).not.toContain("<Image");
+    expect(share).toContain("styles.pill");
+    expect(src).toContain("PHOTO_LIFE_MS = 4000");
+  });
 });

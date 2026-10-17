@@ -3,6 +3,7 @@
  */
 import React from "react";
 import {
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -27,12 +28,16 @@ export type StepBasicsProps = {
   onChangeTitle: (v: string) => void;
   category: WizardCategory | null;
   onChangeCategory: (v: WizardCategory) => void;
+  onTitleFocus?: () => void;
+  onCategoryLayout?: (y: number) => void;
+  onTitleLayout?: (y: number) => void;
   durationDays: number | null;
   onChangeDuration: (days: number | null) => void;
   customDuration: string;
   onChangeCustomDuration: (v: string) => void;
   who: WizardWho;
   onChangeWho: (who: WizardWho) => void;
+  day1Line: string;
 };
 
 const PRESETS: readonly { days: number; label: string }[] = [
@@ -58,12 +63,16 @@ export function StepBasics({
   onChangeTitle,
   category,
   onChangeCategory,
+  onTitleFocus,
+  onCategoryLayout,
+  onTitleLayout,
   durationDays,
   onChangeDuration,
   customDuration,
   onChangeCustomDuration,
   who,
   onChangeWho,
+  day1Line,
 }: StepBasicsProps) {
   const customOpen =
     durationDays == null || !PRESETS.some((p) => p.days === durationDays);
@@ -77,12 +86,12 @@ export function StepBasics({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.block}>
+      <Pressable accessible={false} onPress={() => Keyboard.dismiss()} style={styles.block}>
         <Text style={styles.title}>Name your challenge</Text>
         <Text style={styles.secondary}>One sentence. Be specific.</Text>
-      </View>
+      </Pressable>
 
-      <View style={styles.fieldBlock}>
+      <View style={styles.fieldBlock} onLayout={(e) => onTitleLayout?.(e.nativeEvent.layout.y)}>
         <Card
           style={overLimit ? styles.inputDanger : undefined}
         >
@@ -90,6 +99,7 @@ export function StepBasics({
             accessibilityLabel="Challenge title"
             value={title}
             onChangeText={onChangeTitle}
+            onFocus={onTitleFocus}
             placeholder={CREATE_NAME_PLACEHOLDER}
             placeholderTextColor={NAME_PLACEHOLDER_COLOR}
             style={styles.input}
@@ -115,13 +125,14 @@ export function StepBasics({
         </Text>
       </View>
 
-      <View style={styles.section}>
+      <View style={styles.section} onLayout={(e) => onCategoryLayout?.(e.nativeEvent.layout.y)}>
         <Text style={styles.heading}>Category</Text>
         <View style={styles.chipGrid}>
           {CREATE_CATEGORIES.map((c) => (
             <View key={c.id} style={styles.chipCell}>
               <Chip
                 label={c.label}
+                variant="form"
                 selected={category === c.id}
                 onPress={() => onChangeCategory(c.id)}
               />
@@ -133,7 +144,7 @@ export function StepBasics({
       <View style={styles.section}>
         <Text style={styles.heading}>How long?</Text>
         <Text style={styles.secondary}>
-          {`${durationDays ?? 7} days. Day 1 is today.`}
+          {`${durationDays ?? 7} days. ${day1Line}`}
         </Text>
         {customOpen ? (
           <TextInput

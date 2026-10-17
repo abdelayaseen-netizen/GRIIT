@@ -1,0 +1,219 @@
+appId: app.griit.challenge-tracker
+---
+# Build 90 chunk 06, account path.
+# 06.5 tapping the Password label focuses the field (typing after the label tap logs in).
+# 06.9 the login survives a reopen (stopApp + launchApp without clearState).
+# 06.8 create step 1: the title takes typing and emoji; a double tap on Continue moves one step.
+# 06.7 the freeze sheet confirms, the result line says what happened, no freezes says why not
+#      (dev harness /dev/build81: a fresh account cannot have a missed yesterday).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today"
+    timeout: 25000
+
+# Create the account (fresh is_test email per run).
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-words-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|No challenge yet.*|Drink Water Today"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+# Account creation can land on Settings (pushed, no tab bar) or its Account page.
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
+- tapOn: "Home"
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today"
+    timeout: 20000
+
+# 06.8 Create step 1: typing and emoji land in the title; a double tap on Continue moves one step.
+- tapOn: "Create"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 15000
+- tapOn: "Challenge title"
+- inputText: "Gym before work 😂"
+- assertVisible: "Gym before work 😂"
+# The heading block dismisses the keyboard (hideKeyboard is unreliable on this build).
+- tapOn: "Name your challenge"
+- assertVisible: "Gym before work 😂"
+- assertVisible: "18/60"
+- tapOn: "Fitness"
+- takeScreenshot: build90-06-create-title
+- doubleTapOn: "Continue"
+- extendedWaitUntil:
+    visible: "What must get done daily?"
+    timeout: 10000
+- assertVisible: "Step 2 of 3"
+- assertNotVisible: "How strict?"
+- assertNotVisible: "Step 3 of 3"
+- takeScreenshot: build90-06-create-double-tap
+# Cancel steps back one step at a time; on step 1 with a title it asks to discard.
+- tapOn: "Cancel"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 10000
+- tapOn: "Cancel"
+- tapOn:
+    text: "Discard"
+    optional: true
+
+# 06.7 freeze feedback on the harness (real FreezeSheet, real copy).
+- openLink: "griit://dev/build81"
+- extendedWaitUntil:
+    visible: "^Freeze$"
+    timeout: 20000
+- tapOn: "^Freeze$"
+- extendedWaitUntil:
+    visible: "Use a freeze"
+    timeout: 10000
+- tapOn: "Use a freeze"
+- extendedWaitUntil:
+    visible: "Use a freeze on yesterday?"
+    timeout: 10000
+- assertVisible: "A freeze covers yesterday until midnight.*"
+- takeScreenshot: build90-06-freeze-confirm
+# The sheet is modal, so the Home button underneath is not in the tree.
+- tapOn: "Use a freeze"
+- extendedWaitUntil:
+    visible: ".*Freeze used. Yesterday is held and your streak is 3. 0 freezes left.*"
+    timeout: 10000
+- assertVisible: ".*It covers one missed day so your streak holds.*"
+- takeScreenshot: build90-06-freeze-result
+- tapOn: "No freezes"
+- tapOn: "Use a freeze"
+- extendedWaitUntil:
+    visible: "No freezes left. Your streak resets to 0 at midnight."
+    timeout: 10000
+- takeScreenshot: build90-06-freeze-none
+- tapOn: "Close"
+# The harness route has no tab bar; the profile deep link returns to the tabs.
+- openLink: "griit://profile"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 15000
+
+# Sign out, then sign back in by tapping the Password *label* (06.5).
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      text: "Sign out"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Sign out"
+- extendedWaitUntil:
+    visible: "I already have an account|Log in to GRIIT"
+    timeout: 30000
+- tapOn:
+    text: "I already have an account"
+    optional: true
+- tapOn:
+    text: "Continue with email"
+    optional: true
+- extendedWaitUntil:
+    visible: "Log in to GRIIT"
+    timeout: 15000
+- tapOn: "Email address"
+- inputText: ${MAESTRO_EMAIL}
+- hideKeyboard
+- tapOn:
+    text: "Password"
+    index: 0
+- inputText: "Build90-words-test"
+- hideKeyboard
+- takeScreenshot: build90-06-password-label
+- tapOn: "Log in to GRIIT"
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today|1 of .* done"
+    timeout: 40000
+
+# 06.9 the login survives a reopen.
+- stopApp
+- launchApp:
+    clearState: false
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today|1 of .* done"
+    timeout: 45000
+# Not the welcome screen (Home's starter card has its own "Start").
+- assertNotVisible: "I already have an account"
+- assertNotVisible: "Log in to GRIIT"
+- assertVisible:
+    id: "home-greeting"
+- takeScreenshot: build90-06-relaunch-signed-in
+- stopApp
+- launchApp:
+    clearState: false
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- extendedWaitUntil:
+    visible: "No challenge yet.*|Drink Water Today|1 of .* done"
+    timeout: 45000
+- assertNotVisible: "Log in to GRIIT"
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 15000
+- assertNotVisible: "You're using GRIIT as a guest.*"
+- takeScreenshot: build90-06-relaunch-profile

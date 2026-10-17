@@ -6,6 +6,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import Screen from "@/components/ds/Screen";
 import { HomeV3, type HomeV3Proof } from "@/components/home/HomeV3";
+import { FreezeSheet } from "@/components/home/FreezeSheet";
+import { FREEZE } from "@/lib/copy";
+import { FREEZE_MEANS } from "@/lib/freeze-earn";
 import type { HomeProofRow, HomeProofSection } from "@/lib/home-proof-card";
 import { DS_V3 } from "@/lib/design-system";
 
@@ -68,18 +71,24 @@ const missed = card([
 
 const dayOne = card([section("read", "Read 30 min before bed", 6, 30, [row("read", "Read", "Camera", false)])]);
 
-type StateId = "mid" | "done" | "freeze" | "day1";
+type StateId = "mid" | "done" | "freeze" | "freeze0" | "day1";
 
 const STATES: { id: StateId; label: string }[] = [
   { id: "mid", label: "Mid-day" },
   { id: "done", label: "All done" },
   { id: "freeze", label: "Freeze" },
+  { id: "freeze0", label: "No freezes" },
   { id: "day1", label: "Day 1" },
 ];
 
 export default function Build81Harness() {
   const [state, setState] = useState<StateId>("mid");
-  const proof = state === "done" ? allDone : state === "freeze" ? missed : state === "day1" ? dayOne : mid;
+  // Build 90 06.7: the real FreezeSheet and the result line, without a missed day on a
+  // live account. "Freeze" has one left; "No freezes" shows why it can't be used.
+  const [freezeOpen, setFreezeOpen] = useState(false);
+  const [freezeResult, setFreezeResult] = useState<string | null>(null);
+  const missedDay = state === "freeze" || state === "freeze0";
+  const proof = state === "done" ? allDone : missedDay ? missed : state === "day1" ? dayOne : mid;
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -92,6 +101,11 @@ export default function Build81Harness() {
           ))}
         </View>
         <ScrollView testID="build81-home" contentContainerStyle={styles.scroll}>
+          {freezeResult ? (
+            <Text testID="build81-freeze-result" style={styles.result} accessibilityRole="text">
+              {freezeResult}
+            </Text>
+          ) : null}
           <HomeV3
             key={state}
             title={
@@ -101,27 +115,27 @@ export default function Build81Harness() {
                   ? "Good afternoon, Yaseen"
                   : "Good morning, Yaseen"
             }
-            dateLine={state === "freeze" ? "Friday, Oct 9" : state === "day1" ? "Wednesday, Sep 30" : "Thursday, Oct 8"}
+            dateLine={missedDay ? "Friday, Oct 9" : state === "day1" ? "Wednesday, Sep 30" : "Thursday, Oct 8"}
             streak={state === "done" ? 3 : state === "day1" ? 0 : 2}
             streakLine=""
-            bestStreak={state === "freeze" ? 3 : state === "done" ? 3 : 2}
+            bestStreak={missedDay ? 3 : state === "done" ? 3 : 2}
             proof={proof}
-            todayIndex={state === "freeze" ? 4 : 3}
+            todayIndex={missedDay ? 4 : 3}
             weekLetters={state === "day1" ? ["1", "2", "3", "4", "5", "6", "7"] : ["M", "T", "W", "T", "F", "S", "S"]}
             weekStates={
               state === "day1"
                 ? ["na", "na", "na", "na", "na", "na", "na"]
-                : state === "freeze"
+                : missedDay
                   ? ["secured", "secured", "secured", "missed", "missed", "future", "future"]
                   : state === "done"
                     ? ["na", "secured", "secured", "secured", "future", "future", "future"]
                     : ["secured", "secured", "future", "future", "future", "future", "future"]
             }
             firstWeekDay={state === "day1" ? 1 : null}
-            freezesLeft={1}
+            freezesLeft={state === "freeze0" ? 0 : 1}
             morningAfter={
-              state === "freeze"
-                ? { cost: "", cushion: "", onDismiss: noop, onUseFreeze: noop }
+              missedDay
+                ? { cost: "", cushion: "", onDismiss: noop, onUseFreeze: () => setFreezeOpen(true) }
                 : null
             }
             nextTask={
@@ -137,6 +151,18 @@ export default function Build81Harness() {
             onPressShareToday={noop}
           />
         </ScrollView>
+        <FreezeSheet
+          visible={freezeOpen}
+          remaining={state === "freeze0" ? 0 : 1}
+          timeZone="America/New_York"
+          onUseFreeze={() => {
+            setFreezeOpen(false);
+            setFreezeResult(`${FREEZE_MEANS} ${FREEZE.result(3, 0)}`);
+          }}
+          onRefuse={() => setFreezeOpen(false)}
+          onSeePro={() => setFreezeOpen(false)}
+          onClose={() => setFreezeOpen(false)}
+        />
       </Screen>
     </>
   );
@@ -147,4 +173,5 @@ const styles = StyleSheet.create({
   switcher: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
   chip: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary },
   scroll: { paddingBottom: 48 },
+  result: { ...DS_V3.type.body, color: DS_V3.color.textPrimary, paddingHorizontal: 20, paddingBottom: 8 },
 });

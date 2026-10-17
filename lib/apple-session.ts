@@ -6,6 +6,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { isAnonymousUser, upgradeAnonymousWithApple } from "@/lib/anon-auth";
+import { adoptExistingAccount } from "@/lib/adopt-existing-account";
 import { captureError } from "@/lib/sentry";
 import { writeDeviceTimezone } from "@/lib/write-device-timezone";
 
@@ -55,20 +56,36 @@ export async function signInApplePreferringLink(params: {
         return { kind: "linked", user: linked.user, session: linked.session, message: null };
       }
       if (linked.kind === "identity_taken") {
-        const existing = await signInWithAppleIdToken(params.identityToken, params.nonce);
-        if (existing.errorMessage || !existing.user || !existing.session) {
+        let signedUser: User | null = null;
+        let signedSession: Session | null = null;
+        const moved = await adoptExistingAccount({
+          guestUserId: current.id,
+          signIn: async () => {
+            const existing = await signInWithAppleIdToken(params.identityToken, params.nonce);
+            if (existing.errorMessage || !existing.user || !existing.session) {
+              return {
+                ok: false,
+                message: existing.errorMessage || "Sign in failed. Please try again.",
+              };
+            }
+            signedUser = existing.user;
+            signedSession = existing.session;
+            return { ok: true };
+          },
+        });
+        if (!moved.ok || !signedUser || !signedSession) {
           return {
             kind: "error",
             user: null,
             session: null,
-            message: existing.errorMessage || "Sign in failed. Please try again.",
+            message: moved.ok ? "Sign in failed. Please try again." : moved.message,
           };
         }
         await writeDeviceTimezone();
         return {
           kind: "signed_in_existing",
-          user: existing.user,
-          session: existing.session,
+          user: signedUser,
+          session: signedSession,
           message: SIGNED_IN_EXISTING_ACCOUNT,
         };
       }

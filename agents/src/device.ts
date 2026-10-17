@@ -5,7 +5,7 @@ import { safeText } from "./env";
 import { usablePoint } from "./match";
 
 export const APP_ID = "app.griit.challenge-tracker";
-export const UDID = "B10E65A0-C453-4E58-97BD-A3696ED848AE";
+export const UDID = "ED03BBF2-5118-4E6F-92BE-047AD81637CF";
 
 export function run(cmd: string, args: string[], timeoutMs = 20000): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
@@ -128,6 +128,9 @@ export function launchYaml(grants: "allow" | "deny" = "allow", photos = true): s
     "    stopApp: true",
     "    permissions:",
     ...permissions,
+    "- tapOn:",
+    '    text: "http://localhost:8082"',
+    "    optional: true",
     "- tapOn:",
     '    text: "Not now"',
     "    optional: true",

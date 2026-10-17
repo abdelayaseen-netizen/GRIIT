@@ -1,0 +1,35 @@
+{
+  "personaId": "p22a",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:11:55.390Z",
+  "endedAt": "2026-10-14T23:16:05.480Z",
+  "steps": 24,
+  "durationSec": 250,
+  "goals": [
+    {
+      "id": "p22a-g1",
+      "text": "Create a group challenge and look for an invite.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "1f29bfc5-11ad-4995-816e-61f00cf9b11c",
+  "isTest": true,
+  "cleanup": "kept"
+}

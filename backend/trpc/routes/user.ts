@@ -2,6 +2,7 @@ import * as z from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import type { PgError } from "../../types/db";
+import { blockedPlainText } from "../../lib/content-moderation";
 
 /** Map onboarding challenge id to DB challenge uuid (must match seed). */
 const ONBOARDING_CHALLENGE_IDS: Record<string, string> = {
@@ -41,6 +42,14 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.userId;
+      // Build 90 07.1: the onboarding name and handle are public; check before the upsert.
+      for (const [value, field] of [
+        [input.username, "username"],
+        [input.displayName, "display name"],
+      ] as const) {
+        const blocked = typeof value === "string" ? blockedPlainText(value, field) : null;
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
       const displayName = (input.displayName ?? "").trim() || (input.username ?? "").trim();
       const rawUsername = (input.username ?? "").trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 20);
       const baseUsername = rawUsername.length >= 3 ? rawUsername : displayName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "").slice(0, 24) || "user";

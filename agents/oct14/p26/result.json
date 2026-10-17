@@ -1,0 +1,41 @@
+{
+  "personaId": "p26",
+  "group": "edge",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:21:25.335Z",
+  "endedAt": "2026-10-14T23:23:54.161Z",
+  "steps": 14,
+  "durationSec": 149,
+  "goals": [
+    {
+      "id": "p26-g1",
+      "text": "Look for a finished challenge or what happens on the last day.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. discover repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "95c51b98-9cac-409e-b19f-21a84c5a5bee",
+  "isTest": true,
+  "cleanup": "kept"
+}

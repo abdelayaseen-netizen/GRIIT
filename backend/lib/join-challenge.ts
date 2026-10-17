@@ -13,10 +13,10 @@ import {
 } from "./join-errors";
 import {
   anyTimeWindowClosedToday,
-  day1Defers,
   enrollmentStartAt,
   type TaskWindowRow,
 } from "./late-join-window";
+import { starterJoinStartsTomorrow } from "./starter-task";
 
 export {
   anyTimeWindowClosedToday,
@@ -29,7 +29,31 @@ export {
   type TaskWindowRow,
 } from "./late-join-window";
 
-export type JoinChallengeResult = { id: string; user_id: string; challenge_id: string; status: string; start_at: string; end_at: string; current_day?: number; progress_percent?: number; created_at?: string };
+export type JoinFirstTask = {
+  id: string;
+  title: string | null;
+  task_type: string | null;
+  config: Record<string, unknown> | null;
+  require_photo: boolean | null;
+  min_duration_minutes: number | null;
+  duration_minutes: number | null;
+};
+
+export type JoinChallengeResult = {
+  id: string;
+  user_id: string;
+  challenge_id: string;
+  status: string;
+  start_at: string;
+  end_at: string;
+  current_day?: number;
+  progress_percent?: number;
+  created_at?: string;
+  /** Additive for newer clients — open today's first task after join. */
+  first_task?: JoinFirstTask | null;
+  challenge_title?: string | null;
+  duration_days?: number | null;
+};
 
 /**
  * Join a challenge for the given user: insert active_challenges, seed check_ins for all tasks, upsert streaks.
@@ -39,7 +63,8 @@ export type JoinChallengeResult = { id: string; user_id: string; challenge_id: s
 export async function joinChallengeDirect(
   supabase: SupabaseClient,
   userId: string,
-  challengeId: string
+  challengeId: string,
+  options?: { startTomorrow?: boolean },
 ): Promise<JoinChallengeResult> {
   const now = new Date();
   const { data: existingActive } = await supabase
@@ -75,13 +100,17 @@ export async function joinChallengeDirect(
 
   const { data: challenge, error: challengeError } = await reader
     .from("challenges")
-    .select("id, duration_type, duration_days")
+    .select("id, title, duration_type, duration_days")
     .eq("id", challengeId)
     .single();
 
   if (challengeError || !challenge) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
   }
+  const challengeTitle =
+    typeof (challenge as { title?: string }).title === "string"
+      ? (challenge as { title: string }).title
+      : null;
 
   const { data: tasksForWindowCheck } = await supabase
     .from("challenge_tasks")
@@ -98,7 +127,8 @@ export async function joinChallengeDirect(
     .eq("user_id", userId)
     .eq("date_key", todayKey)
     .maybeSingle();
-  const defer = day1Defers({
+  const defer = starterJoinStartsTomorrow({
+    requested: options?.startTomorrow === true,
     windowClosed: anyTimeWindowClosedToday(taskWindowList, now, userTz),
     todaySecured: Boolean(securedToday),
   });
@@ -113,6 +143,8 @@ export async function joinChallengeDirect(
   });
 
   // Insert only columns that exist in all environments (some DBs lack current_day, progress_percent)
+  // Build 90 chunk 08: a member is on the challenge board from the day they join
+  // (board_opt_in was DEFAULT false and nothing ever set it, so every board said "A board needs two").
   const { data: activeChallenge, error: insertErr } = await supabase
     .from("active_challenges")
     .insert({
@@ -123,6 +155,7 @@ export async function joinChallengeDirect(
       end_at: endAt.toISOString(),
       current_day: 1,
       progress_percent: 0,
+      board_opt_in: true,
     })
     .select("id, user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, created_at")
     .single();
@@ -149,14 +182,39 @@ export async function joinChallengeDirect(
     });
   }
 
+  let firstTask: JoinFirstTask | null = null;
   // Best-effort: seed check_ins for each task (don't fail join if table/columns differ)
   try {
     const { data: tasks } = await reader
       .from("challenge_tasks")
-      .select("id")
-      .eq("challenge_id", challengeId);
-    const taskList = (tasks ?? []) as { id: string }[];
+      .select("id, title, task_type, config, require_photo, min_duration_minutes, order_index")
+      .eq("challenge_id", challengeId)
+      .order("order_index", { ascending: true });
+    type TaskRow = {
+      id: string;
+      title?: string | null;
+      task_type?: string | null;
+      config?: Record<string, unknown> | null;
+      require_photo?: boolean | null;
+      min_duration_minutes?: number | null;
+      order_index?: number | null;
+    };
+    const taskList = (tasks ?? []) as TaskRow[];
     if (taskList.length > 0) {
+      const head = taskList[0]!;
+      const cfg =
+        head.config && typeof head.config === "object" ? head.config : null;
+      const fromConfig =
+        cfg && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null;
+      firstTask = {
+        id: head.id,
+        title: head.title ?? null,
+        task_type: head.task_type ?? null,
+        config: cfg,
+        require_photo: head.require_photo ?? null,
+        min_duration_minutes: head.min_duration_minutes ?? fromConfig,
+        duration_minutes: head.min_duration_minutes ?? fromConfig,
+      };
       const tz = await getProfileTimeZoneForUser(supabase, userId);
       const dateKey = defer ? getTomorrowDateKey(tz) : getTodayDateKey(tz);
       const checkIns = taskList.map((t) => ({
@@ -200,5 +258,10 @@ export async function joinChallengeDirect(
     logger.warn({ err: e }, "[JOIN-BACKEND] streaks best-effort failed");
   }
 
-  return activeChallenge as JoinChallengeResult;
+  return {
+    ...(activeChallenge as JoinChallengeResult),
+    first_task: firstTask,
+    challenge_title: challengeTitle,
+    duration_days: durationDays,
+  };
 }

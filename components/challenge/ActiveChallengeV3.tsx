@@ -58,7 +58,7 @@ import {
   INVITE_TO,
   NO_SHARED_PROOFS_IN_CHALLENGE,
   PEOPLE_SOLO,
-  recordOfDue,
+  recordLine,
 } from "@/lib/v44-detail";
 
 const ICON = DS_V3.space.xs * 6;
@@ -194,7 +194,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
           <Text style={styles.ofLabel}>of {p.durationDays}</Text>
           {p.loading ? null : (
             <Text style={styles.metaLine}>
-              {`${p.dueCount ?? 0} days done · ${p.securedCount ?? 0} secured`}
+              {recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}
             </Text>
           )}
         </View>
@@ -284,6 +284,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
                 <View key={t.id}>
                   {i > 0 ? <View style={styles.divider} /> : null}
                   <Pressable
+                    testID="active-task"
                     accessibilityRole="button"
                     accessibilityLabel={t.title}
                     accessibilityState={{ disabled: t.completed_today || closed }}
@@ -361,7 +362,7 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
             </View>
             <View style={styles.peopleCard}>
               <Text style={styles.hero24}>{p.securedCount ?? 0}</Text>
-              <Text style={styles.caption}>{recordOfDue(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}</Text>
+              <Text style={styles.caption}>{recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}</Text>
               <Pressable accessibilityRole="button" accessibilityLabel={FULL_RECORD} onPress={p.onOpenRecord}>
                 <Text style={styles.link}>{FULL_RECORD}</Text>
               </Pressable>

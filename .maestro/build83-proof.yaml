@@ -1,0 +1,24 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp
+- tapOn:
+    text: "Not now"
+    optional: true
+- swipe:
+    direction: UP
+- tapOn: "Drink water and post a photo"
+- tapOn:
+    text: "Allow"
+    optional: true
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 15000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post proof"
+    timeout: 20000
+- tapOn: "Post proof"
+- extendedWaitUntil:
+    visible: "Today"
+    timeout: 25000
+- assertNotVisible: "Post proof"

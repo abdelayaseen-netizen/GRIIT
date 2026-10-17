@@ -181,6 +181,29 @@ async function defaultLoadSharedPaths(candidates: string[]): Promise<Set<string>
   return loadSharedPathsForCandidates(candidates);
 }
 
+const SIGN_URL_BATCH = 5;
+
+async function signUrlBatch(
+  svc: NonNullable<ReturnType<typeof getSupabaseServer>>,
+  paths: string[],
+  ttl: number,
+  out: Map<string, string | null>,
+): Promise<void> {
+  const { data, error } = await svc.storage.from(PROOF_BUCKET).createSignedUrls(paths, ttl);
+  if (error) {
+    logger.error(
+      { code: (error as { statusCode?: string }).statusCode, message: error.message },
+      "[proof-image] createSignedUrls",
+    );
+    for (const p of paths) out.set(p, null);
+    return;
+  }
+  for (const row of data ?? []) {
+    const path = row.path ?? "";
+    if (path) out.set(path, row.signedUrl ?? null);
+  }
+}
+
 async function defaultCreateSignedUrls(
   paths: string[],
   ttl: number,
@@ -191,18 +214,12 @@ async function defaultCreateSignedUrls(
     for (const p of paths) out.set(p, null);
     return out;
   }
-  const { data, error } = await svc.storage.from(PROOF_BUCKET).createSignedUrls(paths, ttl);
-  if (error) {
-    logger.error(
-      { code: (error as { statusCode?: string }).statusCode, message: error.message },
-      "[proof-image] createSignedUrls",
-    );
-    for (const p of paths) out.set(p, null);
-    return out;
+  for (let i = 0; i < paths.length; i += SIGN_URL_BATCH) {
+    await signUrlBatch(svc, paths.slice(i, i + SIGN_URL_BATCH), ttl, out);
   }
-  for (const row of data ?? []) {
-    const path = row.path ?? "";
-    if (path) out.set(path, row.signedUrl ?? null);
+  const missing = paths.filter((p) => !out.get(p));
+  for (const path of missing) {
+    await signUrlBatch(svc, [path], ttl, out);
   }
   for (const p of paths) {
     if (!out.has(p)) out.set(p, null);

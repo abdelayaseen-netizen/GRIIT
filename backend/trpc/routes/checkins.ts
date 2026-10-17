@@ -53,6 +53,7 @@ import {
 } from "../../lib/workout-verification";
 import {
   buildJournalVerification,
+  countJournalWords,
   type JournalLogFacts,
   type JournalVerification,
 } from "../../lib/journal-verification";
@@ -70,6 +71,7 @@ import {
 import { buildSimpleLogFacts } from "../../lib/simple-verification";
 import {
   assertTimerSessionElapsed,
+  timerSelfReportSkipsSession,
   parseTimerSession,
   wrapTimerSession,
   type TimerSessionKind,
@@ -91,10 +93,15 @@ import {
   canFlipShare,
   flipSharePatch,
   keepSharePatch,
+  shareColumns,
   shareColumnsForComplete,
 } from "../../lib/activity-share";
+import { createsActivityPost, shareStateForAudience } from "../../../lib/post-audience";
 import { cameraProofTiles } from "../../lib/proof-predicate";
 import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
+import { bundleTaskFinish } from "../../lib/finish-bundle";
+import { createStepTimer, type StepTimer } from "../../lib/step-timer";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
   require_photo?: boolean | null;
@@ -242,6 +249,279 @@ async function grantEarnedFreezeOnSecure(args: {
   return { freezeGranted: true, freezesHeld: nextHeld, freezeCap: cap, freezeAtCap: false };
 }
 
+type FinishSecureResult = {
+  success?: boolean;
+  alreadySecured?: boolean;
+  newStreakCount?: number;
+  secured?: boolean;
+  challenge_done?: boolean;
+  remaining_challenges?: number;
+  freezeGranted?: boolean;
+  freezesHeld?: number;
+  freezeCap?: number;
+  freezeAtCap?: boolean;
+};
+
+type SecureDayChallengeRow = {
+  duration_type?: string;
+  ends_at?: string | null;
+  live_date?: string | null;
+  duration_days?: number | null;
+  title?: string | null;
+  participation_type?: string | null;
+  run_status?: string | null;
+};
+
+/** What secureDay returns to the client, plus the recounted total (stripped by `complete`). */
+type SecureDayResult = {
+  success: boolean;
+  alreadySecured: boolean;
+  streak: number;
+  secured: boolean;
+  challenge_done: boolean;
+  remaining_challenges: number;
+  newStreakCount: number;
+  lastStandEarned: boolean;
+  challengeDay: number;
+  challengeCompleted: boolean;
+  challengeId?: string;
+  challengeName?: string;
+  totalDays?: number;
+  freezeGranted: boolean;
+  freezesHeld: number;
+  freezeCap: number;
+  freezeAtCap: boolean;
+  totalDaysSecured: number;
+};
+
+/**
+ * Build 90 01b.2: badge checks run after the answer is sent. One pass covers the finish and the
+ * secure (before: two passes of ~9 reads each, both on the response path).
+ */
+async function unlockAchievementsAfterFinish(
+  supabase: SupabaseClient,
+  userId: string,
+  args: { streak: number; totalDaysSecured: number | null; challengeCompleted: boolean; isHardMode: boolean },
+): Promise<void> {
+  try {
+    let totalDays = args.totalDaysSecured;
+    if (totalDays == null) {
+      const { data: profileRow } = await supabase.from("profiles").select("total_days_secured").eq("user_id", userId).single();
+      totalDays = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+    }
+    const { newUnlockKeys } = await checkAndUnlockAchievements(
+      supabase,
+      userId,
+      args.streak,
+      totalDays,
+      args.challengeCompleted,
+      args.isHardMode,
+    );
+    if (newUnlockKeys.length === 0) return;
+    const achievementRows = newUnlockKeys.map((key) => ({
+      user_id: userId,
+      event_type: "unlocked_achievement" as const,
+      ...shareColumns("unanswered"),
+      metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
+    }));
+    const { data: existingEvents } = await supabase
+      .from("activity_events")
+      .select("metadata")
+      .eq("user_id", userId)
+      .eq("event_type", "unlocked_achievement")
+      .in("metadata->>achievement_key", newUnlockKeys);
+    const alreadyEmitted = new Set(
+      (existingEvents ?? [])
+        .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
+        .filter(Boolean),
+    );
+    const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
+    if (filteredRows.length > 0) {
+      const { error: achErr } = await supabase.from("activity_events").insert(filteredRows);
+      if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
+    }
+  } catch (err) {
+    logger.warn({ err, userId }, "[checkins] achievements after finish failed (non-fatal)");
+  }
+}
+
+/**
+ * Secures the day for one enrollment. Shared by the `secureDay` procedure (older builds) and
+ * `complete` (one request per finish). `known` carries rows `complete` already read, so the
+ * secure does not read them again: RPC → [enrollment, days count] → days update → freeze.
+ */
+async function secureDayCore(
+  ctx: { supabase: SupabaseClient; userId: string },
+  activeChallengeId: string,
+  t: StepTimer,
+  known?: {
+    challengeId: string;
+    tz: string;
+    challenge: SecureDayChallengeRow;
+    alreadySecured: boolean;
+    /** "skip": the caller runs the badge pass itself (after its answer). */
+    achievements: "skip" | "after";
+  },
+): Promise<SecureDayResult> {
+  let challengeId: string;
+  let tz: string;
+  let ch: SecureDayChallengeRow | null;
+  let alreadySecured: boolean;
+  if (known) {
+    challengeId = known.challengeId;
+    tz = known.tz;
+    ch = known.challenge;
+    alreadySecured = known.alreadySecured;
+  } else {
+    const [owned, profileTz] = await t.step("secure_setup", () =>
+      Promise.all([
+        assertActiveChallengeOwnership(ctx.supabase, activeChallengeId, ctx.userId),
+        getProfileTimeZoneForUser(ctx.supabase, ctx.userId),
+      ]),
+    );
+    challengeId = owned.challenge_id;
+    tz = profileTz;
+    const dateKey = getTodayDateKey(tz);
+    const [chFetch, secureFetch] = await t.step("secure_context", () =>
+      Promise.all([
+        ctx.supabase
+          .from("challenges")
+          .select("duration_type, ends_at, live_date, duration_days, title, participation_type, run_status")
+          .eq("id", challengeId)
+          .single(),
+        ctx.supabase.from("day_secures").select("id").eq("user_id", ctx.userId).eq("date_key", dateKey).maybeSingle(),
+      ]),
+    );
+    ch = chFetch.data as SecureDayChallengeRow | null;
+    alreadySecured = Boolean(secureFetch.data);
+  }
+  if (ch?.duration_type === "24h") {
+    const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
+    if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer secure the day." });
+  }
+  const alreadyDateKey = getTodayDateKey(tz);
+
+  const { data: rpcRows, error: rpcError } = (await t.step("secure_day_rpc", () =>
+    ctx.supabase.rpc("secure_day", { p_active_challenge_id: activeChallengeId }),
+  )) as { data: unknown; error: { code?: string; message?: string; details?: string; hint?: string } | null };
+  if (rpcError || !Array.isArray(rpcRows) || rpcRows.length === 0) {
+    const code = (rpcError as { code?: string } | null)?.code;
+    const msg = (rpcError as { message?: string } | null)?.message ?? "";
+    if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: NOT_ALL_REQUIRED_MESSAGE });
+    if (rpcError) {
+      logger.error(
+        {
+          userId: ctx.userId,
+          activeChallengeId,
+          rpcErrorCode: code,
+          rpcErrorMsg: msg,
+          rpcErrorDetails: (rpcError as { details?: string }).details,
+          rpcErrorHint: (rpcError as { hint?: string }).hint,
+          isMissingFunction: code === "42883",
+        },
+        "[checkins.secureDay] RPC failed — refusing to run unsafe TS fallback. If code=42883, the secure_day migration is not applied to this database."
+      );
+    }
+    // Defensive: RPC returned no error but also no rows. Should not happen.
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Could not secure your day right now. Please try again in a moment.",
+    });
+  }
+  const row = parseSecureDayRpcRow(rpcRows[0]);
+  const svc = getSupabaseServer();
+  const recount = row.secured && !alreadySecured;
+  if (recount && !svc) {
+    logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not recounted");
+  }
+  // After the RPC: the enrollment's new current_day, and the day count when this secure is new.
+  const [acFetch, countFetch, profileFetch] = await t.step("secure_after_rpc", () =>
+    Promise.all([
+      ctx.supabase.from("active_challenges").select("current_day").eq("id", activeChallengeId).single(),
+      recount && svc
+        ? svc.from("day_secures").select("id", { count: "exact", head: true }).eq("user_id", ctx.userId)
+        : Promise.resolve({ count: null as number | null, error: null }),
+      recount ? Promise.resolve({ data: null }) : ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single(),
+    ]),
+  );
+  const currentDayAfter = (acFetch.data as { current_day?: number } | null)?.current_day ?? 0;
+  // day_number is the display value (displayDay after secure_day increments current_day). Client renders it raw.
+  const daySecured = displayDay(currentDayAfter, true);
+  if (ch?.participation_type === "team" && ch?.run_status === "active" && shouldEvaluateTeamDay(ch.participation_type)) {
+    await t.step("team_day", async () => {
+      await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: getYesterdayDateKey(tz) });
+      await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: getTodayDateKey(tz) });
+    });
+  }
+  let totalDaysSecured = (profileFetch.data as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
+  if (recount && svc) {
+    const { count, error: countErr } = countFetch as { count: number | null; error: unknown };
+    if (countErr || typeof count !== "number") {
+      logger.error({ err: countErr, userId: ctx.userId }, "[checkins.secureDay] day_secures count failed");
+    } else {
+      const { error: daysErr } = await t.step("days_update", () =>
+        svc
+          .from("profiles")
+          .update({
+            total_days_secured: count,
+            tier: profileTierForSecuredDays(count),
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("user_id", ctx.userId),
+      );
+      if (daysErr) {
+        logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
+      } else {
+        totalDaysSecured = count;
+      }
+    }
+  }
+  const durationDays = ch?.duration_days ?? 0;
+  const challengeName = ch?.title ?? "Challenge";
+  const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
+  if (row.secured && known?.achievements !== "skip") {
+    const achievementArgs = { streak: row.streak, totalDaysSecured, challengeCompleted: challengeJustCompleted, isHardMode: false };
+    setTimeout(() => void unlockAchievementsAfterFinish(ctx.supabase, ctx.userId, achievementArgs), 0);
+  }
+  const freeze = await t.step("freeze_grant", () =>
+    grantEarnedFreezeOnSecure({
+      supabase: ctx.supabase as { from(table: string): any },
+      userId: ctx.userId,
+      streak: row.streak,
+      secured: row.secured,
+      alreadySecured,
+      grantedDateKey: alreadyDateKey,
+    }),
+  );
+  return {
+    success: true,
+    alreadySecured,
+    streak: row.streak,
+    secured: row.secured,
+    challenge_done: row.challenge_done,
+    remaining_challenges: row.remaining_challenges,
+    newStreakCount: row.streak,
+    lastStandEarned: false,
+    challengeDay: daySecured,
+    challengeCompleted: challengeJustCompleted,
+    ...(challengeJustCompleted && { challengeId, challengeName, totalDays: durationDays }),
+    freezeGranted: freeze.freezeGranted,
+    freezesHeld: freeze.freezesHeld,
+    freezeCap: freeze.freezeCap,
+    freezeAtCap: freeze.freezeAtCap,
+    totalDaysSecured,
+  };
+}
+
+/** Filled after the router exists so complete can call secureDay and shareProof without a type cycle. */
+const finishSideEffects: {
+  secure: (ctx: unknown, activeChallengeId: string) => Promise<FinishSecureResult>;
+  share: (ctx: unknown, eventId: string) => Promise<void>;
+} = {
+  secure: () => Promise.reject(new Error("finish side effects are not ready")),
+  share: () => Promise.reject(new Error("finish side effects are not ready")),
+};
+
 export const checkinsRouter = createTRPCRouter({
   complete: protectedProcedure
     .input(
@@ -279,21 +559,43 @@ export const checkinsRouter = createTRPCRouter({
         floor_min: z.number().nonnegative().nullable().optional(),
         /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
         shareChoicePending: z.boolean().optional(),
+        /** Build 90+. When true, this call also shares the new proof. Older builds omit it and call shareProof. */
+        applyShare: z.boolean().optional(),
+        audience: z.enum(["friends", "everyone", "only_me"]).optional(),
+        /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
+        self_reported: z.boolean().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const completeStartedAt = Date.now();
-      const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-      const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-
-      // Load task before date_key so schedule_timezone can win over profile (shared with saveProgress).
-      const { data: taskRow, error: taskFetchError } = await ctx.supabase
-        .from("challenge_tasks")
-        .select(
-          "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, gate_time_mode, gate_time_start, gate_time_end"
-        )
-        .eq("id", input.taskId)
-        .single();
+      // 01b.1: every Supabase / storage / secure step is timed; one log line at the end.
+      // 01b.2: reads that do not depend on each other run in one round trip (Promise.all).
+      const t = createStepTimer();
+      const taskSelect =
+        "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, gate_time_mode, gate_time_start, gate_time_end";
+      // Round 1: the enrollment (with start_at and current_day), the profile time zone, the task,
+      // the streak, and the person's enrollments + posts for the day-proof tiles.
+      const [owned, profileTz, taskFetch, streakFetch, dayEnrollmentsFetch, dayEventsFetch] = await t.step("setup", () =>
+        Promise.all([
+          assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId, "start_at, current_day"),
+          getProfileTimeZoneForUser(ctx.supabase, ctx.userId),
+          ctx.supabase.from("challenge_tasks").select(taskSelect).eq("id", input.taskId).single(),
+          ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle(),
+          ctx.supabase
+            .from("active_challenges")
+            .select("id, challenge_id, start_at")
+            .eq("user_id", ctx.userId)
+            .in("status", ["active", "completed", "abandoned"])
+            .limit(50),
+          ctx.supabase
+            .from("activity_events")
+            .select("id, metadata, created_at")
+            .eq("user_id", ctx.userId)
+            .eq("event_type", "task_completed")
+            .limit(80),
+        ]),
+      );
+      const { challenge_id } = owned;
+      const { data: taskRow, error: taskFetchError } = taskFetch;
 
       if (taskFetchError) {
         const { logger } = await import("../../lib/logger");
@@ -312,25 +614,102 @@ export const checkinsRouter = createTRPCRouter({
       const dateKey = getTodayDateKey(checkInTz);
       // Alias for legacy locals in this mutation that still say `tz`.
       const tz = checkInTz;
+      const profileDateKey = getTodayDateKey(profileTz);
+      const isTimerTask = task?.task_type === "timer";
+      const TEN_SECONDS_AGO = new Date(Date.now() - 10_000).toISOString();
+      const enrollRows = (dayEnrollmentsFetch.data ?? []) as { id: string; challenge_id: string; start_at: string }[];
+      const enrollChallengeIds = [...new Set(enrollRows.map((r) => r.challenge_id))];
 
-      const { data: acStartRow } = await ctx.supabase
-        .from("active_challenges")
-        .select("start_at")
-        .eq("id", input.activeChallengeId)
-        .single();
-      const chQuery = await ctx.supabase
-        .from("challenges")
-        .select("duration_type, ends_at, live_date, duration_days, is_hard_mode")
-        .eq("id", challenge_id)
-        .single();
-      const ch = assertChallengeQueryOk(chQuery) as {
+      // Round 2: everything that needs the challenge id or today's date key, still before any write:
+      // the challenge row (once, with title and team fields for the secure), the anti-cheat read,
+      // the challenge's tasks, today's completed check-ins, the timer session, today's day_secures row,
+      // and the day-proof rows for the other enrollments.
+      const [
+        challengesFetch,
+        recentFetch,
+        allTasksFetch,
+        completedFetch,
+        timerSessionFetch,
+        existingSecureFetch,
+        dayCheckInsFetch,
+        dayTasksFetch,
+      ] = await t.step("context", () =>
+        Promise.all([
+          // One challenges read: this challenge's row plus the rows the day-proof tiles need.
+          ctx.supabase
+            .from("challenges")
+            .select("id, duration_type, ends_at, live_date, duration_days, is_hard_mode, title, participation_type, run_status")
+            .in("id", [...new Set([challenge_id, ...enrollChallengeIds])])
+            .limit(50),
+          ctx.supabase
+            .from("check_ins")
+            .select("id, created_at")
+            .eq("user_id", ctx.userId)
+            .eq("date_key", dateKey)
+            .gte("created_at", TEN_SECONDS_AGO)
+            .neq("task_id", input.taskId)
+            .order("created_at", { ascending: false })
+            .limit(1),
+          ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id).limit(200),
+          ctx.supabase
+            .from("check_ins")
+            .select("task_id")
+            .eq("active_challenge_id", input.activeChallengeId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(100),
+          isTimerTask && input.task_mode !== "minimum" && !timerSelfReportSkipsSession(input.self_reported)
+            ? ctx.supabase
+                .from("check_ins")
+                .select("proof_payload_json")
+                .eq("active_challenge_id", input.activeChallengeId)
+                .eq("task_id", input.taskId)
+                .eq("date_key", dateKey)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+          ctx.supabase.from("day_secures").select("id").eq("user_id", ctx.userId).eq("date_key", profileDateKey).maybeSingle(),
+          ctx.supabase
+            .from("check_ins")
+            .select("id, date_key, task_id, active_challenge_id, photo_url, proof_url, completion_image_url, created_at")
+            .eq("user_id", ctx.userId)
+            .eq("date_key", dateKey)
+            .eq("status", "completed")
+            .limit(100),
+          enrollChallengeIds.length
+            ? ctx.supabase
+                .from("challenge_tasks")
+                .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
+                .in("challenge_id", enrollChallengeIds)
+                .limit(400)
+            : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+        ]),
+      );
+      type ChallengeRowForFinish = {
+        id: string;
         duration_type?: string;
         ends_at?: string | null;
         live_date?: string | null;
         duration_days?: number | null;
         is_hard_mode?: boolean;
+        title?: string | null;
+        participation_type?: string | null;
+        run_status?: string | null;
       };
-      const startAt = (acStartRow as { start_at?: string } | null)?.start_at;
+      const challengeRows = (challengesFetch.data ?? []) as ChallengeRowForFinish[];
+      const ch = assertChallengeQueryOk({
+        data: challengeRows.find((r) => r.id === challenge_id) ?? null,
+        error: challengesFetch.error,
+      }) as {
+        duration_type?: string;
+        ends_at?: string | null;
+        live_date?: string | null;
+        duration_days?: number | null;
+        is_hard_mode?: boolean;
+        title?: string | null;
+        participation_type?: string | null;
+        run_status?: string | null;
+      };
+      const startAt = (owned.row as { start_at?: string | null }).start_at;
       let rampDayNumber = 1;
       const totalDur = ch.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
       if (ch.duration_type !== "24h" && startAt) {
@@ -347,23 +726,13 @@ export const checkinsRouter = createTRPCRouter({
       if (isMinimumDay && isChallengeHardMode) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Hard mode challenges require full completion.",
+          message: "Strict challenges require full completion.",
         });
       }
 
       // --- Anti-cheat: prevent rapid-fire completions ---
       // Reject if the user completed ANY task less than 10 seconds ago
-      const TEN_SECONDS_AGO = new Date(Date.now() - 10_000).toISOString();
-      const { data: recentCheckins } = await ctx.supabase
-        .from("check_ins")
-        .select("id, created_at")
-        .eq("user_id", ctx.userId)
-        .eq("date_key", dateKey)
-        .gte("created_at", TEN_SECONDS_AGO)
-        .neq("task_id", input.taskId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
+      const recentCheckins = recentFetch.data;
       if (recentCheckins && recentCheckins.length > 0) {
         const lastCheckinTime = new Date((recentCheckins[0] as { created_at: string }).created_at);
         const secondsAgo = Math.round((Date.now() - lastCheckinTime.getTime()) / 1000);
@@ -446,7 +815,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -478,16 +847,13 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
       } else if (!isMinimumDay && isJournalProof) {
         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
-          const rejectNote = (input.noteText ?? "").trim();
-          const rejectWords = rejectNote
-            ? rejectNote.split(/\s+/).filter(Boolean).length
-            : 0;
+          const rejectWords = countJournalWords(input.noteText ?? "");
           const rejectFloor =
             typeof input.floor_min === "number" && input.floor_min > 0
               ? input.floor_min
@@ -505,7 +871,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -519,7 +885,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -534,7 +900,7 @@ export const checkinsRouter = createTRPCRouter({
           });
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Hard mode: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
+            message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
             cause: { verification },
           });
         }
@@ -607,8 +973,11 @@ export const checkinsRouter = createTRPCRouter({
         task?.min_duration_minutes ??
         durationMinutes ??
         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
+      const isTimer = taskType === "timer";
+      const timerSelfReport = isTimer && timerSelfReportSkipsSession(input.self_reported);
       if (
         !isMinimumDay &&
+        !timerSelfReport &&
         minDurationMinutes != null &&
         minDurationMinutes > 0 &&
         input.value != null &&
@@ -616,25 +985,20 @@ export const checkinsRouter = createTRPCRouter({
       ) {
         throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minDurationMinutes} minutes. You completed ${input.value} minutes.` });
       }
-      const isJournal = taskType === "journal" || taskType === "manual";
+      // "text" is the task-model name for a journal row; it was missing here, so text journals skipped the floor.
+      const isJournal = taskType === "journal" || taskType === "text" || taskType === "manual";
       if (!isMinimumDay && isJournal && minWords > 0) {
-        const text = (input.noteText ?? "").trim();
-        const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
+        // Build 90 03.3: the same rule as the client (2+ letters, a word at most 3 times).
+        const wordCount = countJournalWords(input.noteText ?? "");
         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
       }
-      const isTimer = taskType === "timer";
       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
       const requiredMinutes = minDurationMinutes ?? durationMinutes;
       let timerSessionPayload: unknown = null;
-      if (!isMinimumDay && isTimer) {
-        const { data: existingSessionRow } = await ctx.supabase
-          .from("check_ins")
-          .select("proof_payload_json")
-          .eq("active_challenge_id", input.activeChallengeId)
-          .eq("task_id", input.taskId)
-          .eq("date_key", dateKey)
-          .maybeSingle();
+      if (!isMinimumDay && isTimer && !timerSelfReport) {
+        // Read in round 2 ("context") above.
+        const existingSessionRow = timerSessionFetch.data;
         timerSessionPayload = (existingSessionRow as { proof_payload_json?: unknown } | null)?.proof_payload_json ?? null;
         const sessionCheck = assertTimerSessionElapsed(parseTimerSession(timerSessionPayload));
         if (!sessionCheck.ok) {
@@ -697,10 +1061,7 @@ export const checkinsRouter = createTRPCRouter({
             }
           : null;
 
-      const journalNote = (input.noteText ?? "").trim();
-      const journalWordCount = journalNote
-        ? journalNote.split(/\s+/).filter(Boolean).length
-        : 0;
+      const journalWordCount = countJournalWords(input.noteText ?? "");
       const journalFloorMin: number | null =
         typeof input.floor_min === "number" && input.floor_min > 0
           ? input.floor_min
@@ -769,14 +1130,17 @@ export const checkinsRouter = createTRPCRouter({
         (typeof cfg.target_count === "number" ? cfg.target_count : null) ??
         (typeof cfg.target_pages === "number" ? cfg.target_pages : null) ??
         0;
+      // 06: the task's own unit first, then the same defaults the app uses (water = cups).
       const counterUnitPlural =
-        taskType === "water"
-          ? "cups"
-          : taskType === "reading"
-            ? "pages"
-            : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
-              ? cfg.unit_label.trim()
-              : "units";
+        typeof cfg.unit === "string" && cfg.unit.trim()
+          ? cfg.unit.trim()
+          : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
+            ? cfg.unit_label.trim()
+            : taskType === "water"
+              ? "cups"
+              : taskType === "reading"
+                ? "pages"
+                : "units";
       const counterLogFacts: CounterLogFacts | null =
         isCounterProof &&
         typeof input.value === "number" &&
@@ -935,13 +1299,15 @@ export const checkinsRouter = createTRPCRouter({
       else if (timerSessionPayload) payload.proof_payload_json = timerSessionPayload;
       if (Object.keys(verificationGates).length > 0) payload.verification_gates = verificationGates;
 
-      const { data, error } = await ctx.supabase
-        .from("check_ins")
-        .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
-        .select(
-          "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
-        )
-        .single();
+      const { data, error } = await t.step("upsert", () =>
+        ctx.supabase
+          .from("check_ins")
+          .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
+          .select(
+            "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, photo_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
+          )
+          .single(),
+      );
       if (error) {
         const { logger } = await import("../../lib/logger");
         const errObj = error as { code?: string; message?: string; details?: string; hint?: string };
@@ -968,94 +1334,81 @@ export const checkinsRouter = createTRPCRouter({
         }
       }
 
-      const { data: chForEvent } = await ctx.supabase.from("challenges").select("title").eq("id", challenge_id).maybeSingle();
-      const challengeTitleForFeed = (chForEvent as { title?: string } | null)?.title ?? "Challenge";
+      const challengeTitleForFeed = ch.title ?? "Challenge";
       const taskTitle = (task as { title?: string })?.title ?? "Task";
       const verificationMethod = verificationMethodFor(gatesFor(task));
-      const shareCols = shareColumnsForComplete(input.shareChoicePending);
-      const activityEventPayload = {
-        user_id: ctx.userId,
-        event_type: "task_completed" as const,
-        challenge_id,
-        ...shareCols,
-        metadata: {
-          task_id: input.taskId,
-          task_name: taskTitle,
-          task_type: taskType,
-          challenge_name: challengeTitleForFeed,
-          date_key: dateKey,
-          has_photo: !!proofUrl,
-          photo_url: proofUrl ?? null,
-          verification_method: verificationMethod,
-          is_hard_mode: cfg.hard_mode === true,
-          task_mode: input.task_mode,
-          heart_rate_verified: false,
-          location_verified: locationGatePassed,
-        },
-      };
-      const { error: taskCompletedEventError } = await ctx.supabase
-        .from("activity_events")
-        .insert(activityEventPayload as never);
-      if (taskCompletedEventError) {
-        logger.error(
-          { err: taskCompletedEventError },
-          "[checkins.complete] task_completed event FAILED via user client — retrying with service role"
-        );
-        const svc = getSupabaseServer();
-        if (svc) {
-          const { error: retryErr } = await svc.from("activity_events").insert(activityEventPayload as never);
-          if (retryErr) {
-            logger.error({ err: retryErr }, "[checkins.complete] task_completed event FAILED on service-role retry too");
-          } else {
-            logger.info("[checkins.complete] task_completed event recovered via service role");
+      const hasPhoto = !!proofUrl;
+      // The activity row is written in round 4, alongside the progress update and the secure.
+      let activityEventPayload: Record<string, unknown> | null = null;
+      if (!createsActivityPost(input.self_reported === true, hasPhoto, input.audience)) {
+        // Self-reported, no photo, no audience chosen: the check-in is saved and no feed row is written.
+      } else {
+        const shareCols = input.audience
+          ? shareColumns(shareStateForAudience(input.audience))
+          : shareColumnsForComplete(input.shareChoicePending);
+        activityEventPayload = {
+          user_id: ctx.userId,
+          event_type: "task_completed" as const,
+          challenge_id,
+          ...shareCols,
+          metadata: {
+            task_id: input.taskId,
+            task_name: taskTitle,
+            task_type: taskType,
+            challenge_name: challengeTitleForFeed,
+            date_key: dateKey,
+            has_photo: !!proofUrl,
+            photo_url: proofUrl ?? null,
+            verification_method: verificationMethod,
+            is_hard_mode: cfg.hard_mode === true,
+            task_mode: input.task_mode,
+            audience: input.audience ?? null,
+            heart_rate_verified: false,
+            location_verified: locationGatePassed,
+          },
+        };
+      }
+      const insertActivityEvent = async (): Promise<string | null> => {
+        if (!activityEventPayload) return null;
+        const eventPayload = activityEventPayload;
+        return t.step("activity_event", async () => {
+          const inserted = await ctx.supabase.from("activity_events").insert(eventPayload as never).select("id").maybeSingle();
+          let id = (inserted.data as { id?: string } | null)?.id ?? null;
+          if (inserted.error) {
+            logger.error(
+              { err: inserted.error },
+              "[checkins.complete] task_completed event FAILED via user client — retrying with service role"
+            );
+            const svc = getSupabaseServer();
+            if (svc) {
+              const retry = await svc.from("activity_events").insert(eventPayload as never).select("id").maybeSingle();
+              if (!retry.error) {
+                id = (retry.data as { id?: string } | null)?.id ?? id;
+                logger.info("[checkins.complete] task_completed event recovered via service role");
+              } else {
+                logger.error({ err: retry.error }, "[checkins.complete] task_completed event FAILED on service-role retry too");
+              }
+            }
           }
-        }
-      }
+          return id;
+        });
+      };
 
-      try {
-        const { data: profileForAch } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
-        const totalDaysForAch = (profileForAch as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
-        const { data: streakForAch } = await ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle();
-        const currentStreakForAch = (streakForAch as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
-        const isHardMode = cfg.hard_mode === true;
-        await checkAndUnlockAchievements(ctx.supabase, ctx.userId, currentStreakForAch, totalDaysForAch, false, isHardMode);
-      } catch {
-        /* non-fatal */
-      }
-
-      const [{ data: allTasks }, { data: completedCheckins }] = await Promise.all([
-        ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id).limit(200),
-        ctx.supabase.from("check_ins").select("task_id").eq("active_challenge_id", input.activeChallengeId).eq("date_key", dateKey).eq("status", "completed").limit(100),
+      // Required-task count from the rows read before the write, plus this task.
+      const allTasks = allTasksFetch.data;
+      const requiredTasks = (allTasks ?? []).filter((row) => isTaskRequired(row as ChallengeTaskRowRaw));
+      const completedIds = new Set<string>([
+        ...((completedFetch.data ?? []) as { task_id: string }[]).map((c) => c.task_id),
+        input.taskId,
       ]);
-      const requiredTasks = (allTasks ?? []).filter((t) => isTaskRequired(t as ChallengeTaskRowRaw));
-      const completedRequired = completedCheckins?.filter((c) => requiredTasks.some((rt) => rt.id === c.task_id)) || [];
+      const completedRequired = requiredTasks.filter((rt) => completedIds.has(rt.id));
       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
-      await ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId);
-
-      const requiredRemaining = requiredRemainingCount(
-        requiredTasks.length,
-        completedRequired.length,
-      );
-      const profileDateKey = getTodayDateKey(profileTz);
-      const { data: existingSecure } = await ctx.supabase
-        .from("day_secures")
-        .select("id")
-        .eq("user_id", ctx.userId)
-        .eq("date_key", profileDateKey)
-        .maybeSingle();
-      const { data: acForDay } = await ctx.supabase
-        .from("active_challenges")
-        .select("current_day")
-        .eq("id", input.activeChallengeId)
-        .maybeSingle();
-      const { data: streakRow } = await ctx.supabase
-        .from("streaks")
-        .select("active_streak_count")
-        .eq("user_id", ctx.userId)
-        .maybeSingle();
+      const requiredRemaining = requiredRemainingCount(requiredTasks.length, completedRequired.length);
+      const existingSecure = existingSecureFetch.data;
+      const streakRow = streakFetch.data;
       const verificationKind: VerificationKind = isPhotoProof
         ? "live_photo"
-        : isTimer
+        : isTimer && !timerSelfReport
           ? "timer"
           : isCheckinProof && locationGatePassed
             ? "gps"
@@ -1063,70 +1416,91 @@ export const checkinsRouter = createTRPCRouter({
               ? "word_count"
               : "self_report";
 
-      const [{ data: dayCheckIns }, { data: dayEnrollments }, { data: dayEvents }] = await Promise.all([
-        ctx.supabase
-          .from("check_ins")
-          .select("id, date_key, task_id, active_challenge_id, photo_url, proof_url, completion_image_url, created_at")
-          .eq("user_id", ctx.userId)
-          .eq("date_key", dateKey)
-          .eq("status", "completed")
-          .limit(100),
-        ctx.supabase
-          .from("active_challenges")
-          .select("id, challenge_id, start_at")
-          .eq("user_id", ctx.userId)
-          .in("status", ["active", "completed", "abandoned"])
-          .limit(50),
-        ctx.supabase
-          .from("activity_events")
-          .select("id, metadata, created_at")
-          .eq("user_id", ctx.userId)
-          .eq("event_type", "task_completed")
-          .limit(80),
-      ]);
-      const enrollRows = (dayEnrollments ?? []) as { id: string; challenge_id: string; start_at: string }[];
-      const enrollChallengeIds = [...new Set(enrollRows.map((r) => r.challenge_id))];
-      const [dayChallenges, dayTasks] = enrollChallengeIds.length
-        ? await Promise.all([
-            ctx.supabase.from("challenges").select("id, title, duration_days").in("id", enrollChallengeIds).limit(50),
-            ctx.supabase
-              .from("challenge_tasks")
-              .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
-              .in("challenge_id", enrollChallengeIds)
-              .limit(400),
-          ])
-        : [{ data: [] }, { data: [] }];
+      // Round 4: the activity row (then the share), the progress update, the secure (its own
+      // rounds inside), all at once. Nothing here depends on another member's result.
+      const bundled = await t.step("finish", () =>
+        Promise.all([
+          bundleTaskFinish({
+            requiredRemaining,
+            applyShare: input.applyShare === true,
+            eventId: insertActivityEvent,
+            secure: () =>
+              t.step("secure", () =>
+                secureDayCore(ctx, input.activeChallengeId, t, {
+                  challengeId: challenge_id,
+                  tz: profileTz,
+                  challenge: ch,
+                  alreadySecured: Boolean(existingSecure),
+                  achievements: "skip",
+                }),
+              ),
+            share: (eventId) => t.step("share", () => finishSideEffects.share(ctx, eventId)),
+          }),
+          t.step("progress", () =>
+            ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId),
+          ),
+        ]).then(([bundle]) => bundle),
+      );
+      const postedEventId = bundled.eventId;
+
+      // Badges after the answer: one pass for the finish and the secure together (was two passes
+      // of ~9 reads each on the response path).
+      const streakAfter = bundled.daySecure?.streak ?? (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
+      const achievementArgs = {
+        streak: streakAfter,
+        totalDaysSecured: bundled.daySecure?.totalDaysSecured ?? null,
+        challengeCompleted: bundled.daySecure?.challengeCompleted === true,
+        isHardMode: cfg.hard_mode === true,
+      };
+      setTimeout(() => void unlockAchievementsAfterFinish(ctx.supabase, ctx.userId, achievementArgs), 0);
+
+      // Day-proof tiles from the rows read before the write, plus the row just written and its post.
+      const saved = (data ?? {}) as {
+        id?: string;
+        proof_url?: string | null;
+        photo_url?: string | null;
+        completion_image_url?: string | null;
+      };
+      const priorDayRows = ((dayCheckInsFetch.data ?? []) as { id: string }[]).filter((r) => r.id !== saved.id);
+      const dayEventRows = [
+        ...((dayEventsFetch.data ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[]),
+        ...(postedEventId && activityEventPayload
+          ? [{ id: postedEventId, metadata: activityEventPayload.metadata as Record<string, unknown>, created_at: new Date().toISOString(), share_state: (activityEventPayload as { share_state?: string }).share_state ?? null }]
+          : []),
+      ];
       const dayProofs = cameraProofTiles({
-        checkIns: (dayCheckIns ?? []) as Parameters<typeof cameraProofTiles>[0]["checkIns"],
+        checkIns: [...priorDayRows, ...(data ? [data] : [])] as Parameters<typeof cameraProofTiles>[0]["checkIns"],
         dateKey,
         enrollments: enrollRows.map((r) => ({
           id: r.id,
           challengeId: r.challenge_id,
           startDateKey: dateKeyFromIsoInTimeZone(r.start_at, tz),
         })),
-        challenges: (dayChallenges.data ?? []) as { id: string; title?: string | null; duration_days?: number | null }[],
-        tasks: (dayTasks.data ?? []) as Parameters<typeof cameraProofTiles>[0]["tasks"],
-        events: (dayEvents ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[],
+        challenges: challengeRows,
+        tasks: (dayTasksFetch.data ?? []) as Parameters<typeof cameraProofTiles>[0]["tasks"],
+        events: dayEventRows,
       });
-
+      const signedComplete = await t.step("sign_urls", () =>
+        signProofPaths(
+          [saved.proof_url, saved.photo_url, saved.completion_image_url, ...dayProofs.map((p) => p.imageUrl)],
+          ctx.userId,
+        ),
+      );
+      const timing = t.finish();
       logger.info(
-        { ms: Date.now() - completeStartedAt, userId: ctx.userId, taskId: input.taskId },
-        "[checkins.complete] timing",
+        {
+          ms: timing.totalMs,
+          gapMs: timing.gapMs,
+          steps: timing.steps,
+          userId: ctx.userId,
+          taskId: input.taskId,
+          taskType,
+          photo: isPhotoProof,
+          secured: requiredRemaining === 0,
+        },
+        "[checkins.complete] steps",
       );
-      const saved = (data ?? {}) as {
-        proof_url?: string | null;
-        photo_url?: string | null;
-        completion_image_url?: string | null;
-      };
-      const signedComplete = await signProofPaths(
-        [
-          saved.proof_url,
-          saved.photo_url,
-          saved.completion_image_url,
-          ...dayProofs.map((t) => t.imageUrl),
-        ],
-        ctx.userId,
-      );
+      const { totalDaysSecured: _omitTotal, ...daySecureOut } = bundled.daySecure ?? ({} as SecureDayResult);
       return {
         ...(data ?? {}),
         proof_url: signedComplete[0] ?? null,
@@ -1137,11 +1511,15 @@ export const checkinsRouter = createTRPCRouter({
         requiredRemaining,
         dayAlreadySecured: Boolean(existingSecure),
         streakDays: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
-        challengeDay: (acForDay as { current_day?: number } | null)?.current_day ?? 1,
+        challengeDay: (owned.row as { current_day?: number | null }).current_day ?? 1,
         challengeLength: ch?.duration_days && ch.duration_days > 0 ? ch.duration_days : 1,
         challengeName: challengeTitleForFeed,
         verificationKind,
-        dayProofs: dayProofs.map((t, i) => ({ ...t, imageUrl: signedComplete[3 + i] ?? null })),
+        dayProofs: dayProofs.map((p, i) => ({ ...p, imageUrl: signedComplete[3 + i] ?? null })),
+        eventId: postedEventId,
+        daySecure: bundled.daySecure ? daySecureOut : null,
+        daySecureAttempted: bundled.daySecureAttempted,
+        shared: bundled.shared,
         ...(photoVerification ? { verification: photoVerification } : {}),
         ...(runVerification ? { verification: runVerification } : {}),
         ...(workoutVerification ? { verification: workoutVerification } : {}),
@@ -1443,7 +1821,7 @@ export const checkinsRouter = createTRPCRouter({
       }
     }
     const rows = await Promise.all(
-      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
+      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status, proof_source").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
     const merged: Record<string, unknown>[] = [];
     for (const { data, error } of rows) {
@@ -1496,177 +1874,33 @@ export const checkinsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-    const { challenge_id } = await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
-    const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
-    const { data: chRow } = await ctx.supabase.from("challenges").select("duration_type, ends_at, live_date").eq("id", challenge_id).single();
-    const ch = chRow as { duration_type?: string; ends_at?: string | null; live_date?: string | null } | null;
-    if (ch?.duration_type === "24h") {
-      const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
-      if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer secure the day." });
-    }
-
-    const alreadyDateKey = getTodayDateKey(tz);
-    const { data: existingSecureRow } = await ctx.supabase
-      .from("day_secures")
-      .select("id")
-      .eq("user_id", ctx.userId)
-      .eq("date_key", alreadyDateKey)
-      .maybeSingle();
-    const alreadySecured = Boolean(existingSecureRow);
-
-    const secureStartedAt = Date.now();
-    const { data: rpcRows, error: rpcError } = await ctx.supabase.rpc("secure_day", { p_active_challenge_id: input.activeChallengeId });
-    logger.info(
-      { ms: Date.now() - secureStartedAt, userId: ctx.userId, code: rpcError?.code ?? null },
-      "[secure_day] rpc timing",
-    );
-    if (!rpcError && Array.isArray(rpcRows) && rpcRows.length > 0) {
-      const row = parseSecureDayRpcRow(rpcRows[0]);
-      const { data: acRow } = await ctx.supabase.from("active_challenges").select("challenge_id, current_day").eq("id", input.activeChallengeId).single();
-      const challengeId = (acRow as { challenge_id?: string; current_day?: number } | null)?.challenge_id;
-      const currentDayAfter = (acRow as { current_day?: number } | null)?.current_day ?? 0;
-      // day_number is the display value (displayDay after secure_day increments current_day). Client renders it raw.
-      const daySecured = displayDay(currentDayAfter, true);
-      if (challengeId) {
-        const { data: chTeam } = await ctx.supabase.from("challenges").select("participation_type, run_status, duration_days").eq("id", challengeId).single();
-        if (
-          (chTeam as { participation_type?: string })?.participation_type === "team" &&
-          (chTeam as { run_status?: string })?.run_status === "active"
-        ) {
-          if (shouldEvaluateTeamDay((chTeam as { participation_type?: string })?.participation_type)) {
-            const today = getTodayDateKey(tz);
-            const yesterday = getYesterdayDateKey(tz);
-            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: yesterday });
-            await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: today });
-          }
-        }
-      }
-      const { data: profileRow } = await ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single();
-      let totalDaysSecured = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
-      if (row.secured && !alreadySecured) {
-        const svc = getSupabaseServer();
-        if (!svc) {
-          logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not recounted");
-        } else {
-          const { count, error: countErr } = await svc
-            .from("day_secures")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", ctx.userId);
-          if (countErr || typeof count !== "number") {
-            logger.error({ err: countErr, userId: ctx.userId }, "[checkins.secureDay] day_secures count failed");
-          } else {
-            const { error: daysErr } = await svc
-              .from("profiles")
-              .update({
-                total_days_secured: count,
-                tier: profileTierForSecuredDays(count),
-                updated_at: new Date().toISOString(),
-              } as never)
-              .eq("user_id", ctx.userId);
-            if (daysErr) {
-              logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
-            } else {
-              totalDaysSecured = count;
-            }
-          }
-        }
-      }
-      const { data: challengeRow } = await ctx.supabase.from("challenges").select("duration_days, title").eq("id", challengeId ?? "").single();
-      const durationDays = (challengeRow as { duration_days?: number } | null)?.duration_days ?? 0;
-      const challengeName = (challengeRow as { title?: string } | null)?.title ?? "Challenge";
-      const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
-      if (row.secured) {
-        const { newUnlockKeys } = await checkAndUnlockAchievements(
-          ctx.supabase,
-          ctx.userId,
-          row.streak,
-          totalDaysSecured,
-          challengeJustCompleted,
-          false
-        );
-        if (newUnlockKeys.length > 0) {
-          const achievementRows = newUnlockKeys.map((key) => ({
-            user_id: ctx.userId,
-            event_type: "unlocked_achievement" as const,
-            metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
-          }));
-          const { data: existingEvents } = await ctx.supabase
-            .from("activity_events")
-            .select("metadata")
-            .eq("user_id", ctx.userId)
-            .eq("event_type", "unlocked_achievement")
-            .in("metadata->>achievement_key", newUnlockKeys);
-          const alreadyEmitted = new Set(
-            (existingEvents ?? [])
-              .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
-              .filter(Boolean)
-          );
-          const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
-          if (filteredRows.length > 0) {
-            const { error: achErr } = await ctx.supabase.from("activity_events").insert(filteredRows);
-            if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
-          }
-        }
-      }
-      const freeze = await grantEarnedFreezeOnSecure({
-        supabase: ctx.supabase as { from(table: string): any },
-        userId: ctx.userId,
-        streak: row.streak,
-        secured: row.secured,
-        alreadySecured,
-        grantedDateKey: alreadyDateKey,
-      });
-      return {
-        success: true,
-        alreadySecured,
-        streak: row.streak,
-        secured: row.secured,
-        challenge_done: row.challenge_done,
-        remaining_challenges: row.remaining_challenges,
-        newStreakCount: row.streak,
-        lastStandEarned: false,
-        challengeDay: daySecured,
-        challengeCompleted: challengeJustCompleted,
-        ...(challengeJustCompleted && { challengeId: challengeId ?? undefined, challengeName, totalDays: durationDays }),
-        freezeGranted: freeze.freezeGranted,
-        freezesHeld: freeze.freezesHeld,
-        freezeCap: freeze.freezeCap,
-        freezeAtCap: freeze.freezeAtCap,
-      };
-    }
-
-    const code = (rpcError as { code?: string })?.code;
-    const msg = (rpcError as { message?: string })?.message ?? "";
-    if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: NOT_ALL_REQUIRED_MESSAGE });
-    if (rpcError) {
-      const details = (rpcError as { details?: string }).details;
-      const hint = (rpcError as { hint?: string }).hint;
-      logger.error(
-        {
-          userId: ctx.userId,
-          activeChallengeId: input.activeChallengeId,
-          rpcErrorCode: code,
-          rpcErrorMsg: msg,
-          rpcErrorDetails: details,
-          rpcErrorHint: hint,
-          isMissingFunction: code === "42883",
-        },
-        "[checkins.secureDay] RPC failed — refusing to run unsafe TS fallback. If code=42883, the secure_day migration is not applied to this database."
+    const t = createStepTimer();
+    const logSteps = (code: string | null) => {
+      const timing = t.finish();
+      logger.info(
+        { ms: timing.totalMs, gapMs: timing.gapMs, steps: timing.steps, userId: ctx.userId, code },
+        "[checkins.secureDay] steps",
       );
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Could not secure your day right now. Please try again in a moment.",
-      });
+    };
+    try {
+      const { totalDaysSecured: _omit, ...out } = await secureDayCore(ctx, input.activeChallengeId, t);
+      logSteps(null);
+      return out;
+    } catch (err) {
+      logSteps(err instanceof TRPCError ? err.code : "UNKNOWN");
+      throw err;
     }
-
-    // Defensive: RPC returned no error but also no rows. Should not happen.
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Could not secure your day right now. Please try again in a moment.",
-    });
   }),
 
-  shareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
+  shareProof: protectedProcedure
+    .input(
+      z.object({
+        eventId: z.string().uuid(),
+        /** Build 90 09.2: a server-written completion (Strava) has no audience yet; the post choice sets it here. Older builds omit it. */
+        audience: z.enum(["friends", "everyone"]).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
     const svc = getSupabaseServer();
     if (!svc) {
       logger.error({ eventId: input.eventId }, "[checkins.shareProof] service role missing");
@@ -1695,7 +1929,10 @@ export const checkinsRouter = createTRPCRouter({
     }
     const nowIso = new Date().toISOString();
     const patch = flipSharePatch(ev.shared === true, nowIso, ev.shared_at ?? null);
-    const { error: upErr } = await svc.from("activity_events").update(patch as never).eq("id", ev.id);
+    const withAudience = input.audience
+      ? { ...patch, metadata: { ...(ev.metadata ?? {}), audience: input.audience } }
+      : patch;
+    const { error: upErr } = await svc.from("activity_events").update(withAudience as never).eq("id", ev.id);
     if (upErr) {
       logger.error({ err: upErr, code: upErr.code, message: upErr.message, details: upErr.details }, "[checkins.shareProof] update");
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
@@ -1742,6 +1979,40 @@ export const checkinsRouter = createTRPCRouter({
     return { ok: true as const, shared: false as const };
   }),
 
+  setPostAudience: protectedProcedure
+    .input(z.object({
+      eventId: z.string().uuid(),
+      audience: z.enum(["friends", "everyone", "only_me"]),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const svc = getSupabaseServer();
+      if (!svc) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
+      }
+      const { data: row, error } = await svc
+        .from("activity_events")
+        .select("id, user_id, metadata")
+        .eq("id", input.eventId)
+        .maybeSingle();
+      if (error || !row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Post not found." });
+      }
+      const ev = row as { id: string; user_id: string; metadata?: Record<string, unknown> | null };
+      if (!canFlipShare(ev.user_id, ctx.userId)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You can only change your own post." });
+      }
+      const cols = shareColumns(shareStateForAudience(input.audience));
+      const metadata = { ...(ev.metadata ?? {}), audience: input.audience };
+      const { error: upErr } = await svc
+        .from("activity_events")
+        .update({ ...cols, metadata } as never)
+        .eq("id", ev.id);
+      if (upErr) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
+      }
+      return { ok: true as const, audience: input.audience };
+    }),
+
   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
     const { data: row } = await ctx.supabase.from("check_ins").select("id, active_challenge_id").eq("id", input.completionId).single();
     if (!row) return { success: false };
@@ -1773,3 +2044,9 @@ export const checkinsRouter = createTRPCRouter({
       return { success: true };
     }),
 });
+
+finishSideEffects.secure = (ctx, activeChallengeId) =>
+  checkinsRouter.createCaller(ctx as never).secureDay({ activeChallengeId });
+finishSideEffects.share = async (ctx, eventId) => {
+  await checkinsRouter.createCaller(ctx as never).shareProof({ eventId });
+};

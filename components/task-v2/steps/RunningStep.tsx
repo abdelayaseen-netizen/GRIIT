@@ -1,16 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ControlPill, { ControlPillRow } from "@/components/ds/ControlPill";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { clockLabel, fmtMmSs } from "@/lib/task-flow-state";
 import {
+  TIMER_FINISH_EARLY,
   TIMER_LEAVING,
   TIMER_PAUSE,
-  TIMER_POST_CAPTION,
   TIMER_RESET,
   WORK_POST,
   WORK_SECURED_CAPTION,
@@ -23,11 +22,13 @@ type Props = {
   taskName: string;
   headerTitle: string;
   headerLabel?: string;
+  dayReady?: boolean;
   startedAtIso: string | null;
   requiredSeconds: number;
   onPause: () => void;
   onReset: () => void;
   onPost: () => void;
+  onFinishEarly: () => void;
   onBack: () => void;
   footerCaption?: string;
   footerBrand?: boolean;
@@ -42,18 +43,19 @@ export function RunningStep({
   taskName,
   headerTitle,
   headerLabel,
+  dayReady = true,
   startedAtIso,
   requiredSeconds,
   onPause,
   onReset,
   onPost,
+  onFinishEarly,
   onBack,
   footerCaption = WORK_SECURED_CAPTION,
   footerBrand,
   submitting = false,
   error,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const endsAt = startedAtIso
     ? clockLabel(Date.parse(startedAtIso) + requiredSeconds * 1000)
     : "";
@@ -68,11 +70,17 @@ export function RunningStep({
     rang.current = true;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [ready]);
+  // Done stays tappable while the timer runs — confirms "Finished early?"
 
   return (
     <View style={styles.root}>
-      <View style={{ paddingTop: insets.top }}>
-        <PushedHeader title={headerTitle} label={headerLabel} onBack={onBack} />
+      <View>
+        <PushedHeader
+          title={headerTitle}
+          label={headerLabel}
+          titleSlot={dayReady ? undefined : <View style={styles.daySkeleton} accessibilityLabel="Loading day" />}
+          onBack={onBack}
+        />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{taskName}</Text>
@@ -90,24 +98,36 @@ export function RunningStep({
           </View>
         )}
       </View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.gutter) }]}>
+      <View style={styles.footer}>
+        <Button
+          testID="timer-finish-early"
+          label={TIMER_FINISH_EARLY}
+          variant="secondary"
+          submitting={submitting}
+          onPress={onFinishEarly}
+        />
         <Button
           testID="timer-post"
           label={WORK_POST}
-          disabled={!ready}
           submitting={submitting}
           onPress={onPost}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>
-          {ready ? footerCaption : TIMER_POST_CAPTION}
-        </Text>
+        {ready ? (
+          <Text style={[styles.caption, footerBrand ? styles.captionBrand : null]}>{footerCaption}</Text>
+        ) : null}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  daySkeleton: {
+    width: 140,
+    height: 22,
+    borderRadius: DS_V3.radius.thumb,
+    backgroundColor: DS_V3.color.surface,
+  },
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
@@ -148,6 +168,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.lg,
+    paddingBottom: DS_V3.space.gutter,
     gap: DS_V3.space.md,
   },
   caption: {

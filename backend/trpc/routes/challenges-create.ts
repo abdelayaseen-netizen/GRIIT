@@ -8,7 +8,8 @@ import {
 } from "../../lib/challenge-tasks";
 import { joinChallengeDirect } from "../../lib/join-challenge";
 import { logger } from "../../lib/logger";
-import { moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
+import { blockedPlainText, moderateContent, moderateTaskTitle, moderateChallengeQuality } from "../../lib/content-moderation";
+import type { BlockedField } from "../../../lib/blocked-text";
 import { validateCreateTask } from "../../lib/create-task-validation";
 import {
   FREE_ACTIVE_CHALLENGES_LIMIT,
@@ -203,6 +204,25 @@ export const challengesCreateProcedures = {
         if (taskErr) {
           throw new TRPCError({ code: "BAD_REQUEST", message: taskErr });
         }
+      }
+
+      // Build 90 07.1: each public field on its own, so the message names the field.
+      // The combined category checks (negative, dangerous, …) follow below.
+      const publicFields: [string | undefined, BlockedField][] = [
+        [input.title, "challenge title"],
+        [input.description, "challenge description"],
+      ];
+      for (const task of input.tasks) {
+        publicFields.push(
+          [task.title, "task title"],
+          [task.journalPrompt, "journal prompt"],
+          [task.locationName, "location name"],
+          [task.routineAnchorCustom, "routine"],
+        );
+      }
+      for (const [value, field] of publicFields) {
+        const blocked = typeof value === "string" ? blockedPlainText(value, field) : null;
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
       }
 
       const qualityCheck = moderateChallengeQuality({

@@ -1,0 +1,61 @@
+appId: app.griit.challenge-tracker
+---
+# Largest Dynamic Type. Content size is set before this flow runs.
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 40000
+- tapOn: "Start"
+- swipe:
+    direction: UP
+- assertVisible: "Physical toughness"
+- tapOn: "Physical toughness"
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 10000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Streaks are easy to fake."
+    timeout: 10000
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Discipline, witnessed."
+    timeout: 10000
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set your line."
+    timeout: 10000
+- assertVisible: "Lock it in"
+- tapOn: "30 days. Long enough that a bad week lands inside it."
+- tapOn: "Lock it in"
+- extendedWaitUntil:
+    visible: "Start here."
+    timeout: 15000
+- assertVisible: "Join"
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "One reminder a day."
+    timeout: 10000
+- assertVisible: "No reminders for now"
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 10000
+- assertVisible: "Have an account? Log in"

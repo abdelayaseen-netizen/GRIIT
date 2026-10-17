@@ -1,0 +1,4 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Share"
+- assertVisible: "griit.app"

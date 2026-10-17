@@ -15,7 +15,7 @@ export const WHY_CIRCLE_SUB =
 
 export const ACCOUNT_TITLE = "Save your streak.";
 export const ACCOUNT_PHONE_LINE = "So your days stay yours if you change phones.";
-export const ACCOUNT_SKIP = "Skip — I'll risk losing my progress";
+export const ACCOUNT_SKIP = "Later";
 
 export function accountInLine(challenge: string | null | undefined): string {
   const name = (challenge ?? "").trim() || "your challenge";

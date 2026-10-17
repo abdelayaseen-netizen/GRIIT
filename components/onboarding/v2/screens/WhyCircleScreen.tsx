@@ -9,7 +9,7 @@ import { Camera } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import Card from "@/components/ds/Card";
-import { WHY_CIRCLE_SUB, WHY_CIRCLE_TITLE } from "@/lib/onboarding-v42-copy";
+import { WHY_CIRCLE_SUB, WHY_CIRCLE_TITLE, WHY_PROOF_END } from "@/lib/onboarding-v42-copy";
 import { ChromePrimary, OnboardingScreen } from "../OnboardingChrome";
 
 const PROOF = DS_V3.space.gutter * 10;
@@ -49,8 +49,7 @@ export default function WhyCircleScreen({
             <Text style={styles.proofLabel}>Your proof photo</Text>
           </View>
           <View style={styles.securedRow}>
-            <Text style={styles.secured}>Day secured.</Text>
-            <Text style={styles.summary}>2 of 3 tasks.</Text>
+            <Text style={styles.summary}>{WHY_PROOF_END}</Text>
           </View>
         </Card>
       </View>

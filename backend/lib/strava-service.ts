@@ -174,3 +174,10 @@ export async function getAthleteActivities(
   if (!res.ok) throw new Error(`Strava getActivities failed: ${res.status}`);
   return (await res.json()) as StravaActivity[];
 }
+
+/** Build 90 09.1: one activity by id, for a webhook event. */
+export async function getActivity(accessToken: string, activityId: string | number): Promise<StravaActivity> {
+  const res = await stravaFetch(accessToken, `/activities/${encodeURIComponent(String(activityId))}`);
+  if (!res.ok) throw new Error(`Strava getActivity failed: ${res.status}`);
+  return (await res.json()) as StravaActivity;
+}

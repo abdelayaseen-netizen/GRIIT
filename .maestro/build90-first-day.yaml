@@ -1,0 +1,52 @@
+appId: app.griit.challenge-tracker
+---
+# Welcome → first task in ≤12 taps. Join sticks; finish opens the task (not empty Home).
+# Taps: Start, goal, Continue, Continue, Join, No reminders = 6.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- extendedWaitUntil:
+    visible: "Physical toughness.*"
+    timeout: 15000
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Join"
+    timeout: 20000
+- assertNotVisible: "Gym Buddy Challenge"
+- tapOn: "Join"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- assertNotVisible: "No challenge yet.*"
+# First task opened (photo ask, blocked camera, or task chrome)
+- extendedWaitUntil:
+    visible: "Take proof photo|Camera access is off|Get to the gym|Open Settings"
+    timeout: 25000

@@ -15,14 +15,16 @@ import { FeedCompactRow } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
-import { formatTimeAgoCompact } from "@/lib/formatTimeAgo";
+import { calendarDateLabel, formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
+import { verifiedLine } from "@/lib/strava-verify";
 import {
   feedCardMeta,
   feedCardSubject,
   feedCardVariant,
   feedProofSubject,
+  selfReportedCardMeta,
 } from "@/lib/feed-card-family";
 import { FEED_TAP_HIT_SLOP } from "@/lib/feed-tap-targets";
 
@@ -103,11 +105,13 @@ export default function FeedPostV3({
         <PostHeader
           name={name}
           subject={`Finished ${post.challengeName}`}
-          when={when}
+          challenge={post.challengeName}
+          when={calendarDateLabel(post.createdAt)}
           userId={post.userId}
           username={post.username}
           avatarUri={avatarUri}
           onProfilePress={onProfilePress}
+          onChallengePress={onChallengePress}
           onMenu={onMenu}
         />
         <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
@@ -178,14 +182,14 @@ export default function FeedPostV3({
         dayN={post.currentDay}
         dayOf={post.totalDays}
         challenge={post.challengeName}
-        gateLine={meta || "Self-reported"}
+        gateLine={verifiedLine(post.verifiedBy) ?? (meta || "Self-reported")}
         respects={post.respectCount}
         respected={post.reactedByMe}
         comments={post.commentCount}
         onProfile={onProfilePress ?? (() => undefined)}
         onChallenge={onChallengePress ?? (() => undefined)}
         onOpen={open}
-        onRespect={ownPost ? () => undefined : onLike}
+        onRespect={onLike}
         onComments={onComment}
       />
     );
@@ -197,11 +201,13 @@ export default function FeedPostV3({
       <PostHeader
         name={name}
         subject={daySubject}
+        challenge={post.challengeName}
         when={when}
         userId={post.userId}
         username={post.username}
         avatarUri={avatarUri}
         onProfilePress={onProfilePress}
+        onChallengePress={onChallengePress}
         onMenu={onMenu}
       />
       {variant === "task_camera" ? (
@@ -244,11 +250,14 @@ export default function FeedPostV3({
             </View>
             <View style={styles.taskCopy}>
               <Text style={styles.taskTitle}>{subject}</Text>
-              <Text style={styles.gate}>{selfReportedLine(post.createdAt)}</Text>
+              {/* 09.3: a Strava completion names its verifier once (lib/strava-verify), in place of Self-reported. */}
+              <Text style={styles.gate}>{verifiedLine(post.verifiedBy) ?? selfReportedLine(post.createdAt)}</Text>
             </View>
           </View>
           <View style={styles.selfRule} />
-          <Text style={styles.selfMeta}>{`${post.challengeName} · Day ${post.currentDay} of ${post.totalDays}`}</Text>
+          <Text style={styles.selfMeta}>
+            {selfReportedCardMeta(post.challengeName, post.currentDay, post.totalDays, post.streakCount)}
+          </Text>
           {post.caption ? <Text style={styles.selfCaption}>{post.caption}</Text> : null}
         </View>
         </DoubleTapRespect>
@@ -286,22 +295,28 @@ function selfReportedLine(iso: string): string {
 function PostHeader({
   name,
   subject,
+  challenge,
   when,
   userId,
   username,
   avatarUri,
   onProfilePress,
+  onChallengePress,
   onMenu,
 }: {
   name: string;
   subject: string;
+  /** 05.2: the challenge the subject line names; the subject opens it when `onChallengePress` is set. */
+  challenge?: string;
   when: string;
   userId: string;
   username: string;
   avatarUri: string | null | undefined;
   onProfilePress?: () => void;
+  onChallengePress?: () => void;
   onMenu?: () => void;
 }) {
+  const subjectText = <Text style={styles.subject} numberOfLines={2}>{subject}</Text>;
   return (
     <View style={styles.header}>
       <Pressable
@@ -312,16 +327,36 @@ function PostHeader({
       >
         <Avatar size={32} userId={userId} uri={avatarUri} displayName={name} username={username} />
       </Pressable>
-      <Pressable
-        onPress={onProfilePress}
-        accessibilityRole="button"
-        accessibilityLabel={`${name} profile`}
-        hitSlop={FEED_TAP_HIT_SLOP}
-        style={styles.flex}
-      >
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <Text style={styles.subject} numberOfLines={1}>{subject}</Text>
-      </Pressable>
+      <View style={styles.flex}>
+        <Pressable
+          onPress={onProfilePress}
+          accessibilityRole="button"
+          accessibilityLabel={`${name} profile`}
+          hitSlop={{ top: FEED_TAP_HIT_SLOP.top, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: 0 }}
+        >
+          <Text style={styles.name} numberOfLines={1}>{name}</Text>
+        </Pressable>
+        {onChallengePress && challenge ? (
+          <Pressable
+            testID="feed-post-challenge"
+            onPress={onChallengePress}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${challenge} challenge`}
+            hitSlop={{ top: 0, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: FEED_TAP_HIT_SLOP.bottom }}
+          >
+            {subjectText}
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={onProfilePress}
+            accessibilityRole="button"
+            accessibilityLabel={`${name} profile`}
+            hitSlop={{ top: 0, left: FEED_TAP_HIT_SLOP.left, right: FEED_TAP_HIT_SLOP.right, bottom: FEED_TAP_HIT_SLOP.bottom }}
+          >
+            {subjectText}
+          </Pressable>
+        )}
+      </View>
       <Text style={styles.when}>{when}</Text>
       <Pressable
         accessibilityRole="button"
@@ -366,7 +401,7 @@ function ActionRow({
       <View style={styles.respect}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={liked ? "Remove respect" : "Give respect"}
+          accessibilityLabel={liked ? "Liked by you" : "Like"}
           accessibilityState={{ selected: liked }}
           testID="feed-respect"
           onPress={() => {
@@ -386,7 +421,7 @@ function ActionRow({
         {respectCount > 0 ? (
           <Text
             testID="feed-respect-count"
-            accessibilityLabel={`${respectCount} respects`}
+            accessibilityLabel={`${respectCount} likes`}
             style={[styles.count, { color: heart.countColor }]}
           >
             {respectCount}

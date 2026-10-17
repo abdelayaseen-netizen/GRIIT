@@ -1,0 +1,4 @@
+step,screen,action,expected,what happened,seconds,confused,quote
+1,home,scroll,Scrolling down to see more posts in the feed that I can like,"50%,62%",18.0,n,Scrolling down to see more posts in the feed that I can like
+2,home,scroll,"I need to scroll down in the feed to see more posts that I can like. Currently I can see Nina and Kai's posts about Drink Water Today, and Maya and Leo's post about the breathing challenge. Let me scroll down to find more posts to interact with.","50%,62%",16.5,n,"I need to scroll down in the feed to see more posts that I can like. Currently I can see Nina and Kai's posts about Drink Water Today, and Maya and Leo's post about the breathing challenge. Let me scroll down to find more posts to interact with."
+3,home,abort,,Gave up. home repeated 3 times.,3.2,n,

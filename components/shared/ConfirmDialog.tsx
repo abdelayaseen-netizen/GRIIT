@@ -26,8 +26,10 @@ export function ConfirmDialog({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.wrap}>
+        {/* Build 90 06: a 60% ink scrim like components/ds/Sheet.tsx, not an opaque
+            canvas. The screen underneath stays visible behind the dialog. */}
         <Pressable
-          style={StyleSheet.absoluteFill}
+          style={styles.scrim}
           onPress={onCancel}
           accessibilityRole="button"
           accessibilityLabel="Close"
@@ -64,7 +66,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: DS_SPACING.lg,
+  },
+  scrim: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: DS_V3.color.canvas,
+    opacity: 0.6,
   },
   card: {
     zIndex: 1,

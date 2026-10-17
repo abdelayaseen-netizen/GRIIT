@@ -13,7 +13,6 @@ import {
   RUN_HONESTY_TYPED,
   RUN_HONESTY_TYPED_NO_CAMERA,
   RUN_PHOTO_AFTER,
-  RUN_TAKE_PHOTO,
   SESSION_HONESTY,
   TIMER_HONESTY,
   TIMER_LEAVING,
@@ -26,12 +25,55 @@ import {
   runPaceLine,
   runPrimaryLabel,
   timerClockLine,
+  timerElapsedSeconds,
   timerPostEnabled,
   timerStartLabel,
+  resolvedTaskDay,
   workDoneLine,
   workStepHeader,
   workThenCamera,
 } from "@/lib/work-step";
+
+describe("timer enrollment select", () => {
+  it("asks only for columns that exist on active_challenges", () => {
+    const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
+    expect(flow).toContain('.select("start_at, created_at, challenge_id")');
+  });
+});
+
+describe("resolvedTaskDay", () => {
+  it("uses the enrollment start once the row loads, and the route day until then", () => {
+    const start = "2026-10-07T12:00:00.000Z";
+    expect(
+      resolvedTaskDay({
+        queryOk: true,
+        startAt: start,
+        routeDay: 1,
+        timeZone: "UTC",
+        todayKey: "2026-10-12",
+        durationDays: 7,
+      }),
+    ).toBe(6);
+    expect(
+      resolvedTaskDay({
+        queryOk: false,
+        startAt: null,
+        routeDay: 6,
+        timeZone: "UTC",
+        todayKey: "2026-10-12",
+        durationDays: 7,
+      }),
+    ).toBe(6);
+  });
+});
+
+describe("timer elapsed", () => {
+  it("records the seconds already run when Finish early is tapped", () => {
+    expect(timerElapsedSeconds(300, 108)).toBe(192);
+    expect(timerElapsedSeconds(300, 0)).toBe(300);
+    expect(timerElapsedSeconds(300, 400)).toBe(0);
+  });
+});
 
 describe("count of line", () => {
   it("omits the unit word when none is set", () => {
@@ -45,7 +87,7 @@ describe("work step CTA labels", () => {
     expect(countCtaLabel(3, 8)).toBe("Log 3 of 8");
     expect(countCtaEnabled(3, 8)).toBe(false);
     expect(countCtaLabel(8, 8)).toBe(COUNT_POST);
-    expect(countCtaLabel(8, 8)).toBe("Post");
+    expect(countCtaLabel(8, 8)).toBe("Done");
     expect(countCtaEnabled(8, 8)).toBe(true);
     expect(COUNT_TYPE).toBe("Type it");
     expect(COUNT_HONESTY).toBe("Self-reported.");
@@ -139,7 +181,8 @@ describe("run honesty", () => {
 describe("run pace line", () => {
   it("formats mm:ss per unit and names the shortfall", () => {
     expect(formatRunPace(26 * 60 + 35, 5)).toBe("5:19");
-    expect(runPaceLine(5, 26 * 60 + 35, "km", 5)).toBe("5:19 per km. Target met.");
+    // Build 90 03.2: no "Target met" before the check-in is saved.
+    expect(runPaceLine(5, 26 * 60 + 35, "km", 5)).toBe("5:19 per km.");
     expect(runPaceLine(4.2, 26 * 60 + 35, "km", 5)).toBe(`${formatRunPace(26 * 60 + 35, 4.2)} per km. 0.8 km short.`);
     expect(runPaceLine(null, 100, "km", 5)).toBeNull();
     const noTarget = runPaceLine(5, 26 * 60 + 35, "km", null);
@@ -147,9 +190,9 @@ describe("run pace line", () => {
     expect(noTarget).not.toContain("Target");
   });
 
-  it("Take photo when Camera applies, Post when it does not", () => {
-    expect(runPrimaryLabel(true)).toBe(RUN_TAKE_PHOTO);
-    expect(runPrimaryLabel(false)).toBe("Post");
+  it("Done · take photo when Camera applies, Done when it does not", () => {
+    expect(runPrimaryLabel(true)).toBe("Done · take photo");
+    expect(runPrimaryLabel(false)).toBe("Done");
     expect(RUN_PHOTO_AFTER).toBe("The photo comes after the numbers");
   });
 });

@@ -12,7 +12,10 @@ export class MaestroSession {
   async start() {
     if (this.proc) return;
     this.buffer = "";
-    const child = spawn("maestro", ["mcp"], { stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn("maestro", ["mcp"], {
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, JAVA_HOME: process.env.JAVA_HOME || "/opt/homebrew/opt/openjdk" },
+    });
     this.proc = child;
     child.stdout.setEncoding("utf8");
     child.stdout.on("data", (chunk: string) => {

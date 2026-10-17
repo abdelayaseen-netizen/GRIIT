@@ -1,0 +1,18 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Profile"
+- scrollUntilVisible:
+    element: "Your data"
+    direction: DOWN
+    timeout: 15000
+- tapOn: "Your data"
+- extendedWaitUntil:
+    visible: "Best 6"
+    timeout: 20000
+- assertVisible: "18 proofs"
+- scrollUntilVisible:
+    element: "Morning Prayer"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "6 of 7"
+- assertNotVisible: "Most often around 12 am"

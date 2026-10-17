@@ -122,13 +122,14 @@ function restHeaders(accessToken: string): Record<string, string> {
 
 /** Patches with the access token only, so the app's refresh token is not rotated. */
 export async function markTestAccount(_client: SupabaseClient, session: SessionInfo): Promise<{ ok: boolean; detail: string }> {
+  const { spawnSync } = await import("child_process");
+  const marked = spawnSync(
+    "railway",
+    ["run", "--service", "grit-backend", "npx", "tsx", "scripts/mark-is-test.ts", session.userId],
+    { cwd: "/Users/yaseenabdela/Developer/GRIIT-build87", encoding: "utf8" },
+  );
+  if (marked.status !== 0) return { ok: false, detail: safeText(marked.stderr || marked.stdout || "railway mark failed") };
   const base = requireEnv("EXPO_PUBLIC_SUPABASE_URL").replace(/\/$/, "");
-  const patch = await fetch(`${base}/rest/v1/profiles?user_id=eq.${session.userId}`, {
-    method: "PATCH",
-    headers: { ...restHeaders(session.accessToken), Prefer: "return=minimal" },
-    body: JSON.stringify({ is_test: true }),
-  });
-  if (!patch.ok) return { ok: false, detail: safeText(await patch.text()) };
   const read = await fetch(`${base}/rest/v1/profiles?user_id=eq.${session.userId}&select=is_test`, {
     headers: restHeaders(session.accessToken),
   });

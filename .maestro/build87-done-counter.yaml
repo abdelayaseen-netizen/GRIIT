@@ -1,0 +1,63 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- swipe:
+    direction: UP
+- tapOn:
+    point: "50%,83%"
+- extendedWaitUntil:
+    visible: "^Continue$"
+    timeout: 10000
+- tapOn: "^Continue$"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Fajr Before Sunrise.*"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "No challenge yet.*"
+    timeout: 25000
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000006"
+- extendedWaitUntil:
+    visible: "Join 10 Pages a Day"
+    timeout: 20000
+- tapOn: "Join 10 Pages a Day"
+- extendedWaitUntil:
+    visible: "Read 10 pages"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+- extendedWaitUntil:
+    visible: "Done · 10 pages"
+    timeout: 15000
+- tapOn: "Done · 10 pages"
+- extendedWaitUntil:
+    visible: "Self-reported."
+    timeout: 20000

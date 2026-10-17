@@ -30,7 +30,10 @@ vi.mock("@/lib/write-device-timezone", () => ({
   writeDeviceTimezone: vi.fn(async () => "America/New_York"),
 }));
 vi.mock("@/lib/trpc", () => ({
-  trpcMutate: vi.fn(async () => ({ created: false })),
+  trpcMutate: vi.fn(async (path: string) => {
+    if (String(path).includes("prepare")) return { ticket: "ticket-1" };
+    return { ok: true };
+  }),
 }));
 
 import { SIGNED_IN_EXISTING_ACCOUNT, signInApplePreferringLink } from "@/lib/apple-session";

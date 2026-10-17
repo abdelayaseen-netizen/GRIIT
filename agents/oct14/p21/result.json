@@ -1,0 +1,39 @@
+{
+  "personaId": "p21",
+  "group": "social",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:00:03.935Z",
+  "endedAt": "2026-10-14T23:11:55.387Z",
+  "steps": 60,
+  "durationSec": 711,
+  "goals": [
+    {
+      "id": "p21-g1",
+      "text": "Open Everyone and Following and try to follow someone.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Device became unreachable during viewHierarchy",
+    "other: Failed to run flow: Device became unreachable during deviceInfo",
+    "other: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "052faea9-3efc-41a9-bd6c-5336f94d7355",
+  "isTest": true,
+  "cleanup": "kept"
+}

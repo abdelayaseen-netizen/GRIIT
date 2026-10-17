@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput, ActivityIndicator, Platform, StyleSheet, Linking } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, Pressable, Modal, TextInput, Platform, StyleSheet, Linking, KeyboardAvoidingView } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { DS_V3 } from "@/lib/design-system";
@@ -44,6 +44,38 @@ export function AccountDangerZone({
   const router = useRouter();
   const { isPremium } = useApp();
   const [subOpen, setSubOpen] = useState(false);
+  const deleteInFlight = useRef(false);
+  const typedRef = useRef(deleteConfirmValue);
+
+  const confirmDelete = async (typed: string) => {
+    const word = (typed || typedRef.current).trim();
+    if (deleteInFlight.current || deleteAccountLoading) return;
+    if (word !== "DELETE") {
+      showDeleteAccountError("Type DELETE to confirm.");
+      return;
+    }
+    deleteInFlight.current = true;
+    setDeleteAccountLoading(true);
+    try {
+      await trpcMutate(TRPC.profiles.deleteAccount);
+      await cancelLapsedUserReminders();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      await supabase.auth.signOut();
+      await runClientSignOutCleanup(userId);
+      const { clearOnboardingStorage } = await import("@/store/onboardingStore");
+      await clearOnboardingStorage();
+      setShowDeleteModal(false);
+      setDeleteConfirmValue("");
+      router.replace(ROUTES.AUTH_LOGIN as never);
+    } catch (e) {
+      captureError(e, "SettingsDeleteAccount");
+      showDeleteAccountError("Failed to delete account. Please try again.");
+    } finally {
+      deleteInFlight.current = false;
+      setDeleteAccountLoading(false);
+    }
+  };
 
   return (
     <>
@@ -77,83 +109,62 @@ export function AccountDangerZone({
       </View>
 
       <Modal visible={showDeleteModal} transparent animationType="fade">
-        <TouchableOpacity
-          style={modalStyles.deleteModalBackdrop}
-          activeOpacity={1}
-          onPress={() => !deleteAccountLoading && setShowDeleteModal(false)}
-          accessibilityLabel="Dismiss delete account dialog"
-          accessibilityRole="button"
-        />
-        <View style={modalStyles.deleteModalCenter}>
-          <View style={[modalStyles.card, modalStyles.deleteModalCard, { backgroundColor: DS_V3.color.surface, borderColor: DS_V3.color.border }]}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={v2.modalFill}>
+        <View accessibilityViewIsModal style={modalStyles.deleteModalCenter}>
+          <View pointerEvents="none" style={modalStyles.deleteModalBackdrop} />
+          <View style={[modalStyles.card, modalStyles.deleteModalCard, { backgroundColor: DS_V3.color.surface, borderColor: DS_V3.color.border, zIndex: 2 }]}>
             <InlineError message={deleteAccountError} onDismiss={clearDeleteAccountError} />
             <Text style={[modalStyles.sectionTitle, { color: DS_V3.color.textPrimary, marginBottom: 8 }]}>Type DELETE to confirm</Text>
             <TextInput
               style={[modalStyles.deleteConfirmInput, { color: DS_V3.color.textPrimary, borderColor: DS_V3.color.border }]}
               value={deleteConfirmValue}
-              onChangeText={setDeleteConfirmValue}
+              onChangeText={(text) => {
+                typedRef.current = text;
+                setDeleteConfirmValue(text);
+              }}
+              onSubmitEditing={(e) => {
+                const text = e.nativeEvent.text ?? typedRef.current;
+                typedRef.current = text;
+                void confirmDelete(text);
+              }}
               placeholder="DELETE"
               placeholderTextColor={DS_V3.color.textSecondary}
               autoCapitalize="characters"
               autoCorrect={false}
               editable={!deleteAccountLoading}
               accessibilityLabel="Type DELETE to confirm account deletion"
-              accessibilityRole="text"
+              testID="delete-confirm"
+              returnKeyType="go"
             />
-            <TouchableOpacity
-              style={[
-                modalStyles.deleteConfirmBtn,
-                { backgroundColor: deleteConfirmValue === "DELETE" ? DS_V3.color.danger : DS_V3.color.border },
-              ]}
-              onPress={async () => {
-                if (deleteConfirmValue !== "DELETE" || deleteAccountLoading) return;
-                setDeleteAccountLoading(true);
-                try {
-                  await trpcMutate(TRPC.profiles.deleteAccount);
-                  await cancelLapsedUserReminders();
-                  const { data: { session } } = await supabase.auth.getSession();
-                  const userId = session?.user?.id;
-                  await supabase.auth.signOut();
-                  await runClientSignOutCleanup(userId);
-                  const { clearOnboardingStorage } = await import("@/store/onboardingStore");
-                  await clearOnboardingStorage();
-                  setShowDeleteModal(false);
-                  setDeleteConfirmValue("");
-                  router.replace(ROUTES.AUTH_LOGIN as never);
-                } catch (e) {
-                  captureError(e, "SettingsDeleteAccount");
-                  showDeleteAccountError("Failed to delete account. Please try again.");
-                } finally {
-                  setDeleteAccountLoading(false);
-                }
-              }}
-              disabled={deleteConfirmValue !== "DELETE" || deleteAccountLoading}
-              activeOpacity={0.85}
-              accessibilityLabel="Permanently delete my account"
+            <Pressable
+              testID="delete-submit"
               accessibilityRole="button"
-              accessibilityState={{ disabled: deleteConfirmValue !== "DELETE" || deleteAccountLoading }}
+              accessibilityLabel="Permanently delete my account"
+              accessibilityState={{ disabled: deleteAccountLoading }}
+              disabled={deleteAccountLoading}
+              onPress={() => {
+                void confirmDelete(typedRef.current);
+              }}
+              onAccessibilityTap={() => {
+                void confirmDelete(typedRef.current);
+              }}
+              style={[modalStyles.deleteConfirmBtn, { backgroundColor: DS_V3.color.danger, alignItems: "center" }]}
             >
-              {deleteAccountLoading ? (
-                <ActivityIndicator size="small" color={DS_V3.color.textPrimary} />
-              ) : (
-                <Text style={modalStyles.deleteConfirmBtnText}>Delete my account</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[modalStyles.deleteCancelBtn, { borderColor: DS_V3.color.border }]}
+              <Text style={modalStyles.deleteConfirmBtnText}>Permanently delete my account</Text>
+            </Pressable>
+            <Button
+              label="Cancel account deletion"
+              variant="tertiary"
+              disabled={deleteAccountLoading}
               onPress={() => {
                 setShowDeleteModal(false);
                 setDeleteConfirmValue("");
+                typedRef.current = "";
               }}
-              disabled={deleteAccountLoading}
-              accessibilityLabel="Cancel account deletion"
-              accessibilityRole="button"
-              accessibilityState={{ disabled: deleteAccountLoading }}
-            >
-              <Text style={[modalStyles.toggleTitle, { color: DS_V3.color.textPrimary }]}>Cancel</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Sheet
@@ -190,6 +201,7 @@ export function AccountDangerZone({
 
 const v2 = StyleSheet.create({
   wrap: { marginTop: DS_V3.space.section, gap: DS_V3.space.md },
+  modalFill: { flex: 1 },
   subBody: { ...DS_V3.type.body, color: DS_V3.color.textSecondary, marginBottom: 12 },
 });
 

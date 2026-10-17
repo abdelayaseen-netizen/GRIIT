@@ -1,0 +1,82 @@
+appId: app.griit.challenge-tracker
+---
+# Guest finishes the first task, then saves with email. Apple sheet is not tapped.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: allow
+      photos: allow
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- extendedWaitUntil:
+    visible: "Physical toughness.*"
+    timeout: 15000
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Show Up 7.*"
+    timeout: 20000
+- tapOn: "Show Up 7.*"
+- tapOn: "Join"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible: "Get to the gym"
+    timeout: 25000
+- tapOn: "Get to the gym"
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 15000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Post to friends"
+    timeout: 20000
+- tapOn: "Post to friends"
+- tapOn:
+    text: "Close"
+    optional: true
+- tapOn:
+    text: "^Done$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Back to today"
+    timeout: 25000
+- tapOn: "Back to today"
+- extendedWaitUntil:
+    visible: "Save your streak."
+    timeout: 20000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: "b89guest15@example.com"
+- tapOn:
+    id: "account-password"
+- inputText: "Build87-guest-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it"
+    timeout: 10000
+- tapOn: "Send it"
+- extendedWaitUntil:
+    visible: "Day secured: every task done."
+    timeout: 25000
+- assertNotVisible: "Save your streak."

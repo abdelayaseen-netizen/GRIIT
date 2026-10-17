@@ -1,0 +1,36 @@
+{
+  "personaId": "p33",
+  "group": "returning",
+  "mode": "goal",
+  "startedAt": "2026-10-14T23:36:34.485Z",
+  "endedAt": "2026-10-14T23:38:07.543Z",
+  "steps": 6,
+  "durationSec": 93,
+  "goals": [
+    {
+      "id": "p33-g1",
+      "text": "Find delete account and read the warning.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "other: Typed text did not appear in the field."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5cce115f-0605-4b07-9ebf-74376282d872",
+  "isTest": true,
+  "cleanup": "kept"
+}

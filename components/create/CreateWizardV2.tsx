@@ -2,8 +2,9 @@
  * CreateWizardV2 — 3-step challenge creation wizard.
  * Visual layer on DS_V3. WizardState and create payload are unchanged.
  */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import KeyboardDock, { NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { nextStepAfterPrimary, pressIsEcho } from "@/lib/create-step-advance";
 
 import { DS_V3 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
@@ -46,6 +48,10 @@ import {
   type CreateVisibility,
 } from "@/backend/lib/create-visibility";
 import { reviewLateJoinState } from "@/lib/late-join";
+import { canSaveWizardTasks, savedWizardTasks } from "@/lib/wizard-saved-tasks";
+import { day1SentenceFromStart, predictedDay1Sentence } from "@/lib/day1-sentence";
+import { getTodayDateKey } from "@/lib/date-utils";
+import { homeSecuredToday } from "@/lib/home-secured-visuals";
 import { WizardFooter, WizardHeader } from "@/components/create/v2/WizardChrome";
 import AddTaskSheet from "@/components/create/AddTaskSheet";
 import { draftFromWizardTask } from "@/lib/add-task-draft";
@@ -103,10 +109,7 @@ function canAdvanceStep1(s: WizardState): boolean {
 }
 
 function canAdvanceStep2(s: WizardState): boolean {
-  if (s.useCustom) {
-    return s.customTasks.length > 0 && s.customTasks.every((t) => t.name.trim().length > 0);
-  }
-  return !!s.pack;
+  return canSaveWizardTasks(savedWizardTasks(s.pack?.tasks, s.customTasks));
 }
 
 function canLaunch(s: WizardState): boolean {
@@ -116,6 +119,8 @@ function canLaunch(s: WizardState): boolean {
 }
 
 export function CreateWizardV2() {
+  const scrollRef = useRef<ScrollView>(null);
+  const titleY = useRef(0);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<WizardState>(INITIAL_STATE);
@@ -195,8 +200,8 @@ export function CreateWizardV2() {
       return {
         ...p,
         pack,
-        category: pack.category,
-        durationDays: pack.durationDays ?? INITIAL_STATE.durationDays,
+        category: p.category ?? pack.category,
+        durationDays: pack.durationDays ?? p.durationDays ?? INITIAL_STATE.durationDays,
         difficulty,
         customDuration: "",
       };
@@ -240,22 +245,25 @@ export function CreateWizardV2() {
     }
   }, [isDirty, reviewing, router, setStep, state.step]);
 
+  // 06.8: one press, one step. Computed from the previous state (not the closed-over
+  // one) and a short lock drops the second tap of a double-tap.
+  const lastAdvanceAt = useRef(0);
   const handlePrimary = useCallback(() => {
-    if (state.step === 1) {
-      if (canAdvanceStep1(state)) setStep(2);
-      return;
-    }
-    if (state.step === 2) {
-      if (canAdvanceStep2(state)) setStep(3);
-      return;
-    }
+    const now = Date.now();
+    if (pressIsEcho(lastAdvanceAt.current, now)) return;
+    lastAdvanceAt.current = now;
     if (state.step === 3) {
       if (canLaunch(state)) {
         setLaunchError("");
         setReviewing(true);
       }
+      return;
     }
-  }, [state, setStep]);
+    setState((p) => {
+      const next = nextStepAfterPrimary(p, { step1: canAdvanceStep1, step2: canAdvanceStep2 });
+      return next === p.step ? p : { ...p, step: next };
+    });
+  }, [state]);
 
   const primaryDisabled =
     (state.step === 1 && !canAdvanceStep1(state)) ||
@@ -267,9 +275,7 @@ export function CreateWizardV2() {
     setLaunchError("");
     setLaunchBusy(true);
     try {
-      const tasksForApi = state.useCustom
-        ? state.customTasks
-        : state.pack?.tasks ?? [];
+      const tasksForApi = savedWizardTasks(state.pack?.tasks, state.customTasks);
 
       const payload: CreateChallengeInput = {
         title: state.title.trim(),
@@ -338,7 +344,7 @@ export function CreateWizardV2() {
   }, [state, queryClient, limitBlocked]);
 
   const launchState = launchBusy ? "loading" : launchError ? "error" : "idle";
-  const reviewTasks = state.useCustom ? state.customTasks : state.pack?.tasks ?? [];
+  const reviewTasks = savedWizardTasks(state.pack?.tasks, state.customTasks);
   const editingDraft = useMemo(() => {
     if (editingIndex == null) return null;
     return draftFromWizardTask(
@@ -349,6 +355,13 @@ export function CreateWizardV2() {
     (profile as { timezone?: string | null } | null)?.timezone,
     getDeviceIanaTimeZone(),
   );
+  const securedKeys = Array.isArray(bootstrap.data?.securedDateKeys)
+    ? (bootstrap.data.securedDateKeys as string[])
+    : [];
+  const predictedDay1 = predictedDay1Sentence({
+    todaySecured: homeSecuredToday(securedKeys, getTodayDateKey(timeZone)),
+    windowClosed: reviewLateJoinState(reviewTasks, timeZone).defer,
+  });
 
   if (limitBlocked) {
     return (
@@ -371,11 +384,13 @@ export function CreateWizardV2() {
     return (
       <LaunchedScreen
         title={launched.title}
+        challengeId={launched.challengeId}
         days={launched.days}
         group={launched.group}
         tomorrow={tomorrow}
         tasks={launched.tasks}
         timeZone={timeZone}
+        day1Line={day1SentenceFromStart(launched.startAt, timeZone)}
         onHome={() => router.replace(ROUTES.TABS_HOME as never)}
         onInvite={
           launched.group
@@ -400,13 +415,15 @@ export function CreateWizardV2() {
           who={state.who}
           difficulty={state.difficulty}
           visibility={state.visibility}
-          starts={late.starts}
+          starts={predictedDay1}
           lateJoinLine={late.line}
           tasks={reviewTasks}
           launchState={launchState}
+          launchError={launchError}
           onBack={() => setReviewing(false)}
           onLaunch={() => void handleLaunch()}
           onEditStep={(step) => {
+            setLaunchError("");
             setReviewing(false);
             setStep(step);
           }}
@@ -443,9 +460,12 @@ export function CreateWizardV2() {
         <WizardHeader step={state.step} total={3} onCancel={handleCancel} />
 
         <ScrollView
+          ref={scrollRef}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
           {state.step === 1 ? (
             <StepBasics
@@ -453,12 +473,21 @@ export function CreateWizardV2() {
               onChangeTitle={setTitle}
               category={state.category}
               onChangeCategory={setCategory}
+              onTitleLayout={(y) => {
+                titleY.current = y;
+              }}
+              onTitleFocus={() => {
+                // 06.8: keep the field you are typing in on screen. Scrolling to the
+                // category block pushed the title above the top edge mid-word.
+                scrollRef.current?.scrollTo({ y: Math.max(0, titleY.current - 8), animated: true });
+              }}
               durationDays={state.durationDays}
               onChangeDuration={setDuration}
               customDuration={state.customDuration}
               onChangeCustomDuration={setCustomDuration}
               who={state.who}
               onChangeWho={setWho}
+              day1Line={predictedDay1}
             />
           ) : null}
           {state.step === 2 ? (

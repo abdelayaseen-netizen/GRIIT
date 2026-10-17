@@ -1,0 +1,183 @@
+appId: app.griit.challenge-tracker
+---
+# Chunk 04: Post to friends on a check-off task goes Day secured → the post (Proof screen,
+# Done + Share outside GRIIT + Who sees this) → Done → Home. After a cold relaunch (no
+# in-memory optimistic post) the own post is in Everyone and in Following. Then Share today
+# shows the sticker set (Streak, Progress) with real challenge and day, Ink / Orange / White
+# and Copy sticker on every card.
+# Fresh is_test email account each run (MAESTRO_EMAIL=b89post…@example.com); a guest
+# would hit the Save your challenge sheet after the first task.
+# Needs the chunk 04 server on Railway (checkins.ts audience, feed.ts own-post rule).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+- tapOn: "Profile"
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build90-post-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Settings|Start here"
+    timeout: 20000
+- tapOn:
+    text: "Send it"
+    optional: true
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 10000
+
+# Post to friends: the save secured the day, so Day secured comes first.
+- tapOn:
+    id: "post-choice-post"
+# Day secured must load on the first try: no Retry tap here.
+- extendedWaitUntil:
+    visible: "Day 1 secured.*"
+    timeout: 20000
+- assertNotVisible: "Couldn't load.*"
+- takeScreenshot: build90-04-day-secured-post
+- tapOn: "^Done$"
+
+# 04.3 the Proof screen: Done, Share outside GRIIT, a labeled audience control.
+- extendedWaitUntil:
+    visible:
+      id: "post-done"
+    timeout: 20000
+- assertVisible: "Who sees this"
+- assertVisible: "Share outside GRIIT"
+- assertVisible:
+    id: "post-share-outside"
+- takeScreenshot: build90-04-proof-done
+- tapOn:
+    id: "post-done"
+- extendedWaitUntil:
+    visible: "1 of .* done"
+    timeout: 20000
+- assertNotVisible:
+    id: "post-done"
+- assertNotVisible: "Who sees this"
+- takeScreenshot: build90-04-posted-home
+
+# 04.4 own post in both feeds. Cold relaunch first: the optimistic row lives in memory,
+# so after this what the feed shows came from the server.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "1 of .* done"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+# The post is the first feed row, just under the fold. One short swipe brings it fully into
+# view; scrollUntilVisible's full-screen swipes carried it off the top and never came back.
+- swipe:
+    start: 50%, 80%
+    end: 50%, 40%
+    duration: 600
+# The self-reported card is one accessible element ("Walk 7,000 steps, Self-reported · 7:00 pm,
+# 7K Steps · Day 1 of 7 · 1 day in a row"), so the meta line is matched inside that label.
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
+    timeout: 20000
+- takeScreenshot: build90-04-feed-everyone
+# The pills expose their accessibility labels, not the visible words.
+- tapOn: "Show feed from people you follow"
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
+    timeout: 20000
+- takeScreenshot: build90-04-feed-following
+- tapOn: "Show feed from everyone"
+- extendedWaitUntil:
+    visible: ".*7K Steps · Day 1 of 7 · 1 day in a row"
+    timeout: 20000
+# Back to the top of Home. Two plain swipes down: scrollUntilVisible UP counted the offscreen
+# hero as visible once a long Everyone feed had scrolled it away, and never scrolled back
+# (08 follow-up).
+- swipe:
+    start: 50%, 30%
+    end: 50%, 85%
+    duration: 400
+- swipe:
+    start: 50%, 30%
+    end: 50%, 85%
+    duration: 400
+- extendedWaitUntil:
+    visible: "Share today"
+    timeout: 20000
+
+# 04.5 / 04.6 the share cards: real challenge and day, three colours, Copy sticker on each.
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: "Share today"
+- extendedWaitUntil:
+    visible: "Copy sticker"
+    timeout: 10000
+- assertVisible: "Ink"
+- assertVisible: "Orange"
+- assertVisible: "White"
+- takeScreenshot: build90-04-share-streak
+- swipe:
+    direction: LEFT
+- assertVisible: "Copy sticker"
+- tapOn: "Orange"
+- takeScreenshot: build90-04-share-progress
+- tapOn: "Close"

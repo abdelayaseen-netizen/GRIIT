@@ -1,0 +1,35 @@
+{
+  "personaId": "p03",
+  "group": "first-timers",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:25:12.520Z",
+  "endedAt": "2026-10-14T22:26:34.381Z",
+  "steps": 9,
+  "durationSec": 82,
+  "goals": [
+    {
+      "id": "p03-g1",
+      "text": "Read each screen and reach a first task without getting lost.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "extra-extra-large",
+  "userId": "04276758-1e39-45a9-b14f-a990b8672c87",
+  "isTest": true,
+  "cleanup": "kept"
+}

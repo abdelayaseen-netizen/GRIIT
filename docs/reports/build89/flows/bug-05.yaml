@@ -1,0 +1,6 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Invite.*"
+- tapOn: "Review"
+- assertNotVisible: "Anyone can find and join"
+- assertVisible: "Only people you invite"

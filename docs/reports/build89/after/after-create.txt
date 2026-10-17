@@ -1,0 +1,45 @@
+exit=1
+
+Running on GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF
+ > Flow after-create
+Tap on "Create"... COMPLETED
+Tap on "Challenge title"... COMPLETED
+Input text Build eighty nine... COMPLETED
+Tap on "Name your challenge"... COMPLETED
+Tap on "Discipline"... COMPLETED
+Scrolling DOWN until "7 days. Day 1 is today." is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Assert that "7 days. Day 1 is today." is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Tap on "Custom"... COMPLETED
+Tap on "Add a task"... COMPLETED
+Tap on "e.g. Read 10 pages"... COMPLETED
+Input text Evening journal... COMPLETED
+Tap on "What you do"... COMPLETED
+Scrolling DOWN until "Add task" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Add task"... COMPLETED
+Tap on "Starter packs"... COMPLETED
+Tap on "Athlete"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How strict?" is visible... COMPLETED
+Assert that "Strict" is visible... COMPLETED
+Assert that "Hard" is not visible... COMPLETED
+Tap on "Invite.*"... COMPLETED
+Tap on "Review"... COMPLETED
+Assert that "Evening journal" is visible... FAILED
+
+Assertion is false: "Evening journal" is visible
+
+Assertion '"Evening journal" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-13_224536
+
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled

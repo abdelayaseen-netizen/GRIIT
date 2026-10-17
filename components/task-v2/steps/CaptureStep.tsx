@@ -1,14 +1,14 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Check } from "lucide-react-native";
+import { StyleSheet, View } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { homeDayLine } from "@/lib/home-day-total";
 import { TaskCapture } from "../TaskCapture";
 
 type Props = {
   challengeName: string;
   taskName: string;
   currentDay: number;
+  durationDays?: number;
   workDone?: string | null;
   photoAfter?: string | null;
   windowLabel?: string;
@@ -19,27 +19,18 @@ type Props = {
 export function CaptureStep({
   challengeName,
   taskName,
-  workDone,
-  photoAfter,
+  currentDay,
+  durationDays,
   windowLabel,
   onCancel,
   onCaptured,
 }: Props) {
-  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      {workDone ? (
-        <View style={styles.doneRow}>
-          <Check size={DS_V3.space.gutter} color={DS_V3.color.textPrimary} />
-          <View style={styles.doneCopy}>
-            <Text style={styles.done}>{workDone}</Text>
-            {photoAfter ? <Text style={styles.after}>{photoAfter}</Text> : null}
-          </View>
-        </View>
-      ) : null}
+    <View style={styles.root}>
       <TaskCapture
         challenge={challengeName}
         task={taskName}
+        dayLine={homeDayLine(currentDay, durationDays)}
         windowLabel={windowLabel}
         onCancel={onCancel}
         onCaptured={onCaptured}

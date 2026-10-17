@@ -1,5 +1,5 @@
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
-import { calendarDayFromStartAt } from "@/backend/lib/calendar-day";
+import { shownChallengeDay } from "@/backend/lib/calendar-day";
 import { checkInHasCameraProof } from "@/backend/lib/proof-predicate";
 import { formatOfDays } from "@/lib/format-days";
 
@@ -13,9 +13,8 @@ export function showCameraSeal(proofPhotoUrl?: string | null): boolean {
   });
 }
 
-/** Own-post double tap is a no-op. Double tap never removes respect. */
-export function doubleTapAction(ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
-  if (ownPost) return "noop";
+/** Double tap likes, including your own post. It never removes a like. */
+export function doubleTapAction(_ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
   return alreadyRespected ? "keep" : "respect";
 }
 
@@ -93,7 +92,12 @@ export function eventLine(group: Pick<FeedEventGroup, "names" | "others" | "verb
 }
 
 export function viewerChallengeDay(
-  enrollments: readonly { challengeId: string; startAt: string | null; durationDays: number }[],
+  enrollments: readonly {
+    challengeId: string;
+    startAt: string | null;
+    durationDays: number;
+    currentDay?: number | null;
+  }[],
   challengeId: string,
   todayKey: string,
   timeZone: string,
@@ -101,7 +105,8 @@ export function viewerChallengeDay(
   const row = enrollments.find((item) => item.challengeId === challengeId);
   if (!row) return null;
   const total = Math.max(1, Math.floor(row.durationDays) || 1);
-  return { day: calendarDayFromStartAt(row.startAt, timeZone, todayKey, total), total };
+  const day = shownChallengeDay(row.startAt, timeZone, todayKey, total);
+  return { day, total };
 }
 
 /** Enrolled viewers open the challenge. Everyone else can join. */

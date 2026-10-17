@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF" tests="1" failures="1" time="18.619" timestamp="2026-10-13T22:18:57">
+    <testcase id="bug-02" name="bug-02" classname="bug-02" file="docs/reports/build89/flows/bug-02.yaml" time="18.614" timestamp="2026-10-13T22:18:57" status="ERROR">
+      <failure>Element not found: Text matching regex: profile-proof</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

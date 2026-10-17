@@ -27,6 +27,8 @@ log("[app-router] importing checkins");
 const { checkinsRouter } = await import("./routes/checkins");
 log("[app-router] importing starters");
 const { startersRouter } = await import("./routes/starters");
+log("[app-router] importing starterTask");
+const { starterTaskRouter } = await import("./routes/starter-task");
 log("[app-router] importing streaks");
 const { streaksRouter } = await import("./routes/streaks");
 log("[app-router] importing leaderboard");
@@ -67,6 +69,7 @@ export const appRouter = createTRPCRouter({
   challenges: challengesRouter,
   checkins: checkinsRouter,
   starters: startersRouter,
+  starterTask: starterTaskRouter,
   streaks: streaksRouter,
   leaderboard: leaderboardRouter,
   respects: respectsRouter,

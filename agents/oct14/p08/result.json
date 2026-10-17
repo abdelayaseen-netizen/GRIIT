@@ -1,0 +1,38 @@
+{
+  "personaId": "p08",
+  "group": "faith",
+  "mode": "goal",
+  "startedAt": "2026-10-14T22:39:01.770Z",
+  "endedAt": "2026-10-14T22:40:05.302Z",
+  "steps": 9,
+  "durationSec": 64,
+  "goals": [
+    {
+      "id": "p08-g1",
+      "text": "Find a morning faith challenge and finish one task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3dae15c6-3476-415b-8cfe-33bbe04a745f",
+  "isTest": true,
+  "cleanup": "kept"
+}

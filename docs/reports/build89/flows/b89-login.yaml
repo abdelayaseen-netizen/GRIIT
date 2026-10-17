@@ -1,0 +1,22 @@
+appId: app.griit.challenge-tracker
+---
+- launchApp:
+    stopApp: true
+- openLink: griit://auth/login
+- tapOn:
+    text: "Email address"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn: "Email address"
+- eraseText
+- inputText: "b89seed@example.com"
+- tapOn: "Password"
+- eraseText
+- inputText: ${B89_SEED_PASSWORD}
+- tapOn: "Log in to GRIIT"
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 25000
+- assertVisible: "Home"

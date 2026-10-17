@@ -7,8 +7,7 @@ import Card from "@/components/ds/Card";
 import { SettingsNav } from "@/components/settings/SettingsNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-function maskEmail(email: string | null | undefined): string {
-  if (!email || !email.includes("@")) return "Signed in with email";
+function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
   return `${(local ?? "").slice(0, 1)}•••@${domain}`;
 }
@@ -16,11 +15,15 @@ function maskEmail(email: string | null | undefined): string {
 export default function SettingsAccountScreen() {
   const { user } = useAuth();
   const [reveal, setReveal] = useState(false);
-  const email = user?.email ?? null;
-  const provider =
-    user?.app_metadata?.provider === "apple"
+  const anonymous = user?.is_anonymous === true;
+  const email = user?.email?.trim() || null;
+  const provider = anonymous
+    ? "guest"
+    : user?.app_metadata?.provider === "apple"
       ? "Apple"
-      : "email";
+      : email
+        ? "email"
+        : "guest";
 
   return (
     <ErrorBoundary>
@@ -31,13 +34,15 @@ export default function SettingsAccountScreen() {
             <Text style={styles.micro}>SIGN-IN METHOD</Text>
             <Text style={styles.val}>{provider}</Text>
           </Card>
-          <Pressable onPress={() => setReveal((v) => !v)} accessibilityRole="button">
-            <Card>
-              <Text style={styles.micro}>EMAIL</Text>
-              <Text style={styles.val}>{reveal ? email ?? "Signed in with email" : maskEmail(email)}</Text>
-              <Text style={styles.hint}>Tap to {reveal ? "hide" : "reveal"}</Text>
-            </Card>
-          </Pressable>
+          {email ? (
+            <Pressable onPress={() => setReveal((v) => !v)} accessibilityRole="button">
+              <Card>
+                <Text style={styles.micro}>EMAIL</Text>
+                <Text style={styles.val}>{reveal ? email : maskEmail(email)}</Text>
+                <Text style={styles.hint}>Tap to {reveal ? "hide" : "reveal"}</Text>
+              </Card>
+            </Pressable>
+          ) : null}
           <Card>
             <Text style={styles.micro}>EXPORT DATA</Text>
             <Text style={styles.hint}>Coming with the next update</Text>

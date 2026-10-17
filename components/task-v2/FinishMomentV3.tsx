@@ -3,12 +3,10 @@
  */
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import ListRow from "@/components/ds/ListRow";
 import ProofImage from "@/components/ds/ProofImage";
-import ScreenChrome from "@/components/ds/ScreenChrome";
 import FinishTextCard from "@/components/share/FinishTextCard";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { ShareChoice, type ShareState } from "@/components/ds/ShareChoice";
@@ -71,7 +69,6 @@ export default function FinishMomentV3({
   onNextTask,
   onLeave,
 }: FinishMomentV3Props) {
-  const insets = useSafeAreaInsets();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [kept, setKept] = useState(false);
   const pending = save === "saving" || save === "slow";
@@ -88,13 +85,14 @@ export default function FinishMomentV3({
     setSheetOpen(true);
   };
 
+  // The task route (`app/task/complete.tsx`) sits on `Screen`, which owns the top inset.
+  // The old in-component band and inset padding doubled it (06 bug: double top padding).
   return (
-    <ScreenChrome>
     <View style={styles.root}>
       <ScrollView
         contentContainerStyle={[
           styles.body,
-          { paddingTop: insets.top + DS_V3.space.xs, paddingBottom: insets.bottom + DS_V3.space.section * 5 },
+          { paddingTop: DS_V3.space.xs, paddingBottom: DS_V3.space.section * 5 },
         ]}
       >
         <View style={styles.statusRow}>
@@ -165,7 +163,7 @@ export default function FinishMomentV3({
         {failed ? <Text style={styles.failedBody}>{FINISH_FAILED_BODY}</Text> : null}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + DS_V3.space.md }]}>
+      <View style={[styles.footer, { paddingBottom: DS_V3.space.md }]}>
         {save === "slow" ? (
           <Button label={FINISH_LEAVE_SAVING} variant="secondary" onPress={onLeave} />
         ) : failed ? null : (
@@ -215,7 +213,6 @@ export default function FinishMomentV3({
         }
       />
     </View>
-    </ScreenChrome>
   );
 }
 

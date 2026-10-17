@@ -10,8 +10,6 @@ import { ROUTES } from "@/lib/routes";
 import { setKnownOnboardingCompleted, setOnboardingV2Exit } from "@/lib/onboarding-v2-routing";
 import { clearOnboardingV2Step } from "@/lib/onboarding-v2-step";
 import { cacheOnboardingCompleted } from "@/lib/onboarding-completed-cache";
-import { queryClient } from "@/lib/query-client";
-import { invalidateAfterOnboardingJoin } from "@/lib/onboarding-v2-invalidate";
 
 export const ONBOARDING_PERSIST_FAILED = "Couldn't save your setup. Try again.";
 
@@ -76,11 +74,10 @@ export async function completeOnboardingV2(opts?: { destination?: string }): Pro
     captureError(e, "OnboardingV2PersistFlag");
   }
 
-  try {
-    await invalidateAfterOnboardingJoin(queryClient);
-  } catch (e) {
-    captureError(e, "OnboardingV2Invalidate");
-  }
+  // Build 90 01b.3: no bootstrap refetch here. Completion writes onboarding_completed and
+  // target_streak, neither read from home.bootstrap (routing reads profiles directly, Home
+  // day totals use duration_days). The join paths refetch after their own join; on the guest
+  // exit this was a second home.bootstrap for the same payload a second after the first.
 
   return { ok: true };
 }

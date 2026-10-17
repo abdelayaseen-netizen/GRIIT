@@ -1,8 +1,49 @@
 /**
  * Analytics events for activation and retention. Forwarded to PostHog when configured.
+ * Usage events send the user id only. Photos, captions, emails, names, and locations stay out.
  */
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getPostHog, resetPostHog } from "./posthog";
+import { accountSaveDistinctId, clearGuestDistinctId, peekGuestDistinctId } from "./analytics-identity";
+import { setUsageConsentFlag, setUsageTestAccount, usageAllowed, usageConsentOn } from "./usage-gate";
 import type { IdentityTier } from "@/constants/identity-copy";
+
+export { setUsageTestAccount, usageAllowed, usageConsentOn };
+
+const USAGE_CONSENT_KEY = "griit_share_usage";
+
+export async function loadUsageConsent(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(USAGE_CONSENT_KEY);
+    setUsageConsentFlag(raw !== "off");
+  } catch {
+    setUsageConsentFlag(true);
+  }
+  return usageConsentOn();
+}
+
+export async function setUsageConsent(on: boolean): Promise<void> {
+  setUsageConsentFlag(on);
+  try {
+    await AsyncStorage.setItem(USAGE_CONSENT_KEY, on ? "on" : "off");
+  } catch {
+    /* the in-memory flag still applies for this session */
+  }
+}
+
+const USAGE_KEYS = new Set(["name", "route", "seconds_on_previous_screen", "method"]);
+
+/** Exact product events. Drops anything that is not a route, step name, method, or a duration. */
+export function trackUsage(name: string, props?: Record<string, string | number | undefined>): void {
+  if (!usageAllowed()) return;
+  const safe: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(props ?? {})) {
+    if (!USAGE_KEYS.has(key) || value === undefined) continue;
+    if (typeof value === "number" && Number.isFinite(value)) safe[key] = value;
+    if (typeof value === "string") safe[key] = value.slice(0, 80);
+  }
+  trackEvent(name, safe);
+}
 
 export type PaywallVariant = "control" | "social_proof";
 export type ReminderType =
@@ -143,14 +184,21 @@ function shouldSendPostHog(): boolean {
 }
 
 export function identify(userId: string, props?: UserProperties) {
-  if (!shouldSendPostHog()) return;
+  if (!shouldSendPostHog() || !usageAllowed()) return;
   const ph = getPostHog();
   if (ph) {
     try {
-      if (props && Object.keys(props).length > 0) {
-        ph.identify(userId, { $set: props });
+      const plan = accountSaveDistinctId({
+        guestDistinctId: peekGuestDistinctId(),
+        nextUserId: userId,
+      });
+      if (plan.aliasUserId) ph.alias(plan.aliasUserId);
+      const rest = { ...(props ?? {}) };
+      delete rest.email;
+      if (Object.keys(rest).length > 0) {
+        ph.identify(plan.distinctId, { $set: rest });
       } else {
-        ph.identify(userId);
+        ph.identify(plan.distinctId);
       }
     } catch {
       // ignore
@@ -159,6 +207,7 @@ export function identify(userId: string, props?: UserProperties) {
 }
 
 export function resetAnalytics() {
+  clearGuestDistinctId();
   resetPostHog();
 }
 
@@ -183,7 +232,7 @@ function eventPayloadForCapture(rest: Record<string, unknown>): CaptureProps {
 /** String-key funnel events (exact PostHog event names). Fire-and-forget. */
 export function trackEvent(event: string, properties?: FunnelProps): void {
   try {
-    if (!shouldSendPostHog()) return;
+    if (!shouldSendPostHog() || !usageAllowed()) return;
     const ph = getPostHog();
     ph?.capture(event, funnelPropsForCapture(properties));
   } catch {
@@ -192,7 +241,7 @@ export function trackEvent(event: string, properties?: FunnelProps): void {
 }
 
 export function track(event: AnalyticsEvent) {
-  if (!shouldSendPostHog()) return;
+  if (!shouldSendPostHog() || !usageAllowed()) return;
   const ph = getPostHog();
   if (ph) {
     try {

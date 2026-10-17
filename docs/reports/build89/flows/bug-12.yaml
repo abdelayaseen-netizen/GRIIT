@@ -1,0 +1,4 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Your data"
+- assertNotVisible: "Most often around 12 am"

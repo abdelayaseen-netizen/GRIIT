@@ -36,6 +36,7 @@ describe("initialStep", () => {
     expect(initialStep("run")).toBe("log");
     expect(initialStep("workout")).toBe("log");
     expect(initialStep("journal")).toBe("write");
+    expect(initialStep("text")).toBe("write");
     expect(initialStep("counter")).toBe("count");
     expect(initialStep("water")).toBe("count");
     expect(initialStep("reading")).toBe("count");
@@ -134,7 +135,15 @@ describe("wordCount", () => {
     expect(wordCount("   ")).toBe(0);
     expect(wordCount("one")).toBe(1);
     expect(wordCount("one two three")).toBe(3);
-    expect(wordCount("  a   b  ")).toBe(2);
+    expect(wordCount("  ab   cd  ")).toBe(2);
+  });
+
+  it("build 90: a word has 2+ letters and repeats at most 3 times (same rule as the server)", () => {
+    expect(wordCount("  x   b  ")).toBe(0);
+    expect(wordCount("....")).toBe(0);
+    expect(wordCount("my my my my my my")).toBe(3);
+    // "I" and "a" are the two one-letter words that count.
+    expect(wordCount("I went to a park")).toBe(5);
   });
 });
 
@@ -162,6 +171,7 @@ describe("verificationKindFor", () => {
     expect(verificationKindFor("timer", false)).toBe("timer");
     expect(verificationKindFor("checkin", false)).toBe("gps");
     expect(verificationKindFor("journal", false)).toBe("word_count");
+    expect(verificationKindFor("text", false)).toBe("word_count");
     expect(verificationKindFor("manual", false)).toBe("self_report");
     expect(verificationKindFor("water", false)).toBe("self_report");
   });
@@ -289,6 +299,7 @@ describe("resolveGoBackFromFailure", () => {
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "timer" })).toBe("entry");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "checkin" })).toBe("entry");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "journal" })).toBe("write");
+    expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "text" })).toBe("write");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "reading" })).toBe("count");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "run" })).toBe("log");
     expect(resolveGoBackFromFailure({ requirePhoto: false, hasPhoto: false, taskType: "photo" })).toBe("capture");
@@ -377,9 +388,10 @@ describe("input ready / what done means", () => {
   it("run needs both fields; workout needs minutes at or above the floor", () => {
     expect(logReady({ taskType: "run", distance: null, durationSec: 60, workoutMin: null, minDurationMinutes: 0 })).toBe(false);
     expect(logReady({ taskType: "run", distance: 1, durationSec: 60, workoutMin: null, minDurationMinutes: 0 })).toBe(true);
-    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 9, minDurationMinutes: 10 })).toBe(false);
-    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 10, minDurationMinutes: 10 })).toBe(true);
-    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 1, minDurationMinutes: 0 })).toBe(true);
+    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 9, minDurationMinutes: 10, kind: "Strength" })).toBe(false);
+    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 10, minDurationMinutes: 10, kind: "Strength" })).toBe(true);
+    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 1, minDurationMinutes: 0, kind: "Yoga" })).toBe(true);
+    expect(logReady({ taskType: "workout", distance: null, durationSec: null, workoutMin: 10, minDurationMinutes: 10 })).toBe(false);
   });
 });
 

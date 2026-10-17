@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="GRIIT iPhone 16 Pro - iOS 26.4 - ED03BBF2-5118-4E6F-92BE-047AD81637CF" tests="1" failures="1" time="17.474" timestamp="2026-10-13T22:20:41">
+    <testcase id="bug-05" name="bug-05" classname="bug-05" file="docs/reports/build89/flows/bug-05.yaml" time="17.469" timestamp="2026-10-13T22:20:41" status="ERROR">
+      <failure>Element not found: Text matching regex: Invite.*</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

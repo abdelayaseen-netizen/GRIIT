@@ -12,7 +12,9 @@
 import { dueKeysForRange, RECORD_WINDOW_STATUSES } from "../backend/lib/due-keys";
 import { finishedRunScore } from "../backend/lib/finished-run";
 import { addCalendarDaysToDateKey, mondayFirstIndexForDateKey } from "./date-utils";
+import { formatOfDays } from "./format-days";
 import { calendarDay, homeDayLine, homeDayTotal } from "./home-day-total";
+import { enrollmentDayStats } from "../backend/lib/enrollment-day-stats";
 import { securedElapsed } from "./consistency";
 import {
   badgeRowsFromProgress,
@@ -94,6 +96,8 @@ export type ChallengeRangeInput = {
   /** Exclusive end calendar day (`end_at` in timezone). */
   endDateKey: string;
   durationDays: number;
+  /** `active_challenges.current_day` when the caller has the enrollment row. */
+  currentDay?: number | null;
   tasksPerDay: number;
   completedAtKey?: string | null;
 };
@@ -175,6 +179,7 @@ export type ProfileRecord = {
     taskName?: string;
     gateTime?: { mode: "by" | "between" | null; start: string | null; end: string | null } | null;
     shared?: boolean;
+    startDateKey?: string | null;
     shareState?: "unanswered" | "shared" | "kept";
     bytes?: number | null;
   }[];
@@ -274,7 +279,7 @@ function consistencyLine(input: {
       : `Day ${input.primaryDay} of ${input.primaryLength}.`;
   }
   const todayBit = input.dueToday ? " Today still open." : "";
-  return `${input.verifiedClosed} of ${input.closedDueDays} days secured.${todayBit}`;
+  return `${formatOfDays(input.verifiedClosed, input.closedDueDays)} secured.${todayBit}`;
 }
 
 function rateLabel(dueCount: number, closedDueDays: number, verifiedClosed: number, rate: number): string {
@@ -334,17 +339,19 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     .sort((a, b) => compareKeys(a.startDateKey, b.startDateKey))
     .map((range) => {
       const rangeDue = dueKeysForRange(range, input.todayKey);
-      const rangeWindow = securedElapsed({
-        dueDayKeys: rangeDue,
-        securedDateKeys: input.securedDateKeys,
+      const stats = enrollmentDayStats({
+        startDateKey: range.startDateKey,
+        timeZone: "UTC",
         todayKey: input.todayKey,
+        durationDays: range.durationDays,
+        securedDateKeys: input.securedDateKeys,
       });
-      const elapsed = rangeWindow.elapsed;
-      const day = calendarDay(range.startDateKey, input.todayKey, range.durationDays);
+      const elapsed = stats.due;
+      const day = stats.day;
       const misses = rangeDue
         .map((k, i) => (k < input.todayKey && !secured.has(k) ? i : -1))
         .filter((i) => i >= 0);
-      const verified = rangeWindow.secured;
+      const verified = stats.secured;
       const missed = misses.length;
       return {
         id: range.id,
@@ -488,7 +495,7 @@ export function buildProfileRecord(input: ProfileRecordInput): ProfileRecord {
     }),
     detail: {
       totalVerified,
-      completion: closedDueDays === 0 ? "—" : `${verifiedClosed} of ${closedDueDays} days`,
+      completion: closedDueDays === 0 ? "—" : formatOfDays(verifiedClosed, closedDueDays),
       firstProof: verifiedClosedKeys[0] ? formatDayMonthYear(verifiedClosedKeys[0]) : "—",
       longestStreak: input.bestStreak,
       months,

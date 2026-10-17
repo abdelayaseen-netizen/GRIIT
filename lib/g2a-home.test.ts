@@ -22,7 +22,7 @@ describe("g2a home copy", () => {
   it("first-day line uses both for two tasks and all n otherwise", () => {
     expect(todayFirstDayLine(2)).toBe("Day 1 is today. Finish both tasks to secure it.");
     expect(todayFirstDayLine(3)).toBe("Day 1 is today. Finish all 3 tasks to secure it.");
-    expect(todayFirstDayLine(1)).toBe("Day 1 is today. Finish all 1 tasks to secure it.");
+    expect(todayFirstDayLine(1)).toBe("Day 1 is today. Finish the task to secure it.");
   });
 
   it("day 2 hero pluralises", () => {

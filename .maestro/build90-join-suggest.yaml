@@ -1,0 +1,37 @@
+appId: app.griit.challenge-tracker
+---
+# 02.1 — each Start-here suggestion is joinable (no duo waiting room).
+# Run once per visible Join card title by selecting it then joining.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "http://localhost:8082"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 45000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Start here."
+    timeout: 20000
+- assertNotVisible: "Gym Buddy Challenge"
+- tapOn: "Join"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- assertNotVisible: "No challenge yet.*"

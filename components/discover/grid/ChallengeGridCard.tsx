@@ -58,7 +58,7 @@ function iconFor(category: string): LucideIcon {
 
 function difficultyLabel(d: RecommendedChallengeDifficulty): string {
   if (d === 'EASY') return 'Easy';
-  if (d === 'HARD') return 'Hard';
+  if (d === 'HARD') return 'Strict';
   return 'Medium';
 }
 

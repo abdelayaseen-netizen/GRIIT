@@ -10,6 +10,8 @@ export const FIRST_PROOF_SLOT_BODY = "It stays private until you choose to share
 
 export function todayFirstDayLine(taskCount: number): string {
   const n = Math.max(1, Math.floor(taskCount));
+  // Build 90 05.4: one task reads "Finish the task", not "all 1 tasks".
+  if (n === 1) return "Day 1 is today. Finish the task to secure it.";
   const finish = n === 2 ? "both" : `all ${n}`;
   return `Day 1 is today. Finish ${finish} tasks to secure it.`;
 }

@@ -57,8 +57,21 @@ export function feedCardSubject(p: FeedCardInput, variant: FeedCardVariant): str
 
 export function feedProofSubject(day: number, total: number, challenge: string): string {
   const name = challenge.trim();
-  const dayLine = `Day ${Math.max(0, Math.floor(day))} of ${Math.max(0, Math.floor(total))}`;
+  const n = Number.isFinite(day) ? Math.max(1, Math.floor(day)) : 1;
+  const of = Number.isFinite(total) ? Math.max(1, Math.floor(total)) : 1;
+  const dayLine = `Day ${n} of ${of}`;
   return name ? `${name} · ${dayLine}` : dayLine;
+}
+
+/**
+ * Build 90 04.1: the self-reported text card names the challenge, the day and the
+ * streak. The streak is left off at 0.
+ */
+export function selfReportedCardMeta(challenge: string, day: number, total: number, streak: number): string {
+  const base = feedProofSubject(day, total, challenge);
+  const n = Number.isFinite(streak) ? Math.floor(streak) : 0;
+  if (n < 1) return base;
+  return `${base} · ${n} ${n === 1 ? "day" : "days"} in a row`;
 }
 
 export function feedCardMeta(p: FeedCardInput, variant: FeedCardVariant): string {

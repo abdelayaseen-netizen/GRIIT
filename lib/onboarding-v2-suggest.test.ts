@@ -3,6 +3,7 @@ import {
   challengeDetailLine,
   isJoinableChallengeId,
   isNoDaysOffChallenge,
+  isRecommendableChallenge,
   matchReasonForChallenge,
   meetsOnboardingDuration,
   preselectedSuggestionId,
@@ -120,9 +121,11 @@ describe("suggestChallengesForGoals", () => {
     );
   });
 
-  it("never pads with a score-0 challenge", () => {
+  it("falls back to popular public challenges when nothing matches the goal", () => {
     const faithOnly = CATALOG.filter((c) => c.title !== "No Days Off");
-    expect(suggestChallengesForGoals(["faith_prayer"], faithOnly)).toEqual([]);
+    const rows = suggestChallengesForGoals(["faith_prayer"], faithOnly, 3, 7);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((c) => (c.duration_days ?? 0) >= 7)).toBe(true);
   });
 
   it("Physical toughness + Daily habits at 30 days has no result shorter than 30", () => {
@@ -175,6 +178,71 @@ describe("suggestChallengesForGoals", () => {
     );
     expect(thin).toHaveLength(1);
   });
+
+  it("never recommends an invite-only group, and faith titles stay faith", () => {
+    expect(isRecommendableChallenge({ participation_type: "team" })).toBe(false);
+    const squad = {
+      id: "a2222222-0001-4000-8000-000000000005",
+      title: "Fitness Squad",
+      category: "fitness",
+      description: "Complete daily workout as a team.",
+      duration_days: 30,
+      participation_type: "team",
+    };
+    const prayer = {
+      id: "a1000001-4000-4000-8000-000000000099",
+      title: "Quran Daily",
+      category: "Daily habits",
+      duration_days: 30,
+      participation_type: "solo",
+    };
+    const rows = suggestChallengesForGoals(["faith_prayer", "daily_habits"], [squad, prayer, ...CATALOG], 3, 7);
+    expect(rows.map((c) => c.title)).toContain("Quran Daily");
+    expect(rows.map((c) => c.title)).not.toContain("Fitness Squad");
+    expect(matchReasonForChallenge(prayer, ["faith_prayer"])).toBe("Matches faith and prayer");
+    expect(suggestChallengesForGoals(["daily_habits"], [prayer], 3, 7).map((c) => c.title)).toEqual(["Quran Daily"]);
+  });
+
+  it("never recommends duo or shared_goal waiting rooms (no enrollment on join)", () => {
+    expect(isRecommendableChallenge({ participation_type: "duo" })).toBe(false);
+    expect(isRecommendableChallenge({ participation_type: "shared_goal" })).toBe(false);
+    const gymBuddy = {
+      id: "a2222222-0001-4000-8000-000000000002",
+      title: "Gym Buddy Challenge",
+      category: "fitness",
+      duration_days: 7,
+      participation_type: "duo",
+    };
+    const gratitude = {
+      id: "d1000001-4000-4000-8000-000000000002",
+      title: "7-Day Gratitude Journal",
+      category: "mind",
+      duration_days: 7,
+      participation_type: "solo",
+    };
+    const rows = suggestChallengesForGoals(
+      ["physical_toughness", "mental_discipline"],
+      [gymBuddy, gratitude, ...CATALOG],
+      3,
+      7,
+    );
+    expect(rows.map((c) => c.title)).not.toContain("Gym Buddy Challenge");
+    expect(rows.every((c) => isRecommendableChallenge(c))).toBe(true);
+  });
+
+  it("collapses duplicate titles and keeps the row with more members", () => {
+    const copy = {
+      id: "a1000001-4000-4000-8000-000000000010",
+      title: "5K Training",
+      category: "Fitness",
+      duration_days: 30,
+      participants_count: 4,
+    };
+    const original = { ...CATALOG[0]!, participants_count: 1 };
+    const rows = suggestChallengesForGoals(["physical_toughness"], [original, copy], 3, 30);
+    expect(rows.filter((c) => c.title === "5K Training")).toHaveLength(1);
+    expect(rows.find((c) => c.title === "5K Training")?.id).toBe(copy.id);
+  });
 });
 
 describe("challengeDetailLine", () => {
@@ -182,6 +250,12 @@ describe("challengeDetailLine", () => {
     expect(challengeDetailLine({ id: "x", duration_days: 1, tasks: [{}] })).toBe("1 day · 1 task · daily");
     expect(challengeDetailLine({ id: "x", duration_days: 23, tasks: [{}, {}] })).toBe(
       "23 days · 2 tasks · daily"
+    );
+    expect(challengeDetailLine({ id: "x", duration_days: 30, tasks: [{}], participants_count: 9 })).toBe(
+      "30 days · 1 task · daily"
+    );
+    expect(challengeDetailLine({ id: "x", duration_days: 30, tasks: [{}], participants_count: 10 })).toBe(
+      "30 days · 1 task · 10 doing it · daily"
     );
   });
 });

@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Home"
+- tapOn: "Show feed from people you follow"
+- assertNotVisible: "Everyone is on until you follow 3 people."

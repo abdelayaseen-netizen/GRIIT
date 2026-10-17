@@ -8,6 +8,8 @@ import { countNoun } from "@/lib/onboarding-v2-suggest";
 
 export const SECURED_TODAY = "Today is secured.";
 export const SECURED_SELF = "Self-reported";
+/** Build 90 06.1: what "secured" means, shown under the title the moment it happens. */
+export const SECURED_MEANS = "Every task today is done. Your streak goes up by one.";
 export const SECURED_TILE_MAX = 3;
 export const SECURED_PHOTO_H = 240;
 export const SECURED_TILE = 112;
@@ -66,7 +68,9 @@ export function securedDayCaption(args: {
   const k = Math.max(0, Math.floor(args.cameraProofs));
   const across = m > 1 ? ` across ${m} challenges` : "";
   if (k <= 0 || args.allSelfReported === true) {
-    return `${countNoun(n, "task", "tasks")}${across}. ${METHOD.selfReported}`;
+    // 06.2: the sticker preview under this line already reads "Self-reported";
+    // the caption keeps the count only, so the word shows once on the screen.
+    return `${countNoun(n, "task", "tasks")}${across}.`;
   }
   if (k >= n) {
     return `${countNoun(n, "task", "tasks")}${across}. ${METHOD.camera(k)}`;

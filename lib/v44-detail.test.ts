@@ -28,6 +28,7 @@ describe("v44 challenge detail", () => {
     expect(COPY_LINK).toBe("Copy link");
     expect(NO_SHARED_PROOFS_IN_CHALLENGE).toContain("No shared proofs");
     expect(recordOfDue(8, 12)).toBe("8 of 12 days secured");
+    expect(recordOfDue(3, 2)).toBe("2 of 2 days secured");
     expect(KEPT_PROOFS_BODY).toContain("with a lock");
   });
 

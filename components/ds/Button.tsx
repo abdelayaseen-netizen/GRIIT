@@ -99,7 +99,7 @@ export default function Button({
       hitSlop={pad > 0 ? { top: pad, bottom: pad, left: pad, right: pad } : undefined}
       style={({ pressed }) => [
         styles.base,
-        { height, minHeight: height, minWidth: DS_V3.size.tap },
+        { minHeight: height, paddingVertical: DS_V3.space.sm, minWidth: DS_V3.size.tap },
         flush ? styles.padFlush : size === "small" ? styles.padSmall : styles.padRegular,
         flush ? styles.flush : null,
         fill ? styles.fill : null,
@@ -204,6 +204,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
+    flexShrink: 1,
+    textAlign: "center",
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,
     fontWeight: DS_V3.type.bodyStrong.fontWeight,

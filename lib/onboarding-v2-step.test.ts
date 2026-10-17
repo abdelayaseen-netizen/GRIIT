@@ -24,17 +24,13 @@ import {
 } from "@/lib/onboarding-v2-step";
 
 describe("ONBOARDING_V2_ORDER", () => {
-  it("is welcome, goals, why_proof, why_circle, commitment, first_challenge, reminders, account, profile", () => {
+  it("is welcome, goals, how, first_challenge, reminders", () => {
     expect(ONBOARDING_V2_ORDER).toEqual([
       "welcome",
       "goals",
-      "why_proof",
-      "why_circle",
-      "commitment",
+      "how",
       "first_challenge",
       "reminders",
-      "account",
-      "profile",
     ]);
   });
 });
@@ -48,7 +44,7 @@ describe("resume-from-storage", () => {
     await persistOnboardingV2Step("first_challenge");
     expect(store.get(ONBOARDING_V2_STEP_KEY)).toBe("first_challenge");
     expect(await loadOnboardingV2Step()).toBe("first_challenge");
-    expect(resumeOnboardingV2Step("why_proof")).toBe("why_proof");
+    expect(resumeOnboardingV2Step("why_proof")).toBe("how");
     expect(resumeOnboardingV2Step("challenge")).toBe("first_challenge");
   });
 });

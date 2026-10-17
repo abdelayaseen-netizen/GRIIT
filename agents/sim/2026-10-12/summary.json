@@ -1,0 +1,125 @@
+{
+  "label": "SIMULATION, not a forecast",
+  "seeds": 30,
+  "people_seed": 200,
+  "people_total": 200,
+  "day1_source": "build 87, 24 fresh agents, agents/runs/2026-10-11-onboarding-b87. Not the 100-person run. n=24.",
+  "ios_share": "estimate, not a cited primary source",
+  "retention": {
+    "overall": {
+      "d1": [
+        19.0,
+        24.0,
+        28.0
+      ],
+      "d7": [
+        9.5,
+        12.0,
+        14.0
+      ],
+      "d30": [
+        3.5,
+        6.0,
+        8.5
+      ],
+      "d90": [
+        2.5,
+        4.0,
+        5.0
+      ],
+      "d365": [
+        0.5,
+        1.0,
+        2.0
+      ]
+    },
+    "by_group": {
+      "parent": [
+        0.0,
+        5.26,
+        15.79
+      ],
+      "gym_men": [
+        0.0,
+        4.35,
+        10.87
+      ],
+      "wellness_women": [
+        0.0,
+        6.9,
+        13.79
+      ],
+      "pro": [
+        0.0,
+        4.55,
+        13.64
+      ],
+      "muslim": [
+        0.0,
+        4.55,
+        9.09
+      ],
+      "lapsed": [
+        0.0,
+        6.67,
+        13.33
+      ],
+      "teen": [
+        0.0,
+        6.67,
+        13.33
+      ],
+      "college": [
+        0.0,
+        5.88,
+        11.76
+      ],
+      "lowtech": [
+        0.0,
+        0.0,
+        14.29
+      ],
+      "creator": [
+        0.0,
+        0.0,
+        12.5
+      ]
+    }
+  },
+  "k_factor": [
+    0.03,
+    0.03,
+    0.04
+  ],
+  "paid_pct": {
+    "overall": [
+      0.0,
+      0.5,
+      2.0
+    ]
+  },
+  "share_rate": {
+    "overall": [
+      0.18,
+      0.24,
+      0.28
+    ]
+  },
+  "lost_to_android": 15,
+  "quit_reasons": [
+    {
+      "reason": "missed without a freeze",
+      "count": 1770,
+      "quote": ""
+    }
+  ],
+  "model_agreement_pct": null,
+  "sanity_flag": "",
+  "llm_moments": "not run",
+  "cost_usd": 0,
+  "r1_check_d30": {
+    "sim_median": 6.0,
+    "benchmark_midpoint": 9.0,
+    "source": "enable3.io App retention benchmarks 2025, health & fitness"
+  }
+}

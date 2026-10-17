@@ -293,12 +293,11 @@ export const leaderboardRouter = createTRPCRouter({
         ),
       ];
       // Challenge-board members stay listed. Account privacy does not hide co-members.
-      if (vis === "private") {
-        userIds = userIds.filter((id) => id === viewerId);
-        if (!userIds.includes(viewerId)) userIds = [viewerId];
-      }
-
-      if (input.scope === "friends" && vis !== "private") {
+      // Build 90 08: `visibility = PRIVATE` is the wizard's "Invite" option ("Only people with
+      // your link can join. Check-ins show only to members"), not "hide members from each
+      // other". The old viewer-only cut here left every invite-only board at "A board needs
+      // two." after a friend joined through the link.
+      if (input.scope === "friends") {
         const mutual = await mutualFriendIds(ctx.supabase, viewerId);
         userIds = userIds.filter((id) => id === viewerId || mutual.has(id));
       }

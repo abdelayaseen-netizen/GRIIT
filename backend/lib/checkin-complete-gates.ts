@@ -3,7 +3,7 @@ import type { TaskConfig } from "./task-config";
 import type { ChallengeTaskConfig } from "./challenge-tasks";
 import { haversineDistance } from "./geo";
 
-/** Hard mode: task may only be completed inside schedule window (viewer TZ). */
+/** Strict: task may only be completed inside schedule window (viewer TZ). */
 export function assertHardModeScheduleWindow(config: TaskConfig): void {
   if (!config.hard_mode || !config.schedule_window_start || !config.schedule_window_end) return;
   const tz = config.schedule_timezone || "UTC";
@@ -43,7 +43,7 @@ export function assertHardModeScheduleWindow(config: TaskConfig): void {
     };
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: `Hard mode: this task can only be completed between ${formatTime(startH, startM)} and ${formatTime(endH, endM)}. Current time: ${formatTime(parseInt(currentHour, 10), parseInt(currentMinute, 10))}.`,
+      message: `Strict: this task can only be completed between ${formatTime(startH, startM)} and ${formatTime(endH, endM)}. Current time: ${formatTime(parseInt(currentHour, 10), parseInt(currentMinute, 10))}.`,
     });
   }
 }
@@ -57,7 +57,7 @@ export function assertHardModeCameraOnly(
   if (!photoUrl && !proofUrl?.trim()) {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Hard mode: photo proof is required. Take a photo with your camera to complete this task.",
+      message: "Strict: photo proof is required. Take a photo with your camera to complete this task.",
     });
   }
 }
@@ -90,7 +90,7 @@ export function evaluateTaskLocation(
     if (inLat == null || inLon == null) {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: "Hard mode: location verification required. Please enable location services and try again.",
+        message: "Strict: location verification required. Please enable location services and try again.",
       });
     }
     const gateLat = cfg.location_latitude as number;
@@ -101,7 +101,7 @@ export function evaluateTaskLocation(
     if (distance > maxRadius) {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: `Hard mode: you must be within ${maxRadius}m of ${cfg.location_name || "the required location"}. You are ${Math.round(distance)}m away.`,
+        message: `Strict: you must be within ${maxRadius}m of ${cfg.location_name || "the required location"}. You are ${Math.round(distance)}m away.`,
       });
     }
     return { locationDistanceM, hardModeLocationGate: true };

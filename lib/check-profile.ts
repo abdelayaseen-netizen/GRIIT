@@ -17,6 +17,8 @@ export type ProfileCheckRow = {
   created_at?: string | null;
 };
 
+type TimedOut = { timedOut: true };
+
 export type ProfileCheckOutcome = {
   hasProfile: boolean;
   onboardingCompleted: boolean | null;
@@ -25,7 +27,22 @@ export type ProfileCheckOutcome = {
   cacheCompleted: boolean;
 };
 
-type TimedOut = { timedOut: true };
+/** PostgREST: `.single()` found no row. Anything else is a failed read, not a missing profile. */
+export const NO_ROW_CODE = "PGRST116";
+
+/**
+ * Build 90 06.9: a failed read (offline, 5xx, auth hiccup) used to come back as `null`,
+ * which routing read as "no profile, start onboarding". A signed-in person who reopened
+ * the app on a bad connection landed on Welcome. A failed read is now "unknown", which
+ * falls through to the retry path and the local completed cache.
+ */
+export function classifyProfileFetch(result: {
+  data: ProfileCheckRow | null;
+  error: { code?: string | null } | null;
+}): ProfileCheckRow | TimedOut | null {
+  if (result.error && result.error.code !== NO_ROW_CODE) return { timedOut: true };
+  return result.data;
+}
 
 function fetchProfile(userId: string) {
   return supabase
@@ -36,9 +53,11 @@ function fetchProfile(userId: string) {
     .then(
       ({
         data,
+        error,
       }: {
         data: ProfileCheckRow | null;
-      }) => data
+        error: { code?: string | null } | null;
+      }) => classifyProfileFetch({ data, error })
     );
 }
 

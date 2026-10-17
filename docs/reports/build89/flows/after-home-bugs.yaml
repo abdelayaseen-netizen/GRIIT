@@ -1,0 +1,15 @@
+appId: app.griit.challenge-tracker
+---
+- tapOn: "Home"
+- tapOn: "Show feed from people you follow"
+- assertNotVisible: "Everyone is on until you follow 3 people."
+- tapOn: "Show feed from everyone"
+- assertVisible: "Everyone is on until you follow 3 people."
+- assertNotVisible: "b87.*"
+- assertNotVisible: "b88.*"
+- scrollUntilVisible:
+    element: "Like"
+    direction: DOWN
+    timeout: 20000
+- tapOn: "Like"
+- assertVisible: "Liked by you.*"

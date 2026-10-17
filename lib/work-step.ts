@@ -21,14 +21,20 @@ export function counterSubline(hasCamera: boolean): string {
 export const COUNT_ADD = "Add one";
 export const COUNT_REMOVE = "Remove one";
 export const COUNT_TYPE = "Type it";
-export const COUNT_POST = "Post";
+export const COUNT_POST = "Done";
 
 export const TIMER_HONESTY = "Runs on the clock. Lock the phone if you want.";
 export const TIMER_MUST_ZERO = "It has to reach zero.";
 export const TIMER_LEAVING = "Leaving the app does not stop it.";
 export const TIMER_LABEL = "Timer";
 export const TIMER_SOUND = "Sound when it ends";
-export const TIMER_POST_CAPTION = "Post opens when the timer reaches zero.";
+export const TIMER_FINISH_EARLY = "Finish early";
+
+export function timerElapsedSeconds(requiredSeconds: number, remainingSeconds: number): number {
+  const required = Math.max(0, Math.floor(requiredSeconds));
+  const remaining = Math.max(0, Math.floor(remainingSeconds));
+  return Math.max(0, required - remaining);
+}
 export const TIMER_PHOTO_AFTER = "The photo comes after the timer";
 export const TIMER_PAUSE = "Pause";
 export const TIMER_RESET = "Reset";
@@ -45,7 +51,7 @@ export const RUN_GPS_WAITING = "Waiting for GPS";
 export const RUN_GPS_LOCKED = "GPS locked";
 export const RUN_START = "Start";
 export const RUN_STOP = "Stop";
-export const RUN_POST = "Post";
+export const RUN_POST = "Done";
 export const WORKOUT_HONESTY =
   "Duration is self-entered unless the in-app timer ran. The photo is still required.";
 export const WORKOUT_NEXT_PHOTO = "Next: photo proof";
@@ -54,7 +60,7 @@ export const WORKOUT_USE_TIMER = "Use the timer instead";
 export const SESSION_HONESTY =
   "Stopping fills in the duration. The photo is still required.";
 
-export const WORK_POST = "Post";
+export const WORK_POST = "Done";
 
 export function workTypeLabel(type: string): string {
   if (type === "counter" || type === "water" || type === "reading") return "Counter";
@@ -71,6 +77,27 @@ export function workStepDay(
   durationDays?: number | null,
 ): number {
   return calendarDayFromStartAt(startAt, timeZone, todayKey, durationDays);
+}
+
+/**
+ * Prefer the enrollment row through shownChallengeDay.
+ * If that row has not loaded, keep the day the previous screen already computed.
+ * A missing row must not flash Day 1.
+ */
+export function resolvedTaskDay(input: {
+  queryOk: boolean;
+  startAt: string | null | undefined;
+  routeDay: number;
+  timeZone: string;
+  todayKey: string;
+  durationDays: number;
+}): number {
+  if (input.queryOk && input.startAt) {
+    return calendarDayFromStartAt(input.startAt, input.timeZone, input.todayKey, input.durationDays);
+  }
+  const routed = Math.floor(input.routeDay);
+  if (routed >= 1) return routed;
+  return 1;
 }
 
 /** Same as the task-flow header. Type is a label, not this string. */
@@ -178,7 +205,7 @@ export function formatShortDistance(n: number): string {
   return String(rounded);
 }
 
-/** "{pace} per {unit}." / "{pace} per {unit}. Target met." / "{pace} per {unit}. {n} {unit} short." */
+/** "{pace} per {unit}." / "{pace} per {unit}. {n} {unit} short." Nothing is met until the server saves it. */
 export function runPaceLine(
   distance: number | null,
   durationSec: number | null,
@@ -190,9 +217,9 @@ export function runPaceLine(
   if (target == null) return head;
   const short = Math.round((target - distance) * 100) / 100;
   if (short > 0) return `${head} ${formatShortDistance(short)} ${unit} short.`;
-  return `${head} Target met.`;
+  return head;
 }
 
 export function runPrimaryLabel(hasCamera: boolean): string {
-  return hasCamera ? RUN_TAKE_PHOTO : RUN_POST;
+  return hasCamera ? "Done · take photo" : RUN_POST;
 }
