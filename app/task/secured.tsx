@@ -224,6 +224,7 @@ function TaskSecuredInner() {
         meta.challengeId &&
         showInviteAfterSecured({
           challengeDay: result.challengeDay,
+          challengeLength: result.challengeLength,
           daySecured: result.daySecured,
           challengeDone: result.challengeDone,
         })

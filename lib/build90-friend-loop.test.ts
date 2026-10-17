@@ -64,7 +64,15 @@ describe("08.1 invite link visible (source)", () => {
     expect(showInviteAfterSecured({ challengeDay: 1, daySecured: true })).toBe(true);
     expect(showInviteAfterSecured({ challengeDay: 2, daySecured: true })).toBe(false);
     expect(showInviteAfterSecured({ challengeDay: 1, daySecured: false })).toBe(false);
-    expect(showInviteAfterSecured({ challengeDay: 1, daySecured: true, challengeDone: true })).toBe(false);
+    // secure_day's challenge_done is "today's tasks are done", true on every secured day; a
+    // 7-day challenge on day 1 still shows the block (seen live: the block was missing).
+    expect(
+      showInviteAfterSecured({ challengeDay: 1, challengeLength: 7, daySecured: true, challengeDone: true }),
+    ).toBe(true);
+    // A one-day challenge that just finished has no first-day-of-many to invite into.
+    expect(
+      showInviteAfterSecured({ challengeDay: 1, challengeLength: 1, daySecured: true, challengeDone: true }),
+    ).toBe(false);
     expect(INVITE_AFTER_FIRST_DAY_HEADING).not.toMatch(/!/);
   });
   it("the link is griit://i/<challenge id>", () => {
@@ -121,6 +129,10 @@ describe("08.2 opening an invite", () => {
     expect(src).toMatch(/setKnownOnboardingCompleted\(anon\.user\.id, true\)/);
     expect(src).toMatch(/if \(linkGuest\) \{\s*await completeOnboardingV2\(\{ destination: taskHref \?\? ROUTES\.TABS_HOME \}\)/);
     expect(src).toMatch(/router\.replace\(\(taskHref \?\? ROUTES\.TABS_HOME\) as never\)/);
+    // Seen live: a cold start put `onboarding` under the link chain, and "Not yet" on the
+    // first task popped to it, which replayed the task. The join drops the stack first.
+    expect(src).toMatch(/if \(router\.canDismiss\(\)\) router\.dismissAll\(\);\s*\}\s*router\.replace\(\(taskHref/);
+    expect(src).toMatch(/router\.dismissAll\(\);\s*router\.replace\(`\$\{ROUTES\.CHALLENGE_ID\(id\)\}\?invite=1` as never\)/);
   });
   it("server: openLink opens non-team, getById/join take viaInvite (source)", () => {
     const groups = read("backend/trpc/routes/groups.ts");
@@ -179,6 +191,9 @@ describe("08.3 Discover search", () => {
     expect(search).toMatch(/returnKeyType="search"/);
     const tab = read("app/(tabs)/discover.tsx");
     expect(tab).toMatch(/openHrefForResult\(ROUTES\.CHALLENGE_ID\(challengeId\), viaInvite\)/);
+    // Seen live: with the keyboard up, the first tap on a result only closed the keyboard.
+    const list = read("components/discover/DiscoverV3.tsx");
+    expect(list).toMatch(/keyboardShouldPersistTaps="handled"/);
   });
 });
 

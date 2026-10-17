@@ -24,15 +24,26 @@ export function inviteLinkFor(challengeId: string, refUserId?: string | null): s
   return inviteDeepLink(challengeId, refUserId);
 }
 
-/** The invite block shows on Day secured only after the first secured day of that challenge. */
+/**
+ * The invite block shows on Day secured only after the first secured day of that challenge.
+ * `challengeDone` is the secure_day RPC's `challenge_done`, which means "this challenge's
+ * tasks are done for today", not "the challenge is over"; it is true on every secured day.
+ * The challenge is over only when that lands on its last day (see `enrollmentFinished`).
+ */
 export function showInviteAfterSecured(input: {
   challengeDay: number | null | undefined;
+  challengeLength?: number | null;
   daySecured: boolean;
   challengeDone?: boolean;
 }): boolean {
   if (!input.daySecured) return false;
-  if (input.challengeDone) return false;
-  return input.challengeDay === 1;
+  if (input.challengeDay !== 1) return false;
+  const finished =
+    input.challengeDone === true &&
+    typeof input.challengeLength === "number" &&
+    input.challengeLength > 0 &&
+    input.challengeLength === input.challengeDay;
+  return !finished;
 }
 
 /** Still-waiting join result: `{ joined: true, runStatus: "waiting" }` with no enrollment id. */

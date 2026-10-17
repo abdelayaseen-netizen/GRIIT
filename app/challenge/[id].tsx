@@ -377,11 +377,24 @@ export default function ChallengeDetailScreen() {
         const taskHref = await firstTaskHrefAfterJoin(result, id, "home");
         if (linkGuest) {
           await completeOnboardingV2({ destination: taskHref ?? ROUTES.TABS_HOME });
+          // On a cold start the redirector sent the sessionless app to onboarding before the
+          // link resolved, so this page sits on a stale `onboarding` entry. Seen live: "Not yet"
+          // on the first task popped to it and it replayed the exit href (the task again).
+          // Drop everything under this page so the task is the only screen.
+          if (router.canDismiss()) router.dismissAll();
         }
         router.replace((taskHref ?? ROUTES.TABS_HOME) as never);
       } else if (joinLeftWaitingRoom(result)) {
         // Duo / shared goal with a seat still open: this page becomes the waiting room.
-        if (linkGuest) await completeOnboardingV2({ destination: ROUTES.CHALLENGE_ID(id) });
+        if (linkGuest) {
+          await completeOnboardingV2({ destination: ROUTES.CHALLENGE_ID(id) });
+          if (router.canDismiss()) {
+            // Same stale `onboarding` entry as above: make the waiting room the only screen.
+            router.dismissAll();
+            router.replace(`${ROUTES.CHALLENGE_ID(id)}?invite=1` as never);
+            return;
+          }
+        }
         await challengeQuery.refetch();
       }
     } catch (err: unknown) {

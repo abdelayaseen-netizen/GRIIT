@@ -345,6 +345,9 @@ export function DiscoverV3({
           numColumns={2}
           keyExtractor={(c) => c.id}
           showsVerticalScrollIndicator={false}
+          // Build 90 08.3: with the search keyboard up, the first tap on a result only
+          // closed the keyboard ("never" is the default); "handled" lets the row take it.
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={[styles.scroll, { paddingBottom: tabBarContentPad(insets.bottom) }]}
           columnWrapperStyle={styles.gridRow}
           ListHeaderComponent={header}
