@@ -1,0 +1,48 @@
+{
+  "personaId": "p4-01a",
+  "group": "social",
+  "chunk": "4-social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+    "freeze": "The app never explained what a freeze is on the screens I saw.",
+    "selfReported": "The app never explained what 'Self-reported' means on the screens I saw.",
+    "tomorrow": "8 - The challenge creation feature is engaging and I like the fitness tracking concept, though I'd need to see more features to stay consistently interested.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:40:28.793Z",
+  "endedAt": "2026-10-17T21:46:09.641Z",
+  "steps": 60,
+  "durationSec": 341,
+  "goals": [
+    {
+      "id": "p4-01a-g1",
+      "text": "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen find the invite link and tap Copy. Then finish today's task with Done and choose Post to friends.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "857ff351-c279-4f36-b935-eafbad648160",
+  "isTest": true,
+  "cleanup": "kept"
+}

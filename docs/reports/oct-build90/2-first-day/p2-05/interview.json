@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "Self-reported means you manually entered your word count yourself rather than the app automatically tracking it.",
+  "tomorrow": "8. I'm enjoying the journaling challenge and want to stay consistent with the 7-day commitment my friend invited me to join.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

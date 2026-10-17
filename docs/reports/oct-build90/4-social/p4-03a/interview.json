@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you've completed the challenge for today and your progress for Day 1 is locked in.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "Self-reported means you manually log that you completed the task yourself rather than it being automatically tracked.",
+  "tomorrow": "8, the app makes fitness challenges feel social and achievable with the invite link feature and daily structure.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

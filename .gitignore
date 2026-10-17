@@ -61,3 +61,7 @@ android/
 run_audit.sh
 audit/
 backend/deploy-sha.txt
+
+# overnight agent-run account files hold test-persona passwords; never commit
+docs/reports/**/account.json
+docs/reports/oct-build90/**/shots/

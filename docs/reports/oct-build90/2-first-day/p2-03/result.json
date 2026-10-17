@@ -1,0 +1,103 @@
+{
+  "personaId": "p2-03",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 14,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T20:04:49.971Z",
+      "toSheetMs": null,
+      "toVisibleMs": 420523,
+      "marker": "Day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you completed your challenge for today and it's locked in as done.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "8. I like that it shows my progress and tells me I did good with the checkmark and the 'Day secured' message.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:03:10.604Z",
+  "endedAt": "2026-10-17T20:12:27.140Z",
+  "steps": 45,
+  "durationSec": 557,
+  "goals": [
+    {
+      "id": "p2-03-g1",
+      "text": "Read each screen and reach a first task, then finish it.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected."
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "extra-extra-large",
+  "userId": "22a1b208-8dc0-4623-bf5d-e821b93b68fe",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -1,0 +1,18 @@
+{
+  "slug": "4-social",
+  "sessions": 6,
+  "joined": 4,
+  "firstTask": 0,
+  "completed": 3,
+  "photo": 3,
+  "secured": 3,
+  "under15": 0,
+  "earlyStopsRefused": 8,
+  "medianDoneToSheetMs": 753,
+  "medianDoneToVisibleMs": 3618,
+  "medianPhotoPostMs": null,
+  "startedAt": "2026-10-17T21:40:28.793Z",
+  "endedAt": "2026-10-17T22:01:08.413Z",
+  "spendUsd": 2.0220990000000025,
+  "resummarizedAt": "2026-10-17T22:25:00.426Z"
+}

@@ -1,0 +1,69 @@
+{
+  "personaId": "p2-10",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 50,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T20:47:38.873Z",
+      "toSheetMs": null,
+      "toVisibleMs": 141193,
+      "marker": "1 of 2 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means I completed both tasks for Day 1 so my streak is protected and won't be broken.",
+    "freeze": "The app never explained what a freeze is during the screens I saw.",
+    "selfReported": "The app never explained what self-reported means during the screens I saw.",
+    "tomorrow": "8 - I'm nervous I picked something hard but I already walked 7,000 steps and completed one task, so I want to keep my streak going and see if I can actually do this.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:32:17.126Z",
+  "endedAt": "2026-10-17T20:50:10.874Z",
+  "steps": 60,
+  "durationSec": 1074,
+  "goals": [
+    {
+      "id": "p2-10-g1",
+      "text": "Pick the easiest-looking challenge and finish the first task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "other: fetch failed",
+    "other: Failed to run flow: Element not found: Text matching regex: Take proof photo",
+    "challenge: Failed to run flow: Element not found: Text matching regex: Couldn't save. Tap to try again."
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "4b3f5510-3ba3-4871-a15d-570676e4e373",
+  "isTest": true,
+  "cleanup": "kept"
+}

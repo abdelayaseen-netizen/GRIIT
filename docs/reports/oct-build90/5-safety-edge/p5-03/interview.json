@@ -1,0 +1,10 @@
+{
+  "secured": "A day secured means you've completed the challenge requirement for that day and it's locked in.",
+  "freeze": "A freeze is a one-time pass that covers a missed day, available after earning a 7-day streak in Standard mode.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task.",
+  "tomorrow": "7 - The challenge format is engaging and the accountability levels give flexibility, but I'd need to see how the community features work to be fully hooked.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": false,
+  "asked": true
+}

@@ -1,9 +1,18 @@
 # GRIIT — Status of Record
 
-**Last verified:** 2026-08-30 — repo audit, on-device TestFlight walkthrough, git history review
-**Current branch:** `fix/streak-integrity` — clean, **2 commits ahead of main**
-**`main`:** last merge = anon-auth tests (2026-08-30)
-**Build on device:** EAS iOS production **build 47**, 2026-08-21 13:46, commit `7caf04f`
+**Last verified:** 2026-10-17 — build 90 shipped (chunk 10 of `docs/build90/`)
+**Current branch:** `feat/build90` (from `feat/build89` at `a375b25a`)
+**Build on TestFlight:** EAS iOS production, App Store Connect **build number 91**, commit `5d3de5bd`, submitted 2026-10-17 19:16 UTC to the internal group "Team (Expo)". The project calls it build 90; the counter reads 91 because a first `eas build` attempt bumped it and then failed on a local-workflow check (see the chunk 10 report).
+**Backend:** Railway `grit-backend`, `/api/health` → `0d36821`
+**Harness:** `feat/agent-testers` at `c616bc72` (agents/src, build 90 fixes)
+
+## Build 90 (Oct 17) in one paragraph
+
+Ten chunks, all PASSED in `docs/build90/PROGRESS.md`, evidence in `docs/reports/build90.md`. Speed: a task finish is on screen in under 300 ms and the server confirm went from 3.6 s / 2.9 s to 626 ms / 533 ms (photo / self-reported medians); request bursts after a finish and in sign-up and join were cut (0 × 429). First day: Join sticks, finish opens the first task, an empty Home shows a starter card, onboarding ends on a task, timers have a length and a "Finished early?". Task inputs: workout chips and duration, pace and speed sanity checks with Save anyway, journal word rule client and server, counters cannot finish below target. Posting: a post-or-private sheet after every task, your own post in both feeds, correct share card data, four sticker cards. Links and numbers: every person and challenge name opens the right page; Home, Profile and the challenge page count from one bootstrap payload; is_test accounts hidden from real users. Words: definitions at the moment they happen, "Self-reported" once per screen, greeting never `@user_xxx`. Safety: every public text field moderated server-side with a dodge-proof normalizer; report a comment; journal entries private. Friend loop: visible invite link with Copy and Share, `griit://i/<id>` opens the challenge for another account or a brand-new guest, Discover search by name or code. Strava auto-detect behind `FLAGS.STRAVA_AUTO_VERIFY` (off). SQL for chunks 03, 06, 08, 09 in `docs/sql/build90.sql`, all run by Yaseen Oct 17.
+
+Open after build 90: the overnight agent run on this build (`docs/reports/oct-build90/`, chunk 10.4) and whatever it finds; `BUGS.md` rows 1–29 are "fixed – awaiting Yaseen"; Strava webhook registration (curl in the chunk 09 report) when the flag turns on; is_test boards decision (05.3 kept as is: test personas never appear on real users' boards, test personas may share a board with each other).
+
+Everything below this line is the August 30 audit, kept as history.
 
 ---
 

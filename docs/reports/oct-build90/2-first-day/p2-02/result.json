@@ -1,0 +1,87 @@
+{
+  "personaId": "p2-02",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 9,
+      "taskLabel": "post-choice-sheet",
+      "tappedAt": "2026-10-17T20:00:11.510Z",
+      "toSheetMs": null,
+      "toVisibleMs": 2411,
+      "marker": "Day secured",
+      "choice": ""
+    },
+    {
+      "step": 11,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T20:00:26.393Z",
+      "toSheetMs": null,
+      "toVisibleMs": 153037,
+      "marker": "Day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means I've completed my daily challenge and confirmed it, so my streak is protected for today.",
+    "freeze": "The app never explained what a freeze is during the screens I saw.",
+    "selfReported": "Self-reported means I manually logged the task myself rather than it being automatically tracked.",
+    "tomorrow": "8 - The streak tracking and daily check-in system feels motivating, even at 3am after a long shift.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:59:15.075Z",
+  "endedAt": "2026-10-17T20:03:10.604Z",
+  "steps": 21,
+  "durationSec": 236,
+  "goals": [
+    {
+      "id": "p2-02-g1",
+      "text": "Finish onboarding and one task with as few decisions as possible, until the app says the day is secured.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c67b24ce-03c5-41e2-b456-c66735e4619e",
+  "isTest": true,
+  "cleanup": "kept"
+}

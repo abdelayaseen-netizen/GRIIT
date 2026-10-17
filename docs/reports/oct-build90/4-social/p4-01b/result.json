@@ -1,0 +1,68 @@
+{
+  "personaId": "p4-01b",
+  "group": "social",
+  "chunk": "4-social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [
+    {
+      "step": 7,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T21:47:11.290Z",
+      "toSheetMs": 771,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed the daily challenge requirement and locked in your progress for that day.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "7 - It's a simple, motivating way to build a habit and the visual proof system makes it satisfying to use.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:46:11.361Z",
+  "endedAt": "2026-10-17T21:47:58.753Z",
+  "steps": 16,
+  "durationSec": 107,
+  "goals": [
+    {
+      "id": "p4-01b-g1",
+      "text": "The invite opened a challenge: join it. Then find Alex on the challenge board or in the feed and tap the name to open the profile. Then find Alex's post in the feed, like it and leave a one-line comment.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "71d39a27-c007-4b56-81fb-6f0205206c42",
+  "isTest": true,
+  "cleanup": "kept"
+}

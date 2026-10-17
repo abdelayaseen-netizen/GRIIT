@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "It means you manually entered your own data instead of the app tracking it automatically.",
+  "tomorrow": "3 - It's a gratitude journal that feels slow and requires typing too many words, not really my vibe.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>Build 90 on the GRIIT iPhone 16 simulator. Production API. Chunk 5-safety-edge.</p>
+<p>Haiku 4.5 for every persona.</p>
+<p>is_test accounts; hidden from real users. Test personas may share a board with each other.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>6</td></tr>
+<tr><th>Steps</th><td>115</td></tr>
+<tr><th>Measured API cost</th><td>$2.31</td></tr>
+<tr><th>Database goals passed</th><td>1 / 1</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>6</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>1</td><td>17%</td><td>5 did not reach it</td></tr><tr><td>challenge</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>joined</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>task</td><td>1</td><td>17%</td><td>5 did not reach it</td></tr><tr><td>completed</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>photo</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr><tr><td>shared</td><td>2</td><td>33%</td><td>4 did not reach it</td></tr><tr><td>social</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>safety</td><td>100% (1/1)</td><td>19</td><td>Gave up. other repeated 3 times.<br>other: the same screen came up 3 times<br>Failed to run flow: Element not found: Text matching regex: inputView</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>other</td><td>8</td><td>35</td><td>369s</td><td>0</td></tr><tr><td>home</td><td>7</td><td>25</td><td>231s</td><td>2</td></tr><tr><td>auth</td><td>3</td><td>19</td><td>135s</td><td>0</td></tr><tr><td>create</td><td>3</td><td>18</td><td>126s</td><td>0</td></tr><tr><td>onboarding</td><td>2</td><td>8</td><td>34s</td><td>0</td></tr><tr><td>challenge</td><td>2</td><td>4</td><td>27s</td><td>0</td></tr><tr><td>welcome</td><td>2</td><td>2</td><td>13s</td><td>0</td></tr><tr><td>task</td><td>1</td><td>2</td><td>25s</td><td>0</td></tr><tr><td>discover</td><td>1</td><td>1</td><td>6s</td><td>0</td></tr><tr><td>settings</td><td>1</td><td>1</td><td>5s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>Gave up. other repeated 3 times. (4)</p><p>Gave up. auth repeated 3 times. (1)</p><p>Gave up. home repeated 3 times. (1)</p>
+<h2>Confusion</h2>
+<ul><li><strong>safety</strong> · home · The Share dialog seems persistent - I tapped Share today but I&#39;m still on Day secured</li></ul>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>home</td><td>32%</td></tr><tr><td>discover</td><td>0%</td></tr><tr><td>auth</td><td>58%</td></tr><tr><td>other</td><td>14%</td></tr><tr><td>challenge</td><td>0%</td></tr><tr><td>create</td><td>0%</td></tr><tr><td>onboarding</td><td>0%</td></tr><tr><td>settings</td><td>0%</td></tr><tr><td>welcome</td><td>0%</td></tr><tr><td>task</td><td>0%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. Gave up. other repeated 3 times.</h3><p>4 agents. Screen: other</p><div><img src="p5-02/shots/017.png" alt=""></div><ol><li>p5-02: abort</li><li>p5-02: Gave up. other repeated 3 times.</li><li>p5-03: abort</li><li>p5-03: Gave up. other repeated 3 times.</li></ol></section><section><h3>2. other: the same screen came up 3 times</h3><p>4 agents. Screen: shared</p><ol><li>p5-02: other: the same screen came up 3 times</li><li>p5-02: other: the same screen came up 3 times</li><li>p5-03: other: the same screen came up 3 times</li><li>p5-04: other: the same screen came up 3 times</li></ol></section><section><h3>3. Failed to run flow: Element not found: Text matching regex: inputView</h3><p>2 agents. Screen: other</p><div><img src="p5-02/shots/012.png" alt=""></div><ol><li>p5-02: type inputView</li><li>p5-02: type inputView</li><li>p5-02: type inputView</li><li>p5-02: tap inputView</li></ol></section><section><h3>4. Failed to run flow: Element not found: Text matching regex: Join 7K Steps</h3><p>2 agents. Screen: home</p><div><img src="p5-02/shots/002.png" alt=""></div><ol><li>p5-02: tap Join 7K Steps</li><li>p5-06: tap Join 7K Steps</li></ol></section><section><h3>5. model reply was not valid JSON</h3><p>2 agents. Screen: auth</p><div><img src="p5-01/shots/005.png" alt=""></div><ol><li>p5-01: none</li><li>p5-01: none</li><li>p5-01: none</li><li>p5-01: none</li></ol></section><section><h3>6. Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).</h3><p>2 agents. Screen: challenge</p><ol><li>p5-02: Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).</li><li>p5-02: Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).</li><li>p5-02: Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).</li><li>p5-02: Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).</li></ol></section><section><h3>7. auth: the same screen came up 3 times</h3><p>1 agents. Screen: discover</p><ol><li>p5-01: auth: the same screen came up 3 times</li><li>p5-01: auth: the same screen came up 3 times</li><li>p5-01: auth: the same screen came up 3 times</li><li>p5-01: auth: the same screen came up 3 times</li></ol></section><section><h3>8. Failed to run flow: Element not found: Text matching regex: @ap501mvcxxykd</h3><p>1 agents. Screen: auth</p><div><img src="p5-01/shots/003.png" alt=""></div><ol><li>p5-01: tap @ap501mvcxxykd</li></ol></section><section><h3>9. Failed to run flow: Element not found: Text matching regex: Close</h3><p>1 agents. Screen: home</p><div><img src="p5-06/shots/013.png" alt=""></div><ol><li>p5-06: tap Close</li></ol></section><section><h3>10. Failed to run flow: Element not found: Text matching regex: Go back</h3><p>1 agents. Screen: home</p><div><img src="p5-06/shots/019.png" alt=""></div><ol><li>p5-06: tap Go back</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/p5-01.html">p5-01</a> Rae · discover · 17 steps</li><li><a href="report/agents/p5-02.html">p5-02</a> Vic · shared · 17 steps</li><li><a href="report/agents/p5-03.html">p5-03</a> Tess · home · 26 steps</li><li><a href="report/agents/p5-04.html">p5-04</a> Reed · opened · 17 steps</li><li><a href="report/agents/p5-05.html">p5-05</a> Guest · task · 17 steps</li><li><a href="report/agents/p5-06.html">p5-06</a> Felix · shared · 21 steps</li></ul>
+</body></html>

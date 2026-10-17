@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you completed your daily challenge goal of no screens for 60 minutes before bed.",
+  "freeze": "The app never explained what a freeze is during the screens I saw.",
+  "selfReported": "The app never explained what self-reported means during the screens I saw.",
+  "tomorrow": "3 - I don't want the camera on and the app seems focused on tracking behavior that feels invasive to my privacy.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

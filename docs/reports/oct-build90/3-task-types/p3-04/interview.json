@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+  "freeze": "The app never explained what a freeze is on the screens I saw.",
+  "selfReported": "Self-reported means you manually enter the count yourself rather than the app tracking it automatically.",
+  "tomorrow": "8 - I like the straightforward daily challenge structure and the satisfying visual feedback of completing 10 pages, though I'd need to see if it keeps me consistent over the full 14 days.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>Build 90 on the GRIIT iPhone 16 simulator. Production API. Chunk 4-social.</p>
+<p>Haiku 4.5 for every persona.</p>
+<p>is_test accounts; hidden from real users. Test personas may share a board with each other.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>6</td></tr>
+<tr><th>Steps</th><td>191</td></tr>
+<tr><th>Measured API cost</th><td>$2.02</td></tr>
+<tr><th>Database goals passed</th><td>0 / 0</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>6</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>1</td><td>17%</td><td>5 did not reach it</td></tr><tr><td>challenge</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>joined</td><td>4</td><td>67%</td><td>2 did not reach it</td></tr><tr><td>task</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr><tr><td>completed</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>photo</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>shared</td><td>3</td><td>50%</td><td>3 did not reach it</td></tr><tr><td>social</td><td>0</td><td>0%</td><td>6 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>social</td><td>0% (0/0)</td><td>32</td><td>challenge: the same screen came up 3 times<br>Gave up. challenge repeated 3 times.<br>Failed to run flow: Element not found: Text matching regex: Join Gym before work</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>create</td><td>4</td><td>75</td><td>432s</td><td>0</td></tr><tr><td>home</td><td>8</td><td>68</td><td>423s</td><td>0</td></tr><tr><td>challenge</td><td>8</td><td>32</td><td>158s</td><td>3</td></tr><tr><td>other</td><td>8</td><td>13</td><td>76s</td><td>0</td></tr><tr><td>onboarding</td><td>1</td><td>1</td><td>6s</td><td>0</td></tr><tr><td>settings</td><td>1</td><td>1</td><td>8s</td><td>0</td></tr><tr><td>discover</td><td>1</td><td>1</td><td>6s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>Gave up. challenge repeated 3 times. (3)</p><p>Gave up. other repeated 3 times. (1)</p>
+<h2>Confusion</h2>
+<p>No confusion notes.</p>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>home</td><td>22%</td></tr><tr><td>create</td><td>20%</td></tr><tr><td>challenge</td><td>63%</td></tr><tr><td>other</td><td>8%</td></tr><tr><td>onboarding</td><td>0%</td></tr><tr><td>settings</td><td>0%</td></tr><tr><td>discover</td><td>0%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. challenge: the same screen came up 3 times</h3><p>3 agents. Screen: shared</p><ol><li>p4-01b: challenge: the same screen came up 3 times</li><li>p4-01b: challenge: the same screen came up 3 times</li><li>p4-01b: challenge: the same screen came up 3 times</li><li>p4-01b: challenge: the same screen came up 3 times</li></ol></section><section><h3>2. Gave up. challenge repeated 3 times.</h3><p>3 agents. Screen: challenge</p><div><img src="p4-01b/shots/016.png" alt=""></div><ol><li>p4-01b: abort</li><li>p4-01b: Gave up. challenge repeated 3 times.</li><li>p4-02b: abort</li><li>p4-02b: Gave up. challenge repeated 3 times.</li></ol></section><section><h3>3. Failed to run flow: Element not found: Text matching regex: Join Gym before work</h3><p>1 agents. Screen: home</p><div><img src="p4-03b/shots/002.png" alt=""></div><ol><li>p4-03b: tap Join Gym before work</li></ol></section><section><h3>4. Gave up. other repeated 3 times.</h3><p>1 agents. Screen: other</p><div><img src="p4-03a/shots/017.png" alt=""></div><ol><li>p4-03a: abort</li><li>p4-03a: Gave up. other repeated 3 times.</li></ol></section><section><h3>5. home: the same screen came up 3 times</h3><p>1 agents. Screen: shared</p><ol><li>p4-03b: home: the same screen came up 3 times</li><li>p4-03b: home: the same screen came up 3 times</li></ol></section><section><h3>6. other: the same screen came up 3 times</h3><p>1 agents. Screen: joined</p><ol><li>p4-03a: other: the same screen came up 3 times</li></ol></section><section><h3>7. Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).</h3><p>1 agents. Screen: challenge</p><ol><li>p4-03b: Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).</li><li>p4-03b: Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).</li><li>p4-03b: Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).</li><li>p4-03b: Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/p4-01a.html">p4-01a</a> Alex · home · 60 steps</li><li><a href="report/agents/p4-01b.html">p4-01b</a> Blake · shared · 16 steps</li><li><a href="report/agents/p4-02a.html">p4-02a</a> Dana · home · 60 steps</li><li><a href="report/agents/p4-02b.html">p4-02b</a> Femi · shared · 17 steps</li><li><a href="report/agents/p4-03a.html">p4-03a</a> Kim · joined · 17 steps</li><li><a href="report/agents/p4-03b.html">p4-03b</a> Jun · shared · 21 steps</li></ul>
+</body></html>

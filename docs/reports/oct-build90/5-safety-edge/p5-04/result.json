@@ -1,0 +1,52 @@
+{
+  "personaId": "p5-04",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+    "freeze": "The app never explained what a freeze is on the screens I saw.",
+    "selfReported": "The app never explained what 'Self-reported' means on the screens I saw.",
+    "tomorrow": "7 - The app seemed straightforward to log into and I'm curious what happens after login, but the error message made me slightly hesitant about the platform's reliability.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:10:10.083Z",
+  "endedAt": "2026-10-17T22:12:31.476Z",
+  "steps": 17,
+  "durationSec": 141,
+  "goals": [
+    {
+      "id": "p5-04-g1",
+      "text": "Tap I already have an account and log in with your email and password. Reach Home.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "other: model reply was not valid JSON"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c6485ebd-8386-431c-8eda-0177dbb82c2e",
+  "isTest": true,
+  "cleanup": "kept"
+}

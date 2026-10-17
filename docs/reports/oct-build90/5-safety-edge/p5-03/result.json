@@ -1,0 +1,50 @@
+{
+  "personaId": "p5-03",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [],
+  "interview": {
+    "secured": "A day secured means you've completed the challenge requirement for that day and it's locked in.",
+    "freeze": "A freeze is a one-time pass that covers a missed day, available after earning a 7-day streak in Standard mode.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task.",
+    "tomorrow": "7 - The challenge format is engaging and the accountability levels give flexibility, but I'd need to see how the community features work to be fully hooked.",
+    "securedRight": true,
+    "freezeRight": true,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:07:01.027Z",
+  "endedAt": "2026-10-17T22:10:10.082Z",
+  "steps": 26,
+  "durationSec": 189,
+  "goals": [
+    {
+      "id": "p5-03-g1",
+      "text": "Open Create and start a new challenge titled shit list with one check-off task. Try to continue; note what the app says. Then rename it to Reading list and finish creating it.",
+      "kind": "db",
+      "pass": true,
+      "detail": "profile is_test is true"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "b63b976c-a022-4569-bf51-55af6c522a01",
+  "isTest": true,
+  "cleanup": "kept"
+}

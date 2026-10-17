@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means, but based on the screen it appeared after completing the 7K steps challenge for the day.",
+  "freeze": "The app never explained what a freeze is during my session.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task during my session.",
+  "tomorrow": "8 - I completed the daily challenge successfully and the app makes it easy to share progress, which motivated me to want to continue the streak.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

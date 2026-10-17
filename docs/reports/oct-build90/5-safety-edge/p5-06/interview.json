@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you've completed your daily goal for the 7K Steps challenge and locked in your progress for today.",
+  "freeze": "The app never explained what a freeze is, so I can't say.",
+  "selfReported": "Self-reported means you manually entered or confirmed your step count yourself rather than it being automatically tracked.",
+  "tomorrow": "8. The app made it easy to complete the challenge and showed clear progress, so I'd want to maintain my streak tomorrow.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

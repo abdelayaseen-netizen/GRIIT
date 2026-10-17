@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means in the screens I saw.",
+  "freeze": "The app never explained what a freeze is in the screens I viewed.",
+  "selfReported": "Self-reported means I'm tracking this task myself without external verification, as indicated by the label under my gratitude journal entry.",
+  "tomorrow": "9 - I found the morning gratitude practice meaningful and aligned with my faith routine, so I'd likely return to continue the 7-day journey.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

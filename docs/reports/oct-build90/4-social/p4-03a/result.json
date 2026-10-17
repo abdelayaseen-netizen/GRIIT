@@ -1,0 +1,51 @@
+{
+  "personaId": "p4-03a",
+  "group": "social",
+  "chunk": "4-social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [],
+  "interview": {
+    "secured": "Day secured means you've completed the challenge for today and your progress for Day 1 is locked in.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "Self-reported means you manually log that you completed the task yourself rather than it being automatically tracked.",
+    "tomorrow": "8, the app makes fitness challenges feel social and achievable with the invite link feature and daily structure.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:55:40.018Z",
+  "endedAt": "2026-10-17T21:57:52.232Z",
+  "steps": 17,
+  "durationSec": 132,
+  "goals": [
+    {
+      "id": "p4-03a-g1",
+      "text": "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen find the invite link and tap Copy. Then finish today's task with Done and choose Post to friends.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "0885c173-17d8-40be-b6ff-2ee724369fad",
+  "isTest": true,
+  "cleanup": "kept"
+}

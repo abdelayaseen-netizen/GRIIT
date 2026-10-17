@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you've completed the daily challenge requirement and it's been recorded for that day.",
+  "freeze": "A freeze can cover a missed day so you don't break your streak.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task.",
+  "tomorrow": "8 - I like the gym accountability and the visual progress tracking, though I'd need to remember to log at night.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

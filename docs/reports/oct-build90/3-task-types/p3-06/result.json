@@ -1,0 +1,58 @@
+{
+  "personaId": "p3-06",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means in the screens I saw.",
+    "freeze": "The app never explained what a freeze is in the screens I saw.",
+    "selfReported": "Self-reported means the word count is based on your own honest input rather than automatic verification.",
+    "tomorrow": "3 - I only wrote one word and the app is asking for 9 more, which feels like a lot of friction for a simple daily task.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:16:22.982Z",
+  "endedAt": "2026-10-17T21:21:39.973Z",
+  "steps": 17,
+  "durationSec": 317,
+  "goals": [
+    {
+      "id": "p3-06-g1",
+      "text": "Open the challenge the app shows you, join it, type the single word ok in the journal and try to finish; note what the app says. Then write at least 20 real words, finish with Done and choose Keep it private.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "task: Failed to run flow: Element not found: Text matching regex: Join Journal Today",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView",
+    "other: Failed to run flow: Element not found: Text matching regex: space"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "2c3c4850-c864-4e33-b1c2-32c134934cbc",
+  "isTest": true,
+  "cleanup": "kept"
+}

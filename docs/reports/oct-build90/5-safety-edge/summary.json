@@ -1,0 +1,18 @@
+{
+  "slug": "5-safety-edge",
+  "sessions": 6,
+  "joined": 3,
+  "firstTask": 1,
+  "completed": 2,
+  "photo": 0,
+  "secured": 2,
+  "under15": 0,
+  "earlyStopsRefused": 8,
+  "medianDoneToSheetMs": null,
+  "medianDoneToVisibleMs": 2729,
+  "medianPhotoPostMs": null,
+  "startedAt": "2026-10-17T22:01:08.413Z",
+  "endedAt": "2026-10-17T22:19:20.756Z",
+  "spendUsd": 2.3122640000000017,
+  "resummarizedAt": "2026-10-17T22:25:00.428Z"
+}

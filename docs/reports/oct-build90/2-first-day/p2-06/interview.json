@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means; I only saw the screen title but no definition.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task.",
+  "tomorrow": "7, because the app seems straightforward for tracking daily check-ins and the 7-day challenge structure creates some accountability.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

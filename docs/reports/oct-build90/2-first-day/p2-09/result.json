@@ -1,0 +1,54 @@
+{
+  "personaId": "p2-09",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [],
+  "interview": {
+    "secured": "Day secured means you've completed all your tasks for that day and earned your streak.",
+    "freeze": "A freeze holds your streak if you miss a day, so you don't lose your progress.",
+    "selfReported": "Self-reported means you manually log that you completed the task instead of the app automatically tracking it with your camera.",
+    "tomorrow": "9 - I like the strict accountability with photo verification, and the streak system keeps me motivated to show up.",
+    "securedRight": true,
+    "freezeRight": true,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:27:07.216Z",
+  "endedAt": "2026-10-17T20:32:17.125Z",
+  "steps": 43,
+  "durationSec": 310,
+  "goals": [
+    {
+      "id": "p2-09-g1",
+      "text": "Pick a fitness challenge, choose Strict if the app offers it, and finish today's task with a photo.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. onboarding repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "onboarding: Failed to run flow: Element not found: Text matching regex: 413,602",
+    "onboarding: Failed to run flow: Element not found: Text matching regex: 412,602",
+    "onboarding: Failed to run flow: Element not found: Text matching regex: 412, 602"
+  ],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "",
+  "isTest": null,
+  "cleanup": "kept"
+}

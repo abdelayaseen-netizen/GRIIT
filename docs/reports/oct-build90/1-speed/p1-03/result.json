@@ -1,0 +1,68 @@
+{
+  "personaId": "p1-03",
+  "group": "speed",
+  "chunk": "1-speed",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 15,
+      "taskLabel": "post-choice-sheet",
+      "tappedAt": "2026-10-17T19:45:38.169Z",
+      "toSheetMs": null,
+      "toVisibleMs": 1596,
+      "marker": "1 of 1 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you completed your daily breathing challenge and have maintained your 1-day streak.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "8, because the one-minute breathing exercise is quick, manageable, and the streak/gamification keeps me motivated to return.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:43:25.091Z",
+  "endedAt": "2026-10-17T19:46:57.953Z",
+  "steps": 22,
+  "durationSec": 213,
+  "goals": [
+    {
+      "id": "p1-03-g1",
+      "text": "Open the challenge the app shows you, join it, start the one-minute timer, wait for it, then finish with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "task: Failed to run flow: Element not found: Text matching regex: Join Breathe 1 Min",
+    "home: Failed to run flow: Element not found: Text matching regex: See the record"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "task",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "8c93d70b-98f0-4a77-80f9-dad2afe2988a",
+  "isTest": true,
+  "cleanup": "kept"
+}

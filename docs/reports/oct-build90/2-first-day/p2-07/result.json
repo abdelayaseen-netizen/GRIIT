@@ -1,0 +1,53 @@
+{
+  "personaId": "p2-07",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 4,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app did not explain what 'Day secured' means on the screens I saw.",
+    "freeze": "The app did not explain what a freeze is on the screens I saw.",
+    "selfReported": "The app did not explain what 'Self-reported' means on the screens I saw.",
+    "tomorrow": "3 - The app showed fitness and wellness challenges but I didn't see a specific daily prayer option that matches my faith priorities, so I'm uncertain about returning.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:21:37.347Z",
+  "endedAt": "2026-10-17T20:22:58.781Z",
+  "steps": 16,
+  "durationSec": 81,
+  "goals": [
+    {
+      "id": "p2-07-g1",
+      "text": "Pick a faith challenge in onboarding and finish today's task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. onboarding repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times",
+    "onboarding: the same screen came up 3 times",
+    "onboarding: the same screen came up 3 times",
+    "onboarding: the same screen came up 3 times",
+    "onboarding: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "",
+  "isTest": null,
+  "cleanup": "kept"
+}

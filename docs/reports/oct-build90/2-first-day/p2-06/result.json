@@ -1,0 +1,74 @@
+{
+  "personaId": "p2-06",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 15,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T20:21:08.270Z",
+      "toSheetMs": 734,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means; I only saw the screen title but no definition.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task.",
+    "tomorrow": "7, because the app seems straightforward for tracking daily check-ins and the 7-day challenge structure creates some accountability.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:19:37.345Z",
+  "endedAt": "2026-10-17T20:21:17.374Z",
+  "steps": 16,
+  "durationSec": 100,
+  "goals": [
+    {
+      "id": "p2-06-g1",
+      "text": "Tap through to the first task as fast as possible and finish it.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected."
+  ],
+  "deadEnds": [
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3a6cbeb7-32c3-4ab9-8510-ef530ba2134d",
+  "isTest": true,
+  "cleanup": "kept"
+}

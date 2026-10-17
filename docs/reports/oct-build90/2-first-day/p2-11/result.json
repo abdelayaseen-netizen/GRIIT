@@ -1,0 +1,56 @@
+{
+  "personaId": "p2-11",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what 'Self-reported' means.",
+    "tomorrow": "7, because the gym challenge is interesting but I need to take photos in the app which is a bit annoying.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:50:10.875Z",
+  "endedAt": "2026-10-17T20:52:26.381Z",
+  "steps": 18,
+  "durationSec": 136,
+  "goals": [
+    {
+      "id": "p2-11-g1",
+      "text": "Reach a first task and finish it. Notice any word you do not understand.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "onboarding: Failed to run flow: Element not found: Text matching regex: Get to the gym",
+    "other: Failed to run flow: Element not found: Text matching regex: Take proof photo"
+  ],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "6de1bf84-ffa0-4dcd-b331-ce6bba46b9f3",
+  "isTest": true,
+  "cleanup": "kept"
+}

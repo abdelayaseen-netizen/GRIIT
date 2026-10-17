@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means in the screens I saw.",
+  "freeze": "The app never explained what a freeze is in the screens I viewed.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task in the screens I saw.",
+  "tomorrow": "3 - I only saw profile editing and authentication screens; the core app functionality and features weren't demonstrated enough to motivate regular use.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

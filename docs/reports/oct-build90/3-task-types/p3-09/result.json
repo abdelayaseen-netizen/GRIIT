@@ -1,0 +1,85 @@
+{
+  "personaId": "p3-09",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 3,
+      "taskLabel": "QUICK STEPS",
+      "tappedAt": "2026-10-17T21:29:40.052Z",
+      "toSheetMs": 741,
+      "toVisibleMs": 1625,
+      "marker": "1 of 1 done",
+      "choice": "Keep it private"
+    },
+    {
+      "step": 23,
+      "taskLabel": "Close",
+      "tappedAt": "2026-10-17T21:31:52.091Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed the daily challenge requirement and it's been recorded for that day.",
+    "freeze": "A freeze can cover a missed day so you don't break your streak.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task.",
+    "tomorrow": "8 - I like the gym accountability and the visual progress tracking, though I'd need to remember to log at night.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:28:50.872Z",
+  "endedAt": "2026-10-17T21:37:56.955Z",
+  "steps": 49,
+  "durationSec": 546,
+  "goals": [
+    {
+      "id": "p3-09-g1",
+      "text": "Open the challenge the app shows you, join it, open today's task and finish it with the button that starts with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Join Quick Steps",
+    "discover: For you is already selected.",
+    "discover: Failed to run flow: Element not found: Text matching regex: Done"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "photo",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "extra-extra-large",
+  "userId": "104b71c5-b20d-4117-a0b6-ffc8ff53167e",
+  "isTest": true,
+  "cleanup": "kept"
+}

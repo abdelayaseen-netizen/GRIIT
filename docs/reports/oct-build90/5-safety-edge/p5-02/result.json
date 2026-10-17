@@ -1,0 +1,85 @@
+{
+  "personaId": "p5-02",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 4,
+      "taskLabel": "post-choice-sheet",
+      "tappedAt": "2026-10-17T22:04:12.878Z",
+      "toSheetMs": null,
+      "toVisibleMs": 2054,
+      "marker": "Day secured",
+      "choice": ""
+    },
+    {
+      "step": 6,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T22:04:25.141Z",
+      "toSheetMs": null,
+      "toVisibleMs": 3864,
+      "marker": "Day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means, but based on the screen it appeared after completing the 7K steps challenge for the day.",
+    "freeze": "The app never explained what a freeze is during my session.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task during my session.",
+    "tomorrow": "8 - I completed the daily challenge successfully and the app makes it easy to share progress, which motivated me to want to continue the streak.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:03:19.277Z",
+  "endedAt": "2026-10-17T22:07:01.026Z",
+  "steps": 17,
+  "durationSec": 222,
+  "goals": [
+    {
+      "id": "p5-02-g1",
+      "text": "Open the challenge the app shows you, join it, finish today's task with Done and choose Post to friends. Write the caption what a shit day and post; note what the app says. Then on your own post in the feed, comment bullshit; note what the app says.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "8874293b-d41c-4de0-acc1-2b9f1a30b03d",
+  "isTest": true,
+  "cleanup": "kept"
+}

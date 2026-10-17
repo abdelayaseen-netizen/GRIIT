@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means in the screens I saw.",
+  "freeze": "The app never explained what a freeze is in the screens I saw.",
+  "selfReported": "Self-reported means the word count is based on your own honest input rather than automatic verification.",
+  "tomorrow": "3 - I only wrote one word and the app is asking for 9 more, which feels like a lot of friction for a simple daily task.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

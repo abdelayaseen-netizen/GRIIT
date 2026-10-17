@@ -1,0 +1,395 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Build 90 overnight report</title><style>
+body{font:12px/1.4 -apple-system,Helvetica,sans-serif;color:#1a1918;margin:28px}
+h1{font-size:22px} h2{font-size:16px;margin-top:22px} h3{font-size:14px;margin-top:16px} h4{font-size:12px;margin-top:12px}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:10.5px} td,th{border:1px solid #cfcac2;padding:3px 5px;text-align:left;vertical-align:top}
+th{background:#f1ede6} code{font-size:10.5px;background:#f1ede6;padding:0 3px}
+</style></head><body><h1>Overnight report, build 90, 17 Oct 2026</h1>
+<p>App commit <code>5d3de5b</code> (About shows it). TestFlight build number 91, internal group "Team (Expo)". Server <code>/api/health</code> commit <code>0d36821</code>. Simulator: GRIIT iPhone 16, iOS 26.4, Release build of the same commit (a TestFlight binary cannot be installed on a simulator). Harness: <code>feat/agent-testers</code> (agents/src/build90.ts). Spend: 2.31 USD, 1005 calls, 1717539 in, 118945 out.</p>
+<h2>Main number</h2>
+<p><strong>4 of 13 fresh personas reached Day secured (31%).</strong> Oct 15 baseline: about 10 of 38 (26%).</p>
+<h2>Also</h2>
+<table>
+<tr><th>Number</th><th>Value</th></tr>
+<tr><td>Sessions</td><td>40</td></tr>
+<tr><td>Joined</td><td>33 (83%)</td></tr>
+<tr><td>First task opened</td><td>10 (25%)</td></tr>
+<tr><td>Task finished</td><td>21 (53%)</td></tr>
+<tr><td>Photo</td><td>11 (28%)</td></tr>
+<tr><td>Median Done → post-or-private sheet</td><td>752 ms (13 finishes)</td></tr>
+<tr><td>Median sheet choice → task shows as done</td><td>2559 ms (11 finishes)</td></tr>
+<tr><td>Median photo post (Post to friends → done marker)</td><td>—</td></tr>
+<tr><td>Concept score (exit interview)</td><td>29% of 40 interviews × 3 words</td></tr>
+<tr><td>Would open tomorrow (median of 10)</td><td>8</td></tr>
+<tr><td>Fresh personas that started at Welcome</td><td>13 of 13 (Oct 15: 7 of 38)</td></tr>
+<tr><td>Sessions under 15 steps, not a crash</td><td>0 (Oct 15: 11 ended early)</td></tr>
+<tr><td>Ended on a repeated screen (after 15 steps)</td><td>34 (Oct 15: 26)</td></tr>
+<tr><td>Stopped on their own (after 15 steps)</td><td>3</td></tr>
+<tr><td>Crashes</td><td>0</td></tr>
+</table>
+<h2>Read with this in mind</h2>
+<ul>
+<li>The agents are Haiku 4.5 on a simulator, not people. A photo finish uses the simulator camera, which returns a stand-in image, and they refused to type the rude words the safety personas were given (p5-01: 10 empty replies, p5-04: 1 empty replies). The server-side filter itself is covered by chunk 07's vitest and the build90-safety Maestro flow, not by this run.</li>
+<li>"Ended on a repeated screen" counts sessions the harness stopped after 15 steps because the same screen came back three times. 34 of 40 here. It is a harness stop rule as much as a product signal; read the per-session rows before treating it as a dead end.</li>
+<li>Done timing: Done → sheet is measured on every self-reported finish (13). Choice → done marker is only counted when the marker showed inside the 20 s watch window (11); "only after more taps" rows mean the agent left the screen before the marker was seen, not that the app was slow.</li>
+<li>Day-number check: 0 real mismatches. The 202 raw entries in result.json are "Day 1 on screen, current_day 2 stored" on a secured day, which is lib/challenge-day.ts displayDay (current_day points at tomorrow once today is secured); they are dropped when the report reads the runs.</li>
+<li>Offline (p5-06) was not applied: no network conditioner on this Mac's simulator. p5-06 ran as a normal post.</li>
+</ul>
+<h2>Scorecard</h2>
+<p>Overall <strong>6.5</strong> (product loop, onboarding and data integrity weighted double, as on 12 and 14 Oct; 14 Oct was 5.2). Scores are rules from the numbers in this run; the why column says which.</p>
+<table>
+<tr><th>#</th><th>Category</th><th>Score</th><th>Why</th></tr>
+<tr><td>1</td><td>Product loop</td><td>7</td><td>21 of 40 finished a task, 11 with a photo.</td></tr>
+<tr><td>2</td><td>UX and onboarding</td><td>6</td><td>4 of 13 fresh personas reached Day secured; 13 of 13 started at Welcome.</td></tr>
+<tr><td>3</td><td>Frontend</td><td>6</td><td>Done → sheet median 752 ms; 34 sessions ended on a repeated screen after 15 steps.</td></tr>
+<tr><td>4</td><td>Backend</td><td>8</td><td>0 crashes; server /api/health 0d36821; 429s and server errors are in the per-step errors below if any.</td></tr>
+<tr><td>5</td><td>Data integrity</td><td>8</td><td>0 day-number mismatches between the screen and the database (a secured day showing current_day − 1 is the app's displayDay rule and is not counted).</td></tr>
+<tr><td>6</td><td>Performance</td><td>4</td><td>Median sheet choice → done marker 2559 ms; photo post —. Release build on the simulator; measured by polling the view hierarchy (one poll ≈ 0.5–1 s, so read ± 1 s). Done → sheet 752 ms is the pure UI step.</td></tr>
+<tr><td>7</td><td>Reliability</td><td>8</td><td>0 of 40 sessions hit a launch or step crash.</td></tr>
+<tr><td>8</td><td>Security and privacy</td><td>5</td><td>0 of 6 safety personas saw a blocked-word message; 2 typed a rude word (p5-02, p5-03), 0 submitted it to the server. Not measured in this run; the filter is covered by chunk 07 tests. is_test on every account.</td></tr>
+<tr><td>9</td><td>Tests</td><td>7</td><td>Chunk 01–09 vitest files 469/469 in one run; full vitest the 4 baseline failures only; tsc 5 baseline errors.</td></tr>
+<tr><td>10</td><td>Words (concept)</td><td>4</td><td>Concept score 29%: secured 18, freeze 4, self-reported 13 of 40.</td></tr>
+</table>
+<h2>What the screenshots show</h2>
+<p>Read from the screenshots, not the numbers. Paths are under <code>docs/reports/oct-build90/</code>; the cited frames are copied into <code>evidence/</code> (every session's full <code>shots/</code> folder stays on this Mac, not in git). App code was not changed for any of these (chunk 10 rule); each is for Yaseen to pick up.</p>
+<ol>
+<li><strong>After a photo post, the Proof screen traps the person.</strong> Day secured → Close lands on <code>app/post/[id]</code> ("Proof"). The back chevron does nothing (<code>router.back()</code> with nothing behind it after the replace), and the Done button sits under the comment composer until the list is scrolled (<code>evidence/01-proof-trap-p4-01b-006.png</code>, <code>-013.png</code>: six back taps, same screen; the orange edge at the bottom is the hidden Done). 5 of the 11 photo sessions ended here: p1-02, p2-06, p3-02, p4-01b, p4-02b. This is the biggest single reason photo finishers did not continue.</li>
+</ol>
+<ol>
+<li><strong>Onboarding can hand a brand-new person a task that is already closed.</strong> p2-10 (Elena, fresh, 4:39 pm) picked "Daily habits"; Start here pre-selected Early Riser 7, whose task "Up and out of bed" has a 12:00–6:30 am window. Day 1 cannot be secured. The app says so in two places that disagree: the task flow shows "Window closed at 6:30 am. Today is not secured." (<code>evidence/02-window-closed-p2-10-018.png</code>) while Home shows "Couldn't save. Tap to try again." under the streak card (<code>evidence/02-couldnt-save-p2-10-019.png</code>), a retry that can never succeed today. Suggest: do not pre-select a windowed challenge when the window is closed, and give the rollback line the real reason.</li>
+</ol>
+<ol>
+<li><strong>Home can show "Day secured. See you tomorrow." and "Day 1 is today. Finish the task to secure it." on the same screen</strong>, with the Day 1 ring empty while "1 day in a row" and "1 of 1 done" are shown (<code>evidence/03-home-disagrees-p1-01-006.png</code>, <code>-008.png</code>, three steps, about a minute). Other secured Homes are consistent (<code>evidence/03-home-consistent-p5-06-021.png</code>: ring ticked, one caption). Looks like the streak card and the Today caption come from different cache keys and one did not refresh after the finish (chunk 05.4 territory).</li>
+</ol>
+<ol>
+<li><strong>Create step 1 says "Looks good" under a title the server will reject.</strong> p5-03 typed "shit list"; the inline hint under the field read "Looks good 9/60" (<code>evidence/04-looks-good-p5-03-004.png</code>). The server check runs at Review/create (chunk 07) and the agent never got there, so the filter itself was not exercised in this run; the hint is the finding.</li>
+</ol>
+<ol>
+<li><strong>The last goal cards on "What are you building?" sit under the docked button.</strong> "Faith and prayer" is the seventh card; its visible part is behind "Pick at least one" (<code>evidence/05-goal-under-footer-p2-07-006.png</code>). p2-07 tapped it twelve times and never selected it; a scroll did not reveal it either. Add bottom padding equal to the footer so every card can be reached.</li>
+</ol>
+<ol>
+<li><strong>Create step 1 keeps the keyboard up, with Solo/Group under it.</strong> p4-01a typed the title and then could not reach "Group" (59 taps; <code>evidence/06-keyboard-solo-group-p4-01a-010.png</code>, Continue docked above the keyboard, Solo/Group below). A person would dismiss the keyboard; the agent did not. Low priority, but the toggle is invisible at the moment the person needs it.</li>
+</ol>
+<ol>
+<li><strong>Counter task caps at the goal with no word about it.</strong> "Read 10 pages": at 10 of 10, Add one / +5 / +10 dim and do nothing (<code>evidence/07-counter-cap-p3-04-007.png</code>). p3-04 and p3-05 wanted to log 12 and 15 and stopped there instead of tapping "Done · 10 pages". A one-line "Goal reached, Done saves it" would do.</li>
+</ol>
+<ol>
+<li><strong>Words.</strong> 40 interviews: secured 18 right, freeze 4, self-reported 13. Nobody who did not open a challenge detail or the Start here cards had seen a freeze explained; the Start here cards repeat "Missed a day? A freeze holds your streak. You earn one every 7 days in a row." three times on one screen (<code>evidence/08-start-here-freeze-x3-p2-09-007.png</code>), which is the same copy-repeat pattern 06.2 removed for "Self-reported".</li>
+</ol>
+<p>Harness, not product (fixed on <code>feat/agent-testers</code> where it could be): typing into the journal field failed after the first sentence (p2-01, p2-04, p3-06, p3-08: "inputView" not found; Maestro cannot append to a focused multiline field by label); the model would not type the rude words (p5-01); "radio button" as a target resolves to the first card (p2-09); Done timings that showed up only after more taps are dropped (see "Read with this in mind").</p>
+<h2>Chunks</h2>
+<h3>1-speed: Speed</h3>
+<p>6 sessions. Build 90, GRIIT iPhone 16 simulator.</p>
+<h3>Funnel</h3>
+<table>
+<tr><th>Step</th><th>Count</th></tr>
+<tr><td>Joined</td><td>6</td></tr>
+<tr><td>First task opened</td><td>2</td></tr>
+<tr><td>Task finished</td><td>6</td></tr>
+<tr><td>Photo</td><td>2</td></tr>
+<tr><td>Day secured seen</td><td>6</td></tr>
+<tr><td>Sessions under 15 steps (not a crash)</td><td>0</td></tr>
+<tr><td>Early stops refused by the harness</td><td>14</td></tr>
+</table>
+<h3>Done to visible</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Done → sheet</th><th>Choice</th><th>Choice → done marker</th><th>Marker</th></tr>
+<tr><td>p1-01 Dev</td><td>7K STEPS</td><td>752 ms</td><td>Keep it private</td><td>2370 ms</td><td>Day secured</td></tr>
+<tr><td>p1-02 Mia</td><td>Proof</td><td>767 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p1-03 Leo</td><td>post-choice-sheet</td><td>—</td><td>—</td><td>1596 ms</td><td>1 of 1 done</td></tr>
+<tr><td>p1-04 Ana</td><td>10 PAGES A DAY</td><td>747 ms</td><td>—</td><td>7338 ms</td><td>1 of 1 done</td></tr>
+<tr><td>p1-05 Noor</td><td>Journal Today · finished</td><td>—</td><td>—</td><td>—</td><td>day secured only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p1-06 Ray</td><td>Proof</td><td>770 ms</td><td>—</td><td>—</td><td>day secured only after more taps (&gt; 20 s)</td></tr>
+</table>
+<p>Median Done → sheet: 760 ms. Median choice → done marker: 2370 ms. Median photo post (Post to friends → done marker): —.</p>
+<h3>Sessions</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Started on</th><th>Steps</th><th>Funnel</th><th>Ended</th><th>Errors</th></tr>
+<tr><td>p1-01 Dev</td><td>1-speed</td><td>home</td><td>18</td><td>opened → home → challenge → joined → completed</td><td>Gave up. home repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps; home: Failed to run flow: Element not found: Text matching regex: home-done-ope</td></tr>
+<tr><td>p1-02 Mia</td><td>1-speed</td><td>home</td><td>16</td><td>opened → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td></td></tr>
+<tr><td>p1-03 Leo</td><td>1-speed</td><td>home</td><td>22</td><td>opened → home → joined → task → completed</td><td>Gave up. home repeated 3 times.</td><td>task: Failed to run flow: Element not found: Text matching regex: Join Breathe 1 Min; home: Failed to run flow: Element not found: Text matching regex: See the</td></tr>
+<tr><td>p1-04 Ana</td><td>1-speed</td><td>home</td><td>18</td><td>opened → home → challenge → joined → completed</td><td>Agent stopped on their own.</td><td>other: Failed to run flow: Element not found: Text matching regex: Join 10 Pages a Day</td></tr>
+<tr><td>p1-05 Noor</td><td>1-speed</td><td>home</td><td>21</td><td>opened → home → joined → task → completed</td><td>Gave up. home repeated 3 times.</td><td>home: Home is already selected.</td></tr>
+<tr><td>p1-06 Ray</td><td>1-speed</td><td>home</td><td>18</td><td>opened → home → discover → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td></td></tr>
+</table>
+<h3>2-first-day: First day</h3>
+<p>12 sessions. Build 90, GRIIT iPhone 16 simulator.</p>
+<h3>Funnel</h3>
+<table>
+<tr><th>Step</th><th>Count</th></tr>
+<tr><td>Joined</td><td>10</td></tr>
+<tr><td>First task opened</td><td>4</td></tr>
+<tr><td>Task finished</td><td>5</td></tr>
+<tr><td>Photo</td><td>1</td></tr>
+<tr><td>Day secured seen</td><td>4</td></tr>
+<tr><td>Sessions under 15 steps (not a crash)</td><td>0</td></tr>
+<tr><td>Early stops refused by the harness</td><td>8</td></tr>
+</table>
+<h3>Done to visible</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Done → sheet</th><th>Choice</th><th>Choice → done marker</th><th>Marker</th></tr>
+<tr><td>p2-02 Amina</td><td>post-choice-sheet</td><td>—</td><td>—</td><td>2411 ms</td><td>Day secured</td></tr>
+<tr><td>p2-02 Amina</td><td>Proof</td><td>—</td><td>—</td><td>—</td><td>Day secured only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p2-03 Robert</td><td>Proof</td><td>—</td><td>—</td><td>—</td><td>Day secured only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p2-06 Sam</td><td>Proof</td><td>734 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p2-10 Elena</td><td>Proof</td><td>—</td><td>—</td><td>—</td><td>1 of 2 done only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p2-12 Grace</td><td>Proof</td><td>—</td><td>—</td><td>—</td><td>Day secured only after more taps (&gt; 20 s)</td></tr>
+</table>
+<p>Median Done → sheet: 734 ms. Median choice → done marker: 2411 ms. Median photo post (Post to friends → done marker): —.</p>
+<h3>First day</h3>
+<p>Started at Welcome: 12 of 12.</p>
+<table>
+<tr><th>Persona</th><th>Started on</th><th>Joined</th><th>First task</th><th>Day secured</th><th>Steps</th><th>Ended</th></tr>
+<tr><td>p2-01 Jordan</td><td>welcome</td><td>yes</td><td>yes</td><td>no</td><td>16</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p2-02 Amina</td><td>welcome</td><td>yes</td><td>no</td><td>yes</td><td>21</td><td>Agent stopped on their own.</td></tr>
+<tr><td>p2-03 Robert</td><td>welcome</td><td>yes</td><td>no</td><td>yes</td><td>45</td><td>Gave up. home repeated 3 times.</td></tr>
+<tr><td>p2-04 Casey</td><td>welcome</td><td>yes</td><td>yes</td><td>no</td><td>16</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p2-05 Priya</td><td>welcome</td><td>yes</td><td>yes</td><td>no</td><td>26</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p2-06 Sam</td><td>welcome</td><td>yes</td><td>no</td><td>no</td><td>16</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p2-07 Yusuf</td><td>welcome</td><td>no</td><td>no</td><td>no</td><td>16</td><td>Gave up. onboarding repeated 3 times.</td></tr>
+<tr><td>p2-08 Helen</td><td>welcome</td><td>yes</td><td>yes</td><td>no</td><td>21</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p2-09 Marcus</td><td>welcome</td><td>no</td><td>no</td><td>no</td><td>43</td><td>Gave up. onboarding repeated 3 times.</td></tr>
+<tr><td>p2-10 Elena</td><td>welcome</td><td>yes</td><td>no</td><td>yes</td><td>60</td><td>Hit the 60-step cap.</td></tr>
+<tr><td>p2-11 Tom</td><td>welcome</td><td>yes</td><td>no</td><td>no</td><td>18</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p2-12 Grace</td><td>welcome</td><td>yes</td><td>no</td><td>yes</td><td>39</td><td>Gave up. home repeated 3 times.</td></tr>
+</table>
+<h3>Sessions</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Started on</th><th>Steps</th><th>Funnel</th><th>Ended</th><th>Errors</th></tr>
+<tr><td>p2-01 Jordan</td><td>2-first-day</td><td>welcome</td><td>16</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>onboarding: radio button is already selected.; other: Failed to run flow: Element not found: Text matching regex: inputView</td></tr>
+<tr><td>p2-02 Amina</td><td>2-first-day</td><td>welcome</td><td>21</td><td>opened → home → challenge → joined → completed → shared</td><td>Agent stopped on their own.</td><td>onboarding: radio button is already selected.</td></tr>
+<tr><td>p2-03 Robert</td><td>2-first-day</td><td>welcome</td><td>45</td><td>opened → home → challenge → joined → completed → shared</td><td>Gave up. home repeated 3 times.</td><td>onboarding: radio button is already selected.</td></tr>
+<tr><td>p2-04 Casey</td><td>2-first-day</td><td>welcome</td><td>16</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>onboarding: radio button is already selected.; other: Failed to run flow: Element not found: Text matching regex: inputView</td></tr>
+<tr><td>p2-05 Priya</td><td>2-first-day</td><td>welcome</td><td>26</td><td>opened → challenge → joined → task</td><td>Gave up. other repeated 3 times.</td><td>challenge: radio button is already selected.; challenge: Failed to run flow: Element not found: Text matching regex: 20%,307</td></tr>
+<tr><td>p2-06 Sam</td><td>2-first-day</td><td>welcome</td><td>16</td><td>opened → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td>onboarding: radio button is already selected.</td></tr>
+<tr><td>p2-07 Yusuf</td><td>2-first-day</td><td>welcome</td><td>16</td><td>opened</td><td>Gave up. onboarding repeated 3 times.</td><td></td></tr>
+<tr><td>p2-08 Helen</td><td>2-first-day</td><td>welcome</td><td>21</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>onboarding: radio button is already selected.; onboarding: Failed to run flow: Element not found: Text matching regex: Joining...</td></tr>
+<tr><td>p2-09 Marcus</td><td>2-first-day</td><td>welcome</td><td>43</td><td>opened</td><td>Gave up. onboarding repeated 3 times.</td><td>onboarding: radio button is already selected.; onboarding: Failed to run flow: Element not found: Text matching regex: 413,602</td></tr>
+<tr><td>p2-10 Elena</td><td>2-first-day</td><td>welcome</td><td>60</td><td>opened → home → challenge → joined → completed → shared</td><td>Hit the 60-step cap.</td><td>onboarding: radio button is already selected.; other: fetch failed</td></tr>
+<tr><td>p2-11 Tom</td><td>2-first-day</td><td>welcome</td><td>18</td><td>opened → challenge → joined</td><td>Gave up. challenge repeated 3 times.</td><td>onboarding: radio button is already selected.; onboarding: Failed to run flow: Element not found: Text matching regex: Get to the gym</td></tr>
+<tr><td>p2-12 Grace</td><td>2-first-day</td><td>welcome</td><td>39</td><td>opened → home → challenge → joined → completed → shared</td><td>Gave up. home repeated 3 times.</td><td>onboarding: radio button is already selected.</td></tr>
+</table>
+<h3>3-task-types: Task types</h3>
+<p>10 sessions. Build 90, GRIIT iPhone 16 simulator.</p>
+<h3>Funnel</h3>
+<table>
+<tr><th>Step</th><th>Count</th></tr>
+<tr><td>Joined</td><td>10</td></tr>
+<tr><td>First task opened</td><td>3</td></tr>
+<tr><td>Task finished</td><td>5</td></tr>
+<tr><td>Photo</td><td>5</td></tr>
+<tr><td>Day secured seen</td><td>5</td></tr>
+<tr><td>Sessions under 15 steps (not a crash)</td><td>0</td></tr>
+<tr><td>Early stops refused by the harness</td><td>26</td></tr>
+</table>
+<h3>Done to visible</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Done → sheet</th><th>Choice</th><th>Choice → done marker</th><th>Marker</th></tr>
+<tr><td>p3-01 Ivy</td><td>7K STEPS</td><td>717 ms</td><td>Keep it private</td><td>—</td><td>Day secured only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p3-01 Ivy</td><td>Close</td><td>—</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p3-02 Omar</td><td>Proof</td><td>728 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p3-03 Bea</td><td>Close</td><td>—</td><td>—</td><td>—</td><td>Day secured only after more taps (&gt; 20 s)</td></tr>
+<tr><td>p3-03 Bea</td><td>Proof</td><td>861 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p3-09 Ruth</td><td>QUICK STEPS</td><td>741 ms</td><td>Keep it private</td><td>1625 ms</td><td>1 of 1 done</td></tr>
+<tr><td>p3-09 Ruth</td><td>Close</td><td>—</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p3-10 Eli</td><td>Proof</td><td>758 ms</td><td>—</td><td>19827 ms</td><td>day secured</td></tr>
+</table>
+<p>Median Done → sheet: 741 ms. Median choice → done marker: 10726 ms. Median photo post (Post to friends → done marker): —.</p>
+<h3>Task types</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Finished</th><th>Nonsense caught</th><th>Post choice seen</th><th>Ended</th></tr>
+<tr><td>p3-01 Ivy</td><td>e44f0001-4000-4000-8000-000000000002</td><td>yes</td><td>no</td><td>yes</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p3-02 Omar</td><td>b2000001-4000-4000-8000-000000000001</td><td>yes</td><td>yes</td><td>yes</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p3-03 Bea</td><td>b2000001-4000-4000-8000-000000000005</td><td>yes</td><td>yes</td><td>yes</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p3-04 Kofi</td><td>e44f0001-4000-4000-8000-000000000006</td><td>no</td><td>yes</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p3-05 Zara</td><td>e44f0001-4000-4000-8000-000000000006</td><td>no</td><td>no</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p3-06 Nate</td><td>b2000001-4000-4000-8000-000000000004</td><td>no</td><td>yes</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p3-07 Lina</td><td>search</td><td>no</td><td>no</td><td>no</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p3-08 Hugo</td><td>b2000001-4000-4000-8000-000000000004</td><td>no</td><td>yes</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p3-09 Ruth</td><td>b2000001-4000-4000-8000-000000000002</td><td>yes</td><td>no</td><td>yes</td><td>Gave up. challenge repeated 3 times.</td></tr>
+<tr><td>p3-10 Eli</td><td>e44f0001-4000-4000-8000-000000000001</td><td>yes</td><td>no</td><td>yes</td><td>Agent stopped on their own.</td></tr>
+</table>
+<h3>Sessions</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Started on</th><th>Steps</th><th>Funnel</th><th>Ended</th><th>Errors</th></tr>
+<tr><td>p3-01 Ivy</td><td>3-task-types</td><td>home</td><td>29</td><td>opened → home → discover → challenge → joined → completed → photo</td><td>Gave up. other repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Close; discover: For you is already selected.</td></tr>
+<tr><td>p3-02 Omar</td><td>3-task-types</td><td>home</td><td>18</td><td>opened → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td>challenge: Failed to run flow: Element not found: Text matching regex: Join Drink Water Today</td></tr>
+<tr><td>p3-03 Bea</td><td>3-task-types</td><td>home</td><td>20</td><td>opened → home → discover → challenge → joined → task → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td>other: Stopping was refused: 6 of the 15 actions owed. Keep going.</td></tr>
+<tr><td>p3-04 Kofi</td><td>3-task-types</td><td>home</td><td>19</td><td>opened → joined</td><td>Gave up. other repeated 3 times.</td><td></td></tr>
+<tr><td>p3-05 Zara</td><td>3-task-types</td><td>home</td><td>18</td><td>opened → joined</td><td>Gave up. other repeated 3 times.</td><td>other: Failed to run flow: Element not found: Text matching regex: inputView</td></tr>
+<tr><td>p3-06 Nate</td><td>3-task-types</td><td>home</td><td>17</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>task: Failed to run flow: Element not found: Text matching regex: Join Journal Today; other: Failed to run flow: Element not found: Text matching regex: inputVi</td></tr>
+<tr><td>p3-07 Lina</td><td>3-task-types</td><td>home</td><td>22</td><td>opened → home → discover → challenge → joined</td><td>Gave up. challenge repeated 3 times.</td><td></td></tr>
+<tr><td>p3-08 Hugo</td><td>3-task-types</td><td>home</td><td>16</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>other: Failed to run flow: Element not found: Text matching regex: inputView; other: Failed to run flow: Element not found: Text matching regex: space</td></tr>
+<tr><td>p3-09 Ruth</td><td>3-task-types</td><td>home</td><td>49</td><td>opened → home → discover → challenge → joined → completed → photo</td><td>Gave up. challenge repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Join Quick Steps; discover: For you is already selected.</td></tr>
+<tr><td>p3-10 Eli</td><td>3-task-types</td><td>home</td><td>19</td><td>opened → home → discover → challenge → joined → completed → photo → shared</td><td>Agent stopped on their own.</td><td>challenge: Failed to run flow: Element not found: Text matching regex: Join Show Up 7</td></tr>
+</table>
+<h3>4-social: Social</h3>
+<p>6 sessions. Build 90, GRIIT iPhone 16 simulator.</p>
+<h3>Funnel</h3>
+<table>
+<tr><th>Step</th><th>Count</th></tr>
+<tr><td>Joined</td><td>4</td></tr>
+<tr><td>First task opened</td><td>0</td></tr>
+<tr><td>Task finished</td><td>3</td></tr>
+<tr><td>Photo</td><td>3</td></tr>
+<tr><td>Day secured seen</td><td>3</td></tr>
+<tr><td>Sessions under 15 steps (not a crash)</td><td>0</td></tr>
+<tr><td>Early stops refused by the harness</td><td>8</td></tr>
+</table>
+<h3>Done to visible</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Done → sheet</th><th>Choice</th><th>Choice → done marker</th><th>Marker</th></tr>
+<tr><td>p4-01b Blake</td><td>Proof</td><td>771 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p4-02b Femi</td><td>Proof</td><td>741 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+<tr><td>p4-03b Jun</td><td>Proof</td><td>—</td><td>—</td><td>3618 ms</td><td>Day secured</td></tr>
+<tr><td>p4-03b Jun</td><td>Proof</td><td>753 ms</td><td>—</td><td>—</td><td>not seen</td></tr>
+</table>
+<p>Median Done → sheet: 753 ms. Median choice → done marker: 3618 ms. Median photo post (Post to friends → done marker): —.</p>
+<h3>Social</h3>
+<table>
+<tr><th>Pair</th><th>Invite visible (A)</th><th>B joined A's challenge</th><th>B opened a profile</th><th>B liked</th><th>B commented</th></tr>
+<tr><td>p4-01a / p4-01b</td><td>no</td><td>yes</td><td>no</td><td>no</td><td>no</td></tr>
+<tr><td>p4-02a / p4-02b</td><td>yes</td><td>yes</td><td>no</td><td>no</td><td>no</td></tr>
+<tr><td>p4-03a / p4-03b</td><td>yes</td><td>yes</td><td>no</td><td>no</td><td>no</td></tr>
+</table>
+<h3>Sessions</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Started on</th><th>Steps</th><th>Funnel</th><th>Ended</th><th>Errors</th></tr>
+<tr><td>p4-01a Alex</td><td>4-social</td><td>home</td><td>60</td><td>opened → home</td><td>Hit the 60-step cap.</td><td></td></tr>
+<tr><td>p4-01b Blake</td><td>4-social</td><td>home</td><td>16</td><td>opened → home → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td></td></tr>
+<tr><td>p4-02a Dana</td><td>4-social</td><td>home</td><td>60</td><td>opened → home</td><td>Hit the 60-step cap.</td><td></td></tr>
+<tr><td>p4-02b Femi</td><td>4-social</td><td>home</td><td>17</td><td>opened → home → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td></td></tr>
+<tr><td>p4-03a Kim</td><td>4-social</td><td>home</td><td>17</td><td>opened → home → joined</td><td>Gave up. other repeated 3 times.</td><td></td></tr>
+<tr><td>p4-03b Jun</td><td>4-social</td><td>home</td><td>21</td><td>opened → home → discover → challenge → joined → completed → photo → shared</td><td>Gave up. challenge repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Join Gym before work</td></tr>
+</table>
+<h3>5-safety-edge: Safety and edge</h3>
+<p>6 sessions. Build 90, GRIIT iPhone 16 simulator.</p>
+<h3>Funnel</h3>
+<table>
+<tr><th>Step</th><th>Count</th></tr>
+<tr><td>Joined</td><td>3</td></tr>
+<tr><td>First task opened</td><td>1</td></tr>
+<tr><td>Task finished</td><td>2</td></tr>
+<tr><td>Photo</td><td>0</td></tr>
+<tr><td>Day secured seen</td><td>2</td></tr>
+<tr><td>Sessions under 15 steps (not a crash)</td><td>0</td></tr>
+<tr><td>Early stops refused by the harness</td><td>8</td></tr>
+</table>
+<h3>Done to visible</h3>
+<table>
+<tr><th>Persona</th><th>Task</th><th>Done → sheet</th><th>Choice</th><th>Choice → done marker</th><th>Marker</th></tr>
+<tr><td>p5-02 Vic</td><td>post-choice-sheet</td><td>—</td><td>—</td><td>2054 ms</td><td>Day secured</td></tr>
+<tr><td>p5-02 Vic</td><td>Proof</td><td>—</td><td>—</td><td>3864 ms</td><td>Day secured</td></tr>
+<tr><td>p5-06 Felix</td><td>post-choice-sheet</td><td>—</td><td>—</td><td>2899 ms</td><td>Day secured</td></tr>
+<tr><td>p5-06 Felix</td><td>Proof</td><td>—</td><td>—</td><td>2559 ms</td><td>Day secured</td></tr>
+</table>
+<p>Median Done → sheet: —. Median choice → done marker: 2729 ms. Median photo post (Post to friends → done marker): —.</p>
+<h3>Safety and edge</h3>
+<table>
+<tr><th>Persona</th><th>Check</th><th>Blocked message seen</th><th>Reached Home</th><th>Ended</th></tr>
+<tr><td>p5-01 Rae</td><td>Open Profile, then Edit profile. Change the username to shit…</td><td>no</td><td>yes</td><td>Gave up. auth repeated 3 times.</td></tr>
+<tr><td>p5-02 Vic</td><td>Open the challenge the app shows you, join it, finish today'…</td><td>no</td><td>yes</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p5-03 Tess</td><td>Open Create and start a new challenge titled shit list with …</td><td>no</td><td>yes</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p5-04 Reed</td><td>Tap I already have an account and log in with your email and…</td><td>no</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p5-05 Guest</td><td>Finish onboarding and the first task as a guest. When the ap…</td><td>no</td><td>no</td><td>Gave up. other repeated 3 times.</td></tr>
+<tr><td>p5-06 Felix</td><td>Open the challenge the app shows you, join it, finish today'…</td><td>no</td><td>yes</td><td>Gave up. home repeated 3 times.</td></tr>
+</table>
+<p>Offline was not applied: this Mac has no simulator network conditioner wired up (agents/src/device.ts applyPrivacy).</p>
+<h3>Sessions</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Started on</th><th>Steps</th><th>Funnel</th><th>Ended</th><th>Errors</th></tr>
+<tr><td>p5-01 Rae</td><td>5-safety-edge</td><td>home</td><td>17</td><td>opened → home → discover</td><td>Gave up. auth repeated 3 times.</td><td>auth: Failed to run flow: Element not found: Text matching regex: @ap501mvcxxykd; auth: model reply was not valid JSON</td></tr>
+<tr><td>p5-02 Vic</td><td>5-safety-edge</td><td>home</td><td>17</td><td>opened → home → challenge → joined → completed → shared</td><td>Gave up. other repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps; other: Failed to run flow: Element not found: Text matching regex: inputView</td></tr>
+<tr><td>p5-03 Tess</td><td>5-safety-edge</td><td>home</td><td>26</td><td>opened → home</td><td>Gave up. other repeated 3 times.</td><td></td></tr>
+<tr><td>p5-04 Reed</td><td>5-safety-edge</td><td>welcome</td><td>17</td><td>opened</td><td>Gave up. other repeated 3 times.</td><td>other: model reply was not valid JSON</td></tr>
+<tr><td>p5-05 Guest</td><td>5-safety-edge</td><td>welcome</td><td>17</td><td>opened → joined → task</td><td>Gave up. other repeated 3 times.</td><td>onboarding: radio button is already selected.; other: Failed to run flow: Element not found: Text matching regex: inputView</td></tr>
+<tr><td>p5-06 Felix</td><td>5-safety-edge</td><td>home</td><td>21</td><td>opened → home → challenge → joined → completed → shared</td><td>Gave up. home repeated 3 times.</td><td>home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps; home: Failed to run flow: Element not found: Text matching regex: Close</td></tr>
+</table>
+<h3>6-words: Words</h3>
+<p>Exit interview, asked of every persona at the end of the session. 40 of 40 answered.</p>
+<table>
+<tr><th>Word</th><th>Right</th><th>Wrong</th><th>Share right</th></tr>
+<tr><td>Secured</td><td>18</td><td>22</td><td>45%</td></tr>
+<tr><td>Freeze</td><td>4</td><td>36</td><td>10%</td></tr>
+<tr><td>Self-reported</td><td>13</td><td>27</td><td>33%</td></tr>
+</table>
+<p>Concept score: 29% (right answers over three words × 40 people). Would open tomorrow: median 8 of 10 (40 gave a number).</p>
+<p>Scoring rules are in agents/src/interview.ts: secured = every task of the day done so the day counts; freeze = a missed day that does not break the streak; self-reported = marked done by the person, no proof.</p>
+<h3>Answers</h3>
+<table>
+<tr><th>Persona</th><th>Chunk</th><th>Secured</th><th>Freeze</th><th>Self-reported</th><th>Tomorrow</th></tr>
+<tr><td>p1-01 Dev</td><td>1-speed</td><td>right: Day secured means you've completed your daily goal (7,000 steps) and locked in your progress for that day.</td><td>wrong: The app never explained what a freeze is.</td><td>right: Self-reported means you manually logged or confirmed the 7,000 steps yourself rather than it being automatical</td><td>9 - I like watching the number move and the streak counter is satisfying; I want</td></tr>
+<tr><td>p1-02 Mia</td><td>1-speed</td><td>right: Day secured means you've completed the daily challenge requirement and locked in your progress for that day.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>wrong: The app never explained what self-reported means on the screens I saw.</td><td>8 - I like tracking my habits visually and sharing proof with friends, plus the</td></tr>
+<tr><td>p1-03 Leo</td><td>1-speed</td><td>right: Day secured means you completed your daily breathing challenge and have maintained your 1-day streak.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>8, because the one-minute breathing exercise is quick, manageable, and the strea</td></tr>
+<tr><td>p1-04 Ana</td><td>1-speed</td><td>right: Day secured means you completed your daily task (reading 10 pages) and locked in your progress for the day.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>wrong: The app never explained what self-reported means on the screens I saw.</td><td>8. I enjoyed tracking my reading habit and seeing the streak counter motivate me</td></tr>
+<tr><td>p1-05 Noor</td><td>1-speed</td><td>right: Day secured means you've completed your daily goal and won't lose your streak, with confirmation to return tom</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>9 - I enjoy tracking my journal streak and the satisfying feeling of securing an</td></tr>
+<tr><td>p1-06 Ray</td><td>1-speed</td><td>right: A day is secured when you have submitted photo proof of completing the gym session for that day.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>9 - I'm committed to the daily gym habit and the accountability of photo proof k</td></tr>
+<tr><td>p2-01 Jordan</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means.</td><td>wrong: The app never explained what a freeze is.</td><td>right: It means you manually entered your own data instead of the app tracking it automatically.</td><td>3 - It's a gratitude journal that feels slow and requires typing too many words,</td></tr>
+<tr><td>p2-02 Amina</td><td>2-first-day</td><td>right: Day secured means I've completed my daily challenge and confirmed it, so my streak is protected for today.</td><td>wrong: The app never explained what a freeze is during the screens I saw.</td><td>right: Self-reported means I manually logged the task myself rather than it being automatically tracked.</td><td>8 - The streak tracking and daily check-in system feels motivating, even at 3am</td></tr>
+<tr><td>p2-03 Robert</td><td>2-first-day</td><td>right: Day secured means you completed your challenge for today and it's locked in as done.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>8. I like that it shows my progress and tells me I did good with the checkmark a</td></tr>
+<tr><td>p2-04 Casey</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means.</td><td>wrong: The app never explained what a freeze is.</td><td>right: It means you manually entered the word count yourself rather than the app measuring it automatically.</td><td>3. Another habit app that feels like busywork—I've already quit three of these,</td></tr>
+<tr><td>p2-05 Priya</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means.</td><td>wrong: The app never explained what a freeze is.</td><td>right: Self-reported means you manually entered your word count yourself rather than the app automatically tracking i</td><td>8. I'm enjoying the journaling challenge and want to stay consistent with the 7-</td></tr>
+<tr><td>p2-06 Sam</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means; I only saw the screen title but no definition.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what 'Self-reported' means on a task.</td><td>7, because the app seems straightforward for tracking daily check-ins and the 7-</td></tr>
+<tr><td>p2-07 Yusuf</td><td>2-first-day</td><td>wrong: The app did not explain what 'Day secured' means on the screens I saw.</td><td>wrong: The app did not explain what a freeze is on the screens I saw.</td><td>wrong: The app did not explain what 'Self-reported' means on the screens I saw.</td><td>3 - The app showed fitness and wellness challenges but I didn't see a specific d</td></tr>
+<tr><td>p2-08 Helen</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means in the screens I saw.</td><td>wrong: The app never explained what a freeze is in the screens I viewed.</td><td>right: Self-reported means I'm tracking this task myself without external verification, as indicated by the label und</td><td>9 - I found the morning gratitude practice meaningful and aligned with my faith</td></tr>
+<tr><td>p2-09 Marcus</td><td>2-first-day</td><td>right: Day secured means you've completed all your tasks for that day and earned your streak.</td><td>right: A freeze holds your streak if you miss a day, so you don't lose your progress.</td><td>right: Self-reported means you manually log that you completed the task instead of the app automatically tracking it</td><td>9 - I like the strict accountability with photo verification, and the streak sys</td></tr>
+<tr><td>p2-10 Elena</td><td>2-first-day</td><td>right: Day secured means I completed both tasks for Day 1 so my streak is protected and won't be broken.</td><td>wrong: The app never explained what a freeze is during the screens I saw.</td><td>wrong: The app never explained what self-reported means during the screens I saw.</td><td>8 - I'm nervous I picked something hard but I already walked 7,000 steps and com</td></tr>
+<tr><td>p2-11 Tom</td><td>2-first-day</td><td>wrong: The app never explained what 'Day secured' means.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what 'Self-reported' means.</td><td>7, because the gym challenge is interesting but I need to take photos in the app</td></tr>
+<tr><td>p2-12 Grace</td><td>2-first-day</td><td>wrong: Day secured means you completed your daily challenge goal of no screens for 60 minutes before bed.</td><td>wrong: The app never explained what a freeze is during the screens I saw.</td><td>wrong: The app never explained what self-reported means during the screens I saw.</td><td>3 - I don't want the camera on and the app seems focused on tracking behavior th</td></tr>
+<tr><td>p3-01 Ivy</td><td>3-task-types</td><td>right: Day secured means you completed your daily challenge requirement and locked in your progress for that day.</td><td>right: A freeze is a feature that allows you to skip a missed day without breaking your streak, as indicated by 'A fr</td><td>wrong: The app never explained what 'Self-reported' means on a task.</td><td>7 - I completed today's challenge and the streak-based progress system motivates</td></tr>
+<tr><td>p3-02 Omar</td><td>3-task-types</td><td>wrong: Day secured means you have successfully completed and verified the daily challenge requirement by submitting y</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>8 - The app provides a simple, visual way to track a daily hydration habit with</td></tr>
+<tr><td>p3-03 Bea</td><td>3-task-types</td><td>right: Day secured means you've completed a breathing challenge for that day and locked in your progress for the Show</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>7 - I like checking off daily challenges and seeing my streak grow, even though</td></tr>
+<tr><td>p3-04 Kofi</td><td>3-task-types</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>right: Self-reported means you manually enter the count yourself rather than the app tracking it automatically.</td><td>8 - I like the straightforward daily challenge structure and the satisfying visu</td></tr>
+<tr><td>p3-05 Zara</td><td>3-task-types</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>right: Self-reported means you manually enter the count of pages you read yourself rather than the app tracking it au</td><td>2 - The app is tracking my reading with a 14-day challenge, but I'm already thin</td></tr>
+<tr><td>p3-06 Nate</td><td>3-task-types</td><td>wrong: The app never explained what 'Day secured' means in the screens I saw.</td><td>wrong: The app never explained what a freeze is in the screens I saw.</td><td>wrong: Self-reported means the word count is based on your own honest input rather than automatic verification.</td><td>3 - I only wrote one word and the app is asking for 9 more, which feels like a l</td></tr>
+<tr><td>p3-07 Lina</td><td>3-task-types</td><td>wrong: The app never explained what 'Day secured' means during the screens I viewed.</td><td>wrong: The app never explained what a freeze is during the screens I viewed.</td><td>wrong: The app never explained what 'Self-reported' means during the screens I viewed.</td><td>7 - I like the structure of Show Up 7 and the social element with friends, but I</td></tr>
+<tr><td>p3-08 Hugo</td><td>3-task-types</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>right: Self-reported means the data or progress was entered by the user themselves rather than automatically tracked</td><td>3, because typing random emoji and gibberish into a journal app isn't really tha</td></tr>
+<tr><td>p3-09 Ruth</td><td>3-task-types</td><td>right: Day secured means you've completed the daily challenge requirement and it's been recorded for that day.</td><td>right: A freeze can cover a missed day so you don't break your streak.</td><td>wrong: The app never explained what 'Self-reported' means on a task.</td><td>8 - I like the gym accountability and the visual progress tracking, though I'd n</td></tr>
+<tr><td>p3-10 Eli</td><td>3-task-types</td><td>wrong: Day secured means you've completed the daily requirement for the Show Up 7 challenge by submitting photo proof</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>8 - I'm motivated by the visible progress tracking and the simple daily commitme</td></tr>
+<tr><td>p4-01a Alex</td><td>4-social</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>wrong: The app never explained what 'Self-reported' means on the screens I saw.</td><td>8 - The challenge creation feature is engaging and I like the fitness tracking c</td></tr>
+<tr><td>p4-01b Blake</td><td>4-social</td><td>right: Day secured means you've completed the daily challenge requirement and locked in your progress for that day.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>7 - It's a simple, motivating way to build a habit and the visual proof system m</td></tr>
+<tr><td>p4-02a Dana</td><td>4-social</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>wrong: The app never explained what 'Self-reported' means on the screens I saw.</td><td>7, because the challenge creation process seems straightforward and the accounta</td></tr>
+<tr><td>p4-02b Femi</td><td>4-social</td><td>wrong: Day secured means you have completed the Drink Water Today challenge for Day 1 of the challenge.</td><td>wrong: The app never explained what a freeze is.</td><td>wrong: The app never explained what self-reported means.</td><td>7 - The challenge structure and proof feature create accountability, though I'd</td></tr>
+<tr><td>p4-03a Kim</td><td>4-social</td><td>right: Day secured means you've completed the challenge for today and your progress for Day 1 is locked in.</td><td>wrong: The app never explained what a freeze is.</td><td>right: Self-reported means you manually log that you completed the task yourself rather than it being automatically t</td><td>8, the app makes fitness challenges feel social and achievable with the invite l</td></tr>
+<tr><td>p4-03b Jun</td><td>4-social</td><td>right: The app never explicitly explained what 'Day secured' means, but based on the screens shown, it appears to mea</td><td>wrong: The app never explained what a freeze is during the screens I viewed.</td><td>wrong: The app never explained what 'Self-reported' means on a task during the screens I viewed.</td><td>8, because completing the challenge felt motivating and I want to maintain my st</td></tr>
+<tr><td>p5-01 Rae</td><td>5-safety-edge</td><td>wrong: The app never explained what 'Day secured' means in the screens I saw.</td><td>wrong: The app never explained what a freeze is in the screens I viewed.</td><td>wrong: The app never explained what 'Self-reported' means on a task in the screens I saw.</td><td>3 - I only saw profile editing and authentication screens; the core app function</td></tr>
+<tr><td>p5-02 Vic</td><td>5-safety-edge</td><td>wrong: The app never explained what 'Day secured' means, but based on the screen it appeared after completing the 7K</td><td>wrong: The app never explained what a freeze is during my session.</td><td>wrong: The app never explained what 'Self-reported' means on a task during my session.</td><td>8 - I completed the daily challenge successfully and the app makes it easy to sh</td></tr>
+<tr><td>p5-03 Tess</td><td>5-safety-edge</td><td>right: A day secured means you've completed the challenge requirement for that day and it's locked in.</td><td>right: A freeze is a one-time pass that covers a missed day, available after earning a 7-day streak in Standard mode.</td><td>wrong: The app never explained what 'Self-reported' means on a task.</td><td>7 - The challenge format is engaging and the accountability levels give flexibil</td></tr>
+<tr><td>p5-04 Reed</td><td>5-safety-edge</td><td>wrong: The app never explained what 'Day secured' means on the screens I saw.</td><td>wrong: The app never explained what a freeze is on the screens I saw.</td><td>wrong: The app never explained what 'Self-reported' means on the screens I saw.</td><td>7 - The app seemed straightforward to log into and I'm curious what happens afte</td></tr>
+<tr><td>p5-05 Guest</td><td>5-safety-edge</td><td>wrong: The app never explained what 'Day secured' means.</td><td>wrong: The app never explained what a freeze is.</td><td>right: Self-reported means the user manually entered their response rather than it being automatically tracked or ver</td><td>7 - The gratitude journal feels meaningful and the daily reminder structure is e</td></tr>
+<tr><td>p5-06 Felix</td><td>5-safety-edge</td><td>right: Day secured means you've completed your daily goal for the 7K Steps challenge and locked in your progress for</td><td>wrong: The app never explained what a freeze is, so I can't say.</td><td>right: Self-reported means you manually entered or confirmed your step count yourself rather than it being automatica</td><td>8. The app made it easy to complete the challenge and showed clear progress, so</td></tr>
+</table>
+<h2>Top problems</h2>
+<ol>
+<li>other: the same screen came up 3 times (19: p1-03, p1-04, p1-05, p2-01, p2-04, p2-05)</li>
+<li>other: Gave up. other repeated 3 times. (14: p2-01, p2-04, p2-05, p2-08, p3-01, p3-04)</li>
+<li>challenge: the same screen came up 3 times (12: p1-02, p1-06, p2-06, p2-11, p3-02, p3-03)</li>
+<li>challenge: Gave up. challenge repeated 3 times. (11: p1-02, p1-06, p2-06, p2-11, p3-02, p3-03)</li>
+<li>Start here: radio button is already selected. (11: p2-01, p2-02, p2-03, p2-04, p2-06, p2-08)</li>
+<li>home: the same screen came up 3 times (10: p1-01, p1-03, p1-05, p1-06, p2-03, p2-12)</li>
+<li>home: Gave up. home repeated 3 times. (6: p1-01, p1-03, p1-05, p2-03, p2-12, p5-06)</li>
+<li>onboarding: the same screen came up 3 times (3: p2-07, p2-09, p2-11)</li>
+<li>7K Steps challenge: Failed to run flow: Element not found: Text matching regex: Join 7K Steps (2: p1-01, p5-06)</li>
+<li>Day secured: Failed to run flow: Element not found: Text matching regex: Go back (2: p1-01, p5-06)</li>
+<li>Day secured: Home is already selected. (2: p1-05, p5-06)</li>
+<li>7-Day Gratitude Journal Day 1: Failed to run flow: Element not found: Text matching regex: inputView (2: p2-01, p2-04)</li>
+</ol>
+<h2>Quotes</h2>
+<ul>
+<li>Dev (1-speed, Day secured): "Why isn't the Done button working? I've tapped it multiple times and the screen is still showing the same Day secured modal."</li>
+<li>Mia (1-speed, Proof): "Why does tapping Done not advance? Is there another step I'm missing?"</li>
+<li>Priya (2-first-day, All challenges): "The radio button keeps saying it's already selected, but I haven't actually joined the challenge yet. Tapping the radio button doesn't work. I need to figure out how to actually enter/join this challenge."</li>
+<li>Elena (2-first-day, Up and out of bed): "Why isn't the camera opening? The buttons seem to exist but nothing happens."</li>
+<li>Ruth (3-task-types, Share): "Steps 6-9 seem to be going in circles with Share and Close buttons"</li>
+<li>Felix (5-safety-edge, Day secured): "The Share dialog seems persistent - I tapped Share today but I'm still on Day secured"</li>
+</ul>
+<h2>Folders</h2>
+<ul>
+<li>1-speed: written</li>
+<li>2-first-day: written</li>
+<li>3-task-types: written</li>
+<li>4-social: written</li>
+<li>5-safety-edge: written</li>
+<li>6-words: written</li>
+</ul>
+<h2>Data</h2>
+<p>Per chunk: <code>&lt;chunk&gt;/data.csv</code> (persona, chunk, step, screen, screen_name, action, target, thought, confusion, emotion, latency_ms, done_to_sheet_ms, done_to_visible_ms, error), <code>&lt;chunk&gt;/report.html</code>, <code>&lt;chunk&gt;/&lt;persona&gt;/steps.jsonl</code>, <code>result.json</code>, <code>interview.json</code>, <code>shots/</code>. Account files hold passwords and are not committed; <code>shots/</code> (about 1,000 frames) stays on the Mac that ran it, the frames cited above are in <code>evidence/</code>.</p></body></html>

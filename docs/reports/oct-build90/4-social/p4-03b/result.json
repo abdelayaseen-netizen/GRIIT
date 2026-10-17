@@ -1,0 +1,98 @@
+{
+  "personaId": "p4-03b",
+  "group": "social",
+  "chunk": "4-social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 6,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T21:59:12.113Z",
+      "toSheetMs": null,
+      "toVisibleMs": 3618,
+      "marker": "Day secured",
+      "choice": ""
+    },
+    {
+      "step": 20,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T22:01:00.166Z",
+      "toSheetMs": 753,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "The app never explicitly explained what 'Day secured' means, but based on the screens shown, it appears to mean you've successfully completed and logged your workout for that day.",
+    "freeze": "The app never explained what a freeze is during the screens I viewed.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task during the screens I viewed.",
+    "tomorrow": "8, because completing the challenge felt motivating and I want to maintain my streak for Day 2 of 7.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:57:53.332Z",
+  "endedAt": "2026-10-17T22:01:08.405Z",
+  "steps": 21,
+  "durationSec": 195,
+  "goals": [
+    {
+      "id": "p4-03b-g1",
+      "text": "The invite opened a challenge: join it. Then find Kim on the challenge board or in the feed and tap the name to open the profile. Then find Kim's post in the feed, like it and leave a one-line comment.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Join Gym before work"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "14b702e2-575e-4af1-8865-2e8049897e16",
+  "isTest": true,
+  "cleanup": "kept"
+}

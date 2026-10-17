@@ -1,0 +1,69 @@
+{
+  "personaId": "p3-02",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [
+    {
+      "step": 17,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T21:06:43.310Z",
+      "toSheetMs": 728,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you have successfully completed and verified the daily challenge requirement by submitting your proof photo.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "8 - The app provides a simple, visual way to track a daily hydration habit with proof verification, making it engaging and easy to follow through on.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:04:34.479Z",
+  "endedAt": "2026-10-17T21:06:52.062Z",
+  "steps": 18,
+  "durationSec": 138,
+  "goals": [
+    {
+      "id": "p3-02-g1",
+      "text": "Open the challenge the app shows you, join it, open today's task, take the proof photo and finish with Done. When the app asks, choose Post to friends.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "challenge: Failed to run flow: Element not found: Text matching regex: Join Drink Water Today"
+  ],
+  "deadEnds": [
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "9b008d64-7e6d-42f0-ac91-9451eaa97e80",
+  "isTest": true,
+  "cleanup": "kept"
+}

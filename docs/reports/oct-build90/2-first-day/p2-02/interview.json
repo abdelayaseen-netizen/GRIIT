@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means I've completed my daily challenge and confirmed it, so my streak is protected for today.",
+  "freeze": "The app never explained what a freeze is during the screens I saw.",
+  "selfReported": "Self-reported means I manually logged the task myself rather than it being automatically tracked.",
+  "tomorrow": "8 - The streak tracking and daily check-in system feels motivating, even at 3am after a long shift.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

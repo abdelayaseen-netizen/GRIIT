@@ -1,0 +1,81 @@
+{
+  "personaId": "p1-01",
+  "group": "speed",
+  "chunk": "1-speed",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [
+    {
+      "step": 3,
+      "taskLabel": "7K STEPS",
+      "tappedAt": "2026-10-17T19:38:23.265Z",
+      "toSheetMs": 752,
+      "toVisibleMs": 2370,
+      "marker": "Day secured",
+      "choice": "Keep it private"
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed your daily goal (7,000 steps) and locked in your progress for that day.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "Self-reported means you manually logged or confirmed the 7,000 steps yourself rather than it being automatically tracked.",
+    "tomorrow": "9 - I like watching the number move and the streak counter is satisfying; I want to keep my streak going.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:37:25.027Z",
+  "endedAt": "2026-10-17T19:41:12.533Z",
+  "steps": 18,
+  "durationSec": 228,
+  "goals": [
+    {
+      "id": "p1-01-g1",
+      "text": "Open the challenge the app shows you, join it, open today's task and finish it with the button that starts with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps",
+    "home: Failed to run flow: Element not found: Text matching regex: home-done-open",
+    "home: Failed to run flow: Element not found: Text matching regex: Go back"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "2e54524d-7ad9-4a25-8beb-70345744babd",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you've completed all your tasks for that day and earned your streak.",
+  "freeze": "A freeze holds your streak if you miss a day, so you don't lose your progress.",
+  "selfReported": "Self-reported means you manually log that you completed the task instead of the app automatically tracking it with your camera.",
+  "tomorrow": "9 - I like the strict accountability with photo verification, and the streak system keeps me motivated to show up.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}

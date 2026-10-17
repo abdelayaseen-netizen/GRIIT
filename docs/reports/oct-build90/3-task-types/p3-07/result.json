@@ -1,0 +1,55 @@
+{
+  "personaId": "p3-07",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means during the screens I viewed.",
+    "freeze": "The app never explained what a freeze is during the screens I viewed.",
+    "selfReported": "The app never explained what 'Self-reported' means during the screens I viewed.",
+    "tomorrow": "7 - I like the structure of Show Up 7 and the social element with friends, but I'd need to see how it actually tracks distance-based running rather than just checkboxes before fully committing.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:21:39.976Z",
+  "endedAt": "2026-10-17T21:24:03.672Z",
+  "steps": 22,
+  "durationSec": 144,
+  "goals": [
+    {
+      "id": "p3-07-g1",
+      "text": "Find any challenge with a run or workout task. Join it, open the task and see what it asks for: distance, time, or a checkbox. Finish it with Done if you can and choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3c8cb029-344c-42de-9072-ee89bb73a5d8",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -1,0 +1,10 @@
+{
+  "secured": "Day secured means you completed your daily challenge requirement and locked in your progress for that day.",
+  "freeze": "A freeze is a feature that allows you to skip a missed day without breaking your streak, as indicated by 'A freeze can cover a missed day.'",
+  "selfReported": "The app never explained what 'Self-reported' means on a task.",
+  "tomorrow": "7 - I completed today's challenge and the streak-based progress system motivates me to keep the momentum going, though I'd need to maintain consistent gym motivation.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": false,
+  "asked": true
+}

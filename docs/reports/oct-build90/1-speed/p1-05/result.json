@@ -1,0 +1,67 @@
+{
+  "personaId": "p1-05",
+  "group": "speed",
+  "chunk": "1-speed",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 8,
+      "taskLabel": "Journal Today · finished",
+      "tappedAt": "2026-10-17T19:51:27.570Z",
+      "toSheetMs": null,
+      "toVisibleMs": 34405,
+      "marker": "day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed your daily goal and won't lose your streak, with confirmation to return tomorrow.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "9 - I enjoy tracking my journal streak and the satisfying feeling of securing another day, plus seeing my friends' progress keeps me engaged.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:49:38.399Z",
+  "endedAt": "2026-10-17T19:53:19.600Z",
+  "steps": 21,
+  "durationSec": 221,
+  "goals": [
+    {
+      "id": "p1-05-g1",
+      "text": "Open the challenge the app shows you, join it, write at least 20 real words in the journal and finish with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Home is already selected."
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "task",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "d682a01e-7a5a-4c9a-af32-75672eabf927",
+  "isTest": true,
+  "cleanup": "kept"
+}

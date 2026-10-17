@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means during the screens I viewed.",
+  "freeze": "The app never explained what a freeze is during the screens I viewed.",
+  "selfReported": "The app never explained what 'Self-reported' means during the screens I viewed.",
+  "tomorrow": "7 - I like the structure of Show Up 7 and the social element with friends, but I'd need to see how it actually tracks distance-based running rather than just checkboxes before fully committing.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

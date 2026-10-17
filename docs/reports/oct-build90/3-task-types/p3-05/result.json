@@ -1,0 +1,55 @@
+{
+  "personaId": "p3-05",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+    "freeze": "The app never explained what a freeze is on the screens I saw.",
+    "selfReported": "Self-reported means you manually enter the count of pages you read yourself rather than the app tracking it automatically.",
+    "tomorrow": "2 - The app is tracking my reading with a 14-day challenge, but I'm already thinking about how to game the system instead of actually reading.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:11:37.810Z",
+  "endedAt": "2026-10-17T21:16:22.980Z",
+  "steps": 18,
+  "durationSec": 285,
+  "goals": [
+    {
+      "id": "p3-05-g1",
+      "text": "Open the challenge the app shows you, join it, type 0 pages and try to finish; note what the app says. Then type 99999 pages and try to finish; note what the app says. Then log 10 pages, finish with Done and choose Keep it private.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "other: Failed to run flow: Element not found: Text matching regex: inputView"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "6b4b4511-12f5-4339-a6ee-b18cf8c55c69",
+  "isTest": true,
+  "cleanup": "kept"
+}

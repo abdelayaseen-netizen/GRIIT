@@ -1,0 +1,86 @@
+{
+  "personaId": "p3-03",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 6,
+      "taskLabel": "Close",
+      "tappedAt": "2026-10-17T21:07:44.640Z",
+      "toSheetMs": null,
+      "toVisibleMs": 39752,
+      "marker": "Day secured",
+      "choice": ""
+    },
+    {
+      "step": 19,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T21:09:19.015Z",
+      "toSheetMs": 861,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed a breathing challenge for that day and locked in your progress for the Show Up 7 Challenge.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "7 - I like checking off daily challenges and seeing my streak grow, even though I get impatient waiting for the timers to finish.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:06:52.065Z",
+  "endedAt": "2026-10-17T21:09:26.425Z",
+  "steps": 20,
+  "durationSec": 154,
+  "goals": [
+    {
+      "id": "p3-03-g1",
+      "text": "Open the challenge the app shows you, join it, start the timer and try to finish it before the minute is up. Note what the app says. Then finish it properly with Done and choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "other: Stopping was refused: 6 of the 15 actions owed. Keep going."
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "task",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "abc65379-c92b-4b7e-97cb-b0105753f00f",
+  "isTest": true,
+  "cleanup": "kept"
+}

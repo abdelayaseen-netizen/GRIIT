@@ -1,0 +1,55 @@
+{
+  "personaId": "p5-05",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "Self-reported means the user manually entered their response rather than it being automatically tracked or verified by the app.",
+    "tomorrow": "7 - The gratitude journal feels meaningful and the daily reminder structure is encouraging, though I'd want to see how the full 7-day experience develops.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:12:31.479Z",
+  "endedAt": "2026-10-17T22:15:44.992Z",
+  "steps": 17,
+  "durationSec": 194,
+  "goals": [
+    {
+      "id": "p5-05-g1",
+      "text": "Finish onboarding and the first task as a guest. When the app offers to save your streak or account, save it with the email below. Then open Profile and find where freezes are explained.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3d66d624-4b69-4d08-92ec-ce3f1b9a8eeb",
+  "isTest": true,
+  "cleanup": "kept"
+}

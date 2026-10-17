@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explicitly explained what 'Day secured' means, but based on the screens shown, it appears to mean you've successfully completed and logged your workout for that day.",
+  "freeze": "The app never explained what a freeze is during the screens I viewed.",
+  "selfReported": "The app never explained what 'Self-reported' means on a task during the screens I viewed.",
+  "tomorrow": "8, because completing the challenge felt motivating and I want to maintain my streak for Day 2 of 7.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

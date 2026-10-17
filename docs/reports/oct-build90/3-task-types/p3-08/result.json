@@ -1,0 +1,57 @@
+{
+  "personaId": "p3-08",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+    "freeze": "The app never explained what a freeze is on the screens I saw.",
+    "selfReported": "Self-reported means the data or progress was entered by the user themselves rather than automatically tracked by the app.",
+    "tomorrow": "3, because typing random emoji and gibberish into a journal app isn't really that fun or useful for me.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:24:03.674Z",
+  "endedAt": "2026-10-17T21:28:50.869Z",
+  "steps": 16,
+  "durationSec": 287,
+  "goals": [
+    {
+      "id": "p3-08-g1",
+      "text": "Open the challenge the app shows you, join it, type an emoji and the word asdfgh into the journal and try to finish; note what the app says. Then write 20 real words, finish with Done and choose Keep it private.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "other: Failed to run flow: Element not found: Text matching regex: inputView",
+    "other: Failed to run flow: Element not found: Text matching regex: space"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "caab9db6-1ffa-4afc-a8f9-d2dd6a58f754",
+  "isTest": true,
+  "cleanup": "kept"
+}

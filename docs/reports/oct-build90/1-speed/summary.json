@@ -1,0 +1,18 @@
+{
+  "slug": "1-speed",
+  "sessions": 6,
+  "joined": 6,
+  "firstTask": 2,
+  "completed": 6,
+  "photo": 2,
+  "secured": 6,
+  "under15": 0,
+  "earlyStopsRefused": 14,
+  "medianDoneToSheetMs": 760,
+  "medianDoneToVisibleMs": 2370,
+  "medianPhotoPostMs": null,
+  "startedAt": "2026-10-17T19:37:25.025Z",
+  "endedAt": "2026-10-17T19:55:53.892Z",
+  "spendUsd": 0.25406999999999996,
+  "resummarizedAt": "2026-10-17T22:25:00.413Z"
+}

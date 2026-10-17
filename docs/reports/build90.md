@@ -984,3 +984,50 @@ Needs a decision from Yaseen, one of:
 - `STRAVA_AUTO_VERIFY` is still false, so Connect Strava is not on Settings in this build. Turn the flag on (client and/or Railway env) when you want it shown.
 - The 7K Steps board lists seeded `user_*` catalog members who are not `is_test`; that is why a fresh test account sees board rows instead of "A board needs two." A catalog/seed decision, not this follow-up.
 - Grok deployed twice: `cc97b5e` (01b.3, no server diff against `59e7b633`) and `85a8790` (the follow-up 3 server change, from 13:47 until the redeploy below). In that window test-account joins were inserted with `board_opt_in = false` (Maestro accounts only, `b8901…` emails). If you want them on boards for flow B, that is a one-line SQL to review; otherwise they are inert test rows.
+
+## 10 Ship and overnight test
+
+Branch `feat/build90` at `5d3de5bd` for the app; harness on `feat/agent-testers` (`c616bc72` … `c7ce10ca`), worktree `/Users/yaseenabdela/Developer/GRIIT-g`. Preconditions checked first: PROGRESS shows 01–09 and 01b PASSED; Yaseen confirmed SQL lines 1–174 run and the backend at `0d36821`; `docs/sql/build90.sql` is 174 lines, Grok's 176–202 were already gone. 01b.2 medians: photo finish 3614 → 626 ms, self-reported 2879 → 533 ms (target 1.5 s met). No "DBG" or on-screen debug text ships: the only debug screens are `app/dev/*`, gated by `__DEV__` and excluded from the EAS archive by `.easignore`.
+
+### 10.1 Final check
+
+- Chunk 01–09 tests in one `vitest run` of the 35 files named in chunks 01–09: 35 files, 469 tests, 0 failures (`/tmp/b90-10-chunk-tests.txt`). Full suite 2097 / 2101: the same 4 pre-build-90 baseline failures as chunk 01 (`/tmp/b90-10-vitest.txt`).
+- `npx tsc --noEmit`: the same 5 baseline errors as every chunk since 01, 0 new (`/tmp/b90-10-tsc.txt`). The chunk text says "0 errors"; that has not been true since before build 90 and no app code may change in this chunk, so it is reported as is.
+- `GET https://grit-backend-production.up.railway.app/api/health` → `{"ok":true,"commit":"0d36821"}`.
+
+### 10.2 Ship
+
+Root cause of the first failed build: `eas build` detects a bare workflow when `ios/` exists in the project and then rejects `runtimeVersion.policy`. `.easignore` cannot remove the folder from that detection. Fix: move `ios/` out of the project for the duration of `eas build`, then move it back (the archive is tracked files only, 359 MB tracked ≈ 380 MB uploaded, so `ios/` was never in the upload). The failed attempt still consumed a remote build number, so the shipped build is **build number 91**, not 90. The `mv` back briefly nested the folder because a config plugin had recreated `ios/LiveActivity/LiveActivity.entitlements`; corrected, `git status` clean.
+
+- EAS build `dbb597cf`, profile production, commit `5d3de5bd`, FINISHED 19:14 UTC; submission `a2e0ae71` FINISHED 19:16 UTC to `["Team (Expo)"]` (eas.json). BETA TESTERS not touched.
+- About: a Release simulator build of the same commit (`xcodebuild … -configuration Release -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO`, `EXConstants.bundle/app.config` `"commit":"5d3de5bd"`) shows "Version 1.0.0 (build 1) · commit 5d3de5b" (`docs/reports/oct-build90/evidence/about-5d3de5b.png`, Maestro flow `/tmp/b90-about.yaml` exit 0). The TestFlight binary carries the same `extra.commit` from `EAS_BUILD_GIT_COMMIT_HASH`; whether it is live in the group needs App Store Connect, which this Mac has no key for.
+- `BUGS.md`: 18 and 19 notes extended, 21–29 added as "fixed – awaiting Yaseen", 30–34 added as "open – found Oct 17 overnight". `claude/griit-status.md`: build 90 state at the top, August kept as history.
+
+### 10.3 Harness fixes (feat/agent-testers)
+
+Root causes, from the Oct 15 run: (1) `needsFreshSignup` read a per-run env switch and a legacy id set, so "fresh" personas inherited the previous account and started on Home; (2) `loop.ts` stopped on "same screen three times" and let the model say `done` at any step, so 11 sessions ended under 15 taps; (3) `StepLog` had no `chunk`, no screen name other than the classifier's, no Done timing. Fixes, each with a test in `agents/src/harness.test.ts` (29 tests): `persona.fresh` wins and a fresh persona is wiped and relaunched until Welcome is on screen (up to 3 times, `startedOn` and `freshStartOk` recorded); `MIN_STEPS = 15`, `done` before that is refused (`done_refused`, counted in `earlyStopsRefused`), the repeat rule nudges instead of stopping before 15; the model returns `{"screen": …}` and `screenName` takes it when the classifier says other/unknown or disagrees; a Done tap starts a 150 ms poll for the post-or-private sheet (Done → sheet) and the done marker (`\d+ of \d+ done` / Day secured), written as `doneTimings` and `done_to_sheet_ms` / `done_to_visible_ms` in data.csv. Exit interview (`interview.ts`) scores secured / freeze / self-reported from the text. Later the same night: Done on the Day secured screen and a marker already on screen do not count; a Done not seen inside its 20 s window is "not seen", not inherited by a later screen; the day-number check follows `lib/challenge-day.ts displayDay` (`current_day` points at tomorrow once today is secured); interviews are rescored from text on read; `--summarize` rewrites summaries without a device. Commits `c616bc72`, `315cc8c5`, `f2de35b1`, `fdc35ce1`, `3e88deb6`, `c7ce10ca`, all pushed. Oct 11 WIP that was in GRIIT-g is in `stash@{0}` there ("Oct 11 WIP in GRIIT-g before build 90 harness work").
+
+### 10.4 Overnight run
+
+`npx tsx agents/src/build90.ts --chunk all --out docs/reports/oct-build90` from GRIIT-g (it holds the Anthropic key), 15:37–18:19 EDT, 40 sessions, $2.31, 1005 model calls, no crash, every chunk folder written. Report: `docs/reports/oct-build90/REPORT.md`, `REPORT.html`, `REPORT.pdf` (WebKit, `agents/tools/html2pdf.swift`), `NOTES.md` (what the screenshots show), `evidence/` (the cited frames), per chunk `summary.md`, `summary.json`, `data.csv`, `report.html`, per persona `steps.jsonl`, `result.json`, `interview.json`. `shots/` (985 frames, 117 MB) and `account.json` (passwords) are gitignored and stay on this Mac.
+
+Main number: **4 of 13 fresh personas reached Day secured (31%)**; Oct 15 about 10 of 38 (26%). Joined 33/40, first task opened 10/40, task finished 21/40, photo 11/40. Median Done → sheet 752 ms (13), median sheet choice → done marker 2559 ms (11, polled, ± 1 s). Concept 29% (secured 18, freeze 4, self-reported 13 of 40); would open tomorrow median 8. 13 of 13 fresh started at Welcome (Oct 15: 7 of 38); 0 sessions under 15 steps (Oct 15: 11). Scorecard overall 6.5 (Oct 14: 5.2); security is "not measured" because Haiku would not type the rude words and the one title typed was never submitted.
+
+What the screenshots show (NOTES.md, BUGS 30–34): the Proof screen after a photo post traps the person (back does nothing, Done under the composer; 5 of 11 photo sessions); onboarding pre-selected Early Riser 7 at 4:39 pm so Day 1 could not be secured and Home said "Couldn't save. Tap to try again."; Home showed "Day secured" and "Finish the task to secure it" together for about a minute; Create step 1 says "Looks good" under "shit list"; the seventh goal card hides under "Pick at least one"; counters cap at the goal silently; the Start here cards repeat the freeze line three times.
+
+### Gates
+
+- [x] All chunk tests pass in one run (469/469; full suite and tsc at the baseline, not 0).
+- [~] TestFlight build is live in "Team (Expo)" and the About sha matches: submitted and FINISHED to that group; About shows `5d3de5b`; "live" needs Yaseen's App Store Connect.
+- [x] Harness fixes committed on `feat/agent-testers`.
+- [x] All 6 overnight chunks produced a folder.
+- [x] Combined report and PDF written.
+- [x] PROGRESS.md: chunk 10 PASSED.
+
+### Needs Yaseen
+
+- Confirm build 91 is live for "Team (Expo)" in App Store Connect, and install it.
+- The five new findings (BUGS 30–34), 30 and 31 first: both stop a first day.
+- Offline (p5-06) was not applied; the simulator has no network conditioner here. Test on a phone.
+- Test-board decision stays as 05.3 (test viewers see each other); nothing shipped for it.
+- Strava webhook registration (09.4) still to run once `STRAVA_AUTO_VERIFY` goes on.

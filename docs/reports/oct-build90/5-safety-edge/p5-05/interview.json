@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "Self-reported means the user manually entered their response rather than it being automatically tracked or verified by the app.",
+  "tomorrow": "7 - The gratitude journal feels meaningful and the daily reminder structure is encouraging, though I'd want to see how the full 7-day experience develops.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

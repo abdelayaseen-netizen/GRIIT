@@ -1,0 +1,56 @@
+{
+  "personaId": "p2-01",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "It means you manually entered your own data instead of the app tracking it automatically.",
+    "tomorrow": "3 - It's a gratitude journal that feels slow and requires typing too many words, not really my vibe.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:55:53.892Z",
+  "endedAt": "2026-10-17T19:59:15.074Z",
+  "steps": 16,
+  "durationSec": 201,
+  "goals": [
+    {
+      "id": "p2-01-g1",
+      "text": "Get from the first screen to a finished task and a secured day without reading paragraphs.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView",
+    "other: Failed to run flow: Element not found: Text matching regex: space"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "a95a175c-3dea-4863-a76b-59bf0cf39892",
+  "isTest": true,
+  "cleanup": "kept"
+}

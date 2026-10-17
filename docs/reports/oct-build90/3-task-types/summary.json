@@ -1,0 +1,18 @@
+{
+  "slug": "3-task-types",
+  "sessions": 10,
+  "joined": 10,
+  "firstTask": 3,
+  "completed": 5,
+  "photo": 5,
+  "secured": 5,
+  "under15": 0,
+  "earlyStopsRefused": 26,
+  "medianDoneToSheetMs": 741,
+  "medianDoneToVisibleMs": 10726,
+  "medianPhotoPostMs": null,
+  "startedAt": "2026-10-17T20:59:39.037Z",
+  "endedAt": "2026-10-17T21:40:28.793Z",
+  "spendUsd": 1.5871440000000017,
+  "resummarizedAt": "2026-10-17T22:25:00.423Z"
+}

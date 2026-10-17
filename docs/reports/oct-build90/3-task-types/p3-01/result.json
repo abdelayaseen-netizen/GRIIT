@@ -1,0 +1,88 @@
+{
+  "personaId": "p3-01",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 2,
+      "taskLabel": "7K STEPS",
+      "tappedAt": "2026-10-17T21:00:05.843Z",
+      "toSheetMs": 717,
+      "toVisibleMs": 20852,
+      "marker": "Day secured",
+      "choice": "Keep it private"
+    },
+    {
+      "step": 22,
+      "taskLabel": "Close",
+      "tappedAt": "2026-10-17T21:02:49.171Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you completed your daily challenge requirement and locked in your progress for that day.",
+    "freeze": "A freeze is a feature that allows you to skip a missed day without breaking your streak, as indicated by 'A freeze can cover a missed day.'",
+    "selfReported": "The app never explained what 'Self-reported' means on a task.",
+    "tomorrow": "7 - I completed today's challenge and the streak-based progress system motivates me to keep the momentum going, though I'd need to maintain consistent gym motivation.",
+    "securedRight": true,
+    "freezeRight": true,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:59:39.037Z",
+  "endedAt": "2026-10-17T21:04:34.478Z",
+  "steps": 29,
+  "durationSec": 295,
+  "goals": [
+    {
+      "id": "p3-01-g1",
+      "text": "Open the challenge the app shows you, join it, open today's task and finish it with the button that starts with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Close",
+    "discover: For you is already selected."
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2, 2 (stored current_day 2, 2)."
+  ],
+  "funnel": "photo",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "90051795-51af-4f72-9b6e-ee9120c1a762",
+  "isTest": true,
+  "cleanup": "kept"
+}

@@ -1,0 +1,54 @@
+{
+  "personaId": "p3-04",
+  "group": "task-types",
+  "chunk": "3-task-types",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 4,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means on the screens I saw.",
+    "freeze": "The app never explained what a freeze is on the screens I saw.",
+    "selfReported": "Self-reported means you manually enter the count yourself rather than the app tracking it automatically.",
+    "tomorrow": "8 - I like the straightforward daily challenge structure and the satisfying visual feedback of completing 10 pages, though I'd need to see if it keeps me consistent over the full 14 days.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T21:09:26.425Z",
+  "endedAt": "2026-10-17T21:11:37.808Z",
+  "steps": 19,
+  "durationSec": 131,
+  "goals": [
+    {
+      "id": "p3-04-g1",
+      "text": "Open the challenge the app shows you, join it, log 12 pages and finish with Done. When the app asks, choose Keep it private.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "joined",
+  "stages": [
+    "opened",
+    "joined"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "cca00fb1-8dde-4189-967c-d1c18055f4c0",
+  "isTest": true,
+  "cleanup": "kept"
+}

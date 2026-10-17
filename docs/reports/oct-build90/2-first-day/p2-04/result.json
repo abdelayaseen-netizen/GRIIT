@@ -1,0 +1,55 @@
+{
+  "personaId": "p2-04",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "It means you manually entered the word count yourself rather than the app measuring it automatically.",
+    "tomorrow": "3. Another habit app that feels like busywork—I've already quit three of these, and this gratitude journal doesn't seem different enough to stick around for.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:12:27.141Z",
+  "endedAt": "2026-10-17T20:15:53.870Z",
+  "steps": 16,
+  "durationSec": 207,
+  "goals": [
+    {
+      "id": "p2-04-g1",
+      "text": "Look for a catch, but finish the first task before you decide.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "onboarding: radio button is already selected.",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "af000287-4dc1-492f-a130-308cea57713a",
+  "isTest": true,
+  "cleanup": "kept"
+}

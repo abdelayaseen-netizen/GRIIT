@@ -1,0 +1,99 @@
+{
+  "personaId": "p5-06",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 4,
+      "taskLabel": "post-choice-sheet",
+      "tappedAt": "2026-10-17T22:16:40.013Z",
+      "toSheetMs": null,
+      "toVisibleMs": 2899,
+      "marker": "Day secured",
+      "choice": ""
+    },
+    {
+      "step": 6,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T22:16:53.197Z",
+      "toSheetMs": null,
+      "toVisibleMs": 2559,
+      "marker": "Day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "Day secured means you've completed your daily goal for the 7K Steps challenge and locked in your progress for today.",
+    "freeze": "The app never explained what a freeze is, so I can't say.",
+    "selfReported": "Self-reported means you manually entered or confirmed your step count yourself rather than it being automatically tracked.",
+    "tomorrow": "8. The app made it easy to complete the challenge and showed clear progress, so I'd want to maintain my streak tomorrow.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:15:44.995Z",
+  "endedAt": "2026-10-17T22:19:20.752Z",
+  "steps": 21,
+  "durationSec": 216,
+  "goals": [
+    {
+      "id": "p5-06-g1",
+      "text": "Open the challenge the app shows you, join it, finish today's task with Done and choose Post to friends. Note whether the post shows up in the feed.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Join 7K Steps",
+    "home: Failed to run flow: Element not found: Text matching regex: Close",
+    "home: Home is already selected.",
+    "home: Failed to run flow: Element not found: Text matching regex: Go back"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "8ad292b6-48a5-4af9-8818-08dbd3504385",
+  "isTest": true,
+  "cleanup": "kept"
+}

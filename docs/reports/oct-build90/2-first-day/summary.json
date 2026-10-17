@@ -1,0 +1,19 @@
+{
+  "slug": "2-first-day",
+  "sessions": 12,
+  "joined": 10,
+  "firstTask": 4,
+  "completed": 5,
+  "photo": 1,
+  "secured": 4,
+  "under15": 0,
+  "earlyStopsRefused": 8,
+  "medianDoneToSheetMs": 734,
+  "medianDoneToVisibleMs": 2411,
+  "medianPhotoPostMs": null,
+  "startedAtWelcome": 12,
+  "startedAt": "2026-10-17T19:55:53.892Z",
+  "endedAt": "2026-10-17T20:59:39.037Z",
+  "spendUsd": 1.064610000000001,
+  "resummarizedAt": "2026-10-17T22:25:00.420Z"
+}

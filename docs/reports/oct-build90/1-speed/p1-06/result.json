@@ -1,0 +1,82 @@
+{
+  "personaId": "p1-06",
+  "group": "speed",
+  "chunk": "1-speed",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [
+    {
+      "step": 10,
+      "taskLabel": "Proof",
+      "tappedAt": "2026-10-17T19:54:46.989Z",
+      "toSheetMs": 770,
+      "toVisibleMs": 23094,
+      "marker": "day secured",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "A day is secured when you have submitted photo proof of completing the gym session for that day.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "The app never explained what self-reported means.",
+    "tomorrow": "9 - I'm committed to the daily gym habit and the accountability of photo proof keeps me motivated to show up.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T19:53:19.601Z",
+  "endedAt": "2026-10-17T19:55:53.882Z",
+  "steps": 18,
+  "durationSec": 154,
+  "goals": [
+    {
+      "id": "p1-06-g1",
+      "text": "Open the challenge the app shows you, join it, open today's task, take the proof photo and finish with Done. When the app asks, choose Post to friends.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. challenge repeated 3 times.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "challenge: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2).",
+    "Screen said Day 1 of 7. Enrollment day is 2 (stored current_day 2)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "4e83632d-95cf-4fac-abd7-65ca98ef17af",
+  "isTest": true,
+  "cleanup": "kept"
+}

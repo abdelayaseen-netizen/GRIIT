@@ -1,0 +1,57 @@
+{
+  "personaId": "p2-05",
+  "group": "first-timers",
+  "chunk": "2-first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means.",
+    "freeze": "The app never explained what a freeze is.",
+    "selfReported": "Self-reported means you manually entered your word count yourself rather than the app automatically tracking it.",
+    "tomorrow": "8. I'm enjoying the journaling challenge and want to stay consistent with the 7-day commitment my friend invited me to join.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T20:15:53.871Z",
+  "endedAt": "2026-10-17T20:19:37.344Z",
+  "steps": 26,
+  "durationSec": 223,
+  "goals": [
+    {
+      "id": "p2-05-g1",
+      "text": "Find a way to join a friend's challenge, otherwise join any challenge and finish the first task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. other repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "challenge: radio button is already selected.",
+    "challenge: Failed to run flow: Element not found: Text matching regex: 20%,307",
+    "auth: Failed to run flow: Element not found: Text matching regex: Retry",
+    "other: Failed to run flow: Element not found: Text matching regex: inputView"
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "task",
+  "stages": [
+    "opened",
+    "challenge",
+    "joined",
+    "task"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "1ed7a61b-4145-493b-b430-1d44d2eadd3c",
+  "isTest": true,
+  "cleanup": "kept"
+}

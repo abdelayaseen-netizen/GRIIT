@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained what 'Day secured' means.",
+  "freeze": "The app never explained what a freeze is.",
+  "selfReported": "It means you manually entered the word count yourself rather than the app measuring it automatically.",
+  "tomorrow": "3. Another habit app that feels like busywork—I've already quit three of these, and this gratitude journal doesn't seem different enough to stick around for.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

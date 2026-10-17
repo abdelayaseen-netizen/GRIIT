@@ -1,0 +1,57 @@
+{
+  "personaId": "p5-01",
+  "group": "safety",
+  "chunk": "5-safety-edge",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained what 'Day secured' means in the screens I saw.",
+    "freeze": "The app never explained what a freeze is in the screens I viewed.",
+    "selfReported": "The app never explained what 'Self-reported' means on a task in the screens I saw.",
+    "tomorrow": "3 - I only saw profile editing and authentication screens; the core app functionality and features weren't demonstrated enough to motivate regular use.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-17T22:01:08.413Z",
+  "endedAt": "2026-10-17T22:03:19.277Z",
+  "steps": 17,
+  "durationSec": 131,
+  "goals": [
+    {
+      "id": "p5-01-g1",
+      "text": "Open Profile, then Edit profile. Change the username to shithead and save; note what the app says. Then change the bio to this app is bullshit and save; note what the app says. Then set a clean username and bio.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. auth repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "auth: Failed to run flow: Element not found: Text matching regex: @ap501mvcxxykd",
+    "auth: model reply was not valid JSON"
+  ],
+  "deadEnds": [
+    "auth: the same screen came up 3 times",
+    "auth: the same screen came up 3 times",
+    "auth: the same screen came up 3 times",
+    "auth: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "discover",
+  "stages": [
+    "opened",
+    "home",
+    "discover"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "be84ec74-5ebe-470d-8c7b-b2f27945d076",
+  "isTest": true,
+  "cleanup": "kept"
+}
