@@ -59,5 +59,5 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 06.bugs Save sheet dismiss, Day secured row under Done, water oz/cups (server deployed 66765c0), double top padding, ConfirmDialog scrim: done, 66765c0f
 07.1 Moderate every public text field server-side: done, b61ab416 (server deployed b61ab41)
 07.2 Harder to dodge: done, b61ab416
-07.3 Report a comment: done, b61ab416; follow-up (visible comment count, flow) in the next sha
+07.3 Report a comment: done, b61ab416; follow-up (visible comment count, flow): done, 44e5fb55
 07.4 Journal text never moderated, never returned to others: done (tests), b61ab416
