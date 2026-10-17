@@ -3,9 +3,11 @@
  */
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import { inclusiveLastDateKey } from "../backend/lib/record-days";
+import { enrollmentDayStats } from "../backend/lib/enrollment-day-stats";
 import { addCalendarDaysToDateKey } from "@/lib/date-utils";
 import { formatOfDays } from "@/lib/format-days";
 import { homeDayLine } from "@/lib/home-day-total";
+import { enrollmentStartKey, requiredTasks } from "@/lib/today-counts";
 import {
   challengeLine,
   dueForStrip,
@@ -216,4 +218,78 @@ export function rowsFromProfileRecord(
     range: finishedDateRangeLine(c.startDateKey, c.endDateKey, fmt),
   }));
   return [...active, ...finished];
+}
+
+/** Home's bootstrap enrollment shape, enough to draw a Challenges card. */
+export type BootstrapEnrollmentForRow = {
+  id: string;
+  challenge_id?: string | null;
+  start_at?: string | null;
+  started_at?: string | null;
+  created_at?: string | null;
+  challenges?: {
+    id?: string | null;
+    title?: string | null;
+    duration_days?: number | null;
+    challenge_tasks?: readonly { id: string; config?: { required?: boolean } | Record<string, unknown> | null }[] | null;
+  } | null;
+};
+
+/**
+ * Profile Challenges used to wait on profiles.getRecord. After join that query
+ * can still be the empty fetch from the first Profile mount (staleTime 60s,
+ * no window-focus refetch). Home already has the enrollment in home.bootstrap;
+ * draw the same card from there so "Open 7K Steps challenge" is on screen.
+ */
+export function rowsFromBootstrapEnrollments(
+  enrollments: readonly BootstrapEnrollmentForRow[] | null | undefined,
+  opts: {
+    todayKey: string;
+    timeZone: string;
+    todaySecured?: boolean;
+    securedDateKeys?: readonly string[];
+    leftByEnrollment?: Record<string, { left: number }>;
+    formatDate?: (key: string) => string;
+  },
+): ChallengeRow[] {
+  const fmt = opts.formatDate ?? ((key: string) => key);
+  const out: ChallengeRow[] = [];
+  for (const ac of enrollments ?? []) {
+    if (!ac.id) continue;
+    const duration = ac.challenges?.duration_days ?? 7;
+    const stats = enrollmentDayStats({
+      startAt: ac.start_at ?? ac.started_at ?? ac.created_at,
+      timeZone: opts.timeZone,
+      todayKey: opts.todayKey,
+      durationDays: duration,
+      securedDateKeys: opts.securedDateKeys,
+    });
+    const start = enrollmentStartKey(ac, opts.todayKey, opts.timeZone);
+    const exclusive = start ? addCalendarDaysToDateKey(start, duration) : "";
+    const startsTomorrow = start > opts.todayKey;
+    out.push({
+      id: ac.id,
+      challengeId: ac.challenge_id ?? ac.challenges?.id ?? "",
+      title: (ac.challenges?.title ?? "").trim() || "Challenge",
+      status: "active",
+      duration_days: duration,
+      current_day: Math.max(1, stats.day),
+      secured_days: stats.secured,
+      secured_today: opts.todaySecured === true,
+      tasks_today: requiredTasks(ac.challenges?.challenge_tasks).length,
+      started_at: start,
+      range: start && exclusive ? finishedDateRangeLine(start, exclusive, fmt) : "",
+      startsTomorrow,
+      startDateLabel: start ? fmt(start) : undefined,
+      tasksLeft:
+        opts.todaySecured === true ? 0 : (opts.leftByEnrollment?.[ac.id]?.left ?? 0),
+    });
+  }
+  return out;
+}
+
+/** Record rows win when both sources have the same active enrollment. */
+export function mergeChallengeRows(recordRows: ChallengeRow[], bootstrapRows: ChallengeRow[]): ChallengeRow[] {
+  const seen = new Set(recordRows.filter((r) => r.status === "active").map((r) => r.id));
+  return [...recordRows, ...bootstrapRows.filter((r) => !seen.has(r.id))];
 }

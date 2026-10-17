@@ -253,7 +253,7 @@ appId: app.griit.challenge-tracker
 - tapOn: "Activity"
 - tapOn: "Leaderboard"
 - extendedWaitUntil:
-    visible: "A board needs two.|Rank 1"
+    visible: "A board needs two.|.*1 secured"
     timeout: 20000
 - takeScreenshot: build90-05-leaderboard
 

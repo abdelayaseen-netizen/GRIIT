@@ -6,7 +6,11 @@ import { feedAuthorHref } from "@/lib/feed-tap-targets";
 import { enrollmentStarted, requiredTasks, todayTaskCounts } from "@/lib/today-counts";
 import { selectHomeProofCard, type HomeProofTask } from "@/lib/home-proof-card";
 import { completedTaskIds } from "@/lib/today-completion";
-import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import {
+  mergeChallengeRows,
+  rowsFromBootstrapEnrollments,
+  rowsFromProfileRecord,
+} from "@/lib/profile-challenges";
 import { recordLine, recordOfDue } from "@/lib/v44-detail";
 import { enrollmentDayStats } from "@/backend/lib/enrollment-day-stats";
 import { weekSecuredOfDue } from "@/lib/g2a-challenge";
@@ -281,5 +285,36 @@ describe("05.4 numbers agree everywhere", () => {
     ).join(" | ");
     expect(progress).toContain("of 1 day");
     expect(progress).not.toContain("1 days");
+  });
+});
+
+describe("01b follow-up: leaderboard wait after Day 1", () => {
+  it("waits for A board needs two or 1 secured", () => {
+    const yaml = read(".maestro/build90-links.yaml");
+    expect(yaml).toContain('visible: "A board needs two.|.*1 secured"');
+    expect(yaml).not.toContain('visible: "A board needs two.|Rank 1"');
+    const listRow = read("components/ds/ListRow.tsx");
+    expect(listRow).toContain("subtitle ? `${title}. ${subtitle}` : title");
+  });
+
+  it("Profile Challenges draws the join from bootstrap when getRecord is still empty", () => {
+    const empty = rowsFromProfileRecord({ runs: [], completed: [] });
+    expect(empty).toEqual([]);
+    const fromHome = rowsFromBootstrapEnrollments(
+      [
+        {
+          id: "enr-7k",
+          challenge_id: "ch-7k",
+          start_at: "2026-10-17T12:00:00.000Z",
+          challenges: { title: "7K Steps", duration_days: 7, challenge_tasks: [{ id: "t1" }] },
+        },
+      ],
+      { todayKey: "2026-10-17", timeZone: "America/New_York", todaySecured: true },
+    );
+    expect(fromHome[0]?.title).toBe("7K Steps");
+    expect(mergeChallengeRows(empty, fromHome)[0]?.title).toBe("7K Steps");
+    const profile = read("app/(tabs)/profile.tsx");
+    expect(profile).toContain("rowsFromBootstrapEnrollments(");
+    expect(profile).toContain("mergeChallengeRows(");
   });
 });

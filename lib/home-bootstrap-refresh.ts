@@ -43,8 +43,14 @@ export async function refreshHomeBootstrap(
 ): Promise<void> {
   const queryKey = [...HOME_BOOTSTRAP_QUERY_KEY];
   if (typeof options.freshAfter === "number" && homeBootstrapIsFreshSince(queryClient, options.freshAfter)) return;
-  // Marking stale while a fetch is in flight makes React Query refetch again when it lands.
-  if (homeBootstrapInFlight(queryClient)) return;
+  if (homeBootstrapInFlight(queryClient)) {
+    // Join the in-flight fetch. Do not invalidate yet: that marks stale and refetches again
+    // when it lands. Parallel callers without freshAfter share that one fetch (04.7).
+    await queryClient.refetchQueries({ queryKey }, { cancelRefetch: false });
+    if (typeof options.freshAfter !== "number") return;
+    if (homeBootstrapIsFreshSince(queryClient, options.freshAfter)) return;
+    // freshAfter was set (a finish) and the in-flight payload is still older than the save.
+  }
   // One call: mark stale and refetch, including a cached query with no observer mounted
   // (refetchType "all"). `cancelRefetch` is the second argument; in the filters object
   // React Query ignores it. A fetch already in flight is joined, not restarted.

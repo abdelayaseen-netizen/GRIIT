@@ -120,6 +120,12 @@ export async function joinChallengeDirect(
   const taskWindowList = (tasksForWindowCheck ?? []) as TaskWindowRow[];
 
   const userTz = await getProfileTimeZoneForUser(supabase, userId);
+  const { data: joinProfile } = await supabase
+    .from("profiles")
+    .select("is_test")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const testAccount = (joinProfile as { is_test?: boolean | null } | null)?.is_test === true;
   const todayKey = getTodayDateKey(userTz);
   const { data: securedToday } = await supabase
     .from("day_secures")
@@ -155,7 +161,7 @@ export async function joinChallengeDirect(
       end_at: endAt.toISOString(),
       current_day: 1,
       progress_percent: 0,
-      board_opt_in: true,
+      board_opt_in: !testAccount,
     })
     .select("id, user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, created_at")
     .single();

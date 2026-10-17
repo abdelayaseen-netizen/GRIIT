@@ -168,7 +168,7 @@ describe("test authors stay off real viewers' surfaces", () => {
     expect(ids).not.toContain(TEST);
 
     const testViewer = await caller(TEST_VIEWER).leaderboard.getWeekly({ limit: 20 });
-    expect(testViewer.entries.map((e) => e.userId)).toContain(TEST);
+    expect(testViewer.entries.map((e) => e.userId)).not.toContain(TEST);
   });
 
   it("the friends leaderboard hides a test friend from a real viewer", async () => {
@@ -179,7 +179,7 @@ describe("test authors stay off real viewers' surfaces", () => {
     expect(ids).not.toContain(TEST);
 
     const testViewer = await caller(TEST_VIEWER).leaderboard.getFriendsBoard();
-    expect(testViewer.entries.map((e) => e.userId)).toContain(TEST);
+    expect(testViewer.entries.map((e) => e.userId)).not.toContain(TEST);
   });
 
   it("the challenge leaderboard hides a test member from a real viewer", async () => {
@@ -189,7 +189,8 @@ describe("test authors stay off real viewers' surfaces", () => {
     expect(ids).not.toContain(TEST);
 
     const testViewer = await caller(TEST_VIEWER).leaderboard.getChallengeBoard({ challengeId: CH });
-    expect(testViewer.entries.map((e) => e.userId)).toContain(TEST);
+    expect(testViewer.entries.map((e) => e.userId)).not.toContain(TEST);
+    expect(testViewer.entries.map((e) => e.userId)).toContain(TEST_VIEWER);
   });
 });
 

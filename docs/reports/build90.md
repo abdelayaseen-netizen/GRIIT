@@ -938,4 +938,51 @@ Five full-flow runs on the after code, all Maestro exit 0, all 0 × 429:
 
 Chunk 01–09 related vitest: 18 files, 206 passed (`/tmp/b90-01b-3-vitest.txt`).
 
-No SQL. Backend deploy is the 01b.1/01b.2 server plus this client; sha written at the end of the chunk.
+No SQL. Backend deploy: HEAD `cc97b5e6` written to `backend/deploy-sha.txt`, `railway up --service grit-backend`, `GET /api/health` → `{"ok":true,"commit":"cc97b5e"}`.
+
+## 01b follow-ups
+
+Asked for after 01b.3, each with a test. Branch `feat/build90`, from `cc97b5e6`. Root causes written before the remaining code. `refreshHomeBootstrap` join-then-freshAfter (an in-flight skip that left Day secured without a day number) ships in this commit too; it was uncommitted after 01b.3.
+
+### Connect Strava in Settings
+
+Root cause: chunk 09 registers `GET /api/auth/strava/callback` and `integrations.getStravaAuthUrl` / `getStravaConnection` / `disconnectStrava`, but Settings has no row that opens the URL, so a person cannot connect from the app. Flag `FLAGS.STRAVA_AUTO_VERIFY` is still off, so the row must stay hidden until the flag is on.
+
+Fix: `stravaSettingsRow({ flagOn, connected, guest })` returns null when the flag is off or the session is a guest; otherwise "Connect Strava" (tap opens `getStravaAuthUrl`) or the same title with subtitle "Connected" (tap → ConfirmDialog "Disconnect Strava" / `disconnectStrava`). Callback is unchanged (`griit://profile?strava=connected`). Copy has no exclamation mark.
+
+Files: `lib/settings-rows.ts`, `lib/settings-rows.test.ts`, `app/settings/index.tsx`.
+
+Test: `lib/settings-rows.test.ts` "Connect Strava is on Settings only when STRAVA_AUTO_VERIFY is on". Failed before: yes (helper missing). Passes now: yes. Not shown in Maestro: the flag is still false.
+
+### build90-links.yaml leaderboard wait
+
+Root cause: `.maestro/build90-links.yaml` waited for `"A board needs two.|Rank 1"`. After chunk 08 every 7K member with `board_opt_in` is on the board, so the empty heading is gone, and `ListRow` put `accessibilityLabel={title}` on the Pressable, which hid both the rank label (`Rank 1`) and the subtitle (`1 secured`) from Maestro. Two more blocks on the same flow: (1) Profile Challenges reads `profiles.getRecord`, which can still be the empty fetch from the first Profile mount (`staleTime` 60 s, `refetchOnWindowFocus: false`, join no longer invalidates it), so the tab said "No active challenge" after Day 1 (`2026-10-17_133633`); (2) Maestro's `|` wait is a full-string regex, so `"1 secured"` does not match `"b8901lo134050. 1 secured"` (`2026-10-17_134051`).
+
+Fix: ListRow labels the row `${title}. ${subtitle}` when a subtitle exists. Profile Challenges merges `home.bootstrap` enrollments when `getRecord.runs` is empty (same source Home already has). The wait is `"A board needs two.|.*1 secured"`.
+
+Files: `.maestro/build90-links.yaml`, `components/ds/ListRow.tsx`, `lib/profile-challenges.ts`, `app/(tabs)/profile.tsx`, `lib/build90-links-numbers.test.ts`.
+
+Test: `lib/build90-links-numbers.test.ts` "waits for A board needs two or 1 secured" and "Profile Challenges draws the join from bootstrap when getRecord is still empty". Failed before: yes. Passes now: yes. Maestro `.maestro/build90-links.yaml` exit 0, account `b8901lp134343@example.com`, `2026-10-17_134343`, log `/tmp/b90-01b-fu-links8.txt`. Screenshot `build90-05-leaderboard`.
+
+### is_test enrollments off real boards
+
+Root cause: chunk 08 set `board_opt_in: true` on every join (`backend/lib/join-challenge.ts`). Maestro emails are `is_test`, so a test persona landed on the 7K board next to real members. `dropTestAuthors` still listed other test ids when the viewer was also a test account, which made "A board needs two." impossible for Maestro too.
+
+Fix: join reads `profiles.is_test` and inserts `board_opt_in: !testAccount`. `dropTestAuthors` always drops test ids except the viewer's own id (weekly / friends / challenge boards pass `viewerId`). Existing test enrollments still have `board_opt_in` true until the SQL runs.
+
+Files: `backend/lib/join-challenge.ts`, `backend/lib/join-challenge-direct.test.ts`, `backend/lib/test-authors.ts`, `backend/trpc/routes/leaderboard.ts`, `backend/trpc/routes/hide-test-authors.test.ts`, `docs/sql/build90.sql` lines 176–202.
+
+Test: `join-challenge-direct.test.ts` "an is_test profile enrolls with board_opt_in false so a real board never lists them"; `hide-test-authors.test.ts` weekly / friends / challenge boards: a real viewer never sees TEST, a test viewer never sees the other TEST id (does see themselves). Failed before: yes (test viewers still saw TEST). Passes now: yes. SQL written, not run.
+
+### Gates
+
+- Three tests, each failed before and pass after: `settings-rows` Connect Strava; links yaml pin + bootstrap Challenges rows; join `board_opt_in` false + hide-test-authors. Related files 13 / 183 (`/tmp/b90-01b-fu-vitest` via the follow-up run).
+- tsc: the same 5 baseline errors, 0 new (`/tmp/b90-01b-fu-tsc.txt`).
+- Maestro links exit 0 as above. Connect Strava not on device (flag off).
+- SQL for Yaseen: `docs/sql/build90.sql` lines 176–202.
+
+### Needs Yaseen
+
+- SQL to review and run: `docs/sql/build90.sql` lines 176–202 (set `board_opt_in = false` on existing `is_test` enrollments). New test joins already insert false. Until it runs, older test enrollments can still appear on a board that does not go through `dropTestAuthors` by user id.
+- `STRAVA_AUTO_VERIFY` is still false, so Connect Strava is not on Settings in this build. Turn the flag on (client and/or Railway env) when you want it shown.
+- The 7K Steps board still lists seeded `user_*` catalog members who are not `is_test`. That is why a fresh test account sees rows ("… 1 secured") instead of "A board needs two." Dropping those rows is a catalog/seed decision, not this follow-up.

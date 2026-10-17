@@ -80,7 +80,7 @@ describe("04.7 one bootstrap request per finish", () => {
     const stop = observer.subscribe(() => {});
     await sleep(5);
     expect(fetches).toBe(1);
-    await refreshHomeBootstrap(qc);
+    await refreshHomeBootstrap(qc, { freshAfter: Date.now() - 10_000 });
     await sleep(80);
     expect(fetches).toBe(1);
     stop();

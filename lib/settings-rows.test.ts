@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { GUEST_SETTINGS_LINE, SETTINGS_NOTIFICATIONS_SUB, settingsPrivacySub } from "@/lib/settings-rows";
+import {
+  GUEST_SETTINGS_LINE,
+  SETTINGS_NOTIFICATIONS_SUB,
+  STRAVA_CONNECT_TITLE,
+  STRAVA_CONNECTED_SUB,
+  settingsPrivacySub,
+  stravaSettingsRow,
+} from "@/lib/settings-rows";
 
 describe("settings rows", () => {
   it("names the two-reminder system and public or private account", () => {
@@ -18,5 +25,27 @@ describe("settings rows", () => {
     );
     expect(settings).toContain("GUEST_SETTINGS_LINE");
     expect(settings).toContain("is_anonymous");
+  });
+
+  it("Connect Strava is on Settings only when STRAVA_AUTO_VERIFY is on", () => {
+    expect(stravaSettingsRow({ flagOn: false, connected: false })).toBeNull();
+    expect(stravaSettingsRow({ flagOn: true, connected: false, guest: true })).toBeNull();
+    expect(stravaSettingsRow({ flagOn: true, connected: false })).toEqual({
+      title: STRAVA_CONNECT_TITLE,
+      subtitle: null,
+      action: "connect",
+    });
+    expect(stravaSettingsRow({ flagOn: true, connected: true })).toEqual({
+      title: STRAVA_CONNECT_TITLE,
+      subtitle: STRAVA_CONNECTED_SUB,
+      action: "disconnect",
+    });
+    const settings = readFileSync(resolve(__dirname, "../app/settings/index.tsx"), "utf8");
+    expect(settings).toContain("stravaSettingsRow(");
+    expect(settings).toContain("FLAGS.STRAVA_AUTO_VERIFY");
+    expect(settings).toContain("TRPC.integrations.getStravaAuthUrl");
+    expect(settings).toContain("TRPC.integrations.disconnectStrava");
+    expect(settings).toContain("TRPC.integrations.getStravaConnection");
+    expect(`${STRAVA_CONNECT_TITLE} ${STRAVA_CONNECTED_SUB}`).not.toContain("!");
   });
 });

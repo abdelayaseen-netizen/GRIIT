@@ -66,7 +66,7 @@ export const leaderboardRouter = createTRPCRouter({
         .map(([uid]) => uid);
       const viewerIsTest = userId ? await viewerIsTestAccount(server, userId) : false;
       const testIds = await testAuthorIdSet(server, rankedIds);
-      const visibleIds = dropTestAuthors(rankedIds, testIds, viewerIsTest);
+      const visibleIds = dropTestAuthors(rankedIds, testIds, viewerIsTest, userId ?? undefined);
       const sortedUserIds = visibleIds.slice(safeOffset, safeOffset + limit);
 
       // Filter blocked users from leaderboard entries (two-way: I don't see them, they don't see me).
@@ -178,6 +178,7 @@ export const leaderboardRouter = createTRPCRouter({
       [...new Set([viewerId, ...mutual])],
       await testAuthorIdSet(server, [viewerId, ...mutual]),
       await viewerIsTestAccount(server, viewerId),
+      viewerId,
     );
 
     const { data: secures, error: sErr } = await server
@@ -306,6 +307,7 @@ export const leaderboardRouter = createTRPCRouter({
         userIds,
         await testAuthorIdSet(server, userIds),
         await viewerIsTestAccount(server, viewerId),
+        viewerId,
       );
 
       if (userIds.length === 0) {

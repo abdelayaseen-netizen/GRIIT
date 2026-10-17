@@ -67,7 +67,12 @@ import type { V42BadgeState } from "@/lib/v42-badges";
 import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
-import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import {
+  mergeChallengeRows,
+  rowsFromBootstrapEnrollments,
+  rowsFromProfileRecord,
+  type BootstrapEnrollmentForRow,
+} from "@/lib/profile-challenges";
 import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
 import {
   joinedBioLine,
@@ -283,11 +288,25 @@ export default function ProfileScreen() {
     todayKey,
     timeZone: homeTimeZone,
   });
-  const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
-    todaySecured,
-    formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
-    leftByEnrollment: todayCounts.byEnrollment,
-  });
+  const formatChallengeDate = (key: string) => formatDayMonthYear(key.slice(0, 10));
+  const challengeRows = mergeChallengeRows(
+    rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
+      todaySecured,
+      formatDate: formatChallengeDate,
+      leftByEnrollment: todayCounts.byEnrollment,
+    }),
+    rowsFromBootstrapEnrollments(
+      (bootstrap.data?.activeChallenges ?? []) as BootstrapEnrollmentForRow[],
+      {
+        todayKey,
+        timeZone: homeTimeZone,
+        todaySecured,
+        securedDateKeys,
+        leftByEnrollment: todayCounts.byEnrollment,
+        formatDate: formatChallengeDate,
+      },
+    ),
+  );
   // The Today tile reads the bootstrap counts (Home's source); the record query can lag a
   // join by a screen. The rows only stand in while the bootstrap has not loaded.
   const bootstrapLoaded = Array.isArray(bootstrap.data?.activeChallenges);
