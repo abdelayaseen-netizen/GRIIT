@@ -525,8 +525,14 @@ export async function runPersona(opts: {
               if (DONE_SHEET.test(choiceLabel)) {
                 pendingDone.choice = choiceLabel;
                 pendingDone.choiceAt = tappedAt;
+                await watchDone(8000);
+              } else {
+                // Not a sheet choice: the Done tap did not show as done inside its window. Record it as
+                // not seen instead of letting a later screen inherit the whole elapsed time.
+                doneTimings.push({ step: pendingDone.step, taskLabel: pendingDone.label, tappedAt: new Date(pendingDone.at).toISOString(), toSheetMs: pendingDone.sheetMs, toVisibleMs: null, marker: "", choice: pendingDone.choice });
+                pendingDone = null;
+                await sleep(400);
               }
-              await watchDone(8000);
             } else {
               await sleep(400);
             }

@@ -164,6 +164,14 @@ function median(values: number[]): number | null {
 const yes = (v: boolean) => (v ? "yes" : "no");
 const ms = (v: number | null | undefined) => (v == null ? "—" : `${v} ms`);
 
+/** The loop polls 12 s after Done and 8 s after a sheet choice. A longer value means the marker was not
+ *  seen in that window and a later poll picked it up after more taps; that is not UI time, so it is dropped. */
+export const DONE_WATCH_MS = 20000;
+export function cleanTiming<T extends { toVisibleMs: number | null; marker: string }>(t: T): T {
+  if (t.toVisibleMs != null && t.toVisibleMs > DONE_WATCH_MS) return { ...t, toVisibleMs: null, marker: `${t.marker || "marker"} only after more taps (> ${DONE_WATCH_MS / 1000} s)` };
+  return t;
+}
+
 /** The per-chunk checks from docs/build90/10-ship-and-test.md. */
 export function summarize(slug: string, runs: Run[], pairs?: [string, string][]): { md: string; json: Record<string, unknown> } {
   const lines: string[] = [`# ${slug}`, "", `${runs.length} sessions. Build 90, GRIIT iPhone 16 simulator.`, ""];
@@ -183,7 +191,7 @@ export function summarize(slug: string, runs: Run[], pairs?: [string, string][])
   json.earlyStopsRefused = runs.reduce((n, r) => n + (r.result.earlyStopsRefused ?? 0), 0);
   lines.push("## Funnel", "", "| Step | Count |", "|---|---|", `| Joined | ${joined.length} |`, `| First task opened | ${task.length} |`, `| Task finished | ${completed.length} |`, `| Photo | ${photo.length} |`, `| Day secured seen | ${secured.length} |`, `| Sessions under 15 steps (not a crash) | ${under15.length} |`, `| Early stops refused by the harness | ${json.earlyStopsRefused} |`, "");
 
-  const timings = runs.flatMap((r) => r.result.doneTimings.map((t) => ({ persona: r.result.personaId, name: r.persona.name, ...t })));
+  const timings = runs.flatMap((r) => r.result.doneTimings.map((t) => cleanTiming({ persona: r.result.personaId, name: r.persona.name, ...t })));
   if (slug === "1-speed" || timings.length) {
     lines.push("## Done to visible", "", "| Persona | Task | Done → sheet | Choice | Choice → done marker | Marker |", "|---|---|---|---|---|---|");
     for (const t of timings) lines.push(`| ${t.persona} ${t.name} | ${t.taskLabel || "—"} | ${ms(t.toSheetMs)} | ${t.choice || "—"} | ${ms(t.toVisibleMs)} | ${t.marker || "not seen"} |`);

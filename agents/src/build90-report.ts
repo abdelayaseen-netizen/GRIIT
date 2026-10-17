@@ -11,7 +11,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { CHUNKS } from "./build90";
+import { CHUNKS, cleanTiming } from "./build90";
 import { tomorrowScore } from "./interview";
 import type { AgentResult, Persona, StepLog } from "./types";
 
@@ -59,7 +59,7 @@ export function buildReport(out: string, sha: string, build: string): string {
   const firstTask = runs.filter((r) => r.result.stages.includes("task"));
   const completed = runs.filter((r) => r.result.stages.includes("completed"));
   const photo = runs.filter((r) => r.result.stages.includes("photo"));
-  const timings = runs.flatMap((r) => r.result.doneTimings);
+  const timings = runs.flatMap((r) => r.result.doneTimings.map(cleanTiming));
   const doneToSheet = median(timings.map((t) => t.toSheetMs ?? NaN));
   const doneToVisible = median(timings.map((t) => t.toVisibleMs ?? NaN));
   const photoPost = median(timings.filter((t) => /post/i.test(t.choice)).map((t) => t.toVisibleMs ?? NaN));
