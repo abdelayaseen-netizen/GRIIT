@@ -40,6 +40,7 @@ import {
   DISCOVER_LOAD_ERROR,
   FEATURED_BUILTINS,
   featuredProofLabel,
+  featuredTaskGate,
   needsSetGym,
   type FeaturedBuiltin,
 } from "@/lib/featured-catalog";
@@ -151,7 +152,7 @@ export function DiscoverV3({
       taskTitle: item.task,
       proof: featuredProofLabel(item.proof),
       window: item.rule,
-      tasks: [{ title: item.task, gate: [featuredProofLabel(item.proof), item.rule].filter(Boolean).join(" · ") }],
+      tasks: [{ title: item.task, gate: featuredTaskGate(item) }],
       difficulty: "Standard",
       modeLine: MODE_STANDARD_JOIN,
       day1Line,

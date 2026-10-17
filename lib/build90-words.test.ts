@@ -23,6 +23,7 @@ import { refreshVerdictAfter401 } from "@/lib/auth-expiry";
 import { classifyProfileFetch, interpretProfileCheckResult, NO_ROW_CODE } from "@/lib/check-profile";
 import { counterDisplayUnit, counterUnitFromTaskType, WATER_UNIT } from "@/lib/counter-log";
 import { counterUnitPlural } from "@/lib/counter-ready-gates";
+import { featuredTaskGate } from "@/lib/featured-catalog";
 
 const src = (p: string) => readFileSync(p, "utf8");
 
@@ -129,6 +130,12 @@ describe("06.1 definitions where the thing happens", () => {
 });
 
 describe("06.2 Self-reported at most once per screen", () => {
+  it("a builtin's Join sheet row says Self-reported once", () => {
+    expect(featuredTaskGate({ proof: "self", rule: "Self-reported" })).toBe("Self-reported");
+    expect(featuredTaskGate({ proof: "camera", rule: "By 9:00 am" })).toBe("Camera · By 9:00 am");
+    expect(src("components/discover/DiscoverV3.tsx")).toContain("gate: featuredTaskGate(item)");
+  });
+
   it("the ask screen drops the footer caption when it repeats the honesty line", () => {
     expect(askFooterCaption("Self-reported.")).toBeNull();
     expect(askFooterCaption("  ")).toBeNull();

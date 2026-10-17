@@ -60,6 +60,20 @@ export function featuredProofLabel(proof: FeaturedProof): string {
   return "Self-reported";
 }
 
+/**
+ * Build 90 06.2: the Join sheet row for a builtin joined the proof word and the gate rule,
+ * and with no gate both are "Self-reported" ("Walk 7,000 steps · Self-reported · Self-reported").
+ * One word per fact.
+ */
+export function featuredTaskGate(item: Pick<FeaturedBuiltin, "proof" | "rule">): string {
+  const parts: string[] = [];
+  for (const raw of [featuredProofLabel(item.proof), item.rule]) {
+    const p = (raw ?? "").trim();
+    if (p && !parts.includes(p)) parts.push(p);
+  }
+  return parts.join(" · ");
+}
+
 export function featuredCardLine(item: Pick<FeaturedBuiltin, "days" | "proof">): string {
   return `${item.days} days · ${featuredProofLabel(item.proof)}`;
 }
