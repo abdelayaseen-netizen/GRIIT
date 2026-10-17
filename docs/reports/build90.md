@@ -980,6 +980,7 @@ Test: `join-challenge-direct.test.ts` "an is_test profile enrolls with board_opt
 - tsc: the same 5 baseline errors, 0 new (`/tmp/b90-01b-fu-tsc.txt`).
 - Maestro links exit 0 as above. Connect Strava not on device (flag off).
 - SQL for Yaseen: `docs/sql/build90.sql` lines 176–202.
+- Backend deployed: HEAD `85a87902` written to `backend/deploy-sha.txt`, `railway up --service grit-backend`, `GET /api/health` → `{"ok":true,"commit":"85a8790"}`.
 
 ### Needs Yaseen
 
