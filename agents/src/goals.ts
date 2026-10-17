@@ -15,8 +15,15 @@ export function inferCheck(text: string): GoalCheck {
 
 const FRESH_SIGNUP = new Set(["lowtech-01", "teen-01", "stress-01"]);
 
-/** These three still walk real sign-up and onboarding. Everyone else logs in ready. */
-export function needsFreshSignup(id: string): boolean {
+/**
+ * A fresh persona starts on a wiped app at Welcome. Everyone else logs in ready, onto Home.
+ * Build 90 10.3: the persona says so itself (`fresh: true`). On Oct 15 only the six chunk-8
+ * first-timers set AGENTS_FRESH, so 31 of 38 sessions opened on Home with a prepared account.
+ * The env switch and the three legacy ids still work for the older runners.
+ */
+export function needsFreshSignup(persona: { id: string; fresh?: boolean } | string): boolean {
+  const id = typeof persona === "string" ? persona : persona.id;
+  if (typeof persona !== "string" && typeof persona.fresh === "boolean") return persona.fresh;
   if (process.env.AGENTS_FRESH === "1") return true;
   return FRESH_SIGNUP.has(id);
 }

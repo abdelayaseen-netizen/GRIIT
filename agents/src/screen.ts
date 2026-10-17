@@ -76,10 +76,18 @@ export function isHomeScreen(lines: string[]): boolean {
       /days in a row/i.test(line),
   );
 }
+/** Build 90 10.3: the first onboarding screen. Start + "I already have an account" or the headline. */
+export function isWelcomeScreen(lines: string[]): boolean {
+  const start = lines.some((line) => line === "Start");
+  const marker = lines.some((line) => line === "I already have an account" || /prove with a photo/i.test(line));
+  return start && marker;
+}
+
 export function classifyScreen(lines: string[]): string {
   const blob = lines.join("\n");
   const has = (re: RegExp) => re.test(blob);
   if (has(/premium|restore purchases|paywall/i)) return "paywall";
+  if (isWelcomeScreen(lines)) return "welcome";
   if (isHomeScreen(lines)) return "home";
   if (has(/continue with email|email address|send it|what should we call you|display name|save your streak|create account|you@example.com/i)) return "auth";
   if (has(/already did it|time's up|take photo|complete ·|log it as done|write here/i)) return "task";

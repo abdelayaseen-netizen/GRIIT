@@ -5,7 +5,8 @@ import { safeText } from "./env";
 import { usablePoint } from "./match";
 
 export const APP_ID = "app.griit.challenge-tracker";
-export const UDID = "ED03BBF2-5118-4E6F-92BE-047AD81637CF";
+/** GRIIT iPhone 16 (iOS 26.4), the simulator the build 90 Maestro flows ran on. AGENTS_UDID overrides it. */
+export const UDID = process.env.AGENTS_UDID?.trim() || "B10E65A0-C453-4E58-97BD-A3696ED848AE";
 
 export function run(cmd: string, args: string[], timeoutMs = 20000): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
@@ -82,6 +83,12 @@ export async function applyPrivacy(stress: string | undefined): Promise<string> 
 export async function restorePrivacy(): Promise<void> {
   await run("xcrun", ["simctl", "privacy", UDID, "grant", "camera", APP_ID]);
   await run("xcrun", ["simctl", "privacy", UDID, "grant", "location", APP_ID]);
+}
+
+/** Opens a deep link (griit://i/<id>) in the simulator, the way a tapped invite would. */
+export async function openUrl(url: string): Promise<string> {
+  const result = await run("xcrun", ["simctl", "openurl", UDID, url]);
+  return result.code === 0 ? "opened" : safeText(result.stderr || result.stdout || "openurl failed");
 }
 
 export function shot(file: string): Promise<void> {

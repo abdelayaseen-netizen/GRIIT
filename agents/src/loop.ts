@@ -15,20 +15,37 @@ import {
 } from "./account";
 import { askModel } from "./claude";
 import { HAIKU_MODEL, SONNET_MODEL } from "./cost";
-import { appContainer, actionYaml, applyPrivacy, launchYaml, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
+import { appContainer, actionYaml, applyPrivacy, launchYaml, openUrl, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
 import { parseDecision, reviewAction } from "./gate";
 import { needsFreshSignup, specsFor, type GoalSpec } from "./goals";
+import { scoreInterview } from "./interview";
 import { resolveTarget, systemAlert } from "./match";
 import { MaestroSession } from "./maestro";
-import { systemPrompt, userPrompt } from "./prompt";
+import { interviewPrompt, MIN_STEPS, systemPrompt, userPrompt } from "./prompt";
 import { samplePng } from "./pixels";
-import { classifyScreen, dayClaims, isHomeScreen, isSpringboard, parseHierarchy, screenSignature, scrollMarks, visibleLines, type El } from "./screen";
+import { classifyScreen, dayClaims, isHomeScreen, isSpringboard, isWelcomeScreen, parseHierarchy, screenSignature, scrollMarks, visibleLines, type El } from "./screen";
 import { nextStreak, selectedChip } from "./stuck";
-import type { AgentResult, Mode, Persona, StepLog } from "./types";
+import type { AgentResult, DoneTiming, Interview, Mode, Persona, StepLog } from "./types";
 
 export type Spend = { usd: number; input: number; output: number; calls: number };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Build 90 10.3: what "the task shows as done" looks like after Done. */
+const DONE_SHEET = /keep it private|post to friends|post to everyone|only me/i;
+const DONE_MARKER = /\b\d+ of \d+ done\b|day secured/i;
+
+export function doneMarker(lines: string[]): { sheet: boolean; visible: string } {
+  const blob = lines.join("\n");
+  const marker = blob.match(DONE_MARKER);
+  return { sheet: DONE_SHEET.test(blob), visible: marker ? marker[0] : "" };
+}
+
+/** True when the agent's target is the Done button of a task (Done, Done · 7,000 steps, Done for today). */
+export function isDoneTap(action: string, target: string, label: string): boolean {
+  if (action !== "tap" && action !== "double_tap") return false;
+  return /^done\b/i.test(target.trim()) || /^done\b/i.test(label.trim());
+}
 
 function redact(value: string, secrets: string[]): string {
   let out = value;
@@ -65,15 +82,53 @@ export async function runPersona(opts: {
   const persona = opts.persona;
   const dir = path.join(opts.runDir, persona.id);
   fs.mkdirSync(path.join(dir, "shots"), { recursive: true });
-  const fresh = needsFreshSignup(persona.id);
+  const fresh = needsFreshSignup(persona);
+  /** A prepared account on a wiped app: the device starts signed out at Welcome and the person logs in. */
+  const signedOut = !fresh && persona.startSignedOut === true;
+  /** What the device should look like before step 1: signed out for fresh and signed-out personas. */
+  const deviceFresh = fresh || signedOut;
+  const chunk = persona.chunk ?? path.basename(opts.runDir);
   const started = new Date();
   const steps: StepLog[] = [];
   const seen: string[] = [];
   const crashes: string[] = [];
   const errors: string[] = [];
   const deadEnds: string[] = [];
+  const doneTimings: DoneTiming[] = [];
+  let pendingDone: { step: number; at: number; label: string; sheetMs: number | null; choice: string; choiceAt: number | null } | null = null;
+  let startedOn = "";
+  let freshStartOk: boolean | null = fresh ? false : null;
+  let earlyStopsRefused = 0;
+  let timingsLogged = 0;
+  let note = "";
   let giveUp = "";
   let stopAll = false;
+  const logStep = (row: StepLog) => {
+    steps.push(row);
+    fs.appendFileSync(path.join(dir, "steps.jsonl"), JSON.stringify(row) + "\n");
+  };
+  /** Polls the screen after a Done tap until the sheet or a done marker shows. Returns the lines it last saw. */
+  const watchDone = async (maxMs: number): Promise<void> => {
+    if (!pendingDone) return;
+    const until = Date.now() + maxMs;
+    while (Date.now() < until && pendingDone) {
+      const now = parseHierarchy(await opts.maestro.inspect(deviceId()));
+      const found = doneMarker(visibleLines(now));
+      const sinceDone = Date.now() - pendingDone.at;
+      if (found.sheet && pendingDone.sheetMs == null) pendingDone.sheetMs = sinceDone;
+      if (found.visible) {
+        // Done → sheet is pure UI time. Sheet choice → done marker is pure UI time. The person's
+        // thinking time between the two is not counted.
+        const elapsed = Date.now() - (pendingDone.choiceAt ?? pendingDone.at);
+        doneTimings.push({ step: pendingDone.step, taskLabel: pendingDone.label, tappedAt: new Date(pendingDone.at).toISOString(), toSheetMs: pendingDone.sheetMs, toVisibleMs: elapsed, marker: found.visible, choice: pendingDone.choice });
+        console.log(`${persona.id} done→visible ${elapsed} ms (${found.visible}${pendingDone.choice ? ` after ${pendingDone.choice}` : ""})${pendingDone.sheetMs != null ? `, sheet at ${pendingDone.sheetMs} ms` : ""}`);
+        pendingDone = null;
+        return;
+      }
+      if (found.sheet && pendingDone.choiceAt == null) return;
+      await sleep(150);
+    }
+  };
   let session: SessionInfo | null = null;
   let isTest: boolean | null = null;
   let model = opts.model;
@@ -124,7 +179,7 @@ export async function runPersona(opts: {
     const next = fromLogin ?? fromDisk;
     if (!next) return;
     if (next.anonymous && !fresh) return;
-    if (sessionMatchesAgent({ fresh, expectedEmail: creds.email, onDevice: next }).startsWith("wrong")) {
+    if (sessionMatchesAgent({ fresh: deviceFresh, expectedEmail: creds.email, onDevice: next }).startsWith("wrong")) {
       giveUp = "Stopped this agent before the next tap. The simulator was signed in as a different account.";
       return;
     }
@@ -147,17 +202,40 @@ export async function runPersona(opts: {
     await wipeAppData();
     const leftover = await accountOnDevice();
     if (leftover && !leftover.anonymous) await wipeAppData();
-    if (installedSession) await installAppSession(installedSession);
+    if (installedSession && !signedOut) await installAppSession(installedSession);
   };
   const openForAgent = async () => {
     await openApp(opts.maestro, grants);
     await sleep(1200);
-    if (!fresh) {
+    if (!deviceFresh) {
       const landed = await scriptedLogin(opts.maestro, creds, false);
       console.log(`${persona.id} login ${landed}`);
       if (landed !== "home") errors.push("Prepared login did not reach Home. The model will continue from the current screen.");
+      startedOn = landed === "home" ? "home" : classifyScreen((await readScreen(opts.maestro)).lines);
     } else {
-      await waitUntilReady(opts.maestro, persona.group === "stress");
+      // Build 90 10.3: a fresh persona must see Welcome. A leftover session or onboarding flag
+      // in the container sends a wiped install straight to Home; wipe again and relaunch, up to 3 times.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await waitUntilReady(opts.maestro, persona.group === "stress");
+        const first = await readScreen(opts.maestro);
+        if (isWelcomeScreen(first.lines)) {
+          startedOn = "welcome";
+          freshStartOk = true;
+          break;
+        }
+        startedOn = classifyScreen(first.lines);
+        console.log(`${persona.id} fresh persona opened on ${startedOn}, not Welcome (attempt ${attempt + 1}). Wiping and relaunching.`);
+        await wipeAppData();
+        await openApp(opts.maestro, grants);
+        await sleep(1200);
+      }
+      if (!freshStartOk) errors.push(`Fresh persona did not start at Welcome after 3 wipes (opened on ${startedOn}).`);
+    }
+    for (const link of persona.links ?? []) {
+      const opened = await openUrl(link);
+      console.log(`${persona.id} link ${link} ${opened}`);
+      if (opened !== "opened") errors.push(`Could not open ${link}: ${opened}`);
+      await sleep(1500);
     }
   };
   try {
@@ -172,12 +250,12 @@ export async function runPersona(opts: {
         await openForAgent();
         lastStatus = "";
         for (let read = 0; read < 5; read++) {
-          lastStatus = sessionMatchesAgent({ fresh, expectedEmail: creds.email, onDevice: await accountOnDevice() });
-          if (lastStatus === "match" || (fresh && lastStatus === "signed_out")) break;
+          lastStatus = sessionMatchesAgent({ fresh: deviceFresh, expectedEmail: creds.email, onDevice: await accountOnDevice() });
+          if (lastStatus === "match" || (deviceFresh && lastStatus === "signed_out")) break;
           if (lastStatus === "wrong_account") break;
           await sleep(400);
         }
-        accountOk = lastStatus === "match" || (fresh && lastStatus === "signed_out");
+        accountOk = lastStatus === "match" || (deviceFresh && lastStatus === "signed_out");
         if (!accountOk && lastStatus !== "wrong_account") {
           accountOk = true;
           console.log(`${persona.id} session file was not readable after Home. Continuing. A different account still stops this agent.`);
@@ -187,7 +265,7 @@ export async function runPersona(opts: {
       if (!accountOk) {
         giveUp = "Skipped. The signed-in account still did not match this agent after a reset.";
         errors.push(giveUp);
-      } else if (lastStatus === "match" || (fresh && lastStatus === "signed_out")) {
+      } else if (lastStatus === "match" || (deviceFresh && lastStatus === "signed_out")) {
         console.log(`${persona.id} account matches before step 1`);
       }
     }
@@ -249,11 +327,13 @@ export async function runPersona(opts: {
       if (alert) {
         const hit = resolveTarget(alert, els);
         await opts.maestro.run(deviceId(), actionYaml("tap", alert, undefined, hit?.point));
-        const row: StepLog = {
+        logStep({
           step: n,
           timestamp: new Date().toISOString(),
           screen,
           route: screen,
+          screenName: "iOS permission alert",
+          chunk,
           action: "tap",
           target: alert,
           thought: "iOS permission alert",
@@ -262,9 +342,7 @@ export async function runPersona(opts: {
           latencyMs: Date.now() - t0,
           error: "",
           shot: path.relative(dir, shotFile),
-        };
-        steps.push(row);
-        fs.appendFileSync(path.join(dir, "steps.jsonl"), JSON.stringify(row) + "\n");
+        });
         console.log(`${persona.id} ${n}/${limit} alert ${alert}`);
         continue;
       }
@@ -289,24 +367,32 @@ export async function runPersona(opts: {
       lastVisual = visual;
       if (same >= 3) {
         deadEnds.push(`${screen}: the same screen came up 3 times`);
-        giveUp = `Gave up. ${screen} repeated 3 times.`;
-        const aborted: StepLog = {
-          step: n,
-          timestamp: new Date().toISOString(),
-          screen,
-          route: screen,
-          action: "abort",
-          target: "",
-          thought: "",
-          confusion: "",
-          emotion: "frustrated",
-          latencyMs: Date.now() - t0,
-          error: giveUp,
-          shot: path.relative(dir, shotFile),
-        };
-        steps.push(aborted);
-        fs.appendFileSync(path.join(dir, "steps.jsonl"), JSON.stringify(aborted) + "\n");
-        break;
+        if (steps.length < MIN_STEPS) {
+          // Build 90 10.3: the 15-tap minimum holds. Before it, a repeated screen is a nudge, not an exit.
+          note = `The screen has not changed for 3 steps. Do something different: scroll, a different button, the tab bar, or back.`;
+          same = 0;
+          earlyStopsRefused += 1;
+          console.log(`${persona.id} ${n}/${limit} ${screen} repeated 3 times before ${MIN_STEPS} steps; nudging instead of stopping`);
+        } else {
+          giveUp = `Gave up. ${screen} repeated 3 times.`;
+          logStep({
+            step: n,
+            timestamp: new Date().toISOString(),
+            screen,
+            route: screen,
+            screenName: screen,
+            chunk,
+            action: "abort",
+            target: "",
+            thought: "",
+            confusion: "",
+            emotion: "frustrated",
+            latencyMs: Date.now() - t0,
+            error: giveUp,
+            shot: path.relative(dir, shotFile),
+          });
+          break;
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "step failed";
@@ -316,7 +402,8 @@ export async function runPersona(opts: {
     }
 
     const goalStatus = specs.map((spec) => spec.text);
-    const prompt = userPrompt({ persona, mode: opts.mode, creds, lines, history: steps, goalStatus, prepared: !fresh });
+    const prompt = userPrompt({ persona, mode: opts.mode, creds, lines, history: steps, goalStatus, prepared: !deviceFresh, signedOut, note });
+    note = "";
     let ask = await askModel({ apiKey: opts.apiKey, model, system: systemPrompt(), prompt, imagePath: shotFile });
     opts.spend.usd += ask.usd;
     opts.spend.input += ask.inputTokens;
@@ -368,11 +455,20 @@ export async function runPersona(opts: {
     const confusion = decision?.confusion ?? "";
     const emotion = decision?.emotion ?? "frustrated";
 
+    let doneTapped = false;
     if (decision && !error) {
       const gate = reviewAction({ decision, screenText: lines.join("\n"), allowedNames: opts.allowedNames, group: persona.group });
       if (!gate.ok) error = gate.reason;
       else if (decision.action === "done") {
-        giveUp = "Agent stopped on their own.";
+        if (steps.length < MIN_STEPS) {
+          // Build 90 10.3: the 15-tap minimum. Oct 15: 11 of 38 sessions ended early on action done.
+          earlyStopsRefused += 1;
+          error = `Stopping was refused: ${steps.length} of the ${MIN_STEPS} actions owed. Keep going.`;
+          note = "You tried to stop too early. Keep using the app the way you would if a friend asked you to give it a real try.";
+          action = "done_refused";
+        } else {
+          giveUp = "Agent stopped on their own.";
+        }
       } else if (decision.action === "wait") {
         await sleep(1000);
       } else if (decision.action === "kill_app") {
@@ -402,8 +498,24 @@ export async function runPersona(opts: {
             error = `${chip} is already selected.`;
             ignoreStuck = true;
           } else if (!already) {
+            doneTapped = isDoneTap(decision.action, decision.target, hit?.label ?? "") && screen === "task";
+            const tappedAt = Date.now();
             await opts.maestro.run(deviceId(), actionYaml(decision.action, hit?.label || decision.target, decision.text, hit?.point));
-            await sleep(400);
+            if (doneTapped) {
+              // Build 90 10.3: time from tapping Done until the task shows as done.
+              const taskLine = lines.find((line) => line !== hit?.label && line.length > 3 && line.length < 60 && !/^done\b/i.test(line)) ?? "";
+              pendingDone = { step: n, at: tappedAt, label: taskLine, sheetMs: null, choice: "", choiceAt: null };
+              await watchDone(12000);
+            } else if (pendingDone) {
+              const choiceLabel = hit?.label || decision.target;
+              if (DONE_SHEET.test(choiceLabel)) {
+                pendingDone.choice = choiceLabel;
+                pendingDone.choiceAt = tappedAt;
+              }
+              await watchDone(8000);
+            } else {
+              await sleep(400);
+            }
           }
           if (decision.action === "type" && decision.text && !already) {
             const after = parseHierarchy(await opts.maestro.inspect(deviceId()));
@@ -419,18 +531,26 @@ export async function runPersona(opts: {
       }
     }
     if (error) errors.push(`${screen}: ${error}`);
-    if (persona.tech === "low" && error && target) {
+    if (persona.tech === "low" && error && target && steps.length >= MIN_STEPS) {
       const prior = steps.filter((step) => step.target === target && step.error).length;
       if (prior + 1 >= 2) {
         giveUp = "Gave up after two failed taps on the same thing.";
       }
     }
 
+    // Build 90 10.3: the real screen name. The classifier's bucket stays in `screen`; when it says
+    // other/unknown, or the agent named a screen the classifier cannot tell apart, log the agent's name.
+    const agentScreen = decision?.screen ? redact(decision.screen, secrets) : "";
+    const screenName = agentScreen && (screen === "other" || screen === "unknown" || agentScreen.toLowerCase() !== screen) ? agentScreen : screen;
+    const timing = doneTimings.length > timingsLogged ? doneTimings[doneTimings.length - 1] : undefined;
+    timingsLogged = doneTimings.length;
     const row: StepLog = {
       step: n,
       timestamp: new Date().toISOString(),
       screen,
       route: screen,
+      screenName,
+      chunk,
       action,
       target: redact(target, secrets),
       text: decision?.text ? redact(decision.text, secrets) : undefined,
@@ -440,14 +560,35 @@ export async function runPersona(opts: {
       latencyMs: Date.now() - t0,
       error: redact(error, secrets),
       shot: path.relative(dir, shotFile),
+      doneToSheetMs: doneTapped ? (timing?.toSheetMs ?? pendingDone?.sheetMs ?? undefined) : undefined,
+      doneToVisibleMs: timing?.toVisibleMs ?? undefined,
     };
-    steps.push(row);
-    fs.appendFileSync(path.join(dir, "steps.jsonl"), JSON.stringify(row) + "\n");
-    console.log(`${persona.id} ${n}/${limit} ${screen} ${action} ${row.target} $${opts.spend.usd.toFixed(2)}`);
-    if (decision?.action === "done") break;
+    logStep(row);
+    console.log(`${persona.id} ${n}/${limit} ${chunk} ${screenName} ${action} ${row.target} $${opts.spend.usd.toFixed(2)}`);
+    if (decision?.action === "done" && giveUp) break;
   }
 
   if (!giveUp && steps.length >= hardCap) giveUp = `Hit the ${hardCap}-step cap.`;
+  if (pendingDone) {
+    doneTimings.push({ step: pendingDone.step, taskLabel: pendingDone.label, tappedAt: new Date(pendingDone.at).toISOString(), toSheetMs: pendingDone.sheetMs, toVisibleMs: null, marker: "", choice: pendingDone.choice });
+    pendingDone = null;
+  }
+
+  // Build 90 10.4 chunk 6: the exit interview, asked of every persona, scored right or wrong.
+  let interview: Interview | null = null;
+  if (steps.length > 0 && !stopAll) {
+    const lastShot = steps[steps.length - 1]?.shot;
+    const imagePath = lastShot ? path.join(dir, lastShot) : "";
+    if (imagePath && fs.existsSync(imagePath)) {
+      const asked = await askModel({ apiKey: opts.apiKey, model, system: "You answer as the person described. Reply with one JSON object only.", prompt: interviewPrompt(persona, steps), imagePath });
+      opts.spend.usd += asked.usd;
+      opts.spend.input += asked.inputTokens;
+      opts.spend.output += asked.outputTokens;
+      opts.spend.calls += 1;
+      interview = scoreInterview(asked.raw);
+      fs.writeFileSync(path.join(dir, "interview.json"), JSON.stringify(interview, null, 2));
+    }
+  }
 
   try {
     await syncAccount();
@@ -486,6 +627,12 @@ export async function runPersona(opts: {
   const result: AgentResult = {
     personaId: persona.id,
     group: persona.group,
+    chunk,
+    startedOn: startedOn || "unknown",
+    freshStartOk,
+    earlyStopsRefused,
+    doneTimings,
+    interview,
     mode: opts.mode,
     startedAt: started.toISOString(),
     endedAt: ended.toISOString(),

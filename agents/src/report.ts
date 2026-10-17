@@ -77,13 +77,13 @@ export function writeOutputs(input: {
 }
 
 function writeCsv(runDir: string, runs: { result: AgentResult; steps: StepLog[] }[]) {
-  const header = ["persona", "group", "step", "timestamp", "screen", "route", "action", "target", "thought", "confusion", "emotion", "latency_ms", "error"];
+  const header = ["persona", "group", "chunk", "step", "timestamp", "screen", "screen_name", "route", "action", "target", "thought", "confusion", "emotion", "latency_ms", "done_to_sheet_ms", "done_to_visible_ms", "error"];
   const lines = [header.join(",")];
-  const cell = (value: string | number) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+  const cell = (value: string | number | undefined) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   for (const run of runs) {
     for (const step of run.steps) {
       lines.push(
-        [run.result.personaId, run.result.group, step.step, step.timestamp, step.screen, step.route, step.action, step.target, step.thought, step.confusion, step.emotion, step.latencyMs, step.error].map(cell).join(","),
+        [run.result.personaId, run.result.group, step.chunk ?? run.result.chunk ?? "", step.step, step.timestamp, step.screen, step.screenName ?? step.screen, step.route, step.action, step.target, step.thought, step.confusion, step.emotion, step.latencyMs, step.doneToSheetMs, step.doneToVisibleMs, step.error].map(cell).join(","),
       );
     }
   }

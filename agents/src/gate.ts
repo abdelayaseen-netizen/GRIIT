@@ -25,6 +25,7 @@ export function parseDecision(raw: string): Decision | null {
     thought: String(rec.thought ?? "").replace(/\s+/g, " ").trim().slice(0, 280),
     confusion: rec.confusion == null ? "" : String(rec.confusion).replace(/\s+/g, " ").trim().slice(0, 280),
     emotion: safeEmotion,
+    screen: rec.screen == null ? undefined : String(rec.screen).replace(/\s+/g, " ").trim().slice(0, 60) || undefined,
   };
 }
 
