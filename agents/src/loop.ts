@@ -95,7 +95,7 @@ export async function runPersona(opts: {
   const errors: string[] = [];
   const deadEnds: string[] = [];
   const doneTimings: DoneTiming[] = [];
-  let pendingDone: { step: number; at: number; label: string; sheetMs: number | null; choice: string; choiceAt: number | null } | null = null;
+  let pendingDone: { step: number; at: number; label: string; sheetMs: number | null; choice: string; choiceAt: number | null; prior: string } | null = null;
   let startedOn = "";
   let freshStartOk: boolean | null = fresh ? false : null;
   let earlyStopsRefused = 0;
@@ -116,7 +116,10 @@ export async function runPersona(opts: {
       const found = doneMarker(visibleLines(now));
       const sinceDone = Date.now() - pendingDone.at;
       if (found.sheet && pendingDone.sheetMs == null) pendingDone.sheetMs = sinceDone;
-      if (found.visible) {
+      // A marker that was already on screen before the tap (e.g. "2 of 3 done" on Home) does not count;
+      // only a new or changed marker, or any marker after the sheet, means this task showed as done.
+      const isNew = found.visible && (found.visible.toLowerCase() !== pendingDone.prior.toLowerCase() || pendingDone.sheetMs != null);
+      if (isNew) {
         // Done → sheet is pure UI time. Sheet choice → done marker is pure UI time. The person's
         // thinking time between the two is not counted.
         const elapsed = Date.now() - (pendingDone.choiceAt ?? pendingDone.at);
@@ -498,13 +501,24 @@ export async function runPersona(opts: {
             error = `${chip} is already selected.`;
             ignoreStuck = true;
           } else if (!already) {
-            doneTapped = isDoneTap(decision.action, decision.target, hit?.label ?? "") && screen === "task";
+            // The screen classifier often calls the task screen "home" or "challenge", so do not gate on it:
+            // a real Done button on screen (hit) or a done marker in reach is enough.
+            const priorMarker = doneMarker(lines).visible;
+            doneTapped =
+              isDoneTap(decision.action, decision.target, hit?.label ?? "") &&
+              // "Done" on the Day secured screen only dismisses it; the task was already done.
+              !/day secured/i.test(priorMarker) &&
+              (screen === "task" || hit != null || /\bday \d+ of \d+\b/i.test(lines.join("\n")));
             const tappedAt = Date.now();
             await opts.maestro.run(deviceId(), actionYaml(decision.action, hit?.label || decision.target, decision.text, hit?.point));
             if (doneTapped) {
               // Build 90 10.3: time from tapping Done until the task shows as done.
-              const taskLine = lines.find((line) => line !== hit?.label && line.length > 3 && line.length < 60 && !/^done\b/i.test(line)) ?? "";
-              pendingDone = { step: n, at: tappedAt, label: taskLine, sheetMs: null, choice: "", choiceAt: null };
+              const chrome = /^(griit|home|today|discover|profile|feed|me|back|go back|done|skip)$/i;
+              const taskLine =
+                lines.find((line) => line !== hit?.label && line.length > 3 && line.length < 60 && !/^done\b/i.test(line) && !chrome.test(line.trim()) && !/^\d+:\d+$/.test(line.trim())) ??
+                decision.screen ??
+                "";
+              pendingDone = { step: n, at: tappedAt, label: taskLine, sheetMs: null, choice: "", choiceAt: null, prior: priorMarker };
               await watchDone(12000);
             } else if (pendingDone) {
               const choiceLabel = hit?.label || decision.target;
