@@ -32,6 +32,15 @@ export function recordOfDue(secured: number, due: number): string {
   return `${formatOfDays(numer, denom)} secured`;
 }
 
+/**
+ * Build 90 05.4: the challenge page's record line. Nothing due yet (Day 1, still open)
+ * reads the same as Home's hero for that state instead of "0 of 0 days secured".
+ */
+export const FIRST_DAY_LINE = "First day is today.";
+export function recordLine(secured: number, due: number): string {
+  return Math.floor(due) <= 0 ? FIRST_DAY_LINE : recordOfDue(secured, due);
+}
+
 export function streakSheetMissBody(args: {
   done: number;
   total: number;

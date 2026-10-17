@@ -77,13 +77,33 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Walk 7,000 steps|^Done$"
     timeout: 20000
+- extendedWaitUntil:
+    visible: "Not yet"
+    timeout: 15000
+- tapOn: "Not yet"
+# The stack under the task is Settings (the account screen opened from there).
+- extendedWaitUntil:
+    visible: "Go back|Home"
+    timeout: 15000
 - tapOn:
     text: "Go back"
     optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
 - tapOn: "Home"
 - extendedWaitUntil:
     visible: "0 of 1 done"
     timeout: 20000
+# The feed page in memory was fetched while B was still a guest (an anonymous viewer is not
+# a test account, so every b89 author was filtered out). A cold relaunch fetches it as B.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "0 of 1 done"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
 
 # The Everyone feed: A's post is the newest row. The author name opens A's profile.
 - swipe:
@@ -102,6 +122,11 @@ appId: app.griit.challenge-tracker
     visible: "Follow"
     timeout: 20000
 - assertVisible: "Go back"
+# The page must resolve A, not show the raw uuid (an unrefreshed guest token hid every
+# other profile behind RLS before the 05.1 fix in lib/anon-auth.ts).
+- extendedWaitUntil:
+    visible: ${MAESTRO_EMAIL.split('@')[0]}
+    timeout: 20000
 - takeScreenshot: build90-05-people-feed-author
 - tapOn: "Go back"
 - extendedWaitUntil:
@@ -117,20 +142,32 @@ appId: app.griit.challenge-tracker
     text: "Comment"
     index: 0
 - extendedWaitUntil:
-    visible: "Add a comment"
+    visible: "Add a comment.*"
     timeout: 15000
-- tapOn: "Add a comment"
+- tapOn: "Add a comment.*"
 - inputText: "nice walk"
 - tapOn: "Send comment"
 - extendedWaitUntil:
     visible: "nice walk"
     timeout: 15000
 - takeScreenshot: build90-05-people-comment
-# In the comments sheet the author (B here) is tappable; it closes the sheet and opens
-# the person. B is the viewer, so this is the own tab.
+- assertNotVisible: "Someone"
+# In the comments sheet every author is tappable; it closes the sheet and opens the
+# person. Earlier runs left other test accounts' comments above B's, so index 0 is
+# another person: their profile must resolve (Follow, a @handle, no uuid).
+- hideKeyboard
 - tapOn:
     text: ".* profile"
     index: 0
+- extendedWaitUntil:
+    visible: "Follow|Edit profile"
+    timeout: 20000
+- assertVisible: "@.*"
+- takeScreenshot: build90-05-people-comment-author
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn: "Profile"
 - extendedWaitUntil:
     visible: "Settings"
     timeout: 15000
@@ -144,26 +181,32 @@ appId: app.griit.challenge-tracker
     timeout: 20000
 - tapOn: "Sign out"
 - extendedWaitUntil:
-    visible: "I already have an account"
+    visible: "I already have an account|Log in to GRIIT"
     timeout: 30000
 
-# Sign in as A.
-- tapOn: "I already have an account"
-- extendedWaitUntil:
-    visible: "Continue with email|Email"
-    timeout: 15000
+# Sign in as A. Sign out lands on either the welcome screen or the login form.
+- tapOn:
+    text: "I already have an account"
+    optional: true
 - tapOn:
     text: "Continue with email"
     optional: true
-- tapOn: "Email"
+# app/auth/login.tsx: tap the inputs (placeholder "Email address"; the second "Password" is
+# the field), not the labels (06.5 is the label-focus fix, next chunk).
+- extendedWaitUntil:
+    visible: "Log in to GRIIT"
+    timeout: 15000
+- tapOn: "Email address"
 - inputText: ${MAESTRO_EMAIL}
-- tapOn: "Password"
+- tapOn:
+    text: "Password"
+    index: 1
 - inputText: "Build90-links-test"
 - hideKeyboard
-- tapOn: "Sign in"
+- tapOn: "Log in to GRIIT"
 - extendedWaitUntil:
-    visible: "Home|1 of 1 done"
-    timeout: 30000
+    visible: "1 of 1 done|Activity"
+    timeout: 40000
 
 # Notifications: the avatar on B's like opens B's profile, even though the row opens the post.
 - tapOn: "Activity"
@@ -200,4 +243,4 @@ appId: app.griit.challenge-tracker
     visible: "Follow"
     timeout: 20000
 - assertVisible: "Go back"
-- takeScreenshot: build90-05-people-comment-author
+- takeScreenshot: build90-05-people-post-comment-author

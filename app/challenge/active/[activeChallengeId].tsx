@@ -230,7 +230,10 @@ export default function ActiveChallengeDetailScreen() {
     ? dateKeyFromIso(String(startIso), profileTz ?? "UTC")
     : todayKey;
   const weekKeys = useMemo(() => enrollmentWeekDateKeys(todayKey), [todayKey]);
-  const keys = Array.isArray(securedDateKeys) ? securedDateKeys : [];
+  // 05.4: the bootstrap's list is what Home and Profile read, and it is refreshed after every
+  // finish; the standalone query (60 s stale) only stands in until the bootstrap has loaded.
+  const bootstrapKeys = Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : null;
+  const keys = bootstrapKeys ?? (Array.isArray(securedDateKeys) ? securedDateKeys : []);
   const securedToday =
     todayKey >= startDateKey && securedTodayFromKeys(keys, todayKey);
   const weekSecured = weekStripFilledForEnrollment({

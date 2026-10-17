@@ -21,6 +21,12 @@ export type ListRowProps = {
   highlight?: boolean;
   divider?: boolean;
   onPress?: () => void;
+  /**
+   * Build 90 05.1: the leading slot is its own tap target (an avatar that opens a
+   * profile). It is then kept out of the row's accessible Pressable and not hidden
+   * from assistive tech, so VoiceOver and UI tests can reach it.
+   */
+  interactiveIcon?: boolean;
 };
 
 export default function ListRow({
@@ -32,19 +38,24 @@ export default function ListRow({
   highlight,
   divider = true,
   onPress,
+  interactiveIcon = false,
 }: ListRowProps) {
+  const rankEl =
+    rank != null ? (
+      <Text style={styles.rank} accessibilityLabel={`Rank ${rank}`}>
+        {rank}
+      </Text>
+    ) : null;
+  const iconEl = icon ? (
+    <View style={styles.iconSlot} accessibilityElementsHidden={!interactiveIcon}>
+      {icon}
+    </View>
+  ) : null;
+  const splitIcon = Boolean(onPress && interactiveIcon && iconEl);
   const body = (
     <>
-      {rank != null ? (
-        <Text style={styles.rank} accessibilityLabel={`Rank ${rank}`}>
-          {rank}
-        </Text>
-      ) : null}
-      {icon ? (
-        <View style={styles.iconSlot} accessibilityElementsHidden>
-          {icon}
-        </View>
-      ) : null}
+      {rankEl}
+      {splitIcon ? null : iconEl}
       <View style={styles.copy}>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -65,6 +76,25 @@ export default function ListRow({
     styles.row,
     highlight ? styles.highlight : null,
   ];
+
+  if (onPress && splitIcon) {
+    return (
+      <View>
+        <View style={rowStyle}>
+          {iconEl}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={title}
+            onPress={onPress}
+            style={({ pressed }) => [styles.rowBody, pressed ? styles.pressed : null]}
+          >
+            {body}
+          </Pressable>
+        </View>
+        {highlight || !divider ? null : <View style={styles.divider} />}
+      </View>
+    );
+  }
 
   if (onPress) {
     return (
@@ -110,6 +140,13 @@ const styles = StyleSheet.create({
   pressed: {
     backgroundColor: DS_V3.color.surface,
     opacity: 0.6,
+  },
+  rowBody: {
+    flex: 1,
+    minHeight: ICON,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.lg,
   },
   iconSlot: {
     minWidth: ICON,

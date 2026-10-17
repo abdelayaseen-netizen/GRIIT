@@ -309,6 +309,7 @@ const NotificationRow = React.memo(function NotificationRow({
           avatar
         )
       }
+      interactiveIcon={!!onPressActor}
       title={title}
       subtitle={relativeTime(n.createdAt)}
       trailing={trailing}

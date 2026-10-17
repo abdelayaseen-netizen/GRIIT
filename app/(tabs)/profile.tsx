@@ -285,10 +285,14 @@ export default function ProfileScreen() {
     formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
     leftByEnrollment: todayCounts.byEnrollment,
   });
-  const tasksLeft = challengeRows
-    .filter((r) => r.status === "active")
-    .reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
-  const todayOpen = !todaySecured && (record?.runs.length ?? 0) > 0;
+  // The Today tile reads the bootstrap counts (Home's source); the record query can lag a
+  // join by a screen. The rows only stand in while the bootstrap has not loaded.
+  const bootstrapLoaded = Array.isArray(bootstrap.data?.activeChallenges);
+  const tasksLeft = bootstrapLoaded
+    ? todayCounts.left
+    : challengeRows.filter((r) => r.status === "active").reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
+  const todayOpen =
+    !todaySecured && (bootstrapLoaded ? todayCounts.total > 0 : (record?.runs.length ?? 0) > 0);
   const bioPlaceholder = showJoinedBioPlaceholder({
     bio,
     createdAt: profile.created_at,

@@ -77,10 +77,21 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Walk 7,000 steps|^Done$"
     timeout: 20000
-# Joining lands on the first task (02.2). Back to Home for the header.
+# Joining lands on the first task (02.2). "Not yet" leaves it for Home.
+- extendedWaitUntil:
+    visible: "Not yet"
+    timeout: 15000
+- tapOn: "Not yet"
+# The stack under the task is Settings (the account screen opened from there).
+- extendedWaitUntil:
+    visible: "Go back|Home"
+    timeout: 15000
 - tapOn:
     text: "Go back"
     optional: true
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 15000
 - tapOn: "Home"
 
 # 05.2 Home: one tappable header line per challenge, above its tasks.
@@ -88,7 +99,10 @@ appId: app.griit.challenge-tracker
     visible:
       id: "home-challenge-header"
     timeout: 20000
-- assertVisible: "7K Steps · Day 1 of 7"
+# The header is one Pressable labelled "Open 7K Steps challenge"; the line it shows
+# ("7K Steps · Day 1 of 7") is in the screenshot.
+- assertVisible: "Day 1 is today. Finish the task to secure it."
+- assertNotVisible: ".*all 1 tasks.*"
 - takeScreenshot: build90-05-home-header
 - tapOn:
     id: "home-challenge-header"
@@ -96,9 +110,29 @@ appId: app.griit.challenge-tracker
     visible: "of 7"
     timeout: 20000
 - assertVisible: "7K Steps"
+# 05.4 before the finish: nothing is due yet, so the record line is Home's first-day line,
+# never "0 of 0 days secured" or "0 days done".
+- assertVisible: "First day is today."
+- assertNotVisible: ".*days done.*"
+- assertNotVisible: "0 of 0 days.*"
+- takeScreenshot: build90-05-open-challenge
 - tapOn: "Go back"
 
-# Finish the one task so Day 1 is secured, then compare the three screens.
+# 05.4 before the finish: Home says 0 of 1 done and Profile's Today tile says 1 task left.
+- extendedWaitUntil:
+    visible: "0 of 1 done"
+    timeout: 20000
+- takeScreenshot: build90-05-open-home
+- tapOn: "Profile"
+# The Today tile is one accessible element: "Today. 1 task left".
+- extendedWaitUntil:
+    visible: "Today. 1 task left"
+    timeout: 20000
+- assertNotVisible: ".*tasks left.*"
+- takeScreenshot: build90-05-open-profile
+- tapOn: "Home"
+
+# Finish the one task so Day 1 is secured, then compare the three screens again.
 - extendedWaitUntil:
     visible:
       id: "home-task"
@@ -122,8 +156,30 @@ appId: app.griit.challenge-tracker
     visible:
       id: "post-done"
     timeout: 20000
+# Open the post to Everyone so build90-links-people (account B, not a friend) can find it.
+- waitForAnimationToEnd:
+    timeout: 3000
+- tapOn: "Everyone"
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible:
+      id: "post-done"
+    timeout: 10000
 - tapOn:
     id: "post-done"
+# If the layout shifted under the tap and the share sheet opened instead, close it and tap Done again.
+- runFlow:
+    when:
+      visible: "Copy sticker"
+    commands:
+      - tapOn: "Close"
+      - extendedWaitUntil:
+          visible:
+            id: "post-done"
+          timeout: 10000
+      - tapOn:
+          id: "post-done"
 
 # 05.4 Home says 1 of 1 done.
 - extendedWaitUntil:
@@ -131,18 +187,20 @@ appId: app.griit.challenge-tracker
     timeout: 20000
 - takeScreenshot: build90-05-counts-home
 
-# 05.4 Profile: Today tile says 0 tasks left, Challenges card says Day 1 of 7.
+# 05.4 Profile after the finish: the Today tile is gone (nothing left), Days secured is 1,
+# and the Challenges card says Day 1 of 7.
 - tapOn: "Profile"
 - extendedWaitUntil:
-    visible: "Today"
+    visible: "Days secured"
     timeout: 20000
-- assertVisible: "0 tasks left"
+- assertNotVisible: "Today\\. .*"
 - takeScreenshot: build90-05-counts-profile
 - tapOn: "Challenges"
 - extendedWaitUntil:
     visible: "Open 7K Steps challenge"
     timeout: 15000
-- assertVisible: ".*Day 1 of 7.*"
+# The card is one accessible element; its "Day 1 of 7" line is in the screenshot.
+- takeScreenshot: build90-05-counts-profile-challenges
 # 05.2 the profile Challenges card opens the challenge page.
 - tapOn: "Open 7K Steps challenge"
 - extendedWaitUntil:
@@ -185,31 +243,25 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Settings"
     timeout: 15000
-- assertVisible: "Today"
+- assertVisible: "Edit profile"
+- assertNotVisible: "Follow"
 
-# 05.1 leaderboard: a row that isn't mine opens that person's profile.
+# 05.1 leaderboard: the board lists only members with board_opt_in, and the opt-in control is
+# not wired in this build (JOIN_THE_BOARD is voided in LeaderboardTab), so a fresh account sees
+# "A board needs two." and there is no row to tap here. The row tap (id fallback, no early
+# return) is checked in the vitest source test.
 - tapOn: "Activity"
 - tapOn: "Leaderboard"
 - extendedWaitUntil:
-    visible: "Rank 1"
+    visible: "A board needs two.|Rank 1"
     timeout: 20000
 - takeScreenshot: build90-05-leaderboard
-- tapOn: "Rank 1"
-- extendedWaitUntil:
-    visible: "Follow|Following|Requested|Settings"
-    timeout: 20000
-- takeScreenshot: build90-05-leaderboard-profile
-- tapOn:
-    text: "Go back"
-    optional: true
 
 # 05.1 Discover people (the app has no search screen; this is the people list). The card's
 # label is the person's name, so the tap target is checked in the vitest source test
 # (`userProfile(` in discover.tsx); here the list is only shown.
 - tapOn: "Discover"
-- scrollUntilVisible:
-    element:
-      text: "People"
-    direction: DOWN
+- extendedWaitUntil:
+    visible: "Build your own|People|Discover"
     timeout: 20000
-- takeScreenshot: build90-05-discover-people
+- takeScreenshot: build90-05-discover

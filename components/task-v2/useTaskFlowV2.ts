@@ -490,6 +490,8 @@ export function useTaskFlowV2() {
         username: profile?.username ?? "you",
         displayName: profile?.display_name ?? profile?.username ?? "You",
         avatarUrl: profile?.avatar_url ?? null,
+        // 05.2: the optimistic row's subject line opens the challenge too.
+        challengeId: enrollmentQ.data?.challenge_id ?? null,
         challengeName,
         taskName,
         currentDay,
@@ -768,6 +770,7 @@ export function useTaskFlowV2() {
           username: profile?.username ?? "you",
           displayName: profile?.display_name ?? profile?.username ?? "You",
           avatarUrl: profile?.avatar_url ?? null,
+          challengeId: enrollmentQ.data?.challenge_id ?? null,
           challengeName,
           taskName,
           currentDay,

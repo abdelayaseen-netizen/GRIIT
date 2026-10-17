@@ -7,12 +7,13 @@ import { enrollmentStarted, requiredTasks, todayTaskCounts } from "@/lib/today-c
 import { selectHomeProofCard, type HomeProofTask } from "@/lib/home-proof-card";
 import { completedTaskIds } from "@/lib/today-completion";
 import { rowsFromProfileRecord } from "@/lib/profile-challenges";
-import { recordOfDue } from "@/lib/v44-detail";
+import { recordLine, recordOfDue } from "@/lib/v44-detail";
 import { enrollmentDayStats } from "@/backend/lib/enrollment-day-stats";
 import { weekSecuredOfDue } from "@/lib/g2a-challenge";
 import { securedSinceLine } from "@/lib/secured-since";
 import { WEEK } from "@/lib/copy";
 import { formatDays } from "@/lib/format-days";
+import { todayFirstDayLine } from "@/lib/g2a-home";
 import { buildSharePaint, paintStrings } from "@/lib/share-image";
 
 const root = resolve(__dirname, "..");
@@ -82,6 +83,10 @@ describe("05.2 tap any challenge name and open the challenge page", () => {
     expect(header).toContain("onChallengePress");
     expect(header).toContain('accessibilityLabel={`Open ${challenge} challenge`}');
     expect(feed).toContain("onChallengePress={onChallengePress}");
+    // The optimistic row shown right after posting carries the challenge id, so its subject
+    // line opens the challenge like a server row's does.
+    const flow = read("components/task-v2/useTaskFlowV2.ts");
+    expect(flow.split("challengeId: enrollmentQ.data?.challenge_id ?? null,").length).toBe(4);
   });
 });
 
@@ -213,15 +218,26 @@ describe("05.4 numbers agree everywhere", () => {
     expect(recordOfDue(stats.secured, stats.due)).toBe("0 of 1 day secured");
     expect(recordOfDue(1, 1)).toBe("1 of 1 day secured");
     expect(recordOfDue(3, 5)).toBe("3 of 5 days secured");
+    // Day 1 still open: nothing is due yet, so the page says what Home's hero says.
+    expect(recordLine(0, 0)).toBe("First day is today.");
+    expect(recordLine(0, 1)).toBe("0 of 1 day secured");
+    expect(recordLine(1, 1)).toBe("1 of 1 day secured");
+    // The page reads the same secured-day list Home and Profile read (the bootstrap), so a
+    // finish moves all three at once.
+    const page = read("app/challenge/active/[activeChallengeId].tsx");
+    expect(page).toContain("bootstrap.data?.securedDateKeys");
+    expect(read("app/(tabs)/profile.tsx")).toContain("bootstrap.data?.securedDateKeys");
     const detail = read("components/challenge/ActiveChallengeV3.tsx");
     expect(detail).not.toContain("days done");
-    expect(detail).toContain("recordOfDue(p.securedCount ?? 0, p.dueCount ?? p.durationDays)");
-    expect(detail.split("recordOfDue(p.securedCount ?? 0, p.dueCount ?? p.durationDays)").length).toBe(3);
+    expect(detail).toContain("recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)");
+    expect(detail.split("recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)").length).toBe(3);
   });
 
   it("pluralises day counts everywhere they are printed", () => {
     expect(formatDays(1)).toBe("1 day");
     expect(formatDays(2)).toBe("2 days");
+    expect(todayFirstDayLine(1)).toBe("Day 1 is today. Finish the task to secure it.");
+    expect(todayFirstDayLine(2)).toBe("Day 1 is today. Finish both tasks to secure it.");
     const week = weekSecuredOfDue({
       weekKeys: ["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18"],
       securedDateKeys: [],

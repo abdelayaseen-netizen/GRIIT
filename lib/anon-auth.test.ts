@@ -8,6 +8,7 @@ const getSession = vi.fn();
 const signInAnonymously = vi.fn();
 const linkIdentity = vi.fn();
 const updateUser = vi.fn();
+const refreshSession = vi.fn();
 const setItem = vi.fn(async (_key: string, _value: string) => undefined);
 const getItem = vi.fn(async (_key: string): Promise<string | null> => null);
 const removeItem = vi.fn(async (_key: string) => undefined);
@@ -27,6 +28,7 @@ vi.mock("@/lib/supabase", () => ({
       signInAnonymously: (...args: unknown[]) => signInAnonymously(...args),
       linkIdentity: (...args: unknown[]) => linkIdentity(...args),
       updateUser: (...args: unknown[]) => updateUser(...args),
+      refreshSession: (...args: unknown[]) => refreshSession(...args),
     },
   },
 }));
@@ -274,6 +276,46 @@ describe("upgradeAnonymousWithEmail", () => {
     expect(updateUser).toHaveBeenCalledWith({ email: "a@b.com", password: "secret1" });
     expect(res.user?.id).toBe("anon-uid-1");
     expect(writeDeviceTimezone).toHaveBeenCalledOnce();
+  });
+
+  /**
+   * Build 90 05.1: updateUser flips auth.users.is_anonymous but the stored access
+   * token still carries `is_anonymous: true`, so RLS (profiles_select_authenticated)
+   * hides every other profile until the token is refreshed — comment authors read
+   * "Someone" and tapping a name opens a profile page showing a raw uuid. Mint a new
+   * token right after the upgrade.
+   */
+  it("refreshes the session after updateUser so RLS sees a non-anonymous token", async () => {
+    getSession.mockResolvedValueOnce({
+      data: { session: { user: anonUser, access_token: "t" } },
+      error: null,
+    });
+    updateUser.mockResolvedValue({ data: { user: permanentUser }, error: null });
+    refreshSession.mockResolvedValue({
+      data: { session: { user: permanentUser, access_token: "fresh" }, user: permanentUser },
+      error: null,
+    });
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+    expect(res.kind).toBe("ok");
+    expect(refreshSession).toHaveBeenCalledOnce();
+    expect(res.session?.access_token).toBe("fresh");
+  });
+
+  it("falls back to the stored session when refreshSession fails", async () => {
+    getSession
+      .mockResolvedValueOnce({
+        data: { session: { user: anonUser, access_token: "t" } },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: { session: { user: permanentUser, access_token: "t2" } },
+        error: null,
+      });
+    updateUser.mockResolvedValue({ data: { user: permanentUser }, error: null });
+    refreshSession.mockResolvedValue({ data: { session: null, user: null }, error: { message: "nope" } });
+    const res = await upgradeAnonymousWithEmail({ email: "a@b.com", password: "secret1" });
+    expect(res.kind).toBe("ok");
+    expect(res.session?.access_token).toBe("t2");
   });
 
   /**

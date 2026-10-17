@@ -304,6 +304,10 @@ function PostThreadScreenInner() {
             onPress={() => setReplyTo({ id: item.id, name: parts.name })}
             onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
             delayLongPress={450}
+            // 05.1: not an accessible element itself, so the author tap target and the
+            // comment text inside stay reachable (an accessible wrapper flattens them
+            // into one "Reply to" button for VoiceOver and UI tests).
+            accessible={false}
             accessibilityRole="button"
             accessibilityLabel={
               isMine
