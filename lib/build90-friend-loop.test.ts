@@ -233,3 +233,33 @@ describe("duo waiting room", () => {
     expect(byId).toMatch(/participationType === "shared_goal" \|\| participationType === "duo"/);
   });
 });
+
+// 08 follow-up: the three flows that stopped on Maestro timing in the chunk 08 regression.
+describe("08 follow-up: Maestro de-flake", () => {
+  it("post-detail swipes to the top for Share today instead of scrollUntilVisible UP", () => {
+    const flow = read(".maestro/build90-post-detail.yaml");
+    expect(flow).not.toMatch(/scrollUntilVisible:[\s\S]{0,120}Share today[\s\S]{0,60}direction: UP/);
+    // Two swipes down (start high on the screen is where the finger ends up: 30% → 85%).
+    const toTop = flow.match(/- swipe:\n\s+start: 50%, 30%\n\s+end: 50%, 85%/g);
+    expect(toTop?.length).toBeGreaterThanOrEqual(2);
+    expect(flow).toMatch(/end: 50%, 85%[\s\S]{0,400}- tapOn: "Share today"/);
+  });
+
+  it("safety and links-people pause for the splash and match the tab with or without the unread dot", () => {
+    for (const file of [".maestro/build90-safety.yaml", ".maestro/build90-links-people.yaml"]) {
+      const flow = read(file);
+      // No exact "Activity" tap or wait is left: the label is "Activity, unread" when the dot shows.
+      expect(flow).not.toMatch(/tapOn: "Activity"\n/);
+      expect(flow).not.toMatch(/done\|Activity"/);
+      // Every relaunch (stopApp + launchApp) is followed by waitForAnimationToEnd and the short
+      // optional wait before anything is tapped.
+      const relaunches = flow.match(/- stopApp\n- launchApp\n/g) ?? [];
+      expect(relaunches.length).toBeGreaterThan(0);
+      for (const m of flow.matchAll(/- stopApp\n- launchApp\n([\s\S]{0,700}?)- tapOn/g)) {
+        expect(m[1]).toMatch(/waitForAnimationToEnd/);
+        expect(m[1]).toMatch(/visible: "nothing-xyz"\n\s+timeout: 2500\n\s+optional: true/);
+      }
+      expect(flow).toMatch(/tapOn: "Activity\.\*"/);
+    }
+  });
+});

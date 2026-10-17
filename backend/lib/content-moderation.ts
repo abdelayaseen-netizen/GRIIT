@@ -135,9 +135,15 @@ const GLUED_EDGE = ["shit", "cunt", "retard"];
 // Ordinary words a glued rule would otherwise catch.
 const GLUED_ALLOW = new Set(["niggardly", "retardant", "retardants", "shitake"]);
 // Short words that sit inside too many ordinary words (class, cocktail, Dickens) stay whole-word.
+// 08 follow-up: their compounds, by exact list (a token that is one of these or starts with one:
+// "dumbasses", "assholes"). No ordinary word starts with any of them.
+const GLUED_COMPOUNDS = ["dumbass", "jackass", "dickhead", "asshole", "dumbfuck", "motherfucker", "bullshit"];
 
 function gluedWord(token: string): string | null {
   if (GLUED_ALLOW.has(token)) return null;
+  for (const word of GLUED_COMPOUNDS) {
+    if (token.startsWith(word)) return word;
+  }
   for (const word of GLUED_ANYWHERE) {
     if (token.includes(word)) return word;
   }

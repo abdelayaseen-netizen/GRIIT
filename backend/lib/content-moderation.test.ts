@@ -211,8 +211,31 @@ describe("blockedPlainText glued words (08)", () => {
     });
   }
   it("keeps the short words whole-word only", () => {
-    for (const text of ["dumbass", "classy", "cockatoo", "damnation", "dickhead"]) {
+    for (const text of ["classy", "cockatoo", "damnation", "assess", "Dickens", "cocktail"]) {
       // Not caught: ass / cock / damn / dick sit inside too many ordinary words.
+      expect(blockedPlainText(text)).toBeNull();
+    }
+  });
+});
+
+// 08 follow-up: the compounds of those short words, by exact list.
+const GLUED_COMPOUNDS = ["dumbass", "jackass", "dickhead", "asshole", "dumbfuck", "motherfucker", "bullshit"];
+
+describe("blockedPlainText glued compounds, exact list (08 follow-up)", () => {
+  for (const text of GLUED_COMPOUNDS) {
+    it(`blocks ${JSON.stringify(text)}`, () => {
+      expect(blockedPlainText(text)).toBe(BLOCKED_TEXT);
+      expect(blockedPlainText(`you ${text.toUpperCase()}`)).toBe(BLOCKED_TEXT);
+      expect(blockedPlainText(`${text}es!!`, "comment")).toBe(blockedTextFor("comment"));
+    });
+  }
+  it("the plural and the dodged spelling are caught too", () => {
+    expect(blockedPlainText("dumbasses")).toBe(BLOCKED_TEXT);
+    expect(blockedPlainText("a55hole")).toBe(BLOCKED_TEXT);
+    expect(blockedPlainText("d.i.c.k.h.e.a.d")).toBe(BLOCKED_TEXT);
+  });
+  it("keeps class, cockatoo, damnation and assess clean", () => {
+    for (const text of ["class", "cockatoo", "damnation", "assess", "Class assessment", "a cockatoo in the classroom"]) {
       expect(blockedPlainText(text)).toBeNull();
     }
   });

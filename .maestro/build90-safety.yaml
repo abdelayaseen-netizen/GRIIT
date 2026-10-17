@@ -45,11 +45,14 @@ appId: app.griit.challenge-tracker
 - inputText: "Build90-links-test"
 - tapOn: "Log in to GRIIT|^Sign in$"
 - extendedWaitUntil:
-    visible: "1 of 1 done|0 of 1 done|Activity"
+    visible: "1 of 1 done|0 of 1 done|Activity.*"
     timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
 
-# Activity → B's comment row → the post.
-- tapOn: "Activity"
+# Activity → B's comment row → the post. The tab reads "Activity, unread" when the dot shows
+# (08 follow-up).
+- tapOn: "Activity.*"
 - extendedWaitUntil:
     visible: ".*commented.*|.*comment.*"
     timeout: 30000
@@ -103,9 +106,17 @@ appId: app.griit.challenge-tracker
 - stopApp
 - launchApp
 - extendedWaitUntil:
-    visible: "1 of 1 done|0 of 1 done|Activity"
+    visible: "1 of 1 done|0 of 1 done|Activity.*"
     timeout: 60000
-- tapOn: "Activity"
+# The wait matches views mounted behind the splash (SPLASH_MAX_MS 1800); pause before the tap
+# so it lands on the tab, not the splash (08 follow-up, from /tmp/b90-08-relaunch.yaml).
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
+- tapOn: "Activity.*"
 - extendedWaitUntil:
     visible: ".*commented.*|.*comment.*"
     timeout: 30000

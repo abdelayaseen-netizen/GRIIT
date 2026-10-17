@@ -7,11 +7,21 @@
 export type DiscoverCatalogRow = {
   creator_id?: string | null;
   source_starter_id?: string | null;
+  participation_type?: string | null;
 };
 
 export function isCatalogChallenge(row: DiscoverCatalogRow): boolean {
   const creator = typeof row.creator_id === "string" ? row.creator_id.trim() : "";
   return creator.length === 0;
+}
+
+/**
+ * Build 90 08 follow-up: a seeded duo row is one global room. Filling it starts it for
+ * everyone and nobody else can join, so it stays off Discover until a per-pair room exists.
+ * Only applies when the row carries participation_type (the feed's checks fetch rows without it).
+ */
+export function isSeededDuoRoom(row: DiscoverCatalogRow): boolean {
+  return isCatalogChallenge(row) && String(row.participation_type ?? "").toLowerCase() === "duo";
 }
 
 export function keepForDiscover(
@@ -20,6 +30,7 @@ export function keepForDiscover(
 ): boolean {
   const creator = typeof row.creator_id === "string" ? row.creator_id.trim() : "";
   if (viewerId && creator && creator === viewerId) return false;
+  if (isSeededDuoRoom(row)) return false;
   return isCatalogChallenge(row);
 }
 

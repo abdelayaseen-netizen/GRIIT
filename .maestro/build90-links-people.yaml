@@ -102,8 +102,14 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "0 of 1 done"
     timeout: 60000
+# The wait matches views mounted behind the splash (SPLASH_MAX_MS 1800); pause before the next
+# gesture so it lands on Home, not the splash (08 follow-up, from /tmp/b90-08-relaunch.yaml).
 - waitForAnimationToEnd:
     timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
 
 # The Everyone feed: A's post is the newest row. The author name opens A's profile.
 - swipe:
@@ -207,11 +213,18 @@ appId: app.griit.challenge-tracker
 - hideKeyboard
 - tapOn: "Log in to GRIIT"
 - extendedWaitUntil:
-    visible: "1 of 1 done|Activity"
+    visible: "1 of 1 done|Activity.*"
     timeout: 40000
+- waitForAnimationToEnd:
+    timeout: 3000
+- extendedWaitUntil:
+    visible: "nothing-xyz"
+    timeout: 2500
+    optional: true
 
 # Notifications: the avatar on B's like opens B's profile, even though the row opens the post.
-- tapOn: "Activity"
+# A has B's like and comment waiting, so the tab reads "Activity, unread" (08 follow-up).
+- tapOn: "Activity.*"
 - extendedWaitUntil:
     visible:
       id: "notif-actor"
