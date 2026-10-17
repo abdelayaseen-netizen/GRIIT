@@ -214,7 +214,7 @@ export function buildReport(out: string, sha: string, build: string, notes = "")
   lines.push("");
   lines.push("## Data");
   lines.push("");
-  lines.push("Per chunk: `<chunk>/data.csv` (persona, chunk, step, screen, screen_name, action, target, thought, confusion, emotion, latency_ms, done_to_sheet_ms, done_to_visible_ms, error), `<chunk>/report.html`, `<chunk>/<persona>/steps.jsonl`, `result.json`, `interview.json`, `shots/`. Account files hold passwords and are not committed.");
+  lines.push("Per chunk: `<chunk>/data.csv` (persona, chunk, step, screen, screen_name, action, target, thought, confusion, emotion, latency_ms, done_to_sheet_ms, done_to_visible_ms, error), `<chunk>/report.html`, `<chunk>/<persona>/steps.jsonl`, `result.json`, `interview.json`, `shots/`. Account files hold passwords and are not committed; `shots/` (about 1,000 frames) stays on the Mac that ran it, the frames cited above are in `evidence/`.");
   lines.push("");
   return lines.join("\n");
 }
