@@ -12,6 +12,7 @@ import {
   REVIEW_LOCK,
   REVIEW_SETTINGS,
   START_THE_CHALLENGE,
+  launchErrorCopy,
   reviewSettingsRows,
   reviewTaskLine,
   reviewTitleLine,
@@ -33,6 +34,7 @@ export function StepReview({
   lateJoinLine,
   tasks,
   launchState,
+  launchError,
   onBack,
   onLaunch,
   onEditStep,
@@ -47,6 +49,8 @@ export function StepReview({
   lateJoinLine?: string | null;
   tasks: WizardTask[];
   launchState: "idle" | "loading" | "error";
+  /** Build 90 07.1: the server's message, shown as is when it names a blocked field. */
+  launchError?: string | null;
   onBack: () => void;
   onLaunch: () => void;
   onEditStep: (step: 1 | 2 | 3) => void;
@@ -54,6 +58,7 @@ export function StepReview({
   const meta = reviewTitleLine({ category, days, who, difficulty });
   const rows = tasks.map(reviewTaskLine);
   const settings = reviewSettingsRows({ visibility, starts });
+  const failure = launchErrorCopy(launchError);
   return (
     <View style={styles.flex}>
       <WizardHeader step={3} total={3} onCancel={onBack} cancelLabel="Back" center="Review" />
@@ -84,11 +89,11 @@ export function StepReview({
         ))}
         {launchState === "error" ? (
           <EmptyState
-            heading="Could not launch"
-            body="Check your connection and try again."
-            actionLabel="Retry"
+            heading={failure.heading}
+            body={failure.body}
+            actionLabel={failure.actionLabel}
             variant="error"
-            onAction={onLaunch}
+            onAction={failure.editStep ? () => onEditStep(failure.editStep as 1 | 2) : onLaunch}
           />
         ) : null}
       </View>

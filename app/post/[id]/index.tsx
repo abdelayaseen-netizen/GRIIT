@@ -33,6 +33,9 @@ import type { LiveFeedPost } from "@/components/feed/feedTypes";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { commentRowParts } from "@/lib/comment-row";
+import { fetchComments } from "@/lib/hidden-comments";
+import { useReportComment } from "@/components/feed/useReportComment";
+import { CANCEL_REPORT_LABEL, REPORT_COMMENT_LABEL, REPORT_COMMENT_PROMPT, commentLongPressAction } from "@/lib/comment-report";
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
@@ -81,7 +84,11 @@ function PostThreadScreenInner() {
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
+  // 07.3: long press on someone else's comment offers a report; 07.1: a refused comment says why.
+  const [reportCommentTargetId, setReportCommentTargetId] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const reportComment = useReportComment(id);
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -110,8 +117,7 @@ function PostThreadScreenInner() {
 
   const commentsQuery = useQuery({
     queryKey: ["feed", "comments", id],
-    queryFn: () =>
-      trpcQuery(TRPC.feed.getComments, { eventId: id, limit: 100 }) as Promise<CommentItem[]>,
+    queryFn: () => fetchComments(id, 100) as Promise<CommentItem[]>,
     enabled: !!id,
   });
 
@@ -136,6 +142,7 @@ function PostThreadScreenInner() {
         ...(input.parentId ? { parentId: input.parentId } : {}),
       }),
     onSuccess: async () => {
+      setSendError(null);
       await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
       await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
@@ -145,6 +152,8 @@ function PostThreadScreenInner() {
     },
     onError: (e) => {
       captureError(e, "PostThreadComment");
+      // The text stays in the field; the line under it says what the server refused.
+      setSendError(e instanceof Error && e.message ? e.message : "Couldn't send. Try again.");
     },
   });
 
@@ -288,6 +297,7 @@ function PostThreadScreenInner() {
     ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {
       const item = row.item;
       const isMine = Boolean(user?.id && item.user_id === user.id);
+      const longPress = commentLongPressAction(user?.id, item.user_id);
       const parts = commentRowParts({
         displayName: item.display_name,
         username: item.username,
@@ -302,7 +312,13 @@ function PostThreadScreenInner() {
           <View style={styles.replyBody}>
           <Pressable
             onPress={() => setReplyTo({ id: item.id, name: parts.name })}
-            onLongPress={isMine ? () => setDeleteCommentTargetId(item.id) : undefined}
+            onLongPress={
+              longPress === "delete"
+                ? () => setDeleteCommentTargetId(item.id)
+                : longPress === "report"
+                  ? () => setReportCommentTargetId(item.id)
+                  : undefined
+            }
             delayLongPress={450}
             // 05.1: not an accessible element itself, so the author tap target and the
             // comment text inside stay reachable (an accessible wrapper flattens them
@@ -312,7 +328,7 @@ function PostThreadScreenInner() {
             accessibilityLabel={
               isMine
                 ? "Your comment — long press to delete"
-                : `Reply to ${parts.name}`
+                : `Reply to ${parts.name} — long press to report`
             }
           >
             <CommentRow
@@ -323,6 +339,29 @@ function PostThreadScreenInner() {
               onPressAuthor={() => openPerson(item.user_id, item.username)}
             />
           </Pressable>
+          {reportCommentTargetId === item.id ? (
+            <View style={styles.deleteBar}>
+              <Text style={styles.deleteCancel}>{REPORT_COMMENT_PROMPT}</Text>
+              <Pressable
+                onPress={() => setReportCommentTargetId(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel report"
+              >
+                <Text style={styles.deleteCancel}>{CANCEL_REPORT_LABEL}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setReportCommentTargetId(null);
+                  reportComment.report(item.id);
+                }}
+                disabled={reportComment.pending}
+                accessibilityRole="button"
+                accessibilityLabel={REPORT_COMMENT_LABEL}
+              >
+                <Text style={styles.deleteConfirm}>Report</Text>
+              </Pressable>
+            </View>
+          ) : null}
           {deleteCommentTargetId === item.id ? (
             <View style={styles.deleteBar}>
               <Pressable
@@ -347,7 +386,7 @@ function PostThreadScreenInner() {
         </View>
       );
     },
-    [user?.id, deleteCommentTargetId, deleteCommentMutation, rows, openPerson],
+    [user?.id, deleteCommentTargetId, reportCommentTargetId, deleteCommentMutation, reportComment, rows, openPerson],
   );
 
   return (
@@ -388,6 +427,15 @@ function PostThreadScreenInner() {
           keyboardShouldPersistTaps="handled"
         />
 
+        {reportComment.notice || sendError ? (
+          <Text
+            style={[styles.composerNote, sendError ? styles.composerNoteError : null]}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="polite"
+          >
+            {sendError ?? reportComment.notice}
+          </Text>
+        ) : null}
         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.lg) }]}>
           {replyTo ? (
             <Pressable
@@ -401,7 +449,10 @@ function PostThreadScreenInner() {
           <View style={styles.field}>
             <TextField
               value={draft}
-              onChangeText={setDraft}
+              onChangeText={(t) => {
+                setDraft(t);
+                if (sendError) setSendError(null);
+              }}
               placeholder={placeholder}
               accessibilityLabel={placeholder}
               ground={composerFieldGround("route")}
@@ -554,6 +605,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.md,
     backgroundColor: DS_V3.color.canvas,
+  },
+  composerNote: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+    backgroundColor: DS_V3.color.canvas,
+  },
+  composerNoteError: {
+    color: DS_V3.color.danger,
   },
   field: { flex: 1 },
   send: {

@@ -160,6 +160,7 @@ export const TRPC = {
   reports: {
     create: 'reports.create',
     reportUser: 'reports.reportUser',
+    reportComment: 'reports.reportComment',
   },
   feed: {
     list: 'feed.list',

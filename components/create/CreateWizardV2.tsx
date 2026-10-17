@@ -418,9 +418,11 @@ export function CreateWizardV2() {
           lateJoinLine={late.line}
           tasks={reviewTasks}
           launchState={launchState}
+          launchError={launchError}
           onBack={() => setReviewing(false)}
           onLaunch={() => void handleLaunch()}
           onEditStep={(step) => {
+            setLaunchError("");
             setReviewing(false);
             setStep(step);
           }}

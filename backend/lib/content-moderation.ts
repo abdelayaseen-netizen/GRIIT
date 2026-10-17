@@ -2,6 +2,7 @@
  * Basic content moderation for user-generated challenge titles and descriptions.
  * Uses a keyword blocklist + pattern matching. Runs server-side on create.
  */
+import { BLOCKED_TEXT, blockedTextFor, type BlockedField } from "../../lib/blocked-text";
 
 const PROFANITY_WORDS = [
   "fuck",
@@ -105,37 +106,64 @@ function normalize(text: string): string {
     .trim();
 }
 
+// Build 90 07.2: the dodges testers used. Order matters: join spelled-out letters
+// before collapsing repeats ("f u u u c k" → "fuuuck" → "fuck").
+const ZERO_WIDTH = /[\u200B-\u200D\u2060\uFEFF\u00AD]/g;
+const LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "@": "a", $: "s" };
+const SPELLED_OUT = /\b(?:[a-z][^a-z0-9]{1,2}){2,}[a-z]\b/g;
+
+/**
+ * Lowercase; strip accents, zero-width and soft-hyphen characters; map leetspeak
+ * (0→o 1→i 3→e 4→a 5→s @→a $→s); join single letters split by spaces or punctuation
+ * ("f u c k", "s.h.i.t"); collapse 3+ repeated letters ("shiiit" → "shit", "ass" stays);
+ * everything else that is not a letter or digit becomes a word break.
+ */
+export function normalizeForMatch(text: string): string {
+  let t = text.normalize("NFKD").replace(/\p{M}/gu, "").replace(ZERO_WIDTH, "").toLowerCase();
+  t = t.replace(/[01345@$]/g, (c) => LEET[c] ?? c);
+  t = t.replace(SPELLED_OUT, (run) => run.replace(/[^a-z0-9]/g, ""));
+  t = t.replace(/([a-z])\1{2,}/g, "$1");
+  return t.replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/** The first blocked word found as a whole word in the normalized text, or null. */
+export function blockedWord(text: string): string | null {
+  const normalized = normalizeForMatch(text);
+  if (!normalized) return null;
+  const tokens = new Set(normalized.split(" "));
+  for (const word of PROFANITY_WORDS) {
+    if (tokens.has(word)) return word;
+  }
+  return null;
+}
+
 export type ModerationResult = {
   allowed: boolean;
   reason?: string;
   category?: "profanity" | "negative" | "inappropriate" | "dangerous" | "low_effort" | "low_quality";
 };
 
-export const BLOCKED_TEXT = "That isn't allowed. Try different words.";
+export { BLOCKED_TEXT };
 
-/** Captions, comments, and display names. Profanity only, so a short name is not "low effort". */
-export function blockedPlainText(text: string): string | null {
-  const normalized = normalize(text);
-  if (!normalized) return null;
-  for (const word of PROFANITY_WORDS) {
-    const regex = new RegExp(`\\b${word}\\b`, "i");
-    if (regex.test(normalized)) return BLOCKED_TEXT;
-  }
-  return null;
+/**
+ * Captions, comments, names, bios, prompts. Profanity only, so a short name is not
+ * "low effort". With a `field`, the message names it ("…in a username…") so the
+ * client can show it under the right input.
+ */
+export function blockedPlainText(text: string, field?: BlockedField): string | null {
+  if (!blockedWord(text)) return null;
+  return field ? blockedTextFor(field) : BLOCKED_TEXT;
 }
 
 export function moderateContent(title: string, description?: string): ModerationResult {
   const combined = normalize(`${title} ${description ?? ""}`);
 
-  for (const word of PROFANITY_WORDS) {
-    const regex = new RegExp(`\\b${word}\\b`, "i");
-    if (regex.test(combined)) {
-      return {
-        allowed: false,
-        reason: BLOCKED_TEXT,
-        category: "profanity",
-      };
-    }
+  if (blockedWord(`${title} ${description ?? ""}`)) {
+    return {
+      allowed: false,
+      reason: BLOCKED_TEXT,
+      category: "profanity",
+    };
   }
 
   for (const word of LOW_EFFORT_WORDS) {

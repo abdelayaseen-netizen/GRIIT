@@ -69,6 +69,15 @@ export const profilesRouter = createTRPCRouter({
       timezone: z.string().max(64).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // Build 90 07.1: the legacy /create-profile screen comes through here now.
+      for (const [value, field] of [
+        [input.username, "username"],
+        [input.display_name, "display name"],
+        [input.bio, "bio"],
+      ] as const) {
+        const blocked = typeof value === "string" ? blockedPlainText(value, field) : null;
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
       const timezone = resolveIanaTimeZone(input.timezone, "UTC");
       const { data, error } = await ctx.supabase
         .from('profiles')
@@ -355,13 +364,18 @@ export const profilesRouter = createTRPCRouter({
       if (typeof updatePayload.timezone === "string") {
         updatePayload.timezone = resolveIanaTimeZone(updatePayload.timezone, "UTC");
       }
+      // Build 90 07.1: every public field, before any write, naming the field.
+      if (typeof updatePayload.username === "string") {
+        const blocked = blockedPlainText(updatePayload.username, "username");
+        if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
+      }
       if (typeof updatePayload.display_name === "string") {
         updatePayload.display_name = updatePayload.display_name.trim().replace(/\s+/g, " ");
-        const blocked = blockedPlainText(String(updatePayload.display_name));
+        const blocked = blockedPlainText(String(updatePayload.display_name), "display name");
         if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
       }
       if (typeof updatePayload.bio === "string") {
-        const blocked = blockedPlainText(String(updatePayload.bio));
+        const blocked = blockedPlainText(String(updatePayload.bio), "bio");
         if (blocked) throw new TRPCError({ code: "BAD_REQUEST", message: blocked });
       }
       if (Object.keys(updatePayload).length === 0) {

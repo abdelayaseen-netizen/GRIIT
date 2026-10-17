@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../create-context";
 import { logger } from "../../lib/logger";
 import { sendPush } from "../../lib/sendPush";
+import { OWN_COMMENT_REPORT, commentReportDetails } from "../../../lib/comment-report";
 
 // Hardcoded moderator user_id. To support multiple moderators later,
 // move to env var (comma-separated UUIDs) and loop notifications.
@@ -120,6 +121,50 @@ export const reportsRouter = createTRPCRouter({
           throw new TRPCError({ code: "BAD_REQUEST", message: "You can't report yourself." });
         }
         logger.error({ err: error, userId: ctx.userId }, "[reports.reportUser] insert failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not submit your report. Please try again." });
+      }
+      return { success: true, alreadyReported: false };
+    }),
+
+  /**
+   * Build 90 07.3: report a comment. Same table and flow as a reported post (a user
+   * report with the thing in `details`); `details` starts with `comment:<id>` so
+   * feed.getComments can keep it hidden for the reporter.
+   */
+  reportComment: protectedProcedure
+    .input(
+      z.object({
+        commentId: z.string().uuid(),
+        reason: z.enum(REPORT_REASONS),
+        details: z.string().max(300).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { data: comment, error: qErr } = await ctx.supabase
+        .from("feed_comments")
+        .select("id, user_id, event_id, text")
+        .eq("id", input.commentId)
+        .maybeSingle();
+      if (qErr) {
+        logger.error({ err: qErr, userId: ctx.userId }, "[reports.reportComment] comment lookup failed");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not submit your report. Please try again." });
+      }
+      const row = comment as { id: string; user_id: string; text?: string | null } | null;
+      if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Comment not found." });
+      if (row.user_id === ctx.userId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: OWN_COMMENT_REPORT });
+      }
+      const details = commentReportDetails(row.id, [row.text ?? "", input.details ?? ""].filter(Boolean).join(" — "));
+      const { error } = await ctx.supabase.from("user_reports").insert({
+        reporter_user_id: ctx.userId,
+        reported_user_id: row.user_id,
+        reason: input.reason,
+        details,
+      });
+      if (error) {
+        const code = (error as { code?: string }).code;
+        if (code === "23505") return { success: true, alreadyReported: true };
+        logger.error({ err: error, userId: ctx.userId }, "[reports.reportComment] insert failed");
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not submit your report. Please try again." });
       }
       return { success: true, alreadyReported: false };

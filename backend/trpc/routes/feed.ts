@@ -7,6 +7,7 @@ import { getSupabaseServer } from "../../lib/supabase-server";
 import { getTodayDateKey, getYesterdayDateKey, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { logger } from "../../lib/logger";
 import { blockedPlainText } from "../../lib/content-moderation";
+import { commentIdFromReportDetails } from "../../../lib/comment-report";
 import { RETENTION_CONFIG } from "../../../lib/retention-config";
 import {
   LIVE_FEED_TYPES,
@@ -76,6 +77,30 @@ async function hiddenTestAuthorIds(
   const reader = getSupabaseServer() ?? ctx.supabase;
   if (await viewerIsTestAccount(reader, ctx.userId)) return new Set();
   return testAuthorIdSet(reader, others);
+}
+
+/**
+ * Build 90 07.3: comment ids the viewer reported (`user_reports.details` starts with
+ * `comment:<id>`, written by reports.reportComment). user_reports has no select policy
+ * for the reporter, so this reads with the service client; without one it is empty and
+ * the client's own hidden set still covers the reporter's screen.
+ */
+async function reportedCommentIds(viewerId: string): Promise<Set<string>> {
+  const server = getSupabaseServer();
+  if (!server) return new Set();
+  const { data, error } = await server
+    .from("user_reports")
+    .select("details")
+    .eq("reporter_user_id", viewerId)
+    .like("details", "comment:%")
+    .limit(500);
+  if (error || !data) return new Set();
+  const ids = new Set<string>();
+  for (const row of data as { details?: string | null }[]) {
+    const id = commentIdFromReportDetails(row.details);
+    if (id) ids.add(id);
+  }
+  return ids;
 }
 
 export const feedRouter = createTRPCRouter({
@@ -574,14 +599,14 @@ export const feedRouter = createTRPCRouter({
   }),
 
   shareCompletion: protectedProcedure.input(z.object({ challengeId: z.string().uuid(), caption: z.string().max(120).optional(), proofPhotoUrl: z.string().max(2000).optional() })).mutation(async ({ input, ctx }) => {
-    const server = getSupabaseServer();
-    if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     if (input.caption?.trim()) {
-      const captionBlock = blockedPlainText(input.caption.trim());
+      const captionBlock = blockedPlainText(input.caption.trim(), "caption");
       if (captionBlock) {
         throw new TRPCError({ code: "BAD_REQUEST", message: captionBlock });
       }
     }
+    const server = getSupabaseServer();
+    if (!server) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sharing is temporarily unavailable." });
     type ActivityEventsWriter = {
       from: (table: "activity_events") => {
         insert: (row: { user_id: string; event_type: string; challenge_id: string; metadata: Record<string, unknown> }) => { select: (cols: "id, metadata") => { single: () => Promise<{ data: { id: string; metadata?: Record<string, unknown> } | null; error: { message: string } | null }> } };
@@ -830,9 +855,14 @@ export const feedRouter = createTRPCRouter({
         ctx,
         unblocked.map((c: { user_id: string }) => c.user_id),
       );
-      const visibleComments = testIds.size > 0
+      const notTest = testIds.size > 0
         ? unblocked.filter((c: { user_id: string }) => !testIds.has(c.user_id))
         : unblocked;
+      // Build 90 07.3: a comment the viewer reported stays hidden for them.
+      const reportedIds = await reportedCommentIds(ctx.userId);
+      const visibleComments = reportedIds.size > 0
+        ? notTest.filter((c: { id: string }) => !reportedIds.has(c.id))
+        : notTest;
       const userIds = [...new Set(visibleComments.map((c: { user_id: string }) => c.user_id))];
       const { data: profiles } = userIds.length
         ? await ctx.supabase
@@ -869,7 +899,7 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const commentBlock = blockedPlainText(input.text);
+      const commentBlock = blockedPlainText(input.text, "comment");
       if (commentBlock) {
         throw new TRPCError({ code: "BAD_REQUEST", message: commentBlock });
       }

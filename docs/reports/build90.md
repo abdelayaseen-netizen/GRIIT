@@ -572,3 +572,23 @@ Fix: `handleUnauthorized()` in `lib/trpc.ts` refreshes once and signs out only w
 - The Day secured screen is taller than an iPhone 16 viewport (302pt sticker preview); the challenge row is above Done but needs one scroll to see. Shrinking the preview is a design call.
 - 06.7's live path (a real missed yesterday with a freeze in hand) was not exercised on a device tonight; the copy and the sheet are proven on the harness, the mutation path is unchanged.
 - 06.9 is a fix for the two reopen paths found in code. If the review account was dropped for another reason (for example a password reset or a revoked refresh token on the Supabase side), that would still sign it out, by design.
+
+## 07 Safety
+
+Branch `feat/build90`. Root causes written before the code; evidence and shas filled in at the end of the chunk.
+
+### 07.1 Moderate every public text field server-side
+
+Root cause: moderation was applied field by field as each one came up, so coverage had holes. Checked: `profiles.update` ran `blockedPlainText` on `display_name` and `bio` only, never `username`; `profiles.create` (used by the legacy `/create-profile` screen through a *direct Supabase upsert*, so no server code at all) and `user.completeOnboarding` (username and display name from onboarding) ran nothing; `challenges.create` moderated title+description together and task titles, but not the per-task `journalPrompt` (shown to every joiner on the Write step), `locationName` or `routineAnchorCustom`; `feed.comment` and `feed.shareCompletion` were covered. Every rejection used the same generic `BLOCKED_TEXT` ("That isn't allowed. Try different words."), so the client could not say which field, and two of the clients did not show the message at all: `CreateWizardV2` stored `launchError` but `StepReview` rendered a fixed "Check your connection and try again."; `CommentsSheet` and the post thread only `captureError`'d a rejected comment, so the composer kept the text with no explanation. Invite messages: there is no free-text invite in the product (`groups.invite` has no message; `groups.nudge` sends one of three fixed lines by `messageKey`), so nothing to moderate there.
+
+### 07.2 Harder to dodge
+
+Root cause: `normalize()` in `backend/lib/content-moderation.ts` lowercased and stripped non-alphanumerics, then matched `\bword\b`. So "sh1t", "f u c k", "fúck", "fu\u200Bck", "shiiiit", "a$$" and "b.i.t.c.h" all passed, and because the strip removed separators *inside* a token, "f.u.c.k" became "fuck" by accident but "f u c k" stayed four letters.
+
+### 07.3 Report a comment
+
+Root cause: there was no comment report at all. Posts are reported through `reports.reportUser` with the post id in `details`, users through the same route from the profile; a comment had only the author's own long-press delete. Nothing hid a reported post or comment for the reporter either (the feed's "Hide post" is a local state array that resets on reload).
+
+### 07.4 Journal text is private
+
+Root cause (verification item): the Write step and the photo Review caption both send `noteText` to `checkins.complete`, which writes `check_ins.note_text`. That column is read back only by the owner (`checkins.getTodayCheckins`); the shared `activity_events.metadata` built in `checkins.complete` does not carry it, `feed`/`feed-activity-hydrate` read captions from metadata only, and `profiles.getRecord` selects `check_ins` without `note_text`. `checkins.complete` runs no moderation on `noteText`. There was no test pinning any of that, so a later change could leak it or start moderating a private diary.

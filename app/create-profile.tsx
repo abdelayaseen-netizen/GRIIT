@@ -11,6 +11,8 @@ import {
 import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { trpcMutate } from "@/lib/trpc";
+import { TRPC } from "@/lib/trpc-paths";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { DS_V3, DS_TYPOGRAPHY, DS_RADIUS } from "@/lib/design-system"
 import { trackEvent } from "@/lib/analytics";
@@ -117,23 +119,15 @@ function CreateProfileScreenInner() {
 
     try {
       const deviceTz = getDeviceIanaTimeZone();
-      const { error } = await supabase.from("profiles").upsert(
-        {
-          user_id: userId,
-          username: normalizedUsername,
-          display_name: displayName.trim(),
-          bio: bio.trim() || null,
-          timezone: deviceTz,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
-
-      if (error) {
-        setFormError(error.message);
-        setSaving(false);
-        return;
-      }
+      // Build 90 07.1: through the server, so the username, name and bio are moderated
+      // like every other public field (a direct upsert skipped that). A blocked value
+      // comes back as a BAD_REQUEST message naming the field, shown under the form.
+      await trpcMutate(TRPC.profiles.create, {
+        username: normalizedUsername,
+        display_name: displayName.trim() || undefined,
+        bio: bio.trim() || undefined,
+        timezone: deviceTz,
+      });
 
       trackEvent("profile_created");
       router.replace(ROUTES.TABS as never);

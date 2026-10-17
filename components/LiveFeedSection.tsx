@@ -19,6 +19,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery, useQueryClient, useQueries, useInfiniteQuery } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { fetchComments } from "@/lib/hidden-comments";
 import { ROUTES } from "@/lib/routes";
 import { feedAuthorHref, feedChallengeHref } from "@/lib/feed-tap-targets";
 import { useAuth } from "@/contexts/AuthContext";
@@ -284,14 +285,8 @@ function LiveFeedSection({
     queries: postsWithComments.map((p) => ({
       queryKey: ["feedCommentPreview", p.id],
       queryFn: async () => {
-        const rows = (await trpcQuery(TRPC.feed.getComments, { eventId: p.id, limit: 100 })) as {
-          user_id: string;
-          text: string;
-          created_at: string;
-          display_name: string;
-          username: string;
-          avatar_url: string | null;
-        }[];
+        // 07.3: the shared fetch drops comments this viewer reported.
+        const rows = await fetchComments(p.id, 100);
         return rows.slice(0, 2).map((row) => ({
           userId: row.user_id,
           username: row.username,
