@@ -155,7 +155,9 @@ appId: app.griit.challenge-tracker
 # In the comments sheet every author is tappable; it closes the sheet and opens the
 # person. Earlier runs left other test accounts' comments above B's, so index 0 is
 # another person: their profile must resolve (Follow, a @handle, no uuid).
-- hideKeyboard
+# Chunk 07: `hideKeyboard` is unreliable on this keyboard (two runs in a row could not
+# dismiss it); a tap on the sheet heading closes it the same way a finger would.
+- tapOn: "Comments"
 - tapOn:
     text: ".* profile"
     index: 0

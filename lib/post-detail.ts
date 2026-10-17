@@ -20,7 +20,16 @@ export const COMMENTS_EMPTY = "No comments yet.";
 
 export function commentsCountLabel(n: number): string {
   if (n <= 0) return "";
-  return `${n} comments`;
+  return n === 1 ? "1 comment" : `${n} comments`;
+}
+
+/**
+ * Build 90 07.3: the heading counts what the viewer can see. Once the comment list has
+ * loaded it is the source (a reported comment is not in it); before that, the post's
+ * stored count.
+ */
+export function visibleCommentCount(loadedCount: number | null, storedCount: number): number {
+  return loadedCount == null ? storedCount : loadedCount;
 }
 
 export function completionLine(input: {

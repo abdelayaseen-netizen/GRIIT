@@ -7,6 +7,7 @@ import {
   COMMENTS_HEADING,
   composerFieldGround,
   commentsCountLabel,
+  visibleCommentCount,
   commentsSectionKind,
   completionLine,
   postDetailPhotoUri,
@@ -65,7 +66,10 @@ describe("comments section render", () => {
   it("uses the handoff empty line and comment count", () => {
     expect(COMMENTS_EMPTY).toBe("No comments yet.");
     expect(commentsCountLabel(0)).toBe("");
+    expect(commentsCountLabel(1)).toBe("1 comment");
     expect(commentsCountLabel(3)).toBe("3 comments");
+    expect(visibleCommentCount(null, 2)).toBe(2);
+    expect(visibleCommentCount(1, 2)).toBe(1);
     expect(COMMENT_PLACEHOLDER).toBe("Add a comment");
     expect(COMMENTS_HEADING).toBe("Comments");
   });

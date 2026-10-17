@@ -45,6 +45,7 @@ import {
   POST_DETAIL_TITLE,
   postDetailAudience,
   commentsCountLabel,
+  visibleCommentCount,
   commentsSectionKind,
   composerFieldGround,
   completionLine,
@@ -122,6 +123,7 @@ function PostThreadScreenInner() {
   });
 
   const comments = commentsQuery.data ?? [];
+  const visibleCount = visibleCommentCount(commentsQuery.data ? comments.length : null, displayPost?.commentCount ?? 0);
   const rows = useMemo(
     () => threadRows(comments.map((item) => ({ ...item, parent_id: item.parent_id ?? null }))),
     [comments],
@@ -277,8 +279,8 @@ function PostThreadScreenInner() {
               />
             </View>
           ) : null}
-          {commentsCountLabel(displayPost.commentCount) ? (
-            <Text style={styles.count}>{commentsCountLabel(displayPost.commentCount)}</Text>
+          {commentsCountLabel(visibleCount) ? (
+            <Text style={styles.count}>{commentsCountLabel(visibleCount)}</Text>
           ) : null}
         </View>
         {section === "loading" ? (
@@ -289,7 +291,7 @@ function PostThreadScreenInner() {
         ) : null}
       </View>
     );
-  }, [loading, displayPost, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
+  }, [loading, displayPost, visibleCount, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
 
   const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
 
