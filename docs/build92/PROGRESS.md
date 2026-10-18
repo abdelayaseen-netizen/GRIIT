@@ -5,7 +5,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | # | Chunk | Status | Commit | Notes |
 |---|---|---|---|---|
 | 01 | Glass foundation and Create | PASSED | c2912c61 | Flag off ships the fallback; expo-glass-effect install is Needs Yaseen. Report: docs/reports/build92.md |
-| 02 | Finish flow and Day secured | PASSED | (see commit below) | Run type not covered on simulator (Strava); offline queue out of scope. Report: docs/reports/build92.md |
+| 02 | Finish flow and Day secured | PASSED | ca530dad | Run type not covered on simulator (Strava); offline queue out of scope. Report: docs/reports/build92.md |
 | 03 | Task inputs and partial logs | NOT STARTED | | |
 | 04 | Posts, likes and proof detail | NOT STARTED | | |
 | 05 | Share stickers | NOT STARTED | | |
@@ -26,8 +26,8 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 01.4 Toasts: done, c2912c61
 01.5 Top bars and route-name leak: done, c2912c61
 01.6 Bottom insets: done (already met, verified), c2912c61
-02.1 One finish flow (sheet, audiences, Posting, offline line): done
-02.2 Where it goes next (routeAfterFinish, Home toast + Next tag, no Proof screen): done
-02.3 Day secured (no scroll, task rows, teaching line once, Done/Back/swipe): done
-02.4 Challenge complete (longest streak, freezes used, dates, other-open line): done
-02.5 Second audience prompt removed from Proof: done
+02.1 One finish flow (sheet, audiences, Posting, offline line): done, ca530dad
+02.2 Where it goes next (routeAfterFinish, Home toast + Next tag, no Proof screen): done, ca530dad
+02.3 Day secured (no scroll, task rows, teaching line once, Done/Back/swipe): done, ca530dad
+02.4 Challenge complete (longest streak, freezes used, dates, other-open line): done, ca530dad
+02.5 Second audience prompt removed from Proof: done, ca530dad
