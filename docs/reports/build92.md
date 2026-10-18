@@ -719,3 +719,77 @@ the top numbers are exactly "Day {n} of {N}" and "{n} days secured", derived fro
 - Definition applied: "{secured} of {elapsed} days secured" where elapsed = days before today plus today once
   secured (`enrollment-day-stats.ts`, `secured-elapsed.ts`). The Your data bar and line move to it; the old
   "{day} of {duration} days. Today counts." line goes.
+
+### Chunk 06 before and after (the four mismatches)
+The fixtures in `backend/lib/user-stats.test.ts` ("Yaseen-like": 8 secured days 10-08…10-18 with 10-11 held and
+10-16/17 missed; camera, Strava and self-reported check-ins) make each pair concrete:
+
+| Pair | Before (two code paths) | After (one field) |
+| --- | --- | --- |
+| Profile Best vs Your data Best | header: `streaks.longest_streak_count` counter; Your data: `bestStreakRun(secured ∪ held)` → the held day counted, so 7 secured days read "Best 8 · Oct 8 – Oct 15" against "Best 7" | both `user_stats.best_streak` = 7, `Oct 8 – Oct 15` (chain dates, held day keeps the chain, counts nothing) |
+| "19 proofs" vs "25 proofs" | Your data: photo `activity_events` de-duplicated by URL; Proofs tab: one per `check_ins` tile | both `user_stats.proofs_count` = completed check-ins with camera or Strava proof (fixture: 8) |
+| "Workout every day: 5 of 7 days" vs "0 of 4 days secured" | Your data: day number of duration ("5 of 7 days. Today counts."); card: secured of elapsed | both `enrollmentProgress` → "3 of 5 days secured" (fixture enrollment from 10-14) |
+| "Wake up at 5: 7 of 7" vs "Left on day 5" | Your data: day number through the planned end for a left enrollment; Challenges: `ended_on_day` | Your data: "Left on day 5 · 4 of 5 secured" from the same records |
+
+### Chunk 06 gates and evidence
+- vitest consistency test `backend/lib/user-stats.test.ts` (17 tests; failing-first run `06/vitest-before.txt`
+  — the module did not exist): three seeded users (Yaseen-like with a freeze and misses, fresh, lapsed) through
+  `computeUserStats`; `buildMeStats` returns the same current/best/dates/secured/proofs/verified; the routes attach
+  `user_stats` from the one `loadUserStats` and set the legacy `activeStreak / longestStreak / totalDaysSecured /
+  streak.current / streak.best` from it; the clients read the fields (Home and Profile no longer call
+  `streakFromDays`, the Proofs tab count and the challenge page read `proofs_count` / `challenges.progress`);
+  `enrollmentProgress` equals `enrollmentDayStats` and `securedElapsed` for the same keys and stops at a left
+  enrollment's end; Your data lines; the freeze rule (no refill, cap 2 / 4, copy gone).
+- Maestro `.maestro/build92-06-numbers.yaml` — SE `06/se/maestro-numbers-run6.txt` PASS, 16 Pro Max
+  `06/16promax/maestro-numbers-16promax.txt` PASS (runs 1–5 were flow fixes: the guest's "Save your challenge."
+  prompt after Done is where the account is created; the simulator has no soft keyboard to hide; Maestro matches
+  the whole label, the profile card is "Open Show Up 7 challenge"). A fresh `b89num…@example.com` (is_test)
+  account secures Day 1 of Show Up 7 with a photo, then: Home "1 · day in a row · Your best"; Profile "1 Streak ·
+  1 Best · 1 Days secured"; Your data "1-day streak · Best 1 · Oct 18 · 1 proofs"; the challenge page "Day 1 of 7 ·
+  1 of 1 day secured" (and the Profile Challenges card "Day 1 of 7 · 1 of 1 day"). Screenshots
+  `06-home-numbers`, `06-profile-numbers`, `06-your-data-numbers`, `06-profile-challenges-card`,
+  `06-challenge-numbers` in `06/se/` and `06/16promax/`. Limit: a Maestro account cannot carry days of history,
+  so the flow proves the four surfaces read the same source on a one-day record; the multi-day cases (freeze,
+  misses, left challenge) are the vitest fixtures above.
+- SQL: none needed. The one source is computed server-side from existing tables (`day_secures`, `freeze_uses`,
+  `check_ins`); no view, function or column. `docs/sql/build92.sql` has no chunk 06 entry.
+- Backend deployed (no SQL; additive — `user_stats` on three responses, new `challenges.progress`, freeze status
+  unchanged in shape; build 91 clients ignore the new fields): `de7d012d`, `railway up --service grit-backend`,
+  `/api/health` → `"commit":"de7d012"`. `backend/deploy-sha.txt` is git-ignored; it holds `de7d012d` locally.
+- Full suite `06/vitest-final.txt`: baseline 4 only. `06/tsc-final.txt`: baseline 5 only. Pins moved with
+  "Build 92 06.x" comments: `backend/trpc/routes/home.test.ts` and `profiles-stats.test.ts` (streak numbers now
+  come from the mocked `day_secures`, not the `streaks` counter), `streaks.test.ts` (monthly allotment → held
+  count capped), `backend/lib/me-stats.test.ts` (`userStats` input; "secured of elapsed" lines),
+  `lib/chunk-u-feed.test.ts` and `lib/consistency.test.ts` (Home/Profile no longer reduce the day array).
+- Self-check diff: no skipped tests, no `as any`, no console.log, no hard-coded numbers; chunk 01–05 tests pass
+  in the full run (`lib/stickers-b92.test.ts`, `lib/post-result.test.ts`, … all green).
+
+### Chunk 06 decisions made alone
+- Server-side computation instead of a SQL view: `backend/lib/user-stats.ts` reads the existing tables, so the
+  chunk does not wait on SQL and the backend could deploy. A view would be a later speed step (chunk 11).
+- A held day keeps the chain and never adds to any count (streak, best, secured). `Best N · dates` therefore
+  spans the chain including held days while N counts secured days only. This matches the SQL `secure_day` counter
+  the Day secured screen shows right after a finish, so the two never disagree.
+- `verified_days` requires every completed check-in that day to carry camera or Strava proof; a day with no
+  check-in rows (older data) is not verified. `proofs_count` counts completed check-ins with a proof image or
+  Strava source (no de-dup by URL — one task, one proof).
+- The Proofs tab's "N proofs · newest first" reads `proofs_count` (the grid still shows photo tiles only, so the
+  line can exceed the tiles when a Strava proof has no photo).
+- The streak-row (`streaks.active_streak_count`) and `profiles.total_days_secured` are still written by the
+  finish path for last-stand and tier logic; they are no longer displayed.
+- `challenges.progress` is a new read procedure; the page keeps its local `enrollmentDayStats` only as the
+  loading stand-in (same formula, same keys).
+- Freeze copy: Settings "Earn a freeze at each 7-day streak. Hold up to 2." (Premium: "hold up to 4 freezes");
+  paywall "Hold up to 4 freezes (free: 2)"; error "No freezes left. You earn one at each 7-day streak." The
+  README has no copy row for these; sentence case, no exclamation.
+- `ProfileHeader` stats gained an accessibility label "1 Streak" (one element per number) so the flow can read
+  them; no visual change.
+
+### Chunk 06 not done / Needs Yaseen
+- Older accounts whose finished days predate `check_ins` proof columns show fewer verified days / proofs than the
+  old photo-event count until a backfill from `activity_events.metadata` is written — not in the spec; flagging.
+- `loadUserStats` reads up to 5000 check-ins per call on three procedures; fine for build 92 users, a candidate
+  for one cached row (or the SQL view) in chunk 11.
+- Share cards (`ShareStickerSheet`, Day secured) still take `streak` from the finish response's counter, which
+  equals `user_stats.current_streak` under the held-day rule; not re-plumbed here.
+- The Maestro check uses a one-day record (above); the multi-day consistency is unit-tested only.

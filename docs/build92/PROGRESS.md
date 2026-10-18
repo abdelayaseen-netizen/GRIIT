@@ -9,7 +9,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 03 | Task inputs and partial logs | PASSED (waiting for SQL) | 96a72a63 | 03.6 data fix is SQL in docs/sql/build92.sql, not run; short saves are saved, not posted. Report: docs/reports/build92.md |
 | 04 | Posts, likes and proof detail | PASSED | 91ee4f74 | Backend deployed 35ea72d then 4677dba (feed.react mode "like", result/badge on feed items). Report: docs/reports/build92.md |
 | 05 | Share stickers | PASSED | 74853f8a | No SQL, no deploy (client only). Needs Yaseen: verify live RevenueCat prices on a device/sandbox. Report: docs/reports/build92.md |
-| 06 | One source for every number | NOT STARTED | | |
+| 06 | One source for every number | PASSED | de7d012d | No SQL (server computes user_stats from existing tables). Backend deployed de7d012 (user_stats on getStats/getRecord/meStats, challenges.progress, freeze refill removed). Report: docs/reports/build92.md |
 | 07 | Profile and post viewer | NOT STARTED | | |
 | 08 | Invite, leaderboard and settings | NOT STARTED | | |
 | 09 | First day and account | NOT STARTED | | |
@@ -48,3 +48,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 05.3 Pro lock (glow/ring locked without "GRIIT Pro", lock chip, "Unlock with GRIIT Pro", upgrade sheet with live prices, purchase → unlocked in place): done, 74853f8a (prices on simulator: none — verify on device)
 05.4 Verified mark (camera/Strava → Verified, else Self-reported; proofSource on the card input): done, 74853f8a
 05.5 Export (1080×1920 story PNG via storyShotSize, transparent sticker PNG for glow/ring, Copy sticker · Instagram Story · Save · Messages · More; carousel host moved to root layout so Day secured opens it): done, 74853f8a
+06.1 Root cause each mismatch (Best counter vs recount w/ held day; proofs events vs tiles; day-number-as-secured line; left enrollment read as finished): done, de7d012d
+06.2 Server fields (backend/lib/user-stats.ts computeUserStats → user_stats on getStats/home.bootstrap, getRecord, meStats; challenges.progress; clients stop computing): done, de7d012d
+06.3 Freeze rule (earn at each 7-day streak, hold 2 / 4 Pro, monthly refill and its Settings/paywall/error copy gone, existing counts capped): done, de7d012d
+06.4 Progress-bar wording ("{secured} of {elapsed} days secured" on Your data; "Left on day n · s of e secured"): done, de7d012d

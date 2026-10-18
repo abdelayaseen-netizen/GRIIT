@@ -1,6 +1,5 @@
 appId: app.griit.challenge-tracker
-env:
-  MAESTRO_EMAIL: b89num@example.com
+# Run with -e MAESTRO_EMAIL=b89num<unix-time>@example.com (fresh is_test address per run).
 ---
 # Build 92 chunk 06: one source for every number. A guest secures Day 1 of Show Up 7 with a photo,
 # saves the account (is_test email) and the same numbers show on Home (streak 1, Your best),
@@ -62,25 +61,29 @@ env:
           visible: "Every task today is done."
           timeout: 10000
 - tapOn: "^Done$"
+# Done raises "Save your challenge." for a guest (or lands Home; then Settings has the same prompt).
 - extendedWaitUntil:
-    visible:
-      id: "tab-home"
+    visible: "Continue with email|tab-home"
     timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Continue with email"
+    commands:
+      - tapOn:
+          id: "tab-profile"
+      - extendedWaitUntil:
+          visible: "Settings"
+          timeout: 15000
+      - tapOn: "Settings"
+      - extendedWaitUntil:
+          visible: "You're using GRIIT as a guest.*"
+          timeout: 15000
+      - tapOn: "You're using GRIIT as a guest.*"
+      - extendedWaitUntil:
+          visible: "Continue with email"
+          timeout: 15000
 
 # ---- Save the account so Profile and Your data open (is_test address) ---------------------------
-- tapOn:
-    id: "tab-profile"
-- extendedWaitUntil:
-    visible: "Settings"
-    timeout: 15000
-- tapOn: "Settings"
-- extendedWaitUntil:
-    visible: "You're using GRIIT as a guest.*"
-    timeout: 15000
-- tapOn: "You're using GRIIT as a guest.*"
-- extendedWaitUntil:
-    visible: "Continue with email"
-    timeout: 15000
 - tapOn: "Continue with email"
 - tapOn:
     id: "account-email"
@@ -88,8 +91,8 @@ env:
 - tapOn:
     id: "account-password"
 - inputText: "Build92-numbers-test"
-- hideKeyboard
-- tapOn: "Continue"
+# The simulator uses the hardware keyboard (no soft keyboard to hide).
+- tapOn: "^Continue$"
 - extendedWaitUntil:
     visible: "Send it|Home|Streak|Settings"
     timeout: 30000
@@ -125,21 +128,39 @@ env:
 
 # ---- Your data: the same streak, best and proofs ----------------------------------------------
 - tapOn: "Your data"
+# The cards sit under the header on the SE; scroll them into view.
 - extendedWaitUntil:
-    visible: "1-day streak"
+    visible: "Consistency|Streaks|1-day streak"
     timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "1-day streak"
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 50
 - assertVisible: "Best 1.*"
-- assertVisible: "1 proofs"
+- scrollUntilVisible:
+    element:
+      text: "1 proofs"
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 50
 - takeScreenshot: 06-your-data-numbers
 
 # ---- Challenge page (Profile → Challenges → the run): Day 1 of 7 · 1 of 1 day secured --------
+- scrollUntilVisible:
+    element:
+      text: "Challenges"
+    direction: UP
+    timeout: 30000
+    visibilityPercentage: 50
 - tapOn: "Challenges"
+# The running card is one accessible element: "Open Show Up 7 challenge".
 - extendedWaitUntil:
-    visible: "Show Up 7"
+    visible: "Open Show Up 7 challenge"
     timeout: 20000
-- tapOn:
-    text: "Show Up 7"
-    index: 0
+- takeScreenshot: 06-profile-challenges-card
+- tapOn: "Open Show Up 7 challenge"
 - extendedWaitUntil:
     visible: "1 of 1 day secured"
     timeout: 30000
