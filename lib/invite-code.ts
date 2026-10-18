@@ -1,6 +1,6 @@
 /**
  * Build 90 chunk 08: the invite code is the challenge id. This reads one out of whatever
- * someone pastes into Discover search: the bare uuid, `griit://i/<uuid>`, a web link ending
+ * someone pastes into Discover search: the bare uuid, an older scheme link, a web link ending
  * in `/i/<uuid>` or `/challenge/<uuid>`, or "Join me on GRIIT · code <uuid>".
  * No imports: shared by the app and the backend.
  */

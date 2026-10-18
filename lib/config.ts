@@ -22,6 +22,12 @@ export const DEEP_LINK_BASE_URL = readDeepLinkBase();
 /** Web origin for invite links. Null until a domain is set. Never griit.app. */
 export const INVITE_BASE = DEEP_LINK_BASE_URL;
 
+/**
+ * Build 92 chunk 08.1: invite links read `{INVITE_BASE_URL}/i/{code}`. The backend serves the
+ * landing page at that path, so the Railway origin is the default until a domain is set.
+ */
+export const INVITE_BASE_URL = DEEP_LINK_BASE_URL ?? "https://grit-backend-production.up.railway.app";
+
 /** Meta App ID for Instagram Stories. Set EXPO_PUBLIC_FACEBOOK_APP_ID. Never a hardcoded id. */
 export function facebookAppId(): string {
   return facebookAppIdFromEnv();

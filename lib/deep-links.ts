@@ -3,7 +3,7 @@
  * Otherwise the app scheme. Never default to griit.app.
  */
 
-import { APP_SCHEME, DEEP_LINK_BASE_URL, INVITE_BASE } from "@/lib/config";
+import { APP_SCHEME, DEEP_LINK_BASE_URL, INVITE_BASE_URL } from "@/lib/config";
 
 export function joinMeOnGriitCode(code: string): string {
   return `Join me on GRIIT · code ${code.trim()}`;
@@ -25,11 +25,17 @@ export function challengeDeepLink(challengeId: string, refUserId?: string | null
   return withRef(appOrWebPath(`/challenge/${challengeId}`), refUserId);
 }
 
+/**
+ * Build 92 chunk 08.1: the public link is `{INVITE_BASE_URL}/i/{code}`; the scheme form is
+ * `griit://invite/{code}` and is only used by the landing page's "Open it" fallback.
+ */
 export function inviteDeepLink(inviteCode: string, refUserId?: string | null): string {
   const code = encodeURIComponent(inviteCode.trim());
-  const path = `/i/${code}`;
-  if (INVITE_BASE) return withRef(`${INVITE_BASE}${path}`, refUserId);
-  return withRef(`${APP_SCHEME}://i/${code}`, refUserId);
+  return withRef(`${INVITE_BASE_URL}/i/${code}`, refUserId);
+}
+
+export function inviteSchemeLink(inviteCode: string): string {
+  return `${APP_SCHEME}://invite/${encodeURIComponent(inviteCode.trim())}`;
 }
 
 export function profileDeepLink(username: string): string {

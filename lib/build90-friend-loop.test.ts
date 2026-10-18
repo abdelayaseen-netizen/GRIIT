@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 
 import { resolveAuthRedirect, isInviteLinkSegment } from "./auth-redirect";
 import { openLinkRoute } from "./group-ui";
+import { inviteQueryFor } from "./invite-resolve";
 import { parseInviteCode, searchKind } from "./invite-code";
 import {
   inviteLinkFor,
@@ -32,18 +33,17 @@ const read = (rel: string) => readFileSync(resolve(__dirname, "..", rel), "utf8"
 const CH = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 describe("08.1 invite link visible (source)", () => {
-  it("one shared InviteLinkRow: link text, Copy → Copied, Share", () => {
-    const src = read("components/InviteLinkRow.tsx");
-    expect(src).toMatch(/inviteLinkFor\(challengeId/);
+  it("one shared InviteSheet: link text, Copy link → Link copied., Share (Build 92 08.3 moved it from InviteLinkRow)", () => {
+    const src = read("components/InviteSheet.tsx");
+    expect(src).toMatch(/inviteDisplayLink\(code\)/);
     expect(src).toMatch(/copyChallengeInvite\(/);
     expect(src).toMatch(/inviteToChallenge\(/);
-    expect(src).toMatch(/copied \? COPIED_LABEL : COPY_LINK_LABEL/);
-    expect(src).toMatch(/selectable/);
-    expect([COPY_LINK_LABEL, COPIED_LABEL, SHARE_LINK_LABEL]).toEqual(["Copy", "Copied", "Share"]);
+    expect(src).toMatch(/setToast\(LINK_COPIED_TOAST\)/);
+    expect([COPY_LINK_LABEL, COPIED_LABEL, SHARE_LINK_LABEL]).toEqual(["Copy link", "Copied", "Share"]);
   });
   it("create-success renders it for every launch (not only groups) with the new challenge id", () => {
     const launched = read("components/create/v2/LaunchedScreen.tsx");
-    expect(launched).toMatch(/<InviteLinkRow challengeId=\{challengeId\}/);
+    expect(launched).toMatch(/<InviteSheet challengeId=\{challengeId\}/);
     const wizard = read("components/create/CreateWizardV2.tsx");
     expect(wizard).toMatch(/<LaunchedScreen[\s\S]*?challengeId=\{launched\.challengeId\}/);
   });
@@ -56,7 +56,9 @@ describe("08.1 invite link visible (source)", () => {
   it("the board's 'A board needs two' renders it", () => {
     const tab = read("components/activity/LeaderboardTab.tsx");
     expect(tab).toMatch(/A board needs two|boardEmptyState/);
-    expect(tab).toMatch(/<InviteLinkRow[\s\S]*?challengeId=\{selectedChallengeId\}/);
+    // Build 92 08.3: Invite opens the sheet; the raw link block is gone from the board.
+    expect(tab).toMatch(/<InviteSheet[\s\S]*?challengeId=\{selectedChallengeId\}/);
+    expect(tab).not.toContain("InviteLinkRow");
   });
   it("the challenge board lists the challenge's members, not only mutual follows", () => {
     // Seen live in flow B: after the link invitee joined, the board still said "A board needs
@@ -81,8 +83,8 @@ describe("08.1 invite link visible (source)", () => {
     ).toBe(false);
     expect(INVITE_AFTER_FIRST_DAY_HEADING).not.toMatch(/!/);
   });
-  it("the link is griit://i/<challenge id>", () => {
-    expect(inviteLinkFor(CH)).toMatch(new RegExp(`/i/${CH}$`));
+  it("the link is {INVITE_BASE_URL}/i/<code> (Build 92 08.1: https, short code, no griit:// UUID)", () => {
+    expect(inviteLinkFor(CH)).toMatch(new RegExp(`^https://.*/i/${CH}$`));
     expect(inviteLinkFor(CH, "u1")).toMatch(/\?ref=u1$/);
   });
 });
@@ -123,8 +125,9 @@ describe("08.2 opening an invite", () => {
   it("the invite screen sends a sessionless viewer straight to the challenge with invite=1", () => {
     const src = read("app/invite/[code].tsx");
     expect(src).toMatch(/if \(authLoading\) return;/);
-    expect(src).toMatch(/if \(!user\) \{[\s\S]*?router\.replace\(`\$\{ROUTES\.CHALLENGE_ID\(challengeId\)\}\?\$\{guestQuery\.toString\(\)\}`/);
-    expect(src).toMatch(/new URLSearchParams\(\{ invite: "1" \}\)/);
+    // Build 92 08.1: the query is built by inviteQueryFor (always invite=1).
+    expect(src).toMatch(/if \(!user\) \{[\s\S]*?router\.replace\(`\$\{ROUTES\.CHALLENGE_ID\(challengeId\)\}\?\$\{inviteQueryFor\(/);
+    expect(inviteQueryFor({})).toBe("invite=1");
     expect(src).not.toMatch(/if \(!user\) return;/);
   });
   it("the challenge page: a link guest gets a session, is marked onboarded, then lands on the first task", () => {
@@ -226,7 +229,7 @@ describe("duo waiting room", () => {
     expect(detail).toMatch(/else if \(joinLeftWaitingRoom\(result\)\)/);
     expect(detail).toMatch(/waitingRoom=\{waitingRoom && id && !finished \? \{ challengeId: id \} : undefined\}/);
     const v3 = read("components/challenge/ChallengeDetailV3.tsx");
-    expect(v3).toMatch(/p\.waitingRoom \? \([\s\S]*?WAITING_FOR_PARTNER_HEADING[\s\S]*?<InviteLinkRow/);
+    expect(v3).toMatch(/p\.waitingRoom \? \([\s\S]*?WAITING_FOR_PARTNER_HEADING[\s\S]*?<InviteSheet/);
     const byId = read("backend/trpc/routes/challenges.ts");
     expect(byId).toMatch(/participationType === "shared_goal" \|\| participationType === "duo"/);
   });

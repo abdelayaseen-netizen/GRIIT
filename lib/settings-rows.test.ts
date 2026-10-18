@@ -30,15 +30,17 @@ describe("settings rows", () => {
   it("Connect Strava is on Settings only when STRAVA_AUTO_VERIFY is on", () => {
     expect(stravaSettingsRow({ flagOn: false, connected: false })).toBeNull();
     expect(stravaSettingsRow({ flagOn: true, connected: false, guest: true })).toBeNull();
-    expect(stravaSettingsRow({ flagOn: true, connected: false })).toEqual({
+    // Build 92 08.6: the row is "Strava" with a Connect / Disconnect action and "Connected as {name}".
+    expect(stravaSettingsRow({ flagOn: true, connected: false })).toMatchObject({
       title: STRAVA_CONNECT_TITLE,
-      subtitle: null,
       action: "connect",
+      actionLabel: "Connect",
     });
-    expect(stravaSettingsRow({ flagOn: true, connected: true })).toEqual({
+    expect(stravaSettingsRow({ flagOn: true, connected: true })).toMatchObject({
       title: STRAVA_CONNECT_TITLE,
       subtitle: STRAVA_CONNECTED_SUB,
       action: "disconnect",
+      actionLabel: "Disconnect",
     });
     const settings = readFileSync(resolve(__dirname, "../app/settings/index.tsx"), "utf8");
     expect(settings).toContain("stravaSettingsRow(");

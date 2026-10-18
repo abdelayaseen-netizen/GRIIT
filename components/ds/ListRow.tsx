@@ -27,6 +27,7 @@ export type ListRowProps = {
    * from assistive tech, so VoiceOver and UI tests can reach it.
    */
   interactiveIcon?: boolean;
+  testID?: string;
 };
 
 export default function ListRow({
@@ -39,6 +40,7 @@ export default function ListRow({
   divider = true,
   onPress,
   interactiveIcon = false,
+  testID,
 }: ListRowProps) {
   const rankEl =
     rank != null ? (
@@ -85,6 +87,7 @@ export default function ListRow({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={title}
+            testID={testID}
             onPress={onPress}
             style={({ pressed }) => [styles.rowBody, pressed ? styles.pressed : null]}
           >
@@ -102,6 +105,7 @@ export default function ListRow({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={title}
+          testID={testID}
           onPress={onPress}
           style={({ pressed }) => [
             rowStyle,
@@ -117,7 +121,9 @@ export default function ListRow({
 
   return (
     <View>
-      <View style={rowStyle}>{body}</View>
+      <View style={rowStyle} testID={testID}>
+        {body}
+      </View>
       {highlight || !divider ? null : <View style={styles.divider} />}
     </View>
   );

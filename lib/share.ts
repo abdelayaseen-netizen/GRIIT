@@ -5,13 +5,14 @@ import * as Haptics from "expo-haptics";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
 import RNShare, { Social } from "react-native-share";
-import { challengeDeepLink, inviteDeepLink, profileDeepLink } from "@/lib/deep-links";
+import { challengeDeepLink, profileDeepLink } from "@/lib/deep-links";
+import { inviteShareMessage, inviteUrlFor } from "@/lib/invite-link";
+import { fetchInviteCode } from "@/lib/invite-code-fetch";
 import { facebookAppId } from "@/lib/config";
 import { instagramStoriesShareInput, type SavePhotosResult } from "@/lib/share-sticker";
 import { trackEvent } from "@/lib/analytics";
 import {
   challengeCompleteShareText,
-  challengeInviteShareText,
   challengeShareText,
   defaultInviteShareText,
   profileShareText,
@@ -68,25 +69,28 @@ export async function shareChallenge(
   await shareOrCopy(challengeShareText(challenge), challenge.name, url);
 }
 
+/**
+ * Build 92 chunk 08.1: share a short invite link. The code comes from `invites.create`
+ * (one per inviter and challenge); nothing is shared until it exists.
+ */
 export async function inviteToChallenge(
   challenge: {
     name: string;
     id: string;
     inviteCode?: string;
   },
-  refUserId?: string | null
+  _refUserId?: string | null
 ): Promise<void> {
-  const inviteCode = challenge.inviteCode ?? challenge.id;
-  const url = inviteDeepLink(inviteCode, refUserId);
-  await shareOrCopy(challengeInviteShareText(challenge.name, url), "Join my challenge");
+  const code = challenge.inviteCode ?? (await fetchInviteCode(challenge.id));
+  await shareOrCopy(inviteShareMessage(challenge.name, code), "Join my challenge", inviteUrlFor(code));
 }
 
 export async function copyChallengeInvite(
   challenge: { id: string; inviteCode?: string },
-  refUserId?: string | null,
+  _refUserId?: string | null,
 ): Promise<void> {
-  const inviteCode = challenge.inviteCode ?? challenge.id;
-  await Clipboard.setStringAsync(inviteDeepLink(inviteCode, refUserId));
+  const code = challenge.inviteCode ?? (await fetchInviteCode(challenge.id));
+  await Clipboard.setStringAsync(inviteUrlFor(code));
 }
 
 export async function shareProfile(

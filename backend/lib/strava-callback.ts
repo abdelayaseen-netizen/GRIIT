@@ -20,6 +20,15 @@ export interface CallbackResult {
   status?: number;
 }
 
+/** "Yaseen A." from firstname + lastname initial; falls back to the username. */
+export function stravaAthleteName(a: { username?: string; firstname?: string; lastname?: string }): string | null {
+  const first = (a.firstname ?? "").trim();
+  const last = (a.lastname ?? "").trim();
+  if (first) return last ? `${first} ${last[0]}.` : first;
+  const u = (a.username ?? "").trim();
+  return u || null;
+}
+
 export async function handleStravaCallback(query: URLSearchParams): Promise<CallbackResult> {
   const code = query.get("code");
   const state = query.get("state");
@@ -61,8 +70,12 @@ export async function handleStravaCallback(query: URLSearchParams): Promise<Call
   }
 
   const expiresAt = new Date(tokenData.expires_at * 1000).toISOString();
-  const metadata = tokenData.athlete
-    ? { athlete_id: tokenData.athlete.id, username: (tokenData.athlete as { username?: string }).username }
+  // Build 92 08.6: Settings reads "Connected as {name}"; keep a short display name next to the id.
+  const athlete = tokenData.athlete as
+    | { id: number | string; username?: string; firstname?: string; lastname?: string }
+    | undefined;
+  const metadata = athlete
+    ? { athlete_id: athlete.id, username: athlete.username, athlete_name: stravaAthleteName(athlete) }
     : {};
 
   const upsertPayload = {

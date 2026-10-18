@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Linking, ScrollView, StyleSheet, Text } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import Screen from "@/components/ds/Screen";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import {
   Camera,
   CreditCard,
   Eye,
+  HeartPulse,
   Info,
   User,
 } from "lucide-react-native";
@@ -24,14 +25,24 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { captureError } from "@/lib/sentry";
 import {
+  APPLE_HEALTH_ROW,
+  CONNECTIONS_TITLE,
   GUEST_SETTINGS_LINE,
+  PRO_FREE_LINE,
+  PRO_PERKS,
+  PRO_PERKS_TAG,
+  PRO_PERK_SUBS,
+  PRO_SEE,
+  PRO_TITLE,
   SETTINGS_NOTIFICATIONS_SUB,
   STRAVA_DISCONNECT,
   STRAVA_DISCONNECT_BODY,
   STRAVA_DISCONNECT_TITLE,
+  STRAVA_NOTE,
   settingsPrivacySub,
   stravaSettingsRow,
 } from "@/lib/settings-rows";
+import Button from "@/components/ds/Button";
 import { DS_V3 } from "@/lib/design-system";
 import Card from "@/components/ds/Card";
 import ListRow from "@/components/ds/ListRow";
@@ -69,15 +80,31 @@ export default function SettingsScreen() {
   const queryClient = useQueryClient();
   const stravaConnection = useQuery({
     queryKey: ["integrations", "getStravaConnection", user?.id ?? ""],
-    queryFn: () => trpcQuery<{ id: string } | null>(TRPC.integrations.getStravaConnection),
+    queryFn: () =>
+      trpcQuery<{ id: string; metadata?: { username?: string | null; athlete_name?: string | null } | null } | null>(
+        TRPC.integrations.getStravaConnection,
+      ),
     enabled: FLAGS.STRAVA_AUTO_VERIFY && !!user?.id && !anonymous,
     staleTime: 60_000,
   });
   const stravaRow = stravaSettingsRow({
     flagOn: FLAGS.STRAVA_AUTO_VERIFY,
     connected: Boolean(stravaConnection.data?.id),
+    name: stravaConnection.data?.metadata?.athlete_name ?? stravaConnection.data?.metadata?.username ?? null,
     guest: anonymous,
   });
+  const onStravaAction = () => {
+    if (!stravaRow) return;
+    if (stravaRow.action === "disconnect") {
+      setStravaLeave(true);
+      return;
+    }
+    void trpcQuery<{ url: string }>(TRPC.integrations.getStravaAuthUrl)
+      .then((res) => {
+        if (res?.url) return Linking.openURL(res.url);
+      })
+      .catch((err: unknown) => captureError(err, "SettingsConnectStrava"));
+  };
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
   const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
   const { error: deleteAccountError, showError: showDeleteAccountError, clearError: clearDeleteAccountError } =
@@ -130,24 +157,6 @@ export default function SettingsScreen() {
                 router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
               }
             />
-            {stravaRow ? (
-              <ListRow
-                icon={<Activity size={ICON} color={DS_V3.color.textPrimary} />}
-                title={stravaRow.title}
-                subtitle={stravaRow.subtitle ?? undefined}
-                onPress={() => {
-                  if (stravaRow.action === "disconnect") {
-                    setStravaLeave(true);
-                    return;
-                  }
-                  void trpcQuery<{ url: string }>(TRPC.integrations.getStravaAuthUrl)
-                    .then((res) => {
-                      if (res?.url) return Linking.openURL(res.url);
-                    })
-                    .catch((err: unknown) => captureError(err, "SettingsConnectStrava"));
-                }}
-              />
-            ) : null}
             <ListRow
               icon={<Info size={ICON} color={DS_V3.color.textPrimary} />}
               title="About"
@@ -155,6 +164,73 @@ export default function SettingsScreen() {
               onPress={() => router.push(ROUTES.SETTINGS_ABOUT as never)}
               divider={false}
             />
+          </Card>
+
+          {/* Build 92 08.6 (P2-20, P2-21): Connections. Strava only when STRAVA_AUTO_VERIFY is on. */}
+          <Text style={styles.sectionTitle} accessibilityRole="header">
+            {CONNECTIONS_TITLE}
+          </Text>
+          <Card style={styles.card}>
+            {stravaRow ? (
+              <>
+                <ListRow
+                  icon={<Activity size={ICON} color={DS_V3.color.textPrimary} />}
+                  title={stravaRow.title}
+                  subtitle={stravaRow.subtitle ?? undefined}
+                  trailing={
+                    <Button
+                      label={stravaRow.actionLabel}
+                      variant="secondary"
+                      size="small"
+                      onPress={onStravaAction}
+                      testID="settings-strava-action"
+                    />
+                  }
+                  divider
+                />
+                {stravaRow.action === "disconnect" ? <Text style={styles.note}>{STRAVA_NOTE}</Text> : null}
+              </>
+            ) : null}
+            <View accessibilityState={{ disabled: true }} style={styles.disabledRow} testID="settings-apple-health">
+              <ListRow
+                icon={<HeartPulse size={ICON} color={DS_V3.color.textPrimary} />}
+                title={APPLE_HEALTH_ROW.label}
+                subtitle={APPLE_HEALTH_ROW.sub}
+                trailing={<Text style={styles.tag}>{APPLE_HEALTH_ROW.badge}</Text>}
+                divider={false}
+              />
+            </View>
+          </Card>
+
+          {/* Build 92 08.6: Pro perks carry a Pro tag; the free core is not gated. */}
+          <Text style={styles.sectionTitle} accessibilityRole="header">
+            {PRO_TITLE}
+          </Text>
+          <Card style={styles.card}>
+            <ListRow
+              icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}
+              title={PRO_TITLE}
+              subtitle={PRO_FREE_LINE}
+              trailing={
+                <Button
+                  label={PRO_SEE}
+                  variant="secondary"
+                  size="small"
+                  onPress={() =>
+                    router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
+                  }
+                />
+              }
+            />
+            {PRO_PERKS.map((perk, i) => (
+              <ListRow
+                key={perk}
+                title={perk}
+                subtitle={PRO_PERK_SUBS[perk]}
+                trailing={<Text style={styles.tag}>{PRO_PERKS_TAG}</Text>}
+                divider={i < PRO_PERKS.length - 1}
+              />
+            ))}
           </Card>
 
           <AccountDangerZone
@@ -208,6 +284,38 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: 0,
+    overflow: "hidden",
+  },
+  sectionTitle: {
+    marginTop: DS_V3.space.section,
+    marginBottom: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: "600",
+    color: DS_V3.color.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  note: {
+    paddingHorizontal: DS_V3.space.md,
+    paddingBottom: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+  },
+  disabledRow: {
+    opacity: 0.55,
+  },
+  tag: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: "600",
+    color: DS_V3.color.textSecondary,
+    backgroundColor: DS_V3.color.canvas,
+    borderRadius: 999,
+    paddingHorizontal: DS_V3.space.sm,
+    paddingVertical: 2,
     overflow: "hidden",
   },
   guest: {

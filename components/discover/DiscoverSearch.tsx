@@ -1,6 +1,6 @@
 /**
  * Build 90 chunk 08.3: Discover search. Words search public challenge titles; a pasted invite
- * code (challenge id or a griit://i/ link) resolves to that challenge and opens it.
+ * code (challenge id or an invite link) resolves to that challenge and opens it.
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";

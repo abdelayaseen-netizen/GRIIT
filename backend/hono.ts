@@ -94,6 +94,43 @@ app.get("/api/health", livenessJson);
 app.get("/health", livenessJson);
 
 /** Remote config. MIN_SUPPORTED_BUILD is an env value, not a schema change. */
+/**
+ * Build 92 chunk 08.2: public invite landing page (P2-18). `{INVITE_BASE_URL}/i/{code}`.
+ * No session, no secrets: only the challenge's public summary and the inviter's name.
+ */
+app.get("/i/:code", async (c) => {
+  const { renderInviteLanding, renderInviteNotFound, isInviteCode } = await import("./lib/invite-codes");
+  const code = c.req.param("code");
+  const notFound = () =>
+    c.html(renderInviteNotFound(), 404, { "Cache-Control": "no-store" });
+  if (!isInviteCode(code)) return notFound();
+  const { getSupabaseServer } = await import("./lib/supabase-server");
+  const service = getSupabaseServer();
+  if (!service) return notFound();
+  const { findInviteByCode, loadInviteChallenge, inviterDisplayName } = await import("./lib/invite-store");
+  const invite = await findInviteByCode(service, code);
+  if (!invite) return notFound();
+  const [challenge, inviterName] = await Promise.all([
+    loadInviteChallenge(service, invite.challengeId),
+    inviterDisplayName(service, invite.inviterId),
+  ]);
+  if (!challenge) return notFound();
+  return c.html(
+    renderInviteLanding({
+      code: invite.code,
+      challengeName: challenge.title,
+      category: challenge.category,
+      days: challenge.durationDays,
+      people: challenge.participantsCount,
+      task: challenge.firstTask,
+      proofLine: challenge.proofLine,
+      inviterName,
+    }),
+    200,
+    { "Cache-Control": "private, max-age=60" },
+  );
+});
+
 app.get("/api/config", (c) => {
   const n = Number(process.env.MIN_SUPPORTED_BUILD ?? "");
   return c.json({

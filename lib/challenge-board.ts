@@ -39,24 +39,42 @@ export type BoardMember = {
   username: string;
   avatarUrl: string | null;
   secured: number;
+  /** Build 92 08.5: secured days this week that carried a proof. */
+  verified?: number;
+  /** Build 92 08.5: when the latest secured day landed; earlier wins a tie. */
+  lastSecuredAt?: string | null;
 };
 
 export type RankedMember = BoardMember & { rank: number; you: boolean };
 
+/** Build 92 08.5: your row reads "You". */
+export const BOARD_YOU = "You";
+export const BOARD_WEEK_DAYS = 7;
+
+/** "3 of 7 · 2 verified"; "0 of 7" when nothing is verified. */
+export function boardRowLine(secured: number, verified: number): string {
+  const base = `${secured} of ${BOARD_WEEK_DAYS}`;
+  return verified > 0 ? `${base} · ${verified} verified` : base;
+}
+
+/**
+ * Build 92 08.5 (P2-16): secured desc, then verified desc, then whoever secured earlier.
+ * Ranks are positions, 1..n; the board is a ranking, not a scoreboard with shared places.
+ */
 export function rankBoard(members: readonly BoardMember[], viewerId: string): RankedMember[] {
   const sorted = [...members].sort((a, b) => {
     if (b.secured !== a.secured) return b.secured - a.secured;
+    const av = a.verified ?? 0;
+    const bv = b.verified ?? 0;
+    if (bv !== av) return bv - av;
+    const al = a.lastSecuredAt ?? "";
+    const bl = b.lastSecuredAt ?? "";
+    if (al && bl && al !== bl) return al < bl ? -1 : 1;
+    if (al && !bl) return -1;
+    if (!al && bl) return 1;
     return a.displayName.localeCompare(b.displayName);
   });
-  let lastScore = Number.NaN;
-  let lastRank = 0;
-  return sorted.map((m, i) => {
-    if (m.secured !== lastScore) {
-      lastRank = i + 1;
-      lastScore = m.secured;
-    }
-    return { ...m, rank: lastRank, you: m.userId === viewerId };
-  });
+  return sorted.map((m, i) => ({ ...m, rank: i + 1, you: m.userId === viewerId }));
 }
 
 export function boardSlices(
@@ -93,10 +111,12 @@ export function boardSlices(
 export function boardEmptyState(memberCount: number, challenge: string): { heading: string; body: string; cta?: string } | null {
   if (memberCount <= 1) {
     const name = challenge.trim() || "this challenge";
+    // Build 92 08.3 (P2-15): Invite opens the invite sheet.
+    void name;
     return {
       heading: "A board needs two.",
-      body: `Invite someone to ${name}. Their days count here from the day they join.`,
-      cta: `Invite to ${name}`,
+      body: "Invite someone to see how you compare this week.",
+      cta: "Invite",
     };
   }
   return null;

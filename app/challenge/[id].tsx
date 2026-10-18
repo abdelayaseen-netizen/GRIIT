@@ -113,7 +113,7 @@ export default function ChallengeDetailScreen() {
       : Array.isArray(params.inviter)
         ? params.inviter[0]
         : undefined;
-  // Build 90 08.2: opened through griit://i/<id> (or an exact code in Discover search).
+  // Build 90 08.2: opened through an invite link (or an exact code in Discover search).
   const viaInvite = (Array.isArray(params.invite) ? params.invite[0] : params.invite) === "1";
   const router = useRouter();
   const pathname = usePathname();
@@ -253,6 +253,7 @@ export default function ChallengeDetailScreen() {
     viewerInviteStatus: challenge?.viewerInviteStatus,
     participationType,
     state,
+    viaInvite,
   });
   // Build 90 08: a member of a duo / shared-goal run that has not started sees the waiting room.
   const waitingRoom = viewerInWaitingRoom({
@@ -446,6 +447,12 @@ export default function ChallengeDetailScreen() {
 
   const onAccept = useCallback(async () => {
     if (!id || joining) return;
+    // Build 92 08.4: a public challenge opened through an invite link joins directly
+    // ("Join · Day 1 is today"); only a group room has an invite row to accept.
+    if (participationType !== "team") {
+      await onJoin();
+      return;
+    }
     if (Platform.OS !== "web") void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setJoining(true);
     try {
@@ -489,7 +496,7 @@ export default function ChallengeDetailScreen() {
     } finally {
       setJoining(false);
     }
-  }, [id, joining, resolveInviteId, showError, refetchAll, queryClient, user?.id, router]);
+  }, [id, joining, participationType, onJoin, resolveInviteId, showError, refetchAll, queryClient, user?.id, router]);
 
   const onNotNow = useCallback(() => {
     goBack();

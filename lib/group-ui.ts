@@ -119,16 +119,27 @@ export function detailFooterVariant(input: {
   viewerInviteStatus?: string | null;
   participationType: string;
   state: "default" | "free_limit" | "ended" | "not_live";
+  /** Build 92 08.4: opened through an invite link → the accept screen (P2-19), public or group. */
+  viaInvite?: boolean;
 }): DetailFooterVariant {
   if (input.state === "ended" || input.state === "not_live") return "closed";
   if (input.state === "free_limit") return "blocked";
-  if (input.viewerInviteStatus === "pending") return "invited";
+  if (input.viewerInviteStatus === "pending" || input.viaInvite) return "invited";
   if (input.participationType === "team") return "invite_only";
   return "join";
 }
 
+/** Build 92 08.4 (P2-19): the caption is the inviter; the button carries "Day 1 is today". */
 export function invitedCaption(inviterName: string): string {
-  return `${inviterName} invited you. Day 1 is the day you accept.`;
+  return `${inviterName} invited you`;
+}
+
+export const ACCEPT_NOT_NOW = "Not now";
+
+/** Group room (team / duo / shared goal): the invite is the approval. Public: Join. */
+export function acceptCtaLabel(participationType: string | null | undefined): string {
+  const roomed = participationType === "team" || participationType === "duo" || participationType === "shared_goal";
+  return roomed ? "Accept · Day 1 is today" : "Join · Day 1 is today";
 }
 
 export function afterAcceptActiveId(

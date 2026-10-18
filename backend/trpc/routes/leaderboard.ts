@@ -6,7 +6,9 @@ import type { LeaderboardProfileRow, LeaderboardStreakRow } from "../../types/db
 import { addCalendarDaysToDateKey, dateKeyFromIsoInTimeZone, getTodayDateKey, getRollingWeekStartDateKey, getWeekStartDateKey, elapsedWeekEnded, getProfileTimeZoneForUser } from "../../lib/date-utils";
 import { dueKeysForRange } from "../../lib/due-keys";
 import { exclusiveEndDateKey } from "../../lib/record-days";
-import { challengeBoardWeekCount } from "../../lib/secured-elapsed";
+import { challengeBoardWeekCount, enrollmentSecuredDateKeys } from "../../lib/secured-elapsed";
+import { boardLastSecuredAt, boardVerifiedCount } from "../../lib/board-verified";
+import type { UserStatsCheckIn } from "../../lib/user-stats";
 import { getCached, setCached } from "../../lib/cache";
 import { getSupabaseServer } from "../../lib/supabase-server";
 import { getBlockedUserIds } from "../../lib/get-blocked-user-ids";
@@ -279,11 +281,14 @@ export const leaderboardRouter = createTRPCRouter({
 
       const { data: participants, error: pErr } = await server
         .from("active_challenges")
-        .select("user_id, board_opt_in, start_at, end_at, ended_at, status")
+        .select("id, user_id, board_opt_in, start_at, end_at, ended_at, status")
         .eq("challenge_id", input.challengeId)
         .eq("status", "active")
         .limit(500);
       if (pErr) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: pErr.message });
+      const enrollmentIds = ((participants ?? []) as { id?: string | null }[])
+        .map((r) => r.id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
 
       let userIds = [
         ...new Set(
@@ -342,28 +347,69 @@ export const leaderboardRouter = createTRPCRouter({
         );
       }
 
-      const { data: secures } = await server
-        .from("day_secures")
-        .select("user_id, date_key")
-        .in("user_id", userIds)
-        .gte("date_key", weekStartKey)
-        .lte("date_key", todayKey)
-        .limit(5000);
-      const keysByUser = new Map<string, string[]>();
-      for (const row of (secures ?? []) as { user_id: string; date_key: string }[]) {
-        const list = keysByUser.get(row.user_id) ?? [];
-        list.push(row.date_key);
-        keysByUser.set(row.user_id, list);
+      const [{ data: secures }, { data: weekCheckIns }] = await Promise.all([
+        server
+          .from("day_secures")
+          .select("user_id, date_key, created_at")
+          .in("user_id", userIds)
+          .gte("date_key", weekStartKey)
+          .lte("date_key", todayKey)
+          .limit(5000),
+        // Build 92 08.5: this challenge's check-ins in the week, for the Verified count.
+        server
+          .from("check_ins")
+          .select("user_id, date_key, status, task_id, proof_source, proof_url, photo_url, completion_image_url")
+          .in("active_challenge_id", enrollmentIds.length > 0 ? enrollmentIds : ["00000000-0000-0000-0000-000000000000"])
+          .in("user_id", userIds)
+          .gte("date_key", weekStartKey)
+          .lte("date_key", todayKey)
+          .limit(5000),
+      ]);
+      type SecureRow = { user_id: string; date_key: string; created_at?: string | null };
+      const securesByUser = new Map<string, SecureRow[]>();
+      for (const row of (secures ?? []) as SecureRow[]) {
+        const list = securesByUser.get(row.user_id) ?? [];
+        list.push(row);
+        securesByUser.set(row.user_id, list);
+      }
+      const checkInsByUser = new Map<string, UserStatsCheckIn[]>();
+      for (const row of (weekCheckIns ?? []) as {
+        user_id: string;
+        date_key: string;
+        status?: string | null;
+        task_id?: string | null;
+        proof_source?: string | null;
+        proof_url?: string | null;
+        photo_url?: string | null;
+        completion_image_url?: string | null;
+      }[]) {
+        const list = checkInsByUser.get(row.user_id) ?? [];
+        list.push({
+          date_key: row.date_key,
+          status: row.status ?? null,
+          task_id: row.task_id ?? null,
+          proof_source: row.proof_source ?? null,
+          has_photo: Boolean(row.proof_url || row.photo_url || row.completion_image_url),
+        });
+        checkInsByUser.set(row.user_id, list);
       }
       const checkInCount = new Map<string, number>();
+      const verifiedCount = new Map<string, number>();
+      const lastSecured = new Map<string, string | null>();
       for (const uid of userIds) {
-        const n = challengeBoardWeekCount({
-          securedDateKeys: keysByUser.get(uid) ?? [],
-          dueDateKeys: dueByUser.get(uid) ?? [],
-          weekStartKey,
-          todayKey,
-        });
+        const userSecures = securesByUser.get(uid) ?? [];
+        const securedDateKeys = userSecures.map((r) => r.date_key);
+        const dueDateKeys = dueByUser.get(uid) ?? [];
+        const n = challengeBoardWeekCount({ securedDateKeys, dueDateKeys, weekStartKey, todayKey });
         if (n > 0) checkInCount.set(uid, n);
+        const countedKeys = enrollmentSecuredDateKeys({
+          securedDateKeys,
+          dueDateKeys,
+          fromKey: weekStartKey,
+          throughKey: todayKey,
+        });
+        verifiedCount.set(uid, boardVerifiedCount({ countedKeys, checkIns: checkInsByUser.get(uid) ?? [] }));
+        lastSecured.set(uid, boardLastSecuredAt({ countedKeys, secures: userSecures }));
       }
 
       const { data: streakRows } = await server.from("streaks").select("user_id, active_streak_count").in("user_id", userIds).limit(200);
@@ -389,23 +435,24 @@ export const leaderboardRouter = createTRPCRouter({
           displayName: p?.display_name ?? p?.username ?? "?",
           avatarUrl: p?.avatar_url ?? null,
           checkInsThisWeek: checkIns,
+          verifiedThisWeek: verifiedCount.get(uid) ?? 0,
+          lastSecuredAt: lastSecured.get(uid) ?? null,
           currentStreak: streak,
           points: checkIns,
         };
       });
+      // Build 92 08.5: secured desc, verified desc, earlier last secure first. Ranks are positions.
       rows.sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
+        if (b.verifiedThisWeek !== a.verifiedThisWeek) return b.verifiedThisWeek - a.verifiedThisWeek;
+        const al = a.lastSecuredAt ?? "";
+        const bl = b.lastSecuredAt ?? "";
+        if (al && bl && al !== bl) return al < bl ? -1 : 1;
+        if (al && !bl) return -1;
+        if (!al && bl) return 1;
         return a.displayName.localeCompare(b.displayName);
       });
-      let lastScore = Number.NaN;
-      let lastRank = 0;
-      const ranked = rows.map((r, i) => {
-        if (r.points !== lastScore) {
-          lastRank = i + 1;
-          lastScore = r.points;
-        }
-        return { ...r, rank: lastRank };
-      });
+      const ranked = rows.map((r, i) => ({ ...r, rank: i + 1 }));
       const leaderPts = ranked[0]?.points ?? 1;
 
       const viewerRow = (participants ?? []).find((r: { user_id: string }) => r.user_id === viewerId) as

@@ -27,7 +27,7 @@ import { catalogCoverCategory } from "@/lib/catalog-cover";
 import Button from "@/components/ds/Button";
 import EmptyState from "@/components/ds/EmptyState";
 import Skeleton from "@/components/ds/Skeleton";
-import InviteLinkRow from "@/components/InviteLinkRow";
+import InviteSheet from "@/components/InviteSheet";
 import { WAITING_FOR_PARTNER_BODY, WAITING_FOR_PARTNER_HEADING } from "@/lib/invite-link";
 import {
   JOIN_CAPTION_TOMORROW,
@@ -41,6 +41,8 @@ import {
 import {
   GROUP_INVITE_ONLY_CAPTION,
   invitedCaption,
+  acceptCtaLabel,
+  ACCEPT_NOT_NOW,
   ofTen,
 } from "@/lib/group-ui";
 
@@ -282,20 +284,23 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           <>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Accept"
+              accessibilityLabel={acceptCtaLabel(p.participationType)}
               disabled={p.joining}
               onPress={p.joining ? undefined : p.onAccept}
               style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
+              testID="invite-accept"
             >
-              <Text style={styles.joinLabel}>Accept</Text>
+              <Text style={styles.joinLabel}>{acceptCtaLabel(p.participationType)}</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Not now"
+              accessibilityLabel={ACCEPT_NOT_NOW}
               onPress={p.onNotNow}
               hitSlop={8}
+              style={styles.notNowHit}
+              testID="invite-not-now"
             >
-              <Text style={styles.notNow}>Not now</Text>
+              <Text style={styles.notNow}>{ACCEPT_NOT_NOW}</Text>
             </Pressable>
             <Text style={styles.joinCaption}>{invitedCaption(p.invite!.inviterName)}</Text>
           </>
@@ -305,7 +310,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           <View style={styles.waiting} testID="waiting-room">
             <Text style={styles.waitingHeading}>{WAITING_FOR_PARTNER_HEADING}</Text>
             <Text style={styles.joinCaption}>{WAITING_FOR_PARTNER_BODY}</Text>
-            <InviteLinkRow challengeId={p.waitingRoom.challengeId} challengeName={p.title} />
+            <InviteSheet challengeId={p.waitingRoom.challengeId} challengeName={p.title} compact />
           </View>
         ) : (
           <>
@@ -467,6 +472,10 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  notNowHit: {
+    minHeight: 44,
+    justifyContent: "center",
   },
   notNow: {
     fontSize: DS_V3.type.secondary.fontSize,

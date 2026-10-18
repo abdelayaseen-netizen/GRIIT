@@ -88,6 +88,10 @@ export const TRPC = {
     members: 'groups.members',
     nudge: 'groups.nudge',
   },
+  invites: {
+    create: 'invites.create',
+    resolve: 'invites.resolve',
+  },
   sharedGoal: {
     logProgress: 'sharedGoal.logProgress',
     getRecentLogs: 'sharedGoal.getRecentLogs',

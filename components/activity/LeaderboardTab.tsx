@@ -17,8 +17,9 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import { consistencyScore } from "@/lib/scoring";
 import { ROUTES, userProfile } from "@/lib/routes";
 import { usableHandle } from "@/lib/feed-tap-targets";
-import { inviteToChallenge } from "@/lib/share";
-import InviteLinkRow from "@/components/InviteLinkRow";
+import InviteSheet from "@/components/InviteSheet";
+import Sheet from "@/components/ds/Sheet";
+import { INVITE_SHEET_TITLE } from "@/lib/invite-link";
 import type { BoardEntry, LeaderScope } from "@/components/activity/types";
 import Avatar from "@/components/ds/Avatar";
 import Chip from "@/components/ds/Chip";
@@ -37,6 +38,8 @@ import {
   TOP_OF_CHALLENGE,
   TWO_PERSON_LINE,
   YOU_ARE_ON_THIS_BOARD,
+  BOARD_YOU,
+  boardRowLine,
   boardEmptyState,
   boardSlices,
   elapsedWeekLine,
@@ -44,9 +47,10 @@ import {
   ranksBelowLine,
 } from "@/lib/challenge-board";
 
-function checkInLine(checkIns: number, days: number): string {
-  void days;
-  return checkIns === 1 ? "1 secured" : `${checkIns} secured`;
+/** Build 92 08.5 (P2-16): "3 of 7 · 2 verified" for the challenge board; "n secured" elsewhere. */
+function checkInLine(entry: BoardEntry, scope: LeaderScope): string {
+  if (scope === "challenge") return boardRowLine(entry.checkInsThisWeek, entry.verifiedThisWeek ?? 0);
+  return entry.checkInsThisWeek === 1 ? "1 secured" : `${entry.checkInsThisWeek} secured`;
 }
 
 function LeaderboardBody({
@@ -95,6 +99,7 @@ function LeaderboardBody({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const activeList = myActive.data ?? [];
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const friendEntries = friendsBoard.data?.entries ?? [];
   const challengeEntries = challengeBoard.data?.entries ?? [];
@@ -177,12 +182,22 @@ function LeaderboardBody({
       username: e.username,
       avatarUrl: e.avatarUrl,
       secured: e.checkInsThisWeek,
+      verified: e.verifiedThisWeek ?? 0,
+      lastSecuredAt: e.lastSecuredAt ?? null,
     })),
     userId,
   );
   const slices = boardSlices(ranked, userId);
   const emptyCopy = boardEmptyState(slices.memberCount, challengeBoard.data?.challengeTitle ?? "this challenge");
-  const rows = outOfRange ? entries.filter((e) => e.userId !== userId) : entries;
+  // Build 92 08.5: the challenge board is ordered and ranked client-side by the same rule as the server.
+  const ordered: BoardEntry[] =
+    scope === "challenge"
+      ? ranked.map((r) => {
+          const e = entries.find((x) => x.userId === r.userId)!;
+          return { ...e, rank: r.rank };
+        })
+      : entries;
+  const rows = outOfRange ? ordered.filter((e) => e.userId !== userId) : ordered;
   const showBoard = !loading && !err && !showEmpty;
   const soloChallenge =
     scope === "challenge" && slices.memberCount <= 1 && Boolean(selectedChallengeId);
@@ -245,21 +260,16 @@ function LeaderboardBody({
             heading={emptyCopy.heading}
             body={emptyCopy.body}
             actionLabel={emptyCopy.cta ?? "Invite"}
-            onAction={() => {
-              void inviteToChallenge({
-                name: challengeBoard.data?.challengeTitle ?? "this challenge",
-                id: selectedChallengeId,
-              });
-            }}
+            onAction={() => setInviteOpen(true)}
           />
-          {/* Build 90 08.1: the link itself, with Copy and Share. */}
-          <View style={styles.inviteLink}>
-            <InviteLinkRow
+          {/* Build 92 08.3: Invite opens the invite sheet (P2-14); no raw link block. */}
+          <Sheet visible={inviteOpen} onDismiss={() => setInviteOpen(false)} heading={INVITE_SHEET_TITLE}>
+            <InviteSheet
               challengeId={selectedChallengeId}
               challengeName={challengeBoard.data?.challengeTitle ?? "this challenge"}
-              refUserId={userId}
+              compact
             />
-          </View>
+          </Sheet>
         </View>
       ) : emptyCopy && showEmpty ? (
         <View style={styles.emptyPad}>
@@ -316,6 +326,7 @@ function LeaderboardBody({
           <BoardRow
             entry={viewer}
             viewerId={userId}
+            scope={scope}
             divider={false}
             onPress={openProfile}
           />
@@ -325,6 +336,7 @@ function LeaderboardBody({
         <BoardRow
           entry={item}
           viewerId={userId}
+          scope={scope}
           divider={index < rows.length - 1 || (outOfRange && Boolean(viewer))}
           onPress={openProfile}
         />
@@ -358,14 +370,17 @@ function useOpenLeaderboardProfile() {
 function BoardRow({
   entry,
   viewerId,
+  scope,
   divider,
   onPress,
 }: {
   entry: BoardEntry;
   viewerId: string;
+  scope: LeaderScope;
   divider: boolean;
   onPress: (viewerId: string, entry: BoardEntry) => void;
 }) {
+  const you = entry.userId === viewerId;
   return (
     <ListRow
       rank={entry.rank}
@@ -376,16 +391,17 @@ function BoardRow({
           displayName={entry.displayName}
         />
       }
-      title={entry.displayName}
-      subtitle={checkInLine(entry.checkInsThisWeek, entry.currentStreak)}
-      highlight={entry.userId === viewerId}
+      title={you ? BOARD_YOU : entry.displayName}
+      subtitle={checkInLine(entry, scope)}
+      highlight={you}
       divider={divider}
       trailing={
         <View style={styles.pts}>
           <DisplayNumber value={entry.checkInsThisWeek} size="inline" />
-          <Text style={styles.ptsLabel}>secured</Text>
+          <Text style={styles.ptsLabel}>{scope === "challenge" ? "/7" : "secured"}</Text>
         </View>
       }
+      testID={you ? "board-row-you" : undefined}
       onPress={() => onPress(viewerId, entry)}
     />
   );
@@ -556,9 +572,6 @@ const styles = StyleSheet.create({
   emptyPad: {
     paddingTop: DS_V3.space.section,
     paddingHorizontal: DS_V3.space.gutter,
-  },
-  inviteLink: {
-    marginTop: DS_V3.space.lg,
   },
   board: {
     paddingTop: DS_V3.space.md,

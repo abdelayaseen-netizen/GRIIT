@@ -939,3 +939,23 @@ file, with a "Build 92 07.x" comment. `lib/g3-profile.test.ts` pins the Part 2 e
 - `app/profile/consistency.tsx` has no entry point now (its row was replaced by the record row); left in place.
 - The own viewer lists a photo-less "day secured" event under the proof post (build 91 did too); Part 1 rules
   for which events are posts are unchanged here.
+
+## Chunk 08 · Invite, leaderboard and settings
+
+### Root causes (written before the fix)
+- 08.1 `lib/invite-link.ts:23` `inviteLinkFor(challengeId)` → `lib/deep-links.ts:28` `inviteDeepLink`: the "code" is
+  the challenge UUID and, with no `EXPO_PUBLIC_DEEP_LINK_BASE_URL`, the link is `griit://i/<uuid>?ref=<uuid>`.
+  `components/InviteLinkRow.tsx:32` renders that string as visible text on create-success, the waiting room and
+  the leaderboard. There is no server-side code store; `app/invite/[code].tsx:28` decodes the code as a challenge id.
+- 08.2 `backend/hono.ts` has no `GET /i/:code`; a link opened without the app goes nowhere.
+- 08.3 `components/activity/LeaderboardTab.tsx:257` shows the raw link block whenever the board is empty;
+  Share is the EmptyState action and Copy is a secondary row with "Copied" (not "Link copied.").
+- 08.5 `backend/trpc/routes/leaderboard.ts:396` sorts by secured then display name; no Verified count, no
+  `lastSecuredAt`; `lib/challenge-board.ts:46` repeats the same tie rule; `BoardRow` shows "secured" with no
+  "You" label. is_test is already dropped at `leaderboard.ts:308`.
+- 08.6 `lib/settings-rows.ts:32` says "Connected", not "Connected as {name}"; no Apple Health row; no Pro perks list.
+Design references: P2-14 (invite sheet), P2-15/16/17 (leaderboard), P2-18 (landing), P2-19 (accept),
+P2-20/21 (settings); Part 2 checklist lines 106–118; copy table rows "Invite sheet", "Share message", "Landing",
+"Accept". Handoff `src/invite/invite.ts`, `src/challenge/leaderboard.ts`, `src/settings/connections.ts`.
+Decision: short codes live in the existing `invite_tracking` table (`referrer_user_id`, `challenge_id`,
+`invite_code`, `source = 'invite_link'`, `referred_user_id` null until accepted) — no migration, no SQL.

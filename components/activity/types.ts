@@ -22,6 +22,10 @@ export type BoardEntry = {
   rank: number;
   points: number;
   checkInsThisWeek: number;
+  /** Build 92 08.5: secured days this week with a proof. */
+  verifiedThisWeek?: number;
+  /** Build 92 08.5: ISO time of the latest counted secure; earlier wins a tie. */
+  lastSecuredAt?: string | null;
   currentStreak: number;
   progressVsLeader: number;
   gapToAbove: number;

@@ -1,0 +1,19 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/build92-invite.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/build92-invite.test.ts [ lib/build92-invite.test.ts ]
+Error: Failed to load url ../backend/lib/invite-codes (resolved id: ../backend/lib/invite-codes) in /Users/yaseenabdela/Developer/GRIIT/lib/build92-invite.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  19:10:30
+   Duration  533ms (transform 34ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 48ms)
+

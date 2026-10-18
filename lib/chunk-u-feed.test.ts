@@ -71,9 +71,10 @@ describe("Chunk U challenge board", () => {
       ],
       "y",
     );
+    // Build 92 08.5: ranks are positions (P2-16 shows 1..5); ties break on verified, then earlier last secure.
     expect(ranked[0]?.rank).toBe(1);
-    expect(ranked[1]?.rank).toBe(1);
-    expect(ranked.find((r) => r.userId === "y")?.rank).toBe(3);
+    expect(ranked[1]?.rank).toBe(2);
+    expect(ranked.find((r) => r.userId === "y")?.rank).toBe(4);
     const slices = boardSlices(ranked, "y");
     expect(slices.split).toBe(true);
     expect(slices.top).toHaveLength(3);
