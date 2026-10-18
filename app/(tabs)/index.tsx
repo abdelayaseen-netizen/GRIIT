@@ -19,6 +19,8 @@ import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
 import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
+import { taskCompleteHref } from "@/lib/task-complete-href";
+import { setCreateChooserToday } from "@/lib/create-chooser";
 import { buildTaskConfigParam } from "@/lib/build-task-config-param";
 import { HomeV3 } from "@/components/home/HomeV3";
 import { StarterTodayRow } from "@/components/home/StarterTodayRow";
@@ -727,9 +729,7 @@ export default function HomeScreen() {
 
   const onPressTask = useCallback(
     (task: StreakHeroV4Task) => {
-      router.push(
-        `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(task.id)}&activeChallengeId=${encodeURIComponent(task.activeChallengeId)}&taskType=${encodeURIComponent(task.taskType)}&taskName=${encodeURIComponent(task.name)}&taskDescription=${encodeURIComponent("")}&taskConfig=${encodeURIComponent(task.taskConfig)}&challengeName=${encodeURIComponent(task.challengeName)}&currentDay=${String(task.currentDay)}&durationDays=${String(task.durationDays)}&originTab=home` as never,
-      );
+      router.push(taskCompleteHref(task) as never);
     },
     [router],
   );
@@ -751,6 +751,24 @@ export default function HomeScreen() {
       ),
     [heroTasks],
   );
+
+  // Build 92 01.3: the Create chooser's "Log today's task" opens this same next task.
+  useEffect(() => {
+    const next = startTask ? heroTasks.find((t) => t.id === startTask.id) : undefined;
+    setCreateChooserToday({
+      todaySecured,
+      nextTask: next
+        ? {
+            id: next.id,
+            href: taskCompleteHref(next),
+            title: next.name,
+            challengeName: next.challengeName,
+            currentDay: next.currentDay,
+            durationDays: next.durationDays,
+          }
+        : null,
+    });
+  }, [heroTasks, startTask, todaySecured]);
 
   const onPressPrimaryCTA = useCallback(() => {
     if (heroTasks.length === 0) {
@@ -942,7 +960,7 @@ export default function HomeScreen() {
               fillToday={todaySecured}
               daySecured={todaySecured}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              onCreateChallenge={() => router.push(ROUTES.TABS_CREATE as never)}
+              onCreateChallenge={() => router.push(ROUTES.CREATE_WIZARD as never)}
               onStartStarter={() => void onStartStarter()}
               starterBusy={starterBusy}
               onPressStreak={() => {

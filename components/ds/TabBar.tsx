@@ -1,63 +1,52 @@
 /**
- * TabBar — 01_components.md "TabBar"
- * Laws: 6 (no brand fill on FAB or active tab), 8 (root chrome).
- * Frame 01: surface pill, 1pt border, textSecondary inactive, brandText active,
- * FAB surface circle, 1pt border, brandText plus.
+ * TabBar — build 92 Part 0 fallback bar (P0-12).
+ * The JS tab bar used while FLAGS.LIQUID_GLASS is off, on iOS < 26 and with Reduce
+ * Transparency: solid #1A1A1A pill with a 1 px #2A2A2A hairline. 5 tabs in order
+ * Home, Discover, Create, Activity, Profile, in the shipped Lucide icons. Orange is
+ * the active icon only; the active label is Text 1. Create opens the Create chooser
+ * and never becomes the selected tab.
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Compass, Flame, Home, Plus, User } from "lucide-react-native";
+import { CirclePlus, Compass, Flame, Home, User } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { GLASS_ACCENT, GLASS_FALLBACK, GLASS_STATE } from "@/lib/glass";
 import { TAB_BAR_PILL_HEIGHT } from "@/lib/tab-bar-inset";
 
-const PT = DS_V3.space.xs / 4;
 const ICON = DS_V3.space.xs * 6;
 const BAR = TAB_BAR_PILL_HEIGHT;
-const ITEM_W = DS_V3.space.gutter * 3;
-const FAB = DS_V3.size.avatar.md;
+const ITEM_H = DS_V3.size.avatar.md;
 
-export type TabBarTab = "home" | "discover" | "activity" | "profile";
+export type TabBarTab = "home" | "discover" | "create" | "activity" | "profile";
 
 export type TabBarProps = {
-  active: TabBarTab;
+  active: Exclude<TabBarTab, "create">;
   onTab: (tab: TabBarTab) => void;
-  onFab: () => void;
   activityUnread?: boolean;
 };
 
 const TABS: { id: TabBarTab; label: string; Icon: typeof Home }[] = [
   { id: "home", label: "Home", Icon: Home },
   { id: "discover", label: "Discover", Icon: Compass },
+  { id: "create", label: "Create", Icon: CirclePlus },
   { id: "activity", label: "Activity", Icon: Flame },
   { id: "profile", label: "Profile", Icon: User },
 ];
 
-export default function TabBar({ active, onTab, onFab, activityUnread }: TabBarProps) {
+export default function TabBar({ active, onTab, activityUnread }: TabBarProps) {
   const insets = useSafeAreaInsets();
-  const left = TABS.slice(0, 2);
-  const right = TABS.slice(2);
 
   const below = Math.max(insets.bottom, DS_V3.space.md);
   return (
     <View
       style={[styles.dock, { paddingBottom: below }]}
       pointerEvents="box-none"
+      testID="tab-bar"
     >
       <View style={[styles.under, { height: below }]} pointerEvents="none" />
       <View style={styles.pill}>
-        {left.map((t) => (
-          <TabItem key={t.id} tab={t} active={active === t.id} onPress={() => onTab(t.id)} />
-        ))}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Create"
-          onPress={onFab}
-          style={({ pressed }) => [styles.fab, pressed ? styles.pressed : null]}
-        >
-          <Plus size={ICON} color={DS_V3.color.textPrimary} />
-        </Pressable>
-        {right.map((t) => (
+        {TABS.map((t) => (
           <TabItem
             key={t.id}
             tab={t}
@@ -82,16 +71,17 @@ function TabItem({
   unread?: boolean;
   onPress: () => void;
 }) {
-  const iconColor = active ? DS_V3.color.brand : DS_V3.color.textSecondary;
-  const labelColor = active ? DS_V3.color.textPrimary : DS_V3.color.textSecondary;
+  const iconColor = active ? GLASS_ACCENT.activeTabIcon : DS_V3.color.textSecondary;
+  const labelColor = active ? GLASS_ACCENT.activeTabLabel : DS_V3.color.textSecondary;
   const Icon = tab.Icon;
   return (
     <Pressable
+      testID={`tab-${tab.id}`}
       accessibilityRole="button"
       accessibilityLabel={unread ? `${tab.label}, unread` : tab.label}
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={styles.item}
+      style={({ pressed }) => [styles.item, pressed ? styles.pressed : null]}
     >
       <View>
         <Icon size={ICON} color={iconColor} />
@@ -130,18 +120,20 @@ const styles = StyleSheet.create({
   },
   pill: {
     height: BAR,
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: PT,
-    borderColor: DS_V3.color.border,
+    backgroundColor: GLASS_FALLBACK.fill,
+    borderWidth: GLASS_FALLBACK.hairlineWidth,
+    borderColor: GLASS_FALLBACK.hairline,
     borderRadius: DS_V3.radius.pill,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: DS_V3.space.sm,
+    paddingHorizontal: DS_V3.space.xs,
   },
   item: {
-    width: ITEM_W,
-    height: FAB,
+    flex: 1,
+    minWidth: DS_V3.size.tap,
+    height: ITEM_H,
+    borderRadius: DS_V3.radius.pill,
     alignItems: "center",
     justifyContent: "center",
     gap: DS_V3.space.xs,
@@ -150,18 +142,9 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.label.fontSize,
     lineHeight: DS_V3.type.label.lineHeight,
   },
-  fab: {
-    width: FAB,
-    height: FAB,
-    borderRadius: DS_V3.radius.pill,
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: PT,
-    borderColor: DS_V3.color.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   pressed: {
-    opacity: 0.8,
+    backgroundColor: GLASS_STATE.pressed,
+    transform: [{ scale: GLASS_STATE.pressedScale }],
   },
   dot: {
     position: "absolute",

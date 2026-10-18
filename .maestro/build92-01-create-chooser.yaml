@@ -1,0 +1,195 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 01 (P0-14): Create tab -> chooser. "Create a challenge" opens Create.
+# "Log today's task" opens the task; after the day is secured it is disabled with
+# "Every task today is done." Also: no header anywhere shows a route name (walks every
+# tab and opens a profile post). Fresh guest each run.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+
+# 01.2 five tabs in order, Create is a tab.
+- assertVisible:
+    id: "tab-home"
+- assertVisible:
+    id: "tab-discover"
+- assertVisible:
+    id: "tab-create"
+- assertVisible:
+    id: "tab-activity"
+- assertVisible:
+    id: "tab-profile"
+
+# 01.3 Create -> chooser (no challenge yet: log row disabled, no post sheet).
+- tapOn:
+    id: "tab-create"
+- extendedWaitUntil:
+    visible:
+      id: "create-chooser"
+    timeout: 10000
+# Rows read as one element: "title. subtitle".
+- assertVisible: "Log today's task.*"
+- assertVisible: "Create a challenge\\. Pick the tasks, the length and who can join\\."
+- assertNotVisible: "Who sees this"
+- takeScreenshot: build92-01-chooser-empty
+- tapOn: "Create a challenge.*"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 15000
+- takeScreenshot: build92-01-chooser-to-create
+- tapOn: "Cancel"
+- extendedWaitUntil:
+    visible:
+      id: "tab-create"
+    timeout: 15000
+
+# Join 7K Steps (one check-off task) so there is an open task today.
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    id: "tab-home"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps"
+    timeout: 20000
+
+# "Log today's task" opens the next open task.
+- tapOn:
+    id: "tab-create"
+- extendedWaitUntil:
+    visible: "Log today's task\\. Walk 7,000 steps · 7K Steps.*"
+    timeout: 10000
+- takeScreenshot: build92-01-chooser-open-task
+- tapOn: "Log today's task.*"
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- assertNotVisible:
+    id: "create-chooser"
+- tapOn: "^Done$"
+
+# Finishing the task (not the chooser) is what opens the post sheet. Post to friends.
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 10000
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Day secured.*|Day 1 secured.*|1 of .* done"
+    timeout: 20000
+# Day secured -> Done. Build 91 still shows the Proof screen after it (Part 1, chunk 02 removes it).
+- repeat:
+    times: 4
+    while:
+      notVisible:
+        id: "tab-create"
+    commands:
+      - tapOn:
+          text: "^Done$"
+          optional: true
+      # Guest account prompt ("Save your challenge.") after the proof screen.
+      - tapOn:
+          text: "^Later$"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: "tab-create"
+          timeout: 4000
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-create"
+    timeout: 15000
+
+# Secured: the log row is disabled with the done line.
+- tapOn:
+    id: "tab-create"
+- extendedWaitUntil:
+    visible: "Log today's task\\. Every task today is done\\."
+    timeout: 10000
+- takeScreenshot: build92-01-chooser-secured
+- tapOn: "Log today's task.*"
+- assertVisible: "Log today's task\\. Every task today is done\\."
+- tapOn: "Close"
+- extendedWaitUntil:
+    notVisible:
+      id: "create-chooser"
+    timeout: 5000
+
+# 01.5 no route name in any header: every tab, then a profile post.
+- tapOn:
+    id: "tab-discover"
+- assertNotVisible: "\\(tabs\\)|discover/|index"
+- tapOn:
+    id: "tab-activity"
+- assertNotVisible: "\\(tabs\\)|activity/"
+- tapOn:
+    id: "tab-profile"
+- extendedWaitUntil:
+    visible: "Proofs"
+    timeout: 20000
+- assertNotVisible: "\\(tabs\\)|profile/"
+# A check-off post has no tile in the fresh account's grid, so open the Posts
+# screen (the one that leaked "profile/posts" in build 91) by deep link.
+- openLink: griit://profile/posts
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Posts"
+    timeout: 15000
+- assertNotVisible: "profile/posts"
+- takeScreenshot: build92-01-posts-header
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 10000
+- assertNotVisible: "\\(tabs\\)"

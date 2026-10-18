@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import { Heart, MessageCircle, MoreHorizontal } from "lucide-react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Screen from "@/components/ds/Screen";
-import PushedHeader from "@/components/ds/PushedHeader";
+import { GlassTopBar, TOP_BAR_ROW_HEIGHT } from "@/components/ds/glass";
 import { DS_V3 } from "@/lib/design-system";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -38,6 +39,13 @@ export default function ProfilePostsScreen() {
   const startId = param(params.startId);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [laidOut, setLaidOut] = useState(false);
+  // Build 92 01.5 (P0-04): the top bar is transparent at rest and glass by 8 pt of scroll.
+  const insets = useSafeAreaInsets();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const onScroll = useMemo(
+    () => Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false }),
+    [scrollY],
+  );
 
   const postsQuery = useQuery({
     queryKey: ["profilePosts", userId],
@@ -74,12 +82,15 @@ export default function ProfilePostsScreen() {
   }, [posts]);
 
   return (
-    <Screen edges={["top"]}>
+    <Screen edges={[]}>
       <Stack.Screen options={{ headerShown: false, presentation: "modal" }} />
-      <PushedHeader title="Posts" onBack={() => router.back()} />
+      <GlassTopBar title="Posts" scrollY={scrollY} onBack={() => router.back()} />
       <FlashList
         ref={listRef}
         data={posts}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ paddingTop: insets.top + TOP_BAR_ROW_HEIGHT, paddingBottom: insets.bottom }}
         keyExtractor={(item) => item.id}
         onLoad={() => setLaidOut(true)}
         onViewableItemsChanged={onViewable}

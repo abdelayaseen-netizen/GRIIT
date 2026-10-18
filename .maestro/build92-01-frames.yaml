@@ -1,0 +1,79 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 01 frame screenshots (run on iPhone SE and iPhone 16 Pro Max):
+# P0-01 / P0-03 / P0-12 tab bar over Home, P0-14 (and the P0-05 sheet chrome) Create chooser,
+# P0-09 / P0-12 toast over Home. Fresh guest each run.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+# First launch of a dev build shows the developer-menu card, then the dev menu sheet.
+- tapOn:
+    text: "Continue"
+    optional: true
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - swipe:
+          start: "50%,60%"
+          end: "50%,98%"
+          duration: 400
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000
+# Let the push transition from the reminder screen settle before the frame.
+- extendedWaitUntil:
+    visible:
+      id: "tab-profile"
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: P0-01-P0-03-tab-bar-home
+- tapOn:
+    id: "tab-create"
+- extendedWaitUntil:
+    visible:
+      id: "create-chooser"
+    timeout: 10000
+- takeScreenshot: P0-14-P0-05-create-chooser-sheet
+- tapOn: "Close"
+- openLink: "griit://dev/build92-toast"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "toast-saved"
+    timeout: 15000
+- assertVisible: "Morning run done. 2 left today."
+- takeScreenshot: P0-09-P0-12-toast-over-home

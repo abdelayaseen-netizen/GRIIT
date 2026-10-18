@@ -10,6 +10,7 @@ import {
   taskDoneTitle,
   taskLeftBody,
 } from "@/lib/task-complete-toast";
+import { TOAST_LIFE_MS } from "@/lib/glass";
 
 describe("task complete toast copy", () => {
   it("names a saved photo and a done self-report, and counts what is left", () => {
@@ -55,6 +56,7 @@ describe("task complete toast copy", () => {
     const share = src.slice(src.indexOf('testID="toast-share"'), src.indexOf("toast.actionLabel"));
     expect(share).not.toContain("<Image");
     expect(share).toContain("styles.pill");
-    expect(src).toContain("PHOTO_LIFE_MS = 4000");
+    expect(TOAST_LIFE_MS).toBe(4000);
+    expect(src).toContain("PHOTO_LIFE_MS = TOAST_LIFE_MS");
   });
 });

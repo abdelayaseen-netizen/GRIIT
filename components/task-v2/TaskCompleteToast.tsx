@@ -1,12 +1,29 @@
 /**
- * Non-last task toast. Sits 12 above the tab bar, dismisses in 4s or on swipe.
+ * The one toast system (build 92 01.4, P0-09 / P0-12).
+ * Chrome glass (or the solid fallback), 70 pt above the tab bar, 4 s, wraps up to 3 lines,
+ * announced to VoiceOver, dismisses on swipe down. An optional action; "Share" opens the
+ * sticker carousel. Error toasts never offer Retry unless the caller wires one that can work.
  */
 import React, { useEffect, useRef } from "react";
-import { Animated, Image, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  AccessibilityInfo,
+  Animated,
+  Image,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Check } from "lucide-react-native";
+import { GlassSurface } from "@/components/ds/glass";
 import { DS_V3 } from "@/lib/design-system";
 import { SHARE } from "@/lib/copy";
-import { tabBarContentPad } from "@/lib/tab-bar-inset";
+import { GLASS_RADIUS, GLASS_STATE, TOAST_LIFE_MS, TOAST_MAX_LINES, glassInset } from "@/lib/glass";
+import { openStickerCarousel } from "@/lib/sticker-carousel";
+import { toastBottomOffset } from "@/lib/tab-bar-inset";
 import {
   clearTaskCompleteFlash,
   dismissTaskToast,
@@ -16,9 +33,9 @@ import {
   type TaskCompleteToast,
 } from "@/lib/task-complete-toast";
 
-const LIFE_MS = 4000;
-const PHOTO_LIFE_MS = 4000;
-const UNDO_MS = 4000;
+const LIFE_MS = TOAST_LIFE_MS;
+const PHOTO_LIFE_MS = TOAST_LIFE_MS;
+const UNDO_MS = TOAST_LIFE_MS;
 
 export function useTaskCompleteFlash(): string | null {
   const [id, setId] = React.useState<string | null>(null);
@@ -35,21 +52,25 @@ export function useTaskCompleteFlash(): string | null {
 }
 
 export default function TaskCompleteToast({
-  onShare,
   onShareFeed,
   onUndoFeed,
 }: {
-  onShare?: (toast: TaskCompleteToast) => void;
   onShareFeed?: (toast: TaskCompleteToast) => Promise<void> | void;
   onUndoFeed?: (toast: TaskCompleteToast) => Promise<void> | void;
 }) {
   const [toast, setToast] = React.useState<TaskCompleteToast | null>(null);
   const [shared, setShared] = React.useState(false);
   const slide = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const inset = glassInset(width);
 
   useEffect(() => subscribeTaskToast((next) => {
     setShared(false);
     setToast(next);
+    if (next) {
+      AccessibilityInfo.announceForAccessibility([next.title, next.body].filter(Boolean).join(" "));
+    }
   }), []);
 
   useEffect(() => {
@@ -80,11 +101,18 @@ export default function TaskCompleteToast({
     <Animated.View
       {...pan.panHandlers}
       testID="toast-saved"
+      accessibilityRole="alert"
       style={[
         styles.wrap,
-        { bottom: tabBarContentPad() + 12, transform: [{ translateY: slide }] },
+        {
+          left: inset,
+          right: inset,
+          bottom: toastBottomOffset(insets.bottom),
+          transform: [{ translateY: slide }],
+        },
       ]}
     >
+      <GlassSurface kind="chrome" style={styles.surface}>
       <View style={styles.thumb}>
         {toast.photoUri ? (
           <Image source={{ uri: toast.photoUri }} style={styles.thumb} />
@@ -93,7 +121,9 @@ export default function TaskCompleteToast({
         )}
       </View>
       <View style={styles.copy}>
-        <Text style={styles.title} numberOfLines={1}>{toast.title}</Text>
+        <Text style={styles.title} numberOfLines={toast.body ? TOAST_MAX_LINES - 1 : TOAST_MAX_LINES}>
+          {toast.title}
+        </Text>
         {toast.body ? <Text style={styles.body} numberOfLines={1}>{toast.body}</Text> : null}
       </View>
       {toast.cameraSeal ? (
@@ -129,13 +159,14 @@ export default function TaskCompleteToast({
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Share as a card"
-          onPress={() => onShare?.(toast)}
+          accessibilityLabel="Share"
+          onPress={() => openStickerCarousel(toast)} // Build 92 01.4: the sticker carousel (stub until chunk 05)
           style={styles.pill}
         >
           <Text style={styles.pillTxt}>Share</Text>
         </Pressable>
       )}
+      </GlassSurface>
     </Animated.View>
   );
 }
@@ -143,23 +174,24 @@ export default function TaskCompleteToast({
 const styles = StyleSheet.create({
   wrap: {
     position: "absolute",
-    left: 16,
-    right: 16,
     zIndex: 20,
-    borderRadius: 16,
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: 1,
-    borderColor: DS_V3.color.border,
+  },
+  surface: {
+    minHeight: 52,
+    borderRadius: GLASS_RADIUS.toast,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 10,
+    paddingVertical: 8,
+    paddingLeft: 10,
+    paddingRight: 8,
+    overflow: "hidden",
   },
   thumb: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: DS_V3.color.surface,
+    backgroundColor: GLASS_STATE.secondaryFill,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",

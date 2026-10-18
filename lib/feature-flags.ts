@@ -83,6 +83,13 @@ export const FLAGS = {
    * Off: no "Verify with Strava" option, webhook events are acknowledged and dropped.
    */
   STRAVA_AUTO_VERIFY: false,
+  /**
+   * Build 92 chunk 01: iOS 26 Liquid Glass on floating chrome (native tabs, glass
+   * surfaces). Off by default: the solid #1A1A1A fallback bar and surfaces ship.
+   * Turn on only after a device check on an Expo SDK 54 + iOS 26 build. Needs
+   * `expo-glass-effect` installed and a new dev client for the real material.
+   */
+  LIQUID_GLASS: false,
 } as const;
 
 // ============================================

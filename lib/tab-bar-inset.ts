@@ -1,4 +1,5 @@
 import { DS_V3 } from "@/lib/design-system";
+import { TOAST_ABOVE_TAB_BAR } from "@/lib/glass";
 
 export const TAB_BAR_PILL_HEIGHT = DS_V3.space.xs * 16;
 /** Floor for phones without a home indicator (pill 64 + dock 12 + one gutter). */
@@ -14,4 +15,10 @@ export const TAB_BAR_CLEARANCE = 96;
 export function tabBarContentPad(bottomInset?: number): number {
   const dock = Math.max(bottomInset ?? 0, DS_V3.space.md);
   return Math.max(TAB_BAR_CLEARANCE, TAB_BAR_PILL_HEIGHT + dock + DS_V3.space.gutter);
+}
+
+/** Build 92 01.4: a toast's bottom edge sits 70 pt above the tab bar's top edge. */
+export function toastBottomOffset(bottomInset?: number): number {
+  const dock = Math.max(bottomInset ?? 0, DS_V3.space.md);
+  return TAB_BAR_PILL_HEIGHT + dock + TOAST_ABOVE_TAB_BAR;
 }

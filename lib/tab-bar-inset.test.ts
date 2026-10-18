@@ -1,7 +1,16 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { tabBarContentPad } from "@/lib/tab-bar-inset";
+import { tabBarContentPad, toastBottomOffset } from "@/lib/tab-bar-inset";
+
+describe("toast offset", () => {
+  it("sits 70 pt above the top edge of the tab bar", () => {
+    // Build 92 01.4: pill 64 + dock max(inset, 12) + 70.
+    expect(toastBottomOffset(34)).toBe(64 + 34 + 70);
+    expect(toastBottomOffset(0)).toBe(64 + 12 + 70);
+    expect(toastBottomOffset()).toBe(64 + 12 + 70);
+  });
+});
 
 describe("tab bar scroll inset", () => {
   it("clears the pill, dock, and home indicator", () => {

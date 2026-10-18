@@ -15,10 +15,15 @@ import TabBar, { type TabBarTab } from "@/components/ds/TabBar";
 import { ROUTES } from "@/lib/routes";
 import TaskCompleteToast from "@/components/task-v2/TaskCompleteToast";
 import ShareSystemSheet from "@/components/share/ShareSystemSheet";
+import CreateChooser from "@/components/create/CreateChooser";
 import { useApp } from "@/contexts/AppContext";
 import { shareCardFromToast, type TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
+import { openCreateChooser } from "@/lib/create-chooser";
+import { registerStickerCarousel } from "@/lib/sticker-carousel";
+import { FLAGS } from "@/lib/feature-flags";
+import NativeGlassTabs from "@/components/ds/glass/NativeGlassTabs";
 
-function routeToTab(name: string | undefined): TabBarTab {
+function routeToTab(name: string | undefined): Exclude<TabBarTab, "create"> {
   if (name === "discover") return "discover";
   if (name === "activity") return "activity";
   if (name === "profile") return "profile";
@@ -41,18 +46,18 @@ function GritTabBar({ state }: BottomTabBarProps) {
   const router = useRouter();
   const activityUnread = useActivityUnread();
   const current = state.routes[state.index]?.name;
-  if (current === "create") return null;
   return (
     <TabBar
       active={routeToTab(current)}
       activityUnread={activityUnread}
       onTab={(tab) => {
-        if (tab === "home") router.push(ROUTES.TABS_HOME as never);
+        // Build 92 01.3: Create opens the chooser; the selected tab stays put.
+        if (tab === "create") openCreateChooser();
+        else if (tab === "home") router.push(ROUTES.TABS_HOME as never);
         else if (tab === "discover") router.push(ROUTES.TABS_DISCOVER as never);
         else if (tab === "activity") router.push(ROUTES.TABS_ACTIVITY as never);
         else router.push(ROUTES.TABS_PROFILE as never);
       }}
-      onFab={() => router.push(ROUTES.TABS_CREATE as never)}
     />
   );
 }
@@ -84,6 +89,12 @@ export default function TabLayout() {
     clearOptimisticFeedPost(toast.eventId);
     await trpcMutate(TRPC.checkins.unshareProof, { eventId: toast.eventId });
   }, []);
+  // Build 92 01.4: a toast's "Share" opens the sticker carousel. Until chunk 05 ships it,
+  // the opener is the current share sheet.
+  React.useEffect(() => {
+    registerStickerCarousel((toast) => setShareToast(toast));
+    return () => registerStickerCarousel(null);
+  }, []);
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -104,6 +115,9 @@ export default function TabLayout() {
       )}
     >
     <View style={styles.tabs}>
+    {FLAGS.LIQUID_GLASS ? (
+      <NativeGlassTabs />
+    ) : (
     <Tabs
       tabBar={(props) => <GritTabBar {...props} />}
       screenOptions={{
@@ -131,8 +145,7 @@ export default function TabLayout() {
         name="create"
         options={{
           title: "Create",
-          tabBarLabel: () => null,
-          tabBarAccessibilityLabel: "Create a new challenge",
+          tabBarAccessibilityLabel: "Create",
           sceneStyle: { backgroundColor: DS_V3.color.canvas },
         }}
       />
@@ -159,7 +172,9 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
-    <TaskCompleteToast onShare={setShareToast} onShareFeed={shareFeed} onUndoFeed={undoFeed} />
+    )}
+    <CreateChooser />
+    <TaskCompleteToast onShareFeed={shareFeed} onUndoFeed={undoFeed} />
     <ShareSystemSheet
       visible={shareToast != null}
       onDismiss={() => setShareToast(null)}

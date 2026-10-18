@@ -15,11 +15,13 @@ import {
   View,
 } from "react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { GLASS_STATE } from "@/lib/glass";
 
 const PT = DS_V3.space.xs / 4;
 const ICON = DS_V3.space.xs * 6;
 
-export type ButtonVariant = "primary" | "secondary" | "tertiary";
+/** Build 92 01.1: `glass` is the secondary on a glass surface (white 8% fill, Text 1, 500). */
+export type ButtonVariant = "primary" | "secondary" | "tertiary" | "glass";
 export type ButtonSize = "regular" | "small";
 
 export type ButtonProps = {
@@ -79,7 +81,7 @@ export default function Button({
       ? destructive
         ? DS_V3.color.textPrimary
         : DS_V3.color.onBrand
-      : variant === "secondary"
+      : variant === "secondary" || variant === "glass"
         ? DS_V3.color.textPrimary
         : destructive
           ? DS_V3.color.danger
@@ -107,6 +109,7 @@ export default function Button({
         variant === "primary" && !disabledLook && destructive && styles.primaryDestructive,
         (variant === "secondary" || disabledLook) && styles.secondary,
         variant === "tertiary" && !disabledLook && styles.tertiary,
+        variant === "glass" && !disabledLook && styles.glass,
         disabledLook && styles.disabledFill,
         spinning && styles.submitting,
         !blocked && pressed ? styles.pressed : null,
@@ -128,6 +131,7 @@ export default function Button({
         style={[
           styles.label,
           labelType === "secondary" ? styles.labelSecondary : null,
+          variant === "glass" ? styles.labelGlass : null,
           { color: labelColor },
         ]}
       >
@@ -181,6 +185,12 @@ const styles = StyleSheet.create({
   },
   tertiary: {
     backgroundColor: "transparent",
+  },
+  glass: {
+    backgroundColor: GLASS_STATE.secondaryFill,
+  },
+  labelGlass: {
+    fontWeight: "500",
   },
   pressed: {
     opacity: 0.8,

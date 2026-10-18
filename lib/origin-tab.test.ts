@@ -32,7 +32,10 @@ describe("origin tab after a proof", () => {
     );
     const secured = readFileSync(resolve(__dirname, "../app/task/secured.tsx"), "utf8");
     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.tsx"), "utf8");
-    expect(home).toContain("originTab=home");
+    const href = readFileSync(resolve(__dirname, "./task-complete-href.ts"), "utf8");
+    expect(home).toContain("taskCompleteHref(task)");
+    expect(href).toContain('originTab = "home"');
+    expect(href).toContain("&originTab=${encodeURIComponent(originTab)}");
     expect(flow).toContain("returnToOrigin");
     expect(flow).toContain("originTabHref");
     expect(flow).not.toContain("router.replace(ROUTES.TABS_HOME");

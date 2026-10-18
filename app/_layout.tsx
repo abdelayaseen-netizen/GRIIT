@@ -294,7 +294,9 @@ function RootLayoutNav() {
         </Pressable>
       ) : null}
       <OfflineBanner insetTop={showExpired ? 0 : insets.top} />
-      <Stack screenOptions={{ headerBackTitle: "Back" }}>
+      {/* Build 92 01.5: no native header anywhere by default. A route that isn't listed below
+          (build 91: /profile/posts) used to paint its route name as a header for a frame. */}
+      <Stack screenOptions={{ headerShown: false, headerBackTitle: "Back" }}>
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="create-profile" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />

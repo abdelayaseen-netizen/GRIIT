@@ -1,0 +1,61 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/create-chooser.test.ts (0 test)
+ ❯ lib/glass.test.ts (0 test)
+ ❯ lib/tab-bar-inset.test.ts (4 tests | 1 failed) 5ms
+   × toast offset > sits 70 pt above the top edge of the tab bar 2ms
+     → toastBottomOffset is not a function
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/create-chooser.test.ts [ lib/create-chooser.test.ts ]
+Error: Cannot find module '@/lib/create-chooser' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/create-chooser.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/create-chooser.test.ts:4:31
+      3| import { beforeEach, describe, expect, it } from "vitest";
+      4| import {
+      5|   CREATE_CHOOSER_COPY,
+       |                      ^
+      6|   closeCreateChooser,
+      7|   createChooserRows,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  lib/glass.test.ts [ lib/glass.test.ts ]
+Error: Cannot find module '@/lib/glass' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/glass.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/glass.test.ts:5:31
+      5| import {
+      6|   GLASS,
+      7|   GLASS_FALLBACK,
+       |             ^
+      8|   GLASS_STATE,
+      9|   TOAST_LIFE_MS,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/tab-bar-inset.test.ts > toast offset > sits 70 pt above the top edge of the tab bar
+TypeError: toastBottomOffset is not a function
+ ❯ lib/tab-bar-inset.test.ts:9:12
+      7|   it("sits 70 pt above the top edge of the tab bar", () => {
+      8|     // Build 92 01.4: pill 64 + dock max(inset, 12) + 70.
+      9|     expect(toastBottomOffset(34)).toBe(64 + 34 + 70);
+       |            ^
+     10|     expect(toastBottomOffset(0)).toBe(64 + 12 + 70);
+     11|     expect(toastBottomOffset()).toBe(64 + 12 + 70);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  3 failed (3)
+      Tests  1 failed | 3 passed (4)
+   Start at  12:36:10
+   Duration  325ms (transform 98ms, setup 0ms, collect 57ms, tests 5ms, environment 0ms, prepare 128ms)
+
