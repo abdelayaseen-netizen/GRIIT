@@ -88,18 +88,20 @@ Double tap on "Open photo", Index: 0... COMPLETED
 Take screenshot P1-21-double-tap-burst... COMPLETED
 Assert that "Close" is not visible... COMPLETED
 Scrolling DOWN until "Liked by you" is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
-Assert that "1 likes" is visible... FAILED
-
-Assertion is false: "1 likes" is visible
-
-Assertion '"1 likes" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
-
-Possible causes:
-- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
-- Element may be temporarily unavailable due to loading state
-- This could be a real regression that needs to be addressed
-
-==== Debug output (logs & screenshots) ====
-
-/Users/yaseenabdela/.maestro/tests/2026-10-18_155114
-exit 1
+Assert that "1 likes" is visible... COMPLETED
+Scrolling UP until "Open photo", Index: 0 is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
+Double tap on "Open photo", Index: 0... COMPLETED
+Wait for animation to end... COMPLETED
+Assert that "Close" is not visible... COMPLETED
+Scrolling DOWN until "Liked by you" is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
+Assert that "1 likes" is visible... COMPLETED
+Scrolling UP until "Open photo", Index: 0 is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
+Tap on "Open photo", Index: 0... COMPLETED
+Assert that "Close" is visible... COMPLETED
+Take screenshot P1-22-full-screen... COMPLETED
+Double tap on id: post-photo-full... COMPLETED
+Wait for animation to end... COMPLETED
+Tap on "Close"... COMPLETED
+Scrolling DOWN until "Liked by you" is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
+Assert that "1 likes" is visible... COMPLETED
+exit 0

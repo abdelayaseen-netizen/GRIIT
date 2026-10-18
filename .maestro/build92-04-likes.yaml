@@ -85,7 +85,7 @@ appId: app.griit.challenge-tracker
       id: "post-result"
     direction: DOWN
     timeout: 10000
-    centerElement: true
+    visibilityPercentage: 50
 - assertNotVisible:
     id: "feed-respect"
 - takeScreenshot: P1-23-own-post-no-heart

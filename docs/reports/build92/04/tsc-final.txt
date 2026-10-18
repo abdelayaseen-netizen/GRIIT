@@ -1,0 +1,5 @@
+lib/featured-catalog-seed.test.ts(186,37): error TS2307: Cannot find module '@electric-sql/pglite' or its corresponding type declarations.
+lib/featured-catalog-seed.test.ts(190,30): error TS2347: Untyped function calls may not accept type arguments.
+lib/featured-catalog-seed.test.ts(191,25): error TS2347: Untyped function calls may not accept type arguments.
+lib/featured-catalog-seed.test.ts(194,27): error TS2347: Untyped function calls may not accept type arguments.
+lib/share.ts(195,30): error TS2307: Cannot find module 'expo-sms' or its corresponding type declarations.

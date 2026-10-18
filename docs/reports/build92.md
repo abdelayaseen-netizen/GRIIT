@@ -463,3 +463,69 @@ badges are sentence case); `surface` → `DS_V3.color.surface`.
   sent; Share opens the sticker sheet.
 - Test: `lib/post-result.test.ts` static checks; `lib/build90-posting.test.ts` Done pins moved (intended);
   Maestro `build92-04-back.yaml` ×3.
+
+### Chunk 04 gates and evidence
+- vitest: `lib/post-result.test.ts` (run/workout/counter/timer/journal lines, journal never carries the text, one
+  badge, likedByLine, header/gesture/detail static checks) and `backend/lib/post-result.test.ts` (facts from
+  complete inputs and a Strava activity, `postBadgeFrom`, `selfLikeRejected`, `feed.react` reads the owner before
+  the toggle and throws FORBIDDEN "You can't like your own post."). Failing-first run `04/vitest-before.txt`.
+- Maestro `.maestro/build92-04-likes.yaml` (16 `16/maestro-likes-run3.txt`, SE `se/maestro-likes-se.txt`, 16 Pro
+  Max `16promax/maestro-likes-16promax.txt`): guest A posts a Drink Water photo to everyone and sees the result row
+  with the one badge and no heart on the own post (P1-23); a fresh guest B finds it first in the Everyone feed →
+  double tap → heart "Liked by you" and "1 likes" (count +1) and nothing opened → second double tap → still 1,
+  nothing opened → single tap → full screen (P1-22) → double tap there → Close → still "Liked by you", "1 likes".
+  Runs 1–2 were flow fixes (the post sheet is not a ScrollView so a typed caption left the keyboard over the
+  audience row — no caption; the heart row sits under the 4:5 photo — scroll to it). The first SE / Pro Max runs
+  found an app bug: in full screen the like state came from a cache lookup that missed the infinite-query shape,
+  so the double tap toggled the like OFF (count 0). Fixed in two places, with tests: the server's `feed.react`
+  gained `mode: "like"` (never deletes an existing reaction) and every double-tap path uses it; the full-screen
+  cache lookup reads `pages[]` too. The heart button keeps the toggle. The Pro Max rerun (run alongside two other
+  simulators) stopped at the own-post `post-result` scroll with the row visible but under the tab bar — the flow
+  asked for `centerElement`; it now accepts 50 % visibility. Pro Max alone then passed (all 3 devices PASS).
+- Maestro `.maestro/build92-04-back.yaml` (16 `16/maestro-back-run3.txt`/`run4`, SE `se/maestro-back-se.txt`,
+  16 Pro Max `16promax/maestro-back-16promax.txt`): a guest posts a 7K Steps check-off to everyone, then 3× feed →
+  tap the post → detail (title "7K Steps", `post-menu` visible, no "Proof" title, no `post-done`) → Back → the feed
+  with the same post on screen (`post-result` visible, `tab-home` visible). Then the frames: empty comments
+  (P1-26), the owner menu Who sees this · Share · Delete post (P1-27), the composer on the keyboard (P1-25) and the
+  sent comment (P1-24). Run 1: the guest "Save your challenge." prompt after Day secured (optional Later); run 2:
+  the simulator shows the menu as a popover without Cancel (tap outside). P1-25 from run 3 showed the composer
+  floating 100pt above the keyboard: `keyboardVerticalOffset` was the top inset + 44 on a view whose layout already
+  reaches the window bottom; it is now 0 and the composer drops its safe-area padding while the keyboard is up.
+- Screenshots next to the design frames (`design/handoff/b92/part1-finish-loop/frames/`): `16/`, `se/`,
+  `16promax/`: `P1-19-feed-photo-post`, `P1-20-post-header` (SE: longest header, one line, "now" on the right),
+  `P1-21-double-tap-burst`, `P1-22-full-screen`, `P1-23-own-post-no-heart`, `P1-24-proof-detail-comments`,
+  `P1-25-composer-on-keyboard`, `P1-26-proof-detail-empty`, `P1-27-owner-menu`. Frames were matched to devices by
+  pixel width (SE 750, 16 1178, Pro Max 1320). The 16 (not a gate device) has no `P1-20`: its likes run predates
+  that step in the flow.
+- Backend deployed twice (no SQL; additive input fields and feed item fields, build 91 clients send no `mode` and
+  ignore `result`/`badge`): `35ea72d` then `4677dba`, each confirmed on `/api/health`.
+- Full suite: see `04/vitest-final.txt` and `04/tsc-final.txt` (baseline set only). Pins moved with comments:
+  `lib/feed-join.test.ts` (own-post double tap → noop; no `<CameraSeal`), `lib/build90-posting.test.ts` (no Done /
+  Share outside on the Proof screen; Back goes back or Home), `lib/post-detail.test.ts` (image inside the gesture
+  wrapper), `lib/build90-strava.test.ts` (Strava badge through `postBadge`), `lib/feed-actions.test.ts` (no timed
+  self-reported line). None weakened: each inverted check is the Part 1 decision it pins.
+- Self-check diff: no skipped tests, no `as any`, no console.log, no hard-coded colours; chunk 01–03 tests pass in
+  the full run.
+
+### Chunk 04 decisions made alone
+- Result facts live in `activity_events.metadata.result` written at post time (complete + Strava webhook); older
+  posts have none and show only their badge. No backfill, no migration.
+- The badge is text in the result row (one per post); the camera seal overlay and its sheet are no longer rendered
+  on the card (`CameraSeal.tsx` stays for the profile viewer).
+- Likes: `feed.react` keeps toggling for the heart button; double taps send `mode: "like"`. Own-post double tap is a
+  no-op on the client and FORBIDDEN on the server.
+- Own posts with no likes yet show nothing in the heart's place (the copy has no empty line); "Liked by {name}"
+  for one like, "Liked by {name} and 1 other" for two.
+- Proof detail: Share in the owner menu opens the existing sticker sheet; Delete asks once with the copy-table
+  note as the sheet title and calls the existing `checkins.unshareProof`; the feed card's menu uses the same words.
+- The detail title is the challenge with the author under it (PushedHeader `titleSlot`); the route word "Proof"
+  remains only as the loading fallback.
+- The run post reads in the task's unit (`distance_unit` from the task config, default km).
+
+### Chunk 04 not done / Needs Yaseen
+- "Double-tap in full screen likes" from an unliked state is covered by the unit tests and the same wrapper; the
+  Maestro flow reaches full screen already liked (one post per guest), so it checks keep-not-unlike there.
+- Older posts (before this deploy) show no result line — only the badge — until re-posted. Backfill from
+  `check_ins.verification_gates` would be a SQL job; not written since nothing in the spec asks for it.
+- Android: the feed's own-post menu rows keep the legacy sheet (words updated); the detail's "…" menu is iOS-only
+  (`ActionSheetIOS`), as the rest of the app's menus are.
