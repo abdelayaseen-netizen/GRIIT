@@ -11,7 +11,8 @@ import {
 } from "../../lib/challenge-tasks";
 import { CHALLENGE_TASK_SELECT } from "../../lib/task-model";
 import { withWindowState } from "../../lib/task-time-gate";
-import { addCalendarDaysToDateKey, dateKeyFromIsoInTimeZone, getProfileTimeZoneForUser } from "../../lib/date-utils";
+import { addCalendarDaysToDateKey, dateKeyFromIsoInTimeZone, getProfileTimeZoneForUser, getTodayDateKey } from "../../lib/date-utils";
+import { enrollmentProgress } from "../../lib/user-stats";
 import { enrollmentFinishNumbers } from "../../lib/enrollment-finish";
 import { applyEnrollmentWindow, applyQueuedEnrollmentWindow } from "../../lib/enrollment-window";
 import { getSupabaseServer } from "../../lib/supabase-server";
@@ -494,6 +495,55 @@ export const challengesRouter = createTRPCRouter({
         logger.error({ err }, "[listMyActive] caught");
         throw err;
       }
+    }),
+
+  /**
+   * Build 92 06.2: per-challenge numbers from the same day records as the dots.
+   * "Day {n} of {N}", "{n} days secured" and the day states; the page reads these, not its own math.
+   */
+  progress: protectedProcedure
+    .input(z.object({ activeChallengeId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
+      const todayKey = getTodayDateKey(tz);
+      const [{ data: row, error }, secures, holds] = await Promise.all([
+        ctx.supabase
+          .from("active_challenges")
+          .select("id, user_id, status, start_at, created_at, ended_at, challenges(duration_days)")
+          .eq("id", input.activeChallengeId)
+          .eq("user_id", ctx.userId)
+          .maybeSingle(),
+        ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(2000),
+        ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(500),
+      ]);
+      if (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load challenge progress." });
+      }
+      if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found." });
+      const r = row as {
+        status?: string | null;
+        start_at?: string | null;
+        created_at?: string | null;
+        ended_at?: string | null;
+        challenges?: { duration_days?: number | null } | { duration_days?: number | null }[] | null;
+      };
+      const challenge = Array.isArray(r.challenges) ? r.challenges[0] : r.challenges;
+      const startIso = r.start_at ?? r.created_at ?? null;
+      const keysOf = (rows: unknown[] | null) =>
+        ((rows ?? []) as { date_key?: string | null }[]).map((x) => x.date_key ?? "").filter(Boolean);
+      const ended = r.status && r.status !== "active" && r.ended_at ? dateKeyFromIsoInTimeZone(r.ended_at, tz) : null;
+      return {
+        status: r.status ?? "active",
+        today_key: todayKey,
+        ...enrollmentProgress({
+          startDateKey: startIso ? dateKeyFromIsoInTimeZone(startIso, tz) : todayKey,
+          durationDays: challenge?.duration_days ?? null,
+          todayKey,
+          endedDateKey: ended,
+          securedKeys: keysOf(secures.data),
+          heldKeys: keysOf(holds.data),
+        }),
+      };
     }),
 
   /** Active enrollments whose start_at is still in the future. Home "Starts tomorrow". */

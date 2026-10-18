@@ -190,6 +190,21 @@ export interface StatsFromApi {
   activeStreak?: number | null;
   completedChallenges?: number;
   activeChallenges?: number;
+  /** Build 92 06.2: the one source for Streak, Best, Days secured, Verified and Proofs. */
+  user_stats?: UserStatsFields | null;
+}
+
+/** Build 92 06.2: `user_stats` as the server computes it once (backend/lib/user-stats.ts). */
+export interface UserStatsFields {
+  current_streak: number;
+  best_streak: number;
+  best_streak_start: string | null;
+  best_streak_end: string | null;
+  secured_days: number;
+  verified_days: number;
+  proofs_count: number;
+  held_days: number;
+  today_key: string;
 }
 
 /** Profile as returned by profiles.get (subscription_status, subscription_expiry, tier, etc.). */

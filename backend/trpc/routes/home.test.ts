@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { appRouter } from "../app-router";
+import { addCalendarDaysToDateKey, getYesterdayDateKey } from "../../lib/date-utils";
 
 vi.mock("../../lib/supabase-server", () => ({
   getSupabaseServer: () => null,
@@ -97,7 +98,9 @@ function createMockSupabase(opts?: { failFollows?: boolean }) {
         return { data: [], error: null, count: null };
       }
       if (table === "day_secures") {
-        return { data: [{ date_key: "2026-09-13" }, { date_key: "2026-09-12" }], error: null, count: null };
+        // Build 92 06.2: the streak is computed from these day records (yesterday and the day before).
+        const y = getYesterdayDateKey("UTC");
+        return { data: [{ date_key: y }, { date_key: addCalendarDaysToDateKey(y, -1) }], error: null, count: null };
       }
       if (table === "user_follows") {
         if (opts?.failFollows) {
@@ -280,7 +283,9 @@ describe("home.bootstrap", () => {
     expect(bootstrap.failed).toEqual(["followCounts"]);
     expect(bootstrap.followCounts).toBeNull();
     expect(bootstrap.profile).toMatchObject({ user_id: USER, username: "tester" });
-    expect(bootstrap.stats).toMatchObject({ activeStreak: 4 });
+    // Build 92 06.2: Streak reads user_stats, computed once from day_secures (not the streaks counter of 4).
+    expect(bootstrap.stats).toMatchObject({ activeStreak: 2, longestStreak: 2, totalDaysSecured: 2 });
+    expect((bootstrap.stats as { user_stats?: { current_streak: number } }).user_stats).toMatchObject({ current_streak: 2 });
     expect(bootstrap.activeChallenges).toEqual(expect.any(Array));
     expect(bootstrap.activeChallenge).toMatchObject({ id: AC });
     expect(bootstrap.todayCheckinsForUser).toEqual(expect.any(Array));

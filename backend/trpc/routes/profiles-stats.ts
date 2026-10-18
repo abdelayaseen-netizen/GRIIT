@@ -22,6 +22,51 @@ import { yesterdayWasDueDay } from "../../lib/due-keys";
 import { restoreStreakCount } from "./streaks";
 import { canViewerSeeAccountContent } from "../../lib/account-privacy";
 import { buildMeStats, proofMethodFromMetadata, resolveStatsTimeZone, type MeStatsEnrollment, type MeStatsProof } from "../../lib/me-stats";
+import { computeUserStats, type UserStatsCheckIn, type UserStatsFields } from "../../lib/user-stats";
+
+type UserStatsDb = {
+  from: (table: string) => {
+    select: (cols: string) => {
+      eq: (col: string, value: string) => {
+        limit: (n: number) => PromiseLike<{ data: unknown[] | null; error: unknown }>;
+      };
+    };
+  };
+};
+
+/**
+ * Build 92 06.2: the one loader behind `user_stats`. getStats (→ home.bootstrap), getRecord and
+ * meStats all call this; nothing else computes Streak, Best, Days secured, Verified or Proofs.
+ */
+export async function loadUserStats(db: UserStatsDb, userId: string, todayKey: string): Promise<UserStatsFields> {
+  const [secures, holds, checkIns] = await Promise.all([
+    db.from("day_secures").select("date_key").eq("user_id", userId).limit(2000),
+    db.from("freeze_uses").select("date_key").eq("user_id", userId).limit(500),
+    db
+      .from("check_ins")
+      .select("date_key, status, task_id, proof_source, proof_url, photo_url, completion_image_url")
+      .eq("user_id", userId)
+      .limit(5000),
+  ]);
+  const keysOf = (rows: unknown[] | null) =>
+    ((rows ?? []) as { date_key?: string | null }[]).map((r) => r.date_key ?? "").filter(Boolean);
+  const rows = ((checkIns.data ?? []) as {
+    date_key?: string | null;
+    status?: string | null;
+    task_id?: string | null;
+    proof_source?: string | null;
+    proof_url?: string | null;
+    photo_url?: string | null;
+    completion_image_url?: string | null;
+  }[]).map<UserStatsCheckIn>((r) => ({
+    date_key: r.date_key ?? "",
+    status: r.status ?? null,
+    task_id: r.task_id ?? null,
+    proof_source: r.proof_source ?? null,
+    has_photo: Boolean(r.proof_url || r.photo_url || r.completion_image_url),
+  }));
+  return computeUserStats({ todayKey, securedKeys: keysOf(secures.data), heldKeys: keysOf(holds.data), checkIns: rows });
+}
 
 /** Production profiles columns only. No streak_freeze_* / preferred_secure_time. */
 export const GET_STATS_PROFILE_SELECT =
@@ -209,11 +254,10 @@ export const profilesStatsProcedures = {
       lastStandRequiresPremium = true;
     }
 
-    // Missing row (RLS / no streak yet) must not collapse to a real zero.
-    const activeStreak =
-      streakRow == null ? null : (streakRow.active_streak_count ?? 0);
-
-    const totalDaysSecured = profileRow?.data?.total_days_secured ?? 0;
+    // Build 92 06.2: the three header numbers come from the one user_stats source.
+    const userStats = await loadUserStats(ctx.supabase as unknown as UserStatsDb, ctx.userId, todayKey);
+    const activeStreak = userStats.current_streak;
+    const totalDaysSecured = userStats.secured_days;
     const tier = profileRow?.data?.tier ?? getTierForDays(totalDaysSecured);
     const pointsToNextTier = getPointsToNextTier(totalDaysSecured);
     const nextTierName = getNextTierName(totalDaysSecured);
@@ -221,14 +265,12 @@ export const profilesStatsProcedures = {
     return {
       activeChallenges: activeChallenges.data?.length || 0,
       completedChallenges: completedChallenges.data?.length || 0,
-      activeStreak,
-      longestStreak: Math.max(
-        streakRow?.longest_streak_count || 0,
-        activeStreak ?? 0,
-      ),
+      activeStreak: userStats.current_streak,
+      longestStreak: userStats.best_streak,
+      totalDaysSecured: userStats.secured_days,
+      user_stats: userStats,
       lastCompletedDateKey: lastCompletedDateKey,
       effectiveMissedDays,
-      totalDaysSecured,
       tier,
       pointsToNextTier,
       nextTierName,
@@ -525,14 +567,9 @@ export const profilesStatsProcedures = {
       const stored = tzRow as { timezone?: string | null; reminder_timezone?: string | null } | null;
       const tz = resolveStatsTimeZone(stored?.timezone || stored?.reminder_timezone, input.timeZone);
       const todayKey = getTodayDateKey(tz);
-      const [secures, freezes, streak, enrollments, proofs] = await Promise.all([
+      const [secures, freezes, enrollments, proofs] = await Promise.all([
         ctx.supabase.from("day_secures").select("date_key").eq("user_id", ctx.userId).limit(800),
         ctx.supabase.from("freeze_uses").select("date_key").eq("user_id", ctx.userId).limit(400),
-        ctx.supabase
-          .from("streaks")
-          .select("active_streak_count")
-          .eq("user_id", ctx.userId)
-          .maybeSingle(),
         ctx.supabase
           .from("active_challenges")
           .select("id, start_at, created_at, status, ended_at, challenges(title, duration_days)")
@@ -560,13 +597,15 @@ export const profilesStatsProcedures = {
       const enrollmentRows: MeStatsEnrollment[] = rows.map((row) => {
         const challenge = Array.isArray(row.challenges) ? row.challenges[0] : row.challenges;
         const startIso = row.start_at ?? row.created_at ?? "";
-        const finished = row.status === "completed" || row.status === "ended" || row.status === "left";
+        // Build 92 06.4: a left (DB "abandoned") enrollment says so instead of reading as finished.
+        const left = row.status === "abandoned" || row.status === "left";
+        const finished = row.status === "completed" || row.status === "ended" || row.status === "failed";
         return {
           id: row.id,
           title: challenge?.title?.trim() || "Challenge",
           startKey: startIso ? dateKeyFromIsoInTimeZone(startIso, tz) : todayKey,
           durationDays: challenge?.duration_days ?? 1,
-          status: finished ? "finished" : "running",
+          status: left ? "left" : finished ? "finished" : "running",
           finishedAt: row.ended_at ? dateKeyFromIsoInTimeZone(row.ended_at, tz) : null,
         };
       });
@@ -588,7 +627,7 @@ export const profilesStatsProcedures = {
         range: input.range,
         todayKey,
         timeZone: tz,
-        currentStreak: (streak.data as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
+        userStats: await loadUserStats(ctx.supabase as unknown as UserStatsDb, ctx.userId, todayKey),
         securedKeys: (secures.data ?? []).map((r: { date_key: string }) => r.date_key),
         heldKeys: (freezes.data ?? []).map((r: { date_key: string }) => r.date_key),
         enrollments: enrollmentRows,

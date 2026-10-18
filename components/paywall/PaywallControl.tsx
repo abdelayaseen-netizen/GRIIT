@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/routes";
 import type { PaywallBodyProps } from "./types";
 
 const VALUE_PROPS = [
-  "4 streak freezes per month (free: 1)",
+  "Hold up to 4 freezes (free: 2)",
   "Unlimited challenges",
   "Advanced analytics",
   "Team challenges",

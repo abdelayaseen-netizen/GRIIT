@@ -654,3 +654,68 @@ sizes — reference only).
 - The dev-client LogBox banner (a RevenueCat console error on the simulator) can cover the upgrade sheet; the flow
   dismisses it. Not a release-build concern.
 - The 16 set has no P1-14 (the gate devices SE and Pro Max have it).
+
+## Chunk 06 · One source for every number
+
+Spec: top-level README "Each number has one server field"; Part 2 README "The numbers (one source each)" table
+(`user_stats.current_streak / best_streak / secured_days / verified_days / proof_count`) and checklist lines
+"Streak, Best, Days secured and Verified match…", "Each number reads its server field…"; Part 3 line "After joining,
+the top numbers are exactly "Day {n} of {N}" and "{n} days secured", derived from the same day records as the dots".
+
+### 06.1 Root cause of each mismatch (written before any change)
+- **Profile "Best 6" vs Your data "Best 7 · Oct 7 – Oct 13".** Profile header: `app/(tabs)/profile.tsx:258`
+  `bootstrap.stats.longestStreak` ← `backend/trpc/routes/profiles-stats.ts:225` `max(streaks.longest_streak_count,
+  active)` — a counter the SQL `secure_day` RPC increments per secured day (a freeze-held day restores the previous
+  count and adds nothing). Your data: `components/profile/YourDataTab.tsx:114` `meStats.user_stats.best_streak` ←
+  `backend/lib/me-stats.ts:70` `bestStreakRun(secured ∪ held)`, which recomputes from `day_secures` + `freeze_uses`
+  and counts the held day in the run. Two formulas (counter vs recount; held day counted or not) → 6 vs 7.
+- **"19 proofs" vs "25 proofs".** Your data: `me-stats.ts:212–218` counts `activity_events` `task_completed` rows
+  with a photo, de-duplicated by photo URL (limit 500). Proofs tab: `lib/proofs-grid.ts:87` `proofsCountLine(
+  getRecord.proofs.length)` ← `backend/trpc/routes/profiles-record.ts:418` `cameraProofTiles` built from
+  `check_ins` rows with a proof image (limit 800, no de-dup, one tile per check-in). Different tables, different
+  de-dup → 19 vs 25.
+- **"Workout every day: 5 of 7 days" vs "0 of 4 days secured".** Your data enrollment line: `me-stats.ts:247–258`
+  sets `secured_days: day` where `day` is the elapsed *day number* and `due_days` is the *duration*, so the bar reads
+  "day 5 of 7" and is labelled as if secured. The challenge card / page: `backend/lib/enrollment-day-stats.ts:36–53`
+  and `backend/lib/secured-elapsed.ts:55` count secured days of elapsed days (today only once secured) → "0 of 4".
+  Same enrollment, numerator and denominator both different.
+- **"Wake up at 5: 7 of 7" vs "Left on day 5".** Your data: `me-stats.ts:166–170` `enrollmentEnd` ignores
+  `ended_at` for a `left` enrollment unless it precedes the planned end and the line (above) prints the day number
+  through that end → "7 of 7". Profile Challenges: `lib/profile-challenges.ts:73` prints `ended_on_day` (5) and
+  `:81` the secured count. The Your data line never says the challenge was left.
+- **Current streak on Home / Profile:** `app/(tabs)/index.tsx:446` and `app/(tabs)/profile.tsx:266` override the
+  server value with `streakFromDays(uDays)` computed on the client from the record's day array — a third formula.
+
+### 06.2 Server fields
+- Decision (no SQL): the five numbers are computed once in `backend/lib/user-stats.ts` `computeUserStats` from the
+  existing tables (`day_secures`, `freeze_uses`, `check_ins`), loaded by one helper `loadUserStats` and attached as
+  `user_stats` to `profiles.getStats` (so `home.bootstrap.stats` carries it), `profiles.getRecord` and
+  `profiles.meStats`. `getStats.activeStreak / longestStreak / totalDaysSecured` and `getRecord.streak` are set from
+  the same object; no view, function or column is needed, so nothing waits on SQL and the backend can deploy.
+- Definitions (Part 2 table): `current_streak` = secured days in the unbroken chain of secured-or-held days ending
+  today (if secured) or yesterday, else 0; `best_streak` = the longest such chain's secured count with its first and
+  last dates; `secured_days` = all `day_secures` up to today; `verified_days` = secured days where every completed
+  check-in that day had camera or Strava proof; `proofs_count` = completed check-ins with proof (photo or Strava).
+  A held day keeps the chain and never adds to the count (README: "A freeze holds the streak but doesn't count as a
+  secured day"); this matches the SQL counter's behaviour on the Day secured screen.
+- Per challenge: `challenges.progress({ activeChallengeId })` returns `day_number`, `total_days`, `days_secured`,
+  `elapsed_days` and `days[]` states (before_join / secured / held / missed / today / future) from the same
+  `enrollmentDayStats` + `day_secures` the dots use; the page prefers it and keeps its local computation only until it
+  loads.
+- Client readers stop computing: Home and Profile drop the `streakFromDays` override; Profile header reads
+  `stats.user_stats`; the Proofs tab count line reads `proofs_count`; Your data reads the shared `user_stats` and
+  the enrollment lines come from `enrollmentDayStats` ("{secured} of {elapsed} days secured", "Left on day n ·
+  {secured} of {elapsed} secured").
+
+### 06.3 Freeze rule
+- Root cause: `backend/trpc/routes/streaks.ts:34–42,131–150` refills a monthly allotment (Free 1 / Pro 4) 30 days
+  after the last use, on top of the earned-at-7 grant (`backend/lib/freeze-grant.ts`), and
+  `app/settings/index.tsx:128` says "Free plan · 1 streak freeze a month"; `components/paywall/PaywallControl.tsx:18`
+  says "4 streak freezes per month (free: 1)"; `streaks.ts:261` "No streak freezes left this month."
+- Change: remaining = min(stored, hold cap) — no refill; the cap is 2, 4 with Pro; the Settings, paywall and error
+  copy describe the earn rule.
+
+### 06.4 Progress-bar wording
+- Definition applied: "{secured} of {elapsed} days secured" where elapsed = days before today plus today once
+  secured (`enrollment-day-stats.ts`, `secured-elapsed.ts`). The Your data bar and line move to it; the old
+  "{day} of {duration} days. Today counts." line goes.

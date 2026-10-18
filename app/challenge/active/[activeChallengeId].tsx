@@ -180,10 +180,25 @@ export default function ActiveChallengeDetailScreen() {
     staleTime: 0,
   });
 
+  // Build 92 06.2: "Day n of N" and "n days secured" come from the server, from the same day
+  // records as the dots. The local enrollmentDayStats below only stands in until this loads.
+  const progress = useQuery({
+    queryKey: ["challenges", "progress", id ?? ""],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.progress, { activeChallengeId: id }) as Promise<{
+        day_number: number;
+        total_days: number;
+        days_secured: number;
+        elapsed_days: number;
+      }>,
+    enabled: !!id && !!user?.id,
+    staleTime: 30 * 1000,
+  });
   useFocusEffect(
     useCallback(() => {
       void bootstrap.refetch();
-    }, [bootstrap.refetch]),
+      void progress.refetch();
+    }, [bootstrap.refetch, progress.refetch]),
   );
 
   useEffect(() => {
@@ -243,7 +258,7 @@ export default function ActiveChallengeDetailScreen() {
     todayKey,
   });
   const todayIndex = Math.max(0, weekKeys.indexOf(todayKey));
-  const dayStats = enrollmentDayStats({
+  const localStats = enrollmentDayStats({
     startAt: startIso,
     startDateKey,
     timeZone: profileTz ?? "UTC",
@@ -251,6 +266,12 @@ export default function ActiveChallengeDetailScreen() {
     durationDays,
     securedDateKeys: keys,
   });
+  const dayStats = {
+    ...localStats,
+    day: progress.data?.day_number || localStats.day,
+    secured: progress.data?.days_secured ?? localStats.secured,
+    due: progress.data?.elapsed_days ?? localStats.due,
+  };
   const shownDay = dayStats.day || shownChallengeDay(startIso, profileTz ?? "UTC", todayKey, durationDays);
 
   const taskSkippedTracked = useRef(false);
@@ -537,7 +558,7 @@ export default function ActiveChallengeDetailScreen() {
               ? detailLateJoinCard(String(startIso), profileTz ?? "UTC")
               : null
           }
-          onRefresh={() => void refetch()}
+          onRefresh={() => void Promise.all([refetch(), progress.refetch()])}
           onBack={goBack}
           onMore={handleLeaveChallenge}
           onRetry={() => void refetch()}

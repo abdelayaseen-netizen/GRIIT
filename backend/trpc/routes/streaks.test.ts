@@ -1,15 +1,12 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import {
-  STREAK_FREEZE_PER_MONTH_FREE,
-  STREAK_FREEZE_PER_MONTH_PRO,
   effectiveFreezesRemaining,
   freezeBlockedByHardMode,
-  monthlyFreezeLimit,
   previewStreakAfterFreeze,
   restoreStreakCount,
   streaksRouter,
 } from "./streaks";
-import { FREEZE_HOLD_CAP_FREE } from "../../lib/freeze-grant";
+import { FREEZE_HOLD_CAP_FREE, FREEZE_HOLD_CAP_PRO } from "../../lib/freeze-grant";
 import { addCalendarDaysToDateKey, getTodayDateKey, getYesterdayDateKey } from "../../lib/date-utils";
 import { evaluateMiss } from "../../lib/miss-reconcile";
 import { getSupabaseAdmin } from "../../lib/supabase-admin";
@@ -188,58 +185,25 @@ describe("freezeBlockedByHardMode", () => {
   });
 });
 
-describe("monthly freeze limit", () => {
-  it("is 1 free / 4 pro", () => {
-    expect(STREAK_FREEZE_PER_MONTH_FREE).toBe(1);
-    expect(STREAK_FREEZE_PER_MONTH_PRO).toBe(4);
-    expect(monthlyFreezeLimit(false)).toBe(1);
-    expect(monthlyFreezeLimit(true)).toBe(4);
-  });
-});
-
+// Build 92 06.3: freezes are earned at each 7-day streak and held up to 2 (4 with Pro).
+// The monthly allotment and its 30-day refill are gone; the stored count is the truth, capped.
 describe("effectiveFreezesRemaining", () => {
-  it("uses stored remaining when the last use is inside the 30-day window", () => {
+  it("is the stored count, never refilled by the calendar", () => {
     expect(
       effectiveFreezesRemaining({
         storedRemaining: 0,
-        lastFreezeUsedAt: new Date("2026-09-01T00:00:00.000Z").toISOString(),
+        lastFreezeUsedAt: new Date("2026-08-01T00:00:00.000Z").toISOString(),
         isPro: false,
         now: new Date("2026-09-14T00:00:00.000Z"),
       })
     ).toEqual({ remaining: 0, limit: 2 });
+    expect(effectiveFreezesRemaining({ storedRemaining: 1, lastFreezeUsedAt: null, isPro: true })).toEqual({ remaining: 1, limit: 4 });
   });
 
-  it("uses the monthly limit when last_freeze_used_at is null", () => {
-    expect(
-      effectiveFreezesRemaining({
-        storedRemaining: 1,
-        lastFreezeUsedAt: null,
-        isPro: true,
-        now: new Date("2026-09-14T00:00:00.000Z"),
-      })
-    ).toEqual({ remaining: STREAK_FREEZE_PER_MONTH_PRO, limit: STREAK_FREEZE_PER_MONTH_PRO });
-  });
-
-  it("refills to the limit when last_freeze_used_at is 30+ days ago", () => {
-    expect(
-      effectiveFreezesRemaining({
-        storedRemaining: 0,
-        lastFreezeUsedAt: new Date("2026-08-01T00:00:00.000Z").toISOString(),
-        isPro: false,
-        now: new Date("2026-09-14T00:00:00.000Z"),
-      })
-    ).toEqual({ remaining: 1, limit: 2 });
-  });
-
-  it("keeps an earned freeze when the 30-day refill is due", () => {
-    expect(
-      effectiveFreezesRemaining({
-        storedRemaining: 2,
-        lastFreezeUsedAt: new Date("2026-08-01T00:00:00.000Z").toISOString(),
-        isPro: false,
-        now: new Date("2026-09-14T00:00:00.000Z"),
-      })
-    ).toEqual({ remaining: 2, limit: 2 });
+  it("keeps an earned freeze, capped at the hold maximum", () => {
+    expect(effectiveFreezesRemaining({ storedRemaining: 2, lastFreezeUsedAt: null, isPro: false })).toEqual({ remaining: 2, limit: 2 });
+    expect(effectiveFreezesRemaining({ storedRemaining: 5, lastFreezeUsedAt: null, isPro: false })).toEqual({ remaining: 2, limit: 2 });
+    expect(effectiveFreezesRemaining({ storedRemaining: 5, lastFreezeUsedAt: null, isPro: true })).toEqual({ remaining: 4, limit: 4 });
   });
 });
 
@@ -320,32 +284,29 @@ describe("streaks.getFreezeStatus", () => {
     });
   });
 
-  it("returns the Pro limit when last_freeze_used_at is null even if stored remaining is 1", async () => {
+  it("returns the stored Pro count when last_freeze_used_at is null (no refill)", async () => {
     const { caller } = createCaller({
       remaining: 1,
       lastFreezeUsedAt: null,
       isPremium: true,
     });
     await expect(caller.getFreezeStatus()).resolves.toEqual({
-      remaining: STREAK_FREEZE_PER_MONTH_PRO,
-      limit: STREAK_FREEZE_PER_MONTH_PRO,
+      remaining: 1,
+      limit: FREEZE_HOLD_CAP_PRO,
       isPro: true,
       lastFreezeUsedAt: null,
     });
   });
 
-  it("refills remaining to the limit after the 30-day window", async () => {
+  it("does not refill after 30 days; an over-cap count is capped", async () => {
     const { caller } = createCaller({
       remaining: 0,
       lastFreezeUsedAt: "2026-08-01T00:00:00.000Z",
       isPremium: true,
     });
-    await expect(caller.getFreezeStatus()).resolves.toEqual({
-      remaining: STREAK_FREEZE_PER_MONTH_PRO,
-      limit: STREAK_FREEZE_PER_MONTH_PRO,
-      isPro: true,
-      lastFreezeUsedAt: "2026-08-01T00:00:00.000Z",
-    });
+    await expect(caller.getFreezeStatus()).resolves.toMatchObject({ remaining: 0, limit: FREEZE_HOLD_CAP_PRO });
+    const over = createCaller({ remaining: 6, lastFreezeUsedAt: null, isPremium: true });
+    await expect(over.caller.getFreezeStatus()).resolves.toMatchObject({ remaining: 4, limit: FREEZE_HOLD_CAP_PRO });
   });
 
   it("throws when the profile read fails", async () => {

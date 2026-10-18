@@ -49,6 +49,7 @@ import {
 import { canSeeProfileContent, isPrivateAccount, type PrivacyProfileFields } from "../../../lib/profile-privacy";
 import * as Sentry from "@sentry/node";
 import { reportError } from "../../lib/error-reporting";
+import { loadUserStats } from "./profiles-stats";
 
 function captureError(
   queryName: string,
@@ -404,10 +405,12 @@ export const profilesRecordProcedures = {
         if (!prev || row.unlocked_at < prev) unlocks[row.achievement_key] = row.unlocked_at;
       }
 
+      // Build 92 06.2: Streak and Best come from the one user_stats source (same as getStats / meStats).
+      const userStats = await loadUserStats(db as unknown as Parameters<typeof loadUserStats>[0], ownerId, todayKey);
       const record = buildProfileRecord({
         todayKey,
-        currentStreak: streakRow == null ? 0 : (streakRow.active_streak_count ?? 0),
-        bestStreak: streakRow?.longest_streak_count ?? 0,
+        currentStreak: userStats.current_streak,
+        bestStreak: userStats.best_streak,
         lastCompletedDateKey: streakRow?.last_completed_date_key ?? null,
         ranges,
         securedDateKeys,
@@ -534,8 +537,9 @@ export const profilesRecordProcedures = {
         todayKey,
       });
 
-      const sliced: ProfileRecord = {
+      const sliced: ProfileRecord & { user_stats: typeof userStats } = {
         ...record,
+        user_stats: userStats,
         proofs: gate.activity ? proofs : [],
         consistency: gate.activity ? { ...record.consistency } : EMPTY_CONSISTENCY,
         detail: gate.activity

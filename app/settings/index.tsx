@@ -125,7 +125,7 @@ export default function SettingsScreen() {
             <ListRow
               icon={<CreditCard size={ICON} color={DS_V3.color.textPrimary} />}
               title="Subscription"
-              subtitle={isPremium ? "Premium" : "Free plan · 1 streak freeze a month"}
+              subtitle={isPremium ? "Premium · hold up to 4 freezes" : "Earn a freeze at each 7-day streak. Hold up to 2."}
               onPress={() =>
                 router.push({ pathname: ROUTES.PAYWALL as never, params: { source: "settings" } } as never)
               }

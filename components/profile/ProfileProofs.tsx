@@ -50,12 +50,15 @@ export default function ProfileProofs({
   nextBadge,
   onNextBadge,
   securedDays,
+  proofCount,
 }: {
   proofs: ProfileProofTile[];
   isOwner: boolean;
   todayOpen?: boolean;
   tasksLeft?: number;
   securedDays?: number;
+  /** Build 92 06.2: `user_stats.proofs_count` — the one proofs number; tiles are not counted. */
+  proofCount?: number;
   monthKey: string;
   days: ProofsDayIn[];
   header: ProofsHeader;
@@ -84,7 +87,7 @@ export default function ProfileProofs({
   return (
     <View style={styles.wrap}>
       <View style={styles.toggleRow}>
-        <Text style={styles.count}>{proofsNewestLine(proofs.length, secured)}</Text>
+        <Text style={styles.count}>{proofsNewestLine(proofCount ?? proofs.length, secured)}</Text>
         <View style={styles.toggle}>
           <Pressable
             accessibilityRole="button"

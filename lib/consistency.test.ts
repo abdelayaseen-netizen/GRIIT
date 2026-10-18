@@ -47,7 +47,9 @@ describe("consistency builders", () => {
     const header = readFileSync(resolve(__dirname, "../components/profile/ProfileHeader.tsx"), "utf8");
     expect(header).toContain("numberOfLines={1}");
     expect(header).toContain("compact(");
-    expect(profile).toContain("daysFromSource");
+    // Build 92 06.2: Profile's header numbers read user_stats; the day array is no longer reduced on the client.
+    expect(profile).not.toContain("daysFromSource");
+    expect(profile).toContain("userStats?.current_streak");
     expect(profile).not.toContain("profileConsistencyFromBootstrap");
     const mutations = readFileSync(resolve(__dirname, "../hooks/useAppChallengeMutations.ts"), "utf8");
     // Build 90 04.7: the same invalidate + refetch pair, joining an in-flight fetch instead of cancelling it.

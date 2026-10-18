@@ -1,0 +1,149 @@
+appId: app.griit.challenge-tracker
+env:
+  MAESTRO_EMAIL: b89num@example.com
+---
+# Build 92 chunk 06: one source for every number. A guest secures Day 1 of Show Up 7 with a photo,
+# saves the account (is_test email) and the same numbers show on Home (streak 1, Your best),
+# Profile (1 Streak · 1 Best · 1 Days secured), Your data (1-day streak, Best 1, 1 proofs) and the
+# challenge page (Day 1 of 7 · 1 of 1 day secured).
+
+# ---- Day 1 with a photo (Show Up 7 · Get to the gym · camera) → Day secured ------------------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 20000
+- tapOn: "Join Show Up 7"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Get to the gym|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Get to the gym"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done.|^Later$"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "^Later$"
+    commands:
+      - tapOn: "^Later$"
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 10000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 20000
+
+# ---- Save the account so Profile and Your data open (is_test address) ---------------------------
+- tapOn:
+    id: "tab-profile"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 15000
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 15000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build92-numbers-test"
+- hideKeyboard
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Send it|Home|Streak|Settings"
+    timeout: 30000
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+
+# ---- Home: streak 1, "day in a row", "Your best" ------------------------------------------------
+- tapOn:
+    id: "tab-home"
+- extendedWaitUntil:
+    visible: "day in a row"
+    timeout: 30000
+- assertVisible: "^1$"
+- assertVisible: "Your best"
+- takeScreenshot: 06-home-numbers
+
+# ---- Profile header: 1 Streak · 1 Best · 1 Days secured --------------------------------------
+- tapOn:
+    id: "tab-profile"
+- extendedWaitUntil:
+    visible: "^1 Streak$"
+    timeout: 30000
+- assertVisible: "^1 Best$"
+- assertVisible: "^1 Days secured$"
+- takeScreenshot: 06-profile-numbers
+
+# ---- Your data: the same streak, best and proofs ----------------------------------------------
+- tapOn: "Your data"
+- extendedWaitUntil:
+    visible: "1-day streak"
+    timeout: 30000
+- assertVisible: "Best 1.*"
+- assertVisible: "1 proofs"
+- takeScreenshot: 06-your-data-numbers
+
+# ---- Challenge page (Profile → Challenges → the run): Day 1 of 7 · 1 of 1 day secured --------
+- tapOn: "Challenges"
+- extendedWaitUntil:
+    visible: "Show Up 7"
+    timeout: 20000
+- tapOn:
+    text: "Show Up 7"
+    index: 0
+- extendedWaitUntil:
+    visible: "1 of 1 day secured"
+    timeout: 30000
+- assertVisible: "^Day$"
+- assertVisible: "^1$"
+- assertVisible: "of 7"
+- takeScreenshot: 06-challenge-numbers

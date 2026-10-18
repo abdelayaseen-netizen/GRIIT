@@ -56,6 +56,7 @@ export const TRPC = {
   challenges: {
     list: 'challenges.list',
     getFeatured: 'challenges.getFeatured',
+    progress: 'challenges.progress',
     search: 'challenges.search',
     getDiscoverFeed: 'challenges.getDiscoverFeed',
     getDiscoverFeatured: 'challenges.getDiscoverFeatured',

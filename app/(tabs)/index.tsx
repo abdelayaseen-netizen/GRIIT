@@ -88,7 +88,6 @@ import { FreezeSheet } from "@/components/home/FreezeSheet";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import {
   daysFromSource,
-  streakFromDays,
   weekStripDaysUi,
   weekStripFromDays,
   type DaySource,
@@ -442,9 +441,11 @@ export default function HomeScreen() {
       }),
     [recordQuery.data?.daySource, recordQuery.data?.todayKey, homeTimeZone],
   );
-  const streakFromArray = uDays.length ? streakFromDays(uDays) : null;
-  const streak =
-    streakFromArray ?? resolveDisplayedStreak(statsReady, resolvedStats?.activeStreak);
+  // Build 92 06.2: Streak reads the server's user_stats; nothing is recomputed from the day array.
+  const streak = resolveDisplayedStreak(
+    statsReady,
+    resolvedStats?.user_stats?.current_streak ?? resolvedStats?.activeStreak,
+  );
   const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys ?? [];
   const header = recordQuery.data?.header ?? EMPTY_SECURED_HEADER;
   const streakLine = securedSinceLine(header);

@@ -1,4 +1,5 @@
 import { addCalendarDaysToDateKey, inclusiveDayCount } from "./date-utils";
+import { enrollmentProgress, type UserStatsFields } from "./user-stats";
 
 export type DayState = "secured" | "held" | "missed" | "none";
 export type StatsRange = "7d" | "30d" | "all";
@@ -9,7 +10,7 @@ export type MeStatsEnrollment = {
   title: string;
   startKey: string;
   durationDays: number;
-  status: "running" | "finished";
+  status: "running" | "finished" | "left";
   finishedAt: string | null;
 };
 
@@ -24,7 +25,8 @@ export type MeStatsInput = {
   range: StatsRange;
   todayKey: string;
   timeZone: string;
-  currentStreak: number;
+  /** Build 92 06.2: the one source for Streak, Best, Days secured, Verified and Proofs. */
+  userStats: UserStatsFields;
   securedKeys: readonly string[];
   heldKeys: readonly string[];
   enrollments: readonly MeStatsEnrollment[];
@@ -41,10 +43,13 @@ export type UserStats = {
   best_streak_start: string | null;
   best_streak_end: string | null;
   proofs_by_method: { camera: number; self_reported: number; apple_health: number };
-  /** Lifetime photo proofs. A photo on a self-reported task counts once. */
+  /** Build 92 06.2: completed tasks with proof — `user_stats.proofs_count`. */
   proof_count: number;
   proof_hour_histogram: number[];
+  /** Build 92 06.2: `user_stats.secured_days`. */
   lifetime_secured_days: number;
+  /** Build 92 06.2: secured days where every task had camera or Strava proof. */
+  verified_days: number;
 };
 
 export type MeStatsResult = {
@@ -56,7 +61,7 @@ export type MeStatsResult = {
     title: string;
     secured_days: number;
     due_days: number;
-    status: "running" | "finished";
+    status: "running" | "finished" | "left";
     finished_at: string | null;
     line: string;
   }[];
@@ -163,7 +168,7 @@ function dateInZone(iso: string, timeZone: string): string {
 
 function enrollmentEnd(row: MeStatsEnrollment): string {
   const last = addCalendarDaysToDateKey(row.startKey, Math.max(0, row.durationDays - 1));
-  if (row.status === "finished" && row.finishedAt) {
+  if (row.status !== "running" && row.finishedAt) {
     const finishedKey = row.finishedAt.slice(0, 10);
     return finishedKey < last ? finishedKey : last;
   }
@@ -204,19 +209,9 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
   const rangeSecured = rangeDue.filter((k) => secured.has(k));
   const rangeHeld = rangeDue.filter((k) => held.has(k));
   const rangeMissed = rangeDue.filter((k) => !secured.has(k) && !held.has(k));
-  const best = bestStreakRun([...secured], [...held]);
   const histogram = Array.from({ length: 24 }, () => 0);
   const methods = { camera: 0, self_reported: 0, apple_health: 0 };
-  const seenPhotos = new Set<string>();
-  let proofCount = 0;
   for (const proof of input.proofs) {
-    if (proof.method === "camera") {
-      const key = proof.photoKey?.trim() || proof.atIso;
-      if (!seenPhotos.has(key)) {
-        seenPhotos.add(key);
-        proofCount += 1;
-      }
-    }
     const day = dateInZone(proof.atIso, input.timeZone);
     if (day < start || day > input.todayKey) continue;
     methods[proof.method] += 1;
@@ -239,23 +234,30 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
     else if (date < input.todayKey && due.has(date)) state = "missed";
     return { date, state };
   });
+  // Build 92 06.4: "{secured} of {elapsed} days secured" from the same day records as the dots;
+  // a left enrollment says so and stops at the day it ended.
   const enrollments = input.enrollments.map((row) => {
-    const duration = Math.max(1, row.durationDays);
-    const end = enrollmentEnd(row);
-    const started = Boolean(row.startKey) && input.todayKey >= row.startKey;
-    const last = !started ? row.startKey : input.todayKey <= end ? input.todayKey : end;
-    const day = started && last ? Math.min(duration, inclusiveDayCount(row.startKey, last)) : 0;
-    const todayCounts = started && input.todayKey <= end;
-    const unit = duration === 1 ? "day" : "days";
-    const todayBit = todayCounts ? "Today counts." : "Today does not count.";
+    const progress = enrollmentProgress({
+      startDateKey: row.startKey,
+      durationDays: row.durationDays,
+      todayKey: input.todayKey,
+      endedDateKey: row.status === "running" ? null : row.finishedAt,
+      securedKeys: input.securedKeys,
+      heldKeys: input.heldKeys,
+    });
+    const elapsed = progress.elapsed_days;
+    const line =
+      row.status === "left"
+        ? `Left on day ${Math.max(1, progress.day_number)} · ${progress.days_secured} of ${elapsed} secured`
+        : `${progress.days_secured} of ${elapsed === 1 ? "1 day" : `${elapsed} days`} secured`;
     return {
       id: row.id,
       title: row.title,
-      secured_days: day,
-      due_days: duration,
+      secured_days: progress.days_secured,
+      due_days: elapsed,
       status: row.status,
       finished_at: row.finishedAt,
-      line: `${day} of ${duration} ${unit}. ${todayBit}`,
+      line,
     };
   });
   return {
@@ -265,14 +267,15 @@ export function buildMeStats(input: MeStatsInput): MeStatsResult {
       due_days: rangeDue.length,
       held_days: rangeHeld.length,
       missed_days: rangeMissed.length,
-      current_streak: input.currentStreak,
-      best_streak: best?.count ?? 0,
-      best_streak_start: best?.start ?? null,
-      best_streak_end: best?.end ?? null,
+      current_streak: input.userStats.current_streak,
+      best_streak: input.userStats.best_streak,
+      best_streak_start: input.userStats.best_streak_start,
+      best_streak_end: input.userStats.best_streak_end,
       proofs_by_method: methods,
-      proof_count: proofCount,
+      proof_count: input.userStats.proofs_count,
       proof_hour_histogram: histogram,
-      lifetime_secured_days: [...secured].filter((k) => k <= input.todayKey).length,
+      lifetime_secured_days: input.userStats.secured_days,
+      verified_days: input.userStats.verified_days,
     },
     day_secures,
     enrollments,

@@ -256,7 +256,11 @@ describe("profiles.getStats", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
     const yesterday = getYesterdayDateKey("UTC");
+    // Build 92 06.2: Streak, Best and Days secured come from the day records, not the streaks counter.
+    // Seven secured days ending yesterday → streak 7, best 7, 7 days secured.
+    const securedDateKeys = Array.from({ length: 7 }, (_, i) => addCalendarDaysToDateKey(yesterday, -i));
     const caller = createCaller({
+      securedDateKeys,
       streakOverrides: {
         last_completed_date_key: yesterday,
         last_secured_date: yesterday,
@@ -269,8 +273,9 @@ describe("profiles.getStats", () => {
     await expect(caller.getStats()).resolves.toMatchObject({
       activeChallenges: 2,
       completedChallenges: 1,
-      activeStreak: 4,
+      activeStreak: 7,
       longestStreak: 7,
+      user_stats: { current_streak: 7, best_streak: 7, secured_days: 7 },
       lastCompletedDateKey: yesterday,
       effectiveMissedDays: 0,
       totalDaysSecured: 7,
@@ -282,10 +287,12 @@ describe("profiles.getStats", () => {
     });
   });
 
-  it("longestStreak is at least the live active streak", async () => {
+  it("longestStreak is at least the live active streak (one source: both come from the same chain)", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T15:00:00.000Z"));
+    const yesterday = getYesterdayDateKey("UTC");
     const caller = createCaller({
+      securedDateKeys: [yesterday, addCalendarDaysToDateKey(yesterday, -1), addCalendarDaysToDateKey(yesterday, -2)],
       streakOverrides: {
         active_streak_count: 3,
         longest_streak_count: 2,

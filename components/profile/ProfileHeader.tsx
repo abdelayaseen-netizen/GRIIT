@@ -108,7 +108,12 @@ function Count({ n, label, onPress }: { n: number; label: string; onPress?: () =
 
 function Stat({ n, l, earned, flame, hair }: { n: number; l: string; earned?: boolean; flame?: boolean; hair?: boolean }) {
   return (
-    <View style={[styles.stat, hair ? styles.statHair : null]}>
+    <View
+      style={[styles.stat, hair ? styles.statHair : null]}
+      accessible
+      accessibilityLabel={`${n.toLocaleString("en-US")} ${l}`}
+      testID={`profile-stat-${l.toLowerCase().replace(/\s+/g, "-")}`}
+    >
       <View style={styles.statNum}>
         {flame ? <Flame size={16} color={DS_V3.color.brand} /> : null}
         <Text

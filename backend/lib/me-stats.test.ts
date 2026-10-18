@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { bestStreakRun, buildMeStats, consistencyPct, proofMethodFromMetadata, resolveStatsTimeZone, usualHour } from "./me-stats";
 import { hourLabel } from "@/lib/v51-format";
 import { inclusiveDayCount } from "./date-utils";
+import { computeUserStats } from "./user-stats";
 
 describe("best streak dates", () => {
   it("an 18-day run is Sep 6 through Sep 23, not Sep 24", () => {
@@ -31,7 +32,8 @@ describe("range stats", () => {
   const base = {
     todayKey: "2026-10-07",
     timeZone: "America/New_York",
-    currentStreak: 2,
+    // Build 92 06.2: the header numbers come in from the one user_stats source.
+    userStats: computeUserStats({ todayKey: "2026-10-07", securedKeys: ["2026-10-05", "2026-10-06"], heldKeys: [], checkIns: [] }),
     securedKeys: ["2026-10-05", "2026-10-06"],
     heldKeys: [] as string[],
     enrollments: [
@@ -158,9 +160,10 @@ describe("range stats", () => {
         },
       ],
     });
+    // Build 92 06.4: secured of elapsed, from the same day records as the dots.
     expect(stats.enrollments.map((row) => row.line)).toEqual([
-      "1 of 7 days. Today counts.",
-      "1 of 1 day. Today does not count.",
+      "0 of 0 days secured",
+      "1 of 1 day secured",
     ]);
   });
 });

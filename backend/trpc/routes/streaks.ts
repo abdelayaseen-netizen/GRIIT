@@ -10,6 +10,7 @@ import {
 import { getSupabaseAdmin } from "../../lib/supabase-admin";
 import { logger } from "../../lib/logger";
 import { freezeHoldCap } from "../../lib/freeze-grant";
+import { freezesHeld } from "../../lib/user-stats";
 
 type FreezeWriteError = {
   code?: string;
@@ -31,15 +32,8 @@ function rethrowFreezeWrite(requestId: string, op: string, error: FreezeWriteErr
   throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to use streak freeze." });
 }
 
-/** Free-tier monthly freeze allotment. Pro uses STREAK_FREEZE_PER_MONTH_PRO. */
-export const STREAK_FREEZE_PER_MONTH_FREE = 1;
-export const STREAK_FREEZE_PER_MONTH_PRO = 4;
-/** 30-day refill window from last_freeze_used_at (same interval as the old reset clock). */
-export const FREEZE_RESET_DAYS = 30;
-
-export function monthlyFreezeLimit(isPremium: boolean): number {
-  return isPremium ? STREAK_FREEZE_PER_MONTH_PRO : STREAK_FREEZE_PER_MONTH_FREE;
-}
+// Build 92 06.3: freezes are earned (one at each 7-day streak, backend/lib/freeze-grant.ts) and held
+// up to 2 (4 with GRIIT Pro). The monthly allotment and its 30-day refill are gone.
 
 /** Yesterday is the only hole: last completed is the day before it, or today after a same-day secure. */
 export function freezeEligibleYesterday(input: {
@@ -56,10 +50,6 @@ export function freezeEligibleYesterday(input: {
   );
 }
 
-export function freezeWindowExpired(lastUsedAt: Date | null, now: Date): boolean {
-  if (!lastUsedAt) return false;
-  return (now.getTime() - lastUsedAt.getTime()) / (1000 * 60 * 60 * 24) >= FREEZE_RESET_DAYS;
-}
 
 export function restoreStreakCount(input: {
   todayKey: string;
@@ -130,24 +120,12 @@ export function freezeBlockedByHardMode(
 
 export function effectiveFreezesRemaining(input: {
   storedRemaining: number | null | undefined;
-  lastFreezeUsedAt: string | null | undefined;
+  lastFreezeUsedAt?: string | null | undefined;
   isPro: boolean;
   now?: Date;
 }): { remaining: number; limit: number } {
-  const cap = freezeHoldCap(input.isPro);
-  const refill = monthlyFreezeLimit(input.isPro);
-  const storedRaw = input.storedRemaining;
-  const storedKnown = typeof storedRaw === "number" && Number.isFinite(storedRaw);
-  const stored = storedKnown ? Math.max(0, storedRaw as number) : null;
-  const lastUsed = input.lastFreezeUsedAt ? new Date(input.lastFreezeUsedAt) : null;
-  const now = input.now ?? new Date();
-  const windowOpen = !!input.lastFreezeUsedAt && !freezeWindowExpired(lastUsed, now);
-  // A due refill adds the monthly allotment up to the hold cap.
-  // It does not replace an earned freeze with the smaller Free refill.
-  if (!windowOpen) {
-    return { remaining: Math.min(cap, Math.max(stored ?? 0, refill)), limit: cap };
-  }
-  return { remaining: Math.min(cap, stored ?? refill), limit: cap };
+  // Build 92 06.3: what was earned, capped. Existing users keep theirs up to the new maximum.
+  return { remaining: freezesHeld(input.storedRemaining, input.isPro), limit: freezeHoldCap(input.isPro) };
 }
 
 export const streaksRouter = createTRPCRouter({
@@ -258,7 +236,7 @@ export const streaksRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Freeze can only be used when you missed exactly one day (yesterday)." });
       }
       if (remaining <= 0) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "No streak freezes left this month." });
+        throw new TRPCError({ code: "FORBIDDEN", message: "No freezes left. You earn one at each 7-day streak." });
       }
 
       const previous = restoreStreakCount({

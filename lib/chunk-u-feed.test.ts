@@ -97,6 +97,8 @@ describe("Chunk U challenge board", () => {
     expect(feed).toContain("InlineComments");
     expect(feed).toContain("Share");
     expect(home).toContain("weekStripFromDays");
-    expect(home).toContain("streakFromDays");
+    // Build 92 06.2: Home no longer recomputes the streak from the day array; it reads user_stats.
+    expect(home).not.toContain("streakFromDays");
+    expect(home).toContain("user_stats?.current_streak");
   });
 });

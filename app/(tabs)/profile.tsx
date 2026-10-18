@@ -41,8 +41,6 @@ import {
 } from "@/lib/secured-since";
 import {
   consistencyDenominatorLine,
-  daysFromSource,
-  streakFromDays,
   type DaySource,
 } from "@/lib/day-state";
 import { trpcQuery } from "@/lib/trpc";
@@ -53,6 +51,7 @@ import { shareInvite, shareProfile } from "@/lib/share";
 import { captureError } from "@/lib/sentry";
 import { profilePrimaryName } from "@/lib/profile-display";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
+import type { UserStatsFields } from "@/types";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import EmptyState from "@/components/ds/EmptyState";
@@ -60,7 +59,6 @@ import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
 import { YourDataTab } from "@/components/profile/YourDataTab";
-import type { MeStatsResult } from "@/backend/lib/me-stats";
 import ProfileProofs from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
@@ -87,6 +85,8 @@ type RecordPayload = ProfileRecord & {
   monthKey?: string;
   days?: ProofsDayIn[];
   badgeGrid?: V42BadgeState[];
+  /** Build 92 06.2 */
+  user_stats?: UserStatsFields | null;
 };
 
 function isProfileTab(value: string | undefined): value is ProfileTab {
@@ -116,13 +116,6 @@ export default function ProfileScreen() {
   });
   if (recordQuery.isError) captureError(recordQuery.error, "Profile.getRecord");
 
-  const lifetimeStats = useQuery({
-    queryKey: ["profiles", "meStats", "all", user?.id ?? ""],
-    queryFn: () => trpcQuery<MeStatsResult>(TRPC.profiles.meStats, { range: "all" }),
-    staleTime: 60 * 1000,
-    enabled: !isGuest && !!user?.id,
-  });
-
   const followCountsQuery = useQuery({
     queryKey: ["profile", user?.id, "followCounts"],
     queryFn: () =>
@@ -136,12 +129,12 @@ export default function ProfileScreen() {
     enabled: !isGuest && !!user?.id,
   });
 
-  const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching || lifetimeStats.isRefetching;
+  const refreshing = recordQuery.isRefetching || followCountsQuery.isRefetching;
 
   const onRefresh = useCallback(async () => {
     await refetchAll();
-    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch(), lifetimeStats.refetch()]);
-  }, [refetchAll, recordQuery, followCountsQuery, lifetimeStats]);
+    await Promise.all([recordQuery.refetch(), followCountsQuery.refetch()]);
+  }, [refetchAll, recordQuery, followCountsQuery]);
 
   const record = recordQuery.data;
   const proofs = record?.proofs ?? [];
@@ -255,16 +248,18 @@ export default function ProfileScreen() {
     (followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0));
   const v3Tab =
     tab === "proofs" ? "Proofs" : tab === "data" ? "Your data" : tab === "badges" ? "Badges" : "Challenges";
-  const streak = bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
-  const best = bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
+  // Build 92 06.2: the three header numbers read user_stats (getStats via the bootstrap, else getRecord).
+  const userStats = bootstrap.data?.stats?.user_stats ?? record?.user_stats ?? null;
+  const streak = userStats?.current_streak ?? bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
+  const best = userStats?.best_streak ?? bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
+  const securedDaysTotal = userStats?.secured_days ?? bootstrap.data?.stats?.totalDaysSecured ?? 0;
+  const proofsCount = userStats?.proofs_count ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
   const securedDateKeys = Array.isArray(bootstrap.data?.securedDateKeys)
     ? bootstrap.data.securedDateKeys
     : [];
   const todayKey = record?.todayKey ?? getTodayDateKey(homeTimeZone);
   const todaySecured = homeSecuredToday(securedDateKeys, todayKey);
-  const uDays = daysFromSource(record?.daySource, homeTimeZone, { todayKey });
-  const streakFromArray = uDays.length ? streakFromDays(uDays) : streak;
   const header = record?.header ?? EMPTY_SECURED_HEADER;
   const consistency = consistencyFromHeader(header);
   const firstJoin = record?.daySource?.enrollments
@@ -326,10 +321,10 @@ export default function ProfileScreen() {
             friendFaces={followCountsQuery.data?.friendFaces ?? []}
             bio={bio}
             bioPlaceholder={bioPlaceholder}
-            streak={streakFromArray}
+            streak={streak}
             best={best}
             todaySecured={todaySecured}
-            totalDaysSecured={lifetimeStats.data?.user_stats.lifetime_secured_days ?? header.secured}
+            totalDaysSecured={securedDaysTotal}
             consistency={consistencyHeadline(consistency)}
             consistencySub={
               consistencyContext(consistency, formatSinceDate, todaySecured) ||
@@ -422,6 +417,7 @@ export default function ProfileScreen() {
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
               nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
               securedDays={header.secured}
+              proofCount={proofsCount}
               onNextBadge={() => {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setTab("badges");
