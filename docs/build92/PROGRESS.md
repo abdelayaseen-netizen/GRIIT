@@ -9,7 +9,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 03 | Task inputs and partial logs | PASSED (waiting for SQL) | 96a72a63 | 03.6 data fix is SQL in docs/sql/build92.sql, not run; short saves are saved, not posted. Report: docs/reports/build92.md |
 | 04 | Posts, likes and proof detail | PASSED | 91ee4f74 | Backend deployed 35ea72d then 4677dba (feed.react mode "like", result/badge on feed items). Report: docs/reports/build92.md |
 | 05 | Share stickers | PASSED | 74853f8a | No SQL, no deploy (client only). Needs Yaseen: verify live RevenueCat prices on a device/sandbox. Report: docs/reports/build92.md |
-| 06 | One source for every number | PASSED | de7d012d | No SQL (server computes user_stats from existing tables). Backend deployed de7d012 (user_stats on getStats/getRecord/meStats, challenges.progress, freeze refill removed). Report: docs/reports/build92.md |
+| 06 | One source for every number | PASSED | 15983b8c (code de7d012d) | No SQL (server computes user_stats from existing tables). Backend deployed de7d012 (user_stats on getStats/getRecord/meStats, challenges.progress, freeze refill removed). Report: docs/reports/build92.md |
 | 07 | Profile and post viewer | NOT STARTED | | |
 | 08 | Invite, leaderboard and settings | NOT STARTED | | |
 | 09 | First day and account | NOT STARTED | | |
