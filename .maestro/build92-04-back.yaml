@@ -51,6 +51,14 @@ appId: app.griit.challenge-tracker
 - tapOn:
     text: "^Done$"
     optional: true
+# A guest's first finished task raises "Save your challenge." (build 91); Later keeps going.
+- extendedWaitUntil:
+    visible: "^Later$"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
 - extendedWaitUntil:
     visible:
       id: "tab-home"
@@ -105,14 +113,21 @@ appId: app.griit.challenge-tracker
 - assertVisible: "^Share$"
 - assertVisible: "Delete post"
 - takeScreenshot: P1-27-owner-menu
-- tapOn: "Cancel"
+# The simulator shows the sheet as a popover without Cancel; a tap outside closes it.
+- tapOn:
+    point: "50%,90%"
+- extendedWaitUntil:
+    notVisible: "Delete post"
+    timeout: 5000
 - tapOn: "Add a comment.*"
 - inputText: "Nice one"
 - takeScreenshot: P1-25-composer-on-keyboard
 - tapOn: "Send comment"
+# The sent comment replaces the empty state; the field clears.
 - extendedWaitUntil:
-    visible: "Nice one"
+    notVisible: "No comments yet.*"
     timeout: 15000
+- assertVisible: "Nice one"
 - takeScreenshot: P1-24-proof-detail-comments
 - tapOn: "Go back"
 - extendedWaitUntil:

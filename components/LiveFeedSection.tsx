@@ -334,7 +334,9 @@ function LiveFeedSection({
   );
 
   const onRespect = useCallback(
-    async (post: LiveFeedPost) => {
+    async (post: LiveFeedPost, mode: "toggle" | "like" = "toggle") => {
+      // Build 92 04.4: a double tap only ever adds a like.
+      if (mode === "like" && post.reactedByMe) return;
       const now = Date.now();
       const last = respectLastAt.current.get(post.id) ?? 0;
       if (now - last < RESPECT_DEBOUNCE_MS) return;
@@ -345,7 +347,7 @@ function LiveFeedSection({
       const next = optimisticRespect(prev);
       updatePost(post.id, (p) => ({ ...p, ...next }));
       try {
-        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id })) as {
+        const result = (await trpcMutate(TRPC.feed.react, { eventId: post.id, mode })) as {
           reacted?: boolean;
           reactionCount?: number;
         };
@@ -596,6 +598,7 @@ function LiveFeedSection({
             viewerTargetStreak={viewerTargetStreak}
             comments={previewByPostId.get(item.id) ?? []}
             onLike={() => void onRespect(item)}
+            onLikeOnce={() => void onRespect(item, "like")}
             onComment={() => setCommentEventId(item.id)}
             onShare={() => void onShare(item)}
             onProfilePress={() => navigateProfile(item)}

@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textPrimary,
   },
   sub: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
-  // Handoff `captionStrong` → label.
-  badge: { ...DS_V3.type.label, color: DS_V3.color.textSecondary, paddingTop: 4 },
+  // Handoff `captionStrong` → caption at 600 (the label token is uppercase; badges are sentence case).
+  badge: { ...DS_V3.type.caption, fontWeight: "600", color: DS_V3.color.textSecondary, paddingTop: 4 },
 });

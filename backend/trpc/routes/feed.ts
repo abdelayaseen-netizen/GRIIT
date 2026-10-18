@@ -693,6 +693,8 @@ export const feedRouter = createTRPCRouter({
     .input(
       z.object({
         eventId: z.string().uuid(),
+        /** Build 92 04.4: "like" never removes an existing reaction (double tap). Default toggles (heart button). */
+        mode: z.enum(["toggle", "like"]).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -722,6 +724,9 @@ export const feedRouter = createTRPCRouter({
       const prevCount = countBefore ?? 0;
       let reacted = false;
       let count: number;
+      if (existing?.id && input.mode === "like") {
+        return { reacted: true, reactionCount: prevCount };
+      }
       if (existing?.id) {
         const { error } = await ctx.supabase
           .from("feed_reactions")

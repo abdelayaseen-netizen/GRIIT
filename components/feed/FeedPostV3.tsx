@@ -37,6 +37,8 @@ export type FeedPostV3Props = {
   viewerUserId?: string | null;
   comments?: FeedCommentPreview[];
   onLike: () => void;
+  /** Build 92 04.4: the double tap — adds a like, never removes one. Falls back to onLike. */
+  onLikeOnce?: () => void;
   onComment: () => void;
   onShare: () => void;
   onProfilePress?: () => void;
@@ -53,6 +55,7 @@ export default function FeedPostV3({
   viewerUserId,
   comments = [],
   onLike,
+  onLikeOnce,
   onComment,
   onShare,
   onProfilePress,
@@ -89,6 +92,7 @@ export default function FeedPostV3({
   // Build 92 04.2: exactly one badge per post.
   const badge = postBadge(post);
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
+  const likeOnce = onLikeOnce ?? onLike;
 
   if (variant === "challenge_finished") {
     const secured = post.securedDays ?? 0;
@@ -109,7 +113,7 @@ export default function FeedPostV3({
           onChallengePress={onChallengePress}
           onMenu={onMenu}
         />
-        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
+        <DoubleTapRespect respected={post.reactedByMe} onRespect={likeOnce} onOpen={open} ownPost={ownPost}>
           <View>
             <View style={styles.finishCard}>
               <View style={styles.finishTop}>
@@ -186,7 +190,7 @@ export default function FeedPostV3({
         onProfile={onProfilePress ?? (() => undefined)}
         onChallenge={onChallengePress ?? (() => undefined)}
         onOpen={open}
-        onRespect={onLike}
+        onRespect={likeOnce}
         onComments={onComment}
       />
     );
@@ -213,7 +217,7 @@ export default function FeedPostV3({
             The photo is not a Pressable, so the first tap of a double no longer opens the photo. */}
         <DoubleTapRespect
           respected={post.reactedByMe}
-          onRespect={onLike}
+          onRespect={likeOnce}
           onOpen={onOpenPhoto ?? open}
           ownPost={ownPost}
           accessibilityLabel={post.caption ? `${post.caption}. Open photo` : "Open photo"}
@@ -244,7 +248,7 @@ export default function FeedPostV3({
         </View>
         </View>
       ) : (
-        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
+        <DoubleTapRespect respected={post.reactedByMe} onRespect={likeOnce} onOpen={open} ownPost={ownPost}>
         <View style={styles.selfPanel}>
           <View style={styles.selfTop}>
             <View style={styles.checkDisc}>

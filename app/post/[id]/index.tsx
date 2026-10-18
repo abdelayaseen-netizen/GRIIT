@@ -103,9 +103,17 @@ function PostThreadScreenInner() {
   const scrollToLatest = useCallback(() => {
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
   }, []);
+  const [keyboardUp, setKeyboardUp] = useState(false);
   useEffect(() => {
-    const sub = Keyboard.addListener("keyboardDidShow", scrollToLatest);
-    return () => sub.remove();
+    const show = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardUp(true);
+      scrollToLatest();
+    });
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
   }, [scrollToLatest]);
 
   const cachedPost = useMemo(() => {
@@ -223,7 +231,7 @@ function PostThreadScreenInner() {
     const next = optimisticRespect(prev);
     queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...next } : p));
     try {
-      const result = (await trpcMutate(TRPC.feed.react, { eventId: id })) as { reacted?: boolean; reactionCount?: number };
+      const result = (await trpcMutate(TRPC.feed.react, { eventId: id, mode: "like" })) as { reacted?: boolean; reactionCount?: number };
       queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...settleRespect(result, next) } : p));
       void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
     } catch (e) {
@@ -502,8 +510,10 @@ function PostThreadScreenInner() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        // The composer sits on the keyboard: offset = top inset + the 44pt header above this view.
-        keyboardVerticalOffset={insets.top + DS_V3.size.tap}
+        // The composer sits on the keyboard. This view's layout already runs to the bottom of the
+        // window (the Screen pads the top inset and the header sits above), so no extra offset: build
+        // 90's 44 left a 44pt gap between the composer and the keyboard.
+        keyboardVerticalOffset={0}
       >
         <FlatList
           ref={listRef}
@@ -544,7 +554,7 @@ function PostThreadScreenInner() {
             {sendError ?? reportComment.notice}
           </Text>
         ) : null}
-        <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.lg) }]}>
+        <View style={[styles.composer, { paddingBottom: keyboardUp ? DS_V3.space.sm : Math.max(insets.bottom, DS_V3.space.lg) }]}>
           {replyTo ? (
             <Pressable
               onPress={() => setReplyTo(null)}

@@ -15,7 +15,7 @@ import { captureError } from "@/lib/sentry";
 import { trpcMutate } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 
-type LiveFeedResponse = { posts: LiveFeedPost[] };
+type LiveFeedResponse = { posts?: LiveFeedPost[]; pages?: { posts?: LiveFeedPost[] }[] };
 
 /** Photo zoom. Swipe down past 120pt to dismiss. */
 export default function PostPhotoScreen() {
@@ -35,7 +35,8 @@ export default function PostPhotoScreen() {
     const direct = queryClient.getQueryData<LiveFeedPost>(["feed", "post", id]);
     if (direct) return direct;
     for (const [, data] of queryClient.getQueriesData<LiveFeedResponse>({ queryKey: ["liveFeed"] })) {
-      const p = data?.posts?.find((x) => x.id === id);
+      const posts = data?.posts ?? data?.pages?.flatMap((pg) => pg.posts ?? []) ?? [];
+      const p = posts.find((x) => x.id === id);
       if (p) return p;
     }
     return null;
@@ -49,7 +50,8 @@ export default function PostPhotoScreen() {
     const next = optimisticRespect(prev);
     queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...next } : p));
     try {
-      const result = (await trpcMutate(TRPC.feed.react, { eventId: id })) as { reacted?: boolean; reactionCount?: number };
+      // mode "like": the server never removes a like for a double tap, whatever this screen's cache says.
+      const result = (await trpcMutate(TRPC.feed.react, { eventId: id, mode: "like" })) as { reacted?: boolean; reactionCount?: number };
       queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...settleRespect(result, next) } : p));
       void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
     } catch (e) {

@@ -398,7 +398,8 @@ Design reference: `design/handoff/b92/part1-finish-loop/` frames P1-19 to P1-27;
 table rows Post results, Badges, Own post, Proof detail, Owner menu; `src/finish/PostResult.tsx`, `format.ts`
 (`resultLine`, `verifyLabel`), `useDoubleTapLike.ts` (reference only, not imported). Token mapping: the handoff's
 `DS_V3.type.earnedNumber` → `DS_V3.type.headline` with tabular figures (Barlow is not loaded in the app, pinned by
-`lib/display-face.test.ts`); `captionStrong` → `DS_V3.type.label`; `surface` → `DS_V3.color.surface`.
+`lib/display-face.test.ts`); `captionStrong` → `DS_V3.type.caption` at weight 600 (the `label` token is uppercase and
+badges are sentence case); `surface` → `DS_V3.color.surface`.
 
 ### 04.1 What a post shows, per task type
 - Root cause: `backend/trpc/routes/checkins.ts:1354–1368` writes the activity row's metadata with `task_type` and

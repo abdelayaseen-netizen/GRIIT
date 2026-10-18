@@ -44,10 +44,8 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Post your proof"
     timeout: 5000
-- tapOn:
-    id: "post-choice-caption"
-- inputText: "b92 likes marker"
-- tapOn: "Post your proof"
+# No caption: the sheet is not a ScrollView, so a typed caption leaves the keyboard over the audience row.
+# A's post is found as the newest photo in B's Everyone feed instead.
 - tapOn:
     id: "post-choice-everyone"
 - assertVisible: "Post to everyone"
@@ -68,15 +66,28 @@ appId: app.griit.challenge-tracker
     visible:
       id: "tab-home"
     timeout: 20000
-# Own post in the feed: the result row and the badge, no heart (04.5).
+# Own post in the feed (following = own posts only): the result row and the badge, no heart (04.5).
+- tapOn:
+    text: "Show feed from people you follow"
+    optional: true
 - scrollUntilVisible:
     element:
-      text: "b92 likes marker. Open photo"
+      text: "Open photo"
+      index: 0
     direction: DOWN
     timeout: 30000
     centerElement: true
-- assertVisible:
-    id: "post-result"
+# The header: challenge and day on one line, the time on the right (P1-20 on the SE).
+- takeScreenshot: P1-20-post-header
+# On the SE the result row sits under the fold of the 4:5 photo.
+- scrollUntilVisible:
+    element:
+      id: "post-result"
+    direction: DOWN
+    timeout: 10000
+    centerElement: true
+- assertNotVisible:
+    id: "feed-respect"
 - takeScreenshot: P1-23-own-post-no-heart
 
 # ---- Guest B: like it ---------------------------------------------------------------------------
@@ -103,28 +114,57 @@ appId: app.griit.challenge-tracker
     optional: true
 - scrollUntilVisible:
     element:
-      text: "b92 likes marker. Open photo"
+      text: "Open photo"
+      index: 0
     direction: DOWN
     timeout: 30000
     centerElement: true
 - assertNotVisible: "Liked by you"
 - takeScreenshot: P1-19-feed-photo-post
-# Double tap: liked once.
-- doubleTapOn: "b92 likes marker. Open photo"
+# Double tap: liked once. The heart row sits under the 4:5 photo, so scroll to it to read it.
+- doubleTapOn:
+    text: "Open photo"
+    index: 0
 - takeScreenshot: P1-21-double-tap-burst
-- extendedWaitUntil:
-    visible: "Liked by you"
-    timeout: 8000
-- assertVisible: "1 likes"
 - assertNotVisible: "Close"
+- scrollUntilVisible:
+    element:
+      text: "Liked by you"
+    direction: DOWN
+    timeout: 10000
+    centerElement: true
+- assertVisible: "1 likes"
 # Second double tap: still liked, still 1, nothing opened.
-- doubleTapOn: "b92 likes marker. Open photo"
+- scrollUntilVisible:
+    element:
+      text: "Open photo"
+      index: 0
+    direction: UP
+    timeout: 10000
+    centerElement: true
+- doubleTapOn:
+    text: "Open photo"
+    index: 0
 - waitForAnimationToEnd
-- assertVisible: "Liked by you"
-- assertVisible: "1 likes"
 - assertNotVisible: "Close"
+- scrollUntilVisible:
+    element:
+      text: "Liked by you"
+    direction: DOWN
+    timeout: 10000
+    centerElement: true
+- assertVisible: "1 likes"
 # Single tap: full screen after the window.
-- tapOn: "b92 likes marker. Open photo"
+- scrollUntilVisible:
+    element:
+      text: "Open photo"
+      index: 0
+    direction: UP
+    timeout: 10000
+    centerElement: true
+- tapOn:
+    text: "Open photo"
+    index: 0
 - extendedWaitUntil:
     visible: "Close"
     timeout: 8000
@@ -134,7 +174,10 @@ appId: app.griit.challenge-tracker
     id: "post-photo-full"
 - waitForAnimationToEnd
 - tapOn: "Close"
-- extendedWaitUntil:
-    visible: "Liked by you"
-    timeout: 8000
+- scrollUntilVisible:
+    element:
+      text: "Liked by you"
+    direction: DOWN
+    timeout: 10000
+    centerElement: true
 - assertVisible: "1 likes"

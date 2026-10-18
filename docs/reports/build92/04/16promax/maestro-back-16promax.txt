@@ -1,0 +1,79 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-04-back
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000002... COMPLETED
+Assert that "Join 7K Steps" is visible... COMPLETED
+Tap on "Join 7K Steps"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Walk 7,000 steps" is visible... COMPLETED
+Scrolling DOWN until "Walk 7,000 steps", Index: 0 is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+Tap on "Walk 7,000 steps", Index: 0... COMPLETED
+Assert that "^Done$" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on id: post-choice-everyone... COMPLETED
+Tap on id: post-choice-post... COMPLETED
+Assert that "Every task today is done.|^Later$" is visible... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Tap on (Optional) "^Done$"... COMPLETED
+Assert that (Optional) "^Later$" is visible... COMPLETED
+Tap on (Optional) "^Later$"... COMPLETED
+Assert that id: tab-home is visible... COMPLETED
+Tap on (Optional) "Show feed from people you follow"... COMPLETED
+Repeat 3 times...
+  Scrolling DOWN until id: post-result is visible with speed 40, visibility percentage 100%, timeout 30000 ms, with centering enabled... COMPLETED
+  Tap on id: post-result... COMPLETED
+  Assert that id: post-menu is visible... COMPLETED
+  Assert that "7K Steps.*" is visible... COMPLETED
+  Assert that "^Proof$" is not visible... COMPLETED
+  Assert that id: post-done is not visible... COMPLETED
+  Tap on "Go back"... COMPLETED
+  Assert that id: post-result is visible... COMPLETED
+  Assert that id: tab-home is visible... COMPLETED
+Repeat 3 times... COMPLETED
+Tap on id: post-result... COMPLETED
+Assert that id: post-menu is visible... COMPLETED
+Assert that "No comments yet.*" is visible... COMPLETED
+Take screenshot P1-26-proof-detail-empty... COMPLETED
+Tap on id: post-menu... COMPLETED
+Assert that "Who sees this" is visible... COMPLETED
+Assert that "^Share$" is visible... COMPLETED
+Assert that "Delete post" is visible... COMPLETED
+Take screenshot P1-27-owner-menu... COMPLETED
+Tap on point (50%,90%)... COMPLETED
+Assert that "Delete post" is not visible... COMPLETED
+Tap on "Add a comment.*"... COMPLETED
+Input text Nice one... COMPLETED
+Take screenshot P1-25-composer-on-keyboard... COMPLETED
+Tap on "Send comment"... COMPLETED
+Assert that "No comments yet.*" is not visible... COMPLETED
+Assert that "Nice one" is visible... COMPLETED
+Take screenshot P1-24-proof-detail-comments... COMPLETED
+Tap on "Go back"... COMPLETED
+Assert that id: tab-home is visible... COMPLETED
+exit 0

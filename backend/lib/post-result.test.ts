@@ -77,6 +77,9 @@ describe("build 92 04.5 · a self-like is rejected by the server", () => {
     expect(guard).toBeGreaterThan(-1);
     expect(guard).toBeLessThan(toggle);
     expect(react).toContain('code: "FORBIDDEN", message: SELF_LIKE_MESSAGE');
+    // Build 92 04.4: a double tap asks for mode "like", which never deletes an existing reaction.
+    expect(react).toContain('mode: z.enum(["toggle", "like"]).optional()');
+    expect(react).toContain('if (existing?.id && input.mode === "like") {');
     expect(SELF_LIKE_MESSAGE).toBe("You can't like your own post.");
   });
 });

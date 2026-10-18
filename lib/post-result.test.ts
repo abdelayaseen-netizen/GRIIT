@@ -70,9 +70,16 @@ describe("build 92 04.4 · double-tap to like", () => {
     const card = read("components/feed/FeedPostV3.tsx");
     expect(card).not.toMatch(/onPress=\{onOpenPhoto \?\? open\}/);
   });
-  it("proof detail and full screen wrap the photo in the same gesture", () => {
-    expect(read("app/post/[id]/index.tsx")).toContain("<DoubleTapRespect");
-    expect(read("app/post/[id]/photo.tsx")).toContain("<DoubleTapRespect");
+  it("proof detail and full screen wrap the photo in the same gesture and only ever add a like", () => {
+    const detail = read("app/post/[id]/index.tsx");
+    const photo = read("app/post/[id]/photo.tsx");
+    expect(detail).toContain("<DoubleTapRespect");
+    expect(photo).toContain("<DoubleTapRespect");
+    expect(detail).toContain('mode: "like"');
+    expect(photo).toContain('mode: "like"');
+    const feed = read("components/LiveFeedSection.tsx");
+    expect(feed).toContain('onLikeOnce={() => void onRespect(item, "like")}');
+    expect(read("components/feed/FeedPostV3.tsx")).toContain("onRespect={likeOnce}");
   });
 });
 
@@ -102,7 +109,8 @@ describe("build 92 04.6 · proof detail", () => {
     expect(screen).toContain('action === "who_sees"');
     expect(screen).toContain('action === "share"');
     expect(screen).toContain("POST_MENU_DELETE_NOTE");
-    expect(screen).toContain("keyboardVerticalOffset={insets.top + DS_V3.size.tap}");
+    expect(screen).toContain("keyboardVerticalOffset={0}");
+    expect(screen).toContain("keyboardUp ? DS_V3.space.sm");
     expect(screen).toContain("scrollToEnd(");
     expect(POST_MENU_WHO_SEES).toBe("Who sees this");
     expect(POST_MENU_SHARE).toBe("Share");
