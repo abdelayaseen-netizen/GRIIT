@@ -25,7 +25,24 @@ import { consumeProofTile } from "@/lib/proof-return";
 import { KEPT_PROOFS_BODY } from "@/lib/v44-detail";
 import { NextBadgeCard } from "@/components/profile/BadgeGrid";
 import type { V42BadgeState } from "@/lib/v42-badges";
-import { showNextBadgeUnderGrid } from "@/lib/g3-profile";
+import { FIND_A_CHALLENGE, START_TODAYS_TASK, showNextBadgeUnderGrid } from "@/lib/g3-profile";
+
+// Build 92 07.3 · Part 2 copy table, row "Proofs".
+export const PROOFS_OFFLINE = "Couldn't load proofs. You're offline.";
+export const PROOFS_TRY_AGAIN = "Try again";
+
+/** 07.6: six 4:5 placeholder tiles while the record loads; the header above is already visible. */
+export function ProofGridSkeleton() {
+  return (
+    <View style={[styles.wrap, { paddingTop: DS_V3.space.lg }]} testID="proofs-skeleton">
+      <View style={styles.grid}>
+        {Array.from({ length: 6 }, (_, i) => (
+          <View key={i} style={[styles.tile, styles.skelTile]} />
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export type ProfileProofTile = {
   id: string;
@@ -51,6 +68,9 @@ export default function ProfileProofs({
   onNextBadge,
   securedDays,
   proofCount,
+  offline,
+  onRetry,
+  onFindChallenge,
 }: {
   proofs: ProfileProofTile[];
   isOwner: boolean;
@@ -66,6 +86,11 @@ export default function ProfileProofs({
   onToday?: () => void;
   nextBadge?: V42BadgeState | null;
   onNextBadge?: () => void;
+  /** Build 92 07.3: the grid could not load (P2 copy "Couldn't load proofs. You're offline."). */
+  offline?: boolean;
+  onRetry?: () => void;
+  /** Empty grid with no run today: "Find a challenge". */
+  onFindChallenge?: () => void;
 }) {
   const [mode, setMode] = useState<"grid" | "calendar">("grid");
   const [outlineId, setOutlineId] = useState<string | null>(null);
@@ -110,7 +135,19 @@ export default function ProfileProofs({
         </View>
       </View>
 
-      {mode === "calendar" ? (
+      {offline ? (
+        <View style={styles.empty} testID="proofs-offline">
+          <Text style={styles.emptyH}>{PROOFS_OFFLINE}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={PROOFS_TRY_AGAIN}
+            onPress={onRetry}
+            style={styles.retry}
+          >
+            <Text style={styles.retryTxt}>{PROOFS_TRY_AGAIN}</Text>
+          </Pressable>
+        </View>
+      ) : mode === "calendar" ? (
         <ProofsCalendar
           monthKey={monthKey}
           days={days}
@@ -122,9 +159,19 @@ export default function ProfileProofs({
           }}
         />
       ) : empty ? (
-        <View style={styles.empty}>
+        <View style={styles.empty} testID="proofs-empty">
           <Text style={styles.emptyH}>{proofsEmptyHeading(secured)}</Text>
           <Text style={styles.emptyB}>{secured > 0 ? KEPT_PROOFS_BODY : NO_PROOFS_BODY}</Text>
+          {isOwner && secured === 0 && (onToday || onFindChallenge) ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={todayOpen && onToday ? START_TODAYS_TASK : FIND_A_CHALLENGE}
+              onPress={todayOpen && onToday ? onToday : onFindChallenge}
+              style={styles.retry}
+            >
+              <Text style={styles.retryTxt}>{todayOpen && onToday ? START_TODAYS_TASK : FIND_A_CHALLENGE}</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         <View style={styles.grid}>
@@ -222,7 +269,8 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: "32.6%",
-    aspectRatio: 1,
+    // Build 92 07.3: 3 columns of 4:5 tiles (Part 2 checklist line 92).
+    aspectRatio: 4 / 5,
     backgroundColor: DS_V3.color.surface,
     overflow: "hidden",
     justifyContent: "flex-end",
@@ -288,4 +336,17 @@ const styles = StyleSheet.create({
   emptyH: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
   emptyB: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
   nextWrap: { paddingTop: DS_V3.space.lg, paddingHorizontal: DS_V3.space.gutter },
+  skelTile: { opacity: 0.6 },
+  retry: {
+    alignSelf: "flex-start",
+    minHeight: 36,
+    paddingHorizontal: 14,
+    borderRadius: DS_V3.radius.input,
+    borderWidth: 1,
+    borderColor: DS_V3.color.border,
+    backgroundColor: DS_V3.color.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  retryTxt: { ...DS_V3.type.secondary, fontWeight: "500", color: DS_V3.color.textPrimary },
 });

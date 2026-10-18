@@ -1,20 +1,16 @@
 /**
- * ProfileV3 — frame 05 + 02_screens.md Profile tree (presentation).
+ * ProfileV3 — profile presentation. Build 92 chunk 07 (Option A, P2-01 / P2-07 / P2-08): the header
+ * with 3 numbers and the record row; the proof grid follows directly in the parent list. Challenges,
+ * Badges and Stats moved to the "Your record" screen (`app/profile/record.tsx`).
  */
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Award, BarChart3, Flag, LayoutGrid, Settings, Share2 } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Settings, Share2 } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { type BadgeItem } from "@/components/ds/Badges";
-import { BadgeGrid } from "@/components/profile/BadgeGrid";
-import { BadgeRows } from "@/components/profile/BadgeRows";
-import type { V42BadgeState } from "@/lib/v42-badges";
-import EmptyState from "@/components/ds/EmptyState";
 import HeaderIcon from "@/components/ds/HeaderIcon";
-import ProofImage from "@/components/ds/ProofImage";
 import RootHeader from "@/components/ds/RootHeader";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
+import { ProfileHeader, type ProfileRecordCounts } from "@/components/profile/ProfileHeader";
 import { streakLineFor } from "@/lib/home-streak";
 
 export { streakLineFor };
@@ -31,23 +27,8 @@ export function badgeItemsFromRows(
 }
 
 const ICON = DS_V3.space.xs * 6;
-const TABS = ["Proofs", "Your data", "Challenges", "Badges"] as const;
 export const PROFILE_V3_FOOTNOTE =
   "Five marks, each earned by verified days only. Nothing here can be bought or awarded.";
-const FOOTNOTE = PROFILE_V3_FOOTNOTE;
-
-export type ProfileV3Run = {
-  id: string;
-  name: string;
-  day: number;
-  length: number;
-};
-
-export type ProfileV3Proof = {
-  dateKey: string;
-  day: number;
-  imageUrl?: string | null;
-};
 
 export type ProfileV3Props = {
   userId?: string | null;
@@ -56,48 +37,27 @@ export type ProfileV3Props = {
   avatarUrl?: string | null;
   followers: number;
   following: number;
-  friends?: number;
-  friendFaces?: { userId: string; username: string; displayName: string; avatarUrl: string | null }[];
   bio: string;
   bioPlaceholder?: string | null;
   streak: number;
   best: number;
-  todaySecured: boolean;
   totalDaysSecured?: number;
-  consistency: string;
-  consistencySub: string;
-  tab: (typeof TABS)[number];
-  onChangeTab: (tab: (typeof TABS)[number]) => void;
-  /** Your data is the signed-in user's own profile only. */
-  showDataTab?: boolean;
-  runs: ProfileV3Run[];
-  proofs: ProfileV3Proof[];
-  badges: BadgeItem[];
-  badgeGrid?: V42BadgeState[];
-  onShareBadge?: (badge: V42BadgeState) => void;
+  verifiedDays?: number;
+  /** Option A record row counts; omit to hide the row. */
+  record?: ProfileRecordCounts | null;
+  onRecord?: () => void;
   onShare: () => void;
   onSettings?: () => void;
   onEditProfile?: () => void;
   onInvite?: () => void;
   onFollowers: () => void;
   onFollowing: () => void;
-  onFriends?: () => void;
-  onSeeRecord: () => void;
-  onDiscover: () => void;
-  onOpenRun: (id: string) => void;
-  onOpenProof?: (proof: ProfileV3Proof) => void;
   followLabel?: string;
   onFollow?: () => void;
   followDisabled?: boolean;
   showRootHeader?: boolean;
   locked?: { heading: string; body: string } | null;
-  isFriend?: boolean;
   onFindFriends?: () => void;
-  onMessage?: () => void;
-  /** Parent FlatList owns the proofs grid + footnote when the list can grow. */
-  proofsInParent?: boolean;
-  /** Parent owns Running / Finished (Chunk T). */
-  challengesInParent?: boolean;
 };
 
 export function ProfileV3({
@@ -107,49 +67,27 @@ export function ProfileV3({
   avatarUrl,
   followers,
   following,
-  friends,
-  friendFaces,
   bio,
   bioPlaceholder,
   streak,
   best,
   totalDaysSecured,
-  consistency,
-  consistencySub,
-  tab,
-  onChangeTab,
-  showDataTab = false,
-  runs,
-  proofs,
-  badges,
-  badgeGrid,
-  onShareBadge,
+  verifiedDays,
+  record,
+  onRecord,
   onShare,
   onSettings,
   onEditProfile,
   onInvite,
   onFollowers,
   onFollowing,
-  onFriends,
-  onSeeRecord,
-  onDiscover,
-  onOpenRun,
-  onOpenProof,
   followLabel,
   onFollow,
   followDisabled,
   showRootHeader = true,
   locked,
-  isFriend,
   onFindFriends,
-  onMessage,
-  proofsInParent = false,
-  challengesInParent = false,
 }: ProfileV3Props) {
-  void consistency;
-  void consistencySub;
-  void onSeeRecord;
-  void onInvite;
   return (
     <View>
       {showRootHeader ? (
@@ -180,25 +118,24 @@ export function ProfileV3({
         streakDays={streak}
         bestDays={best}
         securedDays={locked ? 0 : (totalDaysSecured ?? 0)}
-        friends={friends ?? 0}
-        friendFaces={friendFaces}
+        verifiedDays={locked ? 0 : (verifiedDays ?? 0)}
         followers={followers}
         following={following}
         isOwner={!onFollow}
-        isFriend={isFriend}
         isFollowing={followLabel === "Following"}
         followLabel={followLabel}
         locked={Boolean(locked)}
+        record={locked ? null : record}
         bioPlaceholder={bioPlaceholder}
         onEdit={onEditProfile ?? (() => undefined)}
         onFollow={followDisabled ? () => undefined : (onFollow ?? (() => undefined))}
         onShare={onShare}
         onFindFriends={onFindFriends}
-        onMessage={onMessage}
+        onInvite={onInvite}
         onEditBio={onEditProfile ?? (() => undefined)}
         onFollowers={onFollowers}
         onFollowing={onFollowing}
-        onFriends={onFriends ?? onFollowers}
+        onRecord={onRecord}
       />
 
       {locked ? (
@@ -206,246 +143,18 @@ export function ProfileV3({
           <Text style={styles.heading}>{locked.heading}</Text>
           <Text style={styles.secondary}>{locked.body}</Text>
         </View>
-      ) : (
-        <>
-      <View style={styles.seg}>
-        <View style={styles.iconTabs}>
-          {(showDataTab ? TABS : TABS.filter((item) => item !== "Your data")).map((item) => {
-            const Icon =
-              item === "Proofs" ? LayoutGrid : item === "Your data" ? BarChart3 : item === "Challenges" ? Flag : Award;
-            const on = tab === item;
-            return (
-              <Pressable
-                key={item}
-                onPress={() => onChangeTab(item)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={item}
-                style={styles.iconTab}
-              >
-                <Icon size={18} color={on ? DS_V3.color.textPrimary : DS_V3.color.textSecondary} />
-                <Text style={[styles.tabLabel, on && styles.tabLabelOn]}>{item}</Text>
-                {on ? <View style={styles.iconUnderline} /> : <View style={styles.iconGap} />}
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.tabBody}>
-        {tab === "Challenges" && !challengesInParent ? (
-          runs.length === 0 ? (
-            <EmptyState
-              heading="No active challenge"
-              body="Start one from Discover."
-              actionLabel="Find a challenge"
-              onAction={onDiscover}
-            />
-          ) : (
-            <View style={styles.runStack}>
-              {runs.map((r) => (
-                <Pressable
-                  key={r.id}
-                  onPress={() => onOpenRun(r.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open ${r.name} challenge`}
-                  style={styles.run}
-                >
-                  <Text style={styles.heading}>{r.name}</Text>
-                  <Text style={styles.secondary}>
-                    Day {r.day} of {r.length}. Post today to keep it.
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )
-        ) : null}
-
-        {tab === "Proofs" && !proofsInParent ? (
-          proofs.length === 0 ? (
-            <EmptyState
-              heading="No days with photos"
-              body="A task with the Camera gate puts its photo here, grouped by the day you took it."
-              actionLabel="Find a challenge"
-              onAction={onDiscover}
-            />
-          ) : (
-            <View style={styles.proofGrid}>
-              {proofs.map((p) => (
-                <Pressable
-                  key={p.dateKey}
-                  style={styles.proofCell}
-                  onPress={onOpenProof ? () => onOpenProof(p) : undefined}
-                  accessibilityRole={onOpenProof ? "button" : undefined}
-                  accessibilityLabel={`${p.dateKey}`}
-                >
-                  <ProofImage
-                    uri={p.imageUrl}
-                    size="thumb"
-                    title={p.dateKey}
-                    recyclingKey={p.dateKey}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          )
-        ) : null}
-
-        {tab === "Badges" ? (
-          badgeGrid ? (
-            <BadgeGrid badges={badgeGrid} onShare={onShareBadge} />
-          ) : (
-          <BadgeRows
-            badges={
-              badges.length > 0
-                ? badges
-                : badgeItemsFromRows(
-                    badgeRowsFromProgress({ bestStreak: 0, verifiedDays: 0 }),
-                  )
-            }
-            footnote={FOOTNOTE}
-          />
-          )
-        ) : null}
-      </View>
-
-      {tab === "Badges" || tab === "Proofs" || tab === "Your data" || (tab === "Challenges" && challengesInParent) ? null : (
-        <Text style={styles.foot}>{FOOTNOTE}</Text>
-      )}
-        </>
-      )}
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   actionsRow: { flexDirection: "row", gap: DS_V3.space.sm },
-  identity: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.lg,
-  },
-  idCol: { flex: 1, gap: 2 },
-  name: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
-  handle: {
-    ...DS_V3.type.caption,
-    color: DS_V3.color.textSecondary,
-  },
-  caption: {
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  bio: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.lg,
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  bioPrompt: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.lg,
-    alignItems: "flex-start",
-  },
-  btnRow: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.sm,
-    flexDirection: "row",
-    gap: DS_V3.space.md,
-  },
-  flex: { flex: 1 },
-  mergeRow: {
-    marginHorizontal: DS_V3.space.gutter,
-    marginTop: DS_V3.space.gutter,
-    minHeight: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: DS_V3.space.lg,
-  },
-  mergeHalf: { flex: 1, gap: 2 },
-  mergeConsist: { ...DS_V3.type.secondary, color: DS_V3.color.textPrimary },
-  label: {
-    fontSize: DS_V3.type.label.fontSize,
-    lineHeight: DS_V3.type.label.lineHeight,
-    fontWeight: DS_V3.type.label.fontWeight,
-    letterSpacing: DS_V3.type.label.letterSpacing,
-    color: DS_V3.color.textSecondary,
-  },
-  numRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: DS_V3.space.sm,
-  },
-  days: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  secondary: {
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
-  consist: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.md,
-  },
-  title: {
-    fontSize: DS_V3.type.title.fontSize,
-    lineHeight: DS_V3.type.title.lineHeight,
-    fontWeight: DS_V3.type.title.fontWeight,
-    color: DS_V3.color.textPrimary,
-    marginTop: DS_V3.space.sm,
-  },
-  recordBtn: { alignItems: "flex-start", marginTop: DS_V3.space.sm },
-  seg: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.section,
-  },
-  iconTabs: { flexDirection: "row", justifyContent: "space-around" },
-  iconTab: { minHeight: 44, minWidth: 64, alignItems: "center", justifyContent: "flex-end", gap: 4 },
-  tabLabel: { fontSize: 13, lineHeight: 18, fontWeight: "500", color: DS_V3.color.textSecondary },
-  tabLabelOn: { color: DS_V3.color.textPrimary },
-  iconUnderline: { width: 22, height: 1.5, backgroundColor: DS_V3.color.textPrimary },
-  iconGap: { width: 22, height: 1.5 },
-  tabBody: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.md,
-  },
-  runStack: { gap: DS_V3.space.md },
-  run: { minHeight: DS_V3.size.tap, justifyContent: "center" },
-  heading: {
-    fontSize: DS_V3.type.heading.fontSize,
-    lineHeight: DS_V3.type.heading.lineHeight,
-    fontWeight: DS_V3.type.heading.fontWeight,
-    color: DS_V3.color.textPrimary,
-  },
-  proofGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: DS_V3.space.md,
-  },
-  proofCell: {
-    width: "31%",
-  },
   lock: {
     paddingHorizontal: DS_V3.space.gutter,
     paddingTop: DS_V3.space.section,
-    gap: DS_V3.space.sm,
+    gap: DS_V3.space.xs,
   },
-  foot: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-    fontSize: DS_V3.type.caption.fontSize,
-    lineHeight: DS_V3.type.caption.lineHeight,
-    fontWeight: DS_V3.type.caption.fontWeight,
-    color: DS_V3.color.textSecondary,
-  },
+  heading: { ...DS_V3.type.bodyStrong, color: DS_V3.color.textPrimary },
+  secondary: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
 });

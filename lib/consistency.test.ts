@@ -40,9 +40,10 @@ describe("consistency builders", () => {
     expect(home).toContain("securedSinceLine");
     expect(home).toContain("header");
     expect(home).not.toContain("consistencyFromDayArray");
-    expect(profile).toContain("consistencyHeadline");
-    expect(profile).toContain("consistencyContext");
-    expect(profile).toContain("consistencyContext(consistency, formatSinceDate, todaySecured)");
+    // Build 92 07.2: the profile header shows 3 server numbers (user_stats) and no consistency line;
+    // the proof grid still reads the one getRecord header.
+    expect(profile).not.toContain("consistencyHeadline");
+    expect(profile).toContain("userStats?.verified_days");
     expect(profile).toContain("header.secured");
     const header = readFileSync(resolve(__dirname, "../components/profile/ProfileHeader.tsx"), "utf8");
     expect(header).toContain("numberOfLines={1}");

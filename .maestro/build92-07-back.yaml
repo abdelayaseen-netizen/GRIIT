@@ -1,0 +1,39 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 07.5: grid → tile 10 → viewer opens at post 10 → scroll through 5 posts → Back lands on
+# tile 10. Three runs. Uses the 25-tile dev grid over the real ProfileProofs + PostViewer.
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://dev/build92-grid"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Proofs \\(dev\\)"
+    timeout: 20000
+- repeat:
+    times: 3
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Get to the gym, 10 October"
+          direction: DOWN
+          timeout: 20000
+      - tapOn: "Get to the gym, 10 October"
+      - extendedWaitUntil:
+          visible: "Show Up 7 · Day 3 of 7"
+          timeout: 20000
+      - takeScreenshot: 07-viewer-at-10
+      - repeat:
+          times: 5
+          commands:
+            - swipe:
+                start: "50%,85%"
+                end: "50%,20%"
+                duration: 500
+      - assertVisible: "Show Up 7 · Day .* of 7"
+      - tapOn: "Go back"
+      - extendedWaitUntil:
+          visible: "Get to the gym, 10 October"
+          timeout: 10000
+      - assertVisible: "Proofs \\(dev\\)"
+      - takeScreenshot: 07-back-on-tile-10

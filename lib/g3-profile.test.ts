@@ -25,7 +25,8 @@ import type { V42BadgeState } from "@/lib/v42-badges";
 describe("g3 profile copy", () => {
   it("proofs empty, newest line, today tile, share vs find friends", () => {
     expect(NO_PROOFS_YET).toBe("No proofs yet.");
-    expect(NO_PROOFS_BODY).toMatch(/Self-reported days show as text/);
+    // Build 92 07.3: Part 2 copy table replaced the body.
+    expect(NO_PROOFS_BODY).toBe("Finish a task and it shows up here.");
     expect(proofsNewestLine(0)).toBe("0 proofs · newest first");
     expect(proofsNewestLine(0, 4)).toBe("No shared proofs yet");
     expect(proofsNewestLine(3)).toBe("3 proofs · newest first");

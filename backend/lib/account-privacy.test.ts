@@ -25,9 +25,12 @@ describe("account privacy enforcement", () => {
     const stats = read("../trpc/routes/profiles-stats.ts");
     expect(stats).toContain("canViewerSeeAccountContent");
 
+    // Build 92 07.4: visitor badges render on Your record from the gated record only.
     const visitor = read("../../app/profile/[username].tsx");
-    expect(visitor).toContain("badgeItemsFromRows(rec?.badges ?? [])");
     expect(visitor).not.toContain("badgeRowsFromProgress");
+    const recordScreen = read("../../app/profile/record.tsx");
+    expect(recordScreen).toContain("badgeItemsFromRows(record?.badges ?? [])");
+    expect(recordScreen).toMatch(/isVisitor \? \([\s\S]*?badgeItemsFromRows\(record\?\.badges \?\? \[\]\)/);
 
     const account = read("./account-privacy.ts");
     expect(account).toContain("sharesChallenge");

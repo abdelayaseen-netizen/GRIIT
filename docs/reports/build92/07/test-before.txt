@@ -1,0 +1,14 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/build92-profile.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/build92-profile.test.ts [ lib/build92-profile.test.ts ]
+Error: ENOENT: no such file or directory, open '/Users/yaseenabdela/Developer/GRIIT/components/profile/PostViewer.tsx'
+ ❯ read lib/build92-profile.test.ts:15:29
+     13| } from "@/lib/profile-header";
+     14| 
+     15| const read = (p: string) => readFileSync(new URL(`../${p}`, import.met…

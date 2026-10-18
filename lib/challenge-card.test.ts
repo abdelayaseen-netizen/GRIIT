@@ -79,8 +79,9 @@ describe("ProgressStrip cap", () => {
     expect(header).toContain("compact(");
     expect(header).toContain("Add a bio");
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
-    expect(v3).toContain("LayoutGrid");
+    // Build 92 07.2: the icon tabs left ProfileV3; the header carries the record row (Option A).
     expect(v3).toContain("ProfileHeader");
+    expect(v3).toContain("record={locked ? null : record}");
     const list = readFileSync(resolve(__dirname, "../components/profile/ProfileChallenges.tsx"), "utf8");
     expect(list).toContain("ChallengeCard");
     expect(list).not.toContain("FINISHED_PREDATE_CAPTION");

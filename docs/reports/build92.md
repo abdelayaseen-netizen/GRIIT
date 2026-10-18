@@ -793,3 +793,149 @@ The fixtures in `backend/lib/user-stats.test.ts` ("Yaseen-like": 8 secured days 
 - Share cards (`ShareStickerSheet`, Day secured) still take `streak` from the finish response's counter, which
   equals `user_stats.current_streak` under the held-day rule; not re-plumbed here.
 - The Maestro check uses a one-day record (above); the multi-day consistency is unit-tested only.
+
+## Chunk 07 · Profile and post viewer
+
+### 07.1 Scroll freeze · root cause (written before the fix)
+`app/profile/posts.tsx` (build 91):
+- Every post renders its full-resolution `photoUrl` in an expo-image sized `aspectRatio: 1` at screen width
+  with no `recyclingKey` and no fixed layout. FlashList recycles the row but the image view decodes a fresh
+  1080–4000 px file for each recycled cell, so a 25-post scroll decodes 25 full files on the UI thread.
+- The header fade is an `Animated.event` with `useNativeDriver: false` and `scrollEventThrottle 16`: every
+  scroll frame crosses the bridge and re-renders the header on the JS thread.
+- `onViewableItemsChanged` depends on `posts` and calls `Image.prefetch` for every visible full photo on each
+  change; a long list repeats the prefetches during the whole scroll.
+- `scrollToIndex` runs from each image `onLoad` while `landed` is false, so late loads re-scroll the list.
+Design references: P2-12 (own viewer), P2-13 (two-photo post, 1 of 2); Part 2 checklist lines 102–105.
+
+### 07.2 – 07.6 · design references
+- Header: P2-01 (own, Option A), P2-07 (visitor, not following), P2-08 (visitor, following, long name, empty
+  bio, zero numbers); checklist lines 88–91, 97, 99. Copy: "Streak · Best · Days secured · {n} verified",
+  "{n} followers · {n} following", "Edit profile · Find friends", "Follow · Following · Invite to a challenge".
+- Proof grid: P2-01; checklist line 92 (3 columns, 4:5, date on a small bottom label), line 101 (empty and
+  offline copy, "Try again" refetches). Copy table row "Proofs".
+- Your record: P2-03 (Challenges), P2-05 (Badges), P2-06 (Stats); checklist lines 93–96. Copy table rows
+  "Record row", "Your record", "Badges", "Stats".
+- Loading: P2-09; checklist line 100 (header from cache, grid skeleton, never blank).
+
+### 07.1 Scroll freeze · fix and numbers
+- `components/profile/PostViewer.tsx` (new) replaces the list in `app/profile/posts.tsx`: RN `Animated.FlatList`
+  with `getItemLayout` from per-post heights computed from the data (`postRowHeight`, prefix offsets),
+  `initialScrollIndex` at the tapped post, `windowSize 5`, `initialNumToRender 2`, `maxToRenderPerBatch 2`,
+  `removeClippedSubviews`; expo-image with `recyclingKey={uri}`, `allowDownscaling`, memory-disk cache; the
+  top-bar glass is an `Animated.event` with `useNativeDriver: true` (opacity only) at throttle 32; the first
+  three photos around the opened post are prefetched once (`posts.tsx`), not on every viewability change.
+- Harness: `app/dev/build92-posts.tsx` (25 synthetic 2000 px posts, `mode=new|legacy`, JS frame meter from
+  `lib/frame-meter.ts`), `app/dev/build92-grid.tsx` (25-tile `ProfileProofs` over the viewer),
+  `lib/dev-synthetic-posts.ts`. Flow `.maestro/build92-07-frames.yaml`, 16 Pro Max simulator, 10 s of swipes:
+  | run | list | frames | max | over 50 ms | avg |
+  |---|---|---|---|---|---|
+  | before | legacy (FlashList, full-res, JS scroll) | 599 | 44 ms | 0 | 16.7 ms |
+  | after run 1 | PostViewer (fixed row, nested pager) | 596 | 59 ms | 1 | 16.8 ms |
+  | after run 2 | + per-item heights, plain image for 1-photo posts, batches of 2 | 597 | 52 ms | 1 | 16.8 ms |
+  | after run 3 | same code, meter opens 300 ms after the tap | 597 | 54 ms | 1 | 16.8 ms |
+  Screenshots `docs/reports/build92/07/16promax/07-frames-*.png`, logs `frames-*.log`.
+- Honest reading: the simulator does not reproduce the build 91 freeze through JS frame times (the legacy
+  harness row is also lighter than the real build 91 card: no action row, no DoubleTapRespect). The new
+  viewer shows one frame of 52–59 ms per 10 s run, most likely the mount of a batch of two cards. Two fix
+  attempts were spent; the gate "no frame over 50 ms" is **not met strictly** and the chunk is marked FAILED on
+  this gate only. The root-cause changes (recycled decoding, fixed layout, native-thread bar, single prefetch)
+  are in. A device check with real camera photos is the real test.
+
+### 07.2 Header (P2-01, P2-07, P2-08)
+- `components/profile/ProfileHeader.tsx`: Streak (flame) · Best · Days secured with `verifiedLine()` under it
+  (`user_stats.verified_days`); one `followLine()` ("{n} followers · {n} following", singular "1 follower"),
+  each half tappable; no Friends count, no Message button; own: Edit profile · Find friends; visitor:
+  Follow/Following (primary fill when not following) · Invite to a challenge (`shareInvite`). Name wraps to
+  2 lines; empty bio leaves no gap. Record row (Option A) under the buttons, `testID="profile-record-row"`.
+  The number elements keep their chunk 06 labels ("1 Days secured"); "1 verified" is its own element.
+- `components/profile/ProfileV3.tsx` is now header-only (root header + ProfileHeader + locked copy); the tab
+  strip, tab bodies and badge rendering left it. Props `friends/friendFaces/isFriend/onMessage/onFriends/
+  tab/onChangeTab/runs/proofs/badges/badgeGrid/consistency*/onSeeRecord` removed; `verifiedDays`, `record`,
+  `onRecord` added. Callers: `app/(tabs)/profile.tsx`, `app/profile/[username].tsx`, `app/dev/build81-friends.tsx`.
+- Copy helpers in `lib/profile-header.ts` (`followLine`, `verifiedLine`, `recordRowLine`, `postViewerTitle`,
+  `photoPagerLine`, `INVITE_TO_CHALLENGE`, `PROFILE_RECORD_TABS`).
+
+### 07.3 Proof grid first (P2-01)
+- `components/profile/ProfileProofs.tsx` renders directly under the header on both profiles; tiles
+  `aspectRatio 4/5`, 3 columns, date on the bottom scrim. Empty copy from the Part 2 table: "No proofs yet." ·
+  "Finish a task and it shows up here." with "Start today's task" (a run is open) or "Find a challenge";
+  `lib/g3-profile.ts` `NO_PROOFS_BODY` updated (its test updated with the reason). Offline state
+  "Couldn't load proofs. You're offline." + "Try again" (`offline`, `onRetry` props; own profile passes
+  `recordQuery.isError`). `ProofGridSkeleton` (six 4:5 tiles) exported for 07.6.
+
+### 07.4 Your record (P2-03, P2-05, P2-06)
+- `app/profile/record.tsx` (new), `ROUTES.PROFILE_RECORD` / `PROFILE_RECORD_TAB(tab)`. Segmented
+  Challenges · Badges · Stats. Challenges = `ProfileChallenges` (Running · Finished · Left; rows from
+  `rowsFromProfileRecord` with the shared `todayTaskCounts` left counts). Badges = `BadgeGrid` (next /
+  earned / locked) with the `BadgeRows` fallback. Stats = "Streak history · free" card (Best with
+  `best_streak_start – best_streak_end`, Current), the existing `YourDataTab`, then "Deeper stats · GRIIT Pro"
+  → "Deeper stats are part of GRIIT Pro" / "Charts, best times, verified %, month over month." / "Try GRIIT Pro"
+  (opens `ProUpgradeSheet`); hidden for Pro.
+- Visitor: the record row pushes `/profile/record?userId=…&handle=…`; tabs are Challenges · Badges only (no
+  Stats, checklist line 98), data from that user's gated `getRecord`, visitor badges only from `record.badges`
+  (no client computation; privacy pin moved to this file). Title is `@handle`.
+- `lib/profile-record.ts`: copy constants, `recordCountsFromRecord` (running = runs, finished =
+  completed with status `completed`, badges = earned), `streakSpanLine`.
+
+### 07.5 Post viewer (P2-12, P2-13)
+- Title `postViewerTitle(challenge)` → "Posts" (or the challenge name when the route passes `challenge`).
+  Photos of a post (`photoUrl` + a distinct `proofPhotoUrl`) swipe in a paged row with "1 of 2"
+  (`photoPagerLine`); one photo renders a plain image. Own posts: `likedByLine(lastReactorName, count)`
+  ("Liked by Sara and 2 others"), else "{n} likes", no heart; visitors keep the heart. Back returns to the
+  grid at the same tile (the profile list stays mounted; the viewer is a pushed modal).
+- Flow `.maestro/build92-07-back.yaml` (dev grid → tile 10 → viewer at post 10 → 5 swipes → Back → tile 10
+  visible) ×3 in one run: PASS on 16 Pro Max (`back-run2.log`) and SE (`back-se-run1.log`, scrolls the grid).
+
+### 07.6 Header from cache (P2-09)
+- `lib/profile-header-cache.ts` `useProfileHeaderCache(userId, live)`: reads `griit.profile.header.<userId>`
+  from AsyncStorage once, writes the live snapshot when anything but `savedAt` changed; strict parse drops
+  partial snapshots. Own profile: while `profile` is loading the header renders from the snapshot (or
+  `ProfileHeaderSkeleton`) over `ProofGridSkeleton`; once the profile is in, the header is live and only the
+  grid skeletons until `getRecord` lands. Never a blank screen.
+- Measured: `[b92-07] profile header visible after 47 ms (live)` and `48 ms (live)` after a cold relaunch
+  (Metro log; `AppContext` already had the profile, so the live path won the race; the cache path is pinned
+  by unit tests). The relaunch flow `.maestro/build92-07-relaunch.yaml` captured the loaded header within one
+  Maestro step (`P2-09-profile-loading.png` shows the full header; the skeleton window is shorter than a step).
+
+### Chunk 07 · gates and evidence
+- [ ] Scroll freeze numbers: before max 44 ms / 0 over 50; after max 52–59 ms / 1 over 50 in ~597 frames
+      (table above). **Not met strictly** — one frame over 50 ms per run.
+- [x] Maestro tile 10 → 5 posts → Back on tile 10, 3 runs: `back-run2.log` (Pro Max) and `back-se-run1.log`
+      (SE) both "Repeat 3 times... COMPLETED"; screenshots `07-viewer-at-10.png`, `07-back-on-tile-10.png`.
+- [x] Header within 300 ms: 47 ms and 48 ms logged (see 07.6).
+- [x] Screenshots next to P2-01, P2-03, P2-05, P2-06, P2-07, P2-09, P2-12 on SE and Pro Max:
+      `docs/reports/build92/07/{se,16promax}/P2-*.png` (flows `screens-promax-run1.log`, `screens-se-run2.log`,
+      `relaunch-*.log`). P2-08 (visitor, following) could not be staged with a single fresh account: the
+      stranger preview gives the not-following state only (noted under not done).
+- [x] Tests: `lib/build92-profile.test.ts` 23 tests (failed before: `test-before.txt`; pass: `test-after.txt`);
+      full suite 2219 passed, 4 failed = the baseline four (`vitest-full.txt`); tsc 5 errors = baseline (`tsc.txt`).
+
+### Chunk 07 · decisions made alone
+- Option A (record row) per the README's recommendation; the row text wraps to 2 lines on Pro Max rather
+  than truncating.
+- Visitor record screen: Challenges · Badges, title `@handle` (the copy table only names "Your record").
+- Own viewer with no reactor name shows "{n} likes" (copy rule "likes"), nothing at 0 likes.
+- The visitor "Share profile" button left the header (the top-bar More menu still shares); the own Share
+  icon stays in the root header.
+- Stats tab hides the Pro card for Pro users; the free content is the same for both.
+- Harness measurements stand in for a real 25-post profile (a real one needs 25 days of data or DB writes).
+
+### Chunk 07 · tests moved (behaviour moved, none weakened)
+`lib/challenge-card.test.ts`, `lib/chunk-u-profile.test.ts`, `lib/consistency.test.ts`,
+`lib/profile-bootstrap-source.test.ts`, `lib/glass.test.ts`, `lib/home-streak.test.ts`,
+`lib/profile-read.test.ts`, `lib/build90-links-numbers.test.ts`, `backend/lib/account-privacy.test.ts` pinned
+the tab strip, the consistency headline props (already `void`-ed in ProfileV3), the posts.tsx glass bar, the
+visitor badges source and the per-challenge rows in `profile.tsx`; each now pins the same behaviour at its new
+file, with a "Build 92 07.x" comment. `lib/g3-profile.test.ts` pins the Part 2 empty-grid copy.
+
+### Chunk 07 · not done / needs Yaseen
+- 07.1 frame gate (above). Please scroll a real 20+ post profile on a device; the viewer logs nothing, so the
+  check is by eye plus the dev harness `griit://dev/build92-posts?mode=new`.
+- P2-08 (visitor · following) and P2-13 (visitor two-photo post) screenshots need a second account that
+  follows the first; not staged.
+- The Today tile's fallback left-count while the bootstrap has not loaded is now `record.runs.length`
+  (was the per-row sum, which also had no bootstrap counts yet); the bootstrap value wins as before.
+- `app/profile/consistency.tsx` has no entry point now (its row was replaced by the record row); left in place.
+- The own viewer lists a photo-less "day secured" event under the proof post (build 91 did too); Part 1 rules
+  for which events are posts are unchanged here.

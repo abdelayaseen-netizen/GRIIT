@@ -1,0 +1,19 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 07.6 (P2-09): relaunch with the saved account from build92-07-screens; the profile
+# header shows from cache while the grid still loads. Run right after build92-07-screens on the same
+# simulator. Timing evidence is the Metro line "[b92-07] profile header visible after N ms".
+- launchApp:
+    clearState: false
+    stopApp: true
+- extendedWaitUntil:
+    visible: "day in a row|Good .*"
+    timeout: 60000
+- tapOn:
+    id: "tab-profile"
+- takeScreenshot: P2-09-profile-loading
+- extendedWaitUntil:
+    visible: "^1 Streak$"
+    timeout: 30000
+- assertVisible: "^1 verified$"
+- takeScreenshot: P2-09-profile-loaded

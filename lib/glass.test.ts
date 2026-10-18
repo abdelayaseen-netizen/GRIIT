@@ -83,9 +83,11 @@ describe("root stack headers", () => {
   });
 
   it("Posts uses the glass top bar with a human title", () => {
-    const src = readFileSync(resolve(__dirname, "../app/profile/posts.tsx"), "utf8");
+    // Build 92 07.5: the list and its glass bar moved into PostViewer; the title is "Posts" or the challenge.
+    const src = readFileSync(resolve(__dirname, "../components/profile/PostViewer.tsx"), "utf8");
     expect(src).toContain("GlassTopBar");
-    expect(src).toContain('title="Posts"');
+    const screen = readFileSync(resolve(__dirname, "../app/profile/posts.tsx"), "utf8");
+    expect(screen).toContain("postViewerTitle(");
   });
 });
 

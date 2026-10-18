@@ -198,7 +198,10 @@ describe("05.4 numbers agree everywhere", () => {
     // Without the shared counts the old formula says 4 left; the screen must pass them.
     const profile = read("app/(tabs)/profile.tsx");
     expect(profile).toContain("todayTaskCounts(");
-    expect(profile).toContain("leftByEnrollment:");
+    // Build 92 07.4: the per-challenge rows moved to Your record and pass the same counts.
+    const record = read("app/profile/record.tsx");
+    expect(record).toContain("todayTaskCounts(");
+    expect(record).toContain("leftByEnrollment: todayCounts.byEnrollment");
     const home = read("app/(tabs)/index.tsx");
     expect(home).toContain("enrollmentStarted(");
     expect(home).toContain("requiredTasks(");

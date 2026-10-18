@@ -9,6 +9,7 @@ describe("own profile vs home.bootstrap", () => {
     expect(src).toContain("useHomeBootstrap");
     expect(src).toContain("bootstrap.data?.stats?.activeStreak");
     expect(src).toContain("bootstrap.data?.followCounts");
-    expect(src).toContain("consistencyHeadline");
+    // Build 92 07.2: no consistency headline on the profile; verified reads user_stats.
+    expect(src).toContain("userStats?.verified_days");
   });
 });

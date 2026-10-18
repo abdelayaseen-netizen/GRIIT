@@ -44,6 +44,9 @@ export const ROUTES = {
   SETTINGS_BLOCKED: "/settings/blocked",
   SETTINGS_PERMISSIONS: "/settings/permissions",
   PROFILE_CONSISTENCY: "/profile/consistency",
+  /** Build 92 07.4 · Your record (Challenges · Badges · Stats). */
+  PROFILE_RECORD: "/profile/record",
+  PROFILE_RECORD_TAB: (tab: "Challenges" | "Badges" | "Stats") => `/profile/record?tab=${tab}` as const,
   PROFILE_DAY: "/profile/day",
   PROFILE_PROOF: (date: string) => `/profile/proof/${date}` as const,
   PROFILE_POSTS: (userId: string, startId: string) =>

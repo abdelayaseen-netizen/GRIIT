@@ -36,14 +36,13 @@ export default function Build81Friends() {
           streakDays={2}
           bestDays={3}
           securedDays={12}
-          friends={count}
-          friendFaces={count > 0 ? faces : []}
+          followers={count}
+          following={faces.length}
           isOwner
           onEdit={noop}
           onFollow={noop}
           onShare={noop}
           onFindFriends={noop}
-          onFriends={noop}
           onEditBio={noop}
         />
       </Screen>

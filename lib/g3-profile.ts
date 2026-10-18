@@ -7,7 +7,10 @@ import type { V42BadgeState } from "@/lib/v42-badges";
 
 export const NO_PROOFS_YET = "No proofs yet.";
 export const NO_SHARED_PROOFS_YET = "No shared proofs yet";
-export const NO_PROOFS_BODY = "Proofs you share show here. Self-reported days show as text.";
+// Build 92 07.3 · Part 2 copy table, row "Proofs".
+export const NO_PROOFS_BODY = "Finish a task and it shows up here.";
+export const START_TODAYS_TASK = "Start today's task";
+export const FIND_A_CHALLENGE = "Find a challenge";
 export const SELF_REPORTED_TILE = "SELF-REPORTED";
 export const PHOTO_NOT_SAVED = "Photo not saved";
 export const FIND_FRIENDS = "Find friends";

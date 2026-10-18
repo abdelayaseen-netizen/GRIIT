@@ -70,7 +70,8 @@ describe("homeStreakLine", () => {
       "utf8",
     );
     expect(homeSrc).toContain("securedSinceLine(");
-    expect(profileSrc).toContain("onSeeRecord");
+    // Build 92 07.4: onSeeRecord became the Option A record row (onRecord).
+    expect(profileSrc).toContain("onRecord");
     expect(profileSrc).toContain("streakDays");
   });
 });

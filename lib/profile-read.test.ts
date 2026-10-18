@@ -30,7 +30,8 @@ describe("readOwnProfileOnce", () => {
 
 describe("other-user empty challenges", () => {
   it("says Start one from Discover, not Day 1 begins the morning after you join", () => {
-    const visitor = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
+    // Build 92 07.4: the challenges list moved to Your record (app/profile/record.tsx).
+    const visitor = readFileSync(resolve(__dirname, "../app/profile/record.tsx"), "utf8");
     expect(visitor).toContain('body="Start one from Discover."');
     expect(visitor).not.toContain("Day 1 begins the morning after you join");
   });

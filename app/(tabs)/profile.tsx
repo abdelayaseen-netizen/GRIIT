@@ -1,8 +1,9 @@
 /**
- * Own profile v2 — identity, streak, consistency, Challenges / Proofs / Badges.
- * Record strings come from profiles.getRecord. No proof CTA except empty Proofs tab.
+ * Own profile — build 92 chunk 07 (Option A, P2-01 / P2-09): header with 3 numbers and the record row,
+ * then the proof grid. Challenges, Badges and Stats live on "Your record" (`app/profile/record.tsx`).
+ * The header renders from a cached snapshot while profiles.getRecord loads; only the grid shows skeletons.
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -13,10 +14,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Screen from "@/components/ds/Screen";
 import ScreenChrome from "@/components/ds/ScreenChrome";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import * as Haptics from "expo-haptics";
 
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,22 +27,8 @@ import { getTodayDateKey } from "@/lib/date-utils";
 import { resolveHomeTimeZone } from "@/lib/home-streak";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
 import { homeSecuredToday } from "@/lib/home-secured-visuals";
-import { formatDayMonthYear } from "@/lib/profile-v2-badges";
-import {
-  consistencyContext,
-  consistencyHeadline,
-  consistencyLine,
-} from "@/lib/consistency";
-import {
-  EMPTY_SECURED_HEADER,
-  consistencyFromHeader,
-  formatSinceDate,
-  type ProofsHeader,
-} from "@/lib/secured-since";
-import {
-  consistencyDenominatorLine,
-  type DaySource,
-} from "@/lib/day-state";
+import { EMPTY_SECURED_HEADER, type ProofsHeader } from "@/lib/secured-since";
+import { type DaySource } from "@/lib/day-state";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
@@ -55,26 +41,22 @@ import type { UserStatsFields } from "@/types";
 import { DS_V3 } from "@/lib/design-system";
 import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import EmptyState from "@/components/ds/EmptyState";
-import Skeleton from "@/components/ds/Skeleton";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
-import { YourDataTab } from "@/components/profile/YourDataTab";
-import ProfileProofs from "@/components/profile/ProfileProofs";
+import { ProfileV3 } from "@/components/profile/ProfileV3";
+import { ProfileHeaderSkeleton } from "@/components/profile/ProfileHeader";
+import ProfileProofs, { ProofGridSkeleton } from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
-import { badgeRowsFromProgress } from "@/lib/profile-v2-badges";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
-import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
-import { rowsFromProfileRecord } from "@/lib/profile-challenges";
 import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
+import { useProfileHeaderCache } from "@/lib/profile-header-cache";
+import { recordCountsFromRecord } from "@/lib/profile-record";
 import {
   joinedBioLine,
   nextUnearnedBadge,
   showJoinedBioPlaceholder,
   weekdayFromCreatedAt,
 } from "@/lib/g3-profile";
-
-type ProfileTab = "challenges" | "proofs" | "data" | "badges";
 
 type RecordPayload = ProfileRecord & {
   timezone: string;
@@ -89,10 +71,6 @@ type RecordPayload = ProfileRecord & {
   user_stats?: UserStatsFields | null;
 };
 
-function isProfileTab(value: string | undefined): value is ProfileTab {
-  return value === "challenges" || value === "proofs" || value === "data" || value === "badges";
-}
-
 function isEventId(id: string | null | undefined): id is string {
   return typeof id === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
@@ -100,13 +78,19 @@ function isEventId(id: string | null | undefined): id is string {
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
   const isGuest = useIsGuest();
   const { user } = useAuth();
   const { profile, profileLoading, profileMissing, isError, refetchAll } = useApp();
   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
 
-  const [tab, setTab] = useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "proofs");
+  // 07.6: time from mount to the first header paint, logged once in dev for the ≤300 ms gate.
+  const mountedAt = useRef(Date.now());
+  const headerLogged = useRef(false);
+  const logHeaderVisible = useCallback((source: "cache" | "live") => {
+    if (headerLogged.current || !__DEV__) return;
+    headerLogged.current = true;
+    console.log(`[b92-07] profile header visible after ${Date.now() - mountedAt.current} ms (${source})`);
+  }, []);
 
   const recordQuery = useQuery({
     queryKey: ["profiles", "getRecord", user?.id ?? ""],
@@ -184,6 +168,49 @@ export default function ProfileScreen() {
     }
   }, []);
 
+  // Build 92 06.2 / 07.2: header numbers read user_stats (getStats via the bootstrap, else getRecord).
+  const userStats = bootstrap.data?.stats?.user_stats ?? record?.user_stats ?? null;
+  const streak = userStats?.current_streak ?? bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
+  const best = userStats?.best_streak ?? bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
+  const securedDaysTotal = userStats?.secured_days ?? bootstrap.data?.stats?.totalDaysSecured ?? 0;
+  const verifiedDays = userStats?.verified_days ?? 0;
+  const proofsCount = userStats?.proofs_count ?? 0;
+  const bootstrapFollows = bootstrap.data?.followCounts;
+  const followers =
+    bootstrapFollows?.followers ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0));
+  const following =
+    bootstrapFollows?.following ??
+    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
+  const recordCounts = useMemo(() => recordCountsFromRecord(record), [record]);
+  // 07.6: the snapshot is complete only once the record (counts) and the profile have loaded.
+  const liveHeader = useMemo(
+    () =>
+      profile && record && userStats
+        ? {
+            displayName: profilePrimaryName(profile) || (profile.username?.trim() ?? ""),
+            username: profile.username?.trim() ?? "",
+            avatarUrl: profile.avatar_url ?? null,
+            bio: (profile.bio ?? "").trim() || null,
+            streak,
+            best,
+            secured: securedDaysTotal,
+            verified: verifiedDays,
+            followers,
+            following,
+            running: recordCounts.running,
+            finished: recordCounts.finished,
+            badges: recordCounts.badges,
+          }
+        : null,
+    [profile, record, userStats, streak, best, securedDaysTotal, verifiedDays, followers, following, recordCounts],
+  );
+  const headerCache = useProfileHeaderCache(isGuest ? null : user?.id, liveHeader);
+  useEffect(() => {
+    if (profile && user?.id) logHeaderVisible("live");
+    else if (headerCache.cached) logHeaderVisible("cache");
+  }, [profile, user?.id, headerCache.cached, logHeaderVisible]);
+
   if (isGuest) {
     return (
       <ScreenChrome>
@@ -198,14 +225,36 @@ export default function ProfileScreen() {
   }
 
   if ((profileLoading && !profile) || (!profile && !isError)) {
+    const c = headerCache.cached;
     return (
       <ScreenChrome>
       <Screen style={styles.safe} edges={["top"]}>
-        <View style={styles.skel}>
-          <Skeleton />
-          <View style={styles.skelGap} />
-          <Skeleton />
-        </View>
+        {c && user?.id ? (
+          <ProfileV3
+            userId={user.id}
+            title={c.displayName}
+            handle={c.username}
+            avatarUrl={c.avatarUrl}
+            followers={c.followers}
+            following={c.following}
+            bio={c.bio ?? ""}
+            streak={c.streak}
+            best={c.best}
+            totalDaysSecured={c.secured}
+            verifiedDays={c.verified}
+            record={{ running: c.running, finished: c.finished, badges: c.badges }}
+            onRecord={() => router.push(ROUTES.PROFILE_RECORD as never)}
+            onShare={() => undefined}
+            onSettings={() => router.push(ROUTES.SETTINGS as never)}
+            onEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}
+            onFindFriends={() => router.push(ROUTES.TABS_DISCOVER as never)}
+            onFollowers={() => undefined}
+            onFollowing={() => undefined}
+          />
+        ) : (
+          <ProfileHeaderSkeleton />
+        )}
+        <ProofGridSkeleton />
       </Screen>
       </ScreenChrome>
     );
@@ -236,24 +285,6 @@ export default function ProfileScreen() {
   const handle = profile.username?.trim() ?? "";
   const name = profilePrimaryName(profile) || handle;
   const bio = (profile.bio ?? "").trim();
-  const bootstrapFollows = bootstrap.data?.followCounts;
-  const followers =
-    bootstrapFollows?.followers ??
-    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0));
-  const following =
-    bootstrapFollows?.following ??
-    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0));
-  const friends =
-    bootstrapFollows?.friends ??
-    (followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0));
-  const v3Tab =
-    tab === "proofs" ? "Proofs" : tab === "data" ? "Your data" : tab === "badges" ? "Badges" : "Challenges";
-  // Build 92 06.2: the three header numbers read user_stats (getStats via the bootstrap, else getRecord).
-  const userStats = bootstrap.data?.stats?.user_stats ?? record?.user_stats ?? null;
-  const streak = userStats?.current_streak ?? bootstrap.data?.stats?.activeStreak ?? record?.streak.current ?? 0;
-  const best = userStats?.best_streak ?? bootstrap.data?.stats?.longestStreak ?? record?.streak.best ?? 0;
-  const securedDaysTotal = userStats?.secured_days ?? bootstrap.data?.stats?.totalDaysSecured ?? 0;
-  const proofsCount = userStats?.proofs_count ?? 0;
   const homeTimeZone = resolveHomeTimeZone(profile.timezone, getDeviceIanaTimeZone());
   const securedDateKeys = Array.isArray(bootstrap.data?.securedDateKeys)
     ? bootstrap.data.securedDateKeys
@@ -261,13 +292,6 @@ export default function ProfileScreen() {
   const todayKey = record?.todayKey ?? getTodayDateKey(homeTimeZone);
   const todaySecured = homeSecuredToday(securedDateKeys, todayKey);
   const header = record?.header ?? EMPTY_SECURED_HEADER;
-  const consistency = consistencyFromHeader(header);
-  const firstJoin = record?.daySource?.enrollments
-    .map((e) => e.startDateKey)
-    .sort()[0];
-  const consistencySubFromU = firstJoin
-    ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
-    : "";
   // 05.4: one source of truth for "tasks left today", shared with Home's card.
   const todayCounts = todayTaskCounts({
     activeChallenges: (bootstrap.data?.activeChallenges ?? []) as CountableEnrollment[],
@@ -275,17 +299,10 @@ export default function ProfileScreen() {
     todayKey,
     timeZone: homeTimeZone,
   });
-  const challengeRows = rowsFromProfileRecord(record ?? { runs: [], completed: [] }, {
-    todaySecured,
-    formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
-    leftByEnrollment: todayCounts.byEnrollment,
-  });
   // The Today tile reads the bootstrap counts (Home's source); the record query can lag a
-  // join by a screen. The rows only stand in while the bootstrap has not loaded.
+  // join by a screen. The run count only stands in while the bootstrap has not loaded.
   const bootstrapLoaded = Array.isArray(bootstrap.data?.activeChallenges);
-  const tasksLeft = bootstrapLoaded
-    ? todayCounts.left
-    : challengeRows.filter((r) => r.status === "active").reduce((n, r) => n + (r.tasksLeft ?? 0), 0);
+  const tasksLeft = bootstrapLoaded ? todayCounts.left : (record?.runs.length ?? 0);
   const todayOpen =
     !todaySecured && (bootstrapLoaded ? todayCounts.total > 0 : (record?.runs.length ?? 0) > 0);
   const bioPlaceholder = showJoinedBioPlaceholder({
@@ -302,7 +319,7 @@ export default function ProfileScreen() {
     <ErrorBoundary>
       <ScreenChrome>
       <Screen style={styles.safe} edges={["top"]}>
-        <GriitFade fadeKey={`own-${tab}-${record?.todayKey ?? "none"}`}>
+        <GriitFade fadeKey={`own-${record?.todayKey ?? "none"}`}>
         <FlatList
           data={[]}
           keyExtractor={() => "profile"}
@@ -317,113 +334,63 @@ export default function ProfileScreen() {
             avatarUrl={profile.avatar_url}
             followers={followers}
             following={following}
-            friends={friends}
-            friendFaces={followCountsQuery.data?.friendFaces ?? []}
             bio={bio}
             bioPlaceholder={bioPlaceholder}
             streak={streak}
             best={best}
-            todaySecured={todaySecured}
             totalDaysSecured={securedDaysTotal}
-            consistency={consistencyHeadline(consistency)}
-            consistencySub={
-              consistencyContext(consistency, formatSinceDate, todaySecured) ||
-              consistencyLine(consistency) ||
-              consistencySubFromU
-            }
-            tab={v3Tab}
-            showDataTab
-            onChangeTab={(next) => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setTab(
-                next === "Proofs" ? "proofs" : next === "Your data" ? "data" : next === "Badges" ? "badges" : "challenges",
-              );
-            }}
-            runs={(record?.runs ?? []).map((r) => ({
-              id: r.id,
-              name: r.name,
-              day: r.day,
-              length: r.dayTotal,
-            }))}
-            proofs={proofs}
-            badgeGrid={record?.badgeGrid}
-            badges={badgeItemsFromRows(
-              // Old: 99b1cc4 app/(tabs)/profile.tsx:393
-              //   <BadgeRows rows={record?.badges ?? []} />
-              // New: same `record.badges` (badgeRowsFromProgress). Empty
-              // record still yields the five marks.
-              record?.badges ??
-                badgeRowsFromProgress({
-                  bestStreak: record?.streak.best ?? 0,
-                  verifiedDays: record?.detail.totalVerified ?? 0,
-                }),
-            )}
+            verifiedDays={verifiedDays}
+            record={recordCounts}
+            onRecord={() => router.push(ROUTES.PROFILE_RECORD as never)}
             onShare={() => void handleShare()}
+            onInvite={() => void handleInvite()}
             onSettings={() => router.push(ROUTES.SETTINGS as never)}
             onEditProfile={() => router.push(ROUTES.EDIT_PROFILE as never)}
             onFindFriends={() => router.push(ROUTES.TABS_DISCOVER as never)}
-            onInvite={() => void handleInvite()}
             onFollowers={() =>
               router.push(ROUTES.FOLLOW_LIST(user.id, "followers", handle) as never)
             }
             onFollowing={() =>
               router.push(ROUTES.FOLLOW_LIST(user.id, "following", handle) as never)
             }
-            onFriends={() =>
-              router.push(ROUTES.FOLLOW_LIST(user.id, "friends", handle) as never)
-            }
-            onSeeRecord={() => router.push(ROUTES.PROFILE_CONSISTENCY as never)}
-            onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
-            onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
-            proofsInParent
-            challengesInParent
           />
-          {v3Tab === "Challenges" ? (
-            challengeRows.length === 0 ? (
-              <EmptyState
-                heading="No active challenge"
-                body="Start one from Discover."
-                actionLabel="Find a challenge"
-                onAction={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              />
-            ) : (
-              <ProfileChallenges
-                challenges={challengeRows}
-                formatDate={(key) => formatDayMonthYear(key.slice(0, 10))}
-                onOpen={(row) =>
-                  router.push(
-                    (row.status === "active"
-                      ? ROUTES.CHALLENGE_ACTIVE(row.id)
-                      : ROUTES.CHALLENGE_ID(row.challengeId)) as never,
-                  )
-                }
-              />
-            )
-          ) : null}
-          {v3Tab === "Your data" ? <YourDataTab /> : null}
-          {v3Tab === "Proofs" ? (
+          {record ? (
             <ProfileProofs
               proofs={proofTiles}
               isOwner
               todayOpen={todayOpen}
               tasksLeft={tasksLeft}
-              monthKey={record?.monthKey ?? todayKey.slice(0, 7)}
-              days={record?.days ?? []}
+              monthKey={record.monthKey ?? todayKey.slice(0, 7)}
+              days={record.days ?? []}
               header={header}
+              offline={false}
               onOpenDay={(tile) => {
                 if (!isEventId(tile.id)) return;
                 router.push(ROUTES.PROFILE_POSTS(user.id, tile.id) as never);
               }}
               onToday={() => router.push(ROUTES.TABS_HOME as never)}
-              nextBadge={nextUnearnedBadge(record?.badgeGrid ?? [])}
+              onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
+              nextBadge={nextUnearnedBadge(record.badgeGrid ?? [])}
               securedDays={header.secured}
               proofCount={proofsCount}
-              onNextBadge={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setTab("badges");
-              }}
+              onNextBadge={() => router.push(ROUTES.PROFILE_RECORD_TAB("Badges") as never)}
             />
-          ) : null}
+          ) : recordQuery.isError ? (
+            <ProfileProofs
+              proofs={[]}
+              isOwner
+              monthKey={todayKey.slice(0, 7)}
+              days={[]}
+              header={header}
+              offline
+              onRetry={() => void recordQuery.refetch()}
+              onOpenDay={() => undefined}
+              securedDays={securedDaysTotal}
+              proofCount={proofsCount}
+            />
+          ) : (
+            <ProofGridSkeleton />
+          )}
           </>
           }
           renderItem={() => null}
@@ -474,6 +441,4 @@ const styles = StyleSheet.create({
     color: DS_V3.color.textSecondary,
     textAlign: "center",
   },
-  skel: { paddingHorizontal: DS_V3.space.gutter, paddingTop: DS_V3.space.lg },
-  skelGap: { height: DS_V3.space.gutter },
 });

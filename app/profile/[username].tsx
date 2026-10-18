@@ -24,7 +24,7 @@ import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES } from "@/lib/routes";
 import { cachedProofUrl, proofPrefetchUrls } from "@/lib/proof-url-cache";
 import { captureError } from "@/lib/sentry";
-import { shareProfile } from "@/lib/share";
+import { shareInvite, shareProfile } from "@/lib/share";
 import { DS_V3 } from "@/lib/design-system";
 import type { ProfileRecord } from "@/lib/profile-v2-record";
 import type { ProfileRelationship, VisibilityLevel } from "@/lib/profile-v2-visibility";
@@ -37,29 +37,16 @@ import HeaderIcon from "@/components/ds/HeaderIcon";
 import PushedHeader from "@/components/ds/PushedHeader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { badgeItemsFromRows, ProfileV3 } from "@/components/profile/ProfileV3";
+import { ProfileV3 } from "@/components/profile/ProfileV3";
 import ProfileProofs from "@/components/profile/ProfileProofs";
 import type { ProofsDayIn } from "@/lib/day-cell";
 import type { V42BadgeState } from "@/lib/v42-badges";
-import { formatDayMonthYear } from "@/lib/profile-v2-badges";
-import {
-  consistencyHeadline,
-} from "@/lib/consistency";
-import {
-  EMPTY_SECURED_HEADER,
-  consistencyFromHeader,
-  type ProofsHeader,
-} from "@/lib/secured-since";
+import type { UserStatsFields } from "@/types";
+import { EMPTY_SECURED_HEADER, type ProofsHeader } from "@/lib/secured-since";
 import { ACCOUNT_PRIVATE, STRANGER_BANNER, accountPrivateBody } from "@/lib/g3-profile";
-import {
-  consistencyDenominatorLine,
-  daysFromSource,
-  streakFromDays,
-  type DaySource,
-} from "@/lib/day-state";
+import { daysFromSource, streakFromDays, type DaySource } from "@/lib/day-state";
 import { GriitFade } from "@/components/profile-v2/GriitFade";
-import { ProfileChallenges } from "@/components/profile/ProfileChallenges";
-import { rowsFromProfileRecord } from "@/lib/profile-challenges";
+import { recordCountsFromRecord } from "@/lib/profile-record";
 
 type RecordPayload = ProfileRecord & {
   timezone: string;
@@ -81,6 +68,8 @@ type RecordPayload = ProfileRecord & {
   gate: { profile: boolean; challenges: boolean; activity: boolean };
   daySource?: DaySource;
   header?: ProofsHeader;
+  /** Build 92 06.2 / 07.2 */
+  user_stats?: UserStatsFields | null;
   monthKey?: string;
   days?: ProofsDayIn[];
   badgeGrid?: V42BadgeState[];
@@ -98,7 +87,6 @@ export default function VisitorProfileScreen() {
     useInlineError();
   const [showUnfollow, setShowUnfollow] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
-  const [tab, setTab] = useState<"Challenges" | "Proofs" | "Badges">("Proofs");
 
   const publicQ = useQuery({
     queryKey: ["publicProfile", decoded],
@@ -269,7 +257,6 @@ export default function VisitorProfileScreen() {
 
   const lockTitle = ACCOUNT_PRIVATE;
   const lockBody = accountPrivateBody(name);
-  const isFriend = rec?.viewer.relationship === "accepted";
   const locked = gate.profile ? null : { heading: lockTitle, body: lockBody };
 
   const proofs = rec?.proofs ?? [];
@@ -297,11 +284,6 @@ export default function VisitorProfileScreen() {
   const uDays = daysFromSource(rec?.daySource, rec?.timezone ?? "UTC", { todayKey: rec?.todayKey });
   const streakFromArray = uDays.length ? streakFromDays(uDays) : rec?.streak.current ?? 0;
   const header = rec?.header ?? EMPTY_SECURED_HEADER;
-  const consistency = consistencyHeadline(consistencyFromHeader(header));
-  const firstJoin = rec?.daySource?.enrollments.map((e) => e.startDateKey).sort()[0];
-  const consistencySub = firstJoin
-    ? consistencyDenominatorLine(formatDayMonthYear(firstJoin))
-    : "";
 
   return (
     <ErrorBoundary>
@@ -336,31 +318,18 @@ export default function VisitorProfileScreen() {
               avatarUrl={avatar}
               followers={followCountsQuery.isError ? 0 : (followCountsQuery.data?.followers ?? 0)}
               following={followCountsQuery.isError ? 0 : (followCountsQuery.data?.following ?? 0)}
-              friends={followCountsQuery.isError ? 0 : (followCountsQuery.data?.friends ?? 0)}
-              friendFaces={followCountsQuery.data?.friendFaces ?? []}
               bio={bio}
-              streak={streakFromArray}
-              best={rec?.streak.best ?? 0}
-              todaySecured={
-                !!rec && rec.streak.lastCompletedDateKey === rec.todayKey
+              streak={rec?.user_stats?.current_streak ?? streakFromArray}
+              best={rec?.user_stats?.best_streak ?? rec?.streak.best ?? 0}
+              totalDaysSecured={rec?.user_stats?.secured_days ?? header.secured}
+              verifiedDays={rec?.user_stats?.verified_days ?? 0}
+              record={gate.profile ? recordCountsFromRecord(rec) : null}
+              onRecord={() =>
+                router.push({
+                  pathname: ROUTES.PROFILE_RECORD as never,
+                  params: { userId: ownerId, handle },
+                } as never)
               }
-              totalDaysSecured={header.secured}
-              consistency={consistency}
-              consistencySub={consistencySub}
-              tab={tab}
-              onChangeTab={(next) => {
-                if (next === "Your data") return;
-                setTab(next);
-              }}
-              runs={(rec?.runs ?? []).map((r) => ({
-                id: r.id,
-                name: r.name,
-                day: r.day,
-                length: r.dayTotal,
-              }))}
-              proofs={proofs}
-              badgeGrid={rec?.badgeGrid}
-              badges={badgeItemsFromRows(rec?.badges ?? [])}
               onShare={() =>
                 void shareProfile({
                   username: handle,
@@ -369,6 +338,7 @@ export default function VisitorProfileScreen() {
                   tier: "Starter",
                 })
               }
+              onInvite={() => void shareInvite()}
               onFollowers={() =>
                 ownerId
                   ? router.push(ROUTES.FOLLOW_LIST(ownerId, "followers", handle) as never)
@@ -379,57 +349,19 @@ export default function VisitorProfileScreen() {
                   ? router.push(ROUTES.FOLLOW_LIST(ownerId, "following", handle) as never)
                   : undefined
               }
-              onFriends={() =>
-                ownerId
-                  ? router.push(ROUTES.FOLLOW_LIST(ownerId, "friends", handle) as never)
-                  : undefined
-              }
-              onSeeRecord={() =>
-                router.push({
-                  pathname: ROUTES.PROFILE_CONSISTENCY as never,
-                  params: { userId: ownerId },
-                } as never)
-              }
-              onDiscover={() => router.push(ROUTES.TABS_DISCOVER as never)}
-              onOpenRun={(id) => router.push(ROUTES.CHALLENGE_ACTIVE(id) as never)}
-              onOpenProof={(p) => {
-                router.push({
-                  pathname: ROUTES.PROFILE_PROOF(p.dateKey) as never,
-                  params: { userId: ownerId },
-                } as never);
-              }}
               followLabel={isSelf && !previewStranger ? undefined : followCtrl.label}
               onFollow={isSelf && !previewStranger ? undefined : () => void onFollow()}
               followDisabled={
                 previewStranger || followBusy || followCtrl.action === "idle"
               }
-              isFriend={isFriend && !previewStranger}
               showRootHeader={false}
               locked={locked}
-              proofsInParent
-              challengesInParent
             />
-            {tab === "Challenges" && gate.profile ? (
-              <ProfileChallenges
-                challenges={rowsFromProfileRecord(rec ?? { runs: [], completed: [] }, {
-                  todaySecured: !!rec && rec.streak.lastCompletedDateKey === rec.todayKey,
-                  formatDate: (key) => formatDayMonthYear(key.slice(0, 10)),
-                })}
-                formatDate={(key) => formatDayMonthYear(key.slice(0, 10))}
-                onOpen={(row) =>
-                  router.push(
-                    (row.status === "active"
-                      ? ROUTES.CHALLENGE_ACTIVE(row.id)
-                      : ROUTES.CHALLENGE_ID(row.challengeId)) as never,
-                  )
-                }
-              />
-            ) : null}
             </>
             }
             renderItem={() => null}
             ListFooterComponent={
-              tab === "Proofs" && !locked ? (
+              !locked ? (
                 <ProfileProofs
                   proofs={proofTiles}
                   isOwner={false}

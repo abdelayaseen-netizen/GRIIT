@@ -4,14 +4,19 @@ import { describe, expect, it } from "vitest";
 import { proofDaysFromPhotos, visibleProofDays } from "@/lib/day-state";
 
 describe("Chunk U Profile Part A", () => {
-  it("tab order is Proofs | Challenges | Badges and Proofs is default", () => {
+  // Build 92 07.3 / 07.4 (Option A): the profile tabs are gone. Proofs sit directly under the header and
+  // Challenges · Badges · Stats live on "Your record" (app/profile/record.tsx); visitors get no Stats.
+  it("proofs come first; Challenges, Badges and Stats are one place (Your record)", () => {
     const v3 = readFileSync(resolve(__dirname, "../components/profile/ProfileV3.tsx"), "utf8");
     const own = readFileSync(resolve(__dirname, "../app/(tabs)/profile.tsx"), "utf8");
     const visitor = readFileSync(resolve(__dirname, "../app/profile/[username].tsx"), "utf8");
-    expect(v3).toContain('const TABS = ["Proofs", "Your data", "Challenges", "Badges"]');
-    expect(v3).toContain("showDataTab");
-    expect(own).toContain('useState<ProfileTab>(isProfileTab(tabParam) ? tabParam : "proofs")');
-    expect(visitor).toContain('useState<"Challenges" | "Proofs" | "Badges">("Proofs")');
+    const record = readFileSync(resolve(__dirname, "../app/profile/record.tsx"), "utf8");
+    expect(v3).not.toContain("const TABS");
+    expect(own).toContain("ROUTES.PROFILE_RECORD");
+    expect(own).toContain("<ProfileProofs");
+    expect(visitor).toContain("ROUTES.PROFILE_RECORD");
+    expect(record).toContain('isVisitor ? ["Challenges", "Badges"] : PROFILE_RECORD_TABS');
+    expect(record).toContain('tab === "Stats" && !isVisitor');
   });
 
   it("copy tables match the spec", () => {

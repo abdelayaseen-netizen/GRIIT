@@ -1,0 +1,185 @@
+appId: app.griit.challenge-tracker
+# Run with -e MAESTRO_EMAIL=b89num<unix-time>@example.com (fresh is_test address per run).
+---
+# Build 92 chunk 07: profile Option A, Your record, post viewer, stranger view. A guest secures Day 1
+# of Show Up 7 with a photo and saves the account (is_test email), the same prelude as chunk 06.
+
+# ---- Day 1 with a photo (Show Up 7 · Get to the gym · camera) → Day secured ------------------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 20000
+- tapOn: "Join Show Up 7"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Get to the gym|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Get to the gym"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done.|^Later$"
+    timeout: 60000
+- runFlow:
+    when:
+      visible: "^Later$"
+    commands:
+      - tapOn: "^Later$"
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 10000
+- tapOn: "^Done$"
+# Done raises "Save your challenge." for a guest (or lands Home; then Settings has the same prompt).
+- extendedWaitUntil:
+    visible: "Continue with email|tab-home"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Continue with email"
+    commands:
+      - tapOn:
+          id: "tab-profile"
+      - extendedWaitUntil:
+          visible: "Settings"
+          timeout: 15000
+      - tapOn: "Settings"
+      - extendedWaitUntil:
+          visible: "You're using GRIIT as a guest.*"
+          timeout: 15000
+      - tapOn: "You're using GRIIT as a guest.*"
+      - extendedWaitUntil:
+          visible: "Continue with email"
+          timeout: 15000
+
+# ---- Save the account so Profile and Your data open (is_test address) ---------------------------
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build92-profile-test"
+# The simulator uses the hardware keyboard (no soft keyboard to hide).
+- tapOn: "^Continue$"
+- extendedWaitUntil:
+    visible: "Send it|Home|Streak|Settings"
+    timeout: 30000
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+
+# ---- P2-01 own profile: 3 numbers, verified line, follow line, record row --------------------
+- tapOn:
+    id: "tab-profile"
+- extendedWaitUntil:
+    visible: "^1 Streak$"
+    timeout: 30000
+- assertVisible: "^1 Best$"
+- assertVisible: "^1 Days secured$"
+- assertVisible: "^1 verified$"
+- assertVisible: "^0 followers$"
+- assertVisible: "^0 following$"
+- assertNotVisible: "Friends"
+- assertVisible: "Edit profile"
+- assertVisible: "Find friends"
+- assertVisible: "Challenges, badges and stats · 1 running · 0 finished · 0 badges"
+- assertVisible: "Get to the gym, .*"
+- takeScreenshot: P2-01-own-profile
+
+# ---- P2-03 / P2-05 / P2-06 Your record ------------------------------------------------------------
+- tapOn:
+    id: "profile-record-row"
+- extendedWaitUntil:
+    visible: "Your record"
+    timeout: 20000
+- assertVisible: "Running"
+- assertVisible: "Open Show Up 7 challenge"
+- takeScreenshot: P2-03-record-challenges
+- tapOn: "Badges"
+- takeScreenshot: P2-05-record-badges
+- tapOn: "Stats"
+- extendedWaitUntil:
+    visible: "Streak history"
+    timeout: 20000
+- assertVisible: "^Best$"
+- assertVisible: "^Current$"
+- scrollUntilVisible:
+    element:
+      text: "Try GRIIT Pro"
+    direction: DOWN
+    timeout: 20000
+- assertVisible: "Deeper stats are part of GRIIT Pro"
+- assertVisible: "Charts, best times, verified %, month over month."
+- takeScreenshot: P2-06-record-stats
+- tapOn: "Go back"
+
+# ---- P2-12 own post viewer: "Posts", no heart ---------------------------------------------------
+- extendedWaitUntil:
+    visible: "Get to the gym, .*"
+    timeout: 20000
+- tapOn: "Get to the gym, .*"
+- extendedWaitUntil:
+    visible: "Show Up 7 · Day 1 of 7"
+    timeout: 30000
+- assertVisible: "^Posts$"
+- assertNotVisible: "^Like$"
+- assertNotVisible: "Liked by you"
+- assertVisible: "Comment"
+- takeScreenshot: P2-12-post-viewer-own
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible: "^1 Streak$"
+    timeout: 20000
+
+# ---- P2-07 stranger view: Follow · Invite to a challenge ----------------------------------------
+- tapOn: "Settings"
+- extendedWaitUntil:
+    visible: "Privacy"
+    timeout: 20000
+- tapOn: "Privacy"
+- extendedWaitUntil:
+    visible: "See how a stranger sees you"
+    timeout: 20000
+- tapOn: "See how a stranger sees you"
+- extendedWaitUntil:
+    visible: "^Follow$"
+    timeout: 30000
+- assertVisible: "Invite to a challenge"
+- assertNotVisible: "Edit profile"
+- takeScreenshot: P2-07-visitor-profile

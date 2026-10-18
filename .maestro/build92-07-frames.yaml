@@ -1,0 +1,32 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 07.1: JS frame times over a 10-second scroll of a 25-post viewer.
+# -e MODE=legacy (build 91 list) or -e MODE=new (PostViewer). Result line is read from the screenshot
+# and the screen hierarchy (testID frame-meter-result).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://dev/build92-posts?mode=${MODE}&start=10"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start meter.*"
+    timeout: 20000
+# Let the first images land so the meter measures scrolling, not the initial load.
+- waitForAnimationToEnd:
+    timeout: 4000
+- tapOn: "Start meter.*"
+- repeat:
+    times: 8
+    commands:
+      - swipe:
+          start: "50%,80%"
+          end: "50%,25%"
+          duration: 600
+      - swipe:
+          start: "50%,30%"
+          end: "50%,75%"
+          duration: 600
+- extendedWaitUntil:
+    visible: ".*frames · max.*"
+    timeout: 15000
+- takeScreenshot: 07-frames-${MODE}
