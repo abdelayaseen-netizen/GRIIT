@@ -14,12 +14,10 @@ import { DS_V3, GRIIT_COLORS, DS_RADIUS } from "@/lib/design-system";
 import TabBar, { type TabBarTab } from "@/components/ds/TabBar";
 import { ROUTES } from "@/lib/routes";
 import TaskCompleteToast from "@/components/task-v2/TaskCompleteToast";
-import ShareSystemSheet from "@/components/share/ShareSystemSheet";
 import CreateChooser from "@/components/create/CreateChooser";
 import { useApp } from "@/contexts/AppContext";
-import { shareCardFromToast, type TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
+import { type TaskCompleteToast as TaskToast } from "@/lib/task-complete-toast";
 import { openCreateChooser } from "@/lib/create-chooser";
-import { registerStickerCarousel } from "@/lib/sticker-carousel";
 import { FLAGS } from "@/lib/feature-flags";
 import NativeGlassTabs from "@/components/ds/glass/NativeGlassTabs";
 
@@ -65,7 +63,6 @@ function GritTabBar({ state }: BottomTabBarProps) {
 export default function TabLayout() {
   const { profile } = useApp();
   const { user } = useAuth();
-  const [shareToast, setShareToast] = React.useState<TaskToast | null>(null);
   const shareFeed = React.useCallback(async (toast: TaskToast) => {
     if (!toast.eventId || !user?.id) return;
     await trpcMutate(TRPC.checkins.shareProof, { eventId: toast.eventId });
@@ -89,12 +86,8 @@ export default function TabLayout() {
     clearOptimisticFeedPost(toast.eventId);
     await trpcMutate(TRPC.checkins.unshareProof, { eventId: toast.eventId });
   }, []);
-  // Build 92 01.4: a toast's "Share" opens the sticker carousel. Until chunk 05 ships it,
-  // the opener is the current share sheet.
-  React.useEffect(() => {
-    registerStickerCarousel((toast) => setShareToast(toast));
-    return () => registerStickerCarousel(null);
-  }, []);
+  // Build 92 01.4 / 05.5: a toast's "Share" opens the sticker carousel, hosted at the root
+  // layout (components/share/StickerCarouselHost.tsx) so it also presents over Day secured.
   return (
     <Sentry.ErrorBoundary
       fallback={({ error, resetError }) => (
@@ -175,16 +168,6 @@ export default function TabLayout() {
     )}
     <CreateChooser />
     <TaskCompleteToast onShareFeed={shareFeed} onUndoFeed={undoFeed} />
-    <ShareSystemSheet
-      visible={shareToast != null}
-      onDismiss={() => setShareToast(null)}
-      moment={shareToast?.photoUri ? "photo_proof" : "self_reported"}
-      card={
-        shareToast
-          ? shareCardFromToast(shareToast, profile?.username)
-          : { challenge: "", username: profile?.username, cameraSeal: false }
-      }
-    />
     </View>
     </Sentry.ErrorBoundary>
   );

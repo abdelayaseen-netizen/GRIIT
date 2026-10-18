@@ -137,6 +137,8 @@ function cardFromProps(props: ShareStickerSheetProps): Omit<ShareCardInput, "sty
     dateLabel: props.dateLabel ?? (moment === "day_secured" ? shareDateLabel() : undefined),
     photoUri: day?.photoUri,
     cameraSeal: day?.cameraSeal ?? camera,
+    // Build 92 05.4: Verified only for camera (or Strava) proof.
+    proofSource: day ? (day.proof === "self" ? "self" : "camera") : undefined,
     rule: day?.status,
   };
 }

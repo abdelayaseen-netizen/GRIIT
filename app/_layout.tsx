@@ -26,6 +26,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { DS_V3 } from "@/lib/design-system";
 import ProofShareOverlay from "@/components/shared/ProofShareOverlay";
+import StickerCarouselHost from "@/components/share/StickerCarouselHost";
 import { queryClient } from "@/lib/query-client";
 import { queryFocusedFromAppState } from "@/lib/query-focus";
 import {
@@ -372,6 +373,8 @@ function RootLayoutNav() {
       <Stack.Screen name="+not-found" options={{ headerShown: false }} />
     </Stack>
       <ProofShareOverlay />
+      {/* Build 92 05.5: the sticker carousel presents from here so it opens over any pushed screen. */}
+      <StickerCarouselHost />
     </View>
   );
 }

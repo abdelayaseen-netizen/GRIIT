@@ -213,8 +213,10 @@ describe("04.5 the share card shows the real challenge, day and streak", () => {
     expect(card.streak).toBeUndefined();
   });
 
-  it("the tab layout hands the toast through the mapper", () => {
-    const layout = read("app/(tabs)/_layout.tsx");
+  it("the carousel host hands the toast through the mapper", () => {
+    // Build 92 05.5: the carousel moved from the tabs layout to the root-layout StickerCarouselHost
+    // so Day secured (a root-stack screen) can open it; the mapper call moved with it.
+    const layout = read("components/share/StickerCarouselHost.tsx");
     expect(layout).toContain("shareCardFromToast(");
     // The old path stripped the toast title into the task slot.
     expect(layout).not.toContain("(done|saved)");
@@ -224,15 +226,18 @@ describe("04.5 the share card shows the real challenge, day and streak", () => {
 describe("04.6 sticker set", () => {
   const base = { challenge: "Read 10 pages a day", task: "Read 10 pages", day: 2, durationDays: 7, username: "yaseen" };
 
-  it("a photo task with a streak swipes through four cards: day stamp, streak, progress, photo", () => {
-    expect(stylesForMoment("photo_proof", { streak: 3, hasPhoto: true })).toEqual(["H", "E", "D", "A"]);
+  // Build 92 05.1: the task moments now swipe through the Part 1.3 carousel (Photo, Week strip, Streak glow,
+  // Progress ring) in every state — the Photo style has a plain-card empty state and the streak reads 0 honestly.
+  // The build 90 cards H / E / D / A still paint (below) but no task or day moment lists them.
+  it("a photo task swipes through four cards: Photo, Week strip, Streak glow, Progress ring", () => {
+    expect(stylesForMoment("photo_proof", { streak: 3, hasPhoto: true })).toEqual(["photo", "week", "glow", "ring"]);
   });
 
-  it("the streak card hides at 0 and the photo card needs the user's photo", () => {
-    expect(stylesForMoment("photo_proof", { streak: 0, hasPhoto: true })).toEqual(["H", "D", "A"]);
-    expect(stylesForMoment("self_reported", { streak: 0, hasPhoto: false })).toEqual(["H", "D"]);
-    expect(stylesForMoment("self_reported", { streak: 1, hasPhoto: false })).toEqual(["H", "E", "D"]);
-    expect(stylesForMoment("photo_proof", { streak: 2, hasPhoto: false })).toEqual(["H", "E", "D"]);
+  it("the set does not shrink at streak 0 or without a photo", () => {
+    expect(stylesForMoment("photo_proof", { streak: 0, hasPhoto: true })).toEqual(["photo", "week", "glow", "ring"]);
+    expect(stylesForMoment("self_reported", { streak: 0, hasPhoto: false })).toEqual(["photo", "week", "glow", "ring"]);
+    expect(stylesForMoment("self_reported", { streak: 1, hasPhoto: false })).toEqual(["photo", "week", "glow", "ring"]);
+    expect(stylesForMoment("photo_proof", { streak: 2, hasPhoto: false })).toEqual(["photo", "week", "glow", "ring"]);
   });
 
   it("no moment lists the glow sticker and the stock landscape is gone", () => {

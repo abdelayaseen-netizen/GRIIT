@@ -1,7 +1,14 @@
 /**
  * The 7 styles × 3 colours, for the dev Photos export.
  */
-import { SHARE_COLOURS, type GridCell, type ShareCardInput, type ShareColourId, type ShareStyleId } from "@/lib/share-image";
+import {
+  SHARE_COLOURS,
+  STICKER_STYLES,
+  type GridCell,
+  type ShareCardInput,
+  type ShareColourId,
+  type ShareStyleId,
+} from "@/lib/share-image";
 
 const CODE = "challenge-id";
 
@@ -101,4 +108,22 @@ const STYLES: ShareStyleId[] = ["A", "B", "C", "D", "E", "F", "G"];
 
 export function shareReviewCards(): ShareCardInput[] {
   return STYLES.flatMap((style) => SHARE_COLOURS.map((colour) => shareReviewCard(style, colour)));
+}
+
+/** Build 92 05: the 4 stickers × 3 themes plus the plain card, for the dev export check. */
+export function stickerReviewCards(): ShareCardInput[] {
+  const base = { challenge: "Read 30", task: "Read 10 pages", day: 16, durationDays: 30, streak: 8, username: "yaseen" };
+  const cards = STICKER_STYLES.flatMap((style) =>
+    SHARE_COLOURS.map(
+      (colour): ShareCardInput => ({
+        ...base,
+        style: style.key,
+        colour,
+        photoUri: style.key === "photo" ? "https://picsum.photos/seed/griit/1080/1920" : null,
+        proofSource: "camera",
+      }),
+    ),
+  );
+  cards.push({ ...base, style: "photo", colour: "orange", photoUri: null, proofSource: "self" });
+  return cards;
 }

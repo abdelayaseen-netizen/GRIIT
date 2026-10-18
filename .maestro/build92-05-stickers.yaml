@@ -1,0 +1,248 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 05: share stickers. A guest posts a Drink Water photo, opens Share from the post's
+# owner menu and swipes the carousel: Photo (P1-12 Ink, P1-13 White), Week strip (P1-15 White),
+# Streak glow locked (P1-16), Progress ring Orange locked (P1-17), the upgrade sheet (P1-18), then
+# saves the Week strip. A second guest with a check-off sees the plain card (P1-14).
+
+# ---- Guest A: a photo day (Show Up 7 · Get to the gym · camera) → Day secured → Share ---------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 20000
+- tapOn: "Join Show Up 7"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Get to the gym|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Get to the gym"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done.|^Later$"
+    timeout: 60000
+# A guest's first finished task may raise "Save your challenge." first; Later keeps going.
+- runFlow:
+    when:
+      visible: "^Later$"
+    commands:
+      - tapOn: "^Later$"
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 10000
+- tapOn: "^Share$"
+
+# ---- The carousel ---------------------------------------------------------------------------
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+    timeout: 20000
+- assertVisible:
+    id: "sticker-style-name"
+    text: "^Photo$"
+- assertVisible: "^Free$"
+- assertVisible:
+    id: "sticker-theme"
+- takeScreenshot: P1-12-photo-ink
+- tapOn: "^White$"
+- takeScreenshot: P1-13-photo-white
+# Swipe to Week strip.
+- swipe:
+    start: 90%, 30%
+    end: 10%, 30%
+    duration: 400
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+      text: "^Week strip$"
+    timeout: 5000
+- assertVisible: "^Free$"
+- tapOn: "^White$"
+- takeScreenshot: P1-15-week-white
+# Swipe to Streak glow: locked.
+- swipe:
+    start: 90%, 30%
+    end: 10%, 30%
+    duration: 400
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+      text: "^Streak glow$"
+    timeout: 5000
+- assertVisible:
+    id: "sticker-pro-chip"
+- assertVisible:
+    id: "sticker-unlock"
+- assertNotVisible: "Instagram Story"
+- tapOn: "^White$"
+- takeScreenshot: P1-16-glow-locked
+# Swipe to Progress ring: locked, Orange.
+- swipe:
+    start: 90%, 30%
+    end: 10%, 30%
+    duration: 400
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+      text: "^Progress ring$"
+    timeout: 5000
+- assertVisible:
+    id: "sticker-unlock"
+- tapOn: "^Orange$"
+- takeScreenshot: P1-17-ring-orange-locked
+# The upgrade sheet from a Pro sticker.
+- tapOn:
+    id: "sticker-unlock"
+- extendedWaitUntil:
+    visible:
+      id: "pro-upgrade-sheet"
+    timeout: 5000
+- assertVisible: "^GRIIT Pro$"
+- assertVisible: "Everything in Free stays free."
+- assertVisible: "Streak glow and Progress ring stickers"
+- assertVisible: "4 freezes instead of 2"
+- assertVisible: "Stats for every challenge"
+- assertVisible: "Auto-verify runs with Strava"
+- assertVisible: "^Try GRIIT Pro$"
+- assertVisible: "^Not now$"
+- extendedWaitUntil:
+    notVisible: "Loading prices…"
+    timeout: 20000
+# Dev client only: RevenueCat logs a console error when the simulator has no products, and LogBox
+# shows it as a banner over the sheet. Open it and Dismiss before the frame (the × has no label).
+- runFlow:
+    when:
+      visible: ".*RevenueCat.*"
+    commands:
+      - tapOn: ".*RevenueCat.*"
+      - extendedWaitUntil:
+          visible: "^Dismiss$"
+          timeout: 5000
+      - tapOn: "^Dismiss$"
+      - extendedWaitUntil:
+          notVisible: ".*RevenueCat.*"
+          timeout: 3000
+- takeScreenshot: P1-18-upgrade-sheet
+- tapOn:
+    id: "pro-not-now"
+- assertNotVisible:
+    id: "pro-upgrade-sheet"
+# Not now returns to the carousel on the same style.
+- assertVisible:
+    id: "sticker-style-name"
+    text: "^Progress ring$"
+# Back to Week strip and save the 1080×1920 story.
+- swipe:
+    start: 10%, 30%
+    end: 90%, 30%
+    duration: 400
+- swipe:
+    start: 10%, 30%
+    end: 90%, 30%
+    duration: 400
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+      text: "^Week strip$"
+    timeout: 5000
+- assertVisible: "Instagram Story"
+- assertVisible: "Copy sticker"
+- assertVisible: "^Save$"
+- assertVisible: "^Messages$"
+- assertVisible: "^More$"
+- tapOn: "^Save$"
+- tapOn:
+    text: "Allow Full Access|Allow"
+    optional: true
+- extendedWaitUntil:
+    visible: "Saved to Photos.|Allow Photos access in Settings to save."
+    timeout: 20000
+- tapOn: "Close"
+
+# ---- Guest B: a check-off day → Day secured → Share → the plain card (P1-14) ------------------
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps"
+    timeout: 20000
+- tapOn:
+    text: "Walk 7,000 steps"
+    index: 0
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 20000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 10000
+- tapOn:
+    id: "post-choice-everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done.|^Later$"
+    timeout: 30000
+# A guest's first finished task may raise "Save your challenge." first; Later keeps going.
+- runFlow:
+    when:
+      visible: "^Later$"
+    commands:
+      - tapOn: "^Later$"
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 10000
+- tapOn: "^Share$"
+- extendedWaitUntil:
+    visible:
+      id: "sticker-style-name"
+    timeout: 20000
+- assertVisible:
+    id: "sticker-style-name"
+    text: "^Photo · plain card$"
+- tapOn: "^Orange$"
+# "Self-reported" is painted inside the scaled preview; lib/stickers-b92.test.ts pins the words, the frame shows them.
+- takeScreenshot: P1-14-photo-plain-card-orange
+- tapOn: "Close"

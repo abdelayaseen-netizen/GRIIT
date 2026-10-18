@@ -1,0 +1,147 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-05-stickers
+Run build92-guest-home-camera.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home-camera.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000001... COMPLETED
+Assert that "Join Show Up 7" is visible... COMPLETED
+Tap on "Join Show Up 7"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... WARNED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Get to the gym|Take proof photo" is visible... COMPLETED
+Run flow when "Take proof photo" is not visible...
+Run flow when "Take proof photo" is not visible... SKIPPED
+Assert that "Take proof photo" is visible... COMPLETED
+Tap on "Take proof photo"... COMPLETED
+Assert that id: review-done is visible... COMPLETED
+Tap on id: review-done... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on id: post-choice-everyone... COMPLETED
+Tap on id: post-choice-post... COMPLETED
+Assert that "Every task today is done.|^Later$" is visible... COMPLETED
+Run flow when "^Later$" is visible...
+Run flow when "^Later$" is visible... SKIPPED
+Tap on "^Share$"... COMPLETED
+Assert that id: sticker-style-name is visible... COMPLETED
+Assert that "^Photo$", id: sticker-style-name is visible... COMPLETED
+Assert that "^Free$" is visible... COMPLETED
+Assert that id: sticker-theme is visible... COMPLETED
+Take screenshot P1-12-photo-ink... COMPLETED
+Tap on "^White$"... COMPLETED
+Take screenshot P1-13-photo-white... COMPLETED
+Swipe from (90%, 30%) to (10%, 30%) in 400 ms... COMPLETED
+Assert that "^Week strip$", id: sticker-style-name is visible... COMPLETED
+Assert that "^Free$" is visible... COMPLETED
+Tap on "^White$"... COMPLETED
+Take screenshot P1-15-week-white... COMPLETED
+Swipe from (90%, 30%) to (10%, 30%) in 400 ms... COMPLETED
+Assert that "^Streak glow$", id: sticker-style-name is visible... COMPLETED
+Assert that id: sticker-pro-chip is visible... COMPLETED
+Assert that id: sticker-unlock is visible... COMPLETED
+Assert that "Instagram Story" is not visible... COMPLETED
+Tap on "^White$"... COMPLETED
+Take screenshot P1-16-glow-locked... COMPLETED
+Swipe from (90%, 30%) to (10%, 30%) in 400 ms... COMPLETED
+Assert that "^Progress ring$", id: sticker-style-name is visible... COMPLETED
+Assert that id: sticker-unlock is visible... COMPLETED
+Tap on "^Orange$"... COMPLETED
+Take screenshot P1-17-ring-orange-locked... COMPLETED
+Tap on id: sticker-unlock... COMPLETED
+Assert that id: pro-upgrade-sheet is visible... COMPLETED
+Assert that "^GRIIT Pro$" is visible... COMPLETED
+Assert that "Everything in Free stays free." is visible... COMPLETED
+Assert that "Streak glow and Progress ring stickers" is visible... COMPLETED
+Assert that "4 freezes instead of 2" is visible... COMPLETED
+Assert that "Stats for every challenge" is visible... COMPLETED
+Assert that "Auto-verify runs with Strava" is visible... COMPLETED
+Assert that "^Try GRIIT Pro$" is visible... COMPLETED
+Assert that "^Not now$" is visible... COMPLETED
+Assert that "Loading prices…" is not visible... COMPLETED
+Run flow when ".*RevenueCat.*" is visible...
+  Tap on ".*RevenueCat.*"... COMPLETED
+  Assert that "^Dismiss$" is visible... COMPLETED
+  Tap on "^Dismiss$"... COMPLETED
+  Assert that ".*RevenueCat.*" is not visible... COMPLETED
+Run flow when ".*RevenueCat.*" is visible... COMPLETED
+Take screenshot P1-18-upgrade-sheet... COMPLETED
+Tap on id: pro-not-now... COMPLETED
+Assert that id: pro-upgrade-sheet is not visible... COMPLETED
+Assert that "^Progress ring$", id: sticker-style-name is visible... COMPLETED
+Swipe from (10%, 30%) to (90%, 30%) in 400 ms... COMPLETED
+Swipe from (10%, 30%) to (90%, 30%) in 400 ms... COMPLETED
+Assert that "^Week strip$", id: sticker-style-name is visible... COMPLETED
+Assert that "Instagram Story" is visible... COMPLETED
+Assert that "Copy sticker" is visible... COMPLETED
+Assert that "^Save$" is visible... COMPLETED
+Assert that "^Messages$" is visible... COMPLETED
+Assert that "^More$" is visible... COMPLETED
+Tap on "^Save$"... COMPLETED
+Tap on (Optional) "Allow Full Access|Allow"... COMPLETED
+Assert that "Saved to Photos.|Allow Photos access in Settings to save." is visible... COMPLETED
+Tap on "Close"... COMPLETED
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000002... COMPLETED
+Assert that "Join 7K Steps" is visible... COMPLETED
+Tap on "Join 7K Steps"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Walk 7,000 steps" is visible... COMPLETED
+Tap on "Walk 7,000 steps", Index: 0... COMPLETED
+Assert that "^Done$" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on id: post-choice-everyone... COMPLETED
+Tap on id: post-choice-post... COMPLETED
+Assert that "Every task today is done.|^Later$" is visible... COMPLETED
+Run flow when "^Later$" is visible...
+Run flow when "^Later$" is visible... SKIPPED
+Tap on "^Share$"... COMPLETED
+Assert that id: sticker-style-name is visible... COMPLETED
+Assert that "^Photo · plain card$", id: sticker-style-name is visible... COMPLETED
+Tap on "^Orange$"... COMPLETED
+Take screenshot P1-14-photo-plain-card-orange... COMPLETED
+Tap on "Close"... COMPLETED
+exit 0

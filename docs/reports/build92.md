@@ -529,3 +529,128 @@ badges are sentence case); `surface` → `DS_V3.color.surface`.
   `check_ins.verification_gates` would be a SQL job; not written since nothing in the spec asks for it.
 - Android: the feed's own-post menu rows keep the legacy sheet (words updated); the detail's "…" menu is iOS-only
   (`ActionSheetIOS`), as the rest of the app's menus are.
+
+## Chunk 05 · Share stickers
+
+Design reference: `design/handoff/b92/part1-finish-loop/` frames P1-12 … P1-18 and the "4 styles × 3 themes" grid
+(prototype section 1.3; viewport captures saved to `docs/reports/build92/05/design/stickers-*.png`); README copy
+rows "Stickers", "Sticker content", "Upgrade sheet"; checklist lines "The sticker carousel swipes…", "Photo and Week
+strip export freely…", "With no proof photo…", "The White theme shows no orange…", "Verified shows only…", "Stickers
+export as a 1080×1920 story and as a transparent PNG."; `src/finish/stickers.ts` (styles, themes, Pro gate, export
+sizes — reference only).
+
+### 05.1 Carousel
+- Root cause: `lib/share-image.ts:101` `MOMENT_STYLES` maps the task and day moments to the build 90 set (H day
+  stamp, E streak, D progress grid, A photo) and `stylesForMoment` drops E at streak 0 and A without a photo, so the
+  sheet shows 2–4 colour variants of the old cards, none of which is a Week strip, Streak glow or Progress ring.
+  `components/share/ShareSystemSheet.tsx` has no style name, no Free / Pro label and a loose swatch row instead of the
+  Ink · Orange · White control (P1-12/13/15).
+- Change: new style ids `photo`, `week`, `glow`, `ring` in `MOMENT_STYLES` for `photo_proof`, `self_reported` and
+  `day_secured` (always all four — the Photo style has an empty state, the streak reads 0 honestly); `STICKER_STYLES`
+  meta (label, pro, transparent); paint branches per style and theme; the sheet gets the name row, the segmented
+  theme control and dots. `challenge_finished` and `invite` keep their cards (not named by the chunk).
+- Token mapping: handoff Barlow numerals → the shipped display face (`lib/display-face.test.ts` pins that Barlow is
+  not loaded) at weight 800 with tabular nums; `surface` → `DS_V3.color.surface`; the segmented control uses
+  `DS_V3.color.raised` for the selected pill.
+
+### 05.2 No stock photos
+- Root cause: `lib/share-image.ts:202` hides the photo card without a photo rather than painting a plain card; the
+  transparent preview in build 90 (`SAMPLE_STORY`) was removed and nothing replaced it.
+- Change: `photo` without `photoUri` paints the theme ground with the day stamp ("Photo · plain card" in the name
+  row, P1-14). Transparent styles preview over the user's own proof photo when there is one, otherwise over a checker
+  (no bundled photo; the grid's "sample photo" is a prototype stand-in and the chunk forbids stock).
+
+### 05.3 Pro lock
+- Root cause: nothing in `components/share/` knows about the entitlement; `stylesForMoment` has no Pro flag; the
+  only paywall is the full-screen `/paywall` route, which cannot present over the full-screen share `Modal`.
+- Change: `STICKER_STYLES[].pro`; the sheet reads `useProStatus()` (entitlement "GRIIT Pro",
+  `lib/subscription.ts:15`); a locked card shows the lock chip, hides the export row and shows "Unlock with GRIIT
+  Pro"; card or button tap opens `components/share/ProUpgradeSheet.tsx` (P1-18 copy) whose prices come from
+  `getOfferings()` (monthly + annual package `priceString`); "Try GRIIT Pro" purchases through `purchasePackage` and
+  refetches the entitlement, returning to the same style unlocked; "Not now" closes.
+
+### 05.4 Verified mark
+- Root cause: `buildSharePaint` paints a "Camera" seal from `cameraSeal` and never says Verified / Self-reported;
+  Strava proof has no path to the sticker.
+- Change: `ShareCardInput.proofSource?: "camera" | "strava" | "self"` with `stickerMark()` → "Verified" for camera or
+  Strava, otherwise "Self-reported"; `cameraSeal: true` maps to camera for existing callers.
+
+### 05.5 Export
+- Root cause: `ShareSystemSheet.tsx:309` captures one 1080×1920 PNG of the full card; the transparent styles would
+  ship as a 1080×1920 sheet of mostly empty pixels, and Instagram would scale the whole page as the sticker.
+- Change: a second `ViewShot` of the sticker block alone (transparent, content-sized) feeds Copy sticker and the
+  Instagram `stickerImage` for `glow` / `ring`; Save, Messages and More keep the 1080×1920 story file. Targets:
+  Instagram Story · Copy sticker · Save · Messages · More. The toast "Share" opener from chunk 01
+  (`app/(tabs)/_layout.tsx:95`) already shows this sheet, which is now the carousel; comments updated in
+  `lib/sticker-carousel.ts`.
+- Follow-up found while building: the carousel `Modal` lived in the tabs layout, whose view is detached under a
+  pushed root-stack screen, so Day secured's "Share" (`app/task/secured.tsx`) opened nothing (chunk 02 only
+  asserted the button). The opener registration and the sheet moved to `components/share/StickerCarouselHost.tsx`,
+  mounted once in `app/_layout.tsx`; the tabs layout no longer owns share state.
+- Story pixel size: `react-native-view-shot` sizes `width`/`height` in points × the device scale, so a 1080×1920
+  target produced 3240×5760 on a 3× device. `storyShotSize(PixelRatio.get())` (`lib/share-image.ts`) divides the
+  target by the scale; the file is now exactly 1080×1920 on every device.
+
+### Chunk 05 gates and evidence
+- vitest `lib/stickers-b92.test.ts` (15 tests, failing-first run `05/vitest-before.txt`): every task/day moment
+  lists Photo · Week strip · Streak glow · Progress ring in that order and in every state; style meta (Free / Pro /
+  transparent); the sheet shows the style name, the Free / GRIIT Pro tag, the Ink · Orange · White control, the
+  lock and "Unlock with GRIIT Pro"; the White theme paints no orange (flame glyph excepted), the ring stroke and
+  track are never orange on White, the Orange theme is an orange plate with ink type; the plain card paints for
+  every theme and reads "Photo · plain card"; no bundled jpg/png or unsplash URL in the sheet or painter; the Photo
+  card carries "Day 16", "Read 30 · Day 16 of 30", "Verified", "@yaseen · griit.app"; the upgrade sheet copy, the
+  live price line, "Try GRIIT Pro" through `getOfferings()` / `purchasePackage(` with no `$d.dd` literal; the
+  Verified / Self-reported mark; the week strip cells; the carousel host in the root layout; the story shot size
+  (3× → 360×640 pt, 2× → 540×960 pt, both 1080×1920 px).
+- Maestro `.maestro/build92-05-stickers.yaml` (SE `se/maestro-stickers-se.txt` PASS, 16 Pro Max
+  `16promax/maestro-stickers-16promax.txt` PASS, 16 `16/maestro-stickers-run1..8.txt`, run 8 reached Save and
+  failed only on a since-removed "Self-reported" text assert — that text sits inside the scaled preview and is
+  pinned by vitest instead). Guest A (camera prelude) posts a Show Up 7 photo → Day secured → Share → the
+  carousel: "Photo" + "Free" + theme control (P1-12 Ink, P1-13 White) → swipe → "Week strip" (P1-15 White) →
+  swipe → "Streak glow" with the lock chip and "Unlock with GRIIT Pro", no "Instagram Story" (P1-16) → swipe →
+  "Progress ring" (P1-17 Orange) → Unlock → `pro-upgrade-sheet` with the full copy (P1-18) → Not now → still on
+  "Progress ring" → back to "Week strip" → the five targets → Save → "Saved to Photos." → Close. Guest B posts a
+  7K Steps check-off → Day secured → Share → "Photo · plain card" (P1-14 Orange) → Close. Runs 1–7 were flow
+  fixes and two app bugs: the detached carousel host (above) and an RN `processFontVariant` crash on the ring card
+  when `fontVariant` went from an array to `undefined` (now always an array).
+- Export check (`05/export/export-check.txt`, files `export-1..2.png`, flow `16/maestro-export-check.txt` through
+  the dev screen `griit://dev/share-styles` "Export build 92 stickers to tmp"): the story file is 1080×1920 RGBA;
+  the transparent sticker block is RGBA with 85 % fully transparent pixels (an earlier run of the same path:
+  transparent ring story RGBA, 86.9 % transparent; opaque stories 0 %).
+- Screenshots next to the design frames: `05/se/`, `05/16promax/` P1-12 … P1-18 (7 each); `05/16/` 6 (its run
+  predates the P1-14 step). Design references: `05/design/stickers-*.png` (prototype 1.3 grid, viewport captures).
+- Full suite `05/vitest-final.txt`: baseline 4 failures only. `05/tsc-final.txt`: baseline 5 only. Pins moved with
+  comments ("Build 92 05.x"): `lib/share-image.test.ts` moment map; `lib/build90-posting.test.ts` 04.6 set tests
+  (the set no longer shrinks at streak 0 / no photo — each case now asserts the four cards) and the 04.5 mapper
+  pin (reads `StickerCarouselHost.tsx` instead of the tabs layout).
+- Self-check diff: no skipped tests, no removed assertions beyond those pin moves, no hard-coded prices (the sheet
+  shows "Loading prices…" / "Prices aren't available right now." until the offering arrives), no console.log;
+  chunks 01–04 tests pass in the full run.
+
+### Chunk 05 decisions made alone
+- Footer word: the copy table's "Sticker content" row gives `@handle · griit.app`; `STICKER_FOOTER_DOMAIN` holds the
+  domain so one place changes it.
+- "Try GRIIT Pro" buys the annual package when the offering has one, else monthly (the sheet lists both prices; the
+  design frame has one button). No introductory-offer logic: the price line shows `priceString` as RevenueCat gives it.
+- Transparent styles preview over the user's own proof photo when there is one, otherwise a checker; no sample photo
+  ships in the app (05.2). The dev review screen uses a picsum URL as a stand-in for the Photo style only.
+- The carousel host moved to the root layout (needed for Day secured; see 05.5).
+- The caption row stays under the card (chunk 01 copy); it hides while a style is locked so the unlock button sits
+  where the targets were.
+- The week strip reads the last seven cells of the challenge grid ending today when cells are passed, else it is
+  reconstructed from the streak count (a toast carries no grid).
+- Theme labels are Ink · Orange · White as pills (segmented) instead of three swatches; the selected pill uses the
+  raised surface.
+- Instagram Story uses the transparent sticker as `stickerImage` for glow / ring (and the story file as the
+  background); Photo and Week strip send the story file only.
+
+### Chunk 05 not done / Needs Yaseen
+- Live offering prices on the simulator: RevenueCat returns no offering, so P1-18 shows "Prices aren't available
+  right now." The sheet, the price line and the purchase path are wired; verify on a device with a sandbox tester
+  (or add a StoreKit configuration to the dev client scheme) — Needs Yaseen, no code change expected.
+- Earlier-chunk observations for 04 / 07: a photo post's single tap opens the full-screen photo, so photo posts have
+  no feed path to proof detail (check-off posts do); `app/profile/posts.tsx` Comment → post detail does not navigate
+  from the profile Posts list (the slide starts and stops). Both outside this chunk's items; not changed.
+- The dev-client LogBox banner (a RevenueCat console error on the simulator) can cover the upgrade sheet; the flow
+  dismisses it. Not a release-build concern.
+- The 16 set has no P1-14 (the gate devices SE and Pro Max have it).

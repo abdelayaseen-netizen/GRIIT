@@ -1,7 +1,7 @@
 /**
  * Build 92 chunk 01.4: a toast's "Share" opens the sticker carousel (Part 1.3).
- * Stub until chunk 05 ships the carousel: the tabs layout registers an opener that
- * shows the current share sheet, and chunk 05 swaps the opener for the carousel route.
+ * Chunk 05: the tabs layout registers an opener that shows `ShareSystemSheet`, which
+ * is the carousel (Photo · Week strip · Streak glow · Progress ring).
  * One entry point so no toast hard-codes a share destination.
  */
 import type { TaskCompleteToast } from "@/lib/task-complete-toast";

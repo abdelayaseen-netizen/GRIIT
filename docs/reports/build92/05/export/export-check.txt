@@ -1,0 +1,8 @@
+Build 92 chunk 05 · exported story/sticker files from app/dev/share-styles (iPhone 16 sim, 3x)
+Check: PNG size + alpha channel (python PNG decode, no deps)
+export-1.png: 3240x2775 RGBA transparent_pixels 85.1%
+export-2.png: 1080x1920 RGBA transparent_pixels 0.0%
+
+export-2 = story card (opaque style) → exactly 1080×1920 after storyShotSize(PixelRatio.get()).
+export-1 = transparent sticker block (ShareStickerBlock) at its natural 3× size, RGBA, 85% transparent.
+Earlier run (before the size fix, same code path otherwise): transparent ring story was RGBA with 86.9% fully transparent pixels.

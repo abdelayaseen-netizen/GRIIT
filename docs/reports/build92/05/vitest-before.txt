@@ -1,0 +1,28 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/stickers-b92.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/stickers-b92.test.ts [ lib/stickers-b92.test.ts ]
+Error: Cannot find module '@/lib/pro-upgrade' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/stickers-b92.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/stickers-b92.test.ts:5:31
+      3|  */
+      4| import { readFileSync } from "node:fs";
+      5| import { resolve } from "node:path";
+       |                               ^
+      6| import { describe, expect, it } from "vitest";
+      7| import {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  16:19:51
+   Duration  610ms (transform 74ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 70ms)
+

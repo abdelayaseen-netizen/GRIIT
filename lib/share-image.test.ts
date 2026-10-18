@@ -16,13 +16,14 @@ import {
 const code = "K7Q2M";
 
 describe("v44.1 share styles", () => {
-  it("maps each moment to its styles, default first (build 90 04.6: day stamp, streak, progress, photo)", () => {
-    expect(stylesForMoment("photo_proof")).toEqual(["H", "E", "D", "A"]);
-    expect(stylesForMoment("self_reported")).toEqual(["H", "E", "D"]);
-    expect(stylesForMoment("day_secured")).toEqual(["E", "D"]);
+  it("maps each moment to its styles, default first (build 92 05.1: Photo, Week strip, Streak glow, Progress ring)", () => {
+    // Build 92 05.1 moved the task and day moments from the build 90 set (H, E, D, A) to the Part 1.3 carousel.
+    expect(stylesForMoment("photo_proof")).toEqual(["photo", "week", "glow", "ring"]);
+    expect(stylesForMoment("self_reported")).toEqual(["photo", "week", "glow", "ring"]);
+    expect(stylesForMoment("day_secured")).toEqual(["photo", "week", "glow", "ring"]);
     expect(stylesForMoment("challenge_finished")).toEqual(["F", "D"]);
     expect(stylesForMoment("invite")).toEqual(["G"]);
-    expect(defaultStyle("photo_proof")).toBe("H");
+    expect(defaultStyle("photo_proof")).toBe("photo");
     expect(defaultStyle("invite")).toBe("G");
   });
 

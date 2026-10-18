@@ -40,8 +40,62 @@ export const SHARE_TARGET_MORE = "More";
  * C self-reported check · D progress grid · E streak · F finished · G invite ·
  * H day stamp (build 90 04.6).
  */
-export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H";
+export type ShareStyleId = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "photo" | "week" | "glow" | "ring";
 export type ShareColourId = "ink" | "orange" | "white";
+
+/** Build 92 05: the four stickers of Part 1.3. Photo and Week strip are free; the transparent two are GRIIT Pro. */
+export type StickerStyleKey = "photo" | "week" | "glow" | "ring";
+export const STICKER_STYLES = [
+  { key: "photo", label: "Photo", pro: false, transparent: false },
+  { key: "week", label: "Week strip", pro: false, transparent: false },
+  { key: "glow", label: "Streak glow", pro: true, transparent: true },
+  { key: "ring", label: "Progress ring", pro: true, transparent: true },
+] as const satisfies readonly { key: StickerStyleKey; label: string; pro: boolean; transparent: boolean }[];
+export const STICKER_FREE = "Free";
+export const STICKER_PRO = "GRIIT Pro";
+export const STICKER_UNLOCK = "Unlock with GRIIT Pro";
+export const STICKER_PLAIN_CARD = "plain card";
+/** Footer word from the copy table ("@{handle} · griit.app"). A word on a picture, not a link. */
+export const STICKER_FOOTER_DOMAIN = "griit.app";
+export type ProofSource = "camera" | "strava" | "self";
+
+export function isStickerStyle(id: ShareStyleId): id is StickerStyleKey {
+  return STICKER_STYLES.some((s) => s.key === id);
+}
+
+export function stickerStyleMeta(id: ShareStyleId): { key: string; label: string; pro: boolean; transparent: boolean } {
+  return STICKER_STYLES.find((s) => s.key === id) ?? { key: id, label: "", pro: false, transparent: id === "B" };
+}
+
+/** "Photo · plain card" when there is no proof photo (P1-14). */
+export function stickerStyleLabel(id: ShareStyleId, hasPhoto: boolean): string {
+  const meta = stickerStyleMeta(id);
+  if (id === "photo" && !hasPhoto) return `${meta.label} · ${STICKER_PLAIN_CARD}`;
+  return meta.label;
+}
+
+/** Verified only for camera or Strava proof; everything else is Self-reported. */
+export function stickerMark(input: { proofSource?: ProofSource | null; cameraSeal?: boolean }): "Verified" | "Self-reported" {
+  const source = input.proofSource ?? (input.cameraSeal ? "camera" : "self");
+  return source === "camera" || source === "strava" ? "Verified" : "Self-reported";
+}
+
+/** The last 7 days ending today: from the challenge cells when known, else the streak. */
+export function weekStripCells(input: { cells?: readonly GridCell[]; streak?: number | null }): boolean[] {
+  const cells = input.cells ?? [];
+  const todayIndex = cells.findIndex((c) => c === "today");
+  if (cells.length > 0) {
+    const end = todayIndex >= 0 ? todayIndex : cells.length - 1;
+    const out: boolean[] = [];
+    for (let i = end - 6; i <= end; i += 1) {
+      const cell = i >= 0 ? cells[i] : undefined;
+      out.push(cell === "secured" || cell === "today" || cell === "held");
+    }
+    return out;
+  }
+  const streak = Math.max(0, Math.floor(input.streak ?? 0));
+  return Array.from({ length: 7 }, (_, i) => 7 - i <= streak);
+}
 export type ShareMoment =
   | "photo_proof"
   | "self_reported"
@@ -99,9 +153,10 @@ export const SHARE_COLOURS: ShareColourId[] = ["ink", "orange", "white"];
  * The glow / landscape sticker (B) is gone from every moment.
  */
 export const MOMENT_STYLES: Record<ShareMoment, readonly ShareStyleId[]> = {
-  photo_proof: ["H", "E", "D", "A"],
-  self_reported: ["H", "E", "D"],
-  day_secured: ["E", "D"],
+  // Build 92 05.1: Photo · Week strip · Streak glow · Progress ring, always all four (P1-12 … P1-17).
+  photo_proof: ["photo", "week", "glow", "ring"],
+  self_reported: ["photo", "week", "glow", "ring"],
+  day_secured: ["photo", "week", "glow", "ring"],
   challenge_finished: ["F", "D"],
   invite: ["G"],
 };
@@ -127,6 +182,8 @@ export type ShareCardInput = {
   dateRange?: string;
   photoUri?: string | null;
   cameraSeal?: boolean;
+  /** Build 92 05.4: camera or Strava → "Verified"; else "Self-reported". Falls back to cameraSeal. */
+  proofSource?: ProofSource | null;
   rule?: string;
   proofLine?: string;
   tasks?: { title: string; rule: string }[];
@@ -162,7 +219,15 @@ export type ShareItem =
       sub: string;
       line: string;
     }
-  | { kind: "link"; title: string; link: string; fg: string; sub: string; plate: string };
+  | { kind: "link"; title: string; link: string; fg: string; sub: string; plate: string }
+  /** Build 92 05: Verified / Self-reported with its small mark. */
+  | { kind: "mark"; label: "Verified" | "Self-reported"; color: string; size: number }
+  /** M T W T F S S with done discs. `done` is the disc fill, `tick` the check colour, `empty` the open ring. */
+  | { kind: "week"; days: boolean[]; done: string; tick: string; empty: string; letter: string; size: number }
+  /** A flame with a soft orange glow behind it (ink flame on the Orange plate, no glow). */
+  | { kind: "glowflame"; size: number; color: string; glow: string | null }
+  /** Progress ring: stroke is the type colour, never orange. */
+  | { kind: "ring"; size: number; width: number; progress: number; stroke: string; track: string; items: ShareItem[] };
 
 export type SharePaint = {
   width: number;
@@ -170,6 +235,8 @@ export type SharePaint = {
   background: string;
   transparent: boolean;
   photo: boolean;
+  /** Build 92 05: the photo sits in this inset frame instead of full bleed (White / Orange Photo card). */
+  photoFrame?: { x: number; y: number; w: number; h: number; radius: number } | null;
   scrim: boolean;
   wordmark: { text: string; x: number; y: number; size: number; color: string; tracking: number } | null;
   block: {
@@ -248,6 +315,15 @@ export function shareMessageBody(caption: string, joinLine: string): string {
  * Build 90 04.6 follow-up: every card is a sticker. Instagram Story gets the PNG as
  * `stickerImage` over the palette background, never as a full-bleed `backgroundImage`.
  */
+/**
+ * Build 92 05.5: view-shot sizes in points × the device scale. This target gives exactly
+ * SHARE_W × SHARE_H pixels on any device (3× → 360×640 pt, 2× → 540×960 pt).
+ */
+export function storyShotSize(scale: number): { width: number; height: number } {
+  const s = scale > 0 ? scale : 1;
+  return { width: SHARE_W / s, height: SHARE_H / s };
+}
+
 export function storyUsesSticker(_style: ShareStyleId): boolean {
   return true;
 }
@@ -379,6 +455,144 @@ function cellsFor(input: ShareCardInput): GridCell[] {
   });
 }
 
+const INK = "#0F0F0F";
+const PAPER = "#F5F3EE";
+const FLAME = "#DC5401";
+
+function stickerFooter(input: ShareCardInput, color: string): ShareItem {
+  const handle = atUser(input.username);
+  return text(handle ? `${handle} · ${STICKER_FOOTER_DOMAIN}` : STICKER_FOOTER_DOMAIN, 30, 38, color, "500");
+}
+
+function markItem(input: ShareCardInput, color: string): ShareItem {
+  return { kind: "mark", label: stickerMark(input), color, size: 34 };
+}
+
+/** Type colour of a transparent sticker: ink over a bright photo, paper over a dark one, ink on the Orange plate. */
+function transparentType(colour: ShareColourId): string {
+  return colour === "white" ? PAPER : INK;
+}
+
+function alpha(color: string, a: number): string {
+  if (color === INK) return `rgba(15,15,15,${a})`;
+  if (color === PAPER) return `rgba(245,243,238,${a})`;
+  return color;
+}
+
+/**
+ * Build 92 05: Photo · Week strip · Streak glow · Progress ring per theme, under the orange rule.
+ * Ink: orange only on the flame and the done checks. White: orange only on the flame.
+ * Orange: orange ground / plate, ink type, ink flame. The ring stroke is the type colour.
+ */
+function paintSticker(
+  base: SharePaint,
+  input: ShareCardInput,
+  palette: SharePalette,
+  facts: { day: number; total: number; challenge: string; task: string },
+): void {
+  const push = (item: ShareItem | null) => {
+    if (item) base.block.items.push(item);
+  };
+  const { day, total, challenge, task } = facts;
+  const streak = Math.max(0, Math.floor(input.streak ?? 0));
+  base.wordmark = null;
+  base.block.gap = 20;
+
+  if (input.style === "photo") {
+    if (input.photoUri) {
+      base.photo = true;
+      if (input.colour === "ink") {
+        base.scrim = true;
+        base.background = INK;
+        push(text(`Day ${day}`, 200, 200, PAPER, "800", -0.025 * 200));
+        push(text(`${challenge} · Day ${day} of ${total}`, 44, 54, PAPER, "500"));
+        push(markItem(input, PAPER));
+        push(stickerFooter(input, alpha(PAPER, 0.8)));
+        return;
+      }
+      base.photoFrame = { x: 96, y: 150, w: 888, h: 1090, radius: 48 };
+      base.block.y = 1290;
+      base.block.h = SHARE_H - 1290 - 120;
+      base.block.justify = "flex-start";
+      push(text(`Day ${day}`, 200, 200, palette.fg, "800", -0.025 * 200));
+      push(text(`${challenge} · Day ${day} of ${total}`, 44, 54, palette.fg, "500"));
+      push(markItem(input, palette.fg));
+      push(stickerFooter(input, palette.sub));
+      return;
+    }
+    // 05.2: no proof photo → a plain card in the theme colour. Never a stock photo.
+    push(text(challenge, 40, 48, palette.sub, "500"));
+    push(text(`Day ${day}`, 260, 250, palette.fg, "800", -0.025 * 260));
+    push(text(task ? `${task} · done` : `Day ${day} of ${total}`, 48, 58, palette.fg, "500"));
+    push(markItem(input, palette.fg));
+    push(stickerFooter(input, palette.sub));
+    return;
+  }
+
+  if (input.style === "week") {
+    const flame = input.colour === "orange" ? INK : FLAME;
+    const done = input.colour === "ink" ? FLAME : INK;
+    const tick = input.colour === "ink" ? INK : input.colour === "white" ? PAPER : palette.bg;
+    base.block.justify = "center";
+    push({
+      kind: "row",
+      gap: 24,
+      items: [{ kind: "flame", size: 120, color: flame }, text(String(streak), 300, 290, palette.fg, "800", -0.03 * 300)],
+    });
+    push(text(streakInARow(streak), 64, 76, palette.fg, "500"));
+    push({
+      kind: "week",
+      days: weekStripCells({ cells: input.cells, streak }),
+      done,
+      tick,
+      empty: palette.line,
+      letter: palette.sub,
+      size: 96,
+    });
+    push(markItem(input, palette.fg));
+    push(stickerFooter(input, palette.sub));
+    return;
+  }
+
+  // Transparent stickers.
+  base.transparent = true;
+  base.background = "transparent";
+  base.block.justify = "center";
+  const type = transparentType(input.colour);
+  const onPlate = input.colour === "orange";
+  if (onPlate) {
+    base.block.plate = { color: FLAME, radius: 72, pad: 96 };
+    base.block.x = 140;
+    base.block.w = SHARE_W - 280;
+  } else {
+    base.block.shadow = stickerShadow(input.colour);
+  }
+
+  if (input.style === "glow") {
+    push({ kind: "glowflame", size: 200, color: onPlate ? INK : FLAME, glow: onPlate ? null : "rgba(220,84,1,0.55)" });
+    push(text(String(streak), 440, 420, type, "800", -0.03 * 440));
+    push(text(streakInARow(streak), 72, 84, type, "500"));
+    push(markItem(input, type));
+    push(stickerFooter(input, alpha(type, 0.8)));
+    return;
+  }
+
+  // ring
+  const progress = total > 0 ? Math.max(0, Math.min(1, day / total)) : 0;
+  push({
+    kind: "ring",
+    size: 640,
+    width: 30,
+    progress,
+    stroke: type,
+    track: alpha(type, 0.18),
+    items: [text(`Day ${day}`, 140, 150, type, "800", -0.025 * 140), text(`of ${total}`, 48, 56, type, "500")],
+  });
+  push(text(challenge, 60, 72, type, "500"));
+  push(markItem(input, type));
+  push(stickerFooter(input, alpha(type, 0.8)));
+}
+
 export function buildSharePaint(input: ShareCardInput): SharePaint {
   const palette = SHARE_PALETTES[input.colour];
   const box = SHARE_CONTENT;
@@ -418,6 +632,11 @@ export function buildSharePaint(input: ShareCardInput): SharePaint {
   const push = (item: ShareItem | null) => {
     if (item) base.block.items.push(item);
   };
+
+  if (isStickerStyle(input.style)) {
+    paintSticker(base, input, palette, { day, total, challenge, task });
+    return base;
+  }
 
   if (input.style === "A") {
     base.photo = true;
@@ -584,8 +803,8 @@ export function paintStrings(paint: SharePaint): string[] {
     else if (item.kind === "baseline") {
       walk(item.lead);
       walk(item.rest);
-    } else if (item.kind === "row") item.items.forEach(walk);
-    else if (item.kind === "seal") out.push(item.label);
+    } else if (item.kind === "row" || item.kind === "ring") item.items.forEach(walk);
+    else if (item.kind === "seal" || item.kind === "mark") out.push(item.label);
     else if (item.kind === "link") {
       if (item.title) out.push(item.title);
       if (item.link) out.push(item.link);
