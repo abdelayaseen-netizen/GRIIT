@@ -8,7 +8,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 02 | Finish flow and Day secured | PASSED | ca530dad | Run type not covered on simulator (Strava); offline queue out of scope. Report: docs/reports/build92.md |
 | 03 | Task inputs and partial logs | PASSED (waiting for SQL) | 96a72a63 | 03.6 data fix is SQL in docs/sql/build92.sql, not run; short saves are saved, not posted. Report: docs/reports/build92.md |
 | 04 | Posts, likes and proof detail | PASSED | 91ee4f74 | Backend deployed 35ea72d then 4677dba (feed.react mode "like", result/badge on feed items). Report: docs/reports/build92.md |
-| 05 | Share stickers | NOT STARTED | | |
+| 05 | Share stickers | PASSED | 74853f8a | No SQL, no deploy (client only). Needs Yaseen: verify live RevenueCat prices on a device/sandbox. Report: docs/reports/build92.md |
 | 06 | One source for every number | NOT STARTED | | |
 | 07 | Profile and post viewer | NOT STARTED | | |
 | 08 | Invite, leaderboard and settings | NOT STARTED | | |
@@ -43,3 +43,8 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 04.4 Double-tap to like (feed + detail + full screen, never unlikes, mode "like" on server): done, 91ee4f74 (backend deployed 4677dba)
 04.5 Own posts (no heart, "Liked by…" line, server FORBIDDEN on self-like, owner menu words): done, 91ee4f74
 04.6 Proof detail (Back goes back, title = challenge, owner "…" menu, composer on keyboard, no Done/Share outside): done, 91ee4f74
+05.1 Carousel (Photo · Week strip · Streak glow · Progress ring for every task/day moment, style name, Free/Pro tag, Ink · Orange · White control): done, 74853f8a
+05.2 No stock photos (plain card without a proof photo, transparent preview over own photo or checker, no bundled image): done, 74853f8a
+05.3 Pro lock (glow/ring locked without "GRIIT Pro", lock chip, "Unlock with GRIIT Pro", upgrade sheet with live prices, purchase → unlocked in place): done, 74853f8a (prices on simulator: none — verify on device)
+05.4 Verified mark (camera/Strava → Verified, else Self-reported; proofSource on the card input): done, 74853f8a
+05.5 Export (1080×1920 story PNG via storyShotSize, transparent sticker PNG for glow/ring, Copy sticker · Instagram Story · Save · Messages · More; carousel host moved to root layout so Day secured opens it): done, 74853f8a
