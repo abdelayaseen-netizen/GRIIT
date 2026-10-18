@@ -10,7 +10,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 04 | Posts, likes and proof detail | PASSED | 91ee4f74 | Backend deployed 35ea72d then 4677dba (feed.react mode "like", result/badge on feed items). Report: docs/reports/build92.md |
 | 05 | Share stickers | PASSED | 74853f8a | No SQL, no deploy (client only). Needs Yaseen: verify live RevenueCat prices on a device/sandbox. Report: docs/reports/build92.md |
 | 06 | One source for every number | PASSED | 15983b8c (code de7d012d) | No SQL (server computes user_stats from existing tables). Backend deployed de7d012 (user_stats on getStats/getRecord/meStats, challenges.progress, freeze refill removed). Report: docs/reports/build92.md |
-| 07 | Profile and post viewer | NOT STARTED | | |
+| 07 | Profile and post viewer | FAILED (07.1 frame gate only) | 838e8765 | Items 07.1–07.6 built and tested; all gates pass except "no frame over 50 ms": PostViewer shows 1 frame of 52–59 ms per 10 s run on the Pro Max simulator (legacy harness max 44 ms). 2 fix attempts spent; needs a device check with real photos. P2-08/P2-13 (second account) not staged. No SQL. |
 | 08 | Invite, leaderboard and settings | NOT STARTED | | |
 | 09 | First day and account | NOT STARTED | | |
 | 10 | Discover, challenge page, Home, feed, words | NOT STARTED | | |
@@ -52,3 +52,9 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 06.2 Server fields (backend/lib/user-stats.ts computeUserStats → user_stats on getStats/home.bootstrap, getRecord, meStats; challenges.progress; clients stop computing): done, de7d012d
 06.3 Freeze rule (earn at each 7-day streak, hold 2 / 4 Pro, monthly refill and its Settings/paywall/error copy gone, existing counts capped): done, de7d012d
 06.4 Progress-bar wording ("{secured} of {elapsed} days secured" on Your data; "Left on day n · s of e secured"): done, de7d012d
+07.1 Scroll freeze (root cause written; PostViewer with recycled images, fixed per-item layout, native-thread bar, single prefetch; dev harness + frame meter): done, gate not met strictly (1 frame >50 ms), 838e8765
+07.2 Header (3 numbers + "{n} verified", one follow line, no Friends, Edit profile · Find friends / Follow · Invite to a challenge, record row): done, 838e8765
+07.3 Proof grid first (3 cols 4:5, date label, Part 2 empty copy + CTA, offline + Try again): done, 838e8765
+07.4 Your record (Challenges · Badges · Stats; visitor Challenges · Badges; Pro deeper-stats preview): done, 838e8765
+07.5 Post viewer ("Posts", 1 of 2 pager, own posts Liked by / no heart, Back lands on tile ×3): done, 838e8765
+07.6 Header from cache (AsyncStorage snapshot, header/grid skeletons, 47–48 ms measured): done, 838e8765
