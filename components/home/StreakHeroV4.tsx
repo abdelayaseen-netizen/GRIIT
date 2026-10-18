@@ -59,6 +59,8 @@ export type StreakHeroV4Task = {
   hasCameraProof?: boolean;
   /** Build 90 09.3: completion verified by an integration (check_ins.proof_source). */
   verifiedBy?: import("@/lib/strava-verify").VerifiedBy | null;
+  /** Build 92 03.4: "{done} of {goal} {unit} logged" while a short save keeps the task open. */
+  partialLine?: string | null;
 };
 
 export type StreakHeroV4State = 'day0' | 'default' | 'atRisk' | 'secured';

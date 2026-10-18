@@ -139,6 +139,9 @@ export function TaskFlowV2() {
           fromGps={f.fromGps}
           hasCamera={f.requirePhoto}
           targetDistance={f.targetDistance}
+          soFarDistance={f.soFarDistance}
+          onSaveShort={f.onSaveShort}
+          saving={f.saving}
         />
       ) : null}
 
@@ -244,6 +247,7 @@ export function TaskFlowV2() {
           onOpenKeypad={f.onOpenCountKeypad}
           onRemoveOne={f.onRemoveOne}
           onComplete={f.onCompleteCount}
+          onSaveShort={f.onSaveShort}
           onBack={f.goBack}
         />
       ) : null}

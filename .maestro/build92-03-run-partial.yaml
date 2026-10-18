@@ -1,0 +1,162 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 03: partial logs add up (Part 1 checklist lines 149–152).
+# Fresh guest → wizard → one custom Run task, 3 mi, self-reported → Home.
+# 2 mi in 20:00 → "2 of 3 mi · 1 mi short" + the won't-count line → "Save 2 mi · won't count today"
+# → Home toast "Run saved. 1 mi short, so today isn't secured yet.", the row stays open with
+# "2 of 3 mi logged" → open it again → "2 of 3 mi so far today" + Add distance → 1 mi in 10:00
+# → Done → post sheet → Post → Day secured. Along the way: 1 mi in 3:00 shows the pace line and
+# disables Done; the duration field takes h:mm:ss.
+- runFlow: build92-guest-home.yaml
+
+# Wizard: a custom 3 mi run.
+- tapOn:
+    id: "tab-create"
+- extendedWaitUntil:
+    visible: "Create a challenge"
+    timeout: 15000
+- tapOn: "Create a challenge"
+- extendedWaitUntil:
+    visible: "Step 1 of 3"
+    timeout: 20000
+- tapOn: "Challenge title"
+- inputText: "Three mile days"
+- tapOn: "Name your challenge"
+- tapOn: "Fitness"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "What must get done daily?"
+    timeout: 15000
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- extendedWaitUntil:
+    visible: "Task name"
+    timeout: 15000
+- tapOn: "e.g. Read 10 pages"
+- inputText: "Morning run"
+- hideKeyboard
+- tapOn: "^Run$"
+- extendedWaitUntil:
+    visible: "Distance"
+    timeout: 10000
+- tapOn: "Distance"
+- inputText: "3"
+- hideKeyboard
+- tapOn: "^mi$"
+- tapOn: "Add task"
+- extendedWaitUntil:
+    visible: "Morning run"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How strict?"
+    timeout: 15000
+- tapOn: "Standard.*"
+- tapOn: "Review"
+- extendedWaitUntil:
+    visible: "Start the challenge"
+    timeout: 15000
+- tapOn: "Start the challenge"
+- extendedWaitUntil:
+    visible: "You're in. Day 1 is.*"
+    timeout: 30000
+- tapOn:
+    text: "^Later$"
+    optional: true
+- tapOn:
+    id: "tab-home"
+- extendedWaitUntil:
+    visible: "Morning run"
+    timeout: 30000
+
+# Log 1: an impossible pace is said inline and Done is off; then 2 mi in 20:00 is short.
+- scrollUntilVisible:
+    element:
+      text: "Morning run"
+      index: 0
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "Morning run"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: "log-distance"
+    timeout: 20000
+- tapOn:
+    id: "log-distance"
+- inputText: "1"
+- tapOn:
+    id: "log-duration"
+- inputText: "300"
+- assertVisible: "That pace looks off. Check the distance and time."
+- takeScreenshot: P1-31-pace-off
+- tapOn:
+    id: "log-duration"
+- eraseText: 6
+- inputText: "10500"
+- assertVisible: "1:05:00"
+- takeScreenshot: P1-30-run-hmmss
+- eraseText: 6
+- inputText: "2000"
+- tapOn:
+    id: "log-distance"
+- eraseText: 3
+- inputText: "2"
+- hideKeyboard
+- extendedWaitUntil:
+    visible: "2 of 3 mi · 1 mi short"
+    timeout: 10000
+- assertVisible: "Today won't count toward the 3 mi goal.*"
+- assertVisible: "Save 2 mi · won't count today"
+- takeScreenshot: P1-32-run-short
+- tapOn: "Save 2 mi · won't count today"
+- extendedWaitUntil:
+    visible: "Run saved\\. 1 mi short, so today isn't secured yet\\."
+    timeout: 30000
+- assertNotVisible: "Every task today is done."
+- assertVisible: "2 of 3 mi logged"
+- takeScreenshot: P1-33-home-after-short
+
+# Log 2: the second log adds up and finishes the task.
+- scrollUntilVisible:
+    element:
+      text: "Morning run"
+      index: 0
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "Morning run"
+    index: 0
+- extendedWaitUntil:
+    visible: "2 of 3 mi so far today"
+    timeout: 20000
+- assertVisible: "Add distance"
+- takeScreenshot: P1-35-run-so-far
+- tapOn:
+    id: "log-distance"
+- inputText: "1"
+- tapOn:
+    id: "log-duration"
+- inputText: "1000"
+- hideKeyboard
+- assertNotVisible: "mi short"
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 20000
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done."
+    timeout: 60000
+- assertVisible: "Morning run"
+- takeScreenshot: P1-35-day-secured-after-partials
+- tapOn: "^Done$"
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 20000

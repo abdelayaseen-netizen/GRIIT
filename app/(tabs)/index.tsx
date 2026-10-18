@@ -36,6 +36,7 @@ import LiveFeedSection from "@/components/LiveFeedSection";
 import ScreenChrome from "@/components/ds/ScreenChrome";
 import DayStickerSheet from "@/components/share/DayStickerSheet";
 import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
+import { homeTaskPartialLine } from "@/lib/partial-log";
 import {
   mergeOptimisticCheckins,
   optimisticSaveError,
@@ -315,6 +316,7 @@ export default function HomeScreen() {
       active_challenge_id?: string;
       task_id?: string;
       status?: string;
+      value?: number | null;
       verification_status?: string | null;
       verified?: boolean | null;
       photo_url?: string | null;
@@ -345,6 +347,12 @@ export default function HomeScreen() {
       );
       // 09.3: a Strava-verified completion says "Verified by Strava" in place of "Self-reported".
       const verifiedByTask = new Map(doneRows.map((c) => [String(c.task_id), stravaVerifiedBy(c)]));
+      // Build 92 03.4: a short save leaves a pending row with today's total.
+      const pendingValueByTask = new Map(
+        checkins
+          .filter((c) => c.active_challenge_id === ac.id && c.status === "pending" && typeof c.value === "number")
+          .map((c) => [String(c.task_id), c.value as number]),
+      );
       const challengeName = ac.challenges?.title ?? "Challenge";
       const durationDays = ac.challenges?.duration_days ?? 14;
       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
@@ -384,6 +392,7 @@ export default function HomeScreen() {
           minutesLeft: t.minutesLeft ?? null,
           hasCameraProof: proofByTask.get(t.id) === true,
           verifiedBy: verifiedByTask.get(t.id) ?? null,
+          partialLine: homeTaskPartialLine(t as unknown as Record<string, unknown>, tType, pendingValueByTask.get(t.id)),
         });
       }
     }

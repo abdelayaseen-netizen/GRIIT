@@ -4,7 +4,8 @@ export type KeypadMask = "distance" | "duration" | "minutes" | "count";
 
 export const KEYPAD_MAX: Record<KeypadMask, number> = {
   distance: 5,
-  duration: 4,
+  /** Build 92 03.2: up to h:mm:ss (6 digits); 4 or fewer still read as mm:ss. */
+  duration: 6,
   minutes: 3,
   count: 2,
 };
@@ -16,21 +17,34 @@ export function pushKeypadDigit(buffer: string, digit: string, mask: KeypadMask)
 
 export function formatKeypadBuffer(buffer: string, mask: KeypadMask): string {
   if (mask === "distance") return buffer ? (parseInt(buffer, 10) / 100).toFixed(2) : "0.00";
-  if (mask === "duration") {
-    const p = buffer.padStart(4, "0");
-    return `${p.slice(0, 2)}:${p.slice(2)}`;
-  }
+  if (mask === "duration") return formatDurationDigits(buffer);
   return buffer || "0";
 }
 
 export function parseKeypadBuffer(buffer: string, mask: KeypadMask): number | null {
   if (!buffer) return mask === "count" ? 0 : null;
   if (mask === "distance") return parseInt(buffer, 10) / 100;
-  if (mask === "duration") {
-    const p = buffer.padStart(4, "0");
-    return parseInt(p.slice(0, 2), 10) * 60 + Math.min(59, parseInt(p.slice(2), 10));
-  }
+  if (mask === "duration") return parseDurationDigits(buffer);
   return parseInt(buffer, 10);
+}
+
+/** Digits typed from the right: "2741" → "27:41", "10500" → "1:05:00". */
+function formatDurationDigits(buffer: string): string {
+  if (buffer.length <= 4) {
+    const p = buffer.padStart(4, "0");
+    return `${p.slice(0, 2)}:${p.slice(2)}`;
+  }
+  const p = buffer.padStart(6, "0");
+  const h = String(parseInt(p.slice(0, 2), 10));
+  return `${h}:${p.slice(2, 4)}:${p.slice(4)}`;
+}
+
+function parseDurationDigits(buffer: string): number {
+  const p = buffer.padStart(6, "0");
+  const h = parseInt(p.slice(0, 2), 10);
+  const m = Math.min(59, parseInt(p.slice(2, 4), 10));
+  const s = Math.min(59, parseInt(p.slice(4), 10));
+  return h * 3600 + m * 60 + s;
 }
 
 /** System keyboard — keep one decimal, 3+2 digits (was keypad distance). */

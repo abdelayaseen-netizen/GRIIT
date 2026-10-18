@@ -260,3 +260,66 @@ bundled, so the shipped earned-number style is used and noted); `secondaryStrong
 - Offline post queue (retry later automatically) is out of this chunk's scope; the sheet keeps "Try again".
 - Dev route `griit://dev/build92-secured` shows the live streak (1 on a fresh guest) rather than the `streak` param;
   harmless, frames only.
+
+## Chunk 03 · Task inputs and partial logs
+
+Design reference: `design/handoff/b92/part1-finish-loop/` frames P1-28 to P1-33, P1-35; checklist lines 146–152;
+copy table rows Counter, Run, Partial, Short toast, Home row; `src/finish/format.ts` (`counterLine`, `parseHms`,
+`paceWarning`, `shortOfGoal`, `soFarLine`, `dayTotal`). Ported into `lib/counter.ts`, `lib/keypad-masks.ts`,
+`lib/task-flow-state.ts` and a new pure `lib/partial-log.ts`; nothing imports the handoff file.
+
+### 03.1 Counter
+- Root cause: `lib/counter.ts:27` `step()` returns `Math.min(n + by, target)`; `CountStep.tsx:121,143–144` set
+  `disabled={atTarget}` on +1/+5/+10 and dim +1; `CountStep.tsx:109` and `useTaskFlowV2.ts` `onTypeCount` clamp typed
+  counts to the goal. The only line under the goal is "Log n of target" (`countCtaLabel`); nothing says the goal is
+  reached. So at 10 of 10 the screen dims with no word and the next tap does nothing.
+- Change: `step`/`onTypeCount`/keypad no longer cap; +/− stay active; `counterGoalLine` gives "Goal reached. Done
+  saves it." at or past the goal and "{x} to go." under it; a check icon sits by the count at the goal; the footer
+  under the goal is "Save {n} · won't count today" (03.4) instead of a disabled "{n} left".
+- Test: `lib/partial-log.test.ts` (counter past goal, goal line, labels) + static checks on `CountStep.tsx`.
+
+### 03.2 Run and workout inputs
+- Root cause: `lib/keypad-masks.ts:7` `KEYPAD_MAX.duration = 4`, so the Duration field is mm:ss only; a 1:05:00 run
+  cannot be typed. Workouts already take minutes (`LogStep.tsx:230–243`).
+- Change: duration buffer takes 6 digits; 4 or fewer format as mm:ss, more as h:mm:ss; the field trailing reads
+  "h:mm:ss". `parseHms` accepts "h:mm:ss" and "mm:ss" strings for tests and Strava copy.
+- Test: `lib/partial-log.test.ts` h:mm:ss parse/format; `lib/keypad-masks.test.ts` pins updated where they asserted
+  the 4-digit cap (intended change, commented).
+
+### 03.3 Impossible pace
+- Root cause: `lib/task-flow-state.ts:140` `RUN_PACE_FAST_SEC_PER_MI = 270` (4:30) and the check only runs on Done as
+  an ask dialog with "Save anyway" (`useTaskFlowV2.ts` `onLogContinue`), so a 0:10 /mi run could be saved.
+- Change: fast bound 3:30 (210 s); `runPaceTooFast` drives an inline error line "That pace looks off. Check the
+  distance and time." on the Log step and disables Done. The slow bound keeps its ask (not in the spec, left as is).
+- Test: `lib/partial-log.test.ts` pace check (3:29 blocks, 3:30 passes, km input converted).
+
+### 03.4 Short of the goal
+- Root cause: `lib/work-step.ts:208–220` `runPaceLine` only appends "{n} {unit} short." to the pace line;
+  `logReady` (`task-flow-state.ts:351`) enables Done with any distance; saving calls `checkins.complete`, which
+  completes the task and can secure the day on a 1 mi run against a 3 mi goal.
+- Change: under the goal the Log step shows "{done} of {goal} mi · {x} mi short" and "Today won't count toward the
+  {goal} mi goal. The run is saved, the task stays open and today isn't secured."; the button reads "Save {d} mi ·
+  won't count today" and calls `checkins.saveProgress` (pending row, never `complete`), then Home with the toast "Run
+  saved. {x} short, so today isn't secured yet." The task row stays open and reads "{done} of {goal} {unit} logged".
+  Counters under the goal do the same with "Save {n} · won't count today".
+- Test: `lib/partial-log.test.ts` short lines/labels/toast + static checks (LogStep uses `shortOfGoal`, the hook's
+  short save calls `TRPC.checkins.saveProgress` and never `complete`).
+
+### 03.5 Partial logs add up (server)
+- Root cause: `backend/trpc/routes/checkins.ts:1610` `saveProgress` writes an absolute `value` (stale-lower no-op)
+  and nothing on the client calls it for runs or hydrates it on open (`useTaskFlowV2.ts` starts `count` at 0 and has
+  no today-row query); `getTodayCheckinsForUser` (`:1823`) does not select `value`, so Home cannot show progress.
+- Change: `saveProgress` gains `mode: "set" | "add"` (default set = today's behaviour) and an optional `log`
+  ({distance_km, duration_min, entry_mode}); add mode sums with the pending row and appends the log to
+  `proof_payload_json.partial_logs` — existing columns, no migration. `getTodayCheckinsForUser` adds `value` and
+  `proof_payload_json` to its select (additive). The task screen loads today's row for its task
+  (`checkins.getTodayCheckins`, cached under the existing query key) and shows "{done} of {goal} mi so far today" with
+  "Add distance"; the total decides short vs Done. Totals live under `date_key`, which `resolveCheckInTimeZone` +
+  `getTodayDateKey` already compute in the user's zone, so they reset at local midnight.
+- Test: `backend/lib/counter-progress.test.ts` add mode (sum, logs appended, completed rejected, 2 + 1 reaches 3);
+  `backend/lib/date-utils` midnight reset in America/Los_Angeles and Asia/Tokyo around the same instant.
+
+### 03.6 Data fix
+- `docs/sql/build92.sql` "Chunk 03 · 03.6": read-only SELECT listing live counter/reading tasks whose challenge title
+  says minutes but whose task config counts pages, and a guarded UPDATE limited to an explicit id list (left for
+  Yaseen to fill from the SELECT). Not run.

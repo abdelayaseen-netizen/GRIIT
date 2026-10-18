@@ -25,11 +25,23 @@ import {
   sanitizeMinutesInput,
 } from "@/lib/keypad-masks";
 import {
+  LOG_SANITY_MESSAGE,
+  LOG_SANITY_TITLE,
   WORKOUT_TYPES,
   logReady,
+  runPaceTooFast,
   workoutDistanceField,
   workoutMinimumLine,
 } from "@/lib/task-flow-state";
+import {
+  PARTIAL_ADD_DISTANCE,
+  WONT_COUNT_NOTE,
+  fmtQty,
+  partialLogTotal,
+  shortOfGoal,
+  shortSaveLabel,
+  soFarLine,
+} from "@/lib/partial-log";
 import {
   RUN_HONESTY_TYPED_NO_CAMERA,
   RUN_PHOTO_AFTER,
@@ -73,6 +85,11 @@ type Props = {
   fromGps?: boolean;
   hasCamera?: boolean;
   targetDistance?: number | null;
+  /** Build 92 03.5: distance already saved today, in the display unit. */
+  soFarDistance?: number;
+  /** Build 92 03.4: under the goal the footer saves a pending log and keeps the task open. */
+  onSaveShort?: () => void;
+  saving?: boolean;
 };
 
 export function LogStep({
@@ -100,6 +117,9 @@ export function LogStep({
   fromGps = false,
   hasCamera = true,
   targetDistance = null,
+  soFarDistance = 0,
+  onSaveShort,
+  saving = false,
 }: Props) {
   const insets = useSafeAreaInsets();
   const ready = logReady({
@@ -116,8 +136,24 @@ export function LogStep({
     : hasCamera
       ? WORKOUT_HONESTY
       : RUN_HONESTY_TYPED_NO_CAMERA;
-  const pace = isRun ? runPaceLine(distance, durationSec, unit, targetDistance) : null;
-  const cta = isRun ? runPrimaryLabel(hasCamera) : hasCamera ? WORKOUT_NEXT_PHOTO : runPrimaryLabel(false);
+  const pace = isRun ? runPaceLine(distance, durationSec, unit, null) : null;
+  // Build 92 03.3: faster than 3:30 per mile is said inline and Done is off.
+  const paceOff = isRun && runPaceTooFast(distance, durationSec, unit);
+  // Build 92 03.4/03.5: today's logs add up; under the goal the footer is a short save.
+  const total = partialLogTotal(soFarDistance, distance);
+  const short =
+    isRun && targetDistance != null && distance != null && distance > 0
+      ? shortOfGoal(total, targetDistance, unit)
+      : null;
+  const soFar = isRun && soFarDistance > 0 && targetDistance != null ? soFarLine(soFarDistance, targetDistance, unit, true) : null;
+  const cta = short
+    ? shortSaveLabel(`${fmtQty(distance ?? 0)} ${unit}`)
+    : isRun
+      ? runPrimaryLabel(hasCamera)
+      : hasCamera
+        ? WORKOUT_NEXT_PHOTO
+        : runPrimaryLabel(false);
+  const onPrimary = short ? (onSaveShort ?? onPost) : hasCamera ? onNextPhoto : onPost;
   const workoutDistance = !isRun && workoutDistanceField(kind) === "optional";
   const minimumLine = isRun ? null : workoutMinimumLine(minDurationMinutes);
   const [distanceText, setDistanceText] = useState(distance != null ? String(distance) : "");
@@ -157,10 +193,15 @@ export function LogStep({
           <Text style={styles.honesty}>{honesty}</Text>
           {isRun ? (
             <>
+              {soFar ? (
+                <Text style={styles.soFar} testID="log-so-far">
+                  {soFar}
+                </Text>
+              ) : null}
               <View style={styles.fields}>
                 <View style={styles.field}>
                   <TextField
-                    label="Distance"
+                    label={soFar ? PARTIAL_ADD_DISTANCE : "Distance"}
                     value={distanceText}
                     onChangeText={(t) => {
                       const next = sanitizeDistanceInput(t);
@@ -198,12 +239,24 @@ export function LogStep({
                     inputAccessoryViewID={padAccessory}
                     accessibilityLabel="Duration"
                     testID="log-duration"
-                    trailing={<Text style={styles.trail}>mm:ss</Text>}
+                    trailing={<Text style={styles.trail}>h:mm:ss</Text>}
                   />
                 </View>
               </View>
-              {pace ? <Text style={styles.pace}>{pace}</Text> : null}
-              {hasCamera ? <Text style={styles.pace}>{RUN_PHOTO_AFTER}</Text> : null}
+              {paceOff ? (
+                <Text style={styles.paceError} testID="log-pace-error" accessibilityRole="alert">
+                  {`${LOG_SANITY_TITLE} ${LOG_SANITY_MESSAGE}`}
+                </Text>
+              ) : pace ? (
+                <Text style={styles.pace}>{pace}</Text>
+              ) : null}
+              {short && !paceOff ? (
+                <View style={styles.shortBlock} testID="log-short">
+                  <Text style={styles.shortLine}>{`${short.done} · ${short.short}`}</Text>
+                  <Text style={styles.pace}>{WONT_COUNT_NOTE(targetDistance ?? 0, unit)}</Text>
+                </View>
+              ) : null}
+              {hasCamera && !short ? <Text style={styles.pace}>{RUN_PHOTO_AFTER}</Text> : null}
             </>
           ) : (
             <>
@@ -276,10 +329,10 @@ export function LogStep({
         <Button
           label={cta}
           variant="primary"
-          disabled={!ready}
-          onPress={hasCamera ? onNextPhoto : onPost}
+          disabled={!ready || paceOff || saving}
+          onPress={onPrimary}
           icon={
-            isRun && hasCamera ? (
+            isRun && hasCamera && !short ? (
               <Camera size={CAMERA} color={ready ? DS_V3.color.onBrand : DS_V3.color.textSecondary} />
             ) : undefined
           }
@@ -351,6 +404,27 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  paceError: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.danger,
+  },
+  soFar: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  shortBlock: {
+    gap: DS_V3.space.xs,
+  },
+  shortLine: {
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
   },
   chips: {
     flexDirection: "row",

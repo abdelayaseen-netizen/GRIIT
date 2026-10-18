@@ -84,17 +84,18 @@ describe("03.1 workout is not a run", () => {
 });
 
 describe("03.2 sanity checks", () => {
-  it("run pace faster than 4:30 per mile or slower than 30:00 per mile looks off", () => {
-    // 3 mi in 12:50 (Yaseen's case) is 4:17 per mile.
-    expect(runPaceCheck(3, 12 * 60 + 50, "mi").ok).toBe(false);
+  it("run pace faster than 3:30 per mile or slower than 30:00 per mile looks off", () => {
+    // Build 92 03.3 moved the fast bound from 4:30 to 3:30 (Part 1 checklist line 149).
+    // 3 mi in 12:50 is 4:17 per mile: a fast real run, no longer blocked.
+    expect(runPaceCheck(3, 12 * 60 + 50, "mi").ok).toBe(true);
     // Edge values per mile.
-    expect(runPaceCheck(3, 3 * 270, "mi").ok).toBe(true); // 4:30 exactly
-    expect(runPaceCheck(3, 3 * 269, "mi").ok).toBe(false); // 4:29
+    expect(runPaceCheck(3, 3 * 210, "mi").ok).toBe(true); // 3:30 exactly
+    expect(runPaceCheck(3, 3 * 209, "mi").ok).toBe(false); // 3:29
     expect(runPaceCheck(1, 1800, "mi").ok).toBe(true); // 30:00 exactly
     expect(runPaceCheck(1, 1801, "mi").ok).toBe(false); // 30:01
     // km converts to miles before the check.
-    expect(runPaceCheck(5, 14 * 60, "km").ok).toBe(true); // 4:30.4 per mile
-    expect(runPaceCheck(5, 13 * 60 + 55, "km").ok).toBe(false); // 4:28.8 per mile
+    expect(runPaceCheck(5, 11 * 60, "km").ok).toBe(true); // 3:32.5 per mile
+    expect(runPaceCheck(5, 10 * 60 + 50, "km").ok).toBe(false); // 3:29.3 per mile
     expect(runPaceCheck(1, 1118, "km").ok).toBe(true); // 29:59 per mile
     expect(runPaceCheck(1, 1119, "km").ok).toBe(false); // 30:00.4 per mile
     expect(runPaceCheck(null, 1119, "km").ok).toBe(true); // nothing to check yet
@@ -110,10 +111,10 @@ describe("03.2 sanity checks", () => {
 
   it("the check speaks the one sentence, with Edit and Save anyway", () => {
     expect(LOG_SANITY_TITLE).toBe("That pace looks off.");
-    expect(LOG_SANITY_MESSAGE).toBe("Check your distance and time.");
+    expect(LOG_SANITY_MESSAGE).toBe("Check the distance and time."); // build 92 03.3 copy
     expect(LOG_SANITY_EDIT).toBe("Edit");
     expect(LOG_SANITY_SAVE_ANYWAY).toBe("Save anyway");
-    expect(logSanityCheck({ logKind: "run", kind: "", distance: 3, durationSec: 770, unit: "mi" }).ok).toBe(false);
+    expect(logSanityCheck({ logKind: "run", kind: "", distance: 3, durationSec: 600, unit: "mi" }).ok).toBe(false); // 3:20 per mile (build 92 03.3 bound is 3:30)
     expect(logSanityCheck({ logKind: "workout", kind: "Cycling", distance: 40, durationSec: 3600, unit: "mi" }).ok).toBe(false);
     expect(logSanityCheck({ logKind: "workout", kind: "Strength", distance: null, durationSec: null, unit: "mi" }).ok).toBe(true);
     expect(logSanityCheck({ logKind: "workout", kind: "Swim", distance: 40, durationSec: 3600, unit: "mi" }).ok).toBe(true);
@@ -188,16 +189,16 @@ describe("03.3 journal counts real words", () => {
 });
 
 describe("03.4 counter units", () => {
-  it("Done cannot finish below target; the button says what is left", () => {
+  it("Done finishes at target; under it the button is a short save that keeps the task open", () => {
+    // Build 92 03.4: "{n} left" became "Save {n} · won't count today" (Part 1 checklist line 150).
     expect(counterDoneEnabled(0, 30)).toBe(false);
-    expect(counterDoneEnabled(29, 30)).toBe(false);
+    expect(counterDoneEnabled(29, 30)).toBe(true);
     expect(counterDoneEnabled(30, 30)).toBe(true);
     expect(counterDoneEnabled(31, 30)).toBe(true);
-    expect(counterDoneLabel(0, 30, "pages")).toBe("30 pages left");
-    expect(counterDoneLabel(8, 30, "pages")).toBe("22 pages left");
-    expect(counterDoneLabel(29, 30, "pages")).toBe("1 pages left");
+    expect(counterDoneLabel(8, 30, "pages")).toBe("Save 8 · won't count today");
+    expect(counterDoneLabel(29, 30, "pages")).toBe("Save 29 · won't count today");
     expect(counterDoneLabel(30, 30, "pages")).toBe("Done · 30 pages");
-    expect(counterDoneLabel(2, 8, "")).toBe("6 left");
+    expect(counterDoneLabel(31, 30, "pages")).toBe("Done · 30 pages");
   });
 
   it("the flow submits the counted value, not the goal", () => {

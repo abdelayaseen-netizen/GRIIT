@@ -57,7 +57,7 @@ import {
   type JournalLogFacts,
   type JournalVerification,
 } from "../../lib/journal-verification";
-import { decideCounterProgressWrite } from "../../lib/counter-progress";
+import { decideCounterProgressWrite, decidePartialLogWrite } from "../../lib/counter-progress";
 import {
   buildCounterVerification,
   type CounterLogFacts,
@@ -1616,6 +1616,18 @@ export const checkinsRouter = createTRPCRouter({
         noteText: z.string().max(2000).optional(),
         /** Reading page photo URL only — never proof_payload_json. */
         proofUrl: z.string().max(2000).optional(),
+        /**
+         * Build 92 03.5: "set" (default) keeps the absolute count-up rule; "add" sums the value
+         * with today's pending total and appends `log` to proof_payload_json.partial_logs.
+         */
+        mode: z.enum(["set", "add"]).optional(),
+        log: z
+          .object({
+            distance_km: z.number().nonnegative().optional(),
+            duration_min: z.number().nonnegative().optional(),
+            entry_mode: z.string().max(20).optional(),
+          })
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -1647,7 +1659,7 @@ export const checkinsRouter = createTRPCRouter({
 
       const { data: existing, error: existingErr } = await ctx.supabase
         .from("check_ins")
-        .select("id, status, value")
+        .select("id, status, value, proof_payload_json")
         .eq("active_challenge_id", input.activeChallengeId)
         .eq("task_id", input.taskId)
         .eq("date_key", dateKey)
@@ -1663,8 +1675,20 @@ export const checkinsRouter = createTRPCRouter({
         id?: string;
         status?: string;
         value?: number | null;
+        proof_payload_json?: unknown;
       } | null;
-      const decision = decideCounterProgressWrite({
+      const addMode = input.mode === "add";
+      const partial = addMode
+        ? decidePartialLogWrite({
+            existingStatus: row?.status,
+            existingValue: row?.value,
+            existingPayload: row?.proof_payload_json,
+            incomingValue: input.value,
+            log: input.log ?? {},
+            at: new Date().toISOString(),
+          })
+        : null;
+      const decision = partial ?? decideCounterProgressWrite({
         existingStatus: row?.status,
         existingValue: row?.value,
         incomingValue: input.value,
@@ -1695,6 +1719,7 @@ export const checkinsRouter = createTRPCRouter({
         status: "pending",
         value: decision.nextValue,
       };
+      if (partial && partial.action === "write") payload.proof_payload_json = partial.payload;
       if (input.noteText != null) payload.note_text = input.noteText;
       if (input.proofUrl != null) {
         const stored = ownedProofWrite(input.proofUrl, ctx.userId);
@@ -1821,7 +1846,8 @@ export const checkinsRouter = createTRPCRouter({
       }
     }
     const rows = await Promise.all(
-      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, proof_url, completion_image_url, verification_status, proof_source").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
+      // Build 92 03.5: value + proof_payload_json so Home can show "{done} of {goal} logged" on an open task.
+      acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, value, proof_payload_json, proof_url, completion_image_url, verification_status, proof_source").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
     );
     const merged: Record<string, unknown>[] = [];
     for (const { data, error } of rows) {

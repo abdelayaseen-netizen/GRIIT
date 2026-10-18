@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Check } from "lucide-react-native";
 import KeyboardDock, { NUMBER_PAD_ACCESSORY_ID, NumberPadDoneBar } from "@/components/ds/KeyboardDock";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
@@ -11,12 +12,11 @@ import {
   COUNT_ADD,
   COUNT_REMOVE,
   COUNT_TYPE,
-  countCtaLabel,
   countOfLine,
   counterHeaderWhenReady,
   counterSubline,
 } from "@/lib/work-step";
-import { counterDoneEnabled, counterDoneLabel, showLogPartial } from "@/lib/counter";
+import { counterDoneEnabled, counterDoneLabel, counterGoalLine, counterReached } from "@/lib/counter";
 
 type Props = {
   count: number;
@@ -37,6 +37,8 @@ type Props = {
   onOpenKeypad: () => void;
   onRemoveOne: () => void;
   onComplete: () => void;
+  /** Build 92 03.4: under the goal the footer saves a pending count and keeps the task open. */
+  onSaveShort?: () => void;
   onBack: () => void;
 };
 
@@ -62,11 +64,14 @@ export function CountStep({
   onOpenKeypad,
   onRemoveOne,
   onComplete,
+  onSaveShort,
   onBack,
 }: Props) {
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdOpenedKeypad = useRef(false);
-  const atTarget = counterGoal > 0 && count >= counterGoal;
+  // Build 92 03.1: nothing dims or stops at the goal; the count can go past it.
+  const reached = counterReached(count, counterGoal);
+  const goal = counterGoalLine(count, counterGoal);
   const line = countOfLine(count, counterGoal, counterUnit);
   const header = counterHeaderWhenReady(
     dayReady,
@@ -95,10 +100,15 @@ export function CountStep({
         <View style={styles.countLine}>
           <Text style={styles.figure}>{line.n}</Text>
           <Text style={styles.rest}>{line.rest}</Text>
+          {reached ? (
+            <View style={styles.goalCheck} testID="count-goal-check" accessibilityLabel="Goal reached">
+              <Check size={DS_V3.space.md} color={DS_V3.color.onBrand} strokeWidth={3} />
+            </View>
+          ) : null}
         </View>
-        {showLogPartial(count, counterGoal) ? (
-          <Text style={styles.partial}>{countCtaLabel(count, counterGoal)}</Text>
-        ) : null}
+        <Text style={[styles.partial, reached ? styles.goalLine : null]} testID="count-goal-line">
+          {goal.line}
+        </Text>
         {keypadOpen ? (
           <View style={styles.typeField}>
             <TextField
@@ -106,7 +116,7 @@ export function CountStep({
               value={count === 0 ? "" : String(count)}
               onChangeText={(t) => {
                 const digits = sanitizeCountInput(t);
-                onTypeCount(Math.min(counterGoal, parseCountInput(digits)));
+                onTypeCount(parseCountInput(digits));
               }}
               keyboardType="number-pad"
               inputAccessoryViewID={NUMBER_PAD_ACCESSORY_ID}
@@ -118,9 +128,8 @@ export function CountStep({
           <>
             <View style={styles.addRow}>
             <Pressable
-              disabled={atTarget}
               onPress={() => {
-                if (atTarget || holdOpenedKeypad.current) return;
+                if (holdOpenedKeypad.current) return;
                 onAddOne();
               }}
               onPressIn={() => {
@@ -135,13 +144,13 @@ export function CountStep({
               }}
               accessibilityRole="button"
               accessibilityLabel={COUNT_ADD}
-              style={[styles.addOne, atTarget ? styles.dim : null]}
+              style={styles.addOne}
             >
               <Text style={styles.addOneText}>{COUNT_ADD}</Text>
             </Pressable>
             <View style={styles.bumps}>
-              <ControlPill label="+5" disabled={atTarget} onPress={() => onAddAmount?.(5)} />
-              <ControlPill label="+10" disabled={atTarget} onPress={() => onAddAmount?.(10)} />
+              <ControlPill label="+5" onPress={() => onAddAmount?.(5)} />
+              <ControlPill label="+10" onPress={() => onAddAmount?.(10)} />
             </View>
             </View>
             <ControlPillRow>
@@ -158,7 +167,7 @@ export function CountStep({
           label={counterDoneLabel(count, counterGoal, counterUnit)}
           variant="primary"
           disabled={!counterDoneEnabled(count, counterGoal)}
-          onPress={onComplete}
+          onPress={reached ? onComplete : (onSaveShort ?? onComplete)}
         />
       </View>
     </View>
@@ -216,7 +225,19 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.secondary.lineHeight,
     color: DS_V3.color.textTertiary,
   },
-  dim: { opacity: 0.4 },
+  goalLine: {
+    color: DS_V3.color.textSecondary,
+  },
+  goalCheck: {
+    width: DS_V3.space.lg,
+    height: DS_V3.space.lg,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.brand,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: DS_V3.space.sm,
+    alignSelf: "center",
+  },
   typeField: {
     alignSelf: "stretch",
   },

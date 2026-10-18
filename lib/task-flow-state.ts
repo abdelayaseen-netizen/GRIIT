@@ -136,14 +136,14 @@ export function workoutMinimumLine(minDurationMinutes: number): string | null {
 }
 
 const MILES_PER_KM = 0.621371;
-/** 4:30 per mile. */
-export const RUN_PACE_FAST_SEC_PER_MI = 270;
+/** Build 92 03.3: faster than 3:30 per mile blocks Done. */
+export const RUN_PACE_FAST_SEC_PER_MI = 210;
 /** 30:00 per mile. */
 export const RUN_PACE_SLOW_SEC_PER_MI = 1800;
 export const CYCLING_MAX_MPH = 35;
 
 export const LOG_SANITY_TITLE = "That pace looks off.";
-export const LOG_SANITY_MESSAGE = "Check your distance and time.";
+export const LOG_SANITY_MESSAGE = "Check the distance and time.";
 export const LOG_SANITY_EDIT = "Edit";
 export const LOG_SANITY_SAVE_ANYWAY = "Save anyway";
 
@@ -155,7 +155,13 @@ function toMiles(distance: number, unit: DistanceUnit): number {
 
 const LOOKS_OFF: LogSanity = { ok: false, title: LOG_SANITY_TITLE, message: LOG_SANITY_MESSAGE };
 
-/** Faster than 4:30 per mile or slower than 30:00 per mile looks off. Missing numbers pass. */
+/** Build 92 03.3: the fast bound alone — shown inline on the Log step and disables Done. */
+export function runPaceTooFast(distance: number | null, durationSec: number | null, unit: DistanceUnit): boolean {
+  if (distance == null || durationSec == null || distance <= 0 || durationSec <= 0) return false;
+  return durationSec / toMiles(distance, unit) < RUN_PACE_FAST_SEC_PER_MI;
+}
+
+/** Faster than 3:30 per mile or slower than 30:00 per mile looks off. Missing numbers pass. */
 export function runPaceCheck(distance: number | null, durationSec: number | null, unit: DistanceUnit): LogSanity {
   if (distance == null || durationSec == null || distance <= 0 || durationSec <= 0) return { ok: true };
   const secPerMile = durationSec / toMiles(distance, unit);

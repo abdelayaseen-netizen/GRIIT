@@ -54,7 +54,8 @@ describe("04.1 one clear post choice after every task", () => {
       "onHere: () => void submitWithoutPhoto(",
       "onJournalPost: () => void submitWithoutPhoto(",
       "void submitWithoutPhoto({ value: count }, \"self_report\")",
-      "void submitWithoutPhoto(logPayload(), \"self_report\")",
+      // Build 92 03.5: the run payload is built first so the day's partial logs ride along.
+      "void submitWithoutPhoto(payload, \"self_report\")",
       "await submitWithoutPhoto({ value: Math.floor(requiredSeconds / 60) }, \"timer\")",
     ]) {
       expect(hook).toContain(call);

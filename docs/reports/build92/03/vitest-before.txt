@@ -1,0 +1,73 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/partial-log.test.ts (0 test)
+ ❯ backend/lib/counter-progress.test.ts (8 tests | 3 failed) 16ms
+   × decidePartialLogWrite > adds to the pending total and keeps every log 3ms
+     → decidePartialLogWrite is not a function
+   × decidePartialLogWrite > a lower second log still adds (it is not a stale write) 0ms
+     → decidePartialLogWrite is not a function
+   × decidePartialLogWrite > rejects once the task is completed and ignores a foreign payload shape 0ms
+     → decidePartialLogWrite is not a function
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/partial-log.test.ts [ lib/partial-log.test.ts ]
+Error: Cannot find module '@/lib/partial-log' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/partial-log.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/partial-log.test.ts:6:31
+      4|  */
+      5| import { readFileSync } from "node:fs";
+      6| import { describe, expect, it } from "vitest";
+       |                               ^
+      7| import { counterDoneEnabled, counterDoneLabel, counterGoalLine, step }…
+      8| import {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/lib/counter-progress.test.ts > decidePartialLogWrite > adds to the pending total and keeps every log
+TypeError: decidePartialLogWrite is not a function
+ ❯ backend/lib/counter-progress.test.ts:57:19
+     55| describe("decidePartialLogWrite", () => {
+     56|   it("adds to the pending total and keeps every log", () => {
+     57|     const first = decidePartialLogWrite({
+       |                   ^
+     58|       existingStatus: undefined,
+     59|       existingValue: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  backend/lib/counter-progress.test.ts > decidePartialLogWrite > a lower second log still adds (it is not a stale write)
+TypeError: decidePartialLogWrite is not a function
+ ❯ backend/lib/counter-progress.test.ts:85:15
+     83| 
+     84|   it("a lower second log still adds (it is not a stale write)", () => {
+     85|     const d = decidePartialLogWrite({
+       |               ^
+     86|       existingStatus: "pending",
+     87|       existingValue: 5,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  backend/lib/counter-progress.test.ts > decidePartialLogWrite > rejects once the task is completed and ignores a foreign payload shape
+TypeError: decidePartialLogWrite is not a function
+ ❯ backend/lib/counter-progress.test.ts:98:7
+     96|   it("rejects once the task is completed and ignores a foreign payload…
+     97|     expect(
+     98|       decidePartialLogWrite({
+       |       ^
+     99|         existingStatus: "completed",
+    100|         existingValue: 3,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 5 passed (8)
+   Start at  14:13:57
+   Duration  476ms (transform 78ms, setup 0ms, collect 40ms, tests 16ms, environment 0ms, prepare 136ms)
+

@@ -119,6 +119,8 @@ export type HomeProofTask = {
   taskConfig?: string;
   /** Build 90 09.3: the completion was verified by an integration (check_ins.proof_source). */
   verifiedBy?: VerifiedBy | null;
+  /** Build 92 03.4: an open task with a saved partial reads "{done} of {goal} {unit} logged". */
+  partialLine?: string | null;
 };
 
 export type HomeProofRow = {
@@ -202,6 +204,8 @@ export function homeProofRow(task: HomeProofTask, index: number): HomeProofRow {
   const verified = task.done ? verifiedLine(task.verifiedBy) : null;
   const proofLine = closed
     ? closedWindowCaption(task.gateTime)
+    : !task.done && task.partialLine
+      ? task.partialLine
     : counterLine
       ? counterLine
       : verified
