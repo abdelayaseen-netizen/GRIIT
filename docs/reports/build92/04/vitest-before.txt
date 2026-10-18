@@ -1,0 +1,2144 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/post-result.test.ts (0 test)
+ ❯ backend/lib/post-result.test.ts (8 tests | 2 failed) 10ms
+   × build 92 04.1 · result facts written with the post > complete and the Strava webhook write the result; hydrate and getPost return result + badge 6ms
+     → expected 'import * as z from "zod";\nimport { T…' to contain 'result: postResultFacts('
+   × build 92 04.5 · a self-like is rejected by the server > feed.react looks the owner up before toggling and throws FORBIDDEN 1ms
+     → expected -1 to be greater than -1
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/post-result.test.ts [ lib/post-result.test.ts ]
+Error: Cannot find module '@/lib/post-menu' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/post-result.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/post-result.test.ts:4:31
+      2| import { readFileSync } from "node:fs";
+      3| import { hms, likedByLine, postBadge, resultLine, JOURNAL_ENTRY, JOURN…
+      4| import { POST_MENU_DELETE, POST_MENU_DELETE_NOTE, POST_MENU_SHARE, POS…
+       |                               ^
+      5| 
+      6| const read = (p: string) => readFileSync(new URL(`../${p}`, import.met…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/lib/post-result.test.ts > build 92 04.1 · result facts written with the post > complete and the Strava webhook write the result; hydrate and getPost return result + badge
+AssertionError: expected 'import * as z from "zod";\nimport { T…' to contain 'result: postResultFacts('
+
+- Expected
++ Received
+
+- result: postResultFacts(
++ import * as z from "zod";
++ import { TRPCError } from "@trpc/server";
++ import { createTRPCRouter, protectedProcedure } from "../create-context";
++ import { assertActiveChallengeOwnership } from "../guards";
++ import { requireNoError } from "../errors";
++ import { applyEnrollmentWindow } from "../../lib/enrollment-window";
++ import {
++   getTodayDateKey,
++   getYesterdayDateKey,
++   getProfileTimeZoneForUser,
++   resolveCheckInTimeZone,
++   dateKeyFromIsoInTimeZone,
++   calendarDayIndexInclusive,
++ } from "../../lib/date-utils";
++ import { getDailyTargetForChallengeTask } from "../../../lib/task-progress";
++ import { NOT_ALL_REQUIRED_MESSAGE } from "../../../lib/day-secure-ui";
++ import { displayDay } from "../../../lib/challenge-day";
++ import { shouldEvaluateTeamDay } from "../../lib/group-challenges";
++ import type { PgError } from "../../types/db";
++ import {
++   type ChallengeTaskConfig,
++   type ChallengeTaskRowRaw,
++   getTaskVerification,
++   isTaskRequired,
++ } from "../../lib/challenge-tasks";
++ import type { TaskConfig } from "../../lib/task-config";
++ import { isChallengeExpired } from "../../lib/challenge-timer";
++ import { requiredRemainingCount } from "../../lib/required-remaining";
++ import { checkAndUnlockAchievements, getLabelForKey } from "../../lib/achievements";
++ import { logger } from "../../lib/logger";
++ import {
++   assertHardModeScheduleWindow,
++   assertHardModeCameraOnly,
++   assertChallengeQueryOk,
++ } from "../../lib/checkin-complete-gates";
++ import { haversineDistance } from "../../lib/geo";
++ import { photoProofPayloadSchema } from "../../lib/proof-payload";
++ import { parseSecureDayRpcRow } from "../../lib/secure-day-rpc";
++ import {
++   buildPhotoVerification,
++   evaluateScheduleWindowServer,
++   type PhotoVerification,
++ } from "../../lib/photo-verification";
++ import {
++   buildRunVerification,
++   type RunLogFacts,
++   type RunVerification,
++ } from "../../lib/run-verification";
++ import {
++   buildWorkoutVerification,
++   type WorkoutLogFacts,
++   type WorkoutVerification,
++ } from "../../lib/workout-verification";
++ import {
++   buildJournalVerification,
++   countJournalWords,
++   type JournalLogFacts,
++   type JournalVerification,
++ } from "../../lib/journal-verification";
++ import { decideCounterProgressWrite, decidePartialLogWrite } from "../../lib/counter-progress";
++ import {
++   buildCounterVerification,
++   type CounterLogFacts,
++   type CounterVerification,
++ } from "../../lib/counter-verification";
++ import {
++   buildCheckinVerification,
++   type CheckinLogFacts,
++   type CheckinVerification,
++ } from "../../lib/checkin-verification";
++ import { buildSimpleLogFacts } from "../../lib/simple-verification";
++ import {
++   assertTimerSessionElapsed,
++   timerSelfReportSkipsSession,
++   parseTimerSession,
++   wrapTimerSession,
++   type TimerSessionKind,
++ } from "../../lib/timer-session";
++ import type { VerificationKind } from "../../../lib/task-completion-result";
++ import {
++   CHALLENGE_TASK_SELECT,
++   gatesFor,
++   overlayTaskModel,
++   verificationMethodFor,
++   type TaskModelRow,
++ } from "../../lib/task-model";
++ import { assertTimeGate, withWindowState } from "../../lib/task-time-gate";
++ import { getSupabaseServer } from "../../lib/supabase-server";
++ import { earnedFreezeBlockedByCap, freezeHoldCap, shouldGrantEarnedFreeze } from "../../lib/freeze-grant";
++ import { effectiveFreezesRemaining } from "./streaks";
++ import { profileTierForSecuredDays } from "../../lib/profile-tier";
++ import {
++   canFlipShare,
++   flipSharePatch,
++   keepSharePatch,
++   shareColumns,
++   shareColumnsForComplete,
++ } from "../../lib/activity-share";
++ import { createsActivityPost, shareStateForAudience } from "../../../lib/post-audience";
++ import { cameraProofTiles } from "../../lib/proof-predicate";
++ import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
++ import { bundleTaskFinish } from "../../lib/finish-bundle";
++ import { createStepTimer, type StepTimer } from "../../lib/step-timer";
++ import type { SupabaseClient } from "@supabase/supabase-js";
++
++ type TaskRowWithVerification = ChallengeTaskRowRaw & {
++   require_photo?: boolean | null;
++   timer_direction?: string | null;
++   timer_hard_mode?: boolean | null;
++   require_location?: boolean | null;
++   location_name?: string | null;
++   location_latitude?: number | null;
++   location_longitude?: number | null;
++   location_radius_meters?: number | null;
++   min_duration_minutes?: number | null;
++   target_mode?: string | null;
++   start_value?: number | null;
++   start_duration_minutes?: number | null;
++   gate_time_mode?: string | null;
++   gate_time_start?: string | null;
++   gate_time_end?: string | null;
++ };
++
++ /** Task/config radius when location_radius_meters is null. Same default as evaluateTaskLocation. */
++ export const DEFAULT_LOCATION_RADIUS_METERS = 200;
++ export const LIVE_LOCATION_MAX_ACCURACY_M = 100;
++ export const LIVE_LOCATION_MAX_AGE_MS = 60_000;
++ export const NOT_AT_LOCATION = "Not at the location.";
++
++ export type LiveLocationFix = {
++   lat: number;
++   lng: number;
++   accuracyM: number;
++   capturedAt: string;
++ };
++
++ export type LiveLocationDecision =
++   | { kind: "not_required" }
++   | { kind: "legacy_unclaimed" }
++   | { kind: "passed"; distanceM: number }
++   | { kind: "rejected" };
++
++ /**
++  * Location gate against a fresh fix. Missing fix is the pre-66 client:
++  * accept the check-in and do not record the gate as passed.
++  */
++ export function decideLiveLocationGate(args: {
++   required: boolean;
++   live: LiveLocationFix | null | undefined;
++   targetLat: number;
++   targetLng: number;
++   radiusMeters: number | null | undefined;
++   nowMs: number;
++ }): LiveLocationDecision {
++   if (!args.required) return { kind: "not_required" };
++   if (!args.live) return { kind: "legacy_unclaimed" };
++   const capturedMs = Date.parse(args.live.capturedAt);
++   if (!Number.isFinite(capturedMs) || args.nowMs - capturedMs > LIVE_LOCATION_MAX_AGE_MS) {
++     return { kind: "rejected" };
++   }
++   if (args.live.accuracyM > LIVE_LOCATION_MAX_ACCURACY_M) return { kind: "rejected" };
++   const radius =
++     typeof args.radiusMeters === "number" ? args.radiusMeters : DEFAULT_LOCATION_RADIUS_METERS;
++   const distanceM = haversineDistance(args.targetLat, args.targetLng, args.live.lat, args.live.lng);
++   if (distanceM > radius) return { kind: "rejected" };
++   return { kind: "passed", distanceM };
++ }
++
++ const NO_FREEZE_GRANT = {
++   freezeGranted: false,
++   freezesHeld: 0,
++   freezeCap: 0,
++   freezeAtCap: false,
++ };
++
++ async function grantEarnedFreezeOnSecure(args: {
++   supabase: { from(table: string): any };
++   userId: string;
++   streak: number;
++   secured: boolean;
++   alreadySecured: boolean;
++   grantedDateKey: string;
++ }): Promise<{ freezeGranted: boolean; freezesHeld: number; freezeCap: number; freezeAtCap: boolean }> {
++   if (!args.secured || args.alreadySecured || args.streak < 7 || args.streak % 7 !== 0) return NO_FREEZE_GRANT;
++   const { data: profile } = await args.supabase
++     .from("profiles")
++     .select("is_premium, streak_freezes_remaining, last_freeze_used_at")
++     .eq("user_id", args.userId)
++     .single();
++   const row = profile as {
++     is_premium?: boolean;
++     streak_freezes_remaining?: number | null;
++     last_freeze_used_at?: string | null;
++   } | null;
++   const isPro = !!row?.is_premium;
++   const cap = freezeHoldCap(isPro);
++   const held = effectiveFreezesRemaining({
++     storedRemaining: row?.streak_freezes_remaining,
++     lastFreezeUsedAt: row?.last_freeze_used_at,
++     isPro,
++   }).remaining;
++   const { data: existing } = await args.supabase
++     .from("freeze_grants")
++     .select("id")
++     .eq("user_id", args.userId)
++     .eq("source", "earned")
++     .eq("granted_date_key", args.grantedDateKey)
++     .maybeSingle();
++   const decision = {
++     streak: args.streak,
++     held,
++     cap,
++     alreadyGrantedForDate: Boolean(existing),
++   };
++   if (!shouldGrantEarnedFreeze(decision)) {
++     return {
++       freezeGranted: false,
++       freezesHeld: held,
++       freezeCap: cap,
++       freezeAtCap: earnedFreezeBlockedByCap(decision),
++     };
++   }
++   const svc = getSupabaseServer();
++   if (!svc) {
++     logger.error({ userId: args.userId }, "[checkins.secureDay] no service role; earned freeze not granted");
++     return { freezeGranted: false, freezesHeld: held, freezeCap: cap, freezeAtCap: false };
++   }
++   const { error: grantErr } = await svc.from("freeze_grants").insert({
++     user_id: args.userId,
++     source: "earned",
++     streak_at_grant: args.streak,
++     granted_date_key: args.grantedDateKey,
++     granted_at: new Date().toISOString(),
++   } as never);
++   if (grantErr) {
++     if ((grantErr as { code?: string }).code !== "23505") {
++       logger.error({ err: grantErr, userId: args.userId }, "[checkins.secureDay] freeze grant insert failed");
++     }
++     return { freezeGranted: false, freezesHeld: held, freezeCap: cap, freezeAtCap: false };
++   }
++   const nextHeld = Math.min(cap, held + 1);
++   const { error: holdErr } = await svc
++     .from("profiles")
++     .update({ streak_freezes_remaining: nextHeld, updated_at: new Date().toISOString() } as never)
++     .eq("user_id", args.userId);
++   if (holdErr) {
++     logger.error({ err: holdErr, userId: args.userId }, "[checkins.secureDay] freeze hold update failed");
++   }
++   return { freezeGranted: true, freezesHeld: nextHeld, freezeCap: cap, freezeAtCap: false };
++ }
++
++ type FinishSecureResult = {
++   success?: boolean;
++   alreadySecured?: boolean;
++   newStreakCount?: number;
++   secured?: boolean;
++   challenge_done?: boolean;
++   remaining_challenges?: number;
++   freezeGranted?: boolean;
++   freezesHeld?: number;
++   freezeCap?: number;
++   freezeAtCap?: boolean;
++ };
++
++ type SecureDayChallengeRow = {
++   duration_type?: string;
++   ends_at?: string | null;
++   live_date?: string | null;
++   duration_days?: number | null;
++   title?: string | null;
++   participation_type?: string | null;
++   run_status?: string | null;
++ };
++
++ /** What secureDay returns to the client, plus the recounted total (stripped by `complete`). */
++ type SecureDayResult = {
++   success: boolean;
++   alreadySecured: boolean;
++   streak: number;
++   secured: boolean;
++   challenge_done: boolean;
++   remaining_challenges: number;
++   newStreakCount: number;
++   lastStandEarned: boolean;
++   challengeDay: number;
++   challengeCompleted: boolean;
++   challengeId?: string;
++   challengeName?: string;
++   totalDays?: number;
++   freezeGranted: boolean;
++   freezesHeld: number;
++   freezeCap: number;
++   freezeAtCap: boolean;
++   totalDaysSecured: number;
++ };
++
++ /**
++  * Build 90 01b.2: badge checks run after the answer is sent. One pass covers the finish and the
++  * secure (before: two passes of ~9 reads each, both on the response path).
++  */
++ async function unlockAchievementsAfterFinish(
++   supabase: SupabaseClient,
++   userId: string,
++   args: { streak: number; totalDaysSecured: number | null; challengeCompleted: boolean; isHardMode: boolean },
++ ): Promise<void> {
++   try {
++     let totalDays = args.totalDaysSecured;
++     if (totalDays == null) {
++       const { data: profileRow } = await supabase.from("profiles").select("total_days_secured").eq("user_id", userId).single();
++       totalDays = (profileRow as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
++     }
++     const { newUnlockKeys } = await checkAndUnlockAchievements(
++       supabase,
++       userId,
++       args.streak,
++       totalDays,
++       args.challengeCompleted,
++       args.isHardMode,
++     );
++     if (newUnlockKeys.length === 0) return;
++     const achievementRows = newUnlockKeys.map((key) => ({
++       user_id: userId,
++       event_type: "unlocked_achievement" as const,
++       ...shareColumns("unanswered"),
++       metadata: { achievement_key: key, achievement_label: getLabelForKey(key) },
++     }));
++     const { data: existingEvents } = await supabase
++       .from("activity_events")
++       .select("metadata")
++       .eq("user_id", userId)
++       .eq("event_type", "unlocked_achievement")
++       .in("metadata->>achievement_key", newUnlockKeys);
++     const alreadyEmitted = new Set(
++       (existingEvents ?? [])
++         .map((r: { metadata: { achievement_key?: string } }) => r.metadata?.achievement_key)
++         .filter(Boolean),
++     );
++     const filteredRows = achievementRows.filter((r) => !alreadyEmitted.has(r.metadata.achievement_key));
++     if (filteredRows.length > 0) {
++       const { error: achErr } = await supabase.from("activity_events").insert(filteredRows);
++       if (achErr) logger.error({ err: achErr }, "[checkins] achievement event batch insert failed");
++     }
++   } catch (err) {
++     logger.warn({ err, userId }, "[checkins] achievements after finish failed (non-fatal)");
++   }
++ }
++
++ /**
++  * Secures the day for one enrollment. Shared by the `secureDay` procedure (older builds) and
++  * `complete` (one request per finish). `known` carries rows `complete` already read, so the
++  * secure does not read them again: RPC → [enrollment, days count] → days update → freeze.
++  */
++ async function secureDayCore(
++   ctx: { supabase: SupabaseClient; userId: string },
++   activeChallengeId: string,
++   t: StepTimer,
++   known?: {
++     challengeId: string;
++     tz: string;
++     challenge: SecureDayChallengeRow;
++     alreadySecured: boolean;
++     /** "skip": the caller runs the badge pass itself (after its answer). */
++     achievements: "skip" | "after";
++   },
++ ): Promise<SecureDayResult> {
++   let challengeId: string;
++   let tz: string;
++   let ch: SecureDayChallengeRow | null;
++   let alreadySecured: boolean;
++   if (known) {
++     challengeId = known.challengeId;
++     tz = known.tz;
++     ch = known.challenge;
++     alreadySecured = known.alreadySecured;
++   } else {
++     const [owned, profileTz] = await t.step("secure_setup", () =>
++       Promise.all([
++         assertActiveChallengeOwnership(ctx.supabase, activeChallengeId, ctx.userId),
++         getProfileTimeZoneForUser(ctx.supabase, ctx.userId),
++       ]),
++     );
++     challengeId = owned.challenge_id;
++     tz = profileTz;
++     const dateKey = getTodayDateKey(tz);
++     const [chFetch, secureFetch] = await t.step("secure_context", () =>
++       Promise.all([
++         ctx.supabase
++           .from("challenges")
++           .select("duration_type, ends_at, live_date, duration_days, title, participation_type, run_status")
++           .eq("id", challengeId)
++           .single(),
++         ctx.supabase.from("day_secures").select("id").eq("user_id", ctx.userId).eq("date_key", dateKey).maybeSingle(),
++       ]),
++     );
++     ch = chFetch.data as SecureDayChallengeRow | null;
++     alreadySecured = Boolean(secureFetch.data);
++   }
++   if (ch?.duration_type === "24h") {
++     const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
++     if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer secure the day." });
++   }
++   const alreadyDateKey = getTodayDateKey(tz);
++
++   const { data: rpcRows, error: rpcError } = (await t.step("secure_day_rpc", () =>
++     ctx.supabase.rpc("secure_day", { p_active_challenge_id: activeChallengeId }),
++   )) as { data: unknown; error: { code?: string; message?: string; details?: string; hint?: string } | null };
++   if (rpcError || !Array.isArray(rpcRows) || rpcRows.length === 0) {
++     const code = (rpcError as { code?: string } | null)?.code;
++     const msg = (rpcError as { message?: string } | null)?.message ?? "";
++     if (msg.includes("NOT_ALL_REQUIRED")) throw new TRPCError({ code: "BAD_REQUEST", message: NOT_ALL_REQUIRED_MESSAGE });
++     if (rpcError) {
++       logger.error(
++         {
++           userId: ctx.userId,
++           activeChallengeId,
++           rpcErrorCode: code,
++           rpcErrorMsg: msg,
++           rpcErrorDetails: (rpcError as { details?: string }).details,
++           rpcErrorHint: (rpcError as { hint?: string }).hint,
++           isMissingFunction: code === "42883",
++         },
++         "[checkins.secureDay] RPC failed — refusing to run unsafe TS fallback. If code=42883, the secure_day migration is not applied to this database."
++       );
++     }
++     // Defensive: RPC returned no error but also no rows. Should not happen.
++     throw new TRPCError({
++       code: "INTERNAL_SERVER_ERROR",
++       message: "Could not secure your day right now. Please try again in a moment.",
++     });
++   }
++   const row = parseSecureDayRpcRow(rpcRows[0]);
++   const svc = getSupabaseServer();
++   const recount = row.secured && !alreadySecured;
++   if (recount && !svc) {
++     logger.error({ userId: ctx.userId }, "[checkins.secureDay] no service role; total_days_secured not recounted");
++   }
++   // After the RPC: the enrollment's new current_day, and the day count when this secure is new.
++   const [acFetch, countFetch, profileFetch] = await t.step("secure_after_rpc", () =>
++     Promise.all([
++       ctx.supabase.from("active_challenges").select("current_day").eq("id", activeChallengeId).single(),
++       recount && svc
++         ? svc.from("day_secures").select("id", { count: "exact", head: true }).eq("user_id", ctx.userId)
++         : Promise.resolve({ count: null as number | null, error: null }),
++       recount ? Promise.resolve({ data: null }) : ctx.supabase.from("profiles").select("total_days_secured").eq("user_id", ctx.userId).single(),
++     ]),
++   );
++   const currentDayAfter = (acFetch.data as { current_day?: number } | null)?.current_day ?? 0;
++   // day_number is the display value (displayDay after secure_day increments current_day). Client renders it raw.
++   const daySecured = displayDay(currentDayAfter, true);
++   if (ch?.participation_type === "team" && ch?.run_status === "active" && shouldEvaluateTeamDay(ch.participation_type)) {
++     await t.step("team_day", async () => {
++       await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: getYesterdayDateKey(tz) });
++       await ctx.supabase.rpc("evaluate_team_day", { p_challenge_id: challengeId, p_date_key: getTodayDateKey(tz) });
++     });
++   }
++   let totalDaysSecured = (profileFetch.data as { total_days_secured?: number } | null)?.total_days_secured ?? 0;
++   if (recount && svc) {
++     const { count, error: countErr } = countFetch as { count: number | null; error: unknown };
++     if (countErr || typeof count !== "number") {
++       logger.error({ err: countErr, userId: ctx.userId }, "[checkins.secureDay] day_secures count failed");
++     } else {
++       const { error: daysErr } = await t.step("days_update", () =>
++         svc
++           .from("profiles")
++           .update({
++             total_days_secured: count,
++             tier: profileTierForSecuredDays(count),
++             updated_at: new Date().toISOString(),
++           } as never)
++           .eq("user_id", ctx.userId),
++       );
++       if (daysErr) {
++         logger.error({ err: daysErr, userId: ctx.userId }, "[checkins.secureDay] total_days_secured update failed");
++       } else {
++         totalDaysSecured = count;
++       }
++     }
++   }
++   const durationDays = ch?.duration_days ?? 0;
++   const challengeName = ch?.title ?? "Challenge";
++   const challengeJustCompleted = durationDays > 0 && currentDayAfter >= durationDays;
++   if (row.secured && known?.achievements !== "skip") {
++     const achievementArgs = { streak: row.streak, totalDaysSecured, challengeCompleted: challengeJustCompleted, isHardMode: false };
++     setTimeout(() => void unlockAchievementsAfterFinish(ctx.supabase, ctx.userId, achievementArgs), 0);
++   }
++   const freeze = await t.step("freeze_grant", () =>
++     grantEarnedFreezeOnSecure({
++       supabase: ctx.supabase as { from(table: string): any },
++       userId: ctx.userId,
++       streak: row.streak,
++       secured: row.secured,
++       alreadySecured,
++       grantedDateKey: alreadyDateKey,
++     }),
++   );
++   return {
++     success: true,
++     alreadySecured,
++     streak: row.streak,
++     secured: row.secured,
++     challenge_done: row.challenge_done,
++     remaining_challenges: row.remaining_challenges,
++     newStreakCount: row.streak,
++     lastStandEarned: false,
++     challengeDay: daySecured,
++     challengeCompleted: challengeJustCompleted,
++     ...(challengeJustCompleted && { challengeId, challengeName, totalDays: durationDays }),
++     freezeGranted: freeze.freezeGranted,
++     freezesHeld: freeze.freezesHeld,
++     freezeCap: freeze.freezeCap,
++     freezeAtCap: freeze.freezeAtCap,
++     totalDaysSecured,
++   };
++ }
++
++ /** Filled after the router exists so complete can call secureDay and shareProof without a type cycle. */
++ const finishSideEffects: {
++   secure: (ctx: unknown, activeChallengeId: string) => Promise<FinishSecureResult>;
++   share: (ctx: unknown, eventId: string) => Promise<void>;
++ } = {
++   secure: () => Promise.reject(new Error("finish side effects are not ready")),
++   share: () => Promise.reject(new Error("finish side effects are not ready")),
++ };
++
++ export const checkinsRouter = createTRPCRouter({
++   complete: protectedProcedure
++     .input(
++       z.object({
++         activeChallengeId: z.string().uuid(),
++         taskId: z.string().uuid(),
++         value: z.number().optional(),
++         noteText: z.string().max(2000).optional(),
++         proofUrl: z.string().max(2000).optional(),
++         photo_url: z.string().max(2000).optional(),
++         heart_rate_avg: z.number().int().min(0).optional(),
++         heart_rate_peak: z.number().int().min(0).optional(),
++         location_latitude: z.number().optional(),
++         location_longitude: z.number().optional(),
++         /** Build 66+. Absent on build 65 and earlier — accept, do not claim the location gate. */
++         liveLocation: z
++           .object({
++             lat: z.number().gte(-90).lte(90),
++             lng: z.number().gte(-180).lte(180),
++             accuracyM: z.number().nonnegative(),
++             capturedAt: z.string().datetime(),
++           })
++           .optional(),
++         timer_seconds_on_screen: z.number().int().min(0).optional(),
++         clocked_in_at: z.string().datetime().optional(),
++         task_mode: z.enum(["full", "minimum"]).default("full"),
++         /** Camera capture meta for photo proofs — strict shape; Strava uses its own writer. */
++         proof_payload_json: photoProofPayloadSchema.optional(),
++         /** Run log facts — stored in verification_gates.run_log only (not proof_payload_json). */
++         distance_km: z.number().positive().optional(),
++         duration_min: z.number().positive().optional(),
++         entry_mode: z.enum(["hand", "timer"]).optional(),
++         /** Workout log facts — stored in verification_gates.workout_log only. */
++         workout_kind: z.string().min(1).max(64).optional(),
++         floor_min: z.number().nonnegative().nullable().optional(),
++         /** Absent (build 59 and earlier) → activity row written shared. true → unshared. */
++         shareChoicePending: z.boolean().optional(),
++         /** Build 90+. When true, this call also shares the new proof. Older builds omit it and call shareProof. */
++         applyShare: z.boolean().optional(),
++         audience: z.enum(["friends", "everyone", "only_me"]).optional(),
++         /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
++         self_reported: z.boolean().optional(),
++       })
++     )
++     .mutation(async ({ input, ctx }) => {
++       // 01b.1: every Supabase / storage / secure step is timed; one log line at the end.
++       // 01b.2: reads that do not depend on each other run in one round trip (Promise.all).
++       const t = createStepTimer();
++       const taskSelect =
++         "id, title, task_type, config, require_photo, timer_direction, timer_hard_mode, require_location, location_name, location_latitude, location_longitude, location_radius_meters, min_duration_minutes, target_mode, start_value, start_duration_minutes, gate_time_mode, gate_time_start, gate_time_end";
++       // Round 1: the enrollment (with start_at and current_day), the profile time zone, the task,
++       // the streak, and the person's enrollments + posts for the day-proof tiles.
++       const [owned, profileTz, taskFetch, streakFetch, dayEnrollmentsFetch, dayEventsFetch] = await t.step("setup", () =>
++         Promise.all([
++           assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId, "start_at, current_day"),
++           getProfileTimeZoneForUser(ctx.supabase, ctx.userId),
++           ctx.supabase.from("challenge_tasks").select(taskSelect).eq("id", input.taskId).single(),
++           ctx.supabase.from("streaks").select("active_streak_count").eq("user_id", ctx.userId).maybeSingle(),
++           ctx.supabase
++             .from("active_challenges")
++             .select("id, challenge_id, start_at")
++             .eq("user_id", ctx.userId)
++             .in("status", ["active", "completed", "abandoned"])
++             .limit(50),
++           ctx.supabase
++             .from("activity_events")
++             .select("id, metadata, created_at")
++             .eq("user_id", ctx.userId)
++             .eq("event_type", "task_completed")
++             .limit(80),
++         ]),
++       );
++       const { challenge_id } = owned;
++       const { data: taskRow, error: taskFetchError } = taskFetch;
++
++       if (taskFetchError) {
++         const { logger } = await import("../../lib/logger");
++         logger.error({ error: taskFetchError, userId: ctx.userId, taskId: input.taskId }, "[checkins.complete] task fetch");
++         const code = (taskFetchError as PgError).code;
++         if (code === "PGRST116") throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
++       }
++       if (!taskRow) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge tasks not found" });
++
++       const task = taskRow as TaskRowWithVerification;
++       const cfg = (task?.config ?? {}) as ChallengeTaskConfig;
++       const config = cfg as TaskConfig;
++       assertTimeGate(task, profileTz);
++       const checkInTz = resolveCheckInTimeZone(config.schedule_timezone, profileTz);
++       const dateKey = getTodayDateKey(checkInTz);
++       // Alias for legacy locals in this mutation that still say `tz`.
++       const tz = checkInTz;
++       const profileDateKey = getTodayDateKey(profileTz);
++       const isTimerTask = task?.task_type === "timer";
++       const TEN_SECONDS_AGO = new Date(Date.now() - 10_000).toISOString();
++       const enrollRows = (dayEnrollmentsFetch.data ?? []) as { id: string; challenge_id: string; start_at: string }[];
++       const enrollChallengeIds = [...new Set(enrollRows.map((r) => r.challenge_id))];
++
++       // Round 2: everything that needs the challenge id or today's date key, still before any write:
++       // the challenge row (once, with title and team fields for the secure), the anti-cheat read,
++       // the challenge's tasks, today's completed check-ins, the timer session, today's day_secures row,
++       // and the day-proof rows for the other enrollments.
++       const [
++         challengesFetch,
++         recentFetch,
++         allTasksFetch,
++         completedFetch,
++         timerSessionFetch,
++         existingSecureFetch,
++         dayCheckInsFetch,
++         dayTasksFetch,
++       ] = await t.step("context", () =>
++         Promise.all([
++           // One challenges read: this challenge's row plus the rows the day-proof tiles need.
++           ctx.supabase
++             .from("challenges")
++             .select("id, duration_type, ends_at, live_date, duration_days, is_hard_mode, title, participation_type, run_status")
++             .in("id", [...new Set([challenge_id, ...enrollChallengeIds])])
++             .limit(50),
++           ctx.supabase
++             .from("check_ins")
++             .select("id, created_at")
++             .eq("user_id", ctx.userId)
++             .eq("date_key", dateKey)
++             .gte("created_at", TEN_SECONDS_AGO)
++             .neq("task_id", input.taskId)
++             .order("created_at", { ascending: false })
++             .limit(1),
++           ctx.supabase.from("challenge_tasks").select("id, task_type, config").eq("challenge_id", challenge_id).limit(200),
++           ctx.supabase
++             .from("check_ins")
++             .select("task_id")
++             .eq("active_challenge_id", input.activeChallengeId)
++             .eq("date_key", dateKey)
++             .eq("status", "completed")
++             .limit(100),
++           isTimerTask && input.task_mode !== "minimum" && !timerSelfReportSkipsSession(input.self_reported)
++             ? ctx.supabase
++                 .from("check_ins")
++                 .select("proof_payload_json")
++                 .eq("active_challenge_id", input.activeChallengeId)
++                 .eq("task_id", input.taskId)
++                 .eq("date_key", dateKey)
++                 .maybeSingle()
++             : Promise.resolve({ data: null }),
++           ctx.supabase.from("day_secures").select("id").eq("user_id", ctx.userId).eq("date_key", profileDateKey).maybeSingle(),
++           ctx.supabase
++             .from("check_ins")
++             .select("id, date_key, task_id, active_challenge_id, photo_url, proof_url, completion_image_url, created_at")
++             .eq("user_id", ctx.userId)
++             .eq("date_key", dateKey)
++             .eq("status", "completed")
++             .limit(100),
++           enrollChallengeIds.length
++             ? ctx.supabase
++                 .from("challenge_tasks")
++                 .select("id, title, challenge_id, config, require_photo, require_location, gate_time_mode, task_type")
++                 .in("challenge_id", enrollChallengeIds)
++                 .limit(400)
++             : Promise.resolve({ data: [] as Record<string, unknown>[] }),
++         ]),
++       );
++       type ChallengeRowForFinish = {
++         id: string;
++         duration_type?: string;
++         ends_at?: string | null;
++         live_date?: string | null;
++         duration_days?: number | null;
++         is_hard_mode?: boolean;
++         title?: string | null;
++         participation_type?: string | null;
++         run_status?: string | null;
++       };
++       const challengeRows = (challengesFetch.data ?? []) as ChallengeRowForFinish[];
++       const ch = assertChallengeQueryOk({
++         data: challengeRows.find((r) => r.id === challenge_id) ?? null,
++         error: challengesFetch.error,
++       }) as {
++         duration_type?: string;
++         ends_at?: string | null;
++         live_date?: string | null;
++         duration_days?: number | null;
++         is_hard_mode?: boolean;
++         title?: string | null;
++         participation_type?: string | null;
++         run_status?: string | null;
++       };
++       const startAt = (owned.row as { start_at?: string | null }).start_at;
++       let rampDayNumber = 1;
++       const totalDur = ch.duration_days != null && ch.duration_days > 0 ? ch.duration_days : 1;
++       if (ch.duration_type !== "24h" && startAt) {
++         const startKey = dateKeyFromIsoInTimeZone(String(startAt), tz);
++         const idx = calendarDayIndexInclusive(startKey, dateKey);
++         rampDayNumber = Math.min(totalDur, Math.max(1, idx));
++       }
++       if (ch.duration_type === "24h") {
++         const endsAt = ch.ends_at ?? (ch.live_date ? new Date(new Date(ch.live_date).getTime() + 24 * 60 * 60 * 1000).toISOString() : null);
++         if (isChallengeExpired(endsAt)) throw new TRPCError({ code: "BAD_REQUEST", message: "This 24-hour challenge has ended. You can no longer complete tasks." });
++       }
++       const isMinimumDay = input.task_mode === "minimum";
++       const isChallengeHardMode = ch.is_hard_mode === true;
++       if (isMinimumDay && isChallengeHardMode) {
++         throw new TRPCError({
++           code: "BAD_REQUEST",
++           message: "Strict challenges require full completion.",
++         });
++       }
++
++       // --- Anti-cheat: prevent rapid-fire completions ---
++       // Reject if the user completed ANY task less than 10 seconds ago
++       const recentCheckins = recentFetch.data;
++       if (recentCheckins && recentCheckins.length > 0) {
++         const lastCheckinTime = new Date((recentCheckins[0] as { created_at: string }).created_at);
++         const secondsAgo = Math.round((Date.now() - lastCheckinTime.getTime()) / 1000);
++         throw new TRPCError({
++           code: "TOO_MANY_REQUESTS",
++           message: `Take a moment between tasks. You completed another task ${secondsAgo} second${secondsAgo === 1 ? "" : "s"} ago.`,
++         });
++       }
++
++       const { minWords, durationMinutes } = getTaskVerification(task as ChallengeTaskRowRaw);
++       const taskType = task?.task_type ?? "manual";
++       const dailyTargets = getDailyTargetForChallengeTask(
++         {
++           task_type: taskType,
++           target_mode: task.target_mode,
++           start_value: task.start_value,
++           start_duration_minutes: task.start_duration_minutes,
++           config: cfg as Record<string, unknown>,
++           min_duration_minutes: task.min_duration_minutes,
++         },
++         rampDayNumber,
++         totalDur
++       );
++       const requirePhoto = !isMinimumDay && gatesFor(task).includes("camera");
++       const photoUrl = ownedProofWrite(input.photo_url ?? input.proofUrl, ctx.userId);
++       // Optional/none without a photo is self-reported. A photo on disk is the only camera proof.
++       const isPhotoProof = Boolean(photoUrl);
++       // Run vs workout: duration_min/entry_mode are shared inputs — gate by type / distance / kind.
++       const isRunProof = taskType === "run" || input.distance_km != null;
++       const isWorkoutProof =
++         taskType === "workout" ||
++         (typeof input.workout_kind === "string" && input.workout_kind.length > 0);
++       // Journal only — do not treat DB "manual" (photo/simple) as journal proof.
++       const isJournalProof = taskType === "journal" || taskType === "text";
++       const isCounterProof =
++         taskType === "counter" ||
++         taskType === "water" ||
++         taskType === "reading";
++       const isCheckinProof = taskType === "checkin";
++       // DB maps UI "simple" → task_type "manual"; exclude photo-proof manuals.
++       const isSimpleProof =
++         (taskType === "simple" || taskType === "manual" || taskType === "check_off") &&
++         !isPhotoProof &&
++         !isRunProof &&
++         !isWorkoutProof &&
++         !isJournalProof &&
++         !isCounterProof &&
++         !isCheckinProof;
++
++       const sharedDurationMin =
++         input.duration_min ??
++         (typeof input.value === "number" ? input.value : undefined);
++       const runLogFacts: RunLogFacts | null =
++         isRunProof &&
++         typeof input.distance_km === "number" &&
++         typeof sharedDurationMin === "number" &&
++         (input.entry_mode === "hand" || input.entry_mode === "timer")
++           ? {
++               distance_km: input.distance_km,
++               duration_min: sharedDurationMin,
++               entry_mode: input.entry_mode,
++             }
++           : null;
++
++       const serverNow = new Date();
++       const windowEval = evaluateScheduleWindowServer({
++         start: config.schedule_window_start,
++         end: config.schedule_window_end,
++         timeZone: config.schedule_timezone || "UTC",
++         now: serverNow,
++       });
++
++       if (!isMinimumDay && isRunProof) {
++         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
++           const verification = buildRunVerification({
++             window: windowEval,
++             runLog: runLogFacts,
++             photoPresent: !!photoUrl,
++             proofPayload: input.proof_payload_json ?? null,
++           });
++           throw new TRPCError({
++             code: "BAD_REQUEST",
++             message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
++             cause: { verification },
++           });
++         }
++       } else if (!isMinimumDay && isWorkoutProof) {
++         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
++           // Floor falls back from config after minDurationMinutes is resolved — reject
++           // uses client floor_min when provided; otherwise null (session row may omit).
++           const rejectFloor =
++             typeof input.floor_min === "number"
++               ? input.floor_min
++               : input.floor_min === null
++                 ? null
++                 : null;
++           const verification = buildWorkoutVerification({
++             window: windowEval,
++             workoutLog:
++               typeof input.workout_kind === "string" &&
++               typeof sharedDurationMin === "number" &&
++               (input.entry_mode === "hand" || input.entry_mode === "timer")
++                 ? {
++                     kind: input.workout_kind,
++                     duration_min: sharedDurationMin,
++                     floor_min: rejectFloor,
++                     entry_mode: input.entry_mode,
++                   }
++                 : null,
++             photoPresent: !!photoUrl,
++             proofPayload: input.proof_payload_json ?? null,
++           });
++           throw new TRPCError({
++             code: "BAD_REQUEST",
++             message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
++             cause: { verification },
++           });
++         }
++       } else if (!isMinimumDay && isJournalProof) {
++         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
++           const rejectWords = countJournalWords(input.noteText ?? "");
++           const rejectFloor =
++             typeof input.floor_min === "number" && input.floor_min > 0
++               ? input.floor_min
++               : input.floor_min === null
++                 ? null
++                 : minWords > 0
++                   ? minWords
++                   : null;
++           const verification = buildJournalVerification({
++             window: windowEval,
++             journalLog: {
++               word_count: rejectWords,
++               floor_min: rejectFloor,
++             },
++           });
++           throw new TRPCError({
++             code: "BAD_REQUEST",
++             message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
++             cause: { verification },
++           });
++         }
++       } else if (!isMinimumDay && isCounterProof) {
++         // All-day counters — never apply schedule-window hard reject.
++       } else if (!isMinimumDay && isCheckinProof) {
++         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
++           const verification = buildCheckinVerification({
++             window: windowEval,
++             checkinLog: null,
++           });
++           throw new TRPCError({
++             code: "BAD_REQUEST",
++             message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
++             cause: { verification },
++           });
++         }
++       } else if (!isMinimumDay && isSimpleProof) {
++         // Self-report — no schedule-window gate; honesty is the product.
++       } else if (!isMinimumDay && isPhotoProof) {
++         if (config.hard_mode && windowEval.hasWindow && !windowEval.passed) {
++           const verification = buildPhotoVerification({
++             window: windowEval,
++             photoPresent: !!photoUrl,
++             proofPayload: input.proof_payload_json ?? null,
++           });
++           throw new TRPCError({
++             code: "BAD_REQUEST",
++             message: `Strict: this task can only be completed between ${config.schedule_window_start} and ${config.schedule_window_end}. Current time: ${windowEval.checkedAtHHMM}.`,
++             cause: { verification },
++           });
++         }
++       } else if (!isMinimumDay) {
++         assertHardModeScheduleWindow(config);
++       }
++
++       if (requirePhoto && !photoUrl) throw new TRPCError({ code: "BAD_REQUEST", message: "This task requires a photo. Please take a photo to verify completion." });
++
++       if (!isMinimumDay) {
++         assertHardModeCameraOnly(cfg, photoUrl, input.proofUrl);
++       }
++
++       // Location gate only when a verifiable target exists (both coords numeric).
++       const resolvedLat =
++         typeof task?.location_latitude === "number"
++           ? task.location_latitude
++           : typeof cfg.location_latitude === "number"
++             ? cfg.location_latitude
++             : undefined;
++       const resolvedLng =
++         typeof task?.location_longitude === "number"
++           ? task.location_longitude
++           : typeof cfg.location_longitude === "number"
++             ? cfg.location_longitude
++             : undefined;
++       const hasLocationTarget =
++         typeof resolvedLat === "number" && typeof resolvedLng === "number";
++       const locationFlagSet =
++         task?.require_location === true || cfg.require_location === true;
++       // Misconfigured: flag without coords — warn once per completion, do not block.
++       // logger has no dedupe; single call site = once per complete invocation.
++       if (locationFlagSet && !hasLocationTarget) {
++         logger.warn(
++           { taskId: input.taskId, userId: ctx.userId },
++           "[checkins.complete] require_location true without location_latitude/longitude"
++         );
++       }
++       const enforceLocation = hasLocationTarget && (isCheckinProof || locationFlagSet);
++       const radiusMeters =
++         typeof task?.location_radius_meters === "number"
++           ? task.location_radius_meters
++           : typeof cfg.location_radius_meters === "number"
++             ? cfg.location_radius_meters
++             : DEFAULT_LOCATION_RADIUS_METERS;
++       const locationDecision = decideLiveLocationGate({
++         required: enforceLocation,
++         live: input.liveLocation,
++         targetLat: resolvedLat ?? 0,
++         targetLng: resolvedLng ?? 0,
++         radiusMeters,
++         nowMs: Date.now(),
++       });
++       if (locationDecision.kind === "rejected") {
++         throw new TRPCError({ code: "FORBIDDEN", message: NOT_AT_LOCATION });
++       }
++       if (locationDecision.kind === "legacy_unclaimed") {
++         logger.warn(
++           { userId: ctx.userId },
++           "[checkins.complete] liveLocation absent; location gate not recorded"
++         );
++       }
++       const locationGatePassed = !isMinimumDay && locationDecision.kind === "passed";
++       const locationDistanceM = locationGatePassed ? locationDecision.distanceM : undefined;
++       const hardModeLocationGate =
++         locationGatePassed && cfg.hard_mode === true && cfg.require_location === true;
++
++       const minDurationMinutes =
++         dailyTargets.durationMinutes ??
++         task?.min_duration_minutes ??
++         durationMinutes ??
++         (taskType === "run" && cfg.tracking_mode === "time" && typeof cfg.duration_minutes === "number" ? cfg.duration_minutes : null);
++       const isTimer = taskType === "timer";
++       const timerSelfReport = isTimer && timerSelfReportSkipsSession(input.self_reported);
++       if (
++         !isMinimumDay &&
++         !timerSelfReport &&
++         minDurationMinutes != null &&
++         minDurationMinutes > 0 &&
++         input.value != null &&
++         input.value < minDurationMinutes
++       ) {
++         throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minDurationMinutes} minutes. You completed ${input.value} minutes.` });
++       }
++       // "text" is the task-model name for a journal row; it was missing here, so text journals skipped the floor.
++       const isJournal = taskType === "journal" || taskType === "text" || taskType === "manual";
++       if (!isMinimumDay && isJournal && minWords > 0) {
++         // Build 90 03.3: the same rule as the client (2+ letters, a word at most 3 times).
++         const wordCount = countJournalWords(input.noteText ?? "");
++         if (wordCount < minWords) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${minWords} words. You wrote ${wordCount}.` });
++       }
++       const isRunTimed = taskType === "run" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
++       const isWorkoutTimed = taskType === "workout" && typeof minDurationMinutes === "number" && minDurationMinutes > 0;
++       const requiredMinutes = minDurationMinutes ?? durationMinutes;
++       let timerSessionPayload: unknown = null;
++       if (!isMinimumDay && isTimer && !timerSelfReport) {
++         // Read in round 2 ("context") above.
++         const existingSessionRow = timerSessionFetch.data;
++         timerSessionPayload = (existingSessionRow as { proof_payload_json?: unknown } | null)?.proof_payload_json ?? null;
++         const sessionCheck = assertTimerSessionElapsed(parseTimerSession(timerSessionPayload));
++         if (!sessionCheck.ok) {
++           throw new TRPCError({ code: "BAD_REQUEST", message: sessionCheck.message });
++         }
++       }
++       if (!isMinimumDay && (isRunTimed || isWorkoutTimed) && requiredMinutes > 0) {
++         const completedMinutes = input.value ?? 0;
++         if (completedMinutes < requiredMinutes) throw new TRPCError({ code: "BAD_REQUEST", message: `This task requires at least ${requiredMinutes} minutes. You logged ${completedMinutes}.` });
++       }
++
++       const requiredNumeric = dailyTargets.targetValue;
++       if (
++         !isMinimumDay &&
++         requiredNumeric != null &&
++         requiredNumeric > 0 &&
++         input.value != null &&
++         (taskType === "water" || taskType === "counter" || taskType === "reading") &&
++         input.value < requiredNumeric
++       ) {
++         throw new TRPCError({
++           code: "BAD_REQUEST",
++           message: `This task requires at least ${requiredNumeric}. You logged ${input.value}.`,
++         });
++       }
++       if (
++         !isMinimumDay &&
++         taskType === "run" &&
++         cfg.tracking_mode === "distance" &&
++         requiredNumeric != null &&
++         requiredNumeric > 0 &&
++         input.value != null &&
++         input.value < requiredNumeric
++       ) {
++         throw new TRPCError({
++           code: "BAD_REQUEST",
++           message: `This task requires at least ${requiredNumeric}. You logged ${input.value}.`,
++         });
++       }
++
++       const workoutFloorMin: number | null =
++         typeof input.floor_min === "number" && input.floor_min > 0
++           ? input.floor_min
++           : input.floor_min === null
++             ? null
++             : typeof minDurationMinutes === "number" && minDurationMinutes > 0
++               ? minDurationMinutes
++               : null;
++       const workoutLogFacts: WorkoutLogFacts | null =
++         isWorkoutProof &&
++         typeof input.workout_kind === "string" &&
++         input.workout_kind.length > 0 &&
++         typeof sharedDurationMin === "number" &&
++         (input.entry_mode === "hand" || input.entry_mode === "timer")
++           ? {
++               kind: input.workout_kind,
++               duration_min: sharedDurationMin,
++               floor_min: workoutFloorMin,
++               entry_mode: input.entry_mode,
++             }
++           : null;
++
++       const journalWordCount = countJournalWords(input.noteText ?? "");
++       const journalFloorMin: number | null =
++         typeof input.floor_min === "number" && input.floor_min > 0
++           ? input.floor_min
++           : input.floor_min === null
++             ? null
++             : minWords > 0
++               ? minWords
++               : null;
++       const journalLogFacts: JournalLogFacts | null = isJournalProof
++         ? {
++             word_count: journalWordCount,
++             floor_min: journalFloorMin,
++           }
++         : null;
++
++       const verificationGates: Record<string, unknown> = {};
++       if (
++         (isPhotoProof || isRunProof || isWorkoutProof || isJournalProof) &&
++         !isMinimumDay &&
++         windowEval.hasWindow
++       ) {
++         verificationGates.time_gate = {
++           status: windowEval.passed ? "passed" : "failed",
++           checked_at: serverNow.toISOString(),
++           checked_at_hhmm: windowEval.checkedAtHHMM,
++           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
++         };
++       } else if (
++         !isMinimumDay &&
++         !isSimpleProof &&
++         config.hard_mode &&
++         config.schedule_window_start &&
++         config.schedule_window_end
++       ) {
++         // Non-photo/run/workout/journal: preserve prior hard-mode time_gate shape.
++         verificationGates.time_gate = {
++           status: "passed",
++           clocked_in_at: input.clocked_in_at ?? new Date().toISOString(),
++           window: `${config.schedule_window_start}-${config.schedule_window_end}`,
++         };
++       }
++       if (!isMinimumDay && runLogFacts) {
++         verificationGates.run_log = {
++           distance_km: runLogFacts.distance_km,
++           duration_min: runLogFacts.duration_min,
++           entry_mode: runLogFacts.entry_mode,
++         };
++       }
++       if (!isMinimumDay && workoutLogFacts) {
++         verificationGates.workout_log = {
++           kind: workoutLogFacts.kind,
++           duration_min: workoutLogFacts.duration_min,
++           floor_min: workoutLogFacts.floor_min,
++           entry_mode: workoutLogFacts.entry_mode,
++         };
++       }
++       if (!isMinimumDay && journalLogFacts) {
++         verificationGates.journal_log = {
++           word_count: journalLogFacts.word_count,
++           floor_min: journalLogFacts.floor_min,
++         };
++       }
++       const counterTarget =
++         dailyTargets.targetValue ??
++         (typeof cfg.target_value === "number" ? cfg.target_value : null) ??
++         (typeof cfg.target_count === "number" ? cfg.target_count : null) ??
++         (typeof cfg.target_pages === "number" ? cfg.target_pages : null) ??
++         0;
++       // 06: the task's own unit first, then the same defaults the app uses (water = cups).
++       const counterUnitPlural =
++         typeof cfg.unit === "string" && cfg.unit.trim()
++           ? cfg.unit.trim()
++           : typeof cfg.unit_label === "string" && cfg.unit_label.trim()
++             ? cfg.unit_label.trim()
++             : taskType === "water"
++               ? "cups"
++               : taskType === "reading"
++                 ? "pages"
++                 : "units";
++       const counterLogFacts: CounterLogFacts | null =
++         isCounterProof &&
++         typeof input.value === "number" &&
++         counterTarget > 0
++           ? {
++               count: input.value,
++               target: counterTarget,
++               unit_plural: counterUnitPlural,
++               timezone: checkInTz,
++               date_key: dateKey,
++             }
++           : null;
++       if (!isMinimumDay && counterLogFacts) {
++         verificationGates.counter_log = {
++           count: counterLogFacts.count,
++           target: counterLogFacts.target,
++           unit_plural: counterLogFacts.unit_plural,
++           // Same midnight calendar as date_key / saveProgress (for verifying copy honesty).
++           date_key: dateKey,
++           timezone: checkInTz,
++         };
++       }
++       const checkinLogFacts: CheckinLogFacts | null =
++         isCheckinProof &&
++         typeof locationDistanceM === "number" &&
++         locationDistanceM >= 0
++           ? {
++               arrived_hhmm: windowEval.checkedAtHHMM,
++               distance_meters: Math.round(locationDistanceM),
++               location_name:
++                 task?.location_name ?? cfg.location_name ?? null,
++             }
++           : null;
++       if (!isMinimumDay && checkinLogFacts) {
++         verificationGates.checkin_log = {
++           arrived_hhmm: checkinLogFacts.arrived_hhmm,
++           distance_meters: checkinLogFacts.distance_meters,
++           location_name: checkinLogFacts.location_name,
++         };
++       }
++       if (!isMinimumDay && isSimpleProof) {
++         verificationGates.simple_log = buildSimpleLogFacts();
++       }
++       if (!isMinimumDay && hardModeLocationGate && locationDistanceM != null) {
++         verificationGates.location_gate = {
++           status: "passed",
++           distance_meters: Math.round(locationDistanceM),
++           location_name: cfg.location_name ?? "the required location",
++         };
++       } else if (!isMinimumDay && enforceLocation && locationDistanceM != null) {
++         verificationGates.location_gate = {
++           status: "passed",
++           distance_meters: Math.round(locationDistanceM),
++           location_name: task?.location_name ?? cfg.location_name ?? "the required location",
++         };
++       }
++       if (isPhotoProof && !isMinimumDay && photoUrl) {
++         verificationGates.photo_gate = {
++           status: "passed",
++           camera_only: cfg.require_camera_only === true,
++           captured_in_app: input.proof_payload_json?.captured_in_app ?? null,
++           capturedAt: input.proof_payload_json?.capturedAt ?? null,
++         };
++       } else if (!isMinimumDay && cfg.hard_mode && cfg.require_camera_only && photoUrl) {
++         verificationGates.photo_gate = { status: "passed", camera_only: true };
++       }
++       if (!isMinimumDay && cfg.hard_mode && cfg.require_strava) {
++         verificationGates.strava_gate = { status: "pending" };
++       }
++
++       let photoVerification: PhotoVerification | undefined;
++       if (
++         !isMinimumDay &&
++         isPhotoProof &&
++         !isRunProof &&
++         !isWorkoutProof &&
++         !isJournalProof &&
++         !isCounterProof &&
++         !isCheckinProof &&
++         !isSimpleProof
++       ) {
++         photoVerification = buildPhotoVerification({
++           window: windowEval,
++           photoPresent: !!photoUrl,
++           proofPayload: input.proof_payload_json ?? null,
++         });
++       }
++
++       let runVerification: RunVerification | undefined;
++       if (!isMinimumDay && isRunProof) {
++         runVerification = buildRunVerification({
++           window: windowEval,
++           runLog: runLogFacts,
++           photoPresent: !!photoUrl,
++           proofPayload: input.proof_payload_json ?? null,
++         });
++       }
++
++       let workoutVerification: WorkoutVerification | undefined;
++       if (!isMinimumDay && isWorkoutProof) {
++         workoutVerification = buildWorkoutVerification({
++           window: windowEval,
++           workoutLog: workoutLogFacts,
++           photoPresent: !!photoUrl,
++           proofPayload: input.proof_payload_json ?? null,
++         });
++       }
++
++       let journalVerification: JournalVerification | undefined;
++       if (!isMinimumDay && isJournalProof) {
++         journalVerification = buildJournalVerification({
++           window: windowEval,
++           journalLog: journalLogFacts,
++         });
++       }
++
++       let counterVerification: CounterVerification | undefined;
++       if (!isMinimumDay && isCounterProof) {
++         counterVerification = buildCounterVerification({
++           counterLog: counterLogFacts,
++         });
++       }
++
++       let checkinVerification: CheckinVerification | undefined;
++       if (!isMinimumDay && isCheckinProof) {
++         checkinVerification = buildCheckinVerification({
++           window: windowEval,
++           checkinLog: checkinLogFacts,
++         });
++       }
++
++       const proofUrl = photoUrl;
++       // Explicit status — DB default is 'pending'; complete always writes 'completed'.
++       const payload: Record<string, unknown> = { user_id: ctx.userId, active_challenge_id: input.activeChallengeId, task_id: input.taskId, date_key: dateKey, status: "completed" };
++       payload.task_mode = input.task_mode;
++       const valueOut =
++         input.value != null
++           ? input.value
++           : typeof sharedDurationMin === "number"
++             ? sharedDurationMin
++             : undefined;
++       if (valueOut != null) payload.value = valueOut;
++       if (input.noteText != null) payload.note_text = input.noteText;
++       if (proofUrl != null) payload.proof_url = proofUrl;
++       if (proofUrl) payload.completion_image_url = proofUrl;
++       if (photoUrl) payload.photo_url = photoUrl;
++       if (input.heart_rate_avg != null) payload.heart_rate_avg = input.heart_rate_avg;
++       if (input.heart_rate_peak != null) payload.heart_rate_peak = input.heart_rate_peak;
++       if (locationGatePassed && input.liveLocation) {
++         payload.location_latitude = input.liveLocation.lat;
++         payload.location_longitude = input.liveLocation.lng;
++       }
++       if (input.timer_seconds_on_screen != null) payload.timer_seconds_on_screen = input.timer_seconds_on_screen;
++       if (input.clocked_in_at != null) payload.clocked_in_at = input.clocked_in_at;
++       if (input.proof_payload_json != null) payload.proof_payload_json = input.proof_payload_json;
++       else if (timerSessionPayload) payload.proof_payload_json = timerSessionPayload;
++       if (Object.keys(verificationGates).length > 0) payload.verification_gates = verificationGates;
++
++       const { data, error } = await t.step("upsert", () =>
++         ctx.supabase
++           .from("check_ins")
++           .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
++           .select(
++             "id, user_id, active_challenge_id, task_id, date_key, status, value, note_text, proof_url, photo_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, verification_gates, created_at"
++           )
++           .single(),
++       );
++       if (error) {
++         const { logger } = await import("../../lib/logger");
++         const errObj = error as { code?: string; message?: string; details?: string; hint?: string };
++         logger.error({ supabaseError: error, code: errObj.code, message: errObj.message, details: errObj.details, hint: errObj.hint, payload }, "[checkins.complete] check_ins upsert FAILED");
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save check-in." });
++       }
++
++       // --- Suspicious speed logging ---
++       if (input.clocked_in_at) {
++         const clockedInTime = new Date(input.clocked_in_at).getTime();
++         const submittedTime = Date.now();
++         const durationSeconds = (submittedTime - clockedInTime) / 1000;
++         if (durationSeconds < 3 && taskType !== "photo") {
++           logger.warn(
++             {
++               userId: ctx.userId,
++               taskId: input.taskId,
++               taskType,
++               durationSeconds: Math.round(durationSeconds * 10) / 10,
++               activeChallengeId: input.activeChallengeId,
++             },
++             "[checkins.complete] Suspiciously fast completion"
++           );
++         }
++       }
++
++       const challengeTitleForFeed = ch.title ?? "Challenge";
++       const taskTitle = (task as { title?: string })?.title ?? "Task";
++       const verificationMethod = verificationMethodFor(gatesFor(task));
++       const hasPhoto = !!proofUrl;
++       // The activity row is written in round 4, alongside the progress update and the secure.
++       let activityEventPayload: Record<string, unknown> | null = null;
++       if (!createsActivityPost(input.self_reported === true, hasPhoto, input.audience)) {
++         // Self-reported, no photo, no audience chosen: the check-in is saved and no feed row is written.
++       } else {
++         const shareCols = input.audience
++           ? shareColumns(shareStateForAudience(input.audience))
++           : shareColumnsForComplete(input.shareChoicePending);
++         activityEventPayload = {
++           user_id: ctx.userId,
++           event_type: "task_completed" as const,
++           challenge_id,
++           ...shareCols,
++           metadata: {
++             task_id: input.taskId,
++             task_name: taskTitle,
++             task_type: taskType,
++             challenge_name: challengeTitleForFeed,
++             date_key: dateKey,
++             has_photo: !!proofUrl,
++             photo_url: proofUrl ?? null,
++             verification_method: verificationMethod,
++             is_hard_mode: cfg.hard_mode === true,
++             task_mode: input.task_mode,
++             audience: input.audience ?? null,
++             heart_rate_verified: false,
++             location_verified: locationGatePassed,
++           },
++         };
++       }
++       const insertActivityEvent = async (): Promise<string | null> => {
++         if (!activityEventPayload) return null;
++         const eventPayload = activityEventPayload;
++         return t.step("activity_event", async () => {
++           const inserted = await ctx.supabase.from("activity_events").insert(eventPayload as never).select("id").maybeSingle();
++           let id = (inserted.data as { id?: string } | null)?.id ?? null;
++           if (inserted.error) {
++             logger.error(
++               { err: inserted.error },
++               "[checkins.complete] task_completed event FAILED via user client — retrying with service role"
++             );
++             const svc = getSupabaseServer();
++             if (svc) {
++               const retry = await svc.from("activity_events").insert(eventPayload as never).select("id").maybeSingle();
++               if (!retry.error) {
++                 id = (retry.data as { id?: string } | null)?.id ?? id;
++                 logger.info("[checkins.complete] task_completed event recovered via service role");
++               } else {
++                 logger.error({ err: retry.error }, "[checkins.complete] task_completed event FAILED on service-role retry too");
++               }
++             }
++           }
++           return id;
++         });
++       };
++
++       // Required-task count from the rows read before the write, plus this task.
++       const allTasks = allTasksFetch.data;
++       const requiredTasks = (allTasks ?? []).filter((row) => isTaskRequired(row as ChallengeTaskRowRaw));
++       const completedIds = new Set<string>([
++         ...((completedFetch.data ?? []) as { task_id: string }[]).map((c) => c.task_id),
++         input.taskId,
++       ]);
++       const completedRequired = requiredTasks.filter((rt) => completedIds.has(rt.id));
++       const progress = requiredTasks.length > 0 ? (completedRequired.length / requiredTasks.length) * 100 : 0;
++       const requiredRemaining = requiredRemainingCount(requiredTasks.length, completedRequired.length);
++       const existingSecure = existingSecureFetch.data;
++       const streakRow = streakFetch.data;
++       const verificationKind: VerificationKind = isPhotoProof
++         ? "live_photo"
++         : isTimer && !timerSelfReport
++           ? "timer"
++           : isCheckinProof && locationGatePassed
++             ? "gps"
++             : isJournalProof
++               ? "word_count"
++               : "self_report";
++
++       // Round 4: the activity row (then the share), the progress update, the secure (its own
++       // rounds inside), all at once. Nothing here depends on another member's result.
++       const bundled = await t.step("finish", () =>
++         Promise.all([
++           bundleTaskFinish({
++             requiredRemaining,
++             applyShare: input.applyShare === true,
++             eventId: insertActivityEvent,
++             secure: () =>
++               t.step("secure", () =>
++                 secureDayCore(ctx, input.activeChallengeId, t, {
++                   challengeId: challenge_id,
++                   tz: profileTz,
++                   challenge: ch,
++                   alreadySecured: Boolean(existingSecure),
++                   achievements: "skip",
++                 }),
++               ),
++             share: (eventId) => t.step("share", () => finishSideEffects.share(ctx, eventId)),
++           }),
++           t.step("progress", () =>
++             ctx.supabase.from("active_challenges").update({ progress_percent: progress }).eq("id", input.activeChallengeId),
++           ),
++         ]).then(([bundle]) => bundle),
++       );
++       const postedEventId = bundled.eventId;
++
++       // Badges after the answer: one pass for the finish and the secure together (was two passes
++       // of ~9 reads each on the response path).
++       const streakAfter = bundled.daySecure?.streak ?? (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0;
++       const achievementArgs = {
++         streak: streakAfter,
++         totalDaysSecured: bundled.daySecure?.totalDaysSecured ?? null,
++         challengeCompleted: bundled.daySecure?.challengeCompleted === true,
++         isHardMode: cfg.hard_mode === true,
++       };
++       setTimeout(() => void unlockAchievementsAfterFinish(ctx.supabase, ctx.userId, achievementArgs), 0);
++
++       // Day-proof tiles from the rows read before the write, plus the row just written and its post.
++       const saved = (data ?? {}) as {
++         id?: string;
++         proof_url?: string | null;
++         photo_url?: string | null;
++         completion_image_url?: string | null;
++       };
++       const priorDayRows = ((dayCheckInsFetch.data ?? []) as { id: string }[]).filter((r) => r.id !== saved.id);
++       const dayEventRows = [
++         ...((dayEventsFetch.data ?? []) as { id: string; metadata?: Record<string, unknown> | null; created_at?: string }[]),
++         ...(postedEventId && activityEventPayload
++           ? [{ id: postedEventId, metadata: activityEventPayload.metadata as Record<string, unknown>, created_at: new Date().toISOString(), share_state: (activityEventPayload as { share_state?: string }).share_state ?? null }]
++           : []),
++       ];
++       const dayProofs = cameraProofTiles({
++         checkIns: [...priorDayRows, ...(data ? [data] : [])] as Parameters<typeof cameraProofTiles>[0]["checkIns"],
++         dateKey,
++         enrollments: enrollRows.map((r) => ({
++           id: r.id,
++           challengeId: r.challenge_id,
++           startDateKey: dateKeyFromIsoInTimeZone(r.start_at, tz),
++         })),
++         challenges: challengeRows,
++         tasks: (dayTasksFetch.data ?? []) as Parameters<typeof cameraProofTiles>[0]["tasks"],
++         events: dayEventRows,
++       });
++       const signedComplete = await t.step("sign_urls", () =>
++         signProofPaths(
++           [saved.proof_url, saved.photo_url, saved.completion_image_url, ...dayProofs.map((p) => p.imageUrl)],
++           ctx.userId,
++         ),
++       );
++       const timing = t.finish();
++       logger.info(
++         {
++           ms: timing.totalMs,
++           gapMs: timing.gapMs,
++           steps: timing.steps,
++           userId: ctx.userId,
++           taskId: input.taskId,
++           taskType,
++           photo: isPhotoProof,
++           secured: requiredRemaining === 0,
++         },
++         "[checkins.complete] steps",
++       );
++       const { totalDaysSecured: _omitTotal, ...daySecureOut } = bundled.daySecure ?? ({} as SecureDayResult);
++       return {
++         ...(data ?? {}),
++         proof_url: signedComplete[0] ?? null,
++         photo_url: signedComplete[1] ?? null,
++         completion_image_url: signedComplete[2] ?? null,
++         isMinimumDay,
++         verification_gates: (data as { verification_gates?: unknown } | null)?.verification_gates ?? verificationGates,
++         requiredRemaining,
++         dayAlreadySecured: Boolean(existingSecure),
++         streakDays: (streakRow as { active_streak_count?: number } | null)?.active_streak_count ?? 0,
++         challengeDay: (owned.row as { current_day?: number | null }).current_day ?? 1,
++         challengeLength: ch?.duration_days && ch.duration_days > 0 ? ch.duration_days : 1,
++         challengeName: challengeTitleForFeed,
++         verificationKind,
++         dayProofs: dayProofs.map((p, i) => ({ ...p, imageUrl: signedComplete[3 + i] ?? null })),
++         eventId: postedEventId,
++         daySecure: bundled.daySecure ? daySecureOut : null,
++         daySecureAttempted: bundled.daySecureAttempted,
++         shared: bundled.shared,
++         ...(photoVerification ? { verification: photoVerification } : {}),
++         ...(runVerification ? { verification: runVerification } : {}),
++         ...(workoutVerification ? { verification: workoutVerification } : {}),
++         ...(journalVerification ? { verification: journalVerification } : {}),
++         ...(counterVerification ? { verification: counterVerification } : {}),
++         ...(checkinVerification ? { verification: checkinVerification } : {}),
++       };
++     }),
++
++   /**
++    * Record a wall-clock timer start. Writes a pending check_in with
++    * proof_payload_json.session. complete validates against this row.
++    */
++   startSession: protectedProcedure
++     .input(
++       z.object({
++         activeChallengeId: z.string().uuid(),
++         taskId: z.string().uuid(),
++         requiredSeconds: z.number().int().positive(),
++         kind: z.enum(["timer", "workout_session"]),
++       })
++     )
++     .mutation(async ({ input, ctx }) => {
++       await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
++       const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
++       const { data: taskRow, error: taskErr } = await ctx.supabase
++         .from("challenge_tasks")
++         .select("id, config")
++         .eq("id", input.taskId)
++         .maybeSingle();
++       if (taskErr) {
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load task." });
++       }
++       if (!taskRow) throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
++       const taskCfg = ((taskRow as { config?: ChallengeTaskConfig } | null)?.config ?? {}) as ChallengeTaskConfig;
++       const checkInTz = resolveCheckInTimeZone(taskCfg.schedule_timezone, profileTz);
++       const dateKey = getTodayDateKey(checkInTz);
++
++       const { data: existing, error: existingErr } = await ctx.supabase
++         .from("check_ins")
++         .select("id, status")
++         .eq("active_challenge_id", input.activeChallengeId)
++         .eq("task_id", input.taskId)
++         .eq("date_key", dateKey)
++         .maybeSingle();
++       if (existingErr) {
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to load session." });
++       }
++       const row = existing as { id?: string; status?: string } | null;
++       if (row?.status === "completed") {
++         throw new TRPCError({ code: "BAD_REQUEST", message: "This task is already completed for today." });
++       }
++
++       const session = {
++         started_at: new Date().toISOString(),
++         required_seconds: input.requiredSeconds,
++         kind: input.kind as TimerSessionKind,
++       };
++       const payload: Record<string, unknown> = {
++         user_id: ctx.userId,
++         active_challenge_id: input.activeChallengeId,
++         task_id: input.taskId,
++         date_key: dateKey,
++         status: "pending",
++         proof_payload_json: wrapTimerSession(session),
++       };
++       const { data, error } = await ctx.supabase
++         .from("check_ins")
++         .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
++         .select("id, date_key, proof_payload_json")
++         .single();
++       if (error) {
++         logger.error({ supabaseError: error, payload }, "[checkins.startSession] upsert FAILED");
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to start timer." });
++       }
++       return {
++         id: (data as { id?: string } | null)?.id ?? null,
++         date_key: dateKey,
++         started_at: session.started_at,
++         required_seconds: session.required_seconds,
++       };
++     }),
++
++   /**
++    * Partial counter progress — pending row + value only. Does not complete.
++    * Stale-write guard: incoming < stored → no-op. Completed → BAD_REQUEST.
++    */
++   saveProgress: protectedProcedure
++     .input(
++       z.object({
++         activeChallengeId: z.string().uuid(),
++         taskId: z.string().uuid(),
++         value: z.number().nonnegative(),
++         noteText: z.string().max(2000).optional(),
++         /** Reading page photo URL only — never proof_payload_json. */
++         proofUrl: z.string().max(2000).optional(),
++         /**
++          * Build 92 03.5: "set" (default) keeps the absolute count-up rule; "add" sums the value
++          * with today's pending total and appends `log` to proof_payload_json.partial_logs.
++          */
++         mode: z.enum(["set", "add"]).optional(),
++         log: z
++           .object({
++             distance_km: z.number().nonnegative().optional(),
++             duration_min: z.number().nonnegative().optional(),
++             entry_mode: z.string().max(20).optional(),
++           })
++           .optional(),
++       })
++     )
++     .mutation(async ({ input, ctx }) => {
++       await assertActiveChallengeOwnership(
++         ctx.supabase,
++         input.activeChallengeId,
++         ctx.userId
++       );
++       const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
++       const { data: taskRow, error: taskErr } = await ctx.supabase
++         .from("challenge_tasks")
++         .select("id, config")
++         .eq("id", input.taskId)
++         .maybeSingle();
++       if (taskErr) {
++         throw new TRPCError({
++           code: "INTERNAL_SERVER_ERROR",
++           message: "Failed to load task.",
++         });
++       }
++       if (!taskRow) {
++         throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
++       }
++       const taskCfg = ((taskRow as { config?: ChallengeTaskConfig } | null)?.config ??
++         {}) as ChallengeTaskConfig;
++       // Same resolver as checkins.complete — schedule_timezone wins, else profile.
++       const checkInTz = resolveCheckInTimeZone(taskCfg.schedule_timezone, profileTz);
++       const dateKey = getTodayDateKey(checkInTz);
++
++       const { data: existing, error: existingErr } = await ctx.supabase
++         .from("check_ins")
++         .select("id, status, value, proof_payload_json")
++         .eq("active_challenge_id", input.activeChallengeId)
++         .eq("task_id", input.taskId)
++         .eq("date_key", dateKey)
++         .maybeSingle();
++       if (existingErr) {
++         throw new TRPCError({
++           code: "INTERNAL_SERVER_ERROR",
++           message: "Failed to load progress.",
++         });
++       }
++
++       const row = existing as {
++         id?: string;
++         status?: string;
++         value?: number | null;
++         proof_payload_json?: unknown;
++       } | null;
++       const addMode = input.mode === "add";
++       const partial = addMode
++         ? decidePartialLogWrite({
++             existingStatus: row?.status,
++             existingValue: row?.value,
++             existingPayload: row?.proof_payload_json,
++             incomingValue: input.value,
++             log: input.log ?? {},
++             at: new Date().toISOString(),
++           })
++         : null;
++       const decision = partial ?? decideCounterProgressWrite({
++         existingStatus: row?.status,
++         existingValue: row?.value,
++         incomingValue: input.value,
++       });
++
++       if (decision.action === "reject_completed") {
++         throw new TRPCError({
++           code: "BAD_REQUEST",
++           message: "This task is already completed for today.",
++         });
++       }
++
++       if (decision.action === "noop_stale") {
++         return {
++           id: row?.id ?? null,
++           value: decision.storedValue,
++           status: "pending" as const,
++           date_key: dateKey,
++           stale: true as const,
++         };
++       }
++
++       const payload: Record<string, unknown> = {
++         user_id: ctx.userId,
++         active_challenge_id: input.activeChallengeId,
++         task_id: input.taskId,
++         date_key: dateKey,
++         status: "pending",
++         value: decision.nextValue,
++       };
++       if (partial && partial.action === "write") payload.proof_payload_json = partial.payload;
++       if (input.noteText != null) payload.note_text = input.noteText;
++       if (input.proofUrl != null) {
++         const stored = ownedProofWrite(input.proofUrl, ctx.userId);
++         payload.proof_url = stored;
++         payload.photo_url = stored;
++       }
++
++       const { data, error } = await ctx.supabase
++         .from("check_ins")
++         .upsert(payload, { onConflict: "active_challenge_id,task_id,date_key" })
++         .select("id, value, status, date_key")
++         .single();
++       if (error) {
++         logger.error(
++           { supabaseError: error, payload },
++           "[checkins.saveProgress] upsert FAILED"
++         );
++         throw new TRPCError({
++           code: "INTERNAL_SERVER_ERROR",
++           message: "Failed to save progress.",
++         });
++       }
++       return {
++         id: (data as { id?: string } | null)?.id ?? null,
++         value: decision.nextValue,
++         status: "pending" as const,
++         date_key: dateKey,
++         stale: false as const,
++       };
++     }),
++
++   getTodayCheckins: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
++     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
++     const profileTz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
++     // Union today's date_keys across profile TZ and each task's schedule_timezone
++     // so counter hydrate finds the same row saveProgress/complete wrote.
++     const dateKeys = new Set<string>([getTodayDateKey(profileTz)]);
++     const { data: acRow } = await ctx.supabase
++       .from("active_challenges")
++       .select("challenge_id")
++       .eq("id", input.activeChallengeId)
++       .maybeSingle();
++     const challengeId = (acRow as { challenge_id?: string } | null)?.challenge_id;
++     let taskById = new Map<string, TaskModelRow>();
++     if (challengeId) {
++       const { data: tasks } = await ctx.supabase
++         .from("challenge_tasks")
++         .select(CHALLENGE_TASK_SELECT)
++         .eq("challenge_id", challengeId)
++         .limit(200);
++       for (const t of tasks ?? []) {
++         const cfg = ((t as { config?: ChallengeTaskConfig }).config ??
++           {}) as ChallengeTaskConfig;
++         dateKeys.add(
++           getTodayDateKey(
++             resolveCheckInTimeZone(cfg.schedule_timezone, profileTz)
++           )
++         );
++       }
++       taskById = new Map(
++         (tasks ?? []).map((t) => [String((t as { id?: string }).id), t as TaskModelRow])
++       );
++     }
++     const { data, error } = await ctx.supabase
++       .from("check_ins")
++       .select(
++         "id, task_id, date_key, status, value, note_text, photo_url, proof_url, completion_image_url, proof_source, proof_payload_json, external_activity_id, verification_status, created_at"
++       )
++       .eq("active_challenge_id", input.activeChallengeId)
++       .in("date_key", [...dateKeys])
++       .limit(100);
++     requireNoError(error, "Failed to load check-ins.");
++     const mapped = (data ?? []).map((row) => {
++       const task = taskById.get(String((row as { task_id?: string }).task_id));
++       return task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), profileTz) : row;
++     });
++     const signedToday = await signProofPaths(
++       mapped.flatMap((row) => {
++         const r = row as { proof_url?: string | null; completion_image_url?: string | null; photo_url?: string | null };
++         return [r.proof_url, r.completion_image_url, r.photo_url];
++       }),
++       ctx.userId,
++     );
++     return mapped.map((row, i) => {
++       const r = row as Record<string, unknown>;
++       return {
++         ...r,
++         proof_url: signedToday[i * 3] ?? null,
++         completion_image_url: signedToday[i * 3 + 1] ?? null,
++         photo_url: signedToday[i * 3 + 2] ?? null,
++       };
++     });
++   }),
++
++   getTodayCheckinsForUser: protectedProcedure.query(async ({ ctx }) => {
++     const tz = await getProfileTimeZoneForUser(ctx.supabase, ctx.userId);
++     const dateKey = getTodayDateKey(tz);
++     const { data: acList, error: acErr } = await applyEnrollmentWindow(
++       ctx.supabase
++         .from("active_challenges")
++         .select("id, challenge_id")
++         .eq("user_id", ctx.userId),
++     ).limit(50);
++     requireNoError(acErr, "Failed to load active challenges.");
++     const acRows = Array.isArray(acList) ? acList : [];
++     const acIds = acRows.map((r: { id: string }) => r.id);
++     if (acIds.length === 0) return [];
++     const challengeIds = [
++       ...new Set(
++         acRows
++           .map((r: { challenge_id?: string }) => r.challenge_id)
++           .filter((id): id is string => typeof id === "string" && id.length > 0)
++       ),
++     ];
++     const taskById = new Map<string, TaskModelRow>();
++     if (challengeIds.length > 0) {
++       const { data: tasks } = await ctx.supabase
++         .from("challenge_tasks")
++         .select(CHALLENGE_TASK_SELECT)
++         .in("challenge_id", challengeIds)
++         .limit(500);
++       for (const t of tasks ?? []) {
++         taskById.set(String((t as { id?: string }).id), t as TaskModelRow);
++       }
++     }
++     const rows = await Promise.all(
++       // Build 92 03.5: value + proof_payload_json so Home can show "{done} of {goal} logged" on an open task.
++       acIds.map((acId) => ctx.supabase.from("check_ins").select("id, active_challenge_id, task_id, date_key, status, value, proof_payload_json, proof_url, completion_image_url, verification_status, proof_source").eq("active_challenge_id", acId).eq("date_key", dateKey).limit(100))
++     );
++     const merged: Record<string, unknown>[] = [];
++     for (const { data, error } of rows) {
++       if (error) {
++         logger.error({ err: error }, "[getTodayCheckinsForUser] Supabase error");
++         requireNoError(error, "Failed to load today check-ins.");
++       }
++       for (const row of data ?? []) {
++         const task = taskById.get(String((row as { task_id?: string }).task_id));
++         merged.push(
++           task ? withWindowState(overlayTaskModel(row as Record<string, unknown>, task), tz) : row
++         );
++       }
++     }
++     const signedUser = await signProofPaths(
++       merged.flatMap((row) => {
++         const r = row as { proof_url?: string | null; completion_image_url?: string | null };
++         return [r.proof_url, r.completion_image_url];
++       }),
++       ctx.userId,
++     );
++     return merged.map((row, i) => ({
++       ...row,
++       proof_url: signedUser[i * 2] ?? null,
++       completion_image_url: signedUser[i * 2 + 1] ?? null,
++     }));
++   }),
++
++   secureDay: protectedProcedure
++     .input(z.object({ activeChallengeId: z.string().uuid() }))
++     .output(
++       z.object({
++         streak: z.number(),
++         secured: z.boolean(),
++         challenge_done: z.boolean(),
++         remaining_challenges: z.number(),
++         success: z.boolean(),
++         alreadySecured: z.boolean(),
++         newStreakCount: z.number(),
++         lastStandEarned: z.boolean(),
++         challengeDay: z.number(),
++         challengeCompleted: z.boolean(),
++         challengeId: z.string().uuid().optional(),
++         challengeName: z.string().optional(),
++         totalDays: z.number().optional(),
++         freezeGranted: z.boolean(),
++         freezesHeld: z.number(),
++         freezeCap: z.number(),
++         freezeAtCap: z.boolean(),
++       }),
++     )
++     .mutation(async ({ input, ctx }) => {
++     const t = createStepTimer();
++     const logSteps = (code: string | null) => {
++       const timing = t.finish();
++       logger.info(
++         { ms: timing.totalMs, gapMs: timing.gapMs, steps: timing.steps, userId: ctx.userId, code },
++         "[checkins.secureDay] steps",
++       );
++     };
++     try {
++       const { totalDaysSecured: _omit, ...out } = await secureDayCore(ctx, input.activeChallengeId, t);
++       logSteps(null);
++       return out;
++     } catch (err) {
++       logSteps(err instanceof TRPCError ? err.code : "UNKNOWN");
++       throw err;
++     }
++   }),
++
++   shareProof: protectedProcedure
++     .input(
++       z.object({
++         eventId: z.string().uuid(),
++         /** Build 90 09.2: a server-written completion (Strava) has no audience yet; the post choice sets it here. Older builds omit it. */
++         audience: z.enum(["friends", "everyone"]).optional(),
++       }),
++     )
++     .mutation(async ({ input, ctx }) => {
++     const svc = getSupabaseServer();
++     if (!svc) {
++       logger.error({ eventId: input.eventId }, "[checkins.shareProof] service role missing");
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
++     }
++     const { data: row, error } = await svc
++       .from("activity_events")
++       .select("id, user_id, event_type, shared, shared_at, metadata")
++       .eq("id", input.eventId)
++       .maybeSingle();
++     if (error) {
++       logger.error({ err: error, code: error.code, message: error.message, details: error.details }, "[checkins.shareProof] load");
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
++     }
++     if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Proof not found." });
++     const ev = row as {
++       id: string;
++       user_id: string;
++       event_type: string;
++       shared?: boolean;
++       shared_at?: string | null;
++       metadata?: Record<string, unknown> | null;
++     };
++     if (!canFlipShare(ev.user_id, ctx.userId)) {
++       throw new TRPCError({ code: "FORBIDDEN", message: "You can only share your own proof." });
++     }
++     const nowIso = new Date().toISOString();
++     const patch = flipSharePatch(ev.shared === true, nowIso, ev.shared_at ?? null);
++     const withAudience = input.audience
++       ? { ...patch, metadata: { ...(ev.metadata ?? {}), audience: input.audience } }
++       : patch;
++     const { error: upErr } = await svc.from("activity_events").update(withAudience as never).eq("id", ev.id);
++     if (upErr) {
++       logger.error({ err: upErr, code: upErr.code, message: upErr.message, details: upErr.details }, "[checkins.shareProof] update");
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not share that proof." });
++     }
++     const dateKey = typeof ev.metadata?.date_key === "string" ? ev.metadata.date_key : null;
++     if (dateKey) {
++       const { error: dayErr } = await svc
++         .from("activity_events")
++         .update({ shared: true, share_state: "shared", shared_at: patch.shared_at } as never)
++         .eq("user_id", ev.user_id)
++         .eq("event_type", "secured_day")
++         .eq("metadata->>date_key", dateKey)
++         .eq("share_state", "kept");
++       if (dayErr) {
++         logger.error({ err: dayErr, code: dayErr.code, message: dayErr.message, details: dayErr.details }, "[checkins.shareProof] secured_day");
++       }
++     }
++     return { ok: true as const, shared: true as const, sharedAt: patch.shared_at };
++   }),
++
++   unshareProof: protectedProcedure.input(z.object({ eventId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
++     const svc = getSupabaseServer();
++     if (!svc) {
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
++     }
++     const { data: row, error } = await svc
++       .from("activity_events")
++       .select("id, user_id")
++       .eq("id", input.eventId)
++       .maybeSingle();
++     if (error) {
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
++     }
++     if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Proof not found." });
++     const ev = row as { id: string; user_id: string };
++     if (!canFlipShare(ev.user_id, ctx.userId)) {
++       throw new TRPCError({ code: "FORBIDDEN", message: "You can only undo your own share." });
++     }
++     const patch = keepSharePatch();
++     const { error: upErr } = await svc.from("activity_events").update(patch as never).eq("id", ev.id);
++     if (upErr) {
++       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not undo that share." });
++     }
++     return { ok: true as const, shared: false as const };
++   }),
++
++   setPostAudience: protectedProcedure
++     .input(z.object({
++       eventId: z.string().uuid(),
++       audience: z.enum(["friends", "everyone", "only_me"]),
++     }))
++     .mutation(async ({ input, ctx }) => {
++       const svc = getSupabaseServer();
++       if (!svc) {
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
++       }
++       const { data: row, error } = await svc
++         .from("activity_events")
++         .select("id, user_id, metadata")
++         .eq("id", input.eventId)
++         .maybeSingle();
++       if (error || !row) {
++         throw new TRPCError({ code: "NOT_FOUND", message: "Post not found." });
++       }
++       const ev = row as { id: string; user_id: string; metadata?: Record<string, unknown> | null };
++       if (!canFlipShare(ev.user_id, ctx.userId)) {
++         throw new TRPCError({ code: "FORBIDDEN", message: "You can only change your own post." });
++       }
++       const cols = shareColumns(shareStateForAudience(input.audience));
++       const metadata = { ...(ev.metadata ?? {}), audience: input.audience };
++       const { error: upErr } = await svc
++         .from("activity_events")
++         .update({ ...cols, metadata } as never)
++         .eq("id", ev.id);
++       if (upErr) {
++         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Could not update who sees this." });
++       }
++       return { ok: true as const, audience: input.audience };
++     }),
++
++   markAsShared: protectedProcedure.input(z.object({ completionId: z.string().uuid() })).mutation(async ({ input, ctx }) => {
++     const { data: row } = await ctx.supabase.from("check_ins").select("id, active_challenge_id").eq("id", input.completionId).single();
++     if (!row) return { success: false };
++     const { data: ac } = await ctx.supabase.from("active_challenges").select("user_id").eq("id", (row as { active_challenge_id?: string }).active_challenge_id).single();
++     if (!ac || (ac as { user_id?: string }).user_id !== ctx.userId) return { success: false };
++     await ctx.supabase.from("check_ins").update({ shared: true }).eq("id", input.completionId);
++     return { success: true };
++   }),
++
++   getShareStats: protectedProcedure.query(async ({ ctx }) => {
++     const { data: acList } = await ctx.supabase.from("active_challenges").select("id").eq("user_id", ctx.userId).limit(100);
++     const acIds = (acList ?? []).map((r: { id: string }) => r.id);
++     if (acIds.length === 0) return { totalShared: 0 };
++     const { count } = await ctx.supabase.from("check_ins").select("id", { count: "exact", head: true }).eq("status", "completed").eq("shared", true).in("active_challenge_id", acIds);
++     return { totalShared: count ?? 0 };
++   }),
++
++   getMilestoneShared: protectedProcedure.input(z.object({ activeChallengeId: z.string().uuid() })).query(async ({ input, ctx }) => {
++     await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
++     // milestone columns absent in production, see audit 2026-09-23
++     return { milestone_30_shared: false, milestone_75_shared: false };
++   }),
++
++   setMilestoneShared: protectedProcedure
++     .input(z.object({ activeChallengeId: z.string().uuid(), milestoneDay: z.union([z.literal(30), z.literal(75)]) }))
++     .mutation(async ({ input, ctx }) => {
++       await assertActiveChallengeOwnership(ctx.supabase, input.activeChallengeId, ctx.userId);
++       // milestone columns absent in production, see audit 2026-09-23
++       return { success: true };
++     }),
++ });
++
++ finishSideEffects.secure = (ctx, activeChallengeId) =>
++   checkinsRouter.createCaller(ctx as never).secureDay({ activeChallengeId });
++ finishSideEffects.share = async (ctx, eventId) => {
++   await checkinsRouter.createCaller(ctx as never).shareProof({ eventId });
++ };
++
+
+ ❯ backend/lib/post-result.test.ts:41:22
+     39|   it("complete and the Strava webhook write the result; hydrate and ge…
+     40|     const checkins = read("backend/trpc/routes/checkins.ts");
+     41|     expect(checkins).toContain("result: postResultFacts(");
+       |                      ^
+     42|     const webhook = read("backend/lib/strava-webhook.ts");
+     43|     expect(webhook).toContain("result: postResultFromStrava(");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  backend/lib/post-result.test.ts > build 92 04.5 · a self-like is rejected by the server > feed.react looks the owner up before toggling and throws FORBIDDEN
+AssertionError: expected -1 to be greater than -1
+ ❯ backend/lib/post-result.test.ts:74:19
+     72|     const guard = react.indexOf("selfLikeRejected(");
+     73|     const toggle = react.indexOf('.from("feed_reactions")');
+     74|     expect(guard).toBeGreaterThan(-1);
+       |                   ^
+     75|     expect(guard).toBeLessThan(toggle);
+     76|     expect(react).toContain('code: "FORBIDDEN", message: SELF_LIKE_MES…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 6 passed (8)
+   Start at  15:16:16
+   Duration  615ms (transform 64ms, setup 0ms, collect 35ms, tests 10ms, environment 0ms, prepare 183ms)
+

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,15 @@ import {
   FlatList,
   Pressable,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   RefreshControl,
+  ActionSheetIOS,
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Screen from "@/components/ds/Screen";
-import { ArrowUp } from "lucide-react-native";
+import { ArrowUp, MoreHorizontal } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
@@ -24,8 +26,20 @@ import Divider from "@/components/ds/Divider";
 import TextField from "@/components/ds/TextField";
 import Skeleton from "@/components/ds/Skeleton";
 import CommentRow from "@/components/ds/CommentRow";
-import Button from "@/components/ds/Button";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
+import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
+import { PostResultRow } from "@/components/feed/PostResult";
+import { postBadge } from "@/lib/post-result";
+import {
+  AUDIENCE_CHOICES,
+  AUDIENCE_VALUES,
+  POST_MENU_CANCEL,
+  POST_MENU_DELETE,
+  POST_MENU_DELETE_NOTE,
+  ownerMenuAction,
+  ownerMenuOptions,
+} from "@/lib/post-menu";
+import { optimisticRespect, rollbackRespect, settleRespect } from "@/lib/feed-respect";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
 import type { LiveFeedPost } from "@/components/feed/feedTypes";
@@ -38,8 +52,6 @@ import { CANCEL_REPORT_LABEL, REPORT_COMMENT_LABEL, REPORT_COMMENT_PROMPT, comme
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
-  POST_DETAIL_DONE,
-  POST_DETAIL_SHARE_OUTSIDE,
   POST_DETAIL_TITLE,
   commentsCountLabel,
   visibleCommentCount,
@@ -48,7 +60,6 @@ import {
   completionLine,
   postDetailLoading,
   postDetailPhotoUri,
-  postDetailStamp,
   sendComposerArmed,
 } from "@/lib/post-detail";
 import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
@@ -87,6 +98,15 @@ function PostThreadScreenInner() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const reportComment = useReportComment(id);
+  // Build 92 04.6: the list scrolls to the latest comment when the keyboard opens or a comment is sent.
+  const listRef = useRef<FlatList<{ item: CommentItem; depth: 0 | 1 }>>(null);
+  const scrollToLatest = useCallback(() => {
+    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+  }, []);
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidShow", scrollToLatest);
+    return () => sub.remove();
+  }, [scrollToLatest]);
 
   const cachedPost = useMemo(() => {
     if (!id) return null;
@@ -148,6 +168,7 @@ function PostThreadScreenInner() {
       void postQuery.refetch();
       setDraft("");
       setReplyTo(null);
+      scrollToLatest();
     },
     onError: (e) => {
       captureError(e, "PostThreadComment");
@@ -178,6 +199,80 @@ function PostThreadScreenInner() {
       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
     },
   });
+
+  // Build 92 04.6: Back returns to where the post was opened from; Home when there is no history.
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace(ROUTES.TABS_HOME as never);
+  }, [router]);
+
+  const deletePostMutation = useMutation({
+    mutationFn: () => trpcMutate(TRPC.checkins.unshareProof, { eventId: id }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+      goBack();
+    },
+    onError: (e) => captureError(e, "PostThreadDeletePost"),
+  });
+
+  // Build 92 04.4: a double tap on the photo likes once (never unlikes; nothing on your own post).
+  const likeFromPhoto = useCallback(async () => {
+    const post = postQuery.data;
+    if (!post || post.reactedByMe) return;
+    const prev = { reactedByMe: post.reactedByMe, respectCount: post.respectCount };
+    const next = optimisticRespect(prev);
+    queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...next } : p));
+    try {
+      const result = (await trpcMutate(TRPC.feed.react, { eventId: id })) as { reacted?: boolean; reactionCount?: number };
+      queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...settleRespect(result, next) } : p));
+      void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
+    } catch (e) {
+      captureError(e, "PostThreadLike");
+      queryClient.setQueryData<LiveFeedPost>(["feed", "post", id], (p) => (p ? { ...p, ...rollbackRespect(prev) } : p));
+    }
+  }, [postQuery.data, queryClient, id]);
+
+  const openPhoto = useCallback(() => {
+    const post = postQuery.data;
+    const uri = post ? postDetailPhotoUri(post) : null;
+    if (!post || !uri) return;
+    router.push({
+      pathname: ROUTES.POST_PHOTO(id),
+      params: { uri, name: post.displayName ?? "", context: `${post.challengeName} · Day ${post.currentDay}` },
+    } as never);
+  }, [postQuery.data, router, id]);
+
+  // Build 92 04.6: the owner's "…" menu — Who sees this · Share · Delete post.
+  const openOwnerMenu = useCallback(() => {
+    const post = postQuery.data;
+    if (!post || Platform.OS !== "ios") return;
+    const canRetarget = post.audience === "friends" || post.audience === "everyone" || post.audience === "only_me";
+    const pickAudience = () =>
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [...AUDIENCE_CHOICES, POST_MENU_CANCEL], cancelButtonIndex: AUDIENCE_CHOICES.length },
+        (i) => {
+          const next = AUDIENCE_VALUES[i];
+          if (next) audienceMutation.mutate(next);
+        },
+      );
+    const confirmDelete = () =>
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: POST_MENU_DELETE_NOTE, options: [POST_MENU_DELETE, POST_MENU_CANCEL], destructiveButtonIndex: 0, cancelButtonIndex: 1 },
+        (i) => {
+          if (i === 0) deletePostMutation.mutate();
+        },
+      );
+    const options = ownerMenuOptions(canRetarget);
+    ActionSheetIOS.showActionSheetWithOptions(
+      { options, cancelButtonIndex: options.length - 1, destructiveButtonIndex: options.indexOf(POST_MENU_DELETE) },
+      (i) => {
+        const action = ownerMenuAction(canRetarget, i);
+        if (action === "who_sees") pickAudience();
+        else if (action === "share") setShareOpen(true);
+        else if (action === "delete") confirmDelete();
+      },
+    );
+  }, [postQuery.data, audienceMutation, deletePostMutation]);
 
   const onSend = useCallback(() => {
     const t = draft.trim();
@@ -216,12 +311,24 @@ function PostThreadScreenInner() {
       return <Text style={styles.missing}>Post not found.</Text>;
     }
     const author = displayPost.displayName || displayPost.username;
-    const stamp = postDetailStamp(displayPost);
     const proofUri = postDetailPhotoUri(displayPost);
+    const own = Boolean(user?.id && displayPost.userId === user.id);
     return (
       <View>
         <View style={styles.gutter}>
-          {proofUri ? <ProofImage uri={proofUri} size="feed" stamp={stamp} /> : null}
+          {proofUri ? (
+            <DoubleTapRespect
+              respected={displayPost.reactedByMe}
+              onRespect={() => void likeFromPhoto()}
+              onOpen={openPhoto}
+              ownPost={own}
+              testID="post-detail-photo"
+              accessibilityLabel="Open photo"
+            >
+              <ProofImage uri={proofUri} size="feed" />
+            </DoubleTapRespect>
+          ) : null}
+          <PostResultRow result={displayPost.result} badge={postBadge(displayPost)} compact />
           <Pressable
             testID="post-author"
             accessibilityRole="button"
@@ -250,23 +357,7 @@ function PostThreadScreenInner() {
           {audienceBadge(displayPost.audience) && !(user?.id && displayPost.userId === user.id) ? (
             <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
           ) : null}
-          {user?.id && displayPost.userId === user.id ? (
-            <View style={styles.finish}>
-              {/* Build 92 02.5: the audience is asked once, on the post sheet. The owner changes
-                  it from the "…" menu (chunk 04); no inline control here. */}
-              <Button
-                label={POST_DETAIL_DONE}
-                onPress={() => router.replace(ROUTES.TABS_HOME as never)}
-                testID="post-done"
-              />
-              <Button
-                label={POST_DETAIL_SHARE_OUTSIDE}
-                variant="secondary"
-                onPress={() => setShareOpen(true)}
-                testID="post-share-outside"
-              />
-            </View>
-          ) : null}
+          {/* Build 92 04.6: no Done here. The owner's audience, Share and Delete live in the "…" menu. */}
           {commentsCountLabel(visibleCount) ? (
             <Text style={styles.count}>{commentsCountLabel(visibleCount)}</Text>
           ) : null}
@@ -279,7 +370,7 @@ function PostThreadScreenInner() {
         ) : null}
       </View>
     );
-  }, [loading, displayPost, visibleCount, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
+  }, [loading, displayPost, visibleCount, postQuery.isError, postQuery.error, section, user?.id, openPerson, likeFromPhoto, openPhoto]);
 
   const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
 
@@ -382,13 +473,40 @@ function PostThreadScreenInner() {
   return (
     <Screen style={styles.safe} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <PushedHeader title={POST_DETAIL_TITLE} onBack={() => router.back()} />
+      {/* Build 92 04.6: the title is the challenge, the author under it; never the route word. */}
+      <PushedHeader
+        title={displayPost?.challengeName ?? POST_DETAIL_TITLE}
+        titleSlot={
+          displayPost ? (
+            <View style={styles.titleSlot}>
+              <Text style={styles.headerTitle} numberOfLines={1}>{displayPost.challengeName}</Text>
+              <Text style={styles.headerSub} numberOfLines={1}>{displayPost.displayName || displayPost.username}</Text>
+            </View>
+          ) : undefined
+        }
+        onBack={goBack}
+        trailing={
+          ownPost ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="More"
+              testID="post-menu"
+              onPress={openOwnerMenu}
+              style={styles.more}
+            >
+              <MoreHorizontal size={ICON} color={DS_V3.color.textPrimary} />
+            </Pressable>
+          ) : undefined
+        }
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? DS_V3.size.tap : 0}
+        // The composer sits on the keyboard: offset = top inset + the 44pt header above this view.
+        keyboardVerticalOffset={insets.top + DS_V3.size.tap}
       >
         <FlatList
+          ref={listRef}
           data={section === "list" ? rows : []}
           keyExtractor={(row) => row.item.id}
           contentContainerStyle={styles.list}
@@ -526,7 +644,19 @@ const styles = StyleSheet.create({
     gap: DS_V3.space.lg,
   },
   authorCopy: { flex: 1, gap: PT },
-  finish: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.xs },
+  titleSlot: { alignItems: "center" },
+  headerTitle: {
+    fontSize: DS_V3.type.bodyStrong.fontSize,
+    lineHeight: DS_V3.type.bodyStrong.lineHeight,
+    fontWeight: DS_V3.type.bodyStrong.fontWeight,
+    color: DS_V3.color.textPrimary,
+  },
+  headerSub: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.textSecondary,
+  },
+  more: { width: DS_V3.size.tap, height: DS_V3.size.tap, alignItems: "center", justifyContent: "center" },
   author: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,

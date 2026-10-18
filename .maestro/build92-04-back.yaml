@@ -1,0 +1,121 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 04: proof detail. A guest posts a check-off to everyone, opens it from the feed
+# three times and Back returns to the feed at the same post each time. The detail has the challenge
+# as its title, no Done, an owner "…" menu (Who sees this · Share · Delete post, P1-27), an empty
+# comments state (P1-26), the composer on the keyboard (P1-25) and the comment it sends (P1-24).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: "Walk 7,000 steps"
+      index: 0
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "Walk 7,000 steps"
+    index: 0
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 20000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Every task today is done.|^Later$"
+    timeout: 30000
+- tapOn:
+    text: "^Later$"
+    optional: true
+- tapOn:
+    text: "^Done$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 20000
+# Following with nobody followed shows only the guest's own post.
+- tapOn:
+    text: "Show feed from people you follow"
+    optional: true
+
+# Three times: feed -> post -> Back lands on the feed with the same post on screen.
+- repeat:
+    times: 3
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: "post-result"
+          direction: DOWN
+          timeout: 30000
+          centerElement: true
+      - tapOn:
+          id: "post-result"
+      - extendedWaitUntil:
+          visible:
+            id: "post-menu"
+          timeout: 15000
+      - assertVisible: "7K Steps.*"
+      - assertNotVisible: "^Proof$"
+      - assertNotVisible:
+          id: "post-done"
+      - tapOn: "Go back"
+      - extendedWaitUntil:
+          visible:
+            id: "post-result"
+          timeout: 10000
+      - assertVisible:
+          id: "tab-home"
+
+# The detail once more for the frames.
+- tapOn:
+    id: "post-result"
+- extendedWaitUntil:
+    visible:
+      id: "post-menu"
+    timeout: 15000
+- assertVisible: "No comments yet.*"
+- takeScreenshot: P1-26-proof-detail-empty
+- tapOn:
+    id: "post-menu"
+- extendedWaitUntil:
+    visible: "Who sees this"
+    timeout: 5000
+- assertVisible: "^Share$"
+- assertVisible: "Delete post"
+- takeScreenshot: P1-27-owner-menu
+- tapOn: "Cancel"
+- tapOn: "Add a comment.*"
+- inputText: "Nice one"
+- takeScreenshot: P1-25-composer-on-keyboard
+- tapOn: "Send comment"
+- extendedWaitUntil:
+    visible: "Nice one"
+    timeout: 15000
+- takeScreenshot: P1-24-proof-detail-comments
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 10000

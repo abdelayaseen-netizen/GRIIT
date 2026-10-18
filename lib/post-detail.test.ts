@@ -105,6 +105,8 @@ describe("postDetailPhotoUri", () => {
     expect(postDetailPhotoUri({ proofPhotoUrl: "https://cdn/p.jpg" })).toBe("https://cdn/p.jpg");
     const src = readFileSync(resolve(__dirname, "../app/post/[id]/index.tsx"), "utf8");
     expect(src).toContain("postDetailPhotoUri");
-    expect(src).toContain("proofUri ? <ProofImage");
+    // Build 92 04.4: the image sits inside the double-tap wrapper; still rendered only when there is a uri.
+    expect(src).toMatch(/proofUri \? \(\s+<DoubleTapRespect/);
+    expect(src).toContain("<ProofImage uri={proofUri}");
   });
 });

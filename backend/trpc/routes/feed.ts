@@ -1,4 +1,6 @@
 import * as z from "zod";
+import { postBadgeFrom, postResultFromMetadata } from "../../lib/post-result";
+import { SELF_LIKE_MESSAGE, selfLikeRejected } from "../../lib/feed-like";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
 import { sendPushToProfile } from "../../lib/sendPush";
@@ -444,6 +446,9 @@ export const feedRouter = createTRPCRouter({
       shareCount,
       visibility: vis,
       audience: typeof md.audience === "string" ? md.audience : null,
+      // Build 92 04.1 / 04.2: result facts + the one badge (same as the list). Additive.
+      result: postResultFromMetadata(md),
+      badge: postBadgeFrom(md),
     };
   }),
 
@@ -691,6 +696,16 @@ export const feedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      // Build 92 04.5: you can't like your own post. The owner is read first (service role, so RLS
+      // can't hide the row); when the lookup is unavailable the toggle proceeds as before.
+      const ownerSrv = getSupabaseServer();
+      if (ownerSrv) {
+        const { data: ownerRow } = await ownerSrv.from("activity_events").select("user_id").eq("id", input.eventId).maybeSingle();
+        const ownerId = (ownerRow as { user_id?: string } | null)?.user_id ?? null;
+        if (selfLikeRejected(ownerId, ctx.userId)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: SELF_LIKE_MESSAGE });
+        }
+      }
       // Count before toggle, then ±1 — avoids stale post-delete COUNT under PgBouncer pool
       const [{ data: existing }, { count: countBefore }] = await Promise.all([
         ctx.supabase

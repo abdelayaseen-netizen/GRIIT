@@ -18,6 +18,7 @@ import { getTaskVerification, isTaskRequired } from "./challenge-tasks";
 import { activityMatchesRule } from "./strava-verifier";
 import { ensureValidToken, getActivity, type ConnectedAccountRow, type StravaActivity } from "./strava-service";
 import { isStravaAutoVerifyEnabled } from "./strava-auto-verify";
+import { postResultFromStrava } from "./post-result";
 import { shareColumns } from "./activity-share";
 import { calendarDayIndexInclusive, dateKeyFromIsoInTimeZone, dateKeyInTimeZone, getProfileTimeZoneForUser } from "./date-utils";
 import { sendPushToProfile } from "./sendPush";
@@ -243,6 +244,8 @@ export async function processStravaWebhookEvent(
         heart_rate_verified: false,
         location_verified: false,
         strava_activity_id: activityId,
+        // Build 92 04.1: distance and time from the activity, so the post can say "{d} mi · {time} · {pace} /mi".
+        result: postResultFromStrava(activity, (task.config as { unit?: unknown } | null | undefined)?.unit),
       },
     });
 

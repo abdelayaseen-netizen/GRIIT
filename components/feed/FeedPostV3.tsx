@@ -9,18 +9,17 @@ import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
 import ProofImage from "@/components/ds/ProofImage";
 import { ProofFallbackTile } from "@/components/ds/ProofFallbackTile";
-import { CameraSeal, SealSheet, showCameraSeal } from "@/components/feed/CameraSeal";
 import DoubleTapRespect from "@/components/feed/DoubleTapRespect";
 import { FeedCompactRow } from "@/components/feed/FeedCompactRow";
 import { InlineComments } from "@/components/feed/InlineComments";
+import { PostResultRow } from "@/components/feed/PostResult";
 import type { FeedCommentPreview, LiveFeedPost } from "@/components/feed/feedTypes";
 import { hasCameraProof } from "@/lib/active-challenge-ui";
 import { calendarDateLabel, formatTimeAgoCompact } from "@/lib/formatTimeAgo";
 import { respectHeart } from "@/lib/feed-respect";
 import { feedAvatarUri, liveFeedProofUrl } from "@/lib/live-feed-list";
-import { verifiedLine } from "@/lib/strava-verify";
+import { likedByLine, postBadge } from "@/lib/post-result";
 import {
-  feedCardMeta,
   feedCardSubject,
   feedCardVariant,
   feedProofSubject,
@@ -64,7 +63,6 @@ export default function FeedPostV3({
   onOpenPhoto,
   onMenu,
 }: FeedPostV3Props) {
-  const [sealOpen, setSealOpen] = React.useState(false);
   const photo = liveFeedProofUrl(post);
   const cameraProof = hasCameraProof({
     proof_photo_url: post.proofPhotoUrl || (post.hasProof ? post.photoUrl : null) || null,
@@ -87,12 +85,9 @@ export default function FeedPostV3({
     { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof },
     variant,
   );
-  const meta = feedCardMeta(
-    { ...post, challengeName: post.challengeName, currentDay: post.currentDay, totalDays: post.totalDays, eventType: post.eventType, isCompleted: post.isCompleted, hasProof: post.hasProof, cameraGate: cameraProof, photo: Boolean(photo), securedDays: post.securedDays },
-    variant,
-  );
   const ownPost = Boolean(viewerUserId && viewerUserId === post.userId);
-  const seal = showCameraSeal(post.proofPhotoUrl ?? null);
+  // Build 92 04.2: exactly one badge per post.
+  const badge = postBadge(post);
   const open = onOpenPost ?? onSeeDay ?? (() => undefined);
 
   if (variant === "challenge_finished") {
@@ -150,6 +145,8 @@ export default function FeedPostV3({
           liked={post.reactedByMe}
           respectCount={post.respectCount}
           commentCount={post.commentCount}
+          ownPost={ownPost}
+          lastReactorName={post.lastReactorName}
           onLike={onLike}
           onComment={onComment}
           onShare={onShare}
@@ -182,7 +179,7 @@ export default function FeedPostV3({
         dayN={post.currentDay}
         dayOf={post.totalDays}
         challenge={post.challengeName}
-        gateLine={verifiedLine(post.verifiedBy) ?? (meta || "Self-reported")}
+        gateLine={badge}
         respects={post.respectCount}
         respected={post.reactedByMe}
         comments={post.commentCount}
@@ -211,14 +208,19 @@ export default function FeedPostV3({
         onMenu={onMenu}
       />
       {variant === "task_camera" ? (
-        <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={onOpenPhoto ?? open} ownPost={ownPost}>
+        <View>
+        {/* Build 92 04.4: one gesture owns both taps — a double tap likes, a single tap opens after 250 ms.
+            The photo is not a Pressable, so the first tap of a double no longer opens the photo. */}
+        <DoubleTapRespect
+          respected={post.reactedByMe}
+          onRespect={onLike}
+          onOpen={onOpenPhoto ?? open}
+          ownPost={ownPost}
+          accessibilityLabel={post.caption ? `${post.caption}. Open photo` : "Open photo"}
+        >
         <View style={styles.photoFrame}>
           {photo ? (
-            <Pressable
-              accessibilityRole="image"
-              accessibilityLabel={post.caption ? `${post.caption}. Open photo` : "Open photo"}
-              onPress={onOpenPhoto ?? open}
-            >
+            <View accessibilityRole="image">
               <ProofImage uri={photo} size="feed" recyclingKey={post.id} />
               {post.caption ? (
                 <LinearGradient
@@ -230,17 +232,17 @@ export default function FeedPostV3({
                   <Text style={styles.photoTitle}>{post.caption}</Text>
                 </LinearGradient>
               ) : null}
-            </Pressable>
+            </View>
           ) : (
             <ProofFallbackTile taskName={subject} />
           )}
-          {photo && seal ? (
-            <View style={styles.seal}>
-              <CameraSeal onPress={() => setSealOpen(true)} size={28} />
-            </View>
-          ) : null}
         </View>
         </DoubleTapRespect>
+        {/* Build 92 04.1: the result and the one badge, under the photo. */}
+        <View style={styles.resultUnderPhoto}>
+          <PostResultRow result={post.result} badge={badge} compact />
+        </View>
+        </View>
       ) : (
         <DoubleTapRespect respected={post.reactedByMe} onRespect={onLike} onOpen={open} ownPost={ownPost}>
         <View style={styles.selfPanel}>
@@ -250,10 +252,10 @@ export default function FeedPostV3({
             </View>
             <View style={styles.taskCopy}>
               <Text style={styles.taskTitle}>{subject}</Text>
-              {/* 09.3: a Strava completion names its verifier once (lib/strava-verify), in place of Self-reported. */}
-              <Text style={styles.gate}>{verifiedLine(post.verifiedBy) ?? selfReportedLine(post.createdAt)}</Text>
             </View>
           </View>
+          {/* Build 92 04.1 / 04.2: the result per task type and the one badge (no timed "Self-reported · 7:00 pm"). */}
+          <PostResultRow result={post.result} badge={badge} compact />
           <View style={styles.selfRule} />
           <Text style={styles.selfMeta}>
             {selfReportedCardMeta(post.challengeName, post.currentDay, post.totalDays, post.streakCount)}
@@ -266,6 +268,8 @@ export default function FeedPostV3({
         liked={post.reactedByMe}
         respectCount={post.respectCount}
         commentCount={post.commentCount}
+        ownPost={ownPost}
+        lastReactorName={post.lastReactorName}
         onLike={onLike}
         onComment={onComment}
         onShare={onShare}
@@ -278,18 +282,8 @@ export default function FeedPostV3({
         onAuthorPress={onCommentAuthorPress}
       />
     </View>
-    <SealSheet visible={sealOpen} onDismiss={() => setSealOpen(false)} gates={{}} />
     </>
   );
-}
-
-function selfReportedLine(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "Self-reported";
-  const h = d.getHours();
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `Self-reported · ${hour}:${min} ${h < 12 ? "am" : "pm"}`;
 }
 
 function PostHeader({
@@ -316,7 +310,8 @@ function PostHeader({
   onChallengePress?: () => void;
   onMenu?: () => void;
 }) {
-  const subjectText = <Text style={styles.subject} numberOfLines={2}>{subject}</Text>;
+  // Build 92 04.3: challenge and day on one line; the time on the right never wraps into it.
+  const subjectText = <Text style={styles.subject} numberOfLines={1} ellipsizeMode="tail">{subject}</Text>;
   return (
     <View style={styles.header}>
       <Pressable
@@ -357,7 +352,7 @@ function PostHeader({
           </Pressable>
         )}
       </View>
-      <Text style={styles.when}>{when}</Text>
+      <Text style={styles.when} numberOfLines={1}>{when}</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="More"
@@ -383,6 +378,8 @@ function ActionRow({
   liked,
   respectCount,
   commentCount,
+  ownPost = false,
+  lastReactorName,
   onLike,
   onComment,
   onShare,
@@ -390,15 +387,24 @@ function ActionRow({
   liked: boolean;
   respectCount: number;
   commentCount: number;
+  /** Build 92 04.5: no heart on your own post; it reads "Liked by {name} and {n} others". */
+  ownPost?: boolean;
+  lastReactorName?: string | null;
   onLike: () => void;
   onComment: () => void;
   onShare: () => void;
 }) {
   const bounce = React.useRef(new Animated.Value(1)).current;
   const heart = respectHeart(liked);
+  const likedBy = likedByLine(lastReactorName, respectCount);
   return (
     <View style={styles.actions}>
       <View style={styles.respect}>
+        {ownPost ? (
+          likedBy ? (
+            <Text testID="feed-liked-by" style={styles.likedBy} numberOfLines={1}>{likedBy}</Text>
+          ) : null
+        ) : (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={liked ? "Liked by you" : "Like"}
@@ -418,7 +424,8 @@ function ActionRow({
             <Heart size={ICON} color={heart.color} fill={heart.fill} />
           </Animated.View>
         </Pressable>
-        {respectCount > 0 ? (
+        )}
+        {!ownPost && respectCount > 0 ? (
           <Text
             testID="feed-respect-count"
             accessibilityLabel={`${respectCount} likes`}
@@ -535,10 +542,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  gate: {
-    ...DS_V3.type.secondary,
-    color: DS_V3.color.textSecondary,
-  },
   taskTitle: {
     fontSize: DS_V3.type.title.fontSize,
     lineHeight: DS_V3.type.title.lineHeight,
@@ -548,7 +551,8 @@ const styles = StyleSheet.create({
   selfRule: { height: StyleSheet.hairlineWidth, backgroundColor: DS_V3.color.hairline },
   selfMeta: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
   selfCaption: { ...DS_V3.type.body, color: DS_V3.color.textPrimary },
-  seal: { position: "absolute", top: 12, left: 12, zIndex: 2 },
+  resultUnderPhoto: { paddingTop: 10 },
+  likedBy: { ...DS_V3.type.caption, color: DS_V3.color.textPrimary, paddingLeft: 4 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -560,7 +564,7 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1 },
   name: { fontSize: 15, lineHeight: 20, fontWeight: "600", color: DS_V3.color.textPrimary },
-  when: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary },
+  when: { ...DS_V3.type.caption, color: DS_V3.color.textSecondary, flexShrink: 0 },
   subject: { ...DS_V3.type.secondary, color: DS_V3.color.textSecondary },
   actions: {
     flexDirection: "row",

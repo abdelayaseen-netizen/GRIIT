@@ -1,0 +1,140 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 04: likes. Guest A posts a photo to everyone with a marker caption and sees no heart
+# on their own post (P1-23). A fresh guest B finds it in the Everyone feed: a double tap likes it once
+# (count 1), a second double tap keeps it (never unlikes, no open), a single tap opens full screen
+# (P1-22) where a double tap also never unlikes.
+
+# ---- Guest A: post a photo to everyone --------------------------------------------------------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Drink water and post a photo|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Drink water and post a photo"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-caption"
+- inputText: "b92 likes marker"
+- tapOn: "Post your proof"
+- tapOn:
+    id: "post-choice-everyone"
+- assertVisible: "Post to everyone"
+- tapOn:
+    id: "post-choice-post"
+- extendedWaitUntil:
+    visible: "Drink Water Today · finished"
+    timeout: 60000
+- tapOn: "See the record"
+- extendedWaitUntil:
+    visible: "^Later$"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 20000
+# Own post in the feed: the result row and the badge, no heart (04.5).
+- scrollUntilVisible:
+    element:
+      text: "b92 likes marker. Open photo"
+    direction: DOWN
+    timeout: 30000
+    centerElement: true
+- assertVisible:
+    id: "post-result"
+- takeScreenshot: P1-23-own-post-no-heart
+
+# ---- Guest B: like it ---------------------------------------------------------------------------
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps"
+    timeout: 20000
+- tapOn:
+    text: "Show feed from everyone"
+    optional: true
+- scrollUntilVisible:
+    element:
+      text: "b92 likes marker. Open photo"
+    direction: DOWN
+    timeout: 30000
+    centerElement: true
+- assertNotVisible: "Liked by you"
+- takeScreenshot: P1-19-feed-photo-post
+# Double tap: liked once.
+- doubleTapOn: "b92 likes marker. Open photo"
+- takeScreenshot: P1-21-double-tap-burst
+- extendedWaitUntil:
+    visible: "Liked by you"
+    timeout: 8000
+- assertVisible: "1 likes"
+- assertNotVisible: "Close"
+# Second double tap: still liked, still 1, nothing opened.
+- doubleTapOn: "b92 likes marker. Open photo"
+- waitForAnimationToEnd
+- assertVisible: "Liked by you"
+- assertVisible: "1 likes"
+- assertNotVisible: "Close"
+# Single tap: full screen after the window.
+- tapOn: "b92 likes marker. Open photo"
+- extendedWaitUntil:
+    visible: "Close"
+    timeout: 8000
+- takeScreenshot: P1-22-full-screen
+# Double tap in full screen never unlikes.
+- doubleTapOn:
+    id: "post-photo-full"
+- waitForAnimationToEnd
+- tapOn: "Close"
+- extendedWaitUntil:
+    visible: "Liked by you"
+    timeout: 8000
+- assertVisible: "1 likes"

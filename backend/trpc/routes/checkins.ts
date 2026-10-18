@@ -101,6 +101,7 @@ import { cameraProofTiles } from "../../lib/proof-predicate";
 import { ownedProofWrite, signProofPaths } from "../../lib/proof-image";
 import { bundleTaskFinish } from "../../lib/finish-bundle";
 import { createStepTimer, type StepTimer } from "../../lib/step-timer";
+import { postResultFacts } from "../../lib/post-result";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type TaskRowWithVerification = ChallengeTaskRowRaw & {
@@ -1365,6 +1366,15 @@ export const checkinsRouter = createTRPCRouter({
             audience: input.audience ?? null,
             heart_rate_verified: false,
             location_verified: locationGatePassed,
+            // Build 92 04.1: the result the post shows (facts only; the client writes the words). Additive.
+            result: postResultFacts({
+              taskType,
+              run: runLogFacts ? { distance_km: runLogFacts.distance_km, duration_min: runLogFacts.duration_min } : null,
+              workout: workoutLogFacts ? { kind: workoutLogFacts.kind, duration_min: workoutLogFacts.duration_min } : null,
+              counter: counterLogFacts ? { count: counterLogFacts.count, unit_plural: counterLogFacts.unit_plural } : null,
+              timerMinutes: taskType === "timer" && typeof input.value === "number" ? input.value : null,
+              configUnit: cfg.unit,
+            }),
           },
         };
       }

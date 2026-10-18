@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { postBadgeFrom, postResultFromMetadata } from "./post-result";
 import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
@@ -403,6 +404,9 @@ export async function hydrateActivityEventsToPosts(
       commentCount: commentCounts.get(ev.id) ?? 0,
       visibility,
       audience: typeof md.audience === "string" ? md.audience : null,
+      // Build 92 04.1 / 04.2: the result facts and the one badge. Additive; build 91 ignores them.
+      result: postResultFromMetadata(md),
+      badge: postBadgeFrom(md),
     };
   });
   const dropped = new Set<string>();

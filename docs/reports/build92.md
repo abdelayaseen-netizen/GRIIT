@@ -391,3 +391,74 @@ copy table rows Counter, Run, Partial, Short toast, Home row; `src/finish/format
 - SE run-partial frames (P1-30 to P1-35) not captured: the create wizard's Add-task sheet can't be driven past the
   keyboard on the SE simulator by Maestro (see gates). To capture by hand: SE → Create → Custom → Add a task → Run,
   3 km → tap the field's "km" chip to drop the keyboard → Add task, then follow `.maestro/build92-03-run-partial.yaml`.
+
+## Chunk 04 · Posts, likes and proof detail
+
+Design reference: `design/handoff/b92/part1-finish-loop/` frames P1-19 to P1-27; checklist lines 135–145; copy
+table rows Post results, Badges, Own post, Proof detail, Owner menu; `src/finish/PostResult.tsx`, `format.ts`
+(`resultLine`, `verifyLabel`), `useDoubleTapLike.ts` (reference only, not imported). Token mapping: the handoff's
+`DS_V3.type.earnedNumber` → `DS_V3.type.headline` with tabular figures (Barlow is not loaded in the app, pinned by
+`lib/display-face.test.ts`); `captionStrong` → `DS_V3.type.label`; `surface` → `DS_V3.color.surface`.
+
+### 04.1 What a post shows, per task type
+- Root cause: `backend/trpc/routes/checkins.ts:1354–1368` writes the activity row's metadata with `task_type` and
+  `task_name` only; the run/workout/counter/timer facts stay in `check_ins.verification_gates` (`:1107–1160`), and
+  `backend/lib/feed-activity-hydrate.ts:370–406` returns nothing about the result. The Strava webhook
+  (`backend/lib/strava-webhook.ts:231`) does the same with `distance`/`moving_time` in hand. So the card can only
+  print "Morning run · Self-reported".
+- Change: `backend/lib/post-result.ts` builds `metadata.result` ({kind, distance_km, duration_min, workout_kind,
+  count, unit, …}) at complete and in the webhook; hydrate and `feed.getPost` return `result` and `badge`
+  (additive; build 91 ignores them). Client `lib/post-result.ts` turns facts into the copy-table lines
+  ("{d} mi · {time} · {pace} /mi", "{type} · {m} min", "{n} {unit}", "{m} min", "Journal entry" + "The entry stays
+  private."); `components/feed/PostResult.tsx` renders the row. Posts written before this build have no `result`
+  and show the badge only.
+- Test: `lib/post-result.test.ts` (each type; journal never includes the text; miles from km) and
+  `backend/lib/post-result.test.ts` (facts from complete inputs and from a Strava activity).
+
+### 04.2 One badge per post
+- Root cause: `components/feed/FeedPostV3.tsx` shows the camera seal overlay (`:237–241`) and a time-stamped
+  "Self-reported · 7:00 pm" (`:254`, `:286–293`), and the compact row a third gate line, so one post can carry two
+  proof marks and the wording differs by variant.
+- Change: `postBadge(post)` → exactly one of Verified / Verified by Strava / Self-reported, rendered once in the
+  result row; the seal overlay and the timed line go.
+- Test: `lib/post-result.test.ts` badge cases + static check (no `CameraSeal` render, no `selfReportedLine`).
+
+### 04.3 Post header
+- Root cause: `FeedPostV3.tsx:319` subject `numberOfLines={2}` and `:360` the time has no `flexShrink: 0`, so a
+  long challenge name pushes "1m" into the subject's second line ("Day 16 1m of 30").
+- Change: subject on one line (`numberOfLines={1}`, ellipsis), time `flexShrink: 0`, `numberOfLines={1}`.
+- Test: static check in `lib/post-result.test.ts`; frame P1-20 on the SE.
+
+### 04.4 Double-tap to like
+- Root cause: `components/feed/DoubleTapRespect.tsx:29` discards `onOpen` and only installs a 2-tap gesture, while
+  the photo underneath is a `Pressable` (`FeedPostV3.tsx:217–221`) that opens on the FIRST tap of a double. A
+  double tap therefore opens the photo, fires the like a frame later and the burst renders while the screen is
+  already transitioning (the flicker). Proof detail and full screen have no double-tap at all.
+- Change: `DoubleTapRespect` owns both taps with `Gesture.Exclusive(doubleTap, singleTap)`: the single tap
+  resolves only after the 250 ms double-tap window fails, then calls `onOpen`; the photo `Pressable` loses
+  `onPress`. The same wrapper goes around the proof-detail image and the full-screen photo. Likes from a double
+  tap never unlike (`doubleTapAction` "keep").
+- Test: `lib/post-result.test.ts` static checks (Exclusive gesture, `onOpen` wired, no `onPress` on the photo);
+  Maestro `build92-04-likes.yaml`.
+
+### 04.5 Own posts
+- Root cause: `lib/feed-join.ts:17` `doubleTapAction` ignores `ownPost`; `FeedPostV3.tsx` `ActionRow` always
+  renders the heart; `backend/trpc/routes/feed.ts:687–728` `react` toggles a `feed_reactions` row with no owner
+  check, so a self-like is stored.
+- Change: `doubleTapAction(true, …)` → "noop"; own posts render "Liked by {name} and {n} others" (or "Liked by
+  {name}") in place of the heart; the server fetches the owner first and returns FORBIDDEN for a self-like
+  (`backend/lib/feed-like.ts` `selfLikeRejected`).
+- Test: `lib/feed-join.test.ts` pin moved to noop; `lib/post-result.test.ts` likedByLine; `backend/lib/feed-like.test.ts`.
+
+### 04.6 Proof detail
+- Root cause: `app/post/[id]/index.tsx:385` Back is `router.back()` with nothing when there is no history (the
+  post opened by `replace`), `:257–267` an owner-only Done + "Share outside GRIIT" block sits above the comments
+  and under the composer, `:385` the title is the route word "Proof", `:389` the keyboard offset is 44 and ignores
+  the top inset so the composer floats above the keyboard, and the owner menu lives only on the feed card
+  (`LiveFeedSection.tsx:484`, "Who can see this" / "Delete from the feed").
+- Change: Back goes back or Home; no Done; the title is the challenge name with the author under it; a "…" in the
+  header with Who sees this · Share · Delete post (the feed menu uses the same words); the composer offset is the
+  top inset + header height and the list scrolls to the latest comment when the keyboard opens or a comment is
+  sent; Share opens the sticker sheet.
+- Test: `lib/post-result.test.ts` static checks; `lib/build90-posting.test.ts` Done pins moved (intended);
+  Maestro `build92-04-back.yaml` ×3.

@@ -183,12 +183,15 @@ describe("CameraSeal and DoubleTapRespect", () => {
     expect(showCameraSeal(null)).toBe(false);
     expect(showCameraSeal("")).toBe(false);
     expect(showCameraSeal("https://cdn.example/proof.jpg")).toBe(true);
-    expect(doubleTapAction(true, false)).toBe("respect");
-    expect(doubleTapAction(true, true)).toBe("keep");
+    // Build 92 04.5: your own post can't be liked, so the double tap does nothing there.
+    expect(doubleTapAction(true, false)).toBe("noop");
+    expect(doubleTapAction(true, true)).toBe("noop");
     expect(doubleTapAction(false, false)).toBe("respect");
     expect(doubleTapAction(false, true)).toBe("keep");
     const card = readFileSync(resolve(__dirname, "../components/feed/FeedPostV3.tsx"), "utf8");
-    expect(card).toContain("CameraSeal");
+    // Build 92 04.2: one badge per post; the seal overlay is gone and the badge is text in the result row.
+    expect(card).not.toContain("<CameraSeal");
+    expect(card).toContain("PostResultRow");
     expect(card).toContain("DoubleTapRespect");
     expect(card).toContain("FeedCompactRow");
     expect(card).toContain("ownPost");

@@ -1,4 +1,6 @@
 /** Shared types for home feed cards (matches `feed.getLiveFeed` post shape). */
+import type { PostBadge, PostResult } from "@/backend/lib/post-result";
+
 export type LiveFeedPost = {
   id: string;
   userId: string;
@@ -37,6 +39,10 @@ export type LiveFeedPost = {
   shareCount?: number;
   visibility: "public" | "friends" | "private";
   audience?: "friends" | "everyone" | "only_me" | string | null;
+  /** Build 92 04.1: result facts the post shows ("{d} mi · {time} · {pace} /mi" …). Absent on build 91 rows. */
+  result?: PostResult | null;
+  /** Build 92 04.2: the one badge. */
+  badge?: PostBadge | null;
 };
 
 export type FeedCommentPreview = {

@@ -21,6 +21,15 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { fetchComments } from "@/lib/hidden-comments";
 import { ROUTES } from "@/lib/routes";
+import {
+  POST_MENU_CANCEL,
+  POST_MENU_DELETE,
+  POST_MENU_DELETE_NOTE,
+  POST_MENU_HIDE,
+  POST_MENU_REPORT,
+  ownerMenuAction,
+  ownerMenuOptions,
+} from "@/lib/post-menu";
 import { feedAuthorHref, feedChallengeHref } from "@/lib/feed-tap-targets";
 import { useAuth } from "@/contexts/AuthContext";
 import { DS_RADIUS, DS_SPACING, DS_TYPOGRAPHY, DS_V3 } from "@/lib/design-system";
@@ -501,12 +510,21 @@ function LiveFeedSection({
         }
       };
 
+      // Build 92 04.6: Who sees this · Share · Delete post (copy table "Owner menu"). Delete asks once and
+      // says what it removes.
+      const confirmDelete = () => {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { title: POST_MENU_DELETE_NOTE, options: [POST_MENU_DELETE, POST_MENU_CANCEL], destructiveButtonIndex: 0, cancelButtonIndex: 1 },
+          (i) => {
+            if (i === 0) void handleDeletePost(post);
+          },
+        );
+      };
       const runOwn = (index: number) => {
-        if (canRetarget && index === 0) {
-          pickAudience();
-          return;
-        }
-        if (index === (canRetarget ? 1 : 0)) void handleDeletePost(post);
+        const action = ownerMenuAction(canRetarget, index);
+        if (action === "who_sees") pickAudience();
+        else if (action === "share") void onShare(post);
+        else if (action === "delete") confirmDelete();
       };
       const runOther = (index: number) => {
         if (index === 0) {
@@ -520,15 +538,13 @@ function LiveFeedSection({
 
       if (Platform.OS === "ios") {
         const options = isOwn
-          ? canRetarget
-            ? ["Who can see this", "Delete from the feed", "Cancel"]
-            : ["Delete from the feed", "Cancel"]
-          : ["Report", `Block @${post.username}`, "Hide post", "Cancel"];
+          ? ownerMenuOptions(canRetarget)
+          : [POST_MENU_REPORT, `Block @${post.username}`, POST_MENU_HIDE, POST_MENU_CANCEL];
         ActionSheetIOS.showActionSheetWithOptions(
           {
             options,
             cancelButtonIndex: options.length - 1,
-            destructiveButtonIndex: isOwn ? (canRetarget ? 1 : 0) : 1,
+            destructiveButtonIndex: isOwn ? options.indexOf(POST_MENU_DELETE) : 1,
           },
           (buttonIndex) => {
             if (isOwn) runOwn(buttonIndex);
@@ -539,7 +555,7 @@ function LiveFeedSection({
         setAndroidMenuPost(post);
       }
     },
-    [user?.id, handleDeletePost, reportFeedPost, applyAudience]
+    [user?.id, handleDeletePost, reportFeedPost, applyAudience, onShare]
   );
 
   // Build 90 04.7: the next page is asked for once, from onEndReached. The old per-row call in
@@ -867,9 +883,9 @@ function LiveFeedSection({
                     void handleDeletePost(androidMenuPost);
                   }}
                   accessibilityRole="button"
-                  accessibilityLabel="Delete from the feed"
+                  accessibilityLabel={POST_MENU_DELETE}
                 >
-                  <Text style={styles.androidMenuDestructive}>Delete from the feed</Text>
+                  <Text style={styles.androidMenuDestructive}>{POST_MENU_DELETE}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.androidMenuRow}

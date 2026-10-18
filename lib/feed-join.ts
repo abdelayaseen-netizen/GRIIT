@@ -13,8 +13,9 @@ export function showCameraSeal(proofPhotoUrl?: string | null): boolean {
   });
 }
 
-/** Double tap likes, including your own post. It never removes a like. */
-export function doubleTapAction(_ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
+/** Build 92 04.5: double tap likes someone else's post. It never removes a like and does nothing on your own. */
+export function doubleTapAction(ownPost: boolean, alreadyRespected: boolean): "noop" | "respect" | "keep" {
+  if (ownPost) return "noop";
   return alreadyRespected ? "keep" : "respect";
 }
 

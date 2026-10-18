@@ -120,18 +120,19 @@ describe("04.2 photo-proof tasks say so up front", () => {
 });
 
 describe("04.3 the Proof screen has a finish", () => {
-  it("Done is the primary button, Share outside GRIIT is secondary, the audience is a labeled control", () => {
+  // Build 92 04.6: no Done and no "Share outside GRIIT" button on the Proof screen. Back returns to
+  // where the post was opened from; Share and the audience moved into the owner's "…" menu.
+  it("no Done, no inline audience control, Back goes back or Home", () => {
     const screen = read("app/post/[id]/index.tsx");
-    expect(screen).toContain("label={POST_DETAIL_DONE}");
-    expect(screen).toMatch(/label=\{POST_DETAIL_SHARE_OUTSIDE\}\s+variant="secondary"/);
-    // Build 92 02.5: the audience is asked once on the post sheet; no inline control on the post.
+    expect(screen).not.toContain("label={POST_DETAIL_DONE}");
+    expect(screen).not.toContain("POST_DETAIL_SHARE_OUTSIDE");
     expect(screen).not.toContain("<SegmentedControl");
     expect(screen).not.toContain("POST_DETAIL_AUDIENCE_LABEL");
-    // The plain-text rows are gone.
     expect(screen).not.toContain(">Share outside GRIIT</Text>");
     expect(screen).not.toContain(">Back to today</Text>");
     expect(screen).not.toContain("<Text style={styles.time}>{audienceLabel(choice)}</Text>");
     expect(screen).toContain("router.replace(ROUTES.TABS_HOME as never)");
+    expect(screen).toContain("router.canGoBack()");
   });
 
   it("an older post with no stored audience reads as Friends", () => {

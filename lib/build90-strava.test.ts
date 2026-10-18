@@ -184,7 +184,9 @@ describe("09.3 Verified by Strava in place of Self-reported", () => {
     expect(read("backend/trpc/routes/feed.ts")).toContain("verifiedBy:");
     expect(read("backend/lib/feed-activity-hydrate.ts")).toContain("verifiedBy:");
     expect(read("components/feed/feedTypes.ts")).toContain("verifiedBy?:");
+    // Build 92 04.2: the card shows one badge through postBadge(), which reads verifiedBy → "Verified by Strava".
     const card = read("components/feed/FeedPostV3.tsx");
-    expect(card).toContain("verifiedLine(post.verifiedBy");
+    expect(card).toContain("postBadge(post)");
+    expect(read("lib/post-result.ts")).toContain('post.verifiedBy === "strava") return "Verified by Strava"');
   });
 });
