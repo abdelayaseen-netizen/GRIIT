@@ -323,3 +323,71 @@ copy table rows Counter, Run, Partial, Short toast, Home row; `src/finish/format
 - `docs/sql/build92.sql` "Chunk 03 · 03.6": read-only SELECT listing live counter/reading tasks whose challenge title
   says minutes but whose task config counts pages, and a guarded UPDATE limited to an explicit id list (left for
   Yaseen to fill from the SELECT). Not run.
+
+### Chunk 03 gates and evidence
+- Maestro, fresh guest each run (`docs/reports/build92/03/`):
+  - `.maestro/build92-03-counter-frames.yaml` (SE `se/maestro-counter-frames-se.txt`, 16 Pro Max
+    `16promax/maestro-counter-frames-16promax.txt`): join 10 Pages → Read 10 pages → "Add one" ×4 → "6 to go." and
+    the footer "Save 4 · won't count today" (P1-29) → +5 +1 → "Goal reached. Done saves it." with the
+    `count-goal-check` icon → +1 +1 → count 12, buttons still active (P1-28) → "Remove one" → 11 → back.
+  - `.maestro/build92-03-run-partial.yaml` (iPhone 16 `16/maestro-run-partial-run11.txt`; SE
+    `se/maestro-run-partial-se.txt`; 16 Pro Max `16promax/maestro-run-partial-16promax.txt`): the gate's "2 mi →
+    '2 of 3 so far' → 1 mi → Done → day secured" end to end. Create → Custom → task "Morning run", type Run, Distance
+    3 (km, the wizard default) → Standard → start → open the task → 1 km in 2:00 → inline "That pace looks off. Check
+    the distance and time." and Done disabled (P1-31) → type 10500 → "1:05:00", trailing "h:mm:ss" (P1-30) → 2 km in
+    20:00 → "2 of 3 km · 1 km short", the won't-count note, button "Save 2 km · won't count today" (P1-32) → Home
+    toast "Run saved. 1 km short, so today isn't secured yet.", no Day secured, the row still open (P1-33) → reopen →
+    "2 of 3 km so far today", field label "Add distance" (P1-35-run-so-far) → 1 km in 10:00 → no "short" line, Done →
+    Post your proof → Post → Day secured "Every task today is done." (P1-35-day-secured-after-partials) → Done → Home.
+  - Runs 1–9 on iPhone 16 were flow fixes (full-regex labels, `hideKeyboard` not working on these simulators, one
+    digit per `inputText` on the formatted Duration field, "Back to Home" on the success screen). Run 10 found two
+    app bugs, both fixed with tests: the toast said "1 km short short" (`shortToast` was handed the "{x} short" line;
+    `shortOfGoal` now returns a `gap` and the toast takes that), and the finishing `complete` call was sending
+    `proof_payload_json.partial_logs`, which the camera-payload schema rejects (the client no longer sends it; the
+    server keeps the pending row's `partial_logs` because `complete` only overwrites `proof_payload_json` when one is
+    supplied, `checkins.ts:1298`). On the SE the run flow did not get past the create wizard: the keyboard covers
+    the Add-task sheet's footer and every tap-away target tried (sheet heading, "What you do" label) dismissed the
+    sheet instead (`se/maestro-run-partial-se.txt`, 2 flow attempts, stopped per the budget). The task screens
+    themselves have no SE-specific layout (the SE counter frames passed); the run frames are from the 16 and 16 Pro Max.
+- Screenshots next to the design frames (`design/handoff/b92/part1-finish-loop/frames/`): `se/` and `16promax/`
+  `P1-28-counter-past-goal.png`, `P1-29-counter-partial.png`; `16/` and `16promax/` `P1-30-run-hmmss.png`,
+  `P1-31-pace-off.png`, `P1-32-run-short.png`, `P1-33-home-after-short.png`, `P1-35-run-so-far.png`,
+  `P1-35-day-secured-after-partials.png`.
+- Midnight reset: `backend/lib/counter-progress.test.ts` pins `dateKeyInTimeZone` across 23:30 → 00:30 local in
+  America/Los_Angeles and Asia/Tokyo at the same instant (different keys per zone, the Tokyo total starts over
+  while LA's does not); totals live under that key.
+- Full suite after the chunk: vitest 4 failed / 2146 passed (`vitest-final.txt`) = the 4 baseline failures; tsc 5
+  errors = baseline set (`tsc-final.txt`). Failing-first run saved as `vitest-before.txt`. Pins moved to the new
+  behaviour with "build 92 03.x" comments: `lib/build90-task-inputs.test.ts` (4:30 → 3:30 bound, "{n} left" →
+  "{x} to go.", sanity copy), `lib/counter.test.ts` (step past target), `lib/build90-posting.test.ts`
+  (`submitWithoutPhoto(payload, …)`), `.maestro/build90-task-inputs.yaml` ("h:mm:ss", "30 to go."). None weakened;
+  the pin on `complete` never carrying `partial_logs` is new.
+- Backend deployed (no SQL needed, additive input/select only): `backend/deploy-sha.txt` = `ee6adddb`,
+  `railway up --service grit-backend`, `/api/health` → `"commit":"ee6addd"`. Build 91 clients send no `mode`, so
+  `saveProgress` behaves as before for them.
+- Self-check diff: no skipped tests, no `as any`, no console.log, no hard-coded colours (check icon and error line
+  use `DS_V3.color.brand` / `.danger`); chunk 01 and 02 tests still pass in the full run.
+
+### Chunk 03 decisions made alone
+- Partial run totals are stored as km in `check_ins.value` on the day's pending row, with per-log facts in
+  `proof_payload_json.partial_logs` (existing jsonb column) — no migration. Counters keep "set" mode (the count is
+  the total) and hydrate from the pending row on open.
+- A short save is saved and never posted: posting needs a completed check-in and an activity event. The sheet is
+  skipped and the Home toast is shown instead (copy table "Short toast").
+- Counter short toast reads "Count saved. {x} short, so today isn't secured yet." (the copy table only names runs).
+- The slow-pace bound keeps build 90's ask dialog; only the fast bound (3:30 /mi) became an inline error, as specified.
+- Home row for an open task with a saved partial reads "{done} of {goal} {unit} logged" via a new `partialLine`
+  on `HomeProofTask` (unit from the task config; km converted to the task's unit).
+- The Maestro run uses km (the wizard default) rather than mi; tapping the "mi" chip closed the sheet on the
+  simulator and the copy is unit-agnostic.
+- `getTodayCheckinsForUser` returns `value` and `proof_payload_json` (additive) so Home and the task screen share
+  one query.
+
+### Chunk 03 not done / Needs Yaseen
+- 03.6 SQL: `docs/sql/build92.sql` lines 12–40 (Step 1 read-only SELECT), 42–67 (Step 2 UPDATE, fill the id list
+  from Step 1 first), 69–end (Step 3 confirm). Nothing in the app depends on it.
+- Posting a short save ("Save 2 mi · won't count today" → feed) is not built; by design it saves silently.
+- No seeded run challenge; the run flow builds one through the create wizard each run (~3 min per device).
+- SE run-partial frames (P1-30 to P1-35) not captured: the create wizard's Add-task sheet can't be driven past the
+  keyboard on the SE simulator by Maestro (see gates). To capture by hand: SE → Create → Custom → Add a task → Run,
+  3 km → tap the field's "km" chip to drop the keyboard → Add task, then follow `.maestro/build92-03-run-partial.yaml`.

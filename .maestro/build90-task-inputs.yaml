@@ -85,13 +85,13 @@ appId: app.griit.challenge-tracker
 - takeScreenshot: build90-03-pace-off
 - tapOn: "Edit"
 - assertNotVisible: "That pace looks off."
-- assertVisible: "mm:ss"
+- assertVisible: "h:mm:ss" # build 92 03.2
 - tapOn: "Go back"
 
-# 03.4 Counter: Done is inactive below target and says what is left.
+# 03.4 Counter: below target the footer is a short save (build 92 03.4 replaced "{n} left").
 - openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Athlete&currentDay=1&durationDays=14&originTab=home&taskType=reading&taskName=Read%2030%20pages&taskConfig=%7B%22target_pages%22%3A30%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
 - extendedWaitUntil:
-    visible: "30 pages left"
+    visible: "30 to go."
     timeout: 20000
 - assertNotVisible: "Done · 30 pages"
 - assertNotVisible: "Target met"

@@ -1,0 +1,38 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 03.1: the counter past the goal (P1-28) and partial (P1-29). UI only, through the
+# task deep link build 90 used; nothing is saved.
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Reading&currentDay=1&durationDays=14&originTab=home&taskType=reading&taskName=Read%2010%20pages&taskConfig=%7B%22target_pages%22%3A10%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "10 to go."
+    timeout: 20000
+- assertNotVisible: "10 pages left"
+# Partial: 4 of 10, the footer is a short save.
+- tapOn: "Add one"
+- tapOn: "Add one"
+- tapOn: "Add one"
+- tapOn: "Add one"
+- assertVisible: "6 to go."
+- assertVisible: "Save 4 · won't count today"
+- takeScreenshot: P1-29-counter-partial
+# At the goal: the line says so and nothing dims.
+- tapOn: "^\\+5$"
+- tapOn: "Add one"
+- assertVisible: "Goal reached. Done saves it."
+- assertVisible:
+    id: "count-goal-check"
+- assertVisible: "Done · 10 pages"
+# Past the goal: + keeps working.
+- tapOn: "Add one"
+- tapOn: "Add one"
+- assertVisible: "^12$"
+- assertVisible: "Goal reached. Done saves it."
+- assertVisible: "Done · 10 pages"
+- takeScreenshot: P1-28-counter-past-goal
+- tapOn: "Remove one"
+- assertVisible: "^11$"
+- tapOn: "Go back"

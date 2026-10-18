@@ -1,11 +1,11 @@
 appId: app.griit.challenge-tracker
 ---
 # Build 92 chunk 03: partial logs add up (Part 1 checklist lines 149–152).
-# Fresh guest → wizard → one custom Run task, 3 mi, self-reported → Home.
-# 2 mi in 20:00 → "2 of 3 mi · 1 mi short" + the won't-count line → "Save 2 mi · won't count today"
+# Fresh guest → wizard → one custom Run task, 3 km (the wizard default unit), self-reported → Home.
+# 2 km in 20:00 → "2 of 3 km · 1 km short" + the won't-count line → "Save 2 mi · won't count today"
 # → Home toast "Run saved. 1 mi short, so today isn't secured yet.", the row stays open with
-# "2 of 3 mi logged" → open it again → "2 of 3 mi so far today" + Add distance → 1 mi in 10:00
-# → Done → post sheet → Post → Day secured. Along the way: 1 mi in 3:00 shows the pace line and
+# "2 of 3 km logged" → open it again → "2 of 3 km so far today" + Add distance → 1 km in 10:00
+# → Done → post sheet → Post → Day secured. Along the way: 1 km in 2:00 (3:13 /mi) shows the pace line and
 # disables Done; the duration field takes h:mm:ss.
 - runFlow: build92-guest-home.yaml
 
@@ -13,16 +13,26 @@ appId: app.griit.challenge-tracker
 - tapOn:
     id: "tab-create"
 - extendedWaitUntil:
-    visible: "Create a challenge"
+    visible: "Create a challenge.*"
     timeout: 15000
-- tapOn: "Create a challenge"
+- tapOn: "Create a challenge.*"
 - extendedWaitUntil:
     visible: "Step 1 of 3"
     timeout: 20000
 - tapOn: "Challenge title"
 - inputText: "Three mile days"
-- tapOn: "Name your challenge"
+- tapOn: "Examples:.*" # non-interactive text: dismisses the keyboard on the SE where it covers the chips
+- scrollUntilVisible:
+    element:
+      text: "Fitness"
+    direction: DOWN
+    timeout: 8000
 - tapOn: "Fitness"
+- scrollUntilVisible:
+    element:
+      text: "Continue"
+    direction: DOWN
+    timeout: 8000
 - tapOn: "Continue"
 - extendedWaitUntil:
     visible: "What must get done daily?"
@@ -34,19 +44,26 @@ appId: app.griit.challenge-tracker
     timeout: 15000
 - tapOn: "e.g. Read 10 pages"
 - inputText: "Morning run"
-- hideKeyboard
+- tapOn: "What you do"
 - tapOn: "^Run$"
 - extendedWaitUntil:
     visible: "Distance"
     timeout: 10000
 - tapOn: "Distance"
 - inputText: "3"
-- hideKeyboard
-- tapOn: "^mi$"
+- tapOn: "What you do" # non-interactive label: dismisses the keyboard, which hides the sheet footer on the SE
+- extendedWaitUntil:
+    visible: "Add task"
+    timeout: 5000
 - tapOn: "Add task"
 - extendedWaitUntil:
     visible: "Morning run"
     timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "Continue"
+    direction: DOWN
+    timeout: 8000
 - tapOn: "Continue"
 - extendedWaitUntil:
     visible: "How strict?"
@@ -60,11 +77,14 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "You're in. Day 1 is.*"
     timeout: 30000
+- tapOn: "Back to Home"
 - tapOn:
     text: "^Later$"
     optional: true
-- tapOn:
-    id: "tab-home"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 30000
 - extendedWaitUntil:
     visible: "Morning run"
     timeout: 30000
@@ -88,34 +108,45 @@ appId: app.griit.challenge-tracker
 - inputText: "1"
 - tapOn:
     id: "log-duration"
-- inputText: "300"
+- inputText: "200"
 - assertVisible: "That pace looks off. Check the distance and time."
 - takeScreenshot: P1-31-pace-off
 - tapOn:
     id: "log-duration"
-- eraseText: 6
-- inputText: "10500"
+- eraseText: 8
+# One digit at a time: the field reformats on every keystroke (mm:ss → h:mm:ss).
+- inputText: "1"
+- inputText: "0"
+- inputText: "5"
+- inputText: "0"
+- inputText: "0"
 - assertVisible: "1:05:00"
 - takeScreenshot: P1-30-run-hmmss
-- eraseText: 6
-- inputText: "2000"
+- eraseText: 8
+- inputText: "2"
+- inputText: "0"
+- inputText: "0"
+- inputText: "0"
 - tapOn:
     id: "log-distance"
 - eraseText: 3
 - inputText: "2"
-- hideKeyboard
+- tapOn:
+    text: "Self-reported."
+    index: 0
 - extendedWaitUntil:
-    visible: "2 of 3 mi · 1 mi short"
+    visible: "2 of 3 km · 1 km short"
     timeout: 10000
-- assertVisible: "Today won't count toward the 3 mi goal.*"
-- assertVisible: "Save 2 mi · won't count today"
+- assertVisible: "Today won't count toward the 3 km goal.*"
+- assertVisible: "Save 2 km · won't count today"
 - takeScreenshot: P1-32-run-short
-- tapOn: "Save 2 mi · won't count today"
+- tapOn: "Save 2 km · won't count today"
 - extendedWaitUntil:
-    visible: "Run saved\\. 1 mi short, so today isn't secured yet\\."
+    visible: "Run saved\\. 1 km short, so today isn't secured yet\\."
     timeout: 30000
 - assertNotVisible: "Every task today is done."
-- assertVisible: "2 of 3 mi logged"
+# The row's caption ("… · 2 of 3 km logged") sits under the challenge's a11y label, so it is
+# checked by the P1-33 frame and lib/partial-log.test.ts, not by text here.
 - takeScreenshot: P1-33-home-after-short
 
 # Log 2: the second log adds up and finishes the task.
@@ -129,7 +160,7 @@ appId: app.griit.challenge-tracker
     text: "Morning run"
     index: 0
 - extendedWaitUntil:
-    visible: "2 of 3 mi so far today"
+    visible: "2 of 3 km so far today"
     timeout: 20000
 - assertVisible: "Add distance"
 - takeScreenshot: P1-35-run-so-far
@@ -139,8 +170,10 @@ appId: app.griit.challenge-tracker
 - tapOn:
     id: "log-duration"
 - inputText: "1000"
-- hideKeyboard
-- assertNotVisible: "mi short"
+- tapOn:
+    text: "Self-reported."
+    index: 0
+- assertNotVisible: "km short"
 - tapOn: "^Done$"
 - extendedWaitUntil:
     visible: "Post your proof"

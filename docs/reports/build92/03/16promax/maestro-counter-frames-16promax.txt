@@ -1,0 +1,52 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-03-counter-frames
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://task/complete?taskId=00000000-0000-4000-8000-000000000001&activeChallengeId=00000000-0000-4000-8000-000000000002&challengeName=Reading&currentDay=1&durationDays=14&originTab=home&taskType=reading&taskName=Read%2010%20pages&taskConfig=%7B%22target_pages%22%3A10%2C%22photo_mode%22%3A%22none%22%2C%22required%22%3Atrue%7D... COMPLETED
+Tap on (Optional) "^Open$"... WARNED
+Assert that "10 to go." is visible... COMPLETED
+Assert that "10 pages left" is not visible... COMPLETED
+Tap on "Add one"... COMPLETED
+Tap on "Add one"... COMPLETED
+Tap on "Add one"... COMPLETED
+Tap on "Add one"... COMPLETED
+Assert that "6 to go." is visible... COMPLETED
+Assert that "Save 4 · won't count today" is visible... COMPLETED
+Take screenshot P1-29-counter-partial... COMPLETED
+Tap on "^\+5$"... COMPLETED
+Tap on "Add one"... COMPLETED
+Assert that "Goal reached. Done saves it." is visible... COMPLETED
+Assert that id: count-goal-check is visible... COMPLETED
+Assert that "Done · 10 pages" is visible... COMPLETED
+Tap on "Add one"... COMPLETED
+Tap on "Add one"... COMPLETED
+Assert that "^12$" is visible... COMPLETED
+Assert that "Goal reached. Done saves it." is visible... COMPLETED
+Assert that "Done · 10 pages" is visible... COMPLETED
+Take screenshot P1-28-counter-past-goal... COMPLETED
+Tap on "Remove one"... COMPLETED
+Assert that "^11$" is visible... COMPLETED
+Tap on "Go back"... COMPLETED
+exit 0

@@ -13,9 +13,11 @@ import {
   parseKeypadBuffer,
 } from "@/lib/keypad-masks";
 import { LOG_SANITY_MESSAGE, LOG_SANITY_TITLE, RUN_PACE_FAST_SEC_PER_MI, runPaceCheck, runPaceTooFast } from "@/lib/task-flow-state";
+import { homeProofRow } from "@/lib/home-proof-card";
 import {
   dayTotal,
   homePartialLine,
+  homeTaskPartialLine,
   parseHms,
   partialLogTotal,
   shortOfGoal,
@@ -111,8 +113,8 @@ describe("03.3 impossible pace", () => {
 
 describe("03.4 short of the goal", () => {
   it("says how short before Done and what the save does", () => {
-    expect(shortOfGoal(2, 3, "mi")).toEqual({ done: "2 of 3 mi", short: "1 mi short" });
-    expect(shortOfGoal(1.5, 3, "mi")).toEqual({ done: "1.5 of 3 mi", short: "1.5 mi short" });
+    expect(shortOfGoal(2, 3, "mi")).toEqual({ done: "2 of 3 mi", short: "1 mi short", gap: "1 mi" });
+    expect(shortOfGoal(1.5, 3, "mi")).toEqual({ done: "1.5 of 3 mi", short: "1.5 mi short", gap: "1.5 mi" });
     expect(shortOfGoal(3, 3, "mi")).toBeNull();
     expect(shortOfGoal(4, 3, "mi")).toBeNull();
     expect(WONT_COUNT_NOTE(3, "mi")).toBe(
@@ -122,6 +124,8 @@ describe("03.4 short of the goal", () => {
     expect(shortSaveLabel("4")).toBe("Save 4 · won't count today");
     expect(shortToast("Run", "1 mi")).toBe("Run saved. 1 mi short, so today isn't secured yet.");
     expect(shortToast("Count", "6 pages")).toBe("Count saved. 6 pages short, so today isn't secured yet.");
+    // The toast takes the gap, never the "{x} short" line, so "short" is never said twice.
+    expect(shortToast("Run", shortOfGoal(2, 3, "km")!.gap)).toBe("Run saved. 1 km short, so today isn't secured yet.");
   });
 
   it("the short save goes through saveProgress, never complete", () => {
@@ -161,13 +165,53 @@ describe("03.5 partial logs add up", () => {
     expect(homePartialLine(0, 3, "mi")).toBeNull();
   });
 
+  it("the Home row reads the saved partial while the task is open", () => {
+    const task = { config: { target_value: 3, unit: "km", tracking_mode: "distance" } };
+    expect(homeTaskPartialLine(task, "run", 2)).toBe("2 of 3 km logged");
+    expect(homeTaskPartialLine({ config: { target_value: 3, unit: "miles" } }, "run", 3.218688)).toBe("2 of 3 mi logged");
+    expect(homeTaskPartialLine({ config: { target_pages: 10 } }, "reading", 4)).toBe("4 of 10 pages logged");
+    expect(homeTaskPartialLine(task, "run", undefined)).toBeNull();
+    const row = homeProofRow(
+      {
+        id: "t1",
+        name: "Morning run",
+        challengeName: "Three mile days",
+        currentDay: 1,
+        done: false,
+        challengeSecuredToday: false,
+        taskType: "run",
+        type: "run",
+        partialLine: "2 of 3 km logged",
+      },
+      0,
+    );
+    expect(row.caption).toBe("2 of 3 km logged");
+    const done = homeProofRow(
+      {
+        id: "t1",
+        name: "Morning run",
+        challengeName: "Three mile days",
+        currentDay: 1,
+        done: true,
+        challengeSecuredToday: true,
+        taskType: "run",
+        type: "run",
+        partialLine: "2 of 3 km logged",
+      },
+      0,
+    );
+    expect(done.caption).not.toContain("logged");
+  });
+
   it("the Log step shows today's total and the hook hydrates today's pending row", () => {
     const s = read("components/task-v2/steps/LogStep.tsx");
     expect(s).toContain("soFarLine(");
     expect(s).toContain('testID="log-so-far"');
     const hook = read("components/task-v2/useTaskFlowV2.ts");
     expect(hook).toContain("TRPC.checkins.getTodayCheckins");
-    expect(hook).toContain("partial_logs");
+    expect(hook).toContain("partialLogsFrom(");
+    // complete's proof_payload_json is the camera payload; partial logs never ride on it.
+    expect(hook).not.toContain("partial_logs: [");
     const server = read("backend/trpc/routes/checkins.ts");
     expect(server).toContain('mode: z.enum(["set", "add"])');
     expect(server).toContain("decidePartialLogWrite(");

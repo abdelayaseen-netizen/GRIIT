@@ -1,0 +1,84 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 - iOS 26.4 - B10E65A0-C453-4E58-97BD-A3696ED848AE
+ > Flow build92-03-run-partial
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... WARNED
+  Run flow when "Toggle performance monitor" is visible...
+  Run flow when "Toggle performance monitor" is visible... SKIPPED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Tap on id: tab-create... COMPLETED
+Assert that "Create a challenge.*" is visible... COMPLETED
+Tap on "Create a challenge.*"... COMPLETED
+Assert that "Step 1 of 3" is visible... COMPLETED
+Tap on "Challenge title"... COMPLETED
+Input text Three mile days... COMPLETED
+Tap on "Name your challenge"... COMPLETED
+Tap on "Fitness"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "What must get done daily?" is visible... COMPLETED
+Tap on "Custom"... COMPLETED
+Tap on "Add a task"... COMPLETED
+Assert that "Task name" is visible... COMPLETED
+Tap on "e.g. Read 10 pages"... COMPLETED
+Input text Morning run... COMPLETED
+Tap on "What you do"... COMPLETED
+Tap on "^Run$"... COMPLETED
+Assert that "Distance" is visible... COMPLETED
+Tap on "Distance"... COMPLETED
+Input text 3... COMPLETED
+Tap on "Add task"... COMPLETED
+Assert that "Morning run" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How strict?" is visible... COMPLETED
+Tap on "Standard.*"... COMPLETED
+Tap on "Review"... COMPLETED
+Assert that "Start the challenge" is visible... COMPLETED
+Tap on "Start the challenge"... COMPLETED
+Assert that "You're in. Day 1 is.*" is visible... COMPLETED
+Tap on "Back to Home"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that id: tab-home is visible... COMPLETED
+Assert that "Morning run" is visible... COMPLETED
+Scrolling DOWN until "Morning run", Index: 0 is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+Tap on "Morning run", Index: 0... COMPLETED
+Assert that id: log-distance is visible... COMPLETED
+Tap on id: log-distance... COMPLETED
+Input text 1... COMPLETED
+Tap on id: log-duration... COMPLETED
+Input text 200... COMPLETED
+Assert that "That pace looks off. Check the distance and time." is visible... COMPLETED
+Take screenshot P1-31-pace-off... COMPLETED
+Tap on id: log-duration... COMPLETED
+Erase 6 characters... COMPLETED
+Input text 10500... COMPLETED
+Assert that "1:05:00" is visible... FAILED
+
+Assertion is false: "1:05:00" is visible
+
+Assertion '"1:05:00" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-18_144206

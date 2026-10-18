@@ -239,7 +239,11 @@ export function LogStep({
                     inputAccessoryViewID={padAccessory}
                     accessibilityLabel="Duration"
                     testID="log-duration"
-                    trailing={<Text style={styles.trail}>h:mm:ss</Text>}
+                    trailing={
+                      <Text style={styles.trail} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+                        h:mm:ss
+                      </Text>
+                    }
                   />
                 </View>
               </View>

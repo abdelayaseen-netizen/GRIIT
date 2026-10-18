@@ -20,13 +20,19 @@ export function parseHms(v: string): number | null {
 }
 
 /** Under the goal: the done line and how short. At or past it: null. */
-export function shortOfGoal(value: number, goal: number, unit: string): { done: string; short: string } | null {
+export function shortOfGoal(
+  value: number,
+  goal: number,
+  unit: string,
+): { done: string; short: string; gap: string } | null {
   if (goal <= 0 || value >= goal) return null;
-  const gap = Math.round((goal - value) * 100) / 100;
+  const gapN = Math.round((goal - value) * 100) / 100;
   const u = unit.trim();
+  const gap = `${fmtQty(gapN)}${u ? ` ${u}` : ""}`;
   return {
     done: `${fmtQty(value)} of ${fmtQty(goal)}${u ? ` ${u}` : ""}`,
-    short: `${fmtQty(gap)}${u ? ` ${u}` : ""} short`,
+    short: `${gap} short`,
+    gap,
   };
 }
 

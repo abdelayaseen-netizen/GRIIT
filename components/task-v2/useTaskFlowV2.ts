@@ -12,7 +12,7 @@ import { trackUsage } from "@/lib/analytics";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TODAY_CHECKINS_QUERY_KEY } from "@/lib/today-completion";
-import { fmtQty, partialLogTotal, partialLogsFrom, shortOfGoal, shortToast, type PartialLog } from "@/lib/partial-log";
+import { fmtQty, partialLogTotal, partialLogsFrom, shortOfGoal, shortToast } from "@/lib/partial-log";
 import { TRPC } from "@/lib/trpc-paths";
 import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
 import { ROUTES } from "@/lib/routes";
@@ -223,7 +223,7 @@ export function useTaskFlowV2() {
   });
   const todayPending = (todayRowsQ.data ?? []).find((r) => r.task_id === taskId && r.status === "pending") ?? null;
   const soFarValue = typeof todayPending?.value === "number" && todayPending.value > 0 ? todayPending.value : 0;
-  const priorLogs: PartialLog[] = useMemo(() => partialLogsFrom(todayPending?.proof_payload_json), [todayPending]);
+  const priorLogCount = partialLogsFrom(todayPending?.proof_payload_json).length;
   const startAt = enrollmentQ.isSuccess
     ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.created_at ?? null)
     : null;
@@ -1325,10 +1325,8 @@ export function useTaskFlowV2() {
     const isRun = taskType === "run";
     const amount = isRun ? (distance ?? 0) : count;
     if (!(amount > 0)) return;
-    const short = isRun
-      ? runShort?.short
-      : shortOfGoal(count, counterGoal, counterUnit)?.short;
-    if (!short) return;
+    const gap = isRun ? runShort?.gap : shortOfGoal(count, counterGoal, counterUnit)?.gap;
+    if (!gap) return;
     submitInFlight.current = true;
     setSaving(true);
     try {
@@ -1351,7 +1349,7 @@ export function useTaskFlowV2() {
       if (!mountedRef.current) return;
       publishTaskToast({
         taskId,
-        title: shortToast(isRun ? "Run" : "Count", short),
+        title: shortToast(isRun ? "Run" : "Count", gap),
         body: "",
         photoUri: null,
         cameraSeal: false,
@@ -1373,23 +1371,9 @@ export function useTaskFlowV2() {
   };
 
   const onPostRun = () => {
+    // Build 92 03.5: the finishing log completes the row that already holds today's earlier logs
+    // (`proof_payload_json.partial_logs`, written by saveProgress); complete leaves that column alone.
     const payload = logPayload();
-    // Build 92 03.5: the finishing log carries every log of the day, so the record shows how it added up.
-    if (taskType === "run" && (priorLogs.length > 0 || soFarValue > 0)) {
-      payload.proof_payload_json = {
-        partial_logs: [
-          ...priorLogs,
-          {
-            value: distance != null ? toKilometers(distance, unit) : 0,
-            distance_km: distance != null ? toKilometers(distance, unit) : undefined,
-            duration_min: durationSec != null ? durationSec / 60 : undefined,
-            entry_mode: usedSessionTimer ? "timer" : "hand",
-            at: new Date().toISOString(),
-          },
-        ],
-        total_km: toKilometers(runTotal, unit),
-      };
-    }
     void submitWithoutPhoto(payload, "self_report");
   };
 
@@ -1619,6 +1603,7 @@ export function useTaskFlowV2() {
     onSaveShort: () => void onSaveShort(),
     soFarDistance,
     soFarLabel: soFarDistance > 0 ? fmtQty(soFarDistance) : null,
+    priorLogCount,
     onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
     onHere: () => void submitWithoutPhoto({}, "gps"),
     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
