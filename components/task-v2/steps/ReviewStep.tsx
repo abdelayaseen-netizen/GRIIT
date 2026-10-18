@@ -1,11 +1,13 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import KeyboardDock from "@/components/ds/KeyboardDock";
 import { Image } from "expo-image";
-import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { styles } from "../taskFlowStyles";
-import { audienceLabel, postButtonLabel, POST_AUDIENCES, type PostAudience } from "@/lib/post-audience";
+
+// Build 92 02.1: the review only shows the photo. Caption and audience live on the post sheet,
+// which opens after Done (P1-01), so the audience is asked once.
+const REVIEW_DONE = "Done";
 
 type Props = {
   photoUri: string;
@@ -13,66 +15,20 @@ type Props = {
   currentDay: number;
   taskName: string;
   gateLabel: string;
-  caption: string;
-  onCaption: (t: string) => void;
   onRetake: () => void;
   onPost: () => void;
   submitting?: boolean;
   /** One line when the post cannot go out. The button stays tappable. */
   note?: string | null;
-  audience: PostAudience;
-  onAudience: (audience: PostAudience) => void;
 };
 
-export function ReviewStep({
-  photoUri,
-  caption,
-  onCaption,
-  onRetake,
-  onPost,
-  submitting = false,
-  note,
-  audience,
-  onAudience,
-}: Props) {
+export function ReviewStep({ photoUri, onRetake, onPost, submitting = false, note }: Props) {
   return (
     <KeyboardDock
       footer={
         <View style={styles.reviewDeck}>
-          <View style={styles.capRow}>
-            <TextInput
-              value={caption}
-              onChangeText={(t) => onCaption(t.slice(0, 120))}
-              placeholder="Add a caption"
-              placeholderTextColor={DS_V3.color.textSecondary}
-              selectionColor={DS_V3.color.textPrimary}
-              style={styles.capInput}
-              maxLength={120}
-            />
-            <Text style={styles.counter}>{caption.length} / 120</Text>
-          </View>
-          <View style={styles.audienceRow}>
-            {POST_AUDIENCES.map((choice) => {
-              const on = choice === audience;
-              return (
-                <Pressable
-                  key={choice}
-                  onPress={() => onAudience(choice)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  style={[styles.audienceChip, on && styles.audienceChipOn]}
-                >
-                  <Text style={[styles.audienceChipText, on && styles.audienceChipTextOn]}>{audienceLabel(choice)}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          {submitting ? (
-            <Text style={styles.counter}>Posting…</Text>
-          ) : note ? (
-            <Text style={styles.counter}>{note}</Text>
-          ) : null}
-          <Button label={postButtonLabel(audience)} submitting={submitting} disabled={submitting} onPress={onPost} />
+          {note ? <Text style={styles.counter}>{note}</Text> : null}
+          <Button label={REVIEW_DONE} submitting={submitting} disabled={submitting} onPress={onPost} testID="review-done" />
         </View>
       }
     >

@@ -42,8 +42,11 @@ import {
 import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
 import { closingProofEventId } from "@/lib/proof-moment";
 import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
-import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
-import { routeAfterSave } from "@/lib/route-after-save";
+import { dismissTaskToast, publishTaskToast } from "@/lib/task-complete-toast";
+import { enrollmentFinished } from "@/lib/route-after-save";
+// Build 92 02.1/02.2: one finish flow; the Proof screen is never a destination.
+import { FINISH_COPY, isOfflineError, remainingAfter, remainingToast, routeAfterFinish } from "@/lib/finish-flow";
+import { createChooserToday } from "@/lib/create-chooser";
 import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
 import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
 import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
@@ -253,8 +256,19 @@ export function useTaskFlowV2() {
   const [kind, setKind] = useState("");
   const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
   // Build 90 04.1: the payload waiting on the post choice sheet.
-  const [postChoice, setPostChoice] = useState<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(null);
+  const [postChoice, setPostChoice] = useState<{
+    payload: Record<string, unknown>;
+    kind: VerificationKind;
+    /** Build 92 02.1: the camera came first; the sheet shows the photo and posts through submitPhoto. */
+    photo?: boolean;
+  } | null>(null);
   const [postChoiceAudience, setPostChoiceAudience] = useState<PostAudience>(POST_CHOICE_DEFAULT);
+  // Build 92 02.1: the sheet stays up while posting; a failure shows here with "Try again".
+  const [postChoiceError, setPostChoiceError] = useState<string | null>(null);
+  const postChoiceRef = useRef(postChoice);
+  postChoiceRef.current = postChoice;
+  /** True when the sheet was closed without choosing (P1-34): the toast says "Saved privately." */
+  const closedPrivatelyRef = useRef(false);
   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
   // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
   const logKind = resolveLogKind({
@@ -501,7 +515,19 @@ export function useTaskFlowV2() {
       });
       if (post) publishOptimisticFeedPost(post);
     }
-    returnToOrigin();
+    // Build 92 02.1: the post sheet stays up ("Posting") until the save lands; the outcome
+    // branches below navigate. Nothing leaves this screen before the server answers.
+  };
+
+  /** Build 92 02.1: a failed save keeps the sheet open with the reason and "Try again". */
+  const showSheetError = (message: string) => {
+    if (!mountedRef.current) return;
+    const pending = postChoiceRef.current;
+    setPostChoiceError(message);
+    if (!pending) {
+      // The sheet already closed (Try again from Home); nothing to re-open here.
+      return;
+    }
   };
 
   const failLocalSave = () => {
@@ -658,6 +684,7 @@ export function useTaskFlowV2() {
           setFinishShare("none");
           setFinishSave("failed");
         }
+        showSheetError(failNote || "Couldn't save. Try again.");
         await writeTiming();
         return;
       }
@@ -747,6 +774,7 @@ export function useTaskFlowV2() {
           setFinishSave("failed");
           setFailNote((note) => note || "Couldn't save. Try Post again.");
         }
+        showSheetError(failNote || "Couldn't save. Try again.");
         await writeTiming();
         return;
       }
@@ -756,10 +784,12 @@ export function useTaskFlowV2() {
         clearOptimisticFeedPost(postingId);
         submitInFlight.current = false;
         setSaving(false);
+        const note = hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.";
         if (mountedRef.current) {
           setFinishSave("failed");
-          setFailNote(hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.");
+          setFailNote(note);
         }
+        showSheetError(note);
         await writeTiming();
         return;
       }
@@ -780,36 +810,68 @@ export function useTaskFlowV2() {
         if (posted) publishOptimisticFeedPost(posted);
         if (mountedRef.current) setFinishSave("saved");
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        // Build 90 04.1: a post that secured the day shows Day secured first, then the post (openPost).
-        if (outcome === "saved") {
-          trackUsage("task_completed", { method: kind });
-          if (hasCameraProof) trackUsage("proof_posted");
-          router.replace(ROUTES.POST_ID(postedId) as never);
-          submitInFlight.current = false;
-          setSaving(false);
-          await writeTiming();
-          return;
-        }
+        // Build 92 02.2: a published post goes where every save goes (Home toast, Day secured or
+        // Challenge complete). The Proof screen never opens here.
       }
       trackUsage("task_completed", { method: kind });
       if (hasCameraProof) trackUsage("proof_posted");
       const shareStartedAt = Date.now();
       if (complete.shared !== true) await postHeldShare(eventId ?? undefined);
       timingRef.current.shareMs = Date.now() - shareStartedAt;
-      if (outcome === "saved") {
-        const route = routeAfterSave({
-          challengeFinished: false,
-          daySecuredNow: false,
-          enrollmentId: activeChallengeId,
-        });
-        if (route.screen === "Toast" && mountedRef.current) {
+      // Build 92 02.2: one rule for the next screen. Open tasks across every active challenge
+      // come from the Home snapshot; the next one is highlighted "Next" on Home.
+      const today = createChooserToday();
+      const openIds = today.openTaskIds ?? [];
+      const nextOpen = today.nextTask && today.nextTask.id !== taskId ? today.nextTask : null;
+      const challengeFinished = enrollmentFinished({
+        challengeDone: secure?.challenge_done === true,
+        dayIndex: complete.challengeDay ?? currentDay,
+        durationDays: complete.challengeLength ?? durationDays,
+      });
+      const finishRoute = routeAfterFinish(
+        {
+          challengeFinished,
+          daySecuredNow: securedToday,
+          remainingToday: remainingAfter(openIds, taskId),
+          nextTaskId: nextOpen?.id ?? null,
+        },
+        taskName,
+      );
+      if (finishRoute.to === "ChallengeComplete") {
+        trackUsage("task_completed", { method: kind });
+        if (hasCameraProof) trackUsage("proof_posted");
+        setPostChoice(null);
+        setPostChoiceError(null);
+        void trpcMutate(TRPC.challenges.markEndSeen, { enrollmentIds: [activeChallengeId] }).catch(() => {});
+        dismissTaskToast();
+        router.replace({
+          pathname: ROUTES.CHALLENGE_COMPLETE,
+          params: {
+            challengeName: complete.challengeName ?? challengeName,
+            totalDays: String(complete.challengeLength ?? durationDays),
+            enrollmentId: activeChallengeId,
+            otherOpen: finishRoute.otherChallengesOpen ? "1" : "0",
+            otherChallenge: nextOpen?.challengeName ?? "",
+            startAt: enrollmentQ.data?.start_at ?? "",
+            originTab,
+          },
+        } as never);
+        submitInFlight.current = false;
+        setSaving(false);
+        await writeTiming();
+        return;
+      }
+      if (finishRoute.to === "Home") {
+        if (mountedRef.current) {
           setShareEventId(eventId);
           setFinishSave("saved");
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setPostChoice(null);
+          setPostChoiceError(null);
           publishTaskToast({
             taskId,
-            title: taskDoneTitle(taskName, hasCameraProof),
-            body: taskName,
+            title: closedPrivatelyRef.current ? FINISH_COPY.closedPrivate : remainingToast(taskName, remainingAfter(openIds, taskId)),
+            body: closedPrivatelyRef.current ? remainingToast(taskName, remainingAfter(openIds, taskId)) : "",
             photoUri: photoUri ?? proofUrl ?? null,
             cameraSeal: hasCameraProof,
             eventId: eventId ?? null,
@@ -819,6 +881,7 @@ export function useTaskFlowV2() {
             currentDay,
             totalDays: durationDays,
             streak: typeof complete.streakDays === "number" ? complete.streakDays : undefined,
+            highlightTaskId: finishRoute.highlightTaskId,
           });
           returnToOrigin();
         }
@@ -828,6 +891,8 @@ export function useTaskFlowV2() {
         return;
       }
       setSaving(false);
+      setPostChoice(null);
+      setPostChoiceError(null);
       const assembled = assembleSubmitResult({
         verificationKind: complete.verificationKind ?? kind,
         requiredRemaining: complete.requiredRemaining,
@@ -893,8 +958,6 @@ export function useTaskFlowV2() {
             closingHasPhoto: hasCameraProof,
             originTab,
             counterReachedTarget: counterTask && count >= counterGoal,
-            // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
-            openPost: publishing && postedId ? postedId : null,
             choiceMade: typeof chosenAudience === "string",
             finishedAt: finishStartedAt,
           }) as never,
@@ -925,6 +988,7 @@ export function useTaskFlowV2() {
         setFinishShare("none");
         setFinishSave("failed");
       }
+      showSheetError(isOfflineError(msg) ? FINISH_COPY.offline : msg || "Couldn't save. Try again.");
     }
   };
 
@@ -952,6 +1016,7 @@ export function useTaskFlowV2() {
       failLocalSave();
       submitInFlight.current = false;
       if (mountedRef.current) setSaving(false);
+      showSheetError(FINISH_COPY.offline);
       return;
     }
     await finishSubmit(
@@ -1001,11 +1066,24 @@ export function useTaskFlowV2() {
 
   const answerPostChoice = (chosen: PostAudience) => {
     const pending = postChoice;
-    if (!pending) return;
-    setPostChoice(null);
+    if (!pending || submitInFlight.current) return;
+    setPostChoiceError(null);
+    closedPrivatelyRef.current = false;
     audienceRef.current = chosen;
     setAudience(chosen);
+    // The sheet stays up with "Posting" until the save lands (P1-03); the outcome closes it.
+    if (pending.photo) {
+      void submitPhoto(pending.payload);
+      return;
+    }
     void finishSubmit({ ...pending.payload, audience: chosen }, pending.kind);
+  };
+
+  /** Build 92 02.1: X, scrim or swipe-down saves privately and says so. */
+  const closePostChoice = () => {
+    if (!postChoice || submitInFlight.current) return;
+    answerPostChoice(POST_CHOICE_PRIVATE);
+    closedPrivatelyRef.current = true;
   };
 
   const submitTimer = async () => {
@@ -1254,14 +1332,17 @@ export function useTaskFlowV2() {
     setStep("log");
   };
 
+  // Build 92 02.1: Done on the review opens the post sheet (camera first, then the sheet).
   const onReviewPost = () => {
-    void submitPhoto(
-      isLogTask
-        ? logPayload()
-        : taskType === "reading"
-          ? { value: countRef.current }
-          : {}
-    );
+    if (submitInFlight.current || postChoice) return;
+    Keyboard.dismiss();
+    setPostChoiceAudience(POST_CHOICE_DEFAULT);
+    setPostChoiceError(null);
+    setPostChoice({
+      payload: isLogTask ? logPayload() : taskType === "reading" ? { value: countRef.current } : {},
+      kind: verificationKindFor(taskType, true),
+      photo: true,
+    });
   };
 
   const onDiscardPhoto = () => {
@@ -1408,10 +1489,12 @@ export function useTaskFlowV2() {
     logSanityAsk,
     // Build 90 04.1: the one post choice after a task without a photo review.
     postChoiceOpen: postChoice != null,
+    postChoicePhoto: postChoice?.photo === true,
+    postChoiceError,
     postChoiceAudience,
     setPostChoiceAudience,
     onPostChoicePost: () => answerPostChoice(postChoiceAudience),
-    onPostChoiceKeep: () => answerPostChoice(POST_CHOICE_PRIVATE),
+    onPostChoiceClose: closePostChoice,
     onLogContinue,
     onLogSaveAnyway,
     onLogEdit: () => setLogSanityAsk(null),

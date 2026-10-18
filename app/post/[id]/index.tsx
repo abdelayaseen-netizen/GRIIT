@@ -25,7 +25,6 @@ import TextField from "@/components/ds/TextField";
 import Skeleton from "@/components/ds/Skeleton";
 import CommentRow from "@/components/ds/CommentRow";
 import Button from "@/components/ds/Button";
-import SegmentedControl from "@/components/ds/SegmentedControl";
 import ShareStickerSheet from "@/components/share/ShareStickerSheet";
 import { relativeTime } from "@/lib/utils/relativeTime";
 import { captureError } from "@/lib/sentry";
@@ -39,11 +38,9 @@ import { CANCEL_REPORT_LABEL, REPORT_COMMENT_LABEL, REPORT_COMMENT_PROMPT, comme
 import {
   COMMENT_PLACEHOLDER,
   COMMENTS_EMPTY,
-  POST_DETAIL_AUDIENCE_LABEL,
   POST_DETAIL_DONE,
   POST_DETAIL_SHARE_OUTSIDE,
   POST_DETAIL_TITLE,
-  postDetailAudience,
   commentsCountLabel,
   visibleCommentCount,
   commentsSectionKind,
@@ -57,7 +54,7 @@ import {
 import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
 import { ROUTES } from "@/lib/routes";
 import { feedAuthorHref } from "@/lib/feed-tap-targets";
-import { POST_AUDIENCES, audienceBadge, audienceLabel, type PostAudience } from "@/lib/post-audience";
+import { audienceBadge, type PostAudience } from "@/lib/post-audience";
 
 type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
 
@@ -255,17 +252,8 @@ function PostThreadScreenInner() {
           ) : null}
           {user?.id && displayPost.userId === user.id ? (
             <View style={styles.finish}>
-              <View style={styles.audienceBlock}>
-                <Text style={styles.count}>{POST_DETAIL_AUDIENCE_LABEL}</Text>
-                <SegmentedControl
-                  items={POST_AUDIENCES.map((choice) => audienceLabel(choice))}
-                  value={audienceLabel(postDetailAudience(displayPost.audience))}
-                  onChange={(label) => {
-                    const choice = POST_AUDIENCES.find((a) => audienceLabel(a) === label);
-                    if (choice && choice !== postDetailAudience(displayPost.audience)) audienceMutation.mutate(choice);
-                  }}
-                />
-              </View>
+              {/* Build 92 02.5: the audience is asked once, on the post sheet. The owner changes
+                  it from the "…" menu (chunk 04); no inline control here. */}
               <Button
                 label={POST_DETAIL_DONE}
                 onPress={() => router.replace(ROUTES.TABS_HOME as never)}
@@ -539,7 +527,6 @@ const styles = StyleSheet.create({
   },
   authorCopy: { flex: 1, gap: PT },
   finish: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.xs },
-  audienceBlock: { gap: DS_V3.space.sm, paddingBottom: DS_V3.space.sm },
   author: {
     fontSize: DS_V3.type.bodyStrong.fontSize,
     lineHeight: DS_V3.type.bodyStrong.lineHeight,

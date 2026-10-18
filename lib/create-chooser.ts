@@ -26,6 +26,8 @@ export type CreateChooserTask = {
 export type CreateChooserToday = {
   todaySecured: boolean;
   nextTask: CreateChooserTask | null;
+  /** Build 92 02.2: ids of every open task today across active challenges (for "{n} left today."). */
+  openTaskIds?: string[];
 };
 
 export type CreateChooserRow = {

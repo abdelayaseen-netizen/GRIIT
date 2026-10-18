@@ -59,14 +59,14 @@ describe("04.1 one clear post choice after every task", () => {
     ]) {
       expect(hook).toContain(call);
     }
-    // A published post lands on the post; a post that secured the day shows Day secured first.
-    expect(hook).toContain("openPost: publishing && postedId ? postedId : null");
+    // Build 92 02.2: a published post never opens the Proof screen; Day secured never carries openPost.
+    expect(hook).not.toContain("openPost:");
     expect(hook).toContain("choiceMade: typeof chosenAudience === \"string\"");
     const flow = read("components/task-v2/TaskFlowV2.tsx");
     expect(flow).toContain("<PostChoiceSheet");
-    expect(flow).toContain("onKeep={f.onPostChoiceKeep}");
+    expect(flow).toContain("onClose={f.onPostChoiceClose}");
     const secured = read("app/task/secured.tsx");
-    expect(secured).toContain("!choiceMade &&");
+    expect(secured).not.toContain("openPost");
   });
 
   it("the text card names task, challenge, day and streak", () => {
@@ -123,8 +123,9 @@ describe("04.3 the Proof screen has a finish", () => {
     const screen = read("app/post/[id]/index.tsx");
     expect(screen).toContain("label={POST_DETAIL_DONE}");
     expect(screen).toMatch(/label=\{POST_DETAIL_SHARE_OUTSIDE\}\s+variant="secondary"/);
-    expect(screen).toContain("<SegmentedControl");
-    expect(screen).toContain("POST_DETAIL_AUDIENCE_LABEL");
+    // Build 92 02.5: the audience is asked once on the post sheet; no inline control on the post.
+    expect(screen).not.toContain("<SegmentedControl");
+    expect(screen).not.toContain("POST_DETAIL_AUDIENCE_LABEL");
     // The plain-text rows are gone.
     expect(screen).not.toContain(">Share outside GRIIT</Text>");
     expect(screen).not.toContain(">Back to today</Text>");

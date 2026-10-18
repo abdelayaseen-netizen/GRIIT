@@ -123,3 +123,140 @@ with pure tokens and the on/off rule in `lib/glass.ts` so vitest can read them.
 - Seen in build 91 while running the flow (not chunk 01 items; for chunk 02/04): Day secured shows "0 tasks." and an
   odd share-card preview; Done on Day secured goes to a Proof screen and then the guest "Save your challenge." prompt;
   a self-reported check-off post has no tile in the author's own proof grid.
+
+## Chunk 02 · Finish flow and Day secured
+
+Design reference: `design/handoff/b92/part1-finish-loop/README.md` ("What changed", "Routing", copy table,
+checklist lines 114–128), `src/finish/{routeAfterSave,copy,PostSheet,DaySecuredScreen,format}.ts(x)`; frames
+P1-01 … P1-11, P1-34. Top-level README Part 1 locked decisions (lines 33–40) and checklist (222–236).
+
+Token mapping: `DS_V3.type.earnedHero` (Barlow 88) → `DS_V3.type.number` (64/800 tabular; no Barlow Condensed is
+bundled, so the shipped earned-number style is used and noted); `secondaryStrong` → secondary + weight 500;
+`captionStrong` → caption + weight 500; `SegmentedControl` with icons → three glass radio pills (the shipped
+`SegmentedControl` has no icon slot and is being removed from the Proof screen anyway).
+
+### 02.1 One finish flow
+- Root cause: the audience was asked in two places — `steps/ReviewStep.tsx` chips (photo tasks, before Done) and
+  `steps/PostChoiceSheet.tsx` (everything else, Friends/Everyone + "Keep it private", no Only me). Closing the sheet
+  (scrim) saved privately with no toast. `useTaskFlowV2.ts` `showDoneLocally()` left for Home before the server
+  answered, so "Posting" and an offline error had no screen to show on; a failed save rolled the task back.
+- Change: `lib/finish-flow.ts` (copy table, `routeAfterFinish`, `remainingAfter`, `isOfflineError`, `verifyLabel`,
+  `finishDates`, the teaching flag). `PostChoiceSheet` rebuilt on `GlassSheet` (inline; a Modal cannot present in
+  the frame another closes): "Post your proof", "{task} · {challenge} · Day n of N", photo thumb + caption when the
+  camera came first, "Who sees this" Friends / Everyone / Only me (Friends default), the line per audience, one
+  button "Post to friends" / "Post to everyone" / "Save privately" / "Posting" / "Try again"; X, scrim and swipe-down
+  save privately. `ReviewStep` keeps only the photo + Retake + Done (`review-done`). The hook: `onReviewPost` opens
+  the sheet (camera first), `answerPostChoice` keeps the sheet up until the save lands, failures show on the sheet
+  (`postChoiceError`, offline line for network errors) with "Try again"; the closed sheet toasts "Saved privately."
+  (body "{task} done. {n} left today."). `GlassSheet` gained `inline` and `closeTestID` (chunk 01 component; needed
+  here). `app/task/strava.tsx` adopted the new sheet props.
+- Decision: the sheet waits for the server ("Posting") instead of build 90's optimistic leave, because P1-03/P1-04
+  need a screen to show the state on. Done → sheet is still immediate (gate below). Offline: the optimistic Home row
+  is kept and the sheet says the task is saved and counts; a true offline queue (survives a kill) is not built —
+  listed under Needs Yaseen.
+- Test: `lib/finish-flow.test.ts` 02.1 (failed before: module missing / static checks; passes now). Maestro
+  `build92-02-finish-checkoff-counter.yaml`, `build92-02-finish-photo.yaml`.
+
+### 02.2 Where it goes next
+- Root cause: `useTaskFlowV2.ts:787` `router.replace(ROUTES.POST_ID(postedId))` after every published post with the
+  day still open (the trap: 53 dead taps); `app/task/secured.tsx:197` opened the Proof on Done when `openPost` was
+  set; the toast title was `taskDoneTitle()` = "Saved."; Challenge complete was reachable only from Day secured's
+  Done (`afterSecuredNext`), never straight from the save; Home had no "Next" marker.
+- Change: both `POST_ID` replaces removed; `routeAfterFinish` decides ChallengeComplete (with `otherOpen` when today is
+  not secured) → DaySecured → Home. Home toast "{task} done. {n} left today." where n = open tasks across all active
+  challenges minus this one (`lib/create-chooser.ts` snapshot now carries `openTaskIds`, published by Home). The
+  first open row on Home shows a "Next" tag (`components/home/HomeV3.tsx`, `home-task-next`). The toast carries
+  `highlightTaskId`.
+- Test: `lib/finish-flow.test.ts` 02.2; `lib/route-after-save.test.ts` (enrollmentFinished unchanged). Maestro
+  asserts `post-done` (the Proof's button) is never visible and the toast text matches.
+
+### 02.3 Day secured
+- Root cause: `components/task-v2/SecuredDayScreen.tsx` was a 462-line ScrollView: sticker preview, proof tiles,
+  "N tasks." caption (which read "0 tasks." before the bootstrap landed), invite card, ShareChoice footer; the
+  teaching line `SECURED_MEANS` showed every time; only an X close, no Back, no swipe.
+- Change: rewritten to the P1-06/08 order inside one non-scrolling view: streak number (`DS_V3.type.number`) +
+  "day(s) in a row", "Every task today is done.", `WeekStrip`, today's tasks (title + Verified / Verified by Strava /
+  Self-reported; the finishing camera task shows its photo, self-reported rows show nothing), the teaching line on
+  the first secured day per user (`SECURED_TEACHING_KEY`, AsyncStorage keyed by user id), then `FloatingActionBar`
+  Share (primary) / Done. Done, "Go back" and swipe-down (PanResponder, 64 pt) go Home. Share opens the sticker
+  carousel registry (chunk 05; the share sheet until then). Invite moved off this screen (Part 2 locked decision:
+  invite after creating, on an empty board, on a challenge).
+- Test: `lib/finish-flow.test.ts` 02.3 (order, no ScrollView, teaching once per user). Maestro
+  `build92-02-secured-nav.yaml` (Done ×3, Back ×3, swipe ×3) via `griit://dev/build92-secured`.
+
+### 02.4 Challenge complete
+- Root cause: `MomentScreenV3` complete variant showed "Held" and "Days done" and had no dates and no
+  "other challenges open" line; the save never routed here directly.
+- Change: stats are Longest streak · Freeze(s) used · Dates ("Oct 1 – Oct 30" from the enrollment `start_at`
+  passed by the hook; no backend change); `otherOpen` line "Today isn't secured yet. {challenge} still needs
+  today." where {challenge} is the next open task's challenge from the Home snapshot. `app/challenge/complete.tsx`
+  reads `otherOpen`, `otherChallenge`, `startAt`.
+- Test: `lib/finish-flow.test.ts` 02.4. Not reproduced on a simulator (needs an enrollment on its last day); see
+  "Not done".
+
+### 02.5 Second audience prompt
+- Root cause: `app/post/[id]/index.tsx:256–268` rendered "Who sees this" + `SegmentedControl` for the owner.
+- Change: removed (the `setPostAudience` mutation stays for the chunk 04 "…" menu).
+- Test: `lib/finish-flow.test.ts` 02.5; `lib/build90-posting.test.ts` 04.3 flipped to `not.toContain` with the reason.
+
+### Chunk 02 gates and evidence
+- Maestro, each flow run to green once per device, fresh guest each run:
+  - `.maestro/build92-02-finish-checkoff-counter.yaml` (iPhone 16 `maestro-checkoff-counter-run4.txt`, SE
+    `se/maestro-checkoff-counter-se.txt`): join 7K Steps + 10 Pages → Home shows the `Next` tag on the first open
+    task → check-off Done → sheet (`Post your proof`, `Who sees this`, friends/everyone toggle, `Post to friends`)
+    → Post → Home toast "Walk 7,000 steps done. 1 left today.", the Proof screen and the sheet never shown, `Next`
+    moves to Read 10 pages → counter +10 → `Done · 10 pages` → sheet → close without choosing → saved privately →
+    Day secured (streak 1, both rows `Self-reported`, Done + Share) → Done → Home. Runs 1–3 were flow fixes: the
+    build-91 guest "Save your challenge." prompt after the first finish (optional `Later`), the counter needs +10
+    before Done, and on the SE the rows sit under the tab bar (`scrollUntilVisible`). No app fix was needed.
+  - `.maestro/build92-02-finish-photo.yaml` (16 Pro Max, `16promax/maestro-photo-16promax.txt`): camera allowed →
+    Drink Water Today → Take proof photo → Review `Done` → sheet with the photo thumb and caption field → Post →
+    Challenge complete (Drink Water Today is a 1-day challenge: "Drink Water Today · finished", Longest streak,
+    Freezes used, Dates) → See the record → Home. Day secured is not shown as well (routing rule: finished wins).
+  - `.maestro/build92-02-secured-nav.yaml` (SE `se/maestro-secured-nav-se.txt`, 16 Pro Max
+    `16promax/maestro-secured-nav-16promax.txt`): Day secured → Done ×3, Back ×3, swipe-down ×3, each lands on Home;
+    0 failures on either device. The first open shows the teaching line, later opens don't.
+  - Run type: not covered on the simulator. There is no seeded run challenge and a run task needs Strava/Health
+    (`app/task/strava.tsx`); that screen uses the same `PostChoiceSheet` and was updated and type-checked. See Not done.
+- Screenshots next to the design frames (`design/handoff/b92/part1-finish-loop/frames/`):
+  `se/` and `16promax/`: `P1-06-day-secured-first-time.png`, `P1-08-day-secured-self-reported.png`,
+  `P1-08-day-secured-self-reported-home.png` (dev route `griit://dev/build92-secured`); `se/P1-04-home-toast-next.png`
+  and `se/P1-07-day-secured-real.png` (real flow; also `16/` for iPhone 16); `16promax/P1-02-post-sheet-photo.png`,
+  `16promax/P1-10-challenge-complete.png`. On the SE, Day secured has no ScrollView (static test) and the whole screen
+  (streak, title, week strip, two task rows, teaching line, action bar) fits without scrolling (`se/P1-07`).
+- Teaching line once per user: `lib/finish-flow.test.ts` covers `teachingShows`/`markTeachingSeen` (fresh user shows,
+  same user hidden after marking, another user still shows, bad JSON treated as unseen); the Maestro secured-nav flow
+  asserts `day-secured-teaching` on the first open only.
+- Done → sheet timing, from `maestro.log` timestamps (tap COMPLETED → "Post your proof" assert COMPLETED), 8 taps
+  across the runs above: 0.09, 0.09, 0.09, 0.09, 0.10, 0.10, 0.10, 0.10 s. The sheet is inline (no Modal), so it
+  renders in the same frame as the state change; well under build 90's 0.75 s.
+- Full suite after the chunk: vitest 4 failed / 2128 passed (`vitest-final.txt`) = the 4 baseline failures; tsc 5
+  errors = baseline set (`tsc-final.txt`). Failing-first run saved as `vitest-before.txt` (7 failed).
+  13 build-90 static pins moved to the new behaviour, each with a "Build 92 02" comment (list in 02.1–02.5); none
+  weakened: every inverted check (`not.toContain("InviteLinkRow")`, no `POST_ID(` in done, no `<SegmentedControl` on
+  Proof, no `openPost`) is the Part 1 locked decision it pins.
+- Self-check diff: no skipped tests, no `as any`, no console.log, no hard-coded colours; chunk 01 tests still pass.
+
+### Chunk 02 decisions made alone
+- The sheet waits for the server ("Posting" on the button, retries in place) instead of build 90's optimistic leave,
+  so the next screen always reflects the real save.
+- Offline: the optimistic Home row stays, the sheet shows the offline line and "Try again"; no persistent offline
+  queue in this chunk (see Not done).
+- Teaching-line "seen" is stored per user in AsyncStorage (`griit.secured.teaching.v1`), no SQL.
+- Day secured drops the invite row (Part 2 locked decision); Share opens the sticker carousel registry from chunk 01.
+- Challenge complete dates are computed client-side from the enrollment `start_at` + duration; no backend change.
+- Day secured shows a photo thumb only for the task that just finished with the camera; other rows show the label.
+- `GlassSheet` gained `inline` (renders in-tree, no Modal) and `closeTestID`; the finish sheet uses inline so it can
+  stay up while the save runs and so Maestro can read it.
+- Closing the sheet without choosing saves privately and the Home toast title becomes "Saved privately." with the
+  remaining count as the body.
+
+### Chunk 02 not done / Needs Yaseen
+- Run task type not covered by Maestro on the simulator (needs Strava/Health and a run challenge). Steps to cover on
+  a device: create a challenge with the "Morning run" pack, connect Strava, finish a run, check Done → sheet → the
+  routed screen, Proof screen absent.
+- Challenge complete via a multi-day challenge on its last day is not reproducible on the simulator; covered by the
+  1-day Drink Water Today flow and `routeAfterFinish` unit tests.
+- Offline post queue (retry later automatically) is out of this chunk's scope; the sheet keeps "Try again".
+- Dev route `griit://dev/build92-secured` shows the live streak (1 on a fresh guest) rather than the `streak` param;
+  harmless, frames only.

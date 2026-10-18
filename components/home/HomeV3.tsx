@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Flame } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { FINISH_COPY } from "@/lib/finish-flow";
 import WeekStrip from "@/components/ds/WeekStrip";
 import { fillTodayOnStrip } from "@/lib/home-streak";
 import { homeStatus } from "@/lib/home-status";
@@ -322,7 +323,14 @@ export function HomeV3({
             accessibilityLabel={row.name}
             onPress={() => onPressTask?.(row.id)}
           >
-            <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
+            <View style={styles.taskTitleRow}>
+              <Text style={[styles.task, homeProofTitleMuted(row) ? styles.taskMuted : null]}>{row.name}</Text>
+              {!row.done && !row.closed && openRow?.id === row.id && !(daySecured || allDone) ? (
+                <Text style={styles.nextTag} testID="home-task-next">
+                  {FINISH_COPY.next}
+                </Text>
+              ) : null}
+            </View>
           </Pressable>
           {section.challengeId ? (
             <Pressable
@@ -855,6 +863,18 @@ const styles = StyleSheet.create({
     borderColor: DS_V3.color.border,
   },
   taskCopy: { flex: 1, gap: DS_V3.space.xs / 2 },
+  taskTitleRow: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.xs },
+  // Build 92 02.2 (P1-05): the next open task is marked "Next".
+  nextTag: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: "500",
+    color: DS_V3.color.textPrimary,
+    paddingHorizontal: DS_V3.space.xs + 2,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.border,
+    overflow: "hidden",
+  },
   taskDot: {
     width: DS_V3.space.xs * 6,
     height: DS_V3.space.xs * 6,

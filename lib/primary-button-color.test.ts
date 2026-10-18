@@ -8,7 +8,8 @@ describe("primary button labels", () => {
       resolve(__dirname, "../components/task-v2/steps/ReviewStep.tsx"),
       "utf8",
     );
-    expect(review).toContain("label={postButtonLabel(audience)}");
+    // Build 92 02.1: the review's one button is Done; the post sheet names the audience.
+    expect(review).toContain("label={REVIEW_DONE}");
     expect(review).not.toContain("{taskName}");
     expect(review).not.toContain("{challengeName}");
     expect(review).not.toContain("Day {currentDay}");

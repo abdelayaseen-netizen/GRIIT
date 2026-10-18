@@ -1,0 +1,89 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 02: Day secured -> Done, Back and swipe-down all go Home. 3 runs each.
+# Opens the screen through the dev route; the first open shows the teaching line.
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://dev/build92-secured?streak=1"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Every task today is done."
+    timeout: 20000
+- assertVisible:
+    id: "day-secured-teaching"
+- takeScreenshot: P1-06-day-secured-first-time
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 15000
+
+# Done x2 more
+- repeat:
+    times: 2
+    commands:
+      - openLink: "griit://dev/build92-secured?streak=3"
+      - tapOn:
+          text: "^Open$"
+          optional: true
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 20000
+      - assertNotVisible:
+          id: "day-secured-teaching"
+      - tapOn: "^Done$"
+      - extendedWaitUntil:
+          visible:
+            id: "tab-home"
+          timeout: 15000
+- takeScreenshot: P1-08-day-secured-self-reported-home
+
+# Back x3
+- repeat:
+    times: 3
+    commands:
+      - openLink: "griit://dev/build92-secured?streak=3"
+      - tapOn:
+          text: "^Open$"
+          optional: true
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 20000
+      - tapOn:
+          id: "day-secured-back"
+      - extendedWaitUntil:
+          visible:
+            id: "tab-home"
+          timeout: 15000
+
+# Swipe down x3
+- repeat:
+    times: 3
+    commands:
+      - openLink: "griit://dev/build92-secured?streak=3"
+      - tapOn:
+          text: "^Open$"
+          optional: true
+      - extendedWaitUntil:
+          visible: "Every task today is done."
+          timeout: 20000
+      - swipe:
+          start: "50%,30%"
+          end: "50%,85%"
+          duration: 300
+      - extendedWaitUntil:
+          visible:
+            id: "tab-home"
+          timeout: 15000
+
+# P1-08 frame: self-reported, not the first time.
+- openLink: "griit://dev/build92-secured?streak=3"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Every task today is done."
+    timeout: 20000
+- takeScreenshot: P1-08-day-secured-self-reported
+- tapOn: "^Done$"

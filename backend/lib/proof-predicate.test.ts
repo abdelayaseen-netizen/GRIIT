@@ -187,8 +187,10 @@ describe("splitSecuredProof", () => {
     expect(names).not.toBe("Challenge");
     const src = readFileSync(resolve(__dirname, "../trpc/routes/checkins.ts"), "utf8");
     expect(src).toContain('.in("status", ["active", "completed", "abandoned"])');
+    // Build 92 02.3: Day secured lists today's tasks (title + verification) instead of a proof caption.
     const screen = readFileSync(resolve(__dirname, "../../components/task-v2/SecuredDayScreen.tsx"), "utf8");
-    expect(screen).toContain("proofs.map((p) => p.challengeName)");
+    expect(screen).toContain("{t.title}");
+    expect(screen).toContain("{t.label}");
   });
 
   it("checkins.complete writes proof_url, not proof_photo_url or verified", () => {

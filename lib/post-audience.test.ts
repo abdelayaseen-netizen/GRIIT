@@ -72,7 +72,9 @@ describe("post audience", () => {
     const hook = readFileSync("components/task-v2/useTaskFlowV2.ts", "utf8");
     const checkins = readFileSync("backend/trpc/routes/checkins.ts", "utf8");
     const feed = readFileSync("backend/trpc/routes/feed.ts", "utf8");
-    expect(review).toContain("postButtonLabel");
+    // Build 92 02.1: the audience button moved from the review to the post sheet.
+    expect(review).not.toContain("postButtonLabel");
+    expect(readFileSync("components/task-v2/steps/PostChoiceSheet.tsx", "utf8")).toContain("postButton({");
     expect(readFileSync("lib/post-audience.ts", "utf8")).toContain("Post to friends");
     expect(hook).toContain('useState<PostAudience>("friends")');
     expect(hook).toContain("audience: audienceRef.current");

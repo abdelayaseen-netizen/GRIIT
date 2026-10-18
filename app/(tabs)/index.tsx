@@ -757,6 +757,7 @@ export default function HomeScreen() {
     const next = startTask ? heroTasks.find((t) => t.id === startTask.id) : undefined;
     setCreateChooserToday({
       todaySecured,
+      openTaskIds: heroTasks.filter((t) => !t.done && t.windowState !== "closed").map((t) => t.id),
       nextTask: next
         ? {
             id: next.id,

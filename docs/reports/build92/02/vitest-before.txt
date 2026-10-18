@@ -1,0 +1,4735 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/finish-flow.test.ts (11 tests | 7 failed) 46ms
+   × 02.1 the post sheet asks once > the photo review no longer asks the audience; the sheet does, and closing saves privately 5ms
+     → expected 'import React from "react";\nimport { …' not to contain 'POST_AUDIENCES'
+   × 02.2 where it goes next > the Proof screen is never a destination in the finish flow 2ms
+     → expected 'import { photoModeFor } from "@/backe…' not to contain 'ROUTES.POST_ID('
+   × 02.2 where it goes next > the toast names the task and the count; Home marks the next task 2ms
+     → expected 'import { photoModeFor } from "@/backe…' to contain 'remainingAfter('
+   × 02.3 Day secured > no scroll view, the Part 1 order, and Done / Back / swipe all go Home 2ms
+     → expected '/**\n * Frame 59 — streak is the hero…' not to contain '<ScrollView'
+   × 02.3 Day secured > the teaching line shows once per user 1ms
+     → expected 'import { useEffect, useState } from "…' to contain 'teachingShows('
+   × 02.4 Challenge complete > freeze wording, dates, and the other-challenges line 31ms
+     → expected 'import React, { useEffect, useState }…' to contain 'otherOpenLine('
+   × 02.5 the Proof screen asks nothing > no inline Who sees this control on the post 1ms
+     → expected 'import React, { useCallback, useMemo,…' not to contain '<SegmentedControl'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.1 the post sheet asks once > the photo review no longer asks the audience; the sheet does, and closing saves privately
+AssertionError: expected 'import React from "react";\nimport { …' not to contain 'POST_AUDIENCES'
+
+- Expected
++ Received
+
+- POST_AUDIENCES
++ import React from "react";
++ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
++ import KeyboardDock from "@/components/ds/KeyboardDock";
++ import { Image } from "expo-image";
++ import { DS_V3 } from "@/lib/design-system";
++ import Button from "@/components/ds/Button";
++ import { styles } from "../taskFlowStyles";
++ import { audienceLabel, postButtonLabel, POST_AUDIENCES, type PostAudience } from "@/lib/post-audience";
++
++ type Props = {
++   photoUri: string;
++   challengeName: string;
++   currentDay: number;
++   taskName: string;
++   gateLabel: string;
++   caption: string;
++   onCaption: (t: string) => void;
++   onRetake: () => void;
++   onPost: () => void;
++   submitting?: boolean;
++   /** One line when the post cannot go out. The button stays tappable. */
++   note?: string | null;
++   audience: PostAudience;
++   onAudience: (audience: PostAudience) => void;
++ };
++
++ export function ReviewStep({
++   photoUri,
++   caption,
++   onCaption,
++   onRetake,
++   onPost,
++   submitting = false,
++   note,
++   audience,
++   onAudience,
++ }: Props) {
++   return (
++     <KeyboardDock
++       footer={
++         <View style={styles.reviewDeck}>
++           <View style={styles.capRow}>
++             <TextInput
++               value={caption}
++               onChangeText={(t) => onCaption(t.slice(0, 120))}
++               placeholder="Add a caption"
++               placeholderTextColor={DS_V3.color.textSecondary}
++               selectionColor={DS_V3.color.textPrimary}
++               style={styles.capInput}
++               maxLength={120}
++             />
++             <Text style={styles.counter}>{caption.length} / 120</Text>
++           </View>
++           <View style={styles.audienceRow}>
++             {POST_AUDIENCES.map((choice) => {
++               const on = choice === audience;
++               return (
++                 <Pressable
++                   key={choice}
++                   onPress={() => onAudience(choice)}
++                   accessibilityRole="button"
++                   accessibilityState={{ selected: on }}
++                   style={[styles.audienceChip, on && styles.audienceChipOn]}
++                 >
++                   <Text style={[styles.audienceChipText, on && styles.audienceChipTextOn]}>{audienceLabel(choice)}</Text>
++                 </Pressable>
++               );
++             })}
++           </View>
++           {submitting ? (
++             <Text style={styles.counter}>Posting…</Text>
++           ) : note ? (
++             <Text style={styles.counter}>{note}</Text>
++           ) : null}
++           <Button label={postButtonLabel(audience)} submitting={submitting} disabled={submitting} onPress={onPost} />
++         </View>
++       }
++     >
++     <View style={styles.reviewPhoto}>
++       <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFillObject} contentFit="cover" />
++       <Pressable onPress={onRetake} accessibilityRole="button" accessibilityLabel="Retake" style={styles.retake}>
++         <Text style={styles.retakeText}>Retake</Text>
++       </Pressable>
++     </View>
++     </KeyboardDock>
++   );
++ }
++
+
+ ❯ lib/finish-flow.test.ts:48:24
+     46|   it("the photo review no longer asks the audience; the sheet does, an…
+     47|     const review = read("components/task-v2/steps/ReviewStep.tsx");
+     48|     expect(review).not.toContain("POST_AUDIENCES");
+       |                        ^
+     49|     expect(review).not.toContain("audienceChip");
+     50|     const sheet = read("components/task-v2/steps/PostChoiceSheet.tsx");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.2 where it goes next > the Proof screen is never a destination in the finish flow
+AssertionError: expected 'import { photoModeFor } from "@/backe…' not to contain 'ROUTES.POST_ID('
+
+- Expected
++ Received
+
+- ROUTES.POST_ID(
++ import { photoModeFor } from "@/backend/lib/task-model";
++ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
++ import { Image, Keyboard } from "react-native";
++ import { useQuery, useQueryClient } from "@tanstack/react-query";
++ import { useLocalSearchParams, useRouter } from "expo-router";
++ import { supabase } from "@/lib/supabase";
++ import * as ImageManipulator from "expo-image-manipulator";
++ import * as Location from "expo-location";
++ import * as Haptics from "expo-haptics";
++ import { useApp } from "@/contexts/AppContext";
++ import { trackUsage } from "@/lib/analytics";
++ import { useAuth } from "@/contexts/AuthContext";
++ import { trpcMutate } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
++ import { ROUTES } from "@/lib/routes";
++ import { firstString, parseConfig } from "@/lib/task-helpers";
++ import { counterDisplayUnit } from "@/lib/counter-log";
++ import { evaluateScheduleWindow } from "@/lib/schedule-window";
++ import { haversineDistance } from "@/lib/geo";
++ import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
++ import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
++ import { uploadProofImageFromFile } from "@/lib/uploadProofImage";
++ import { shrinkProofForUpload } from "@/lib/proof-resize";
++ import { finishWaitsOnLocation, LOCATION_FIX_TIMEOUT_MS } from "@/lib/finish-location";
++ import { timerRequiredSeconds } from "@/lib/timer-duration";
++ import {
++   confirmOptimisticTaskDone,
++   markOptimisticTaskDone,
++   rollbackOptimisticTaskDone,
++   setOptimisticRetry,
++ } from "@/lib/optimistic-home";
++ import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
++ import { getTodayDateKey } from "@/lib/date-utils";
++ import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
++ import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
++ import {
++   dayOpenTaskHref,
++   serverSecuredToday,
++   type DayOpenModel,
++ } from "@/lib/day-open";
++ import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
++ import { closingProofEventId } from "@/lib/proof-moment";
++ import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
++ import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
++ import { routeAfterSave } from "@/lib/route-after-save";
++ import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
++ import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
++ import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
++ import { shareProgressImage } from "@/lib/share";
++ import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
++ import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
++ import {
++   clearLocalTimerSession,
++   loadLocalTimerSession,
++   saveLocalTimerSession,
++ } from "@/lib/task-session-store";
++ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
++ import { startLiveActivity, endLiveActivity, showLiveActivityDone } from "@/lib/live-activity";
++ import {
++   FINISH_SLOW_MS,
++   finishAfterMutation,
++   resolveHeldShare,
++   type AlsoTodayRow,
++   type SaveState,
++   type ShareIntent,
++ } from "@/lib/finish-moment";
++ import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
++ import { homeDayLine, shownChallengeDay } from "@/lib/home-day-total";
++ import { prepareJournalUnmount } from "@/lib/journal-leave";
++ import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
++ import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
++ import {
++   RUN_PHOTO_AFTER,
++   TIMER_PHOTO_AFTER,
++   timerElapsedSeconds,
++   workDoneLine,
++   workThenCamera,
++ } from "@/lib/work-step";
++ import {
++   flowAllowsSubmit,
++   flowFooterBrand,
++   flowFooterCaption,
++   gateTimeFromConfig,
++   withRequiredPhotoGate,
++   isWindowClosedError,
++   minutesLeftFromConfig,
++   windowStateFromConfig,
++ } from "@/lib/task-flow-window";
++ import {
++   type TaskFlowStep,
++   checkinGpsNextStep,
++   chromeFlags,
++   clockLabel,
++   discardPhotoStep,
++   finishSubmitOutcome,
++   flowOpensCamera,
++   fmtMmSs,
++   initialStep,
++   isHonest,
++   logSanityCheck,
++   resolveGoBack,
++   resolveGoBackFromFailure,
++   resolveLogKind,
++   resolveRetryFailedSubmit,
++   shouldBlockOnWindow,
++   submitWithoutPhotoNext,
++   timerRemainingSec,
++   timerResumeStep,
++   timerShouldAutoSubmit,
++   verificationKindFor,
++   wordCount,
++   type LogSanity,
++ } from "@/lib/task-flow-state";
++
++ type FinishTiming = {
++   photoReadMs: number;
++   uploadMs: number;
++   completeMs: number;
++   secureMs: number;
++   shareMs: number;
++   homeRefetchMs: number;
++   doneVisibleMs: number;
++ };
++
++ const EMPTY_TIMING: FinishTiming = {
++   photoReadMs: 0,
++   uploadMs: 0,
++   completeMs: 0,
++   secureMs: 0,
++   shareMs: 0,
++   homeRefetchMs: 0,
++   doneVisibleMs: 0,
++ };
++
++ function readLocationFix(): Promise<Location.LocationObject> {
++   return new Promise((resolve, reject) => {
++     const timer = setTimeout(() => reject(new Error("Couldn't read your location.")), LOCATION_FIX_TIMEOUT_MS);
++     Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
++       .then((loc) => {
++         clearTimeout(timer);
++         resolve(loc);
++       })
++       .catch((err: unknown) => {
++         clearTimeout(timer);
++         reject(err instanceof Error ? err : new Error("Couldn't read your location."));
++       });
++   });
++ }
++
++ export function useTaskFlowV2() {
++   const router = useRouter();
++   const params = useLocalSearchParams<{
++     taskId?: string;
++     activeChallengeId?: string;
++     taskType?: string;
++     taskName?: string;
++     taskConfig?: string;
++     challengeName?: string;
++     currentDay?: string;
++     durationDays?: string;
++     originTab?: string;
++   }>();
++   const { user } = useAuth();
++   const queryClient = useQueryClient();
++   const { completeTask, secureDay, profile } = useApp();
++   const timingRef = useRef<FinishTiming>({ ...EMPTY_TIMING });
++   const shownLocalRef = useRef(false);
++
++   const taskId = firstString(params.taskId);
++   const activeChallengeId = firstString(params.activeChallengeId);
++   useEffect(() => {
++     if (!taskId) return;
++     trackUsage("task_started");
++   }, [taskId]);
++   const taskType = (firstString(params.taskType) || "manual").toLowerCase();
++   const taskName = firstString(params.taskName) || "Untitled task";
++   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
++   const challengeName = firstString(params.challengeName) || "Challenge";
++   const durationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
++   const originTab = originTabFromParam(firstString(params.originTab));
++   const userId = user?.id ?? "";
++   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
++   const enrollmentQ = useQuery({
++     queryKey: ["activeChallenge", "startAt", activeChallengeId],
++     queryFn: async () => {
++       const { data, error } = await supabase
++         .from("active_challenges")
++         .select("start_at, created_at, challenge_id")
++         .eq("id", activeChallengeId)
++         .maybeSingle();
++       if (error) throw error;
++       return data as {
++         start_at?: string | null;
++         created_at?: string | null;
++         challenge_id?: string | null;
++       } | null;
++     },
++     enabled: !!activeChallengeId,
++     staleTime: 60 * 1000,
++   });
++   const dayReady = !activeChallengeId || enrollmentQ.isSuccess;
++   const startAt = enrollmentQ.isSuccess
++     ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.created_at ?? null)
++     : null;
++   const currentDay = shownChallengeDay(
++     startAt,
++     profile?.timezone ?? "UTC",
++     dateKey,
++     durationDays,
++   );
++   const requiredSeconds = timerRequiredSeconds(config);
++   const minWords = journalMinWords(config.min_words);
++   const counterGoal = resolveConfigCounterTarget(config) || 8;
++   const taskRequired = config.required !== false;
++   const gates = useMemo(
++     () => withRequiredPhotoGate(config as Record<string, unknown>),
++     [config],
++   );
++   const photoMode = photoModeFor({ config: config as Record<string, unknown> });
++   const requirePhoto = flowOpensCamera(gates);
++   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
++   const windowState = windowStateFromConfig(config as Record<string, unknown>);
++   const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
++   const counterUnit = counterDisplayUnit(taskType, config);
++   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
++   const place = config.location_name || "the saved location";
++
++   const [step, setStep] = useState<TaskFlowStep>(() =>
++     windowState === "closed" ? "window_closed" : initialStep(taskType, withRequiredPhotoGate(config as Record<string, unknown>)),
++   );
++   const [caption, setCaption] = useState("");
++   const [audience, setAudience] = useState<PostAudience>("friends");
++   const audienceRef = useRef(audience);
++   audienceRef.current = audience;
++   const [photoUri, setPhotoUri] = useState<string | null>(null);
++   const [capturedAt, setCapturedAt] = useState<string | null>(null);
++   const [discardAsk, setDiscardAsk] = useState(false);
++   const [text, setText] = useState("");
++   const [journalFieldOn, setJournalFieldOn] = useState(true);
++   const [count, setCount] = useState(0);
++   const countRef = useRef(count);
++   const finishEarlyRef = useRef<{ seconds: number } | null>(null);
++   countRef.current = count;
++   const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
++   const [distance, setDistance] = useState<number | null>(null);
++   const [durationSec, setDurationSec] = useState<number | null>(null);
++   const [workoutMin, setWorkoutMin] = useState<number | null>(null);
++   const [unit, setUnit] = useState<DistanceUnit>(() =>
++     runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
++   );
++   // Build 90 03.1: no preselected activity type. The chip is part of the log.
++   const [kind, setKind] = useState("");
++   const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
++   // Build 90 04.1: the payload waiting on the post choice sheet.
++   const [postChoice, setPostChoice] = useState<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(null);
++   const [postChoiceAudience, setPostChoiceAudience] = useState<PostAudience>(POST_CHOICE_DEFAULT);
++   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
++   // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
++   const logKind = resolveLogKind({
++     taskType,
++     taskName,
++     trackingMode: config.tracking_mode ?? null,
++     unit: config.unit ?? null,
++     targetValue: typeof config.target_value === "number" ? config.target_value : null,
++   });
++   const isLogTask = taskType === "run" || taskType === "workout";
++   const [soundOn, setSoundOn] = useState(true);
++   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
++   const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
++   const [nowTick, setNowTick] = useState(() => Date.now());
++   const [sessionUp, setSessionUp] = useState(0);
++   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
++   const [result, setResult] = useState<SubmitResult | null>(null);
++   const [dayOpen] = useState<DayOpenModel | null>(null);
++   const [finishSave, setFinishSave] = useState<SaveState>("saving");
++   const [finishShare, setFinishShare] = useState<ShareIntent>("none");
++   const [finishFeedPosted, setFinishFeedPosted] = useState(false);
++   const [alsoToday, setAlsoToday] = useState<AlsoTodayRow[]>([]);
++   const [failNote, setFailNote] = useState("");
++   const [failCode, setFailCode] = useState<string | undefined>(undefined);
++   const [saving, setSaving] = useState(false);
++   const [windowForbidden, setWindowForbidden] = useState(false);
++   const [shareEventId, setShareEventId] = useState<string | null>(null);
++   const [shareFailed, setShareFailed] = useState(false);
++   const [sharing, setSharing] = useState(false);
++   const submitInFlight = useRef(false);
++   const finishShareRef = useRef<ShareIntent>("none");
++   const lastSubmitRef = useRef<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(
++     null,
++   );
++   const mountedRef = useRef(true);
++   useEffect(() => {
++     mountedRef.current = true;
++     return () => {
++       mountedRef.current = false;
++     };
++   }, []);
++
++   const windowStartRaw = config.schedule_window_start || gateTime?.start || null;
++   const windowEndRaw = config.schedule_window_end || gateTime?.end || null;
++   const windowEval = evaluateScheduleWindow({
++     start: windowStartRaw,
++     end: windowEndRaw,
++     timeZone: config.schedule_timezone ?? profile?.timezone,
++   });
++
++   useEffect(() => {
++     if (shouldBlockOnWindow({ windowStatus: windowEval.status, taskType, step })) {
++       setStep("blocked");
++     }
++   }, [windowEval.status, taskType, step]);
++
++   useEffect(() => {
++     if (taskType !== "timer" || !userId || !taskId) return;
++     void loadLocalTimerSession(userId, taskId, dateKey).then((s) => {
++       if (!s) return;
++       setStartedAtIso(s.startedAtIso);
++       setSoundOn(s.soundOn);
++       const remaining = timerRemainingSec({
++         nowMs: Date.now(),
++         requiredSeconds: s.requiredSeconds,
++         startedAtIso: s.startedAtIso,
++       });
++       setStep(timerResumeStep(remaining));
++     });
++   }, [userId, taskId, dateKey, taskType]);
++
++   useEffect(() => {
++     if (step !== "running" && step !== "session") return;
++     const id = setInterval(() => setNowTick(Date.now()), 1000);
++     return () => clearInterval(id);
++   }, [step]);
++
++   useEffect(() => {
++     if (step !== "session") return;
++     const id = setInterval(() => setSessionUp((s) => s + 1), 1000);
++     return () => clearInterval(id);
++   }, [step]);
++
++   const refreshGps = useCallback(async () => {
++     const perm = await Location.requestForegroundPermissionsAsync();
++     if (perm.status !== "granted") return;
++     const loc = await readLocationFix();
++     const lat = config.location_latitude;
++     const lng = config.location_longitude;
++     if (lat == null || lng == null) return;
++     const m = haversineDistance(loc.coords.latitude, loc.coords.longitude, lat, lng);
++     setGps({ m: Math.round(m), acc: Math.round(loc.coords.accuracy ?? 0) });
++     const next = checkinGpsNextStep(m, radius, taskType);
++     if (next) setStep(next);
++   }, [config.location_latitude, config.location_longitude, radius, taskType]);
++
++   useEffect(() => {
++     if (taskType !== "checkin") return;
++     void refreshGps();
++   }, [taskType, refreshGps]);
++
++   const remainingSec = timerRemainingSec({
++     nowMs: nowTick,
++     requiredSeconds,
++     startedAtIso,
++     pausedRemaining,
++   });
++
++   const returnToOrigin = useCallback(() => {
++     void endLiveActivity();
++     router.replace(originTabHref(originTab) as never);
++   }, [originTab, router]);
++
++   const exit = useCallback(() => {
++     void endLiveActivity();
++     if (router.canGoBack()) router.back();
++     else returnToOrigin();
++   }, [returnToOrigin, router]);
++
++   const openDayOpenTask = useCallback(
++     (id: string) => {
++       const t = dayOpen?.tasks.find((row) => (row.id ?? "") === id);
++       if (!t) {
++         returnToOrigin();
++         return;
++       }
++       router.replace(dayOpenTaskHref(t, originTab) as never);
++     },
++     [dayOpen, originTab, returnToOrigin, router],
++   );
++
++   const goNextTask = useCallback(() => {
++     const next = alsoToday[0];
++     if (next) {
++       openDayOpenTask(next.id);
++       return;
++     }
++     if (dayOpen?.nextId) {
++       openDayOpenTask(dayOpen.nextId);
++       return;
++     }
++     returnToOrigin();
++   }, [alsoToday, dayOpen, openDayOpenTask, returnToOrigin]);
++
++   const persistUnit = useCallback((next: DistanceUnit) => {
++     setUnit(next);
++     void trpcMutate(TRPC.profiles.update, { distance_unit: next }).catch(() => {});
++   }, []);
++
++   const goBack = useCallback(() => {
++     const decision = resolveGoBack({ step, caption, taskType, gates });
++     if (decision.action === "discard_ask") {
++       setDiscardAsk(true);
++       return;
++     }
++     if (decision.action === "stay") return;
++     if (decision.action === "set_step") {
++       if (decision.clearPhoto) setPhotoUri(null);
++       setStep(decision.step);
++       return;
++     }
++     exit();
++   }, [step, caption, taskType, gates, exit]);
++
++   const uploadPhoto = async (): Promise<string | null> => {
++     if (!photoUri) return null;
++     try {
++       const readStarted = Date.now();
++       const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
++         Image.getSize(photoUri, (width, height) => resolve({ width, height }), reject);
++       });
++       const shrunk = await shrinkProofForUpload({
++         uri: photoUri,
++         width: size.width,
++         height: size.height,
++         manipulate: (uri, actions, options) =>
++           ImageManipulator.manipulateAsync(uri, actions, {
++             compress: options.compress,
++             format: ImageManipulator.SaveFormat.JPEG,
++           }),
++       });
++       timingRef.current.photoReadMs = Date.now() - readStarted;
++       const uploadStarted = Date.now();
++       const uploaded = await uploadProofImageFromFile(shrunk.uri);
++       timingRef.current.uploadMs = Date.now() - uploadStarted;
++       if ("error" in uploaded) {
++         setFailCode(undefined);
++         setFailNote(uploaded.error);
++         setStep("failed");
++         return null;
++       }
++       return uploaded.url;
++     } catch (err) {
++       setFailCode(undefined);
++       setFailNote(err instanceof Error ? err.message : "Photo did not save. Try the camera again.");
++       setStep("failed");
++       return null;
++     }
++   };
++
++   const postHeldShare = async (eventId: string | undefined) => {
++     if (
++       resolveHeldShare({ held: finishShareRef.current === "feed_held", after: "saved" }) !==
++       "call_share"
++     ) {
++       return;
++     }
++     if (!eventId) return;
++     try {
++       await trpcMutate(TRPC.checkins.shareProof, { eventId });
++       finishShareRef.current = "none";
++       if (mountedRef.current) {
++         setFinishShare("none");
++         setShareEventId(eventId);
++         setFinishFeedPosted(true);
++       }
++     } catch {
++       if (mountedRef.current) setShareFailed(true);
++     }
++   };
++
++   const postingId = `posting-${taskId}`;
++
++   const showDoneLocally = () => {
++     if (shownLocalRef.current) return;
++     shownLocalRef.current = true;
++     markOptimisticTaskDone({ taskId, activeChallengeId });
++     // Build 90 04.1: a text card posts too, so the optimistic row is not photo-only.
++     if (audiencePublishes(audienceRef.current)) {
++       const post = optimisticTaskPost({
++         eventId: postingId,
++         userId,
++         username: profile?.username ?? "you",
++         displayName: profile?.display_name ?? profile?.username ?? "You",
++         avatarUrl: profile?.avatar_url ?? null,
++         // 05.2: the optimistic row's subject line opens the challenge too.
++         challengeId: enrollmentQ.data?.challenge_id ?? null,
++         challengeName,
++         taskName,
++         currentDay,
++         totalDays: durationDays,
++         photoUrl: photoUri,
++         caption: photoUri ? "Posting…" : null,
++       });
++       if (post) publishOptimisticFeedPost(post);
++     }
++     returnToOrigin();
++   };
++
++   const failLocalSave = () => {
++     if (!shownLocalRef.current) return;
++     shownLocalRef.current = false;
++     rollbackOptimisticTaskDone(taskId);
++     clearOptimisticFeedPost(postingId);
++   };
++
++   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind, heldLock = false) => {
++     if (submitInFlight.current && !heldLock) return;
++     if (!heldLock) {
++       timingRef.current = { ...EMPTY_TIMING };
++       shownLocalRef.current = false;
++     }
++     if (!flowAllowsSubmit(windowState)) {
++       setWindowForbidden(true);
++       setStep("window_closed");
++       return;
++     }
++     const hasTarget =
++       typeof config.location_latitude === "number" && typeof config.location_longitude === "number";
++     const locationGated = finishWaitsOnLocation({
++       taskType,
++       requireLocation: config.require_location === true,
++       hasTarget,
++     });
++     const body: Record<string, unknown> = { ...payload };
++     delete body.location_latitude;
++     delete body.location_longitude;
++     if (locationGated) {
++       try {
++         const perm = await Location.requestForegroundPermissionsAsync();
++         if (perm.status !== "granted") {
++           if (heldLock) {
++             submitInFlight.current = false;
++             failLocalSave();
++           }
++           if (mountedRef.current) {
++             setFailNote("Couldn't read your location.");
++             setFailCode(undefined);
++             setStep("failed");
++           }
++           return;
++         }
++         const loc = await readLocationFix();
++         const lat = loc.coords.latitude;
++         const lng = loc.coords.longitude;
++         const accuracyM = loc.coords.accuracy;
++         const accuracy = typeof accuracyM === "number" && Number.isFinite(accuracyM) ? accuracyM : 9999;
++         setGps({
++           m: Math.round(
++             haversineDistance(lat, lng, config.location_latitude as number, config.location_longitude as number),
++           ),
++           acc: Math.round(accuracy),
++         });
++         body.liveLocation = {
++           lat,
++           lng,
++           accuracyM: accuracy,
++           capturedAt: new Date().toISOString(),
++         };
++       } catch (err) {
++         if (heldLock) {
++           submitInFlight.current = false;
++           failLocalSave();
++         }
++         if (mountedRef.current) {
++           setFailNote(err instanceof Error ? err.message : "Couldn't read your location.");
++           setFailCode(undefined);
++           setStep("failed");
++         }
++         return;
++       }
++     }
++     lastSubmitRef.current = { payload: body, kind };
++     const shareNow =
++       finishShareRef.current === "feed_held" ||
++       audiencePublishes(typeof body.audience === "string" ? body.audience : null);
++     submitInFlight.current = true;
++     setSaving(true);
++     finishShareRef.current = "none";
++     setFinishShare("none");
++     setFinishFeedPosted(false);
++     setFinishSave("saving");
++     setAlsoToday([]);
++     setShareFailed(false);
++     const slowTimer = setTimeout(() => {
++       if (mountedRef.current && submitInFlight.current) setFinishSave("slow");
++     }, FINISH_SLOW_MS);
++     try {
++       const proofUrl =
++         typeof payload.proofUrl === "string"
++           ? payload.proofUrl
++           : typeof payload.photo_url === "string"
++             ? payload.photo_url
++             : undefined;
++       const hasCameraProof = Boolean(proofUrl);
++       const finishStartedAt = Date.now();
++       const writeTiming = async () => {
++         const homeStarted = Date.now();
++         try {
++           // Build 90 04.7: joins the refresh completeTask already started instead of cancelling it,
++           // and skips the request when that refresh has already landed since the finish began.
++           await refreshHomeBootstrap(queryClient, { freshAfter: finishStartedAt });
++         } catch {
++           /* Home already shows the optimistic row */
++         }
++         timingRef.current.homeRefetchMs = Date.now() - homeStarted;
++         if (__DEV__) {
++           console.info("[finishSubmit] timing", {
++             photoReadMs: timingRef.current.photoReadMs,
++             uploadMs: timingRef.current.uploadMs,
++             completeMs: timingRef.current.completeMs,
++             secureMs: timingRef.current.secureMs,
++             shareMs: timingRef.current.shareMs,
++             homeRefetchMs: timingRef.current.homeRefetchMs,
++             doneVisibleMs: timingRef.current.doneVisibleMs,
++             totalMs: Date.now() - finishStartedAt,
++           });
++         }
++       };
++       if (kind === "word_count") {
++         await prepareJournalUnmount({
++           clear: () => setText(""),
++           unmountField: () => setJournalFieldOn(false),
++         });
++       }
++       showDoneLocally();
++       if (!timingRef.current.doneVisibleMs) {
++         timingRef.current.doneVisibleMs = Date.now() - finishStartedAt;
++         if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs });
++       }
++       setOptimisticRetry(() => {
++         submitInFlight.current = false;
++         void finishSubmit(body, kind, true);
++       });
++       const completeStartedAt = Date.now();
++       const complete = await completeTask({
++         activeChallengeId,
++         taskId,
++         ...body,
++         shareChoicePending: true,
++         applyShare: shareNow,
++       });
++       timingRef.current.completeMs = Date.now() - completeStartedAt;
++       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
++         clearTimeout(slowTimer);
++         submitInFlight.current = false;
++         setSaving(false);
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++         }
++         await writeTiming();
++         return;
++       }
++       let secure: {
++         success?: boolean;
++         alreadySecured?: boolean;
++         newStreakCount?: number;
++         secured?: boolean;
++         challenge_done?: boolean;
++         remaining_challenges?: number;
++         freezeGranted?: boolean;
++         freezesHeld?: number;
++         freezeCap?: number;
++         freezeAtCap?: boolean;
++       } | null = null;
++       let secureDaySecured = complete.daySecure?.secured === true;
++       if (complete.daySecure) {
++         const r = complete.daySecure;
++         secure = {
++           success: r.success === true,
++           alreadySecured: r.alreadySecured,
++           newStreakCount: r.newStreakCount,
++           secured: r.secured,
++           challenge_done: r.challenge_done,
++           remaining_challenges: r.remaining_challenges,
++           freezeGranted: r.freezeGranted,
++           freezesHeld: r.freezesHeld,
++           freezeCap: r.freezeCap,
++           freezeAtCap: r.freezeAtCap,
++         };
++         timingRef.current.secureMs = 0;
++       } else if (complete.requiredRemaining === 0) {
++         const secureStartedAt = Date.now();
++         const after = await attemptSecureDayAfterComplete({
++           requiredRemaining: complete.requiredRemaining,
++           activeChallengeId,
++           challengeTitle: complete.challengeName ?? challengeName,
++           secureDay,
++         });
++         timingRef.current.secureMs = Date.now() - secureStartedAt;
++         secureDaySecured = after.ui.kind === "secured" || after.result?.secured === true;
++         if (after.result) {
++           const r = after.result as {
++             success?: boolean;
++             alreadySecured?: boolean;
++             newStreakCount?: number;
++             secured?: boolean;
++             challenge_done?: boolean;
++             remaining_challenges?: number;
++             freezeGranted?: boolean;
++             freezesHeld?: number;
++             freezeCap?: number;
++             freezeAtCap?: boolean;
++           };
++           secure = {
++             success: r.success === true,
++             alreadySecured: r.alreadySecured,
++             newStreakCount: r.newStreakCount,
++             secured: r.secured,
++             challenge_done: r.challenge_done,
++             remaining_challenges: r.remaining_challenges,
++             freezeGranted: r.freezeGranted,
++             freezesHeld: r.freezesHeld,
++             freezeCap: r.freezeCap,
++             freezeAtCap: r.freezeAtCap,
++           };
++         }
++       }
++       const securedToday = serverSecuredToday({
++         dayAlreadySecured: complete.dayAlreadySecured === true,
++         secureDaySecured,
++       });
++       const outcome = finishAfterMutation({ complete, securedToday });
++       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
++       void endLiveActivity();
++       clearTimeout(slowTimer);
++       const eventId = closingProofEventId(complete.dayProofs, proofUrl);
++       const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
++       const chosenAudience = typeof body.audience === "string" ? body.audience : null;
++       if (outcome === "failed") {
++         submitInFlight.current = false;
++         setSaving(false);
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++           setFailNote((note) => note || "Couldn't save. Try Post again.");
++         }
++         await writeTiming();
++         return;
++       }
++       confirmOptimisticTaskDone(taskId);
++       const publishing = audiencePublishes(chosenAudience);
++       if (publishing && !postedId) {
++         clearOptimisticFeedPost(postingId);
++         submitInFlight.current = false;
++         setSaving(false);
++         if (mountedRef.current) {
++           setFinishSave("failed");
++           setFailNote(hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.");
++         }
++         await writeTiming();
++         return;
++       }
++       if (publishing && postedId) {
++         const posted = optimisticTaskPost({
++           eventId: postedId,
++           userId,
++           username: profile?.username ?? "you",
++           displayName: profile?.display_name ?? profile?.username ?? "You",
++           avatarUrl: profile?.avatar_url ?? null,
++           challengeId: enrollmentQ.data?.challenge_id ?? null,
++           challengeName,
++           taskName,
++           currentDay,
++           totalDays: durationDays,
++           photoUrl: photoUri ?? proofUrl ?? null,
++         });
++         if (posted) publishOptimisticFeedPost(posted);
++         if (mountedRef.current) setFinishSave("saved");
++         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
++         // Build 90 04.1: a post that secured the day shows Day secured first, then the post (openPost).
++         if (outcome === "saved") {
++           trackUsage("task_completed", { method: kind });
++           if (hasCameraProof) trackUsage("proof_posted");
++           router.replace(ROUTES.POST_ID(postedId) as never);
++           submitInFlight.current = false;
++           setSaving(false);
++           await writeTiming();
++           return;
++         }
++       }
++       trackUsage("task_completed", { method: kind });
++       if (hasCameraProof) trackUsage("proof_posted");
++       const shareStartedAt = Date.now();
++       if (complete.shared !== true) await postHeldShare(eventId ?? undefined);
++       timingRef.current.shareMs = Date.now() - shareStartedAt;
++       if (outcome === "saved") {
++         const route = routeAfterSave({
++           challengeFinished: false,
++           daySecuredNow: false,
++           enrollmentId: activeChallengeId,
++         });
++         if (route.screen === "Toast" && mountedRef.current) {
++           setShareEventId(eventId);
++           setFinishSave("saved");
++           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
++           publishTaskToast({
++             taskId,
++             title: taskDoneTitle(taskName, hasCameraProof),
++             body: taskName,
++             photoUri: photoUri ?? proofUrl ?? null,
++             cameraSeal: hasCameraProof,
++             eventId: eventId ?? null,
++             challengeId: enrollmentQ.data?.challenge_id ?? null,
++             challengeName,
++             taskName,
++             currentDay,
++             totalDays: durationDays,
++             streak: typeof complete.streakDays === "number" ? complete.streakDays : undefined,
++           });
++           returnToOrigin();
++         }
++         submitInFlight.current = false;
++         setSaving(false);
++         await writeTiming();
++         return;
++       }
++       setSaving(false);
++       const assembled = assembleSubmitResult({
++         verificationKind: complete.verificationKind ?? kind,
++         requiredRemaining: complete.requiredRemaining,
++         dayAlreadySecured: complete.dayAlreadySecured ?? false,
++         streakDaysBefore: complete.streakDays ?? 0,
++         challengeDayBeforeSecure: complete.challengeDay ?? currentDay,
++         challengeLength: complete.challengeLength ?? durationDays,
++         challengeName: complete.challengeName ?? challengeName,
++         secure: secure
++           ? {
++               success: secure.success === true,
++               alreadySecured: secure.alreadySecured,
++               newStreakCount: secure.newStreakCount,
++               secured: secure.secured,
++               challenge_done: secure.challenge_done,
++               remaining_challenges: secure.remaining_challenges,
++               freezeGranted: secure.freezeGranted,
++               freezesHeld: secure.freezesHeld,
++               freezeCap: secure.freezeCap,
++               freezeAtCap: secure.freezeAtCap,
++             }
++           : null,
++       });
++       if (
++         !canOpenSecuredScreen({
++           daySecured: assembled.daySecured,
++           newStreakCount: secure?.newStreakCount,
++         })
++       ) {
++         submitInFlight.current = false;
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++           setSaving(false);
++           setFailNote((note) => note || "The post did not finish. Try again.");
++         }
++         await writeTiming();
++         return;
++       }
++       assembled.challengeDone = secure?.challenge_done === true;
++       assembled.activeChallengeId = activeChallengeId;
++       if (securedNavOnce() === "replace") {
++         setResult(assembled);
++         setSecuredHandoff({
++           proofs: proofsFromComplete({
++             dayProofs: complete.dayProofs,
++             photoUri: photoUri ?? proofUrl,
++             challengeName: assembled.challengeName,
++             challengeDay: assembled.challengeDay,
++             challengeLength: assembled.challengeLength,
++             eventId,
++           }),
++           shareEventId: eventId,
++           closingHasPhoto: hasCameraProof,
++         });
++         dismissTaskToast();
++         const counterTask = taskType === "counter" || taskType === "water" || taskType === "reading";
++         router.replace(
++           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
++             shareEventId: eventId,
++             closingHasPhoto: hasCameraProof,
++             originTab,
++             counterReachedTarget: counterTask && count >= counterGoal,
++             // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
++             openPost: publishing && postedId ? postedId : null,
++             choiceMade: typeof chosenAudience === "string",
++             finishedAt: finishStartedAt,
++           }) as never,
++         );
++       }
++       submitInFlight.current = false;
++       await writeTiming();
++     } catch (err) {
++       clearTimeout(slowTimer);
++       submitInFlight.current = false;
++       setSaving(false);
++       failLocalSave();
++       const msg = err instanceof Error ? err.message : "";
++       const code = failureErrorCode(err);
++       if (mountedRef.current) {
++         setFailNote(msg);
++         setFailCode(code === "FORBIDDEN" ? "BAD_REQUEST" : code);
++       }
++       if (isWindowClosedError(msg)) {
++         if (mountedRef.current) {
++           setWindowForbidden(true);
++           setStep("window_closed");
++         }
++         return;
++       }
++       finishShareRef.current = "none";
++       if (mountedRef.current) {
++         setFinishShare("none");
++         setFinishSave("failed");
++       }
++     }
++   };
++
++   const submitPhoto = async (extra: Record<string, unknown> = {}) => {
++     if (submitInFlight.current) return;
++     if (!flowAllowsSubmit(windowState)) {
++       setWindowForbidden(true);
++       setStep("window_closed");
++       return;
++     }
++     submitInFlight.current = true;
++     setSaving(true);
++     timingRef.current = { ...EMPTY_TIMING };
++     shownLocalRef.current = false;
++     const visibleAt = Date.now();
++     showDoneLocally();
++     timingRef.current.doneVisibleMs = Date.now() - visibleAt;
++     if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs, kind: "photo" });
++     setOptimisticRetry(() => {
++       submitInFlight.current = false;
++       void submitPhoto(extra);
++     });
++     const url = await uploadPhoto();
++     if (!url) {
++       failLocalSave();
++       submitInFlight.current = false;
++       if (mountedRef.current) setSaving(false);
++       return;
++     }
++     await finishSubmit(
++       {
++         proofUrl: url,
++         photo_url: url,
++         noteText: caption.trim() || undefined,
++         audience: audienceRef.current,
++         proof_payload_json: capturedAt
++           ? { capturedAt, captured_in_app: true }
++           : undefined,
++         ...extra,
++         ...(taskType === "timer"
++           ? finishEarlyRef.current
++             ? {
++                 value: finishEarlyRef.current.seconds / 60,
++                 timer_seconds_on_screen: finishEarlyRef.current.seconds,
++                 self_reported: true,
++               }
++             : { value: Math.floor(requiredSeconds / 60) }
++           : {}),
++         ...(taskType === "journal" || taskType === "text" ? { noteText: text } : {}),
++         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
++           ? { value: countRef.current }
++           : {}),
++       },
++       verificationKindFor(taskType, true),
++       true,
++     );
++   };
++
++   const submitWithoutPhoto = async (payload: Record<string, unknown>, kind: VerificationKind) => {
++     if (submitWithoutPhotoNext(requirePhoto) === "capture") {
++       setStep("capture");
++       return;
++     }
++     // Build 90 04.1: every task without a photo review asks once: post, or keep it private.
++     if (needsPostChoice(payload)) {
++       if (submitInFlight.current || postChoice) return;
++       Keyboard.dismiss();
++       setPostChoiceAudience(POST_CHOICE_DEFAULT);
++       setPostChoice({ payload, kind });
++       return;
++     }
++     await finishSubmit(payload, kind);
++   };
++
++   const answerPostChoice = (chosen: PostAudience) => {
++     const pending = postChoice;
++     if (!pending) return;
++     setPostChoice(null);
++     audienceRef.current = chosen;
++     setAudience(chosen);
++     void finishSubmit({ ...pending.payload, audience: chosen }, pending.kind);
++   };
++
++   const submitTimer = async () => {
++     await submitWithoutPhoto({ value: Math.floor(requiredSeconds / 60) }, "timer");
++   };
++
++   const startTimer = async () => {
++     let started: { started_at: string; required_seconds: number } | null = null;
++     try {
++       started = await trpcMutate<{ started_at: string; required_seconds: number }>(TRPC.checkins.startSession, {
++         activeChallengeId,
++         taskId,
++         requiredSeconds,
++         kind: "timer",
++       });
++     } catch (err) {
++       setFailCode(failureErrorCode(err));
++       setFailNote(err instanceof Error ? err.message : "Couldn't start the timer.");
++       setStep("failed");
++       return;
++     }
++     if (!started?.started_at) {
++       setFailCode(undefined);
++       setFailNote("Couldn't start the timer.");
++       setStep("failed");
++       return;
++     }
++     const iso = started.started_at;
++     setPausedRemaining(null);
++     setStartedAtIso(iso);
++     if (userId) {
++       await saveLocalTimerSession(userId, {
++         kind: "timer",
++         startedAtIso: iso,
++         requiredSeconds,
++         activeChallengeId,
++         taskId,
++         dateKey,
++         soundOn,
++       });
++     }
++     const ends = new Date(Date.parse(iso) + requiredSeconds * 1000);
++     await scheduleTimerDoneNotification({
++       taskId,
++       at: ends,
++       durationLabel: fmtMmSs(requiredSeconds),
++       sound: soundOn,
++       route: `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(taskId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=timer&taskName=${encodeURIComponent(taskName)}&taskConfig=${encodeURIComponent(firstString(params.taskConfig))}&challengeName=${encodeURIComponent(challengeName)}&currentDay=${currentDay}&durationDays=${durationDays}&originTab=${encodeURIComponent(originTab)}`,
++     });
++     startLiveActivity({
++       taskId,
++       taskTitle: taskName,
++       challengeName,
++       timerType: "checkin",
++       startedAtMs: Date.parse(iso),
++       targetSeconds: requiredSeconds,
++       route: ROUTES.TASK_COMPLETE,
++     });
++     setStep("running");
++   };
++
++   const retryFailedSubmit = () => {
++     setFailNote("");
++     setFailCode(undefined);
++     const decision = resolveRetryFailedSubmit({
++       hasPhoto: !!photoUri,
++       taskType,
++       requirePhoto,
++       timerReadyToSubmit: !!(startedAtIso && remainingSec <= 0),
++     });
++     if (decision === "submit_photo") {
++       void submitPhoto();
++       return;
++     }
++     if (decision === "start_timer") {
++       void startTimer();
++       return;
++     }
++     if (decision === "capture") {
++       setStep("capture");
++       return;
++     }
++     if (decision === "submit_timer") {
++       void submitTimer();
++       return;
++     }
++     if (decision === "submit_journal") {
++       void finishSubmit({ noteText: text }, "word_count");
++       return;
++     }
++     if (decision === "submit_count") {
++       void finishSubmit({ value: countRef.current }, "self_report");
++       return;
++     }
++     if (decision === "submit_checkin") {
++       void finishSubmit({}, "gps");
++       return;
++     }
++     if (decision === "log") {
++       setStep("log");
++       return;
++     }
++     void finishSubmit({}, "self_report");
++   };
++
++   const goBackFromFailure = () => {
++     setFailNote("");
++     setFailCode(undefined);
++     setStep(resolveGoBackFromFailure({ requirePhoto, hasPhoto: !!photoUri, taskType, gates }));
++   };
++
++   const cancelTimer = async () => {
++     if (userId) await clearLocalTimerSession(userId, taskId, dateKey);
++     await cancelTimerDoneNotification(taskId);
++     void endLiveActivity();
++     exit();
++   };
++
++   const pauseTimer = () => {
++     if (pausedRemaining != null) return;
++     setPausedRemaining(remainingSec);
++   };
++
++   const resetTimer = async () => {
++     setPausedRemaining(null);
++     setStartedAtIso(null);
++     if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
++     await cancelTimerDoneNotification(taskId);
++     void endLiveActivity();
++     setStep("entry");
++   };
++
++   useEffect(() => {
++     if (timerShouldAutoSubmit(step, remainingSec, !!startedAtIso)) {
++       showLiveActivityDone();
++       void submitTimer();
++     }
++     // eslint-disable-next-line react-hooks/exhaustive-deps
++   }, [step, remainingSec, startedAtIso]);
++
++   const { dark, hideChrome } = chromeFlags(step);
++   const fail = failureScreenCopy({
++     errorCode: failCode,
++     message: failNote,
++     hasLocalPhoto: !!photoUri,
++   });
++
++   const verifyLine = verificationLine({
++     kind: (taskType === "simple" ? "manual" : taskType) as Parameters<typeof verificationLine>[0]["kind"],
++     timeLabel: capturedAt ? clockLabel(capturedAt) : clockLabel(Date.now()),
++     durationLabel:
++       taskType === "timer"
++         ? fmtMmSs(requiredSeconds)
++         : isLogTask && logKind === "run"
++           ? durationSec != null
++             ? fmtMmSs(durationSec)
++             : ""
++           : isLogTask
++             ? `${workoutMin ?? 0} min`
++             : undefined,
++     startedAtLabel: startedAtIso ? clockLabel(startedAtIso) : undefined,
++     distanceLabel: distance != null ? formatDistance(toKilometers(distance, unit), unit) : undefined,
++     words: wordCount(text),
++     gpsMeters: gps?.m,
++     accuracyM: gps?.acc,
++   });
++
++   const onTypeCount = (v: number) => {
++     setCount(Math.min(counterGoal, Math.max(0, v)));
++   };
++
++   /**
++    * Run: distance + duration (+ value in minutes for a timed run so the floor check passes).
++    * Workout: activity type + minutes (+ optional distance for Cycling / Swim).
++    */
++   const logPayload = (): Record<string, unknown> => {
++     const entry_mode = usedSessionTimer ? "timer" : "hand";
++     if (logKind === "run") {
++       const durationMin = durationSec != null ? durationSec / 60 : undefined;
++       return {
++         distance_km: distance != null ? toKilometers(distance, unit) : undefined,
++         duration_min: durationMin,
++         entry_mode,
++         ...(config.tracking_mode === "time" && durationMin != null ? { value: durationMin } : {}),
++       };
++     }
++     return {
++       duration_min: workoutMin ?? undefined,
++       value: workoutMin ?? undefined,
++       workout_kind: kind || undefined,
++       entry_mode,
++       distance_km: distance != null && distance > 0 ? toKilometers(distance, unit) : undefined,
++     };
++   };
++
++   const onPostRun = () => {
++     void submitWithoutPhoto(logPayload(), "self_report");
++   };
++
++   /** Build 90 03.2: impossible pace / speed asks before anything is saved. */
++   const onLogContinue = () => {
++     const check = logSanityCheck({
++       logKind,
++       kind,
++       distance,
++       durationSec: logKind === "run" ? durationSec : workoutMin != null ? workoutMin * 60 : null,
++       unit,
++     });
++     if (!check.ok) {
++       setLogSanityAsk(check);
++       return;
++     }
++     if (requirePhoto) setStep("capture");
++     else onPostRun();
++   };
++
++   const onLogSaveAnyway = () => {
++     setLogSanityAsk(null);
++     if (requirePhoto) setStep("capture");
++     else onPostRun();
++   };
++
++   const onUseTimer = () => {
++     setSessionUp(0);
++     setStep("session");
++     startLiveActivity({
++       taskId,
++       taskTitle: taskName,
++       challengeName,
++       timerType: logKind === "run" ? "run_gps" : "run_treadmill",
++       startedAtMs: Date.now(),
++       route: ROUTES.TASK_COMPLETE,
++     });
++   };
++
++   const onSessionStop = () => {
++     void endLiveActivity();
++     setUsedSessionTimer(true);
++     if (logKind === "run") setDurationSec(Math.max(1, sessionUp));
++     else setWorkoutMin(Math.max(1, Math.round(sessionUp / 60)));
++     setStep("log");
++   };
++
++   const onSessionCancel = () => {
++     void endLiveActivity();
++     setStep("log");
++   };
++
++   const onReviewPost = () => {
++     void submitPhoto(
++       isLogTask
++         ? logPayload()
++         : taskType === "reading"
++           ? { value: countRef.current }
++           : {}
++     );
++   };
++
++   const onDiscardPhoto = () => {
++     setDiscardAsk(false);
++     setCaption("");
++     setPhotoUri(null);
++     setStep(discardPhotoStep(taskType));
++   };
++
++   return {
++     step,
++     dark,
++     hideChrome,
++     currentDay,
++     taskType,
++     gates,
++     taskName,
++     challengeName,
++     windowEval,
++     config,
++     place,
++     radius,
++     gps,
++     requiredSeconds,
++     soundOn,
++     setSoundOn,
++     keypad,
++     unit,
++     distance,
++     durationSec,
++     workoutMin,
++     setDistance,
++     setDurationSec,
++     setWorkoutMin,
++     kind,
++     setKind,
++     sessionUp,
++     photoUri,
++     caption,
++     setCaption,
++     audience,
++     setAudience,
++     remainingSec,
++     startedAtIso,
++     text,
++     setText,
++     journalFieldOn,
++     minWords,
++     count,
++     counterGoal,
++     counterUnit,
++     result,
++     dayOpen,
++     finishSave,
++     finishShare,
++     finishFeedPosted,
++     alsoToday,
++     durationDays,
++     shareInviteCode: enrollmentQ.data?.challenge_id ?? null,
++     shareUsername: profile?.username ?? null,
++     finishGateLine: gateLine(gates, gateTime),
++     fail,
++     discardAsk,
++     taskRequired,
++     verifyLine,
++     saving,
++     submitError: failNote,
++     requirePhoto,
++     photoMode,
++     fromGps: false,
++     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
++     chromeTitle: challengeName.trim() || "Challenge",
++     headerTitle: homeDayLine(currentDay, durationDays),
++     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
++     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
++     footerBrand: flowFooterBrand(windowState),
++     windowLabel: formatGateTime(gateTime) || undefined,
++     workDone: workThenCamera(taskType, gates)
++       ? workDoneLine(
++           taskType === "timer"
++             ? fmtMmSs(requiredSeconds)
++             : taskType === "run"
++               ? logKind === "run"
++                 ? fmtMmSs(durationSec ?? 0)
++                 : `${workoutMin ?? 0} min`
++               : String(count),
++         )
++       : null,
++     photoAfter: workThenCamera(taskType, gates)
++       ? taskType === "timer"
++         ? TIMER_PHOTO_AFTER
++         : taskType === "run"
++           ? RUN_PHOTO_AFTER
++           : null
++       : null,
++     closedAt: closedWindowTime(gateTime),
++     windowStartLabel: format12h(windowStartRaw) || null,
++     windowEndLabel: format12h(windowEndRaw) || null,
++     windowForbidden,
++     windowState,
++     goBack,
++     exit,
++     refreshGps,
++     startTimer,
++     persistUnit,
++     onUseTimer,
++     onNextPhoto: () => setStep("capture"),
++     onSessionStop,
++     onSessionCancel,
++     onCaptured: (uri: string, at: string) => {
++       setPhotoUri(uri);
++       setCapturedAt(at);
++       setStep("review");
++     },
++     onRetake: () => {
++       setPhotoUri(null);
++       setStep("capture");
++     },
++     onReviewPost,
++     cancelTimer,
++     pauseTimer,
++     resetTimer,
++     submitTimer,
++     onFinishEarly: () => {
++       const seconds = timerElapsedSeconds(requiredSeconds, remainingSec);
++       finishEarlyRef.current = { seconds };
++       setPausedRemaining(remainingSec);
++       void endLiveActivity();
++       void submitWithoutPhoto(
++         { self_reported: true, timer_seconds_on_screen: seconds, value: seconds / 60 },
++         "self_report",
++       );
++     },
++     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
++     onAddAmount: (n: number) => setCount((c) => Math.min(counterGoal, c + Math.max(0, Math.floor(n)))),
++     dayReady,
++     onOpenCountKeypad: () => {
++       setKeypad({ field: "count" });
++     },
++     onRemoveOne: () => setCount((c) => Math.max(0, c - 1)),
++     onTypeCount,
++     onPostRun,
++     logKind,
++     logSanityAsk,
++     // Build 90 04.1: the one post choice after a task without a photo review.
++     postChoiceOpen: postChoice != null,
++     postChoiceAudience,
++     setPostChoiceAudience,
++     onPostChoicePost: () => answerPostChoice(postChoiceAudience),
++     onPostChoiceKeep: () => answerPostChoice(POST_CHOICE_PRIVATE),
++     onLogContinue,
++     onLogSaveAnyway,
++     onLogEdit: () => setLogSanityAsk(null),
++     onAttachPhoto: () => setStep("capture"),
++     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
++     // Build 90 03.4: Done sends what was counted. The button is inactive below the goal.
++     onCompleteCount: () => {
++       if (count < counterGoal) return;
++       countRef.current = count;
++       void submitWithoutPhoto({ value: count }, "self_report");
++     },
++     onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
++     onHere: () => void submitWithoutPhoto({}, "gps"),
++     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
++     goNextTask,
++     openDayOpenTask,
++     goBackFromFailure,
++     retryFailedSubmit,
++     onDiscardPhoto,
++     onKeepPhoto: () => setDiscardAsk(false),
++     shareFailed,
++     sharing,
++     onShareProof: () => {
++       if (sharing) return;
++       if (!shareEventId) {
++         setShareFailed(true);
++         return;
++       }
++       setSharing(true);
++       void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
++         .then(() => {
++           trackUsage("proof_shared");
++           setSharing(false);
++           returnToOrigin();
++         })
++         .catch(() => {
++           setSharing(false);
++           setShareFailed(true);
++         });
++     },
++     onFinishShare: () => {
++       if (finishSave === "failed") return;
++       if (finishSave === "saved") {
++         if (!shareEventId) {
++           setShareFailed(true);
++           return;
++         }
++         if (sharing) return;
++         setSharing(true);
++         void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
++           .then(() => {
++             finishShareRef.current = "none";
++             if (mountedRef.current) {
++               setSharing(false);
++               setFinishShare("none");
++               setFinishFeedPosted(true);
++             }
++           })
++           .catch(() => {
++             if (mountedRef.current) {
++               setSharing(false);
++               setShareFailed(true);
++             }
++           });
++         return;
++       }
++       finishShareRef.current = "feed_held";
++       setFinishShare("feed_held");
++     },
++     onFinishRetry: () => {
++       const last = lastSubmitRef.current;
++       if (!last) return;
++       void finishSubmit(last.payload, last.kind);
++     },
++     onKeepProof: () => {
++       returnToOrigin();
++     },
++     onShare: (uri: string) => {
++       if (!result) return;
++       void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
++     },
++     isHonest: isHonest(taskType, !!photoUri),
++   };
++ }
++
+
+ ❯ lib/finish-flow.test.ts:92:22
+     90|   it("the Proof screen is never a destination in the finish flow", () …
+     91|     const hook = read("components/task-v2/useTaskFlowV2.ts");
+     92|     expect(hook).not.toContain("ROUTES.POST_ID(");
+       |                      ^
+     93|     expect(hook).toContain("routeAfterFinish(");
+     94|     const secured = read("app/task/secured.tsx");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.2 where it goes next > the toast names the task and the count; Home marks the next task
+AssertionError: expected 'import { photoModeFor } from "@/backe…' to contain 'remainingAfter('
+
+- Expected
++ Received
+
+- remainingAfter(
++ import { photoModeFor } from "@/backend/lib/task-model";
++ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
++ import { Image, Keyboard } from "react-native";
++ import { useQuery, useQueryClient } from "@tanstack/react-query";
++ import { useLocalSearchParams, useRouter } from "expo-router";
++ import { supabase } from "@/lib/supabase";
++ import * as ImageManipulator from "expo-image-manipulator";
++ import * as Location from "expo-location";
++ import * as Haptics from "expo-haptics";
++ import { useApp } from "@/contexts/AppContext";
++ import { trackUsage } from "@/lib/analytics";
++ import { useAuth } from "@/contexts/AuthContext";
++ import { trpcMutate } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
++ import { ROUTES } from "@/lib/routes";
++ import { firstString, parseConfig } from "@/lib/task-helpers";
++ import { counterDisplayUnit } from "@/lib/counter-log";
++ import { evaluateScheduleWindow } from "@/lib/schedule-window";
++ import { haversineDistance } from "@/lib/geo";
++ import { resolveCheckinRadiusMeters } from "@/lib/checkin-ready-gates";
++ import { resolveConfigCounterTarget } from "@/lib/real-verification-gates";
++ import { uploadProofImageFromFile } from "@/lib/uploadProofImage";
++ import { shrinkProofForUpload } from "@/lib/proof-resize";
++ import { finishWaitsOnLocation, LOCATION_FIX_TIMEOUT_MS } from "@/lib/finish-location";
++ import { timerRequiredSeconds } from "@/lib/timer-duration";
++ import {
++   confirmOptimisticTaskDone,
++   markOptimisticTaskDone,
++   rollbackOptimisticTaskDone,
++   setOptimisticRetry,
++ } from "@/lib/optimistic-home";
++ import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
++ import { getTodayDateKey } from "@/lib/date-utils";
++ import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
++ import { attemptSecureDayAfterComplete } from "@/lib/day-secure-ui";
++ import {
++   dayOpenTaskHref,
++   serverSecuredToday,
++   type DayOpenModel,
++ } from "@/lib/day-open";
++ import { canOpenSecuredScreen, securedNavOnce, taskSecuredHref } from "@/lib/task-secured-nav";
++ import { closingProofEventId } from "@/lib/proof-moment";
++ import { proofsFromComplete, setSecuredHandoff } from "@/lib/secured-day";
++ import { dismissTaskToast, publishTaskToast, taskDoneTitle } from "@/lib/task-complete-toast";
++ import { routeAfterSave } from "@/lib/route-after-save";
++ import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
++ import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
++ import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
++ import { shareProgressImage } from "@/lib/share";
++ import { failureErrorCode, failureScreenCopy, verificationLine } from "@/lib/task-completion-copy";
++ import { formatDistance, runDistanceUnit, toKilometers, type DistanceUnit } from "@/lib/distance-unit";
++ import {
++   clearLocalTimerSession,
++   loadLocalTimerSession,
++   saveLocalTimerSession,
++ } from "@/lib/task-session-store";
++ import { cancelTimerDoneNotification, scheduleTimerDoneNotification } from "@/lib/timer-done-notification";
++ import { startLiveActivity, endLiveActivity, showLiveActivityDone } from "@/lib/live-activity";
++ import {
++   FINISH_SLOW_MS,
++   finishAfterMutation,
++   resolveHeldShare,
++   type AlsoTodayRow,
++   type SaveState,
++   type ShareIntent,
++ } from "@/lib/finish-moment";
++ import { journalMinWords, WRITE_FOOTER_CAPTION } from "@/lib/write-step";
++ import { homeDayLine, shownChallengeDay } from "@/lib/home-day-total";
++ import { prepareJournalUnmount } from "@/lib/journal-leave";
++ import { closedWindowTime, format12h, formatGateTime, gateLine } from "@/lib/task-ui";
++ import { SIMPLE_ASK_CAPTION } from "@/lib/simple-log";
++ import {
++   RUN_PHOTO_AFTER,
++   TIMER_PHOTO_AFTER,
++   timerElapsedSeconds,
++   workDoneLine,
++   workThenCamera,
++ } from "@/lib/work-step";
++ import {
++   flowAllowsSubmit,
++   flowFooterBrand,
++   flowFooterCaption,
++   gateTimeFromConfig,
++   withRequiredPhotoGate,
++   isWindowClosedError,
++   minutesLeftFromConfig,
++   windowStateFromConfig,
++ } from "@/lib/task-flow-window";
++ import {
++   type TaskFlowStep,
++   checkinGpsNextStep,
++   chromeFlags,
++   clockLabel,
++   discardPhotoStep,
++   finishSubmitOutcome,
++   flowOpensCamera,
++   fmtMmSs,
++   initialStep,
++   isHonest,
++   logSanityCheck,
++   resolveGoBack,
++   resolveGoBackFromFailure,
++   resolveLogKind,
++   resolveRetryFailedSubmit,
++   shouldBlockOnWindow,
++   submitWithoutPhotoNext,
++   timerRemainingSec,
++   timerResumeStep,
++   timerShouldAutoSubmit,
++   verificationKindFor,
++   wordCount,
++   type LogSanity,
++ } from "@/lib/task-flow-state";
++
++ type FinishTiming = {
++   photoReadMs: number;
++   uploadMs: number;
++   completeMs: number;
++   secureMs: number;
++   shareMs: number;
++   homeRefetchMs: number;
++   doneVisibleMs: number;
++ };
++
++ const EMPTY_TIMING: FinishTiming = {
++   photoReadMs: 0,
++   uploadMs: 0,
++   completeMs: 0,
++   secureMs: 0,
++   shareMs: 0,
++   homeRefetchMs: 0,
++   doneVisibleMs: 0,
++ };
++
++ function readLocationFix(): Promise<Location.LocationObject> {
++   return new Promise((resolve, reject) => {
++     const timer = setTimeout(() => reject(new Error("Couldn't read your location.")), LOCATION_FIX_TIMEOUT_MS);
++     Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
++       .then((loc) => {
++         clearTimeout(timer);
++         resolve(loc);
++       })
++       .catch((err: unknown) => {
++         clearTimeout(timer);
++         reject(err instanceof Error ? err : new Error("Couldn't read your location."));
++       });
++   });
++ }
++
++ export function useTaskFlowV2() {
++   const router = useRouter();
++   const params = useLocalSearchParams<{
++     taskId?: string;
++     activeChallengeId?: string;
++     taskType?: string;
++     taskName?: string;
++     taskConfig?: string;
++     challengeName?: string;
++     currentDay?: string;
++     durationDays?: string;
++     originTab?: string;
++   }>();
++   const { user } = useAuth();
++   const queryClient = useQueryClient();
++   const { completeTask, secureDay, profile } = useApp();
++   const timingRef = useRef<FinishTiming>({ ...EMPTY_TIMING });
++   const shownLocalRef = useRef(false);
++
++   const taskId = firstString(params.taskId);
++   const activeChallengeId = firstString(params.activeChallengeId);
++   useEffect(() => {
++     if (!taskId) return;
++     trackUsage("task_started");
++   }, [taskId]);
++   const taskType = (firstString(params.taskType) || "manual").toLowerCase();
++   const taskName = firstString(params.taskName) || "Untitled task";
++   const config = useMemo(() => parseConfig(firstString(params.taskConfig)), [params.taskConfig]);
++   const challengeName = firstString(params.challengeName) || "Challenge";
++   const durationDays = Math.max(1, parseInt(firstString(params.durationDays) || "14", 10) || 14);
++   const originTab = originTabFromParam(firstString(params.originTab));
++   const userId = user?.id ?? "";
++   const dateKey = getTodayDateKey(profile?.timezone ?? undefined);
++   const enrollmentQ = useQuery({
++     queryKey: ["activeChallenge", "startAt", activeChallengeId],
++     queryFn: async () => {
++       const { data, error } = await supabase
++         .from("active_challenges")
++         .select("start_at, created_at, challenge_id")
++         .eq("id", activeChallengeId)
++         .maybeSingle();
++       if (error) throw error;
++       return data as {
++         start_at?: string | null;
++         created_at?: string | null;
++         challenge_id?: string | null;
++       } | null;
++     },
++     enabled: !!activeChallengeId,
++     staleTime: 60 * 1000,
++   });
++   const dayReady = !activeChallengeId || enrollmentQ.isSuccess;
++   const startAt = enrollmentQ.isSuccess
++     ? (enrollmentQ.data?.start_at ?? enrollmentQ.data?.created_at ?? null)
++     : null;
++   const currentDay = shownChallengeDay(
++     startAt,
++     profile?.timezone ?? "UTC",
++     dateKey,
++     durationDays,
++   );
++   const requiredSeconds = timerRequiredSeconds(config);
++   const minWords = journalMinWords(config.min_words);
++   const counterGoal = resolveConfigCounterTarget(config) || 8;
++   const taskRequired = config.required !== false;
++   const gates = useMemo(
++     () => withRequiredPhotoGate(config as Record<string, unknown>),
++     [config],
++   );
++   const photoMode = photoModeFor({ config: config as Record<string, unknown> });
++   const requirePhoto = flowOpensCamera(gates);
++   const gateTime = gateTimeFromConfig(config as Record<string, unknown>);
++   const windowState = windowStateFromConfig(config as Record<string, unknown>);
++   const minutesLeft = minutesLeftFromConfig(config as Record<string, unknown>);
++   const counterUnit = counterDisplayUnit(taskType, config);
++   const radius = resolveCheckinRadiusMeters(config.location_radius_meters);
++   const place = config.location_name || "the saved location";
++
++   const [step, setStep] = useState<TaskFlowStep>(() =>
++     windowState === "closed" ? "window_closed" : initialStep(taskType, withRequiredPhotoGate(config as Record<string, unknown>)),
++   );
++   const [caption, setCaption] = useState("");
++   const [audience, setAudience] = useState<PostAudience>("friends");
++   const audienceRef = useRef(audience);
++   audienceRef.current = audience;
++   const [photoUri, setPhotoUri] = useState<string | null>(null);
++   const [capturedAt, setCapturedAt] = useState<string | null>(null);
++   const [discardAsk, setDiscardAsk] = useState(false);
++   const [text, setText] = useState("");
++   const [journalFieldOn, setJournalFieldOn] = useState(true);
++   const [count, setCount] = useState(0);
++   const countRef = useRef(count);
++   const finishEarlyRef = useRef<{ seconds: number } | null>(null);
++   countRef.current = count;
++   const [keypad, setKeypad] = useState<{ field: "count" } | null>(null);
++   const [distance, setDistance] = useState<number | null>(null);
++   const [durationSec, setDurationSec] = useState<number | null>(null);
++   const [workoutMin, setWorkoutMin] = useState<number | null>(null);
++   const [unit, setUnit] = useState<DistanceUnit>(() =>
++     runDistanceUnit((config as { unit?: unknown }).unit, profile?.distance_unit),
++   );
++   // Build 90 03.1: no preselected activity type. The chip is part of the log.
++   const [kind, setKind] = useState("");
++   const [logSanityAsk, setLogSanityAsk] = useState<LogSanity | null>(null);
++   // Build 90 04.1: the payload waiting on the post choice sheet.
++   const [postChoice, setPostChoice] = useState<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(null);
++   const [postChoiceAudience, setPostChoiceAudience] = useState<PostAudience>(POST_CHOICE_DEFAULT);
++   const [usedSessionTimer, setUsedSessionTimer] = useState(false);
++   // Workouts are stored as run + tracking_mode "time"; the log screen branches on this, not taskType.
++   const logKind = resolveLogKind({
++     taskType,
++     taskName,
++     trackingMode: config.tracking_mode ?? null,
++     unit: config.unit ?? null,
++     targetValue: typeof config.target_value === "number" ? config.target_value : null,
++   });
++   const isLogTask = taskType === "run" || taskType === "workout";
++   const [soundOn, setSoundOn] = useState(true);
++   const [startedAtIso, setStartedAtIso] = useState<string | null>(null);
++   const [pausedRemaining, setPausedRemaining] = useState<number | null>(null);
++   const [nowTick, setNowTick] = useState(() => Date.now());
++   const [sessionUp, setSessionUp] = useState(0);
++   const [gps, setGps] = useState<{ m: number; acc: number } | null>(null);
++   const [result, setResult] = useState<SubmitResult | null>(null);
++   const [dayOpen] = useState<DayOpenModel | null>(null);
++   const [finishSave, setFinishSave] = useState<SaveState>("saving");
++   const [finishShare, setFinishShare] = useState<ShareIntent>("none");
++   const [finishFeedPosted, setFinishFeedPosted] = useState(false);
++   const [alsoToday, setAlsoToday] = useState<AlsoTodayRow[]>([]);
++   const [failNote, setFailNote] = useState("");
++   const [failCode, setFailCode] = useState<string | undefined>(undefined);
++   const [saving, setSaving] = useState(false);
++   const [windowForbidden, setWindowForbidden] = useState(false);
++   const [shareEventId, setShareEventId] = useState<string | null>(null);
++   const [shareFailed, setShareFailed] = useState(false);
++   const [sharing, setSharing] = useState(false);
++   const submitInFlight = useRef(false);
++   const finishShareRef = useRef<ShareIntent>("none");
++   const lastSubmitRef = useRef<{ payload: Record<string, unknown>; kind: VerificationKind } | null>(
++     null,
++   );
++   const mountedRef = useRef(true);
++   useEffect(() => {
++     mountedRef.current = true;
++     return () => {
++       mountedRef.current = false;
++     };
++   }, []);
++
++   const windowStartRaw = config.schedule_window_start || gateTime?.start || null;
++   const windowEndRaw = config.schedule_window_end || gateTime?.end || null;
++   const windowEval = evaluateScheduleWindow({
++     start: windowStartRaw,
++     end: windowEndRaw,
++     timeZone: config.schedule_timezone ?? profile?.timezone,
++   });
++
++   useEffect(() => {
++     if (shouldBlockOnWindow({ windowStatus: windowEval.status, taskType, step })) {
++       setStep("blocked");
++     }
++   }, [windowEval.status, taskType, step]);
++
++   useEffect(() => {
++     if (taskType !== "timer" || !userId || !taskId) return;
++     void loadLocalTimerSession(userId, taskId, dateKey).then((s) => {
++       if (!s) return;
++       setStartedAtIso(s.startedAtIso);
++       setSoundOn(s.soundOn);
++       const remaining = timerRemainingSec({
++         nowMs: Date.now(),
++         requiredSeconds: s.requiredSeconds,
++         startedAtIso: s.startedAtIso,
++       });
++       setStep(timerResumeStep(remaining));
++     });
++   }, [userId, taskId, dateKey, taskType]);
++
++   useEffect(() => {
++     if (step !== "running" && step !== "session") return;
++     const id = setInterval(() => setNowTick(Date.now()), 1000);
++     return () => clearInterval(id);
++   }, [step]);
++
++   useEffect(() => {
++     if (step !== "session") return;
++     const id = setInterval(() => setSessionUp((s) => s + 1), 1000);
++     return () => clearInterval(id);
++   }, [step]);
++
++   const refreshGps = useCallback(async () => {
++     const perm = await Location.requestForegroundPermissionsAsync();
++     if (perm.status !== "granted") return;
++     const loc = await readLocationFix();
++     const lat = config.location_latitude;
++     const lng = config.location_longitude;
++     if (lat == null || lng == null) return;
++     const m = haversineDistance(loc.coords.latitude, loc.coords.longitude, lat, lng);
++     setGps({ m: Math.round(m), acc: Math.round(loc.coords.accuracy ?? 0) });
++     const next = checkinGpsNextStep(m, radius, taskType);
++     if (next) setStep(next);
++   }, [config.location_latitude, config.location_longitude, radius, taskType]);
++
++   useEffect(() => {
++     if (taskType !== "checkin") return;
++     void refreshGps();
++   }, [taskType, refreshGps]);
++
++   const remainingSec = timerRemainingSec({
++     nowMs: nowTick,
++     requiredSeconds,
++     startedAtIso,
++     pausedRemaining,
++   });
++
++   const returnToOrigin = useCallback(() => {
++     void endLiveActivity();
++     router.replace(originTabHref(originTab) as never);
++   }, [originTab, router]);
++
++   const exit = useCallback(() => {
++     void endLiveActivity();
++     if (router.canGoBack()) router.back();
++     else returnToOrigin();
++   }, [returnToOrigin, router]);
++
++   const openDayOpenTask = useCallback(
++     (id: string) => {
++       const t = dayOpen?.tasks.find((row) => (row.id ?? "") === id);
++       if (!t) {
++         returnToOrigin();
++         return;
++       }
++       router.replace(dayOpenTaskHref(t, originTab) as never);
++     },
++     [dayOpen, originTab, returnToOrigin, router],
++   );
++
++   const goNextTask = useCallback(() => {
++     const next = alsoToday[0];
++     if (next) {
++       openDayOpenTask(next.id);
++       return;
++     }
++     if (dayOpen?.nextId) {
++       openDayOpenTask(dayOpen.nextId);
++       return;
++     }
++     returnToOrigin();
++   }, [alsoToday, dayOpen, openDayOpenTask, returnToOrigin]);
++
++   const persistUnit = useCallback((next: DistanceUnit) => {
++     setUnit(next);
++     void trpcMutate(TRPC.profiles.update, { distance_unit: next }).catch(() => {});
++   }, []);
++
++   const goBack = useCallback(() => {
++     const decision = resolveGoBack({ step, caption, taskType, gates });
++     if (decision.action === "discard_ask") {
++       setDiscardAsk(true);
++       return;
++     }
++     if (decision.action === "stay") return;
++     if (decision.action === "set_step") {
++       if (decision.clearPhoto) setPhotoUri(null);
++       setStep(decision.step);
++       return;
++     }
++     exit();
++   }, [step, caption, taskType, gates, exit]);
++
++   const uploadPhoto = async (): Promise<string | null> => {
++     if (!photoUri) return null;
++     try {
++       const readStarted = Date.now();
++       const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
++         Image.getSize(photoUri, (width, height) => resolve({ width, height }), reject);
++       });
++       const shrunk = await shrinkProofForUpload({
++         uri: photoUri,
++         width: size.width,
++         height: size.height,
++         manipulate: (uri, actions, options) =>
++           ImageManipulator.manipulateAsync(uri, actions, {
++             compress: options.compress,
++             format: ImageManipulator.SaveFormat.JPEG,
++           }),
++       });
++       timingRef.current.photoReadMs = Date.now() - readStarted;
++       const uploadStarted = Date.now();
++       const uploaded = await uploadProofImageFromFile(shrunk.uri);
++       timingRef.current.uploadMs = Date.now() - uploadStarted;
++       if ("error" in uploaded) {
++         setFailCode(undefined);
++         setFailNote(uploaded.error);
++         setStep("failed");
++         return null;
++       }
++       return uploaded.url;
++     } catch (err) {
++       setFailCode(undefined);
++       setFailNote(err instanceof Error ? err.message : "Photo did not save. Try the camera again.");
++       setStep("failed");
++       return null;
++     }
++   };
++
++   const postHeldShare = async (eventId: string | undefined) => {
++     if (
++       resolveHeldShare({ held: finishShareRef.current === "feed_held", after: "saved" }) !==
++       "call_share"
++     ) {
++       return;
++     }
++     if (!eventId) return;
++     try {
++       await trpcMutate(TRPC.checkins.shareProof, { eventId });
++       finishShareRef.current = "none";
++       if (mountedRef.current) {
++         setFinishShare("none");
++         setShareEventId(eventId);
++         setFinishFeedPosted(true);
++       }
++     } catch {
++       if (mountedRef.current) setShareFailed(true);
++     }
++   };
++
++   const postingId = `posting-${taskId}`;
++
++   const showDoneLocally = () => {
++     if (shownLocalRef.current) return;
++     shownLocalRef.current = true;
++     markOptimisticTaskDone({ taskId, activeChallengeId });
++     // Build 90 04.1: a text card posts too, so the optimistic row is not photo-only.
++     if (audiencePublishes(audienceRef.current)) {
++       const post = optimisticTaskPost({
++         eventId: postingId,
++         userId,
++         username: profile?.username ?? "you",
++         displayName: profile?.display_name ?? profile?.username ?? "You",
++         avatarUrl: profile?.avatar_url ?? null,
++         // 05.2: the optimistic row's subject line opens the challenge too.
++         challengeId: enrollmentQ.data?.challenge_id ?? null,
++         challengeName,
++         taskName,
++         currentDay,
++         totalDays: durationDays,
++         photoUrl: photoUri,
++         caption: photoUri ? "Posting…" : null,
++       });
++       if (post) publishOptimisticFeedPost(post);
++     }
++     returnToOrigin();
++   };
++
++   const failLocalSave = () => {
++     if (!shownLocalRef.current) return;
++     shownLocalRef.current = false;
++     rollbackOptimisticTaskDone(taskId);
++     clearOptimisticFeedPost(postingId);
++   };
++
++   const finishSubmit = async (payload: Record<string, unknown>, kind: VerificationKind, heldLock = false) => {
++     if (submitInFlight.current && !heldLock) return;
++     if (!heldLock) {
++       timingRef.current = { ...EMPTY_TIMING };
++       shownLocalRef.current = false;
++     }
++     if (!flowAllowsSubmit(windowState)) {
++       setWindowForbidden(true);
++       setStep("window_closed");
++       return;
++     }
++     const hasTarget =
++       typeof config.location_latitude === "number" && typeof config.location_longitude === "number";
++     const locationGated = finishWaitsOnLocation({
++       taskType,
++       requireLocation: config.require_location === true,
++       hasTarget,
++     });
++     const body: Record<string, unknown> = { ...payload };
++     delete body.location_latitude;
++     delete body.location_longitude;
++     if (locationGated) {
++       try {
++         const perm = await Location.requestForegroundPermissionsAsync();
++         if (perm.status !== "granted") {
++           if (heldLock) {
++             submitInFlight.current = false;
++             failLocalSave();
++           }
++           if (mountedRef.current) {
++             setFailNote("Couldn't read your location.");
++             setFailCode(undefined);
++             setStep("failed");
++           }
++           return;
++         }
++         const loc = await readLocationFix();
++         const lat = loc.coords.latitude;
++         const lng = loc.coords.longitude;
++         const accuracyM = loc.coords.accuracy;
++         const accuracy = typeof accuracyM === "number" && Number.isFinite(accuracyM) ? accuracyM : 9999;
++         setGps({
++           m: Math.round(
++             haversineDistance(lat, lng, config.location_latitude as number, config.location_longitude as number),
++           ),
++           acc: Math.round(accuracy),
++         });
++         body.liveLocation = {
++           lat,
++           lng,
++           accuracyM: accuracy,
++           capturedAt: new Date().toISOString(),
++         };
++       } catch (err) {
++         if (heldLock) {
++           submitInFlight.current = false;
++           failLocalSave();
++         }
++         if (mountedRef.current) {
++           setFailNote(err instanceof Error ? err.message : "Couldn't read your location.");
++           setFailCode(undefined);
++           setStep("failed");
++         }
++         return;
++       }
++     }
++     lastSubmitRef.current = { payload: body, kind };
++     const shareNow =
++       finishShareRef.current === "feed_held" ||
++       audiencePublishes(typeof body.audience === "string" ? body.audience : null);
++     submitInFlight.current = true;
++     setSaving(true);
++     finishShareRef.current = "none";
++     setFinishShare("none");
++     setFinishFeedPosted(false);
++     setFinishSave("saving");
++     setAlsoToday([]);
++     setShareFailed(false);
++     const slowTimer = setTimeout(() => {
++       if (mountedRef.current && submitInFlight.current) setFinishSave("slow");
++     }, FINISH_SLOW_MS);
++     try {
++       const proofUrl =
++         typeof payload.proofUrl === "string"
++           ? payload.proofUrl
++           : typeof payload.photo_url === "string"
++             ? payload.photo_url
++             : undefined;
++       const hasCameraProof = Boolean(proofUrl);
++       const finishStartedAt = Date.now();
++       const writeTiming = async () => {
++         const homeStarted = Date.now();
++         try {
++           // Build 90 04.7: joins the refresh completeTask already started instead of cancelling it,
++           // and skips the request when that refresh has already landed since the finish began.
++           await refreshHomeBootstrap(queryClient, { freshAfter: finishStartedAt });
++         } catch {
++           /* Home already shows the optimistic row */
++         }
++         timingRef.current.homeRefetchMs = Date.now() - homeStarted;
++         if (__DEV__) {
++           console.info("[finishSubmit] timing", {
++             photoReadMs: timingRef.current.photoReadMs,
++             uploadMs: timingRef.current.uploadMs,
++             completeMs: timingRef.current.completeMs,
++             secureMs: timingRef.current.secureMs,
++             shareMs: timingRef.current.shareMs,
++             homeRefetchMs: timingRef.current.homeRefetchMs,
++             doneVisibleMs: timingRef.current.doneVisibleMs,
++             totalMs: Date.now() - finishStartedAt,
++           });
++         }
++       };
++       if (kind === "word_count") {
++         await prepareJournalUnmount({
++           clear: () => setText(""),
++           unmountField: () => setJournalFieldOn(false),
++         });
++       }
++       showDoneLocally();
++       if (!timingRef.current.doneVisibleMs) {
++         timingRef.current.doneVisibleMs = Date.now() - finishStartedAt;
++         if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs });
++       }
++       setOptimisticRetry(() => {
++         submitInFlight.current = false;
++         void finishSubmit(body, kind, true);
++       });
++       const completeStartedAt = Date.now();
++       const complete = await completeTask({
++         activeChallengeId,
++         taskId,
++         ...body,
++         shareChoicePending: true,
++         applyShare: shareNow,
++       });
++       timingRef.current.completeMs = Date.now() - completeStartedAt;
++       if (finishSubmitOutcome({ complete, securedToday: false }) === "failed" || !complete) {
++         clearTimeout(slowTimer);
++         submitInFlight.current = false;
++         setSaving(false);
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++         }
++         await writeTiming();
++         return;
++       }
++       let secure: {
++         success?: boolean;
++         alreadySecured?: boolean;
++         newStreakCount?: number;
++         secured?: boolean;
++         challenge_done?: boolean;
++         remaining_challenges?: number;
++         freezeGranted?: boolean;
++         freezesHeld?: number;
++         freezeCap?: number;
++         freezeAtCap?: boolean;
++       } | null = null;
++       let secureDaySecured = complete.daySecure?.secured === true;
++       if (complete.daySecure) {
++         const r = complete.daySecure;
++         secure = {
++           success: r.success === true,
++           alreadySecured: r.alreadySecured,
++           newStreakCount: r.newStreakCount,
++           secured: r.secured,
++           challenge_done: r.challenge_done,
++           remaining_challenges: r.remaining_challenges,
++           freezeGranted: r.freezeGranted,
++           freezesHeld: r.freezesHeld,
++           freezeCap: r.freezeCap,
++           freezeAtCap: r.freezeAtCap,
++         };
++         timingRef.current.secureMs = 0;
++       } else if (complete.requiredRemaining === 0) {
++         const secureStartedAt = Date.now();
++         const after = await attemptSecureDayAfterComplete({
++           requiredRemaining: complete.requiredRemaining,
++           activeChallengeId,
++           challengeTitle: complete.challengeName ?? challengeName,
++           secureDay,
++         });
++         timingRef.current.secureMs = Date.now() - secureStartedAt;
++         secureDaySecured = after.ui.kind === "secured" || after.result?.secured === true;
++         if (after.result) {
++           const r = after.result as {
++             success?: boolean;
++             alreadySecured?: boolean;
++             newStreakCount?: number;
++             secured?: boolean;
++             challenge_done?: boolean;
++             remaining_challenges?: number;
++             freezeGranted?: boolean;
++             freezesHeld?: number;
++             freezeCap?: number;
++             freezeAtCap?: boolean;
++           };
++           secure = {
++             success: r.success === true,
++             alreadySecured: r.alreadySecured,
++             newStreakCount: r.newStreakCount,
++             secured: r.secured,
++             challenge_done: r.challenge_done,
++             remaining_challenges: r.remaining_challenges,
++             freezeGranted: r.freezeGranted,
++             freezesHeld: r.freezesHeld,
++             freezeCap: r.freezeCap,
++             freezeAtCap: r.freezeAtCap,
++           };
++         }
++       }
++       const securedToday = serverSecuredToday({
++         dayAlreadySecured: complete.dayAlreadySecured === true,
++         secureDaySecured,
++       });
++       const outcome = finishAfterMutation({ complete, securedToday });
++       if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
++       void endLiveActivity();
++       clearTimeout(slowTimer);
++       const eventId = closingProofEventId(complete.dayProofs, proofUrl);
++       const postedId = typeof complete.eventId === "string" ? complete.eventId : eventId;
++       const chosenAudience = typeof body.audience === "string" ? body.audience : null;
++       if (outcome === "failed") {
++         submitInFlight.current = false;
++         setSaving(false);
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++           setFailNote((note) => note || "Couldn't save. Try Post again.");
++         }
++         await writeTiming();
++         return;
++       }
++       confirmOptimisticTaskDone(taskId);
++       const publishing = audiencePublishes(chosenAudience);
++       if (publishing && !postedId) {
++         clearOptimisticFeedPost(postingId);
++         submitInFlight.current = false;
++         setSaving(false);
++         if (mountedRef.current) {
++           setFinishSave("failed");
++           setFailNote(hasCameraProof ? "The photo saved. The post did not go out." : "Saved. The post did not go out.");
++         }
++         await writeTiming();
++         return;
++       }
++       if (publishing && postedId) {
++         const posted = optimisticTaskPost({
++           eventId: postedId,
++           userId,
++           username: profile?.username ?? "you",
++           displayName: profile?.display_name ?? profile?.username ?? "You",
++           avatarUrl: profile?.avatar_url ?? null,
++           challengeId: enrollmentQ.data?.challenge_id ?? null,
++           challengeName,
++           taskName,
++           currentDay,
++           totalDays: durationDays,
++           photoUrl: photoUri ?? proofUrl ?? null,
++         });
++         if (posted) publishOptimisticFeedPost(posted);
++         if (mountedRef.current) setFinishSave("saved");
++         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
++         // Build 90 04.1: a post that secured the day shows Day secured first, then the post (openPost).
++         if (outcome === "saved") {
++           trackUsage("task_completed", { method: kind });
++           if (hasCameraProof) trackUsage("proof_posted");
++           router.replace(ROUTES.POST_ID(postedId) as never);
++           submitInFlight.current = false;
++           setSaving(false);
++           await writeTiming();
++           return;
++         }
++       }
++       trackUsage("task_completed", { method: kind });
++       if (hasCameraProof) trackUsage("proof_posted");
++       const shareStartedAt = Date.now();
++       if (complete.shared !== true) await postHeldShare(eventId ?? undefined);
++       timingRef.current.shareMs = Date.now() - shareStartedAt;
++       if (outcome === "saved") {
++         const route = routeAfterSave({
++           challengeFinished: false,
++           daySecuredNow: false,
++           enrollmentId: activeChallengeId,
++         });
++         if (route.screen === "Toast" && mountedRef.current) {
++           setShareEventId(eventId);
++           setFinishSave("saved");
++           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
++           publishTaskToast({
++             taskId,
++             title: taskDoneTitle(taskName, hasCameraProof),
++             body: taskName,
++             photoUri: photoUri ?? proofUrl ?? null,
++             cameraSeal: hasCameraProof,
++             eventId: eventId ?? null,
++             challengeId: enrollmentQ.data?.challenge_id ?? null,
++             challengeName,
++             taskName,
++             currentDay,
++             totalDays: durationDays,
++             streak: typeof complete.streakDays === "number" ? complete.streakDays : undefined,
++           });
++           returnToOrigin();
++         }
++         submitInFlight.current = false;
++         setSaving(false);
++         await writeTiming();
++         return;
++       }
++       setSaving(false);
++       const assembled = assembleSubmitResult({
++         verificationKind: complete.verificationKind ?? kind,
++         requiredRemaining: complete.requiredRemaining,
++         dayAlreadySecured: complete.dayAlreadySecured ?? false,
++         streakDaysBefore: complete.streakDays ?? 0,
++         challengeDayBeforeSecure: complete.challengeDay ?? currentDay,
++         challengeLength: complete.challengeLength ?? durationDays,
++         challengeName: complete.challengeName ?? challengeName,
++         secure: secure
++           ? {
++               success: secure.success === true,
++               alreadySecured: secure.alreadySecured,
++               newStreakCount: secure.newStreakCount,
++               secured: secure.secured,
++               challenge_done: secure.challenge_done,
++               remaining_challenges: secure.remaining_challenges,
++               freezeGranted: secure.freezeGranted,
++               freezesHeld: secure.freezesHeld,
++               freezeCap: secure.freezeCap,
++               freezeAtCap: secure.freezeAtCap,
++             }
++           : null,
++       });
++       if (
++         !canOpenSecuredScreen({
++           daySecured: assembled.daySecured,
++           newStreakCount: secure?.newStreakCount,
++         })
++       ) {
++         submitInFlight.current = false;
++         finishShareRef.current = "none";
++         failLocalSave();
++         if (mountedRef.current) {
++           setFinishShare("none");
++           setFinishSave("failed");
++           setSaving(false);
++           setFailNote((note) => note || "The post did not finish. Try again.");
++         }
++         await writeTiming();
++         return;
++       }
++       assembled.challengeDone = secure?.challenge_done === true;
++       assembled.activeChallengeId = activeChallengeId;
++       if (securedNavOnce() === "replace") {
++         setResult(assembled);
++         setSecuredHandoff({
++           proofs: proofsFromComplete({
++             dayProofs: complete.dayProofs,
++             photoUri: photoUri ?? proofUrl,
++             challengeName: assembled.challengeName,
++             challengeDay: assembled.challengeDay,
++             challengeLength: assembled.challengeLength,
++             eventId,
++           }),
++           shareEventId: eventId,
++           closingHasPhoto: hasCameraProof,
++         });
++         dismissTaskToast();
++         const counterTask = taskType === "counter" || taskType === "water" || taskType === "reading";
++         router.replace(
++           taskSecuredHref(assembled, photoUri ?? undefined, taskName, {
++             shareEventId: eventId,
++             closingHasPhoto: hasCameraProof,
++             originTab,
++             counterReachedTarget: counterTask && count >= counterGoal,
++             // Build 90 04.1: only a published post opens after Day secured; the choice was already made.
++             openPost: publishing && postedId ? postedId : null,
++             choiceMade: typeof chosenAudience === "string",
++             finishedAt: finishStartedAt,
++           }) as never,
++         );
++       }
++       submitInFlight.current = false;
++       await writeTiming();
++     } catch (err) {
++       clearTimeout(slowTimer);
++       submitInFlight.current = false;
++       setSaving(false);
++       failLocalSave();
++       const msg = err instanceof Error ? err.message : "";
++       const code = failureErrorCode(err);
++       if (mountedRef.current) {
++         setFailNote(msg);
++         setFailCode(code === "FORBIDDEN" ? "BAD_REQUEST" : code);
++       }
++       if (isWindowClosedError(msg)) {
++         if (mountedRef.current) {
++           setWindowForbidden(true);
++           setStep("window_closed");
++         }
++         return;
++       }
++       finishShareRef.current = "none";
++       if (mountedRef.current) {
++         setFinishShare("none");
++         setFinishSave("failed");
++       }
++     }
++   };
++
++   const submitPhoto = async (extra: Record<string, unknown> = {}) => {
++     if (submitInFlight.current) return;
++     if (!flowAllowsSubmit(windowState)) {
++       setWindowForbidden(true);
++       setStep("window_closed");
++       return;
++     }
++     submitInFlight.current = true;
++     setSaving(true);
++     timingRef.current = { ...EMPTY_TIMING };
++     shownLocalRef.current = false;
++     const visibleAt = Date.now();
++     showDoneLocally();
++     timingRef.current.doneVisibleMs = Date.now() - visibleAt;
++     if (__DEV__) console.info("[finishSubmit] visible", { doneVisibleMs: timingRef.current.doneVisibleMs, kind: "photo" });
++     setOptimisticRetry(() => {
++       submitInFlight.current = false;
++       void submitPhoto(extra);
++     });
++     const url = await uploadPhoto();
++     if (!url) {
++       failLocalSave();
++       submitInFlight.current = false;
++       if (mountedRef.current) setSaving(false);
++       return;
++     }
++     await finishSubmit(
++       {
++         proofUrl: url,
++         photo_url: url,
++         noteText: caption.trim() || undefined,
++         audience: audienceRef.current,
++         proof_payload_json: capturedAt
++           ? { capturedAt, captured_in_app: true }
++           : undefined,
++         ...extra,
++         ...(taskType === "timer"
++           ? finishEarlyRef.current
++             ? {
++                 value: finishEarlyRef.current.seconds / 60,
++                 timer_seconds_on_screen: finishEarlyRef.current.seconds,
++                 self_reported: true,
++               }
++             : { value: Math.floor(requiredSeconds / 60) }
++           : {}),
++         ...(taskType === "journal" || taskType === "text" ? { noteText: text } : {}),
++         ...(taskType === "counter" || taskType === "water" || taskType === "reading"
++           ? { value: countRef.current }
++           : {}),
++       },
++       verificationKindFor(taskType, true),
++       true,
++     );
++   };
++
++   const submitWithoutPhoto = async (payload: Record<string, unknown>, kind: VerificationKind) => {
++     if (submitWithoutPhotoNext(requirePhoto) === "capture") {
++       setStep("capture");
++       return;
++     }
++     // Build 90 04.1: every task without a photo review asks once: post, or keep it private.
++     if (needsPostChoice(payload)) {
++       if (submitInFlight.current || postChoice) return;
++       Keyboard.dismiss();
++       setPostChoiceAudience(POST_CHOICE_DEFAULT);
++       setPostChoice({ payload, kind });
++       return;
++     }
++     await finishSubmit(payload, kind);
++   };
++
++   const answerPostChoice = (chosen: PostAudience) => {
++     const pending = postChoice;
++     if (!pending) return;
++     setPostChoice(null);
++     audienceRef.current = chosen;
++     setAudience(chosen);
++     void finishSubmit({ ...pending.payload, audience: chosen }, pending.kind);
++   };
++
++   const submitTimer = async () => {
++     await submitWithoutPhoto({ value: Math.floor(requiredSeconds / 60) }, "timer");
++   };
++
++   const startTimer = async () => {
++     let started: { started_at: string; required_seconds: number } | null = null;
++     try {
++       started = await trpcMutate<{ started_at: string; required_seconds: number }>(TRPC.checkins.startSession, {
++         activeChallengeId,
++         taskId,
++         requiredSeconds,
++         kind: "timer",
++       });
++     } catch (err) {
++       setFailCode(failureErrorCode(err));
++       setFailNote(err instanceof Error ? err.message : "Couldn't start the timer.");
++       setStep("failed");
++       return;
++     }
++     if (!started?.started_at) {
++       setFailCode(undefined);
++       setFailNote("Couldn't start the timer.");
++       setStep("failed");
++       return;
++     }
++     const iso = started.started_at;
++     setPausedRemaining(null);
++     setStartedAtIso(iso);
++     if (userId) {
++       await saveLocalTimerSession(userId, {
++         kind: "timer",
++         startedAtIso: iso,
++         requiredSeconds,
++         activeChallengeId,
++         taskId,
++         dateKey,
++         soundOn,
++       });
++     }
++     const ends = new Date(Date.parse(iso) + requiredSeconds * 1000);
++     await scheduleTimerDoneNotification({
++       taskId,
++       at: ends,
++       durationLabel: fmtMmSs(requiredSeconds),
++       sound: soundOn,
++       route: `${ROUTES.TASK_COMPLETE}?taskId=${encodeURIComponent(taskId)}&activeChallengeId=${encodeURIComponent(activeChallengeId)}&taskType=timer&taskName=${encodeURIComponent(taskName)}&taskConfig=${encodeURIComponent(firstString(params.taskConfig))}&challengeName=${encodeURIComponent(challengeName)}&currentDay=${currentDay}&durationDays=${durationDays}&originTab=${encodeURIComponent(originTab)}`,
++     });
++     startLiveActivity({
++       taskId,
++       taskTitle: taskName,
++       challengeName,
++       timerType: "checkin",
++       startedAtMs: Date.parse(iso),
++       targetSeconds: requiredSeconds,
++       route: ROUTES.TASK_COMPLETE,
++     });
++     setStep("running");
++   };
++
++   const retryFailedSubmit = () => {
++     setFailNote("");
++     setFailCode(undefined);
++     const decision = resolveRetryFailedSubmit({
++       hasPhoto: !!photoUri,
++       taskType,
++       requirePhoto,
++       timerReadyToSubmit: !!(startedAtIso && remainingSec <= 0),
++     });
++     if (decision === "submit_photo") {
++       void submitPhoto();
++       return;
++     }
++     if (decision === "start_timer") {
++       void startTimer();
++       return;
++     }
++     if (decision === "capture") {
++       setStep("capture");
++       return;
++     }
++     if (decision === "submit_timer") {
++       void submitTimer();
++       return;
++     }
++     if (decision === "submit_journal") {
++       void finishSubmit({ noteText: text }, "word_count");
++       return;
++     }
++     if (decision === "submit_count") {
++       void finishSubmit({ value: countRef.current }, "self_report");
++       return;
++     }
++     if (decision === "submit_checkin") {
++       void finishSubmit({}, "gps");
++       return;
++     }
++     if (decision === "log") {
++       setStep("log");
++       return;
++     }
++     void finishSubmit({}, "self_report");
++   };
++
++   const goBackFromFailure = () => {
++     setFailNote("");
++     setFailCode(undefined);
++     setStep(resolveGoBackFromFailure({ requirePhoto, hasPhoto: !!photoUri, taskType, gates }));
++   };
++
++   const cancelTimer = async () => {
++     if (userId) await clearLocalTimerSession(userId, taskId, dateKey);
++     await cancelTimerDoneNotification(taskId);
++     void endLiveActivity();
++     exit();
++   };
++
++   const pauseTimer = () => {
++     if (pausedRemaining != null) return;
++     setPausedRemaining(remainingSec);
++   };
++
++   const resetTimer = async () => {
++     setPausedRemaining(null);
++     setStartedAtIso(null);
++     if (userId && taskId) await clearLocalTimerSession(userId, taskId, dateKey);
++     await cancelTimerDoneNotification(taskId);
++     void endLiveActivity();
++     setStep("entry");
++   };
++
++   useEffect(() => {
++     if (timerShouldAutoSubmit(step, remainingSec, !!startedAtIso)) {
++       showLiveActivityDone();
++       void submitTimer();
++     }
++     // eslint-disable-next-line react-hooks/exhaustive-deps
++   }, [step, remainingSec, startedAtIso]);
++
++   const { dark, hideChrome } = chromeFlags(step);
++   const fail = failureScreenCopy({
++     errorCode: failCode,
++     message: failNote,
++     hasLocalPhoto: !!photoUri,
++   });
++
++   const verifyLine = verificationLine({
++     kind: (taskType === "simple" ? "manual" : taskType) as Parameters<typeof verificationLine>[0]["kind"],
++     timeLabel: capturedAt ? clockLabel(capturedAt) : clockLabel(Date.now()),
++     durationLabel:
++       taskType === "timer"
++         ? fmtMmSs(requiredSeconds)
++         : isLogTask && logKind === "run"
++           ? durationSec != null
++             ? fmtMmSs(durationSec)
++             : ""
++           : isLogTask
++             ? `${workoutMin ?? 0} min`
++             : undefined,
++     startedAtLabel: startedAtIso ? clockLabel(startedAtIso) : undefined,
++     distanceLabel: distance != null ? formatDistance(toKilometers(distance, unit), unit) : undefined,
++     words: wordCount(text),
++     gpsMeters: gps?.m,
++     accuracyM: gps?.acc,
++   });
++
++   const onTypeCount = (v: number) => {
++     setCount(Math.min(counterGoal, Math.max(0, v)));
++   };
++
++   /**
++    * Run: distance + duration (+ value in minutes for a timed run so the floor check passes).
++    * Workout: activity type + minutes (+ optional distance for Cycling / Swim).
++    */
++   const logPayload = (): Record<string, unknown> => {
++     const entry_mode = usedSessionTimer ? "timer" : "hand";
++     if (logKind === "run") {
++       const durationMin = durationSec != null ? durationSec / 60 : undefined;
++       return {
++         distance_km: distance != null ? toKilometers(distance, unit) : undefined,
++         duration_min: durationMin,
++         entry_mode,
++         ...(config.tracking_mode === "time" && durationMin != null ? { value: durationMin } : {}),
++       };
++     }
++     return {
++       duration_min: workoutMin ?? undefined,
++       value: workoutMin ?? undefined,
++       workout_kind: kind || undefined,
++       entry_mode,
++       distance_km: distance != null && distance > 0 ? toKilometers(distance, unit) : undefined,
++     };
++   };
++
++   const onPostRun = () => {
++     void submitWithoutPhoto(logPayload(), "self_report");
++   };
++
++   /** Build 90 03.2: impossible pace / speed asks before anything is saved. */
++   const onLogContinue = () => {
++     const check = logSanityCheck({
++       logKind,
++       kind,
++       distance,
++       durationSec: logKind === "run" ? durationSec : workoutMin != null ? workoutMin * 60 : null,
++       unit,
++     });
++     if (!check.ok) {
++       setLogSanityAsk(check);
++       return;
++     }
++     if (requirePhoto) setStep("capture");
++     else onPostRun();
++   };
++
++   const onLogSaveAnyway = () => {
++     setLogSanityAsk(null);
++     if (requirePhoto) setStep("capture");
++     else onPostRun();
++   };
++
++   const onUseTimer = () => {
++     setSessionUp(0);
++     setStep("session");
++     startLiveActivity({
++       taskId,
++       taskTitle: taskName,
++       challengeName,
++       timerType: logKind === "run" ? "run_gps" : "run_treadmill",
++       startedAtMs: Date.now(),
++       route: ROUTES.TASK_COMPLETE,
++     });
++   };
++
++   const onSessionStop = () => {
++     void endLiveActivity();
++     setUsedSessionTimer(true);
++     if (logKind === "run") setDurationSec(Math.max(1, sessionUp));
++     else setWorkoutMin(Math.max(1, Math.round(sessionUp / 60)));
++     setStep("log");
++   };
++
++   const onSessionCancel = () => {
++     void endLiveActivity();
++     setStep("log");
++   };
++
++   const onReviewPost = () => {
++     void submitPhoto(
++       isLogTask
++         ? logPayload()
++         : taskType === "reading"
++           ? { value: countRef.current }
++           : {}
++     );
++   };
++
++   const onDiscardPhoto = () => {
++     setDiscardAsk(false);
++     setCaption("");
++     setPhotoUri(null);
++     setStep(discardPhotoStep(taskType));
++   };
++
++   return {
++     step,
++     dark,
++     hideChrome,
++     currentDay,
++     taskType,
++     gates,
++     taskName,
++     challengeName,
++     windowEval,
++     config,
++     place,
++     radius,
++     gps,
++     requiredSeconds,
++     soundOn,
++     setSoundOn,
++     keypad,
++     unit,
++     distance,
++     durationSec,
++     workoutMin,
++     setDistance,
++     setDurationSec,
++     setWorkoutMin,
++     kind,
++     setKind,
++     sessionUp,
++     photoUri,
++     caption,
++     setCaption,
++     audience,
++     setAudience,
++     remainingSec,
++     startedAtIso,
++     text,
++     setText,
++     journalFieldOn,
++     minWords,
++     count,
++     counterGoal,
++     counterUnit,
++     result,
++     dayOpen,
++     finishSave,
++     finishShare,
++     finishFeedPosted,
++     alsoToday,
++     durationDays,
++     shareInviteCode: enrollmentQ.data?.challenge_id ?? null,
++     shareUsername: profile?.username ?? null,
++     finishGateLine: gateLine(gates, gateTime),
++     fail,
++     discardAsk,
++     taskRequired,
++     verifyLine,
++     saving,
++     submitError: failNote,
++     requirePhoto,
++     photoMode,
++     fromGps: false,
++     targetDistance: typeof config.target_value === "number" ? config.target_value : null,
++     chromeTitle: challengeName.trim() || "Challenge",
++     headerTitle: homeDayLine(currentDay, durationDays),
++     footerCaption: flowFooterCaption(windowState, minutesLeft, SIMPLE_ASK_CAPTION),
++     writeFooterCaption: flowFooterCaption(windowState, minutesLeft, WRITE_FOOTER_CAPTION),
++     footerBrand: flowFooterBrand(windowState),
++     windowLabel: formatGateTime(gateTime) || undefined,
++     workDone: workThenCamera(taskType, gates)
++       ? workDoneLine(
++           taskType === "timer"
++             ? fmtMmSs(requiredSeconds)
++             : taskType === "run"
++               ? logKind === "run"
++                 ? fmtMmSs(durationSec ?? 0)
++                 : `${workoutMin ?? 0} min`
++               : String(count),
++         )
++       : null,
++     photoAfter: workThenCamera(taskType, gates)
++       ? taskType === "timer"
++         ? TIMER_PHOTO_AFTER
++         : taskType === "run"
++           ? RUN_PHOTO_AFTER
++           : null
++       : null,
++     closedAt: closedWindowTime(gateTime),
++     windowStartLabel: format12h(windowStartRaw) || null,
++     windowEndLabel: format12h(windowEndRaw) || null,
++     windowForbidden,
++     windowState,
++     goBack,
++     exit,
++     refreshGps,
++     startTimer,
++     persistUnit,
++     onUseTimer,
++     onNextPhoto: () => setStep("capture"),
++     onSessionStop,
++     onSessionCancel,
++     onCaptured: (uri: string, at: string) => {
++       setPhotoUri(uri);
++       setCapturedAt(at);
++       setStep("review");
++     },
++     onRetake: () => {
++       setPhotoUri(null);
++       setStep("capture");
++     },
++     onReviewPost,
++     cancelTimer,
++     pauseTimer,
++     resetTimer,
++     submitTimer,
++     onFinishEarly: () => {
++       const seconds = timerElapsedSeconds(requiredSeconds, remainingSec);
++       finishEarlyRef.current = { seconds };
++       setPausedRemaining(remainingSec);
++       void endLiveActivity();
++       void submitWithoutPhoto(
++         { self_reported: true, timer_seconds_on_screen: seconds, value: seconds / 60 },
++         "self_report",
++       );
++     },
++     onAddOne: () => setCount((c) => Math.min(counterGoal, c + 1)),
++     onAddAmount: (n: number) => setCount((c) => Math.min(counterGoal, c + Math.max(0, Math.floor(n)))),
++     dayReady,
++     onOpenCountKeypad: () => {
++       setKeypad({ field: "count" });
++     },
++     onRemoveOne: () => setCount((c) => Math.max(0, c - 1)),
++     onTypeCount,
++     onPostRun,
++     logKind,
++     logSanityAsk,
++     // Build 90 04.1: the one post choice after a task without a photo review.
++     postChoiceOpen: postChoice != null,
++     postChoiceAudience,
++     setPostChoiceAudience,
++     onPostChoicePost: () => answerPostChoice(postChoiceAudience),
++     onPostChoiceKeep: () => answerPostChoice(POST_CHOICE_PRIVATE),
++     onLogContinue,
++     onLogSaveAnyway,
++     onLogEdit: () => setLogSanityAsk(null),
++     onAttachPhoto: () => setStep("capture"),
++     onSubmitCount: () => void submitWithoutPhoto({ value: count }, "self_report"),
++     // Build 90 03.4: Done sends what was counted. The button is inactive below the goal.
++     onCompleteCount: () => {
++       if (count < counterGoal) return;
++       countRef.current = count;
++       void submitWithoutPhoto({ value: count }, "self_report");
++     },
++     onDidIt: () => void submitWithoutPhoto({ self_reported: true }, "self_report"),
++     onHere: () => void submitWithoutPhoto({}, "gps"),
++     onJournalPost: () => void submitWithoutPhoto({ noteText: text }, "word_count"),
++     goNextTask,
++     openDayOpenTask,
++     goBackFromFailure,
++     retryFailedSubmit,
++     onDiscardPhoto,
++     onKeepPhoto: () => setDiscardAsk(false),
++     shareFailed,
++     sharing,
++     onShareProof: () => {
++       if (sharing) return;
++       if (!shareEventId) {
++         setShareFailed(true);
++         return;
++       }
++       setSharing(true);
++       void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
++         .then(() => {
++           trackUsage("proof_shared");
++           setSharing(false);
++           returnToOrigin();
++         })
++         .catch(() => {
++           setSharing(false);
++           setShareFailed(true);
++         });
++     },
++     onFinishShare: () => {
++       if (finishSave === "failed") return;
++       if (finishSave === "saved") {
++         if (!shareEventId) {
++           setShareFailed(true);
++           return;
++         }
++         if (sharing) return;
++         setSharing(true);
++         void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
++           .then(() => {
++             finishShareRef.current = "none";
++             if (mountedRef.current) {
++               setSharing(false);
++               setFinishShare("none");
++               setFinishFeedPosted(true);
++             }
++           })
++           .catch(() => {
++             if (mountedRef.current) {
++               setSharing(false);
++               setShareFailed(true);
++             }
++           });
++         return;
++       }
++       finishShareRef.current = "feed_held";
++       setFinishShare("feed_held");
++     },
++     onFinishRetry: () => {
++       const last = lastSubmitRef.current;
++       if (!last) return;
++       void finishSubmit(last.payload, last.kind);
++     },
++     onKeepProof: () => {
++       returnToOrigin();
++     },
++     onShare: (uri: string) => {
++       if (!result) return;
++       void shareProgressImage(uri, `${taskName}. Day ${result.challengeDay} on GRIIT.`);
++     },
++     isHonest: isHonest(taskType, !!photoUri),
++   };
++ }
++
+
+ ❯ lib/finish-flow.test.ts:101:18
+     99|   it("the toast names the task and the count; Home marks the next task…
+    100|     const hook = read("components/task-v2/useTaskFlowV2.ts");
+    101|     expect(hook).toContain("remainingAfter(");
+       |                  ^
+    102|     expect(hook).not.toContain("taskDoneTitle(");
+    103|     const home = read("components/home/HomeV3.tsx");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.3 Day secured > no scroll view, the Part 1 order, and Done / Back / swipe all go Home
+AssertionError: expected '/**\n * Frame 59 — streak is the hero…' not to contain '<ScrollView'
+
+- Expected
++ Received
+
+- <ScrollView
++ /**
++  * Frame 59 — streak is the hero; image area follows proof count; never an empty card.
++  */
++ import React, { useState } from "react";
++ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++ import ViewShot from "react-native-view-shot";
++ import { Download, Flame, Instagram, ShieldOff, Snowflake, X } from "lucide-react-native";
++ import { DS_V3 } from "@/lib/design-system";
++ import Button from "@/components/ds/Button";
++ import { ShareChoice } from "@/components/ds/ShareChoice";
++ import Card from "@/components/ds/Card";
++ import ShareImage from "@/components/share/ShareImage";
++ import { saveStickerToPhotos, shareToInstagramStory } from "@/lib/share";
++ import { facebookAppId, showStoryAction } from "@/lib/share-sticker";
++ import type { ShareCardInput } from "@/lib/share-image";
++ import { securedMomentTitle, streakInARow } from "@/lib/task-complete-toast";
++ import EmptyState from "@/components/ds/EmptyState";
++ import { ProofPhoto } from "@/components/ds/ProofFallbackTile";
++ import WeekStrip, { type WeekStripDay } from "@/components/ds/WeekStrip";
++ import { SECURED_DONE } from "@/lib/simple-log";
++ import { OPENED_IN_INSTAGRAM } from "@/lib/copy";
++ import { PROOF_SHARE_FAILED } from "@/lib/proof-moment";
++ import {
++   SECURED_LOAD_ERROR,
++   SECURED_LOAD_RETRY,
++   SECURED_MEANS,
++   SECURED_PHOTO_H,
++   SECURED_SELF,
++   SECURED_TILE,
++   SECURED_TILE_MAX,
++   securedChallengeLine,
++   securedDayCaption,
++   securedOverflowLabel,
++   type SecuredProof,
++   type SecuredSelfRow,
++ } from "@/lib/secured-day";
++ import InviteLinkRow from "@/components/InviteLinkRow";
++ import { INVITE_AFTER_FIRST_DAY_BODY, INVITE_AFTER_FIRST_DAY_HEADING } from "@/lib/invite-link";
++
++ const PT = DS_V3.space.xs / 4;
++ const TILE_GAP = 6;
++ const SCRIM = 0.62;
++ const ICON = DS_V3.space.lg;
++
++ export default function SecuredDayScreen({
++   streak,
++   proofs,
++   selfReported,
++   taskCount,
++   challengeCount,
++   allSelfReported,
++   loadError,
++   onRetryLoad,
++   week,
++   todayIndex,
++   fillToday,
++   offerShare,
++   shareFailed,
++   onShare,
++   onKeep,
++   onUndo,
++   sharedNow,
++   onDone,
++   username,
++   freezeNote,
++   invite,
++ }: {
++   streak: number;
++   proofs: SecuredProof[];
++   selfReported: SecuredSelfRow[];
++   taskCount?: number;
++   challengeCount: number;
++   allSelfReported?: boolean;
++   loadError?: boolean;
++   onRetryLoad?: () => void;
++   week: WeekStripDay[];
++   todayIndex: number;
++   fillToday?: boolean;
++   offerShare: boolean;
++   shareFailed?: boolean;
++   sharing?: boolean;
++   onShare?: () => void;
++   onKeep?: () => void;
++   onUndo?: () => void;
++   sharedNow?: boolean;
++   onDone: () => void;
++   username?: string | null;
++   freezeNote?: string | null;
++   /** Build 90 08.1: after the first secured day, the invite link with Copy and Share. */
++   invite?: { challengeId: string; challengeName: string } | null;
++ }) {
++   const n = proofs.length;
++   const overflow = securedOverflowLabel(n);
++   const caption =
++     taskCount == null
++       ? ""
++       : securedDayCaption({
++           taskCount,
++           challengeCount,
++           cameraProofs: n,
++           allSelfReported,
++         });
++   const names = [...new Set(proofs.map((p) => p.challengeName))].join(", ");
++   const day = proofs[0]?.day ?? selfReported[0]?.day ?? null;
++   const title = securedMomentTitle(challengeCount, day);
++   const lineKeys = new Set<string>();
++   const lines: string[] = [];
++   const pushLine = (key: string, line: string) => {
++     if (lineKeys.has(key)) return;
++     lineKeys.add(key);
++     lines.push(line);
++   };
++   if (challengeCount !== 1) {
++     for (const p of proofs) {
++       pushLine(`p:${p.challengeName}:${p.day}:${p.length}`, securedChallengeLine(p.challengeName, p.day, p.length));
++     }
++     for (const row of selfReported) {
++       pushLine(`s:${row.name}:${row.day}`, securedChallengeLine(row.name, row.day, row.length));
++     }
++   }
++   const previewPhoto = proofs[0]?.uri ?? null;
++   const previewChallenge = proofs[0]?.challengeName ?? selfReported[0]?.name ?? "";
++   const previewLength = proofs[0]?.length ?? selfReported[0]?.length;
++   const preview: ShareCardInput = {
++     style: previewPhoto ? "A" : "C",
++     colour: "ink",
++     challenge: previewChallenge,
++     day: day ?? undefined,
++     durationDays: previewLength,
++     photoUri: previewPhoto,
++     cameraSeal: Boolean(previewPhoto),
++     username,
++     streak,
++   };
++   const showStory = showStoryAction(facebookAppId());
++   const [storyNote, setStoryNote] = useState<string | null>(null);
++   const shot = React.useRef<ViewShot>(null);
++
++   const capture = async () => {
++     const uri = await shot.current?.capture?.();
++     return typeof uri === "string" ? uri : null;
++   };
++
++   return (
++     <View style={styles.root}>
++       <ScrollView
++         style={styles.scroll}
++         contentContainerStyle={[
++           styles.body,
++           { paddingTop: DS_V3.space.sm, paddingBottom: DS_V3.space.section },
++         ]}
++       >
++         <Pressable
++           accessibilityRole="button"
++           accessibilityLabel="Close"
++           onPress={onDone}
++           style={styles.close}
++         >
++           <X size={DS_V3.space.lg + DS_V3.space.sm} color={DS_V3.color.textSecondary} />
++         </Pressable>
++         <View style={styles.hero}>
++           <Flame size={28} color={DS_V3.color.brand} />
++           <Text style={styles.hero88}>{streak}</Text>
++           <Text style={styles.unit}>{streakInARow(streak)}</Text>
++           {freezeNote ? (
++             <View style={styles.freezeNote}>
++               <Snowflake size={16} color={DS_V3.color.textSecondary} />
++               <Text style={styles.caption}>{freezeNote}</Text>
++             </View>
++           ) : null}
++         </View>
++         <View style={styles.center}>
++           <Text style={styles.today}>{title}</Text>
++           <Text style={styles.caption}>{SECURED_MEANS}</Text>
++           {lines.map((line) => (
++             <Text key={line} style={styles.caption}>{line}</Text>
++           ))}
++           {loadError ? (
++             <EmptyState
++               heading={SECURED_LOAD_ERROR}
++               body="Check your connection and try again."
++               actionLabel={SECURED_LOAD_RETRY}
++               variant="error"
++               onRetry={onRetryLoad}
++             />
++           ) : caption ? (
++             <Text style={styles.caption}>{caption}</Text>
++           ) : null}
++         </View>
++         <View style={styles.previewClip}>
++           <View style={styles.previewScale}>
++             <ShareImage input={preview} />
++           </View>
++         </View>
++         <View style={styles.offscreen} pointerEvents="none">
++           <ViewShot ref={shot} options={{ format: "png", quality: 1, result: "tmpfile" }}>
++             <ShareImage input={preview} />
++           </ViewShot>
++         </View>
++         <WeekStrip days={week} todayIndex={todayIndex} fillToday={fillToday} />
++         {n === 0 && selfReported.length > 0 ? (
++           <Card>
++             {selfReported.map((c) => (
++               // 06.2: the caption above already says "Self-reported." once; the row
++               // keeps the glyph and the challenge line only.
++               <View key={c.name} style={styles.selfRow} accessibilityLabel={`${securedChallengeLine(c.name, c.day, c.length)}, ${SECURED_SELF}`}>
++                 <ShieldOff size={ICON} color={DS_V3.color.textSecondary} />
++                 <Text style={styles.selfName}>{securedChallengeLine(c.name, c.day, c.length)}</Text>
++               </View>
++             ))}
++           </Card>
++         ) : n === 1 && proofs[0] ? (
++           <>
++             <ProofPhoto uri={proofs[0].uri} taskName={proofs[0].challengeName} style={styles.photo} />
++             <Text style={styles.photoCap}>
++               {securedChallengeLine(proofs[0].challengeName, proofs[0].day, proofs[0].length)}
++             </Text>
++           </>
++         ) : n > 1 ? (
++           <>
++             <View style={styles.tiles}>
++               {proofs.slice(0, SECURED_TILE_MAX).map((pr, i) => {
++                 const last = i === SECURED_TILE_MAX - 1 && overflow;
++                 return (
++                   <View key={`${pr.uri}-${i}`} style={styles.tile}>
++                     <ProofPhoto uri={pr.uri} taskName={pr.challengeName} style={styles.tileImg} />
++                     {last ? (
++                       <View style={styles.scrim} pointerEvents="none">
++                         <View style={styles.scrimFill} />
++                         <Text style={styles.plus}>{overflow}</Text>
++                       </View>
++                     ) : null}
++                   </View>
++                 );
++               })}
++             </View>
++             <Text style={styles.photoCap}>{names}</Text>
++           </>
++         ) : null}
++         {invite ? (
++           <View style={styles.invite} testID="secured-invite">
++             <Text style={styles.inviteHeading}>{INVITE_AFTER_FIRST_DAY_HEADING}</Text>
++             <Text style={styles.caption}>{INVITE_AFTER_FIRST_DAY_BODY}</Text>
++             <InviteLinkRow challengeId={invite.challengeId} challengeName={invite.challengeName} />
++           </View>
++         ) : null}
++         {shareFailed ? <Text style={styles.fail}>{PROOF_SHARE_FAILED}</Text> : null}
++       </ScrollView>
++       {/* Build 90 06: the footer used to carry `bottom: gutter` on a relatively
++           positioned View, which slid it up over the last row of the scroll content. */}
++       <View style={styles.footer}>
++         {offerShare ? (
++           <>
++             <ShareChoice
++               state={sharedNow ? "shared" : shareFailed ? "failed" : "unanswered"}
++               isPhoto
++               photoUri={proofs[0]?.uri}
++               onShare={() => onShare?.()}
++               onKeep={() => onKeep?.()}
++               onUndo={() => onUndo?.()}
++               onRetry={() => onShare?.()}
++             />
++             {showStory ? (
++               <Button
++                 label="Instagram Story"
++                 variant="secondary"
++                 icon={<Instagram size={18} color={DS_V3.color.textPrimary} />}
++                 onPress={() => {
++                   void capture().then(async (uri) => {
++                     if (!uri) return;
++                     const opened = await shareToInstagramStory(uri);
++                     if (opened === "instagram") setStoryNote(OPENED_IN_INSTAGRAM);
++                   });
++                 }}
++               />
++             ) : null}
++             {storyNote ? <Text style={styles.fail}>{storyNote}</Text> : null}
++             <Button
++               label="Save"
++               variant="secondary"
++               icon={<Download size={18} color={DS_V3.color.textPrimary} />}
++               onPress={() => {
++                 void capture().then((uri) => {
++                   if (uri) void saveStickerToPhotos(uri);
++                 });
++               }}
++             />
++           </>
++         ) : (
++           <Button label={SECURED_DONE} onPress={onDone} />
++         )}
++       </View>
++     </View>
++   );
++ }
++
++ const styles = StyleSheet.create({
++   root: {
++     flex: 1,
++     backgroundColor: DS_V3.color.canvas,
++   },
++   body: {
++     paddingHorizontal: DS_V3.space.gutter,
++     gap: DS_V3.space.md,
++   },
++   close: {
++     minHeight: DS_V3.size.tap,
++     minWidth: DS_V3.size.tap,
++     alignSelf: "flex-end",
++     alignItems: "flex-end",
++     justifyContent: "center",
++   },
++   hero: {
++     alignItems: "center",
++     gap: 2,
++   },
++   freezeNote: {
++     flexDirection: "row",
++     alignItems: "center",
++     gap: 6,
++     marginTop: 8,
++   },
++   hero88: {
++     fontSize: 88,
++     lineHeight: 88,
++     fontWeight: "800",
++     fontVariant: ["tabular-nums"],
++     color: DS_V3.color.textPrimary,
++   },
++   previewClip: {
++     width: 170,
++     height: 302,
++     alignSelf: "center",
++     overflow: "hidden",
++     borderRadius: 16,
++   },
++   previewScale: {
++     position: "absolute",
++     width: 1080,
++     height: 1920,
++     left: (170 - 1080) / 2,
++     top: (302 - 1920) / 2,
++     transform: [{ scale: 170 / 1080 }],
++   },
++   offscreen: {
++     position: "absolute",
++     left: -4000,
++     top: 0,
++   },
++   label: {
++     fontSize: DS_V3.type.label.fontSize,
++     lineHeight: DS_V3.type.label.lineHeight,
++     fontWeight: DS_V3.type.label.fontWeight,
++     letterSpacing: DS_V3.type.label.letterSpacing,
++     textTransform: "uppercase",
++     color: DS_V3.color.textSecondary,
++   },
++   unit: {
++     fontSize: DS_V3.type.body.fontSize,
++     lineHeight: DS_V3.type.body.lineHeight,
++     fontWeight: DS_V3.type.body.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   center: {
++     alignItems: "center",
++     gap: 6,
++   },
++   today: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   caption: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++     textAlign: "center",
++   },
++   photo: {
++     width: "100%",
++     height: SECURED_PHOTO_H,
++     borderRadius: DS_V3.radius.card,
++     borderWidth: PT,
++     borderColor: DS_V3.color.border,
++   },
++   photoCap: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++     textAlign: "center",
++   },
++   tiles: {
++     flexDirection: "row",
++     gap: TILE_GAP,
++   },
++   tile: {
++     flex: 1,
++     height: SECURED_TILE,
++     borderRadius: DS_V3.radius.card,
++     overflow: "hidden",
++     borderWidth: PT,
++     borderColor: DS_V3.color.border,
++   },
++   tileImg: {
++     width: "100%",
++     height: "100%",
++   },
++   scrim: {
++     ...StyleSheet.absoluteFillObject,
++     alignItems: "center",
++     justifyContent: "center",
++   },
++   scrimFill: {
++     ...StyleSheet.absoluteFillObject,
++     backgroundColor: DS_V3.color.canvas,
++     opacity: SCRIM,
++   },
++   plus: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   selfRow: {
++     flexDirection: "row",
++     alignItems: "center",
++     gap: 10,
++   },
++   selfName: {
++     flex: 1,
++     fontSize: DS_V3.type.secondary.fontSize,
++     lineHeight: DS_V3.type.secondary.lineHeight,
++     fontWeight: DS_V3.type.secondary.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   invite: {
++     gap: DS_V3.space.sm,
++     marginTop: DS_V3.space.md,
++   },
++   inviteHeading: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   fail: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++     textAlign: "center",
++   },
++   scroll: { flex: 1 },
++   footer: {
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingBottom: DS_V3.space.gutter,
++     gap: DS_V3.space.sm,
++   },
++ });
++
+
+ ❯ lib/finish-flow.test.ts:112:24
+    110|   it("no scroll view, the Part 1 order, and Done / Back / swipe all go…
+    111|     const screen = read("components/task-v2/SecuredDayScreen.tsx");
+    112|     expect(screen).not.toContain("<ScrollView");
+       |                        ^
+    113|     expect(screen).not.toContain("ScrollView,");
+    114|     expect(screen).toContain("FINISH_COPY.secured");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.3 Day secured > the teaching line shows once per user
+AssertionError: expected 'import { useEffect, useState } from "…' to contain 'teachingShows('
+
+- Expected
++ Received
+
+- teachingShows(
++ import { useEffect, useState } from "react";
++ import { useQueryClient } from "@tanstack/react-query";
++ import { useLocalSearchParams, useRouter } from "expo-router";
++ import { ErrorBoundary } from "@/components/ErrorBoundary";
++ import Screen from "@/components/ds/Screen";
++ import SecuredDayScreen from "@/components/task-v2/SecuredDayScreen";
++ import { weekFromSecuredKeys } from "@/components/task-v2/MomentScreenV3";
++ import { useApp } from "@/contexts/AppContext";
++ import { useAuth } from "@/contexts/AuthContext";
++ import { firstString } from "@/lib/task-helpers";
++ import { originTabFromParam, originTabHref } from "@/lib/origin-tab";
++ import { ROUTES } from "@/lib/routes";
++ import { trpcMutate } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { getTodayDateKey } from "@/lib/date-utils";
++ import { dayOpenTasksFromActive } from "@/lib/day-open-active";
++ import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
++ import { bootstrapDayOpenInput, refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
++ import {
++   proofsFromComplete,
++   readSecuredHandoff,
++   selectSecuredDayMeta,
++   type SecuredProof,
++   type SecuredSelfRow,
++ } from "@/lib/secured-day";
++ import {
++   finishedAtFromSecuredParam,
++   readSecuredDateKeysFromCache,
++   submitResultFromSecuredParams,
++   todayIsSecuredInCache,
++ } from "@/lib/task-secured-nav";
++ import { afterSecuredNext } from "@/lib/moment-queue";
++ import { freezeEarnedNote } from "@/lib/freeze-earn";
++ import { useFirstConcept } from "@/lib/concept-seen";
++ import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
++ import { showInviteAfterSecured } from "@/lib/invite-link";
++
++ function TaskSecuredInner() {
++   const router = useRouter();
++   const params = useLocalSearchParams<{
++     daySecured?: string;
++     daySecuredEarlier?: string;
++     requiredRemaining?: string;
++     streakDays?: string;
++     streakDaysBefore?: string;
++     challengeDay?: string;
++     challengeLength?: string;
++     challengeName?: string;
++     verificationKind?: string;
++     proofUri?: string;
++     taskName?: string;
++     shareEventId?: string;
++     closingPhoto?: string;
++     challengeDone?: string;
++     activeChallengeId?: string;
++     originTab?: string;
++     counterTarget?: string;
++     freezeGranted?: string;
++     freezesHeld?: string;
++     freezeCap?: string;
++     freezeAtCap?: string;
++     openPost?: string;
++     choiceMade?: string;
++     finishedAt?: string;
++   }>();
++   const { user } = useAuth();
++   const { profile, stats } = useApp();
++   const queryClient = useQueryClient();
++   const userId = user?.id ?? "";
++   const tz = profile?.timezone ?? undefined;
++   const result = submitResultFromSecuredParams({
++     daySecured: firstString(params.daySecured),
++     daySecuredEarlier: firstString(params.daySecuredEarlier),
++     requiredRemaining: firstString(params.requiredRemaining),
++     streakDays: firstString(params.streakDays),
++     streakDaysBefore: firstString(params.streakDaysBefore),
++     challengeDay: firstString(params.challengeDay),
++     challengeLength: firstString(params.challengeLength),
++     challengeName: firstString(params.challengeName),
++     verificationKind: firstString(params.verificationKind),
++     challengeDone: firstString(params.challengeDone),
++     activeChallengeId: firstString(params.activeChallengeId),
++     freezeGranted: firstString(params.freezeGranted),
++     freezesHeld: firstString(params.freezesHeld),
++     freezeCap: firstString(params.freezeCap),
++     freezeAtCap: firstString(params.freezeAtCap),
++   });
++   const finishedAt = finishedAtFromSecuredParam(firstString(params.finishedAt));
++   // 06.1: the first freeze ever earned says what it does, once.
++   const firstFreeze = useFirstConcept("freeze", result.freezeGranted === true);
++   const keys = readSecuredDateKeysFromCache(queryClient, userId);
++   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
++   const statsRow = stats as { frozenDateKeys?: string[]; lastStandDateKeys?: string[] } | null;
++   const week = weekFromSecuredKeys(keys, tz, {
++     frozenDateKeys: statsRow?.frozenDateKeys ?? [],
++     lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
++     todaySecured: fillToday,
++   });
++   const proofUri = firstString(params.proofUri) || undefined;
++   const paramEventId = firstString(params.shareEventId) || null;
++   const closingPhoto = firstString(params.closingPhoto) === "1" || Boolean(proofUri);
++   const held = readSecuredHandoff();
++   const [proofs] = useState<SecuredProof[]>(
++     () =>
++       held?.proofs ??
++       proofsFromComplete({
++         photoUri: proofUri,
++         challengeName: result.challengeName,
++         challengeDay: result.challengeDay,
++         challengeLength: result.challengeLength,
++         eventId: paramEventId,
++       }),
++   );
++   const shareEventId = held?.shareEventId ?? paramEventId;
++   // Build 90 04.1: the post-or-private choice was made before the save; do not ask again here.
++   const choiceMade = firstString(params.choiceMade) === "1";
++   const offerShare = !choiceMade && (held?.closingHasPhoto ?? closingPhoto) && proofs.length > 0;
++   const [meta, setMeta] = useState<{
++     taskCount: number;
++     challengeCount: number;
++     selfReported: SecuredSelfRow[];
++     allSelfReported: boolean;
++     ready: boolean;
++     error: boolean;
++     /** 08.1: the challenge id of the enrollment this screen is for (from the bootstrap). */
++     challengeId: string | null;
++   }>({
++     taskCount: 0,
++     challengeCount: 0,
++     selfReported: [],
++     allSelfReported: false,
++     ready: false,
++     error: false,
++     challengeId: null,
++   });
++   const [retryTick, setRetryTick] = useState(0);
++   const [shareFailed, setShareFailed] = useState(false);
++   const [sharing, setSavingShare] = useState(false);
++   const [sharedNow, setSharedNow] = useState(false);
++
++   useEffect(() => {
++     let live = true;
++     void (async () => {
++       try {
++         await queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] }, { cancelRefetch: false });
++         await queryClient.invalidateQueries({ queryKey: ["discover", "myActive"] }, { cancelRefetch: false });
++         // Build 90 04.7: one bootstrap refresh (joining the one the finish started) carries
++         // listMyActive and today's check-ins; no second and third request for the same rows.
++         // 01b.3: the finish awaits its refresh before replacing to this screen, so by now it
++         // has usually landed. `finishedAt` lets this call skip when that payload is newer.
++         await refreshHomeBootstrap(queryClient, finishedAt ? { freshAfter: finishedAt } : undefined);
++         const { enrollments, completed } = bootstrapDayOpenInput<
++           Parameters<typeof dayOpenTasksFromActive>[0]["enrollments"][number],
++           Parameters<typeof dayOpenTasksFromActive>[0]["completed"][number]
++         >(user?.id ? queryClient.getQueryData(homeBootstrapQueryKey(user.id)) : undefined);
++         const tasks = dayOpenTasksFromActive({
++           enrollments,
++           completed,
++           todayKey: getTodayDateKey(tz),
++           timeZone: tz ?? "UTC",
++         });
++         if (!live) return;
++         const next = selectSecuredDayMeta({ tasks, proofs });
++         const own = (enrollments as { id?: string; challenge_id?: string }[]).find(
++           (e) => e.id === result.activeChallengeId,
++         );
++         setMeta({
++           taskCount: next.taskCount,
++           challengeCount: next.challengeCount,
++           selfReported: next.selfReported,
++           allSelfReported: next.allSelfReported,
++           ready: true,
++           error: false,
++           challengeId: typeof own?.challenge_id === "string" ? own.challenge_id : null,
++         });
++       } catch {
++         if (!live) return;
++         setMeta({
++           taskCount: 0,
++           challengeCount: 0,
++           selfReported: [],
++           allSelfReported: false,
++           ready: false,
++           error: true,
++           challengeId: null,
++         });
++       }
++     })();
++     return () => {
++       live = false;
++     };
++   }, [proofs, queryClient, tz, retryTick, user?.id, result.activeChallengeId, finishedAt]);
++
++   const done = () => {
++     const openPost = firstString(params.openPost);
++     if (openPost) {
++       router.replace(ROUTES.POST_ID(openPost) as never);
++       return;
++     }
++     const next = afterSecuredNext({
++       challengeDone: result.challengeDone,
++       challengeDay: result.challengeDay,
++       challengeLength: result.challengeLength,
++       counterReachedTarget: firstString(params.counterTarget) === "1",
++     });
++     if (next === "challenge_complete") {
++       const enrollmentId = result.activeChallengeId;
++       if (enrollmentId) {
++         void trpcMutate(TRPC.challenges.markEndSeen, { enrollmentIds: [enrollmentId] }).catch(() => {});
++       }
++       router.replace({
++         pathname: ROUTES.CHALLENGE_COMPLETE,
++         params: {
++           challengeName: result.challengeName,
++           totalDays: String(result.challengeLength),
++           enrollmentId: enrollmentId ?? "",
++         },
++       } as never);
++       return;
++     }
++     router.replace(originTabHref(originTabFromParam(firstString(params.originTab))) as never);
++   };
++
++   return (
++     <SecuredDayScreen
++       streak={result.streakDays}
++       freezeNote={freezeEarnedNote(result, firstFreeze === true)}
++       invite={
++         meta.challengeId &&
++         showInviteAfterSecured({
++           challengeDay: result.challengeDay,
++           challengeLength: result.challengeLength,
++           daySecured: result.daySecured,
++           challengeDone: result.challengeDone,
++         })
++           ? { challengeId: meta.challengeId, challengeName: result.challengeName }
++           : null
++       }
++       proofs={proofs}
++       selfReported={meta.selfReported}
++       taskCount={meta.ready ? meta.taskCount : undefined}
++       challengeCount={meta.ready ? meta.challengeCount : 0}
++       allSelfReported={meta.ready ? meta.allSelfReported : false}
++       loadError={meta.error}
++       onRetryLoad={() => {
++         setMeta((prev) => ({ ...prev, error: false, ready: false }));
++         setRetryTick((n) => n + 1);
++       }}
++       week={week.days}
++       todayIndex={week.todayIndex}
++       fillToday={fillToday}
++       offerShare={offerShare}
++       shareFailed={shareFailed}
++       sharing={sharing}
++       onShare={() => {
++         if (sharing) return;
++         if (!shareEventId) {
++           setShareFailed(true);
++           return;
++         }
++         setSavingShare(true);
++         void trpcMutate(TRPC.checkins.shareProof, { eventId: shareEventId })
++           .then(() => {
++             setSavingShare(false);
++             setSharedNow(true);
++             const post = optimisticTaskPost({
++               eventId: shareEventId,
++               userId,
++               username: profile?.username ?? "",
++               displayName: profile?.display_name ?? "You",
++               avatarUrl: profile?.avatar_url ?? null,
++               challengeName: result.challengeName,
++               taskName: firstString(params.taskName) || result.challengeName,
++               currentDay: result.challengeDay,
++               totalDays: result.challengeLength,
++               photoUrl: proofs[0]?.uri ?? proofUri ?? null,
++             });
++             if (post) publishOptimisticFeedPost(post);
++           })
++           .catch(() => {
++             setSavingShare(false);
++             setShareFailed(true);
++           });
++       }}
++       onKeep={done}
++       onUndo={() => {
++         if (!shareEventId) return;
++         clearOptimisticFeedPost(shareEventId);
++         setSharedNow(false);
++         void trpcMutate(TRPC.checkins.unshareProof, { eventId: shareEventId }).catch(() => {});
++       }}
++       sharedNow={sharedNow}
++       onDone={done}
++       username={profile?.username}
++     />
++   );
++ }
++
++ export default function TaskSecuredScreen() {
++   return (
++     <Screen>
++       <ErrorBoundary>
++         <TaskSecuredInner />
++       </ErrorBoundary>
++     </Screen>
++   );
++ }
++
+
+ ❯ lib/finish-flow.test.ts:145:21
+    143|     expect(teachingShows(after, "")).toBe(false);
+    144|     const secured = read("app/task/secured.tsx");
+    145|     expect(secured).toContain("teachingShows(");
+       |                     ^
+    146|     expect(secured).toContain("markTeachingSeen(");
+    147|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.4 Challenge complete > freeze wording, dates, and the other-challenges line
+AssertionError: expected 'import React, { useEffect, useState }…' to contain 'otherOpenLine('
+
+- Expected
++ Received
+
+- otherOpenLine(
++ import React, { useEffect, useState } from "react";
++ import { useRouter, useLocalSearchParams, Stack } from "expo-router";
++ import { ROUTES } from "@/lib/routes";
++ import { track, trackEvent } from "@/lib/analytics";
++ import { maybePromptForReview } from "@/lib/review-prompt";
++ import { ErrorBoundary } from "@/components/ErrorBoundary";
++ import Screen from "@/components/ds/Screen";
++ import MomentScreenV3 from "@/components/task-v2/MomentScreenV3";
++ import { trpcQuery } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++
++ type FinishRecord = {
++   challengeName: string;
++   durationDays: number;
++   securedDays: number;
++   longestStreak: number;
++   heldDays: number;
++   daysDone: number;
++ };
++
++ function firstParam(value: string | string[] | undefined): string {
++   return typeof value === "string" ? value : Array.isArray(value) ? value[0] ?? "" : "";
++ }
++
++ function ChallengeCompleteScreenInner() {
++   const router = useRouter();
++   const params = useLocalSearchParams();
++   const challengeIdParam = firstParam(params.challengeId);
++   const enrollmentId = firstParam(params.enrollmentId);
++   const challengeName = firstParam(params.challengeName) || "Challenge";
++   const totalDays = parseInt(firstParam(params.totalDays) || "0", 10);
++   const [record, setRecord] = useState<FinishRecord | null>(null);
++
++   useEffect(() => {
++     track({
++       name: "challenge_completed",
++       challenge_name: challengeName,
++       duration: totalDays,
++     });
++     trackEvent("challenge_completed", { challenge_id: challengeIdParam || undefined, days: totalDays });
++   }, [challengeName, totalDays, challengeIdParam]);
++
++   useEffect(() => {
++     if (!enrollmentId) return;
++     let live = true;
++     void trpcQuery<FinishRecord>(TRPC.challenges.finishRecord, { enrollmentId }).then((row) => {
++       if (!live || !row) return;
++       setRecord(row);
++       if (row.securedDays > 0) {
++         maybePromptForReview(row.securedDays, "challenge_completed").catch(() => {});
++       }
++     }).catch(() => {});
++     return () => {
++       live = false;
++     };
++   }, [enrollmentId]);
++
++   return (
++     <>
++       <Stack.Screen options={{ headerShown: false }} />
++       <MomentScreenV3
++         variant="complete"
++         challengeName={record?.challengeName || challengeName}
++         streak={record?.longestStreak ?? 0}
++         securedDays={record?.securedDays ?? 0}
++         longestStreak={record?.longestStreak ?? 0}
++         heldDays={record?.heldDays ?? 0}
++         numbersReady={record != null}
++         target={record?.durationDays || totalDays || 30}
++         onDone={() => router.replace(ROUTES.TABS_HOME as never)}
++       />
++     </>
++   );
++ }
++
++ export default function ChallengeCompleteScreen() {
++   return (
++     <Screen>
++       <ErrorBoundary>
++         <ChallengeCompleteScreenInner />
++       </ErrorBoundary>
++     </Screen>
++   );
++ }
++
+
+ ❯ lib/finish-flow.test.ts:157:22
+    155|     expect(finishDates(null, 30)).toBeNull();
+    156|     const complete = read("app/challenge/complete.tsx");
+    157|     expect(complete).toContain("otherOpenLine(");
+       |                      ^
+    158|     const moment = read("components/task-v2/MomentScreenV3.tsx");
+    159|     expect(moment).toContain("freezesUsedLabel(");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  lib/finish-flow.test.ts > 02.5 the Proof screen asks nothing > no inline Who sees this control on the post
+AssertionError: expected 'import React, { useCallback, useMemo,…' not to contain '<SegmentedControl'
+
+- Expected
++ Received
+
+- <SegmentedControl
++ import React, { useCallback, useMemo, useState } from "react";
++ import {
++   View,
++   Text,
++   StyleSheet,
++   FlatList,
++   Pressable,
++   KeyboardAvoidingView,
++   Platform,
++   RefreshControl,
++ } from "react-native";
++ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
++ import { useSafeAreaInsets } from "react-native-safe-area-context";
++ import Screen from "@/components/ds/Screen";
++ import { ArrowUp } from "lucide-react-native";
++ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
++ import { trpcMutate, trpcQuery } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { DS_V3 } from "@/lib/design-system";
++ import PushedHeader from "@/components/ds/PushedHeader";
++ import ProofImage from "@/components/ds/ProofImage";
++ import Avatar from "@/components/ds/Avatar";
++ import Divider from "@/components/ds/Divider";
++ import TextField from "@/components/ds/TextField";
++ import Skeleton from "@/components/ds/Skeleton";
++ import CommentRow from "@/components/ds/CommentRow";
++ import Button from "@/components/ds/Button";
++ import SegmentedControl from "@/components/ds/SegmentedControl";
++ import ShareStickerSheet from "@/components/share/ShareStickerSheet";
++ import { relativeTime } from "@/lib/utils/relativeTime";
++ import { captureError } from "@/lib/sentry";
++ import type { LiveFeedPost } from "@/components/feed/feedTypes";
++ import { useAuth } from "@/contexts/AuthContext";
++ import { ErrorBoundary } from "@/components/ErrorBoundary";
++ import { commentRowParts } from "@/lib/comment-row";
++ import { fetchComments } from "@/lib/hidden-comments";
++ import { useReportComment } from "@/components/feed/useReportComment";
++ import { CANCEL_REPORT_LABEL, REPORT_COMMENT_LABEL, REPORT_COMMENT_PROMPT, commentLongPressAction } from "@/lib/comment-report";
++ import {
++   COMMENT_PLACEHOLDER,
++   COMMENTS_EMPTY,
++   POST_DETAIL_AUDIENCE_LABEL,
++   POST_DETAIL_DONE,
++   POST_DETAIL_SHARE_OUTSIDE,
++   POST_DETAIL_TITLE,
++   postDetailAudience,
++   commentsCountLabel,
++   visibleCommentCount,
++   commentsSectionKind,
++   composerFieldGround,
++   completionLine,
++   postDetailLoading,
++   postDetailPhotoUri,
++   postDetailStamp,
++   sendComposerArmed,
++ } from "@/lib/post-detail";
++ import { replyComposerPlaceholder, threadRows } from "@/lib/post-thread";
++ import { ROUTES } from "@/lib/routes";
++ import { feedAuthorHref } from "@/lib/feed-tap-targets";
++ import { POST_AUDIENCES, audienceBadge, audienceLabel, type PostAudience } from "@/lib/post-audience";
++
++ type LiveFeedResponse = { movingCount: number; posts: LiveFeedPost[] };
++
++ type CommentItem = {
++   id: string;
++   user_id: string;
++   text: string;
++   created_at: string;
++   parent_id: string | null;
++   display_name: string;
++   username: string;
++   avatar_url: string | null;
++ };
++
++ const PT = DS_V3.space.xs / 4;
++ const ICON = DS_V3.space.xs * 5;
++
++ function PostThreadScreenInner() {
++   const router = useRouter();
++   const insets = useSafeAreaInsets();
++   const { user } = useAuth();
++   const { id: rawId } = useLocalSearchParams<{ id: string }>();
++   const id = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : "";
++   const queryClient = useQueryClient();
++   const [draft, setDraft] = useState("");
++   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
++   const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<string | null>(null);
++   // 07.3: long press on someone else's comment offers a report; 07.1: a refused comment says why.
++   const [reportCommentTargetId, setReportCommentTargetId] = useState<string | null>(null);
++   const [sendError, setSendError] = useState<string | null>(null);
++   const [shareOpen, setShareOpen] = useState(false);
++   const reportComment = useReportComment(id);
++
++   const cachedPost = useMemo(() => {
++     if (!id) return null;
++     const all = queryClient.getQueriesData<LiveFeedResponse>({ queryKey: ["liveFeed"] });
++     for (const [, data] of all) {
++       const p = data?.posts?.find((x) => x.id === id);
++       if (p) return p;
++     }
++     return null;
++   }, [queryClient, id]);
++
++   const postQuery = useQuery({
++     queryKey: ["feed", "post", id],
++     queryFn: () => trpcQuery(TRPC.feed.getPost, { eventId: id }) as Promise<LiveFeedPost>,
++     enabled: !!id,
++     staleTime: 30 * 1000,
++     retry: 1,
++     placeholderData: cachedPost ?? undefined,
++   });
++
++   const displayPost = postQuery.data ?? null;
++   const loading = postDetailLoading({
++     postPending: postQuery.isPending,
++     hasPost: Boolean(displayPost),
++   });
++
++   const commentsQuery = useQuery({
++     queryKey: ["feed", "comments", id],
++     queryFn: () => fetchComments(id, 100) as Promise<CommentItem[]>,
++     enabled: !!id,
++   });
++
++   const comments = commentsQuery.data ?? [];
++   const visibleCount = visibleCommentCount(commentsQuery.data ? comments.length : null, displayPost?.commentCount ?? 0);
++   const rows = useMemo(
++     () => threadRows(comments.map((item) => ({ ...item, parent_id: item.parent_id ?? null }))),
++     [comments],
++   );
++   const section = commentsSectionKind(commentsQuery.isPending, comments.length);
++   const sendArmed = sendComposerArmed(draft);
++   const placeholder = replyTo ? replyComposerPlaceholder(replyTo.name) : COMMENT_PLACEHOLDER;
++
++   const onRefresh = useCallback(() => {
++     void Promise.all([postQuery.refetch(), commentsQuery.refetch()]);
++   }, [postQuery, commentsQuery]);
++
++   const commentMutation = useMutation({
++     mutationFn: (input: { text: string; parentId?: string }) =>
++       trpcMutate(TRPC.feed.comment, {
++         eventId: id,
++         text: input.text,
++         ...(input.parentId ? { parentId: input.parentId } : {}),
++       }),
++     onSuccess: async () => {
++       setSendError(null);
++       await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
++       await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
++       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
++       void postQuery.refetch();
++       setDraft("");
++       setReplyTo(null);
++     },
++     onError: (e) => {
++       captureError(e, "PostThreadComment");
++       // The text stays in the field; the line under it says what the server refused.
++       setSendError(e instanceof Error && e.message ? e.message : "Couldn't send. Try again.");
++     },
++   });
++
++   const deleteCommentMutation = useMutation({
++     mutationFn: (commentId: string) => trpcMutate(TRPC.feed.deleteComment, { commentId }),
++     onSuccess: async () => {
++       setDeleteCommentTargetId(null);
++       await queryClient.invalidateQueries({ queryKey: ["feed", "comments", id] });
++       await queryClient.invalidateQueries({ queryKey: ["feedCommentPreview", id] });
++       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
++       void postQuery.refetch();
++     },
++     onError: (e) => {
++       captureError(e, "PostThreadDeleteComment");
++     },
++   });
++
++   const audienceMutation = useMutation({
++     mutationFn: (audience: PostAudience) =>
++       trpcMutate(TRPC.checkins.setPostAudience, { eventId: id, audience }),
++     onSuccess: async () => {
++       await queryClient.invalidateQueries({ queryKey: ["feed", "post", id] });
++       await queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
++     },
++   });
++
++   const onSend = useCallback(() => {
++     const t = draft.trim();
++     if (!t || !id) return;
++     commentMutation.mutate({ text: t, parentId: replyTo?.id });
++   }, [draft, id, commentMutation, replyTo]);
++
++   // 05.1: the author header and every comment author open the person.
++   const openPerson = useCallback(
++     (authorUserId: string, username: string | null | undefined) => {
++       router.push(feedAuthorHref({ viewerUserId: user?.id, authorUserId, username }) as never);
++     },
++     [router, user?.id],
++   );
++
++   const listHeader = useMemo(() => {
++     if (loading) {
++       return (
++         <View style={styles.stack}>
++           <View style={styles.gutter}>
++             <Skeleton variant="proof" />
++           </View>
++           <Skeleton lines={2} />
++           <Skeleton lines={2} />
++         </View>
++       );
++     }
++     if (postQuery.isError && !displayPost) {
++       return (
++         <Text style={styles.missing}>
++           {postQuery.error instanceof Error ? postQuery.error.message : "Couldn't load this post."}
++         </Text>
++       );
++     }
++     if (!displayPost) {
++       return <Text style={styles.missing}>Post not found.</Text>;
++     }
++     const author = displayPost.displayName || displayPost.username;
++     const stamp = postDetailStamp(displayPost);
++     const proofUri = postDetailPhotoUri(displayPost);
++     return (
++       <View>
++         <View style={styles.gutter}>
++           {proofUri ? <ProofImage uri={proofUri} size="feed" stamp={stamp} /> : null}
++           <Pressable
++             testID="post-author"
++             accessibilityRole="button"
++             accessibilityLabel={`${author} profile`}
++             onPress={() => openPerson(displayPost.userId, displayPost.username)}
++             style={styles.authorRow}
++           >
++             <Avatar
++               size={DS_V3.size.avatar.sm}
++               uri={displayPost.avatarUrl}
++               displayName={author}
++             />
++             <View style={styles.authorCopy}>
++               <Text style={styles.author}>{author}</Text>
++               <Text style={styles.time}>{relativeTime(displayPost.createdAt)}</Text>
++             </View>
++           </Pressable>
++           <Text style={styles.completion}>
++             {completionLine({
++               challenge: displayPost.challengeName,
++               day: displayPost.currentDay,
++               total: displayPost.totalDays,
++               task: displayPost.taskName,
++             })}
++           </Text>
++           {audienceBadge(displayPost.audience) && !(user?.id && displayPost.userId === user.id) ? (
++             <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
++           ) : null}
++           {user?.id && displayPost.userId === user.id ? (
++             <View style={styles.finish}>
++               <View style={styles.audienceBlock}>
++                 <Text style={styles.count}>{POST_DETAIL_AUDIENCE_LABEL}</Text>
++                 <SegmentedControl
++                   items={POST_AUDIENCES.map((choice) => audienceLabel(choice))}
++                   value={audienceLabel(postDetailAudience(displayPost.audience))}
++                   onChange={(label) => {
++                     const choice = POST_AUDIENCES.find((a) => audienceLabel(a) === label);
++                     if (choice && choice !== postDetailAudience(displayPost.audience)) audienceMutation.mutate(choice);
++                   }}
++                 />
++               </View>
++               <Button
++                 label={POST_DETAIL_DONE}
++                 onPress={() => router.replace(ROUTES.TABS_HOME as never)}
++                 testID="post-done"
++               />
++               <Button
++                 label={POST_DETAIL_SHARE_OUTSIDE}
++                 variant="secondary"
++                 onPress={() => setShareOpen(true)}
++                 testID="post-share-outside"
++               />
++             </View>
++           ) : null}
++           {commentsCountLabel(visibleCount) ? (
++             <Text style={styles.count}>{commentsCountLabel(visibleCount)}</Text>
++           ) : null}
++         </View>
++         {section === "loading" ? (
++           <View style={styles.commentSkeletons}>
++             <Skeleton lines={2} />
++             <Skeleton lines={2} />
++           </View>
++         ) : null}
++       </View>
++     );
++   }, [loading, displayPost, visibleCount, postQuery.isError, postQuery.error, section, user?.id, router, audienceMutation, openPerson]);
++
++   const ownPost = Boolean(user?.id && displayPost && displayPost.userId === user.id);
++
++   const renderCommentItem = useCallback(
++     ({ item: row, index }: { item: { item: CommentItem; depth: 0 | 1 }; index: number }) => {
++       const item = row.item;
++       const isMine = Boolean(user?.id && item.user_id === user.id);
++       const longPress = commentLongPressAction(user?.id, item.user_id);
++       const parts = commentRowParts({
++         displayName: item.display_name,
++         username: item.username,
++         createdAt: item.created_at,
++         text: item.text,
++         formatTime: relativeTime,
++       });
++       const next = rows[index + 1];
++       return (
++         <View style={row.depth > 0 ? styles.reply : undefined}>
++           {row.depth > 0 ? <View style={styles.threadLine} /> : null}
++           <View style={styles.replyBody}>
++           <Pressable
++             onPress={() => setReplyTo({ id: item.id, name: parts.name })}
++             onLongPress={
++               longPress === "delete"
++                 ? () => setDeleteCommentTargetId(item.id)
++                 : longPress === "report"
++                   ? () => setReportCommentTargetId(item.id)
++                   : undefined
++             }
++             delayLongPress={450}
++             // 05.1: not an accessible element itself, so the author tap target and the
++             // comment text inside stay reachable (an accessible wrapper flattens them
++             // into one "Reply to" button for VoiceOver and UI tests).
++             accessible={false}
++             accessibilityRole="button"
++             accessibilityLabel={
++               isMine
++                 ? "Your comment — long press to delete"
++                 : `Reply to ${parts.name} — long press to report`
++             }
++           >
++             <CommentRow
++               displayName={parts.name}
++               time={parts.time}
++               body={parts.body}
++               avatarUri={item.avatar_url}
++               onPressAuthor={() => openPerson(item.user_id, item.username)}
++             />
++           </Pressable>
++           {reportCommentTargetId === item.id ? (
++             <View style={styles.deleteBar}>
++               <Text style={styles.deleteCancel}>{REPORT_COMMENT_PROMPT}</Text>
++               <Pressable
++                 onPress={() => setReportCommentTargetId(null)}
++                 accessibilityRole="button"
++                 accessibilityLabel="Cancel report"
++               >
++                 <Text style={styles.deleteCancel}>{CANCEL_REPORT_LABEL}</Text>
++               </Pressable>
++               <Pressable
++                 onPress={() => {
++                   setReportCommentTargetId(null);
++                   reportComment.report(item.id);
++                 }}
++                 disabled={reportComment.pending}
++                 accessibilityRole="button"
++                 accessibilityLabel={REPORT_COMMENT_LABEL}
++               >
++                 <Text style={styles.deleteConfirm}>Report</Text>
++               </Pressable>
++             </View>
++           ) : null}
++           {deleteCommentTargetId === item.id ? (
++             <View style={styles.deleteBar}>
++               <Pressable
++                 onPress={() => setDeleteCommentTargetId(null)}
++                 accessibilityRole="button"
++                 accessibilityLabel="Cancel delete"
++               >
++                 <Text style={styles.deleteCancel}>Cancel</Text>
++               </Pressable>
++               <Pressable
++                 onPress={() => deleteCommentMutation.mutate(item.id)}
++                 disabled={deleteCommentMutation.isPending}
++                 accessibilityRole="button"
++                 accessibilityLabel="Confirm delete comment"
++               >
++                 <Text style={styles.deleteConfirm}>Delete</Text>
++               </Pressable>
++             </View>
++           ) : null}
++           {next && next.depth === 0 ? <Divider /> : null}
++           </View>
++         </View>
++       );
++     },
++     [user?.id, deleteCommentTargetId, reportCommentTargetId, deleteCommentMutation, reportComment, rows, openPerson],
++   );
++
++   return (
++     <Screen style={styles.safe} edges={["top"]}>
++       <Stack.Screen options={{ headerShown: false }} />
++       <PushedHeader title={POST_DETAIL_TITLE} onBack={() => router.back()} />
++       <KeyboardAvoidingView
++         style={styles.flex}
++         behavior={Platform.OS === "ios" ? "padding" : undefined}
++         keyboardVerticalOffset={Platform.OS === "ios" ? DS_V3.size.tap : 0}
++       >
++         <FlatList
++           data={section === "list" ? rows : []}
++           keyExtractor={(row) => row.item.id}
++           contentContainerStyle={styles.list}
++           ListHeaderComponent={listHeader}
++           ListEmptyComponent={
++             !loading && displayPost && section === "empty" ? (
++               <Text style={styles.empty}>{COMMENTS_EMPTY}</Text>
++             ) : null
++           }
++           refreshControl={
++             <RefreshControl
++               refreshing={
++                 (commentsQuery.isRefetching && !commentsQuery.isPending) ||
++                 (postQuery.isRefetching && !postQuery.isPending)
++               }
++               onRefresh={onRefresh}
++               tintColor={DS_V3.color.textPrimary}
++             />
++           }
++           renderItem={renderCommentItem}
++           initialNumToRender={10}
++           maxToRenderPerBatch={10}
++           windowSize={5}
++           removeClippedSubviews={Platform.OS === "android"}
++           showsVerticalScrollIndicator={false}
++           keyboardShouldPersistTaps="handled"
++         />
++
++         {reportComment.notice || sendError ? (
++           <Text
++             style={[styles.composerNote, sendError ? styles.composerNoteError : null]}
++             accessibilityRole="alert"
++             accessibilityLiveRegion="polite"
++           >
++             {sendError ?? reportComment.notice}
++           </Text>
++         ) : null}
++         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, DS_V3.space.lg) }]}>
++           {replyTo ? (
++             <Pressable
++               onPress={() => setReplyTo(null)}
++               accessibilityRole="button"
++               accessibilityLabel="Cancel reply"
++             >
++               <Text style={styles.cancelReply}>Cancel reply</Text>
++             </Pressable>
++           ) : null}
++           <View style={styles.field}>
++             <TextField
++               value={draft}
++               onChangeText={(t) => {
++                 setDraft(t);
++                 if (sendError) setSendError(null);
++               }}
++               placeholder={placeholder}
++               accessibilityLabel={placeholder}
++               ground={composerFieldGround("route")}
++               maxLength={200}
++               multiline
++             />
++           </View>
++           <Pressable
++             onPress={onSend}
++             disabled={commentMutation.isPending || !sendArmed}
++             style={[styles.send, sendArmed ? styles.sendArmed : styles.sendIdle]}
++             accessibilityRole="button"
++             accessibilityLabel="Send comment"
++             accessibilityState={{ disabled: !sendArmed }}
++           >
++             <ArrowUp
++               size={ICON}
++               color={sendArmed ? DS_V3.color.textPrimary : DS_V3.color.textSecondary}
++               strokeWidth={2}
++             />
++           </Pressable>
++         </View>
++       </KeyboardAvoidingView>
++       {ownPost && displayPost ? (
++         <ShareStickerSheet
++           visible={shareOpen}
++           onDismiss={() => setShareOpen(false)}
++           variant="day"
++           moment={postDetailPhotoUri(displayPost) ? "photo_proof" : "self_reported"}
++           streak={displayPost.streakCount}
++           day={{
++             challenge: displayPost.challengeName,
++             task: displayPost.taskName ?? undefined,
++             day: displayPost.currentDay,
++             durationDays: displayPost.totalDays,
++             proof: postDetailPhotoUri(displayPost) ? "camera" : "self",
++             photoUri: postDetailPhotoUri(displayPost),
++             photoShared: true,
++             username: displayPost.username,
++           }}
++         />
++       ) : null}
++     </Screen>
++   );
++ }
++
++ export default function PostThreadScreen() {
++   return (
++     <ErrorBoundary>
++       <PostThreadScreenInner />
++     </ErrorBoundary>
++   );
++ }
++
++ const styles = StyleSheet.create({
++   safe: { flex: 1, backgroundColor: DS_V3.color.canvas },
++   flex: { flex: 1 },
++   list: { paddingBottom: DS_V3.space.lg },
++   stack: { gap: DS_V3.space.lg, paddingBottom: DS_V3.space.lg },
++   gutter: { paddingHorizontal: DS_V3.space.gutter, gap: DS_V3.space.lg },
++   reply: {
++     flexDirection: "row",
++     alignItems: "stretch",
++     paddingLeft: DS_V3.space.gutter,
++   },
++   threadLine: {
++     width: 2,
++     backgroundColor: DS_V3.color.hairline,
++     marginRight: DS_V3.space.sm,
++   },
++   replyBody: { flex: 1 },
++   cancelReply: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     color: DS_V3.color.textSecondary,
++     paddingBottom: DS_V3.space.sm,
++   },
++   authorRow: {
++     flexDirection: "row",
++     alignItems: "center",
++     gap: DS_V3.space.lg,
++   },
++   authorCopy: { flex: 1, gap: PT },
++   finish: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.xs },
++   audienceBlock: { gap: DS_V3.space.sm, paddingBottom: DS_V3.space.sm },
++   author: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   time: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   completion: {
++     fontSize: DS_V3.type.secondary.fontSize,
++     lineHeight: DS_V3.type.secondary.lineHeight,
++     fontWeight: DS_V3.type.secondary.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   count: {
++     fontSize: DS_V3.type.label.fontSize,
++     lineHeight: DS_V3.type.label.lineHeight,
++     fontWeight: DS_V3.type.label.fontWeight,
++     letterSpacing: DS_V3.type.label.letterSpacing,
++     textTransform: DS_V3.type.label.textTransform,
++     color: DS_V3.color.textSecondary,
++   },
++   commentSkeletons: { gap: DS_V3.space.lg, paddingHorizontal: DS_V3.space.gutter },
++   empty: {
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.lg,
++     fontSize: DS_V3.type.secondary.fontSize,
++     lineHeight: DS_V3.type.secondary.lineHeight,
++     fontWeight: DS_V3.type.secondary.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   missing: {
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingVertical: DS_V3.space.lg,
++     fontSize: DS_V3.type.secondary.fontSize,
++     lineHeight: DS_V3.type.secondary.lineHeight,
++     color: DS_V3.color.textSecondary,
++   },
++   deleteBar: {
++     flexDirection: "row",
++     gap: DS_V3.space.lg,
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingBottom: DS_V3.space.lg,
++   },
++   deleteCancel: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   deleteConfirm: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.danger,
++   },
++   composer: {
++     flexDirection: "row",
++     alignItems: "flex-end",
++     gap: DS_V3.space.sm,
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.md,
++     backgroundColor: DS_V3.color.canvas,
++   },
++   composerNote: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.sm,
++     backgroundColor: DS_V3.color.canvas,
++   },
++   composerNoteError: {
++     color: DS_V3.color.danger,
++   },
++   field: { flex: 1 },
++   send: {
++     width: DS_V3.size.tap,
++     height: DS_V3.size.tap,
++     borderRadius: DS_V3.radius.pill,
++     alignItems: "center",
++     justifyContent: "center",
++   },
++   sendIdle: {
++     backgroundColor: DS_V3.color.surface,
++     borderWidth: PT,
++     borderColor: DS_V3.color.border,
++   },
++   sendArmed: {
++     backgroundColor: DS_V3.color.primary,
++   },
++ });
++
+
+ ❯ lib/finish-flow.test.ts:167:23
+    165|   it("no inline Who sees this control on the post", () => {
+    166|     const proof = read("app/post/[id]/index.tsx");
+    167|     expect(proof).not.toContain("<SegmentedControl");
+       |                       ^
+    168|     expect(proof).not.toContain("POST_DETAIL_AUDIENCE_LABEL");
+    169|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 4 passed (11)
+   Start at  13:39:20
+   Duration  633ms (transform 44ms, setup 0ms, collect 39ms, tests 46ms, environment 0ms, prepare 56ms)
+

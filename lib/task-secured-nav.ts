@@ -43,7 +43,6 @@ export function taskSecuredHref(
     closingHasPhoto?: boolean;
     originTab?: string | null;
     counterReachedTarget?: boolean;
-    openPost?: string | null;
     /** Build 90 04.1: the post-or-private choice was answered before the save. */
     choiceMade?: boolean;
     /**
@@ -73,7 +72,6 @@ export function taskSecuredHref(
       closingPhoto: share?.closingHasPhoto ? "1" : "0",
       originTab: share?.originTab ?? "home",
       counterTarget: share?.counterReachedTarget ? "1" : "0",
-      openPost: share?.openPost ?? "",
       choiceMade: share?.choiceMade ? "1" : "0",
       finishedAt: typeof share?.finishedAt === "number" ? String(share.finishedAt) : "",
       freezeGranted: result.freezeGranted ? "1" : "0",

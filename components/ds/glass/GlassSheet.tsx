@@ -22,9 +22,16 @@ export type GlassSheetProps = {
   title?: string;
   children: React.ReactNode;
   testID?: string;
+  /** testID for the title-row close control (defaults to none). */
+  closeTestID?: string;
+  /**
+   * Draw inside the current screen instead of a Modal. Needed when the sheet must open in
+   * the same frame another iOS Modal closes (two Modals cannot present together).
+   */
+  inline?: boolean;
 };
 
-export function GlassSheet({ visible, onClose, label, title, children, testID }: GlassSheetProps) {
+export function GlassSheet({ visible, onClose, label, title, children, testID, closeTestID, inline = false }: GlassSheetProps) {
   const insets = useSafeAreaInsets();
   const drag = useRef(new Animated.Value(0)).current;
   const pan = useRef(
@@ -44,8 +51,8 @@ export function GlassSheet({ visible, onClose, label, title, children, testID }:
     }),
   ).current;
 
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+  const body = (
+    <>
       <Pressable
         style={styles.dim}
         onPress={onClose}
@@ -77,6 +84,7 @@ export function GlassSheet({ visible, onClose, label, title, children, testID }:
                 accessibilityLabel="Close"
                 style={styles.close}
                 hitSlop={4}
+                testID={closeTestID}
               >
                 <X size={22} color={DS_V3.color.textPrimary} />
               </Pressable>
@@ -85,6 +93,15 @@ export function GlassSheet({ visible, onClose, label, title, children, testID }:
           {children}
         </GlassSurface>
       </Animated.View>
+    </>
+  );
+  if (inline) {
+    if (!visible) return null;
+    return <View style={StyleSheet.absoluteFill}>{body}</View>;
+  }
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      {body}
     </Modal>
   );
 }

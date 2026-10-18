@@ -7,6 +7,7 @@ import { AccessibilityInfo, StatusBar, StyleSheet, Text, View } from "react-nati
 import * as Haptics from "expo-haptics";
 import { Camera, ShieldOff } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
+import { FINISH_COPY, freezesUsedLabel } from "@/lib/finish-flow";
 import { getCurrentWeekDateKeys, getTodayDateKey } from "@/lib/date-utils";
 import { buildWeekStripDays } from "@/lib/week-strip-days";
 import type { SubmitResult } from "@/lib/task-completion-result";
@@ -122,6 +123,10 @@ export type MomentScreenV3Props = {
   longestStreak?: number;
   heldDays?: number;
   numbersReady?: boolean;
+  /** Build 92 02.4: "Oct 1 – Oct 30" for the finish record. */
+  dates?: string | null;
+  /** Build 92 02.4 (P1-11): the challenge finished but another one still needs today. */
+  otherOpen?: string | null;
 };
 
 export default function MomentScreenV3({
@@ -143,6 +148,8 @@ export default function MomentScreenV3({
   longestStreak = 0,
   heldDays = 0,
   numbersReady = false,
+  dates = null,
+  otherOpen = null,
 }: MomentScreenV3Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const counts = isSecuredVariant(variant);
@@ -234,10 +241,17 @@ export default function MomentScreenV3({
             {variant !== "complete" || numbersReady ? <Text style={styles.copy}>{copy}</Text> : null}
           </View>
           {variant === "complete" && numbersReady ? (
-            <View style={styles.finishStats}>
-              <FinishStat value={longestStreak} label="Longest streak" />
-              <FinishStat value={heldDays} label="Held" />
-              <FinishStat value={securedDays + heldDays} label="Days done" />
+            <View style={styles.finishBlock}>
+              <View style={styles.finishStats}>
+                <FinishStat value={longestStreak} label={FINISH_COPY.longestStreak} />
+                <FinishStat value={heldDays} label={freezesUsedLabel(heldDays)} />
+                {dates ? <FinishStat value={dates} label={FINISH_COPY.dates} small /> : null}
+              </View>
+              {otherOpen ? (
+                <Text style={styles.otherOpen} testID="challenge-complete-other-open">
+                  {otherOpen}
+                </Text>
+              ) : null}
             </View>
           ) : variant === "complete" ? (
             <View style={styles.media} />
@@ -282,10 +296,12 @@ export default function MomentScreenV3({
   );
 }
 
-function FinishStat({ value, label }: { value: number; label: string }) {
+function FinishStat({ value, label, small = false }: { value: number | string; label: string; small?: boolean }) {
   return (
     <View style={styles.finishStat}>
-      <Text style={styles.finishStatValue}>{value}</Text>
+      <Text style={[styles.finishStatValue, small && styles.finishStatSmall]} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
       <Text style={styles.finishStatLabel}>{label}</Text>
     </View>
   );
@@ -309,6 +325,15 @@ const styles = StyleSheet.create({
   finishName: {
     ...DS_V3.type.secondary,
     color: DS_V3.color.textSecondary,
+  },
+  finishBlock: { gap: DS_V3.space.sm },
+  finishStatSmall: { fontSize: DS_V3.type.secondary.fontSize, lineHeight: DS_V3.type.secondary.lineHeight },
+  otherOpen: {
+    marginHorizontal: DS_V3.space.gutter,
+    fontSize: DS_V3.type.secondary.fontSize,
+    lineHeight: DS_V3.type.secondary.lineHeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
   },
   finishStats: {
     marginHorizontal: DS_V3.space.gutter,

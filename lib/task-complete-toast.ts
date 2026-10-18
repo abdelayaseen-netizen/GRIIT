@@ -18,6 +18,8 @@ export type TaskCompleteToast = {
   streak?: number;
   actionLabel?: string;
   lifeMs?: number;
+  /** Build 92 02.2: the next open task, marked "Next" on Home. */
+  highlightTaskId?: string | null;
 };
 
 /**

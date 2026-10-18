@@ -172,14 +172,10 @@ export function TaskFlowV2() {
           currentDay={f.currentDay}
           taskName={f.taskName}
           gateLabel={f.chromeTitle}
-          caption={f.caption}
-          onCaption={f.setCaption}
           onRetake={f.onRetake}
           onPost={f.onReviewPost}
           submitting={f.saving}
           note={f.submitError}
-          audience={f.audience}
-          onAudience={f.setAudience}
         />
       ) : null}
 
@@ -328,11 +324,18 @@ export function TaskFlowV2() {
       <PostChoiceSheet
         visible={f.postChoiceOpen}
         taskName={f.taskName}
+        challengeName={f.challengeName}
+        currentDay={f.currentDay}
+        durationDays={f.durationDays}
+        photoUri={f.postChoicePhoto ? f.photoUri : null}
+        caption={f.caption}
+        onCaption={f.setCaption}
         audience={f.postChoiceAudience}
         onAudience={f.setPostChoiceAudience}
         onPost={f.onPostChoicePost}
-        onKeep={f.onPostChoiceKeep}
+        onClose={f.onPostChoiceClose}
         loading={f.saving}
+        error={f.postChoiceError}
       />
       <DiscardPhotoModal
         visible={f.discardAsk}

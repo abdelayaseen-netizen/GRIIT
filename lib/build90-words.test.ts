@@ -74,9 +74,10 @@ describe("06.5 the Password label focuses its field", () => {
 describe("06.1 / 06.2 Day secured", () => {
   const screen = src("components/task-v2/SecuredDayScreen.tsx");
 
-  it("says what secured means under the title", () => {
+  it("says what secured means: the title, and the teaching line once (build 92 02.3)", () => {
     expect(SECURED_MEANS).toBe("Every task today is done. Your streak goes up by one.");
-    expect(screen).toContain("{SECURED_MEANS}");
+    expect(screen).toContain("{FINISH_COPY.secured}");
+    expect(screen).toContain("{FINISH_COPY.securedFirst}");
   });
 
   it("renders Self-reported once: the caption, not the card row tag", () => {
@@ -84,9 +85,10 @@ describe("06.1 / 06.2 Day secured", () => {
     expect(screen).not.toMatch(/selfTag: \{/);
   });
 
-  it("the footer no longer slides up over the last row", () => {
+  it("the footer is the floating action bar; nothing scrolls under it (build 92 02.3)", () => {
     expect(screen).not.toContain("{ bottom: DS_V3.space.gutter }");
-    expect(screen).toContain("paddingBottom: DS_V3.space.section");
+    expect(screen).toContain("<FloatingActionBar");
+    expect(screen).not.toContain("<ScrollView");
   });
 });
 

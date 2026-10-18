@@ -1,0 +1,51 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 02: fresh guest through onboarding to Home (shared prelude).
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+# First launch of a dev build shows the developer-menu card, then the dev menu sheet.
+- tapOn:
+    text: "Continue"
+    optional: true
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - swipe:
+          start: "50%,60%"
+          end: "50%,98%"
+          duration: 400
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- tapOn: "Physical toughness.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Set this up later"
+    timeout: 20000
+- tapOn: "Set this up later"
+- extendedWaitUntil:
+    visible: "No reminders for now"
+    timeout: 20000
+- tapOn: "No reminders for now"
+- extendedWaitUntil:
+    visible:
+      id: "home-starter-card"
+    timeout: 25000

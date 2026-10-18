@@ -27,6 +27,7 @@ function StravaChoiceInner() {
     taskName?: string;
     day?: string;
     challengeName?: string;
+    durationDays?: string;
     secured?: string;
     streak?: string;
   }>();
@@ -83,10 +84,13 @@ function StravaChoiceInner() {
       <PostChoiceSheet
         visible
         taskName={taskName}
+        challengeName={challengeName}
+        currentDay={day}
+        durationDays={Math.max(day, parseInt(firstString(params.durationDays) || "0", 10) || day)}
         audience={audience}
         onAudience={setAudience}
-        onPost={post}
-        onKeep={keep}
+        onPost={audience === "only_me" ? keep : post}
+        onClose={keep}
         loading={busy}
       />
     </View>

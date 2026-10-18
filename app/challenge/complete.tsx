@@ -8,6 +8,7 @@ import Screen from "@/components/ds/Screen";
 import MomentScreenV3 from "@/components/task-v2/MomentScreenV3";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
+import { finishDates, otherOpenLine } from "@/lib/finish-flow";
 
 type FinishRecord = {
   challengeName: string;
@@ -29,6 +30,10 @@ function ChallengeCompleteScreenInner() {
   const enrollmentId = firstParam(params.enrollmentId);
   const challengeName = firstParam(params.challengeName) || "Challenge";
   const totalDays = parseInt(firstParam(params.totalDays) || "0", 10);
+  // Build 92 02.4: the finish can arrive while another challenge still needs today (P1-11).
+  const otherOpen = firstParam(params.otherOpen) === "1";
+  const otherChallenge = firstParam(params.otherChallenge);
+  const startAt = firstParam(params.startAt);
   const [record, setRecord] = useState<FinishRecord | null>(null);
 
   useEffect(() => {
@@ -67,6 +72,8 @@ function ChallengeCompleteScreenInner() {
         heldDays={record?.heldDays ?? 0}
         numbersReady={record != null}
         target={record?.durationDays || totalDays || 30}
+        dates={finishDates(startAt || null, record?.durationDays || totalDays)}
+        otherOpen={otherOpen && otherChallenge ? otherOpenLine(otherChallenge) : null}
         onDone={() => router.replace(ROUTES.TABS_HOME as never)}
       />
     </>

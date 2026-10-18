@@ -27,9 +27,10 @@ describe("moment queue", () => {
     expect(gate).toContain("pathname");
     expect(secured).toContain("afterSecuredNext");
     expect(secured).toContain("CHALLENGE_COMPLETE");
+    // Build 92 02.2: Done never opens the Proof; challenge complete, else the origin tab.
     const done = secured.slice(secured.indexOf("const done = ()"));
-    expect(done.indexOf("POST_ID(openPost)")).toBeGreaterThan(-1);
-    expect(done.indexOf("POST_ID(openPost)")).toBeLessThan(done.indexOf("CHALLENGE_COMPLETE"));
+    expect(done).not.toContain("POST_ID(");
+    expect(done.indexOf("CHALLENGE_COMPLETE")).toBeLessThan(done.indexOf("originTabHref("));
   });
 
   it("finishes only when the last day was secured, never from the day index or a counter target", () => {

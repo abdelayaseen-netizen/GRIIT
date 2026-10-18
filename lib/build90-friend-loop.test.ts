@@ -47,13 +47,11 @@ describe("08.1 invite link visible (source)", () => {
     const wizard = read("components/create/CreateWizardV2.tsx");
     expect(wizard).toMatch(/<LaunchedScreen[\s\S]*?challengeId=\{launched\.challengeId\}/);
   });
-  it("Day secured renders it after the first secured day", () => {
+  it("Day secured no longer carries the invite (build 92 Part 2: invite after creating, on an empty board, on a challenge)", () => {
     const screen = read("components/task-v2/SecuredDayScreen.tsx");
-    expect(screen).toMatch(/<InviteLinkRow challengeId=\{invite\.challengeId\}/);
-    expect(screen).toContain("INVITE_AFTER_FIRST_DAY_HEADING");
+    expect(screen).not.toContain("InviteLinkRow");
     const route = read("app/task/secured.tsx");
-    expect(route).toMatch(/showInviteAfterSecured\(\{/);
-    expect(route).toMatch(/challengeId: typeof own\?\.challenge_id === "string"/);
+    expect(route).not.toContain("showInviteAfterSecured");
   });
   it("the board's 'A board needs two' renders it", () => {
     const tab = read("components/activity/LeaderboardTab.tsx");

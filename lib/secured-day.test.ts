@@ -134,11 +134,12 @@ describe("secured screen wiring", () => {
       "utf8",
     );
     expect(secured).toContain("SecuredDayScreen");
-    expect(secured).toContain("TRPC.checkins.shareProof");
+    // Build 92 02.3: Share opens the sticker carousel; the choice to post was made on the sheet.
+    expect(secured).toContain("openStickerCarousel(");
     expect(secured).not.toContain("shareProgressImage");
     expect(secured).not.toContain("TaskConfirmation");
-    expect(screen).toContain("SECURED_PHOTO_H");
-    expect(screen).toContain("SECURED_TILE_MAX");
+    expect(secured).toContain("verifyLabel(");
+    expect(screen).toContain("{t.label}");
     expect(screen).not.toContain("formatSecuredStateLine");
     expect(moment).toContain("ShareStickerSheet");
     expect(moment).toContain("camera && hasPhoto");

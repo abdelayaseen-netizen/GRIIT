@@ -1,0 +1,135 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 02: one finish flow on a check-off task and a counter task.
+# Done -> post sheet (asked once) -> Home toast "{task} done. 1 left today." + Next ->
+# second task -> close the sheet (saves privately) -> Day secured (last task) -> Done -> Home.
+# The Proof screen never appears.
+- runFlow: build92-guest-home.yaml
+
+# Join 7K Steps (check-off) and 10 Pages a Day (counter).
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+# A guest's second join shows "Save your challenge."; Later keeps going.
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps"
+    timeout: 20000
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000006"
+- extendedWaitUntil:
+    visible: "Join 10 Pages a Day"
+    timeout: 20000
+- tapOn: "Join 10 Pages a Day"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+# A guest's second join shows "Save your challenge."; Later keeps going.
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Read 10 pages"
+    timeout: 20000
+# Next is marked on the first open task.
+- assertVisible:
+    id: "home-task-next"
+
+# Check-off: Done -> the post sheet. On the SE the row sits under the tab bar until scrolled.
+- scrollUntilVisible:
+    element:
+      text: "Walk 7,000 steps"
+      index: 0
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "Walk 7,000 steps"
+    index: 0
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 20000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- assertVisible: "Who sees this"
+- assertVisible: "Post to friends"
+- assertVisible: "Your friends see it in their feed."
+- tapOn:
+    id: "post-choice-everyone"
+- assertVisible: "Post to everyone"
+- tapOn:
+    id: "post-choice-friends"
+- tapOn:
+    id: "post-choice-post"
+# Home with the toast and the next task marked. A guest's first finished task also raises
+# "Save your challenge." (build 91, chunk 09); Later clears it.
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps done\\. 1 left today\\.|^Later$"
+    timeout: 30000
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps done\\. 1 left today\\."
+    timeout: 5000
+- assertNotVisible:
+    id: "post-done"
+- assertNotVisible: "Who sees this"
+- assertVisible:
+    id: "home-task-next"
+- takeScreenshot: build92-02-home-toast-next
+
+# Counter: Done -> sheet -> close without choosing -> saved privately -> Day secured (last task).
+- scrollUntilVisible:
+    element:
+      text: "Read 10 pages"
+      index: 0
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "Read 10 pages"
+    index: 0
+- extendedWaitUntil:
+    visible: "^\\+10$"
+    timeout: 20000
+- tapOn: "^\\+10$"
+- extendedWaitUntil:
+    visible: "Done · 10 pages"
+    timeout: 10000
+- tapOn: "Done · 10 pages"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-close"
+- extendedWaitUntil:
+    visible: "Every task today is done."
+    timeout: 30000
+- assertNotVisible: "Who sees this"
+- assertNotVisible:
+    id: "post-done"
+- assertVisible:
+    id: "day-secured-streak"
+- assertVisible: "Self-reported"
+- assertVisible: "Share"
+- takeScreenshot: build92-02-day-secured-real
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 15000
+- assertNotVisible:
+    id: "post-done"

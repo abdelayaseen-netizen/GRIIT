@@ -1,0 +1,76 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 02: photo task. Camera first, then the post sheet with the photo and caption,
+# asked once. Post -> Challenge complete (a 1-day challenge). The Proof screen never appears.
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+# A guest's second join shows "Save your challenge."; Later keeps going.
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Drink water and post a photo|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Drink water and post a photo"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- assertNotVisible: "Who sees this"
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- assertVisible:
+    id: "post-choice-caption"
+- assertVisible: "Post to friends"
+- takeScreenshot: build92-02-post-sheet-photo
+- tapOn:
+    id: "post-choice-post"
+# Drink Water Today is a 1-day challenge, so the save finishes it: Challenge complete (P1-10),
+# never Day secured as well, never the Proof screen.
+- extendedWaitUntil:
+    visible: "Drink Water Today · finished"
+    timeout: 60000
+- assertNotVisible:
+    id: "post-done"
+- assertNotVisible: "Who sees this"
+- assertNotVisible: "Every task today is done."
+- assertVisible: "Longest streak"
+- assertVisible: "Freezes used|Freeze used"
+- assertVisible: "Dates"
+- takeScreenshot: P1-10-challenge-complete
+- tapOn: "See the record"
+# A guest's first finished task raises "Save your challenge." (build 91, chunk 09); Later clears it.
+- extendedWaitUntil:
+    visible: "^Later$"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 15000

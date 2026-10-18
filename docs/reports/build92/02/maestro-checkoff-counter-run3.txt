@@ -1,0 +1,73 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 - iOS 26.4 - B10E65A0-C453-4E58-97BD-A3696ED848AE
+ > Flow build92-02-finish-checkoff-counter
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... WARNED
+  Run flow when "Toggle performance monitor" is visible...
+  Run flow when "Toggle performance monitor" is visible... SKIPPED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000002... COMPLETED
+Assert that "Join 7K Steps" is visible... COMPLETED
+Tap on "Join 7K Steps"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Walk 7,000 steps" is visible... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000006... COMPLETED
+Assert that "Join 10 Pages a Day" is visible... COMPLETED
+Tap on "Join 10 Pages a Day"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Read 10 pages" is visible... COMPLETED
+Assert that id: home-task-next is visible... COMPLETED
+Tap on "Walk 7,000 steps", Index: 0... COMPLETED
+Assert that "^Done$" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Assert that "Who sees this" is visible... COMPLETED
+Assert that "Post to friends" is visible... COMPLETED
+Assert that "Your friends see it in their feed." is visible... COMPLETED
+Tap on id: post-choice-everyone... COMPLETED
+Assert that "Post to everyone" is visible... COMPLETED
+Tap on id: post-choice-friends... COMPLETED
+Tap on id: post-choice-post... COMPLETED
+Assert that "Walk 7,000 steps done\. 1 left today\.|^Later$" is visible... COMPLETED
+Tap on (Optional) "^Later$"... COMPLETED
+Assert that "Walk 7,000 steps done\. 1 left today\." is visible... COMPLETED
+Assert that id: post-done is not visible... COMPLETED
+Assert that "Who sees this" is not visible... COMPLETED
+Assert that id: home-task-next is visible... COMPLETED
+Take screenshot build92-02-home-toast-next... COMPLETED
+Tap on "Read 10 pages", Index: 0... COMPLETED
+Assert that "Done · 10 pages" is visible... FAILED
+
+Assertion is false: "Done · 10 pages" is visible
+
+Assertion '"Done · 10 pages" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-18_135523

@@ -45,8 +45,9 @@ describe("task complete toast copy", () => {
   it("leaves the task list on a non-last save instead of the finish moment", () => {
     const flow = readFileSync(resolve(__dirname, "../components/task-v2/useTaskFlowV2.ts"), "utf8");
     expect(flow).toContain("publishTaskToast");
-    expect(flow).toContain("taskDoneTitle");
-    expect(flow).toContain("routeAfterSave");
+    // Build 92 02.2: the toast reads "{task} done. {n} left today." via lib/finish-flow.
+    expect(flow).toContain("remainingToast(");
+    expect(flow).toContain("routeAfterFinish(");
     expect(flow).not.toContain("await loadAlsoToday");
     expect(flow).not.toContain('setStep("finish")');
   });
