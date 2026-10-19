@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 /**
  * Build 90 10.3: the four harness rules. On Oct 15 only 7 of 38 sessions saw onboarding and
  * 11 ended before 15 taps; the step log had no chunk, no real screen name, no Done timing.
  */
 import { describe, expect, it } from "vitest";
+import { otherBooted } from "./device";
 import { parseDecision } from "./gate";
 import { needsFreshSignup } from "./goals";
 import { freezeRight, scoreInterview, securedRight, selfReportedRight, tomorrowScore } from "./interview";
@@ -172,5 +175,28 @@ describe("reading recorded runs", () => {
     expect(isSecuredDayShape("Screen said Day 1 of 7. Enrollment day is 5 (stored current_day 5).")).toBe(false);
     expect(cleanTiming({ toVisibleMs: 153037, marker: "Day secured" }).toVisibleMs).toBeNull();
     expect(cleanTiming({ toVisibleMs: 2411, marker: "Day secured" }).toVisibleMs).toBe(2411);
+  });
+});
+
+describe("12b.5 two booted simulators", () => {
+  const list = (devices: { udid: string; name: string; state: string }[]) => JSON.stringify({ devices: { "iOS-26-4": devices } });
+  const PM = "B6CC0160-9C9F-4D0B-840D-70D790EF7FFD";
+  const SE = "575796A4-0937-4BBD-B863-5F926C173844";
+
+  it("names the other booted simulator", () => {
+    const json = list([
+      { udid: PM, name: "GRIIT 16 Pro Max b92", state: "Booted" },
+      { udid: SE, name: "GRIIT SE b92", state: "Booted" },
+    ]);
+    expect(otherBooted(json, PM)).toEqual([`GRIIT SE b92 (${SE})`]);
+  });
+
+  it("only the target booted passes", () => {
+    expect(otherBooted(list([{ udid: PM, name: "PM", state: "Booted" }, { udid: SE, name: "SE", state: "Shutdown" }]), PM)).toEqual([]);
+  });
+
+  it("every Maestro session checks before it starts", () => {
+    const src = readFileSync(resolve(__dirname, "./maestro.ts"), "utf8");
+    expect(src).toMatch(/async start\(\) \{\s*if \(this\.proc\) return;\s*await assertOnlySimulator\(\);/);
   });
 });

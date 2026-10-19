@@ -1,7 +1,9 @@
 import zlib from "zlib";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseHierarchy, visibleLines } from "./screen";
-import { nextStreak, selectedChip } from "./stuck";
+import { nextStreak, repeatedScreen, selectedChip } from "./stuck";
 import { samplePng, visualSame } from "./pixels";
 
 function png(w: number, h: number, paint: (x: number, y: number) => [number, number, number]): Buffer {
@@ -70,5 +72,20 @@ describe("stuck screens", () => {
     expect(selectedChip("Fitness", els)).toBeNull();
     expect(selectedChip("Filter by Faith", [{ text: "", a11y: "Filter by Faith", id: "", bounds: "", value: "", selected: true }])).toBe("Faith");
     expect(nextStreak({ text: "same", visual: null, lastText: "same", lastVisual: null, streak: 2, ignore: true })).toBe(1);
+  });
+});
+
+describe("12b.5 a repeated screen never ends the session", () => {
+  it("Home unchanged 3 times after the 15-step minimum nudges and keeps going", () => {
+    expect(repeatedScreen(3)).toEqual({ nudge: true, stop: false });
+    expect(repeatedScreen(9)).toEqual({ nudge: true, stop: false });
+    expect(repeatedScreen(2)).toEqual({ nudge: false, stop: false });
+  });
+
+  it("the loop has no 'repeated 3 times' exit; only the stuck-note rule stops on a screen", () => {
+    const loop = readFileSync(resolve(__dirname, "./loop.ts"), "utf8");
+    expect(loop).not.toMatch(/giveUp = `Gave up\. \$\{screen\} repeated 3 times\.`/);
+    expect(loop).toMatch(/repeatedScreen\(same\)\.nudge/);
+    expect(loop).toMatch(/countStuck\(stuckCounts, screenName, stuck\) >= STUCK_LIMIT/);
   });
 });

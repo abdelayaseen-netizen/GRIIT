@@ -25,7 +25,7 @@ import { MaestroSession } from "./maestro";
 import { interviewPrompt, MIN_STEPS, systemPrompt, userPrompt } from "./prompt";
 import { samplePng } from "./pixels";
 import { classifyScreen, dayClaims, isHomeScreen, isSpringboard, isWelcomeScreen, parseHierarchy, screenSignature, scrollMarks, visibleLines, type El } from "./screen";
-import { countStuck, DEAD_TAPS, endTag, isRepeatOfDeadTarget, nextStreak, selectedChip, stuckNote, stuckPrompt, STUCK_LIMIT, nextTapRepeat, type TapRepeat } from "./stuck";
+import { countStuck, DEAD_TAPS, REPEAT_NUDGE, repeatedScreen, endTag, isRepeatOfDeadTarget, nextStreak, selectedChip, stuckNote, stuckPrompt, STUCK_LIMIT, nextTapRepeat, type TapRepeat } from "./stuck";
 import type { AgentResult, DoneTiming, Interview, Mode, Persona, StepLog } from "./types";
 
 export type Spend = { usd: number; input: number; output: number; calls: number };
@@ -405,34 +405,12 @@ export async function runPersona(opts: {
       repeat = nextTapRepeat(repeat, lastTap, sig);
       lastTap = null;
       if (repeat && repeat.count >= DEAD_TAPS) note = [note, stuckPrompt(repeat)].filter(Boolean).join("\n");
-      if (same >= 3) {
+      if (repeatedScreen(same).nudge) {
         deadEnds.push(`${screen}: the same screen came up 3 times`);
-        if (steps.length < MIN_STEPS) {
-          // Build 90 10.3: the 15-tap minimum holds. Before it, a repeated screen is a nudge, not an exit.
-          note = `The screen has not changed for 3 steps. Do something different: scroll, a different button, the tab bar, or back.`;
-          same = 0;
-          earlyStopsRefused += 1;
-          console.log(`${persona.id} ${n}/${limit} ${screen} repeated 3 times before ${MIN_STEPS} steps; nudging instead of stopping`);
-        } else {
-          giveUp = `Gave up. ${screen} repeated 3 times.`;
-          logStep({
-            step: n,
-            timestamp: new Date().toISOString(),
-            screen,
-            route: screen,
-            screenName: screen,
-            chunk,
-            action: "abort",
-            target: "",
-            thought: "",
-            confusion: "",
-            emotion: "frustrated",
-            latencyMs: Date.now() - t0,
-            error: giveUp,
-            shot: path.relative(dir, shotFile),
-          });
-          break;
-        }
+        note = [note, REPEAT_NUDGE].filter(Boolean).join("\n");
+        same = 0;
+        if (steps.length < MIN_STEPS) earlyStopsRefused += 1;
+        console.log(`${persona.id} ${n}/${limit} ${screen} repeated 3 times; nudging, not stopping`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "step failed";

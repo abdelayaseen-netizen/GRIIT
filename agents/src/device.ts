@@ -8,6 +8,32 @@ export const APP_ID = "app.griit.challenge-tracker";
 /** GRIIT iPhone 16 (iOS 26.4), the simulator the build 90 Maestro flows ran on. AGENTS_UDID overrides it. */
 export const UDID = process.env.AGENTS_UDID?.trim() || "B10E65A0-C453-4E58-97BD-A3696ED848AE";
 
+/** Booted simulators other than `udid`, from `xcrun simctl list devices booted -j`. */
+export function otherBooted(listJson: string, udid: string): string[] {
+  let data: { devices?: Record<string, { udid?: string; name?: string; state?: string }[]> };
+  try {
+    data = JSON.parse(listJson);
+  } catch {
+    return [];
+  }
+  return Object.values(data.devices ?? {})
+    .flat()
+    .filter((d) => d.state === "Booted" && d.udid && d.udid !== udid)
+    .map((d) => `${d.name ?? "simulator"} (${d.udid})`);
+}
+
+/**
+ * Build 92 12b.5: with two simulators booted, Maestro MCP answers every device_id from one of them
+ * (an SE screen came back for a Pro Max on its home screen). Refuse to start instead.
+ */
+export async function assertOnlySimulator(udid = UDID): Promise<void> {
+  const listed = await run("xcrun", ["simctl", "list", "devices", "booted", "-j"]);
+  const others = otherBooted(listed.stdout, udid);
+  if (others.length) {
+    throw new Error(`Another simulator is booted: ${others.join(", ")}. Shut it down so Maestro drives ${udid} only.`);
+  }
+}
+
 export function run(cmd: string, args: string[], timeoutMs = 20000): Promise<{ code: number; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });

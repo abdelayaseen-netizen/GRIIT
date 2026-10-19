@@ -1,5 +1,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "child_process";
 import { safeText } from "./env";
+import { assertOnlySimulator } from "./device";
 
 type Rpc = { id?: number; result?: { content?: { type: string; text?: string }[]; isError?: boolean }; error?: { message?: string } };
 
@@ -11,6 +12,7 @@ export class MaestroSession {
 
   async start() {
     if (this.proc) return;
+    await assertOnlySimulator();
     this.buffer = "";
     const child = spawn("maestro", ["mcp"], {
       stdio: ["pipe", "pipe", "pipe"],

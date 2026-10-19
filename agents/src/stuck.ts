@@ -17,6 +17,16 @@ export function nextStreak(input: {
   return input.streak + 1;
 }
 
+/**
+ * Build 92 12b.5: a screen that comes up unchanged 3 times is a nudge, never an exit. Sessions end on
+ * the step budget, the spend cap, the time cap, or STUCK_LIMIT stuck notes on one screen.
+ */
+export function repeatedScreen(same: number): { nudge: boolean; stop: false } {
+  return { nudge: same >= 3, stop: false };
+}
+
+export const REPEAT_NUDGE = "The screen has not changed for 3 steps. Do something different: scroll, a different button, the tab bar, or back.";
+
 /** Taps in a row on one target that left the screen exactly as it was. */
 export type TapRepeat = { target: string; count: number };
 
