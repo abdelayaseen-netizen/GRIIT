@@ -13,7 +13,10 @@ export type OnboardingGoal =
   | 'reading_learning'
   | 'cold_exposure'
   | 'sleep_recovery'
-  | 'faith_prayer';
+  | 'faith_prayer'
+  /** Build 92 09.1: the Part 3 goals "Running" and "Health". */
+  | 'running'
+  | 'health';
 
 export type IntensityLevel = 'beginner' | 'intermediate' | 'extreme';
 

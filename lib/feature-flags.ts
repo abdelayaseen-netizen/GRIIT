@@ -90,6 +90,12 @@ export const FLAGS = {
    * `expo-glass-effect` installed and a new dev client for the real material.
    */
   LIQUID_GLASS: false,
+  /**
+   * Build 92 chunk 09.4: save an account by a 6-digit email code (no password field).
+   * Off until Supabase Auth email OTP is on and the Magic Link and Change Email templates send
+   * {{ .Token }} (docs/reports/build92.md, 09.4). Off: the build 91 email + password form.
+   */
+  EMAIL_OTP: false,
 } as const;
 
 // ============================================

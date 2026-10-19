@@ -1,0 +1,73 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 09 gate: fresh guest, Faith and prayer, Start here, Join on the first card,
+# first task opens with "You’re in. Day 1 is today.", Done, Day secured.
+- launchApp:
+    clearState: true
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "http://localhost:8081|Start|Continue"
+    timeout: 60000
+- tapOn:
+    text: "http://localhost:8081"
+    optional: true
+- tapOn:
+    text: "Not now"
+    optional: true
+- tapOn:
+    text: "Continue"
+    optional: true
+- runFlow:
+    when:
+      visible: "Toggle performance monitor"
+    commands:
+      - swipe:
+          start: "50%,60%"
+          end: "50%,98%"
+          duration: 400
+- extendedWaitUntil:
+    visible: "Start"
+    timeout: 60000
+- tapOn: "Start"
+- extendedWaitUntil:
+    visible: "Faith and prayer"
+    timeout: 15000
+- takeScreenshot: P3-01-goals
+- tapOn: "Faith and prayer"
+- takeScreenshot: P3-02-goals-picked
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "How it works"
+    timeout: 15000
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "Start here"
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "start-here-join-.*"
+    timeout: 20000
+- takeScreenshot: P3-04-start-here
+- tapOn:
+    id: "start-here-join-.*"
+    index: 0
+- extendedWaitUntil:
+    visible: "You’re in. Day 1 is today."
+    timeout: 25000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-06-first-task-toast
+- extendedWaitUntil:
+    visible: "^Done$|Done without photo"
+    timeout: 15000
+- tapOn: "^Done$|Done without photo"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 20000
+- tapOn: "Post to friends"
+- extendedWaitUntil:
+    visible: "Every task today is done.*|Day 1 secured.*|Day secured.*"
+    timeout: 20000
+- takeScreenshot: P3-06-day-secured

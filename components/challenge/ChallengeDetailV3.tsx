@@ -106,6 +106,8 @@ export type ChallengeDetailV3Props = {
   /** Account day is already in day_secures, or the task window has closed. Day 1 is tomorrow. */
   todayAlreadySecured?: boolean;
   windowClosed?: boolean;
+  /** Build 92 09.3 (P3-13b): "Day 1 is tomorrow at {time}" when a task window closed today. */
+  day1TomorrowAt?: string | null;
   category?: string | null;
   peopleNames?: string[];
   /** Build 90 08: viewer is in a duo / shared-goal run with a seat still open. Link instead of Join. */
@@ -324,12 +326,14 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
             ) : (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Join ${p.title}`}
+                accessibilityLabel={p.day1TomorrowAt ? `Join · ${p.day1TomorrowAt}` : `Join ${p.title}`}
                 disabled={p.joining}
                 onPress={p.joining ? undefined : p.onJoin}
                 style={({ pressed }) => [styles.join, pressed ? styles.joinPressed : null]}
               >
-                <Text style={styles.joinLabel}>{`Join ${p.title}`}</Text>
+                <Text style={styles.joinLabel}>
+                  {p.day1TomorrowAt ? `Join · ${p.day1TomorrowAt}` : `Join ${p.title}`}
+                </Text>
               </Pressable>
             )}
             {blocked ? (
@@ -351,7 +355,7 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
               </>
             ) : (
               <Text style={styles.joinCaption}>
-                {joinCaption(p.participationType, undefined, undefined, deferDay1)}
+                {p.day1TomorrowAt ?? joinCaption(p.participationType, undefined, undefined, deferDay1)}
               </Text>
             )}
           </>

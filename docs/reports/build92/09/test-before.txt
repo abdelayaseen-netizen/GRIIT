@@ -1,0 +1,28 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/build92-first-day.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/build92-first-day.test.ts [ lib/build92-first-day.test.ts ]
+Error: Cannot find module '@/lib/first-day' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/build92-first-day.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/build92-first-day.test.ts:4:31
+      3|  * Fixed clock for windows: 9:41 in New York (Fajr's window is 5:00–6:…
+      4|  */
+      5| import { readFileSync } from "node:fs";
+       |                           ^
+      6| import { join } from "node:path";
+      7| import { describe, expect, it } from "vitest";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  23:35:19
+   Duration  448ms (transform 42ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 66ms)
+

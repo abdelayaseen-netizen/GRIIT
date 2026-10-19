@@ -16,16 +16,21 @@ const GOAL_ORDER: OnboardingGoal[] = [
   "cold_exposure",
   "sleep_recovery",
   "faith_prayer",
+  "running",
+  "health",
 ];
 
+/** Build 92 09.1: the Part 3 labels; cold exposure and sleep stay for goals saved before build 92. */
 export const GOAL_LABELS: Record<OnboardingGoal, string> = {
-  physical_toughness: "Physical toughness",
-  mental_discipline: "Mental discipline",
-  daily_habits: "Daily habits",
-  reading_learning: "Reading and learning",
+  physical_toughness: "Fitness and gym",
+  mental_discipline: "Mind",
+  daily_habits: "Discipline",
+  reading_learning: "Reading",
   cold_exposure: "Cold exposure",
   sleep_recovery: "Sleep and recovery",
   faith_prayer: "Faith and prayer",
+  running: "Running",
+  health: "Health",
 };
 
 const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: string[] }> = {
@@ -57,6 +62,14 @@ const GOAL_MATCH: Record<OnboardingGoal, { categories: string[]; keywords: strin
     categories: ["faith"],
     keywords: ["pray", "prayer", "salah", "quran", "dhikr", "fajr", "mosque", "deen"],
   },
+  running: {
+    categories: ["running"],
+    keywords: ["run", "5k", "10k", "mile", "jog", "strava"],
+  },
+  health: {
+    categories: ["health"],
+    keywords: ["water", "sleep", "steps", "walk", "cold", "shower", "sugar", "diet", "hydrat"],
+  },
 };
 
 const CATEGORY_GOAL: Record<string, OnboardingGoal> = {
@@ -66,7 +79,8 @@ const CATEGORY_GOAL: Record<string, OnboardingGoal> = {
   body: "physical_toughness",
   mind: "mental_discipline",
   focus: "mental_discipline",
-  health: "sleep_recovery",
+  health: "health",
+  running: "running",
   learning: "reading_learning",
   discipline: "daily_habits",
   habit: "daily_habits",

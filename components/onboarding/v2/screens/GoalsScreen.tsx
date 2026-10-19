@@ -1,24 +1,62 @@
 import React, { useCallback } from "react";
-import { StyleSheet, View } from "react-native";
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Activity,
+  BookOpen,
+  Brain,
+  Check,
+  Dumbbell,
+  HeartPulse,
+  ListChecks,
+  Sunrise,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useOnboardingStore, type OnboardingGoal } from "@/store/onboardingStore";
-import { toggleOnboardingGoal } from "@/lib/onboarding-v2-goals-core";
+import { FIRST_DAY_GOALS, GOALS_COPY, MAX_FIRST_DAY_GOALS, goalHint, pickGoal } from "@/lib/first-day";
+import { GOAL_LABELS } from "@/lib/goal-challenge-map";
 import { track } from "@/lib/analytics";
 import { DS_V3 } from "@/lib/design-system";
-import { ChromePrimary, OnboardingScreen, OptionRow } from "../OnboardingChrome";
+import { ChromePrimary, OnboardingScreen } from "../OnboardingChrome";
 
-export const V2_GOAL_TILES: { id: OnboardingGoal; label: string; example: string }[] = [
-  { id: "physical_toughness", label: "Physical toughness", example: "Lifting, running, no missed sessions" },
-  { id: "mental_discipline", label: "Mental discipline", example: "Meditation, journaling, focus blocks" },
-  { id: "daily_habits", label: "Daily habits", example: "Wake times, water, tidy space" },
-  { id: "reading_learning", label: "Reading and learning", example: "Pages a day, a course, a language" },
-  { id: "cold_exposure", label: "Cold exposure", example: "Cold showers, plunges, breathwork" },
-  { id: "sleep_recovery", label: "Sleep and recovery", example: "Phone down, lights out, rest days" },
-  { id: "faith_prayer", label: "Faith and prayer", example: "Daily prayers, Quran, dhikr" },
-];
+/** Build 92 09.1 (P3-01 – P3-03): 7 goals in 2 columns of 56 pt cards, all above the docked button on SE. */
+export const MAX_GOALS = MAX_FIRST_DAY_GOALS;
 
-export const MAX_GOALS = 3;
-const GRID = V2_GOAL_TILES.slice(0, 6);
-const FAITH = V2_GOAL_TILES[6]!;
+const ICONS: Partial<Record<OnboardingGoal, LucideIcon>> = {
+  physical_toughness: Dumbbell,
+  faith_prayer: Sunrise,
+  running: Activity,
+  reading_learning: BookOpen,
+  health: HeartPulse,
+  daily_habits: ListChecks,
+  mental_discipline: Brain,
+};
+
+const ICON = 20;
+const TICK = 22;
+
+function GoalCard({ id, label, on, onPress }: { id: OnboardingGoal; label: string; on: boolean; onPress: () => void }) {
+  const Icon = ICONS[id] ?? Check;
+  const ink = on ? DS_V3.color.canvas : DS_V3.color.textPrimary;
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: on }}
+      onPress={onPress}
+      style={({ pressed }) => [styles.card, on ? styles.cardOn : styles.cardOff, pressed && styles.pressed]}
+    >
+      <Icon size={ICON} color={ink} />
+      <Text style={[styles.label, { color: ink }]} numberOfLines={2}>
+        {label}
+      </Text>
+      {on ? (
+        <View style={styles.tick}>
+          <Check size={13} color={DS_V3.color.textPrimary} strokeWidth={3} />
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
 
 export default function GoalsScreen({
   onContinue,
@@ -32,7 +70,11 @@ export default function GoalsScreen({
 
   const toggle = useCallback(
     (id: OnboardingGoal) => {
-      setSelectedGoals(toggleOnboardingGoal(selectedGoals, id, MAX_GOALS));
+      const { next, swappedOut } = pickGoal(selectedGoals, id);
+      setSelectedGoals(next);
+      if (swappedOut) {
+        AccessibilityInfo.announceForAccessibility(`${GOAL_LABELS[swappedOut]} removed`);
+      }
     },
     [selectedGoals, setSelectedGoals]
   );
@@ -49,57 +91,72 @@ export default function GoalsScreen({
     <OnboardingScreen
       step={0}
       onBack={onBack}
-      title="What are you building?"
-      subtitle={`Pick 1 to ${MAX_GOALS}. It filters the challenges we suggest.`}
+      title={GOALS_COPY.title}
+      subtitle={GOALS_COPY.subtitle}
       footer={
-        <ChromePrimary
-          label={blocked ? "Pick at least one" : "Continue"}
-          disabled={blocked}
-          onPress={handleContinue}
-        />
+        <>
+          <Text style={styles.hint} accessibilityLiveRegion="polite">
+            {goalHint(selectedGoals.length)}
+          </Text>
+          <ChromePrimary label={GOALS_COPY.cta} disabled={blocked} onPress={handleContinue} />
+        </>
       }
     >
-      <View style={styles.body}>
-        <View style={styles.grid}>
-          {GRID.map((g) => {
-            const on = selectedGoals.includes(g.id);
-            const atCap = !on && selectedGoals.length >= MAX_GOALS;
-            return (
-              <View key={g.id} style={styles.cell}>
-                <OptionRow
-                  title={g.label}
-                  subtitle={g.example}
-                  selected={on}
-                  dimmed={atCap}
-                  onPress={() => toggle(g.id)}
-                />
-              </View>
-            );
-          })}
-        </View>
-        <OptionRow
-          title={FAITH.label}
-          subtitle={FAITH.example}
-          selected={selectedGoals.includes(FAITH.id)}
-          dimmed={!selectedGoals.includes(FAITH.id) && selectedGoals.length >= MAX_GOALS}
-          onPress={() => toggle(FAITH.id)}
-        />
+      <View style={styles.grid}>
+        {FIRST_DAY_GOALS.map((g) => (
+          <GoalCard
+            key={g.id}
+            id={g.id}
+            label={g.label}
+            on={selectedGoals.includes(g.id)}
+            onPress={() => toggle(g.id)}
+          />
+        ))}
       </View>
     </OnboardingScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  body: {
-    paddingHorizontal: DS_V3.space.gutter,
-    paddingTop: DS_V3.space.gutter,
-    paddingBottom: 280,
-    gap: DS_V3.space.sm,
-  },
   grid: {
-    gap: DS_V3.space.md,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.lg,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: DS_V3.space.sm,
   },
-  cell: {
-    width: "100%",
+  card: {
+    width: "48%",
+    minHeight: 56,
+    paddingHorizontal: DS_V3.space.md,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
+  cardOff: { backgroundColor: DS_V3.color.surface },
+  cardOn: { backgroundColor: DS_V3.color.textPrimary },
+  label: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: "500",
+  },
+  tick: {
+    width: TICK,
+    height: TICK,
+    borderRadius: DS_V3.radius.pill,
+    backgroundColor: DS_V3.color.canvas,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hint: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
+    textAlign: "center",
+  },
+  pressed: { opacity: 0.8 },
 });

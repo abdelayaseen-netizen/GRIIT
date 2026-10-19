@@ -44,7 +44,8 @@ describe("suggestionTaskLine", () => {
 
 describe("noMatchSubtitle", () => {
   it("joins goal labels in lowercase", () => {
-    expect(goalCataloguePhrase(["physical_toughness"])).toBe("physical toughness");
+    // Build 92 09.1: the Part 3 goal labels ("Fitness and gym"); sleep keeps its build 90 label.
+    expect(goalCataloguePhrase(["physical_toughness"])).toBe("fitness and gym");
     expect(noMatchSubtitle(["sleep_recovery", "faith_prayer"])).toBe(
       "Nothing in the catalogue matches sleep and recovery and faith and prayer yet."
     );

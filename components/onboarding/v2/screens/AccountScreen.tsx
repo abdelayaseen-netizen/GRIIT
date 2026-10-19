@@ -29,7 +29,7 @@ import { trpcMutate } from "@/lib/trpc";
 import { STARTER_TODAY_QUERY_KEY, loadStarterTodayRow } from "@/components/home/StarterTodayRow";
 import { isMaestroTestEmail } from "@/lib/maestro-account";
 import { TRPC } from "@/lib/trpc-paths";
-import { ACCOUNT_PHONE_LINE, ACCOUNT_SKIP, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
+import { ACCOUNT_PHONE_LINE, ACCOUNT_TITLE, accountInLine } from "@/lib/onboarding-v42-copy";
 import { FLAGS } from "@/lib/feature-flags";
 import {
   CONFIRM_EMAIL_NOTICE,
@@ -47,6 +47,10 @@ import {
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
+import AccountCodeForm from "./AccountCodeForm";
+import { ACCOUNT_COPY, sendEmailCode, verifyEmailCode, type OtpAuth } from "@/lib/email-otp";
+
+const otpAuth = supabase.auth as unknown as OtpAuth;
 
 async function flagMaestroProfile(emailAddr?: string): Promise<void> {
   const email = (emailAddr ?? "").trim();
@@ -88,13 +92,12 @@ export default function AccountScreen({
   onSkip,
   onSignInWithAccount,
   onBack,
-  alwaysOfferSkip = false,
 }: {
   onAuthSuccess: (kind: AccountAuthKind) => void;
   onSkip: () => void;
   onSignInWithAccount: (email?: string) => void;
   onBack: () => void;
-  /** Build 90 06.6: the Home save sheet always shows Later, whatever the starter flag says. */
+  /** Build 92 09.5: Not now is always offered; kept so existing callers still type-check. */
   alwaysOfferSkip?: boolean;
 }) {
   const setProfileSetupHints = useOnboardingStore((s) => s.setProfileSetupHints);
@@ -118,6 +121,8 @@ export default function AccountScreen({
     refetchOnWindowFocus: false,
   });
   const starterDone = starterQuery.data?.status === "done_now";
+  /** Build 92 09.4: the guest whose email belongs to another account; the code signs into it and moves the guest. */
+  const [adoptGuestId, setAdoptGuestId] = useState<string | null>(null);
 
   useEffect(() => {
     if (Platform.OS === "ios") {
@@ -333,27 +338,106 @@ export default function AccountScreen({
     }
   }, [email, password, onAuthSuccess, setProfileSetupHints]);
 
+  const sendCode = useCallback(async (address: string): Promise<boolean> => {
+    setError("");
+    setLoading(true);
+    try {
+      const { data: sessionSnap } = await supabase.auth.getSession();
+      const sessionUser = sessionSnap.session?.user ?? null;
+      const guest = isAnonymousUser(sessionUser);
+      const sent = await sendEmailCode(otpAuth, { email: address, guest });
+      if (sent.ok) {
+        setAdoptGuestId(null);
+        return true;
+      }
+      if (guest && sessionUser && /already|registered|exists/i.test(sent.message)) {
+        const signIn = await sendEmailCode(otpAuth, { email: address, guest: false });
+        if (signIn.ok) {
+          setAdoptGuestId(sessionUser.id);
+          return true;
+        }
+        setError(signIn.message);
+        return false;
+      }
+      setError(sent.message);
+      return false;
+    } catch (e: unknown) {
+      captureError(e, "OnboardingV2EmailCode");
+      setError(surfaceCaughtAuthError(e));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const verifyCode = useCallback(
+    async (address: string, code: string) => {
+      setError("");
+      setLoading(true);
+      try {
+        if (adoptGuestId) {
+          const moved = await adoptExistingAccount({
+            guestUserId: adoptGuestId,
+            signIn: async () => {
+              const out = await verifyEmailCode(otpAuth, { email: address, code, guest: false });
+              return out.ok ? { ok: true } : { ok: false, message: out.message };
+            },
+          });
+          if (!moved.ok) {
+            setError(moved.message);
+            return;
+          }
+          track({ name: "signup_completed", method: "email" });
+          onAuthSuccess(classifyAccountAuth({ path: "signin_email" }));
+          return;
+        }
+        const { data: sessionSnap } = await supabase.auth.getSession();
+        const guest = isAnonymousUser(sessionSnap.session?.user ?? null);
+        const out = await verifyEmailCode(otpAuth, { email: address, code, guest });
+        if (!out.ok) {
+          setError(out.message);
+          return;
+        }
+        setProfileSetupHints({ email: address });
+        track({ name: "signup_completed", method: "email" });
+        track({ name: "account_created", method: "email" });
+        await saveDerivedDisplayName(undefined, address);
+        await flagMaestroProfile(address);
+        onAuthSuccess(classifyAccountAuth({ path: guest ? "anon_upgrade_email" : "signup_email" }));
+      } catch (e: unknown) {
+        captureError(e, "OnboardingV2EmailCode");
+        setError(surfaceCaughtAuthError(e));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [adoptGuestId, onAuthSuccess, setProfileSetupHints],
+  );
+
   const onEmailBlur = () => {
     if (state === "email_entry" || state === "malformed") {
       setState(isCompleteEmail(email) ? "email_entry" : email.trim() ? "malformed" : "email_entry");
     }
   };
 
-  const accountTitle = FLAGS.STARTER_TASK_ENABLED
-    ? starterDone
-      ? "Save your streak and your freeze."
-      : "Save your challenge."
-    : ACCOUNT_TITLE;
-  const accountSubtitle = FLAGS.STARTER_TASK_ENABLED
-    ? starterDone
-      ? "Your first day is secured. Sign in so it’s still here tomorrow."
-      : "Sign in so your challenge and today’s starter are kept."
-    : accountInLine(challengeTitle);
-  const skip =
-    FLAGS.STARTER_TASK_ENABLED && !alwaysOfferSkip ? null : <TextLink label={ACCOUNT_SKIP} onPress={onSkip} />;
+  const accountTitle = FLAGS.EMAIL_OTP
+    ? ACCOUNT_COPY.title
+    : FLAGS.STARTER_TASK_ENABLED
+      ? starterDone
+        ? "Save your streak and your freeze."
+        : "Save your challenge."
+      : ACCOUNT_TITLE;
+  const accountSubtitle = FLAGS.EMAIL_OTP
+    ? ACCOUNT_COPY.subtitle
+    : FLAGS.STARTER_TASK_ENABLED
+      ? starterDone
+        ? "Your first day is secured. Sign in so it’s still here tomorrow."
+        : "Sign in so your challenge and today’s starter are kept."
+      : accountInLine(challengeTitle);
+  // Build 92 09.5: "Not now" is always there and keeps the guest's progress.
+  const skip = <TextLink label={ACCOUNT_COPY.notNow} onPress={onSkip} />;
   const applePrimary = Platform.OS === "ios" && appleAvailable;
-  const footer =
-    state === "default" ? (
+  const footer = FLAGS.EMAIL_OTP ? null : state === "default" ? (
       <>
         {applePrimary ? (
           <Button
@@ -389,7 +473,18 @@ export default function AccountScreen({
       footer={footer}
     >
       <View style={styles.body}>
-        {state === "default" ? (
+        {FLAGS.EMAIL_OTP ? (
+          <AccountCodeForm
+            appleAvailable={applePrimary}
+            busy={loading}
+            error={error}
+            onApple={() => void handleApple()}
+            onSendCode={sendCode}
+            onVerify={(address, code) => void verifyCode(address, code)}
+            onNotNow={onSkip}
+          />
+        ) : null}
+        {!FLAGS.EMAIL_OTP && state === "default" ? (
           <View style={styles.auth}>
             <Text style={styles.phone}>{ACCOUNT_PHONE_LINE}</Text>
             <TextLink
@@ -401,9 +496,9 @@ export default function AccountScreen({
           </View>
         ) : null}
 
-        {error && state !== "default" ? <Text style={styles.error}>{error}</Text> : null}
+        {!FLAGS.EMAIL_OTP && error && state !== "default" ? <Text style={styles.error}>{error}</Text> : null}
 
-        {state === "email_entry" || state === "malformed" ? (
+        {!FLAGS.EMAIL_OTP && (state === "email_entry" || state === "malformed") ? (
           <View style={styles.auth}>
             <Field
               label="Email"
@@ -444,7 +539,7 @@ export default function AccountScreen({
           </View>
         ) : null}
 
-        {state === "confirm_email" ? (
+        {!FLAGS.EMAIL_OTP && state === "confirm_email" ? (
           <View style={styles.auth}>
             <Field label="Email" value={email} editable={false} />
             <Notice icon={<CircleHelp size={ICON} color={DS_V3.color.textPrimary} />}>

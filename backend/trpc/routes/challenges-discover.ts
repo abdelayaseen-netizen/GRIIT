@@ -950,7 +950,7 @@ export const challengesDiscoverProcedures = {
           participation_type,
           source_starter_id,
           creator_id,
-          challenge_tasks (id, title, task_type, order_index, config)
+          challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)
         `)
         .eq('visibility', 'PUBLIC')
         .eq('status', 'published')

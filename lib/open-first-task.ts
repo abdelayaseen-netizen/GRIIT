@@ -43,6 +43,11 @@ export function takePendingFirstTaskHref(): string | null {
   return href;
 }
 
+/** Build 92 09.2: the task screen shows "You're in. Day 1 is today." when opened straight from Join. */
+export function withJoinedToast(href: string): string {
+  return `${href}&joined=1`;
+}
+
 /** True when join created (or already has) an enrollment we can open a task from. */
 export function joinHasEnrollment(result: JoinWithFirstTask | null | undefined): boolean {
   if (!result) return false;

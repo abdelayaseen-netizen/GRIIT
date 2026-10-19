@@ -31,7 +31,7 @@ appId: app.griit.challenge-tracker
     visible: "Start"
     timeout: 60000
 - tapOn: "Start"
-- tapOn: "Physical toughness.*"
+- tapOn: "Fitness and gym"
 - tapOn: "Continue"
 - extendedWaitUntil:
     visible: "How it works"

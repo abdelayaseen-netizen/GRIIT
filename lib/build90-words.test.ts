@@ -169,11 +169,12 @@ describe("06.6 guest Save your streak sheet", () => {
     expect(home).toContain("setHomeFocused(true);");
   });
 
-  it("sits under the status bar and always offers Later", () => {
+  // Build 92 09.5: the skip is "Not now" and is always offered (not only from this sheet).
+  it("sits under the status bar and always offers Not now", () => {
     expect(sheet).toContain("paddingTop: insets.top");
     expect(sheet).toContain("alwaysOfferSkip");
-    expect(src("components/onboarding/v2/screens/AccountScreen.tsx")).toMatch(
-      /FLAGS\.STARTER_TASK_ENABLED && !alwaysOfferSkip \? null : <TextLink label=\{ACCOUNT_SKIP\}/,
+    expect(src("components/onboarding/v2/screens/AccountScreen.tsx")).toContain(
+      "const skip = <TextLink label={ACCOUNT_COPY.notNow} onPress={onSkip} />;",
     );
   });
 });

@@ -227,6 +227,7 @@ export function minutesLeftCaption(minutes: number): string {
 }
 
 export function windowClosedAtLine(time: string): string {
+  if (!time.trim()) return "Window closed. Today is not secured.";
   return `Window closed at ${time}. Today is not secured.`;
 }
 

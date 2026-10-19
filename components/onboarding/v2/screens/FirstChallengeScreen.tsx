@@ -1,22 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { Check, SearchX } from "lucide-react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { SearchX } from "lucide-react-native";
 import { trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import {
-  preselectedSuggestionId,
   suggestChallengesForGoals,
   type SuggestableChallenge,
 } from "@/lib/onboarding-v2-suggest";
 import { mergePickedIntoSuggestions } from "@/lib/onboarding-v2-browse";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
-import {
-  modeLine,
-  noMatchSubtitle,
-  participationLabel,
-  suggestionTaskLine,
-} from "@/lib/onboarding-v2-first-challenge";
+import { participationLabel, suggestionTaskLine } from "@/lib/onboarding-v2-first-challenge";
+import { FREEZE_LINE, START_HERE_COPY, orderStartHere } from "@/lib/first-day";
+import { GOAL_LABELS } from "@/lib/goal-challenge-map";
+import Button from "@/components/ds/Button";
 import { captureError } from "@/lib/sentry";
 import { DS_V3 } from "@/lib/design-system";
 import { formatDays } from "@/lib/format-days";
@@ -24,42 +21,33 @@ import Card from "@/components/ds/Card";
 import { ChromePrimary, OnboardingScreen, TextLink } from "../OnboardingChrome";
 
 const PT = DS_V3.space.xs / 4;
-const PT_SELECTED = PT * 1.5;
-const RADIO = DS_V3.space.xs * 5;
 const CARD_PAD_X = DS_V3.space.md + DS_V3.space.xs / 2;
 const ICON = DS_V3.space.xs * 6;
 
+/** Build 92 09.2 (P3-04, P3-05): each card joins on its own; no radio, no shared footer Join. */
 function SuggestionCard({
   challenge,
-  selected,
-  onPress,
+  startsTomorrow,
+  joining,
+  disabled,
+  onJoin,
 }: {
   challenge: SuggestableChallenge;
-  selected: boolean;
-  onPress: () => void;
+  startsTomorrow: string | null;
+  joining: boolean;
+  disabled: boolean;
+  onJoin: () => void;
 }) {
   const tasks = Array.isArray(challenge.tasks) ? challenge.tasks : [];
   const lines = tasks.map((t) => suggestionTaskLine(t));
   const participation = participationLabel(challenge.participation_type);
   const days = challenge.duration_days ?? 0;
+  const title = challenge.title ?? "Challenge";
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityLabel={challenge.title ?? "Suggested challenge"}
-      accessibilityState={{ selected }}
-      style={({ pressed }) => [styles.card, selected ? styles.cardOn : styles.cardOff, pressed && styles.pressed]}
-    >
-      <View style={styles.cardHead}>
-        <View style={styles.cardCopy}>
-          <Text style={styles.cardTitle}>{challenge.title ?? "Challenge"}</Text>
-          <Text style={styles.cardMeta}>{`${formatDays(days)} · ${participation}`}</Text>
-        </View>
-        {selected ? (
-          <Check size={RADIO} color={DS_V3.color.textPrimary} />
-        ) : (
-          <View style={styles.radioOff} />
-        )}
+    <View style={styles.card} testID={`start-here-card-${challenge.id}`}>
+      <View style={styles.cardCopy}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardMeta}>{`${formatDays(days)} · ${participation}`}</Text>
       </View>
       <View style={styles.taskList}>
         {lines.map((line) => (
@@ -69,18 +57,27 @@ function SuggestionCard({
           </View>
         ))}
       </View>
-      <Text style={styles.mode}>{modeLine(challenge.is_hard_mode === true)}</Text>
-    </Pressable>
+      {startsTomorrow ? <Text style={styles.tomorrow}>{startsTomorrow}</Text> : null}
+      <Button
+        label={joining ? START_HERE_COPY.joining : START_HERE_COPY.join}
+        accessibilityLabel={`${START_HERE_COPY.join} ${title}`}
+        size="small"
+        disabled={disabled}
+        onPress={onJoin}
+        testID={`start-here-join-${challenge.id}`}
+      />
+    </View>
   );
 }
 
 export default function FirstChallengeScreen({
-  onJoin,
+  onJoined,
   onSkip,
   onBrowse,
   onBack,
 }: {
-  onJoin: (challengeId: string) => void;
+  /** Joined: open the first task (`href`), or Home when Day 1 is tomorrow. */
+  onJoined: (challengeId: string, href: string | null, startsTomorrow: boolean) => void;
   onSkip: () => void;
   onBrowse: () => void;
   onBack: () => void;
@@ -92,8 +89,7 @@ export default function FirstChallengeScreen({
   const [catalog, setCatalog] = useState<SuggestableChallenge[]>([]);
   const [suggestions, setSuggestions] = useState<SuggestableChallenge[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pickedId, setPickedId] = useState<string | null>(selectedChallengeId);
-  const [joining, setJoining] = useState(false);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -120,75 +116,48 @@ export default function FirstChallengeScreen({
     };
   }, [selectedGoals, targetStreak]);
 
-  useEffect(() => {
-    if (selectedChallengeId) setPickedId(selectedChallengeId);
-  }, [selectedChallengeId]);
+  const cards = useMemo(
+    () => orderStartHere(mergePickedIntoSuggestions(suggestions, catalog, selectedChallengeId)),
+    [suggestions, catalog, selectedChallengeId]
+  );
+  const empty = !loading && suggestions.length === 0;
+  const firstGoal = selectedGoals[0] ? GOAL_LABELS[selectedGoals[0]] : "your goals";
 
-  const pick = (c: SuggestableChallenge) => {
-    setPickedId(c.id);
+  const handleJoin = async (c: SuggestableChallenge, startsTomorrow: boolean) => {
+    if (joiningId) return;
     setError("");
+    setJoiningId(c.id);
     setSelectedChallengeMeta({
       id: c.id,
       title: c.title ?? null,
       taskCount: Array.isArray(c.tasks) ? c.tasks.length : 0,
       durationDays: c.duration_days ?? null,
     });
-  };
-
-  useEffect(() => {
-    if (selectedChallengeId || pickedId || loading) return;
-    const pre = preselectedSuggestionId(suggestions);
-    if (!pre) return;
-    const row = suggestions.find((c) => c.id === pre);
-    if (row) pick(row);
-  }, [loading, suggestions, selectedChallengeId, pickedId]);
-
-  const cards = useMemo(
-    () => mergePickedIntoSuggestions(suggestions, catalog, pickedId),
-    [suggestions, catalog, pickedId]
-  );
-  const empty = !loading && suggestions.length === 0;
-
-  const handleJoin = async () => {
-    if (!pickedId || joining) return;
-    setError("");
-    setJoining(true);
     try {
-      const result = await joinFirstChallenge(pickedId);
+      const result = await joinFirstChallenge(c.id);
       if (!result.ok) {
         setError(result.message);
         return;
       }
-      onJoin(pickedId);
+      onJoined(c.id, startsTomorrow ? null : result.href, startsTomorrow);
     } catch (e) {
       captureError(e, "OnboardingV2Join");
       setError(e instanceof Error ? e.message : "Could not join. Try again.");
     } finally {
-      setJoining(false);
+      setJoiningId(null);
     }
   };
 
-  const footer = empty ? (
+  const footer = (
     <>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <ChromePrimary label="Browse all" onPress={onBrowse} />
-      <TextLink label="Set this up later" onPress={onSkip} />
-    </>
-  ) : (
-    <>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <ChromePrimary
-        label={joining ? "Joining…" : "Join"}
-        disabled={!pickedId || joining}
-        onPress={() => {
-          void handleJoin();
-        }}
-      />
-      <Text style={styles.today}>Day 1 is today.</Text>
+      {empty ? <ChromePrimary label={START_HERE_COPY.browseAll} onPress={onBrowse} /> : null}
       <View style={styles.footerRow}>
-        <View style={styles.footerHalf}>
-          <TextLink label="Browse all" onPress={onBrowse} />
-        </View>
+        {empty ? null : (
+          <View style={styles.footerHalf}>
+            <TextLink label={START_HERE_COPY.browse} onPress={onBrowse} />
+          </View>
+        )}
         <View style={styles.footerHalf}>
           <TextLink label="Set this up later" onPress={onSkip} />
         </View>
@@ -200,8 +169,8 @@ export default function FirstChallengeScreen({
     <OnboardingScreen
       step={4}
       onBack={onBack}
-      title="Start here."
-      subtitle={empty ? noMatchSubtitle(selectedGoals) : "Three that match your goals."}
+      title={START_HERE_COPY.title}
+      subtitle={empty ? START_HERE_COPY.empty(firstGoal) : START_HERE_COPY.subtitle}
       footer={footer}
     >
       {loading ? (
@@ -213,25 +182,23 @@ export default function FirstChallengeScreen({
           <Card>
             <View style={styles.emptyRow}>
               <SearchX size={ICON} color={DS_V3.color.textPrimary} />
-              <View style={styles.emptyCopy}>
-                <Text style={styles.emptyTitle}>Couldn't load challenges</Text>
-                <Text style={styles.emptyBody}>
-                  Browse the full catalogue, or start without one and join later from Discover.
-                </Text>
-              </View>
+              <Text style={styles.emptyBody}>{START_HERE_COPY.empty(firstGoal)}</Text>
             </View>
           </Card>
         </View>
       ) : (
         <View style={styles.list}>
-          {cards.map((c) => (
+          {cards.map(({ challenge, startsTomorrow }) => (
             <SuggestionCard
-              key={c.id}
-              challenge={c}
-              selected={pickedId === c.id}
-              onPress={() => pick(c)}
+              key={challenge.id}
+              challenge={challenge}
+              startsTomorrow={startsTomorrow}
+              joining={joiningId === challenge.id}
+              disabled={joiningId != null}
+              onJoin={() => void handleJoin(challenge, startsTomorrow != null)}
             />
           ))}
+          <Text style={styles.freeze}>{FREEZE_LINE}</Text>
         </View>
       )}
     </OnboardingScreen>
@@ -253,21 +220,9 @@ const styles = StyleSheet.create({
     paddingVertical: DS_V3.space.md,
     paddingHorizontal: CARD_PAD_X,
     gap: DS_V3.space.sm,
-  },
-  cardOff: {
     backgroundColor: DS_V3.color.surface,
     borderWidth: PT,
     borderColor: DS_V3.color.border,
-  },
-  cardOn: {
-    backgroundColor: DS_V3.color.surface,
-    borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.border,
-  },
-  cardHead: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: DS_V3.space.md,
   },
   cardCopy: {
     flex: 1,
@@ -284,13 +239,6 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
-  },
-  radioOff: {
-    width: RADIO,
-    height: RADIO,
-    borderRadius: DS_V3.radius.pill,
-    borderWidth: PT_SELECTED,
-    borderColor: DS_V3.color.textSecondary,
   },
   taskList: {
     gap: DS_V3.space.xs,
@@ -314,6 +262,19 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
     textAlign: "right",
+  },
+  tomorrow: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: "600",
+    color: DS_V3.color.textPrimary,
+  },
+  freeze: {
+    paddingTop: DS_V3.space.sm,
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: DS_V3.type.caption.fontWeight,
+    color: DS_V3.color.textSecondary,
   },
   mode: {
     fontSize: DS_V3.type.caption.fontSize,

@@ -1,4 +1,10 @@
 import type { TimeEnforcementConfig } from "@/types";
+import {
+  anyTimeWindowClosedToday,
+  taskWindowEndHHMM,
+  windowTaskRequired,
+  type TaskWindowRow,
+} from "@/backend/lib/late-join-window";
 
 interface TimeWindow {
   start: Date;
@@ -199,4 +205,42 @@ export function validateTimeEnforcement(config: Partial<TimeEnforcementConfig>):
   }
 
   return { valid: true };
+}
+
+/**
+ * Build 92 chunk 09.3: the late-join rule on the client, from the same task-window math the
+ * server uses at join (`backend/lib/late-join-window.ts`). True when a required task's window
+ * has already closed today in `timeZone`, so joining now makes Day 1 tomorrow.
+ */
+export function windowClosedToday(
+  tasks: readonly object[] | null | undefined,
+  now: Date = new Date(),
+  timeZone: string = deviceTimeZone(),
+): boolean {
+  return anyTimeWindowClosedToday([...(tasks ?? [])] as TaskWindowRow[], now, timeZone);
+}
+
+function lowerClock(hhmm: string): string {
+  const { hours, minutes } = parseHHMM(hhmm);
+  const period = hours >= 12 ? "pm" : "am";
+  const h = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  return `${h}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
+/** "Day 1 is tomorrow at 5:00 am" when the window has closed today; the opening time (By: the By time). */
+export function day1TomorrowLabel(
+  tasks: readonly object[] | null | undefined,
+  now: Date = new Date(),
+  timeZone: string = deviceTimeZone(),
+): string | null {
+  const list = [...(tasks ?? [])] as TaskWindowRow[];
+  if (!anyTimeWindowClosedToday(list, now, timeZone)) return null;
+  const closed = list.find((t) => windowTaskRequired(t) && anyTimeWindowClosedToday([t], now, timeZone));
+  const opens =
+    closed?.gate_time_mode === "between" ? closed.gate_time_start : closed ? taskWindowEndHHMM(closed) : null;
+  return opens ? `Day 1 is tomorrow at ${lowerClock(opens)}` : "Day 1 is tomorrow";
+}
+
+function deviceTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }

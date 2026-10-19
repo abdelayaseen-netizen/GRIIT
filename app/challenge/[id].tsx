@@ -64,6 +64,7 @@ import {
   type DetailTask,
 } from "@/lib/challenge-detail-mapping";
 import { anyTimeWindowClosedToday } from "@/backend/lib/late-join-window";
+import { day1TomorrowLabel } from "@/lib/time-enforcement";
 import { catalogFromChallengeRow, catalogScreenPrivate } from "@/lib/challenge-catalog-screen";
 
 type JoinResult = import("@/lib/open-first-task").JoinWithFirstTask;
@@ -596,6 +597,11 @@ export default function ChallengeDetailScreen() {
           onRetry={() => void challengeQuery.refetch()}
           todayAlreadySecured={securedDateKeys.includes(todayKey)}
           windowClosed={anyTimeWindowClosedToday(
+            (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[],
+            new Date(),
+            timeZone,
+          )}
+          day1TomorrowAt={day1TomorrowLabel(
             (challenge?.tasks ?? challenge?.challenge_tasks ?? []) as DetailTask[],
             new Date(),
             timeZone,

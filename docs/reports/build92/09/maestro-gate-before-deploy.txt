@@ -1,0 +1,47 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-09-first-day
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+Tap on (Optional) "http://localhost:8081"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Tap on (Optional) "Continue"... COMPLETED
+Run flow when "Toggle performance monitor" is visible...
+  Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+Run flow when "Toggle performance monitor" is visible... COMPLETED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Assert that "Faith and prayer" is visible... COMPLETED
+Take screenshot P3-01-goals... COMPLETED
+Tap on "Faith and prayer"... COMPLETED
+Take screenshot P3-02-goals-picked... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Start here" is visible... COMPLETED
+Assert that id: start-here-join-.* is visible... COMPLETED
+Take screenshot P3-04-start-here... COMPLETED
+Tap on id: start-here-join-.*, Index: 0... COMPLETED
+Assert that "You’re in. Day 1 is today." is visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Take screenshot P3-06-first-task-toast... COMPLETED
+Assert that "^Done$|Done without photo" is visible... COMPLETED
+Tap on "^Done$|Done without photo"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on "Post to friends"... COMPLETED
+Assert that "Day 1 secured.*|Day secured.*" is visible... FAILED
+
+Assertion is false: "Day 1 secured.*|Day secured.*" is visible
+
+Assertion '"Day 1 secured.*|Day secured.*" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-18_235033

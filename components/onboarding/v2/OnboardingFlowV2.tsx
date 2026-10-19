@@ -25,7 +25,7 @@ import { exitOnboardingV2 } from "@/lib/onboarding-v2-exit";
 import { joinFirstChallenge } from "@/lib/onboarding-v2-join";
 import { applyBrowseBack, applyBrowsePick } from "@/lib/onboarding-v2-browse";
 import type { SuggestableChallenge } from "@/lib/onboarding-v2-suggest";
-import { takePendingFirstTaskHref } from "@/lib/open-first-task";
+import { takePendingFirstTaskHref, withJoinedToast } from "@/lib/open-first-task";
 import { DS_V3 } from "@/lib/design-system";
 import { OBV2_COLOR } from "./theme";
 import { FlowChrome, StepFade } from "./ui";
@@ -292,6 +292,26 @@ export default function OnboardingFlowV2() {
     router.replace((peekOnboardingV2Exit() ?? destination) as never);
   }, [router]);
 
+  /**
+   * Build 92 09.2: one tap on Join joins and opens the first task ("You're in. Day 1 is today.").
+   * A closed-window join (Day 1 tomorrow) lands on Home. Reminders are set later from Settings.
+   */
+  const handleJoined = useCallback(
+    async (challengeId: string, href: string | null, startsTomorrow: boolean) => {
+      setSelectedChallenge(challengeId);
+      setCompleteError("");
+      takePendingFirstTaskHref();
+      const destination = href && !startsTomorrow ? withJoinedToast(href) : ROUTES.TABS;
+      const result = await exitOnboardingV2(destination);
+      if (!result.ok) {
+        setCompleteError(result.message);
+        return;
+      }
+      router.replace((peekOnboardingV2Exit() ?? destination) as never);
+    },
+    [router, setSelectedChallenge]
+  );
+
   const renderScreen = () => {
     if (signInOpen) {
       return (
@@ -319,10 +339,9 @@ export default function OnboardingFlowV2() {
         }
         return (
           <FirstChallengeScreen
-            onJoin={(challengeId) => {
-              setSelectedChallenge(challengeId);
-              afterChallenge();
-            }}
+            onJoined={(challengeId, href, startsTomorrow) =>
+              void handleJoined(challengeId, href, startsTomorrow)
+            }
             onSkip={afterChallenge}
             onBrowse={() => setBrowseOpen(true)}
             onBack={goBack}
