@@ -1059,3 +1059,88 @@ saved is_test account), `08/se/P2-21-settings-{connections,pro}.png` (guest, fla
   counts live enrollments. Same lag, outside chunk 08's areas.
 - The live landing count includes test guests (81 on Show Up 7); is_test filtering there was not added.
 - The invite screen caption says "0 of 10 in the group" on a public challenge (build 90 picker copy, unchanged).
+
+## Chunk 09 · First day and account
+
+### Root causes (written before the fix)
+- 09.1 `components/onboarding/v2/screens/GoalsScreen.tsx:20-21,62-86`: six full-width `OptionRow`s (with an example
+  line each) then Faith and prayer last, body `paddingBottom: 280`; on an SE the 7th card sits under the docked
+  button. Labels are the build 90 set ("Physical toughness"…), not the Part 3 seven. `lib/onboarding-v2-goals-core.ts:31`
+  `toggleOnboardingGoal` refuses a 4th pick (dimmed cards) instead of swapping out the oldest.
+- 09.2 `FirstChallengeScreen.tsx:46-50` cards are `accessibilityRole="radio"` with a radio dot; one footer "Join"
+  (`:180`) joins the picked card, then `OnboardingFlowV2.tsx:322` goes on to Reminders; the first task opens only
+  after Reminders → finish. The Standard freeze line repeats on every card (`modeLine`, `:72`).
+- 09.3 `backend/trpc/routes/challenges-discover.ts:952` `getStarterPack` selects `challenge_tasks (id, title,
+  task_type, order_index, config)`: no `gate_time_*` columns, so Start here cannot see that Early Riser's
+  "by 06:30" window has closed and `suggestChallengesForGoals` (`lib/onboarding-v2-suggest.ts:135`) can put it
+  first. The server already defers Day 1 (`backend/lib/join-challenge.ts:130` → `late-join-window.ts`
+  `enrollmentStartAt`, since 2824ec0d), but no client surface says so.
+- 09.4 `components/onboarding/v2/screens/AccountScreen.tsx:405-473`: email + password fields (the password manager
+  sheet), a confirm step and "Send it"; no one-time code. Title/subtitle are the build 90 starter lines.
+- 09.5 `AccountScreen.tsx:352-353`: with `STARTER_TASK_ENABLED` on, the skip link is hidden unless the caller passes
+  `alwaysOfferSkip`, and it reads `ACCOUNT_SKIP`, not "Not now".
+Design references: P3-01, P3-02, P3-03 (goals), P3-04, P3-05, P3-06, P3-07 (Start here, first task), P3-08, P3-09
+(account), P3-13b (challenge page, window closed); Part 3 checklist lines 87–96; copy rows Goals, Start here,
+Freeze line, After Join, Account, Account errors. Handoff `src/onboarding/{goals.ts,startHere.ts,AccountStep.tsx}`.
+
+### Items
+- **09.1 Goals** (`GoalsScreen.tsx`, `lib/first-day.ts`): the Part 3 seven in a 2-column grid (Fitness and gym,
+  Faith and prayer, Running, Reading, Health, Discipline, Mind). All 7 sit above the docked Continue on an SE
+  (`09/se/P3-01-goals.png`). Selected = filled card + check icon (`P3-02-goals-picked.png`). A 4th pick swaps out the
+  oldest (`pickGoal`) and says so to VoiceOver. New goal ids `running` and `health` map to the existing
+  `running` / `health` categories; the old `cold_exposure` / `sleep_recovery` ids keep their labels for stored goals.
+- **09.2 Start here** (`FirstChallengeScreen.tsx`, `OnboardingFlowV2.tsx`): a Join button on every card, no radio
+  buttons, the freeze line once under the list. One tap joins and opens the first task with the toast
+  "You’re in. Day 1 is today." (`P3-04-start-here.png`, `P3-06-first-task-toast.png`). The toast is drawn in a
+  `FullWindowOverlay` (react-native-screens, already installed) because the first step can be the photo-optional
+  Sheet, which is a native Modal and covered the toast. Reminders is skipped on the Join path (Home asks later).
+- **09.3 Closed windows** (`lib/time-enforcement.ts` → `windowClosedToday`, `day1TomorrowLabel`, on the pure
+  `backend/lib/late-join-window.ts`): Start here puts closed-today cards last with "Day 1 is tomorrow at {time}"; the
+  challenge page caption and join button read "Join · Day 1 is tomorrow at {time}". A closed-window Join lands on
+  Home, not on a task that can't be done. Server side was already right (`join-challenge.ts` defers `start_at`;
+  `enrollmentProgress` never marks days before start as missed) and is now pinned by
+  `backend/lib/first-day-window.test.ts` at a fixed 9:41. `getStarterPack` now selects the `gate_time_*` columns
+  (backend change, deployed with chunk 10). `windowClosedAtLine("")` no longer reads "Window closed at . Today…".
+- **09.4 Account** (`AccountCodeForm.tsx`, `lib/email-otp.ts`, `AccountScreen.tsx`): Apple first, then email with a
+  6-digit code (no password field), "Not now". The code field uses `textContentType="oneTimeCode"` and
+  `autoComplete="one-time-code"` and verifies itself at 6 digits; 60 s resend; wrong / expired code lines. A guest
+  keeps their user id (`updateUser({email})` → `verifyOtp` type `email_change`); a taken email falls back to a
+  sign-in code and the existing `adoptExistingAccount` path. Behind `FLAGS.EMAIL_OTP` (default off) until Supabase
+  sends codes (steps below). `P3-08-account.png` was shot with the flag on locally, then reverted.
+- **09.5 Guest save:** "Not now" is always offered and leaves the guest as they are (same anonymous user, same
+  enrollment); saving later converts the same user id, so the streak carries over.
+
+### Gates
+- Maestro SE, Welcome → Faith and prayer → Start here → Join → first task → Done → Day secured, 5 of 5:
+  **waiting on the chunk 10 deploy.** Every step up to Done passes on SE (`.maestro/build92-09-first-day.yaml`),
+  but tonight the first Faith card is Fajr Before Sunrise and the live server rejects the check-in with
+  "Window closed." (`09/se/gate-fail-window-closed-before-deploy.png`, `09/maestro-gate-before-deploy.txt`).
+  The live `getStarterPack` does not send `gate_time_*`, so the client cannot see the closed window; this is the
+  09.3 fix, and it reaches the server only with a deploy. Chunk 09 doesn't approve a deploy and chunk 10 does
+  ("Backend deployed if changed"), so the deploy and the 5 gate runs happen at the start of chunk 10.
+- Vitest at 9:41: `backend/lib/first-day-window.test.ts` (4) + `lib/build92-first-day.test.ts` (20): 24/24
+  (`09/test-before.txt` fails: modules missing; `09/test-after.txt`).
+- Email OTP flow test against a stubbed Supabase auth (`lib/build92-first-day.test.ts` "09.4"): pass. Dashboard steps below.
+- Screenshots P3-01, P3-02, P3-04, P3-06, P3-08: `docs/reports/build92/09/se/`.
+- Full vitest: 4 failed (the 4 baseline failures), 2263 passed (`09/vitest-full.txt`). tsc: 5 (baseline, `09/tsc.txt`).
+
+### Tests moved (intended behaviour change)
+- `lib/build90-words.test.ts` "always offers Later" → "always offers Not now": 09.5 makes the skip "Not now" and always shown.
+- `lib/onboarding-v2-first-challenge.test.ts`: `physical_toughness` now reads "fitness and gym" (Part 3 labels).
+- Maestro preludes `build92-guest-home*.yaml`, `build92-01-*.yaml`: tap "Fitness and gym". The build 87–90 flows
+  still tap "Physical toughness.*" and the Start here footer "Join"; they are not chunk 01–09 gates and were left alone.
+
+### Decisions
+- `EMAIL_OTP` flag, default off, so the shipped account form keeps working until the dashboard is set.
+- Kept "Set this up later" next to "Browse all challenges" on Start here (the design has Browse; the skip already existed).
+- A closed-window Join goes to Home (Day 1 is tomorrow), not to the task screen.
+- New goal ids `running` and `health` instead of renaming the stored `cold_exposure` / `sleep_recovery`.
+- For a "by" window, "Day 1 is tomorrow at {time}" uses the By time (there is no opening time).
+- Toast drawn in `FullWindowOverlay`; it moved up to just under the status bar so it doesn't cover "Day 1 of 7".
+
+### Needs Yaseen (Supabase dashboard, not changed by the agent)
+1. Authentication → Providers → Email: enabled, "Email OTP" on, OTP length 6 (expiry 3600 s is fine).
+2. Authentication → Email Templates → **Magic Link**: put `{{ .Token }}` in the body (e.g. "Your GRIIT code is {{ .Token }}").
+3. Email Templates → **Change Email Address**: send `{{ .Token }}` too (the guest save uses `email_change`).
+4. Email Templates → **Confirm signup**: send `{{ .Token }}` (a brand-new email that signs in, not a guest).
+5. Then set `EMAIL_OTP: true` in `lib/feature-flags.ts` and ship.
