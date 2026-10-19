@@ -1,0 +1,21 @@
+{
+  "gender": "unspecified",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "d-01",
+  "name": "Tess",
+  "age": 29,
+  "background": "Returning user (1-speed/p1-01), last secured 2026-10-17.",
+  "why": "Started a streak and is checking in again.",
+  "goals": [
+    "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday."
+  ],
+  "savedAccount": "/Users/yaseenabdela/Developer/GRIIT/docs/reports/oct-build90/1-speed/p1-01/account.json",
+  "chunk": "day2",
+  "group": "day2"
+}

@@ -1,0 +1,10 @@
+{
+  "secured": "The app never told me what \"Day secured\" means; I didn't see that phrase on the home screen or the photo viewer, so I'd only be guessing that it means I finished today's challenge.",
+  "freeze": "The app never explained a freeze to me, and I didn't see the word anywhere, so I can't say what it is here.",
+  "selfReported": "I never saw \"Self-reported\" on a task or any explanation of it, so I don't know what it means in this app.",
+  "tomorrow": "5 - The home screen is clear, with a streak counter and a simple \"Drink Water Today\" start button, but I haven't started a challenge yet and the feed is just a black photo from a stranger, so nothing is pulling me back yet.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

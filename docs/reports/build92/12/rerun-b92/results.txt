@@ -1,0 +1,5 @@
+# build 92 (53b47e13, Release, 16 Pro Max) final flows 2026-10-19 07:10:02 device B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+curse-caption FAIL (exit 1)
+curse-comment PASS
+strava-stub PASS
+offline-post NOT RUN (no network conditioner on this Mac)

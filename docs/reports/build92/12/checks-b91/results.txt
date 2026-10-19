@@ -1,0 +1,10 @@
+# build 91 (f217c38f, Release, iPhone 16) 2026-10-19 04:27:45 device B10E65A0-C453-4E58-97BD-A3696ED848AE
+journal-long PASS
+curse-username PASS
+username-control PASS
+curse-bio PASS
+curse-caption FAIL (exit 1)
+curse-comment PASS
+curse-title PASS
+strava-stub PASS
+offline-post NOT RUN (no network conditioner on this Mac)

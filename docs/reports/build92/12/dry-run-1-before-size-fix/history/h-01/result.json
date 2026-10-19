@@ -1,0 +1,64 @@
+{
+  "personaId": "h-01",
+  "group": "history",
+  "chunk": "history",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never told me what \"Day secured\" means; I didn't see that phrase on the home screen or the photo viewer, so I'd only be guessing that it means I finished today's challenge.",
+    "freeze": "The app never explained a freeze to me, and I didn't see the word anywhere, so I can't say what it is here.",
+    "selfReported": "I never saw \"Self-reported\" on a task or any explanation of it, so I don't know what it means in this app.",
+    "tomorrow": "5 - The home screen is clear, with a streak counter and a simple \"Drink Water Today\" start button, but I haven't started a challenge yet and the feed is just a black photo from a stranger, so nothing is pulling me back yet.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T11:14:16.474Z",
+  "endedAt": "2026-10-19T11:18:20.514Z",
+  "steps": 17,
+  "durationSec": 244,
+  "goals": [
+    {
+      "id": "h-01-g1",
+      "text": "You have used GRIIT for about a month. Open your profile and scroll through every one of your posts to the end. Then go to Home and compare the numbers: does the streak and the day number on Home match what your profile says? Say in your thought every number that does not match.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Refused: \"Profile\" again after 2 taps with no change. Try something different.",
+    "home: model reply was not valid JSON",
+    "home: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "home",
+  "stages": [
+    "opened",
+    "home"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "98f47627-2a2f-464c-90f2-737d14c0084e",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [
+    "home: stuck: tapped \"Profile\" 2 times with no change",
+    "home: stuck: tapped \"Profile\" 2 times with no change"
+  ],
+  "coldStartMs": 6085,
+  "model": "claude-sonnet-5-5",
+  "endTag": "agent stuck"
+}

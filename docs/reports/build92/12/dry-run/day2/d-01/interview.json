@@ -1,0 +1,10 @@
+{
+  "secured": "A day is secured when I finish every task in the challenge that day, like walking 7,000 steps and posting my proof; the Activity screen says a day only counts when every task is done.",
+  "freeze": "The screens I can see here never clearly explained what a freeze is, so I'm only guessing that it might protect a streak if I miss a day.",
+  "selfReported": "I think it means the app is trusting me to say I did the task rather than verifying it, but I can't point to a clear explanation from what I saw.",
+  "tomorrow": "6 - The 7K Steps challenge is simple and I like seeing days get secured, but the leaderboard was only gray loading placeholders and a couple of terms weren't clear.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}

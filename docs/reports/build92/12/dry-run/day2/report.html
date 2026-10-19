@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>GRIIT iPhone 16 simulator. Production API. Group day2.</p>
+<p>Models from agents.config.json: d-01 claude-sonnet-5-5.</p>
+<p>is_test accounts; hidden from real users.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>1</td></tr>
+<tr><th>Steps</th><td>17</td></tr>
+<tr><th>Measured API cost</th><td>$0.32</td></tr>
+<tr><th>Database goals passed</th><td>0 / 0</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>challenge</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>joined</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>task</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>completed</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>photo</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>shared</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>social</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>day2</td><td>0% (0/0)</td><td>17</td><td>Check off doesn&#39;t seem to have registered; &#39;Nothing done today. 1 task left.&#39; is unchanged.<br>Check off keeps failing and nothing on this page mentions yesterday.<br>Day 3 of 7 but only 1 of 2 days secured, and it&#39;s unclear what happened to yesterday here.</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>home</td><td>2</td><td>14</td><td>255s</td><td>0</td></tr><tr><td>discover</td><td>1</td><td>2</td><td>12s</td><td>0</td></tr><tr><td>other</td><td>1</td><td>1</td><td>8s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>No repeated-screen give-ups.</p>
+<h2>Confusion</h2>
+<ul><li><strong>day2</strong> · home · Streak says 0 but also offers to keep my 1-day streak with a freeze - unclear if it&#39;s already broken.</li><li><strong>day2</strong> · home · Day 3 of 7 but only 1 of 2 days secured, and it&#39;s unclear what happened to yesterday here.</li><li><strong>day2</strong> · home · Check off doesn&#39;t seem to have registered; &#39;Nothing done today. 1 task left.&#39; is unchanged.</li><li><strong>day2</strong> · home · The page says &#39;1 of 2 days secured&#39; but Day 3 of 7, and yesterday isn&#39;t shown clearly.</li><li><strong>day2</strong> · home · Check off keeps failing and nothing on this page mentions yesterday.</li><li><strong>day2</strong> · home · Streak says 1 day in a row, but day 2 shows a dash and &#39;Use a freeze to keep your 1-day streak&#39; appears even though today is secured.</li><li><strong>day2</strong> · home · The streak says 1 day in a row, but yesterday shows a dash and it still offers a freeze for a 1-day streak. That is unclear.</li></ul>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>home</td><td>7%</td></tr><tr><td>other</td><td>0%</td></tr><tr><td>discover</td><td>0%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. Check off doesn&#39;t seem to have registered; &#39;Nothing done today. 1 task left.&#39; is unchanged.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/006.png" alt=""></div><ol><li>d-01: scroll 50%,60%</li></ol></section><section><h3>2. Check off keeps failing and nothing on this page mentions yesterday.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/008.png" alt=""></div><ol><li>d-01: tap Start today’s task</li></ol></section><section><h3>3. Day 3 of 7 but only 1 of 2 days secured, and it&#39;s unclear what happened to yesterday here.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/003.png" alt=""></div><ol><li>d-01: tap Got it</li></ol></section><section><h3>4. empty model reply</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/005.png" alt=""></div><ol><li>d-01: none</li></ol></section><section><h3>5. Failed to run flow: Device became unreachable during viewHierarchy</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/004.png" alt=""></div><ol><li>d-01: tap Check off</li><li>d-01: tap Check off</li></ol></section><section><h3>6. home: the same screen came up 3 times</h3><p>1 agents. Screen: shared</p><ol><li>d-01: home: the same screen came up 3 times</li></ol></section><section><h3>7. Streak says 0 but also offers to keep my 1-day streak with a freeze - unclear if it&#39;s already broken.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/001.png" alt=""></div><ol><li>d-01: scroll 50%,60%</li></ol></section><section><h3>8. Streak says 1 day in a row, but day 2 shows a dash and &#39;Use a freeze to keep your 1-day streak&#39; appears even though today is secured.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/012.png" alt=""></div><ol><li>d-01: tap What these words mean</li></ol></section><section><h3>9. The page says &#39;1 of 2 days secured&#39; but Day 3 of 7, and yesterday isn&#39;t shown clearly.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/007.png" alt=""></div><ol><li>d-01: tap Check off</li></ol></section><section><h3>10. The streak says 1 day in a row, but yesterday shows a dash and it still offers a freeze for a 1-day streak. That is unclear.</h3><p>1 agents. Screen: home</p><div><img src="d-01/shots/014.png" alt=""></div><ol><li>d-01: scroll Feed</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/d-01.html">d-01</a> Tess · shared · 17 steps</li></ul>
+</body></html>

@@ -1,0 +1,10 @@
+{
+  "secured": "The app never actually showed me the phrase \"Day secured\" on these screens, so I'm guessing it means finishing your daily task (like the 7,000 steps) so the day counts toward your streak.",
+  "freeze": "A freeze is something you can use, and I have 1 left, to keep your 1-day streak alive when you missed a day, so the streak doesn't reset.",
+  "selfReported": "The app doesn't explain it, but I take it to mean you say you did the task yourself and nothing verifies it, like a step count from a device.",
+  "tomorrow": "6 - I'd likely open it to keep my streak going and use the freeze, but the streak display is confusing (0 days in a row with a best of 1) and the terms aren't explained.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}

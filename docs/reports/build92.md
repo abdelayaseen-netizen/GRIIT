@@ -1364,3 +1364,113 @@ Timelines: `11/budget-run*-count.txt`; Maestro: `11/maestro-budget-run*.txt` (al
 - The trace ships but is off unless built with `EXPO_PUBLIC_STARTUP_TRACE=1`; `lib/bundle-start.js` sets one global.
 - The home cache is per user on the device and is not cleared on sign-out (same as the chunk 07 profile header cache).
 - Thumbnails left for a deploy chunk rather than shipping undeployed server code.
+
+## Chunk 12 · Better test agents
+
+Harness work is on `feat/agent-testers` (`agents/`); no app code changed. Evidence is in `docs/reports/build92/12/`.
+Build 92 = 53b47e13 Release on the 16 Pro Max simulator; build 91 = f217c38f Release on the iPhone 16 simulator.
+
+### Must-fix for build 92 (app bugs found by the checks, not fixed in chunk 12)
+1. **A typed caption traps the post.** On the post sheet (P1-01) the keyboard covers "Post to friends", and every
+   normal way to drop it closes the sheet, which saves the proof privately (Only me). The post is lost.
+   Checked on the 16 Pro Max simulator with `agents/checks/caption-keyboard.yaml`:
+   - Return adds a line; the keyboard stays (`12/shots/b92-caption-1-typed.png`).
+   - A slow swipe down from the grab handle does nothing: sheet and keyboard stay (`b92-caption-2-swipe-handle-nothing.png`).
+   - Maestro `hideKeyboard` closes the sheet and lands on "Drink Water Today · finished" (`b92-caption-4-hide-keyboard-closed.png`).
+   - A tap on the photo above the sheet does the same (`b92-caption-3-tap-above-closed.png`).
+   Root cause: `components/task-v2/steps/PostChoiceSheet.tsx:90-102`, the caption is a `multiline` `TextInput` with no
+   return-key dismiss, and the sheet is not lifted above the keyboard; `components/ds/glass/GlassSheet.tsx:56-61`, the
+   dim area's `onPress` is `onClose`, so the tap that would drop a keyboard closes the sheet instead. Not tried on a
+   device: whether an iOS keyboard swipe on hardware behaves differently from the simulator.
+2. **The post-sheet caption is never checked for curse words and never shown on the post.** It is sent as
+   `noteText` (`components/task-v2/useTaskFlowV2.ts:1065`) and stored only in `check_ins.note_text`
+   (`backend/trpc/routes/checkins.ts:1287`); the `task_completed` event metadata (`checkins.ts:1350-1377`) has no
+   caption, and the word filter runs only in `feed.shareCompletion` (`backend/trpc/routes/feed.ts:610`). So even with
+   bug 1 fixed, "this fucking water" would be saved, not refused. Build 90 07.4 made the review caption private
+   journal text on purpose; the build 92 sheet ("Add a caption (optional)" on "Post your proof", Part 1 copy table)
+   reads as a public caption. Needs Yaseen to say which is meant before the fix.
+
+### 12.1 Stronger personas
+- `agents/agents.config.json`: `claude-sonnet-5-5` default, `claude-opus-5-5` for the first-day group, cap $60,
+  `maxTokens` 2000 (Opus thinking counts against it; 400 cut replies short), list prices checked Oct 18.
+  `agents/src/config.ts` reads it; `AGENT_MODEL`, `AGENT_FIRST_DAY_MODEL`, `AGENT_CAP_USD`, `AGENT_MAX_TOKENS` override it.
+  `cost.ts` prices from config; the runner stops before the next session once spend reaches the cap and writes `stopped.txt`.
+
+### 12.2 "Be a person" rule
+- `agents/src/stuck.ts`: two taps on one target that leave the screen signature unchanged make the next prompt say
+  "do something different… start your thought with stuck:"; a third tap on that target is refused. Each stuck note is
+  logged on the step; 3 on one screen stop the session ("Stopped: 3 stuck notes on …").
+- Found by the dry run and fixed: `agents/src/match.ts` `screenSize` only accepted a window 700–950 pt tall (iPhone 16
+  is 852). The 16 Pro Max (956) and the SE (667) fell back to 393×852, so every tap point was computed for the wrong
+  screen; the Profile tab was clamped to the bottom-right corner. Runs 1 and 2 of the dry run
+  (`12/dry-run-1-before-size-fix`, `dry-run-2-before-size-fix`) are every session tapping a control and nothing
+  changing. Now 560–1000 pt; test in `agents/src/build92.test.ts` fails on the old rule
+  (`12/screen-size-test-before.txt`) and passes on the new one.
+
+### 12.3 Scripted checks (Maestro, not the AI)
+`agents/checks/run-checks.sh <udid> <label> <out> <app checkout> [flow…]`; each flow starts from a fresh guest.
+Journal typing appends instead of erasing 50 characters (`device.ts` `typePlan`). Final results (first full run at
+04:19 / 04:27; curse-caption and curse-comment rerun at 07:10 with the fixed flows):
+
+| Check | Build 91 | Build 92 |
+|---|---|---|
+| journal-long (typed in three parts into the multiline field, all kept, day secured) | PASS | PASS |
+| curse-username | PASS | PASS |
+| username-control (a clean name is accepted) | PASS | PASS |
+| curse-bio | PASS | PASS |
+| curse-caption | FAIL: the caption posts, Day 1 secured, no refusal (`12/shots/b91-caption-posted.png`) | FAIL: closing the keyboard closes the post (must-fix 1) |
+| curse-comment | PASS | PASS (after the flow fix) |
+| curse-title | PASS | PASS |
+| strava-stub (stubbed webhook completes a run task) | PASS | PASS |
+| offline-post | not run: no network conditioner on this Mac | not run |
+
+Flow fixes this session:
+- `curse-caption` / `photo-post.yaml`: the photo steps moved to `photo-sheet.yaml`; with a caption, the flow closes
+  the keyboard (`hideKeyboard`, optional because build 91's review screen keeps Post above its keyboard), then asserts
+  the post is still open, then taps Post. The old tap loop tapped keys under the keyboard and never posted on build 92.
+  "Post to (friends|everyone)" because build 91 sometimes opened on Everyone.
+- `curse-comment`: after Home, `scrollUntilVisible` to a fully visible "Comment"; the 4:5 photo pushed it below the fold.
+
+### 12.4 New persona groups and 12.5 report
+- `agents/src/build92.ts`: History (2), Social pairs (3 × A, B, A again), Day 2 (6 returning users), first-day (12, Opus).
+  Saved accounts log in through `account.ts` `savedAccountSession`. `--dry` runs one session per new group.
+- `agents/src/build92-report.ts`: `screens.csv` in the build 90 format, an end tag on every session (app bug / agent
+  stuck / finished / harness stop), the main numbers (Day 1 secured, Day 2 return, social actions per pair, cold start,
+  3-word quiz).
+- History seed: `docs/sql/build92.sql`, chunk 12 item 12.4, NOT RUN (34 days, 33 secured, 1 freeze used, 25 posts,
+  a left 7K Steps). The account is `is_test` "Priya" (`agents/tools/prepare-account.ts`).
+
+### Dry run (`12/dry-run/REPORT.md`, run 3, 16 Pro Max, build 92)
+| Session | Steps | End | What happened |
+|---|---|---|---|
+| h-01 Priya (History) | 16 | agent stuck (home repeated 3 times) | Opened Profile, calendar, Activity, Leaderboard; Home and Profile agree (0 / 0) because the seed has not run |
+| s-dry-b Blake (Social) | 19 | agent stuck (home repeated 3 times) | Accepted Kim's invite, joined, posted; Kim's saved build 90 account (`4-social/p4-03a`) has no proof, so nothing to like or comment on |
+| d-01 Tess (Day 2) | 17 | finished | Came back after a 1-day gap, saw the streak and the freeze offer, secured the day |
+
+Cost: $0.32 for the 3 sessions (58 calls, 120,666 in / 8,254 out). Projection printed by the runner: $4.34 for the
+full run at the dry run's 17 steps a session. At the 60-step limit per session it would be about $16. Both are under
+the $60 cap.
+
+### Gates
+- [x] Dry run of 3 sessions (one from each new group) completes with the report written (`12/dry-run/REPORT.md`).
+- [~] Scripted checks: build 91 is green on everything that works; build 92 is green on everything except
+  curse-caption, which fails on both builds for real app reasons (must-fix 1 and 2), not a flow problem.
+- [x] Dry-run cost printed with the projected full-run cost.
+- [x] Tests: agents vitest 49/49 (`12/vitest-agents.txt`), agents tsc 0 (`12/tsc-agents.txt`). App unchanged: full
+  vitest 4 failed, the chunk 11 baseline 4 (`12/vitest-full.txt`); tsc 5, the baseline (`12/tsc.txt`).
+- [x] Committed on `feat/agent-testers` and pushed; PROGRESS updated on `feat/build92`.
+
+### Decisions
+- Dry run on the 16 Pro Max with build 92, not the iPhone 16 (build 91), since chunk 13 tests build 92.
+- History ran against the unseeded account so the gate could run; its numbers mean nothing until the SQL runs.
+- Day 2 used a build 90 account that last secured Oct 17 (a return after a gap, labelled as such): no account
+  secured yesterday.
+- The social partner is the only saved build 90 account that created a challenge (Kim), though it never posted.
+- Must-fix 1 and 2 logged, not fixed (chunk 12 does not change app code).
+
+### Not sure
+- Sessions still end early on the build 90 "home repeated 3 times" rule (16–19 of 60 steps). It may cut full-run
+  sessions short before likes and comments; not changed in this chunk.
+- Cold start in the dry run (9.8 s median) is through Maestro and includes its launch and login overhead; it is not
+  comparable to chunk 11's 1.46 s.
+- In dry run 1 the SE simulator showed a 7K Steps day done; I could not tell if the harness or chunk 11 did that.

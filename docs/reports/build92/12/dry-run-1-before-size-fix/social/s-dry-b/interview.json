@@ -1,0 +1,10 @@
+{
+  "secured": "The app never showed me \"Day secured\" on this screen, so I can't say what it means; I only saw \"Join · Day 1 is today.\"",
+  "freeze": "The only thing I saw was \"A freeze can cover a missed day,\" so I guess it's a way to skip a day without breaking the streak, but the app didn't say how I get one or how many I have.",
+  "selfReported": "I think it means I just tell the app I did the 10 pushups and nothing checks it, but the app didn't actually explain the term.",
+  "tomorrow": "6 - Kim invited me and the task is easy (10 pushups), but I'd still be unsure how the streak and freezes work and there's no one else in it yet.",
+  "securedRight": false,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}

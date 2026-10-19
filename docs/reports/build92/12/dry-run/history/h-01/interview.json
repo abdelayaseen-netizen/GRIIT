@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained \"Day secured\" to me; the home screen only showed a streak of 0 days and 'Day 1 starts now', so my guess is that it means I've submitted proof for today, but that's a guess.",
+  "freeze": "I never saw a freeze explained in what I looked at, so I can't say what it is; I'd only guess it protects a streak if I miss a day.",
+  "selfReported": "The app never defined \"Self-reported\" for me, so I'm only guessing that it means I said I did the task and nobody verified it.",
+  "tomorrow": "6 - The streak and week tracker plus the one-glass-of-water task is simple and fits how I check my numbers, but the terms weren't explained and the feed looked empty and black, so I'm not fully sold.",
+  "securedRight": false,
+  "freezeRight": true,
+  "selfReportedRight": false,
+  "asked": true
+}

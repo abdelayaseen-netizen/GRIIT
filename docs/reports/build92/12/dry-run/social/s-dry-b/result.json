@@ -1,0 +1,73 @@
+{
+  "personaId": "s-dry-b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [
+    {
+      "step": 4,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-19T11:37:51.787Z",
+      "toSheetMs": null,
+      "toVisibleMs": 1933,
+      "marker": "1 of 1 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "\"Day secured\" means I finished every task for today, so today counts toward my streak (the app says this right at the top of the home screen).",
+    "freeze": "The app never explained what a freeze is in anything I saw, so I don't know; I'd only be guessing that it saves a streak.",
+    "selfReported": "The app never spelled it out, but it's shown under my pushups post, so I assume it means I just said I did it and nothing verified it.",
+    "tomorrow": "7 - Kim invited me and the 1-task day was quick, and I want to see day 2 of the streak, but I'm not sure yet what else the app offers.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T11:36:15.626Z",
+  "endedAt": "2026-10-19T11:40:56.785Z",
+  "steps": 19,
+  "durationSec": 281,
+  "goals": [
+    {
+      "id": "s-dry-b-g1",
+      "text": "The invite opened Kim's challenge: accept it and join. Then find Kim's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Kim's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "completed",
+    "shared",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "f2e41297-9bcc-4e98-8286-6f43a63706d1",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9831,
+  "model": "claude-sonnet-5-5",
+  "endTag": "agent stuck"
+}

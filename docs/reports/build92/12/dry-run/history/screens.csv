@@ -1,0 +1,7 @@
+persona,group,screen,visits,seconds,steps,wasted_taps,stuck_notes
+"h-01","history","home","3","114.5","7","1","0"
+"h-01","history","Profile","1","20","2","0","0"
+"h-01","history","Profile calendar","1","22.8","2","0","0"
+"h-01","history","Activity","1","9.1","1","0","0"
+"h-01","history","Activity Leaderboard","2","49.9","3","0","0"
+"h-01","history","discover","1","7.4","1","1","0"

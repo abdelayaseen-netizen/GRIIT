@@ -1,0 +1,59 @@
+{
+  "personaId": "s-dry-b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never showed me \"Day secured\" on this screen, so I can't say what it means; I only saw \"Join · Day 1 is today.\"",
+    "freeze": "The only thing I saw was \"A freeze can cover a missed day,\" so I guess it's a way to skip a day without breaking the streak, but the app didn't say how I get one or how many I have.",
+    "selfReported": "I think it means I just tell the app I did the 10 pushups and nothing checks it, but the app didn't actually explain the term.",
+    "tomorrow": "6 - Kim invited me and the task is easy (10 pushups), but I'd still be unsure how the streak and freezes work and there's no one else in it yet.",
+    "securedRight": false,
+    "freezeRight": true,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T11:18:20.518Z",
+  "endedAt": "2026-10-19T11:20:00.422Z",
+  "steps": 11,
+  "durationSec": 100,
+  "goals": [
+    {
+      "id": "s-dry-b-g1",
+      "text": "The invite opened Kim's challenge: accept it and join. Then find Kim's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Kim's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Stopped: 3 stuck notes on Gym before work invite.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "opened",
+  "stages": [
+    "opened"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "c4425d18-0fe8-4838-8331-676897ad0100",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [
+    "Gym before work invite: stuck: tapped \"Join · Day 1 is today\" 2 times with no change",
+    "Gym before work invite: stuck: tapped \"Join · Day 1 is today\" 2 times with no change",
+    "Gym before work invite: stuck: Join and Not now both do nothing. Trying a scroll instead of tapping them again, in case there's more on the page or the screen is just slow. I'd have quit already, but I still owe actions."
+  ],
+  "coldStartMs": 2409,
+  "model": "claude-sonnet-5-5",
+  "endTag": "agent stuck"
+}

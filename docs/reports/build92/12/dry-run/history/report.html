@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>GRIIT iPhone 16 simulator. Production API. Group history.</p>
+<p>Models from agents.config.json: h-01 claude-sonnet-5-5.</p>
+<p>is_test accounts; hidden from real users.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>1</td></tr>
+<tr><th>Steps</th><td>16</td></tr>
+<tr><th>Measured API cost</th><td>$0.13</td></tr>
+<tr><th>Database goals passed</th><td>0 / 0</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>challenge</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>joined</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>task</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>completed</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>photo</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>shared</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>social</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>history</td><td>0% (0/0)</td><td>16</td><td>&quot;Joined Monday&quot; and &quot;No days yet&quot; after a supposed month of use<br>&quot;No proofs yet.&quot; after a month of use<br>After a month everything says &#39;No days yet. Day 1 is today.&#39;</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>discover</td><td>2</td><td>9</td><td>109s</td><td>0</td></tr><tr><td>home</td><td>3</td><td>7</td><td>115s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>Gave up. home repeated 3 times. (1)</p>
+<h2>Confusion</h2>
+<ul><li><strong>history</strong> · home · Streak says 0 and &#39;No challenge yet&#39; even though I&#39;ve been doing this for a month</li><li><strong>history</strong> · discover · &quot;No proofs yet.&quot; after a month of use</li><li><strong>history</strong> · discover · After a month I expected some proofs here, but it says &#39;No proofs yet.&#39;</li><li><strong>history</strong> · discover · &quot;Joined Monday&quot; and &quot;No days yet&quot; after a supposed month of use</li><li><strong>history</strong> · discover · After a month everything says &#39;No days yet. Day 1 is today.&#39;</li><li><strong>history</strong> · home · After a month I&#39;d expect a streak and a Day number, not &#39;Day 1 starts now&#39;.</li><li><strong>history</strong> · home · After a month everything says Day 1 and 0 streak</li><li><strong>history</strong> · home · After a month everything shows 0 and &#39;Day 1 starts now&#39;</li><li><strong>history</strong> · discover · No notifications yet.</li><li><strong>history</strong> · discover · Leaderboard only shows grey placeholder bars, no names or numbers</li><li><strong>history</strong> · discover · Leaderboard only shows grey bars, no names or numbers</li><li><strong>history</strong> · discover · Leaderboard never loads, just grey bars</li><li><strong>history</strong> · home · After a month I expected a streak, but Home says &#39;No challenge yet. Join one and Day 1 is today.&#39;</li><li><strong>history</strong> · home · After a month of use everything reads 0 and &#39;Day 1 starts now&#39;</li></ul>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>home</td><td>86%</td></tr><tr><td>discover</td><td>78%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. &quot;Joined Monday&quot; and &quot;No days yet&quot; after a supposed month of use</h3><p>1 agents. Screen: discover</p><div><img src="h-01/shots/004.png" alt=""></div><ol><li>h-01: scroll 50%,75%</li></ol></section><section><h3>2. &quot;No proofs yet.&quot; after a month of use</h3><p>1 agents. Screen: discover</p><div><img src="h-01/shots/002.png" alt=""></div><ol><li>h-01: scroll 50%,70%</li></ol></section><section><h3>3. After a month everything says &#39;No days yet. Day 1 is today.&#39;</h3><p>1 agents. Screen: discover</p><div><img src="h-01/shots/005.png" alt=""></div><ol><li>h-01: tap Home</li></ol></section><section><h3>4. After a month everything says Day 1 and 0 streak</h3><p>1 agents. Screen: home</p><div><img src="h-01/shots/007.png" alt=""></div><ol><li>h-01: scroll 50%,60%</li></ol></section><section><h3>5. After a month everything shows 0 and &#39;Day 1 starts now&#39;</h3><p>1 agents. Screen: home</p><div><img src="h-01/shots/008.png" alt=""></div><ol><li>h-01: tap Activity</li></ol></section><section><h3>6. After a month I expected a streak, but Home says &#39;No challenge yet. Join one and Day 1 is today.&#39;</h3><p>1 agents. Screen: home</p><div><img src="h-01/shots/014.png" alt=""></div><ol><li>h-01: scroll 50%,60%</li></ol></section><section><h3>7. After a month I expected some proofs here, but it says &#39;No proofs yet.&#39;</h3><p>1 agents. Screen: discover</p><div><img src="h-01/shots/003.png" alt=""></div><ol><li>h-01: tap Calendar</li></ol></section><section><h3>8. After a month I&#39;d expect a streak and a Day number, not &#39;Day 1 starts now&#39;.</h3><p>1 agents. Screen: home</p><div><img src="h-01/shots/006.png" alt=""></div><ol><li>h-01: scroll 50%,60%</li></ol></section><section><h3>9. After a month of use everything reads 0 and &#39;Day 1 starts now&#39;</h3><p>1 agents. Screen: home</p><div><img src="h-01/shots/015.png" alt=""></div><ol><li>h-01: done_refused</li></ol></section><section><h3>10. discover: the same screen came up 3 times</h3><p>1 agents. Screen: discover</p><ol><li>h-01: discover: the same screen came up 3 times</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/h-01.html">h-01</a> Priya · discover · 16 steps</li></ul>
+</body></html>

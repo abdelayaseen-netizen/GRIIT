@@ -111,3 +111,129 @@ WHERE EXISTS (SELECT 1 FROM public.challenges c WHERE c.id = v.challenge_id)
   AND NOT EXISTS (
     SELECT 1 FROM public.challenge_tasks ct WHERE ct.challenge_id = v.challenge_id
   );
+
+-- ---------------------------------------------------------------------------
+-- NOT RUN. Chunk 12, item 12.4: the History test account's month of history.
+-- Account: is_test user 98f47627-2a2f-464c-90f2-737d14c0084e ("Priya", made by
+-- agents/tools/prepare-account.ts on Oct 19; login in the git-ignored
+-- docs/reports/build92/12/history/account.json). Only this user's rows are written.
+-- What it writes, as the app would have if she had used it for 34 days (America/New_York):
+--   * No Days Off (a1000001-...-0001, 75 days), joined 34 days ago, every task done and the
+--     day secured on 33 of the 34 days; day -10 missed and held by a freeze.
+--   * Freeze grants at streak 7, 14 and 28 (the earn rule, cap 2); one used on day -10;
+--     2 left in hand.
+--   * 25 shared task_completed posts (the last 26 days minus the missed day). No photos, so
+--     they show on Posts and in the feed, not as Proofs tiles.
+--   * 7K Steps (e44f0001-...-0002) joined 30 days ago, 4 days secured, then left
+--     (status abandoned, the same as the app's leave after its midnight).
+--   * Today is not secured: Home should show No Days Off Day 35 open and a 33-day streak
+--     (held day kept) and Profile 33 days secured, 25 posts.
+-- Rerun-safe: every insert skips rows that exist. Check the preflight first.
+-- ---------------------------------------------------------------------------
+
+-- Preflight: the user is a test account and both challenges exist.
+SELECT p.user_id, p.username, p.is_test, p.timezone,
+  (SELECT count(*) FROM public.challenges WHERE id IN ('a1000001-4000-4000-8000-000000000001', 'e44f0001-4000-4000-8000-000000000002')) AS challenges_found,
+  (SELECT count(*) FROM public.challenge_tasks WHERE challenge_id = 'a1000001-4000-4000-8000-000000000001') AS no_days_off_tasks,
+  (SELECT count(*) FROM public.active_challenges WHERE user_id = p.user_id) AS enrollments_now
+FROM public.profiles p
+WHERE p.user_id = '98f47627-2a2f-464c-90f2-737d14c0084e';
+
+DO $$
+DECLARE
+  uid uuid := '98f47627-2a2f-464c-90f2-737d14c0084e';
+  ndo uuid := 'a1000001-4000-4000-8000-000000000001';
+  steps uuid := 'e44f0001-4000-4000-8000-000000000002';
+  tz text := 'America/New_York';
+  today date := (now() AT TIME ZONE 'America/New_York')::date;
+  missed int := 10;
+  a_id uuid;
+  b_id uuid;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE user_id = uid AND is_test = true) THEN
+    RAISE EXCEPTION 'History seed: % is not an is_test profile', uid;
+  END IF;
+
+  UPDATE public.profiles SET timezone = tz WHERE user_id = uid AND timezone IS NULL;
+
+  -- No Days Off, joined 34 days ago; 33 secures leave current_day at 34.
+  SELECT id INTO a_id FROM public.active_challenges WHERE user_id = uid AND challenge_id = ndo LIMIT 1;
+  IF a_id IS NULL THEN
+    INSERT INTO public.active_challenges (user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, last_secured_date_key, board_opt_in, created_at)
+    VALUES (uid, ndo, 'active', ((today - 34)::timestamp AT TIME ZONE tz), ((today - 34 + 75)::timestamp AT TIME ZONE tz), 34, 100, to_char(today - 1, 'YYYY-MM-DD'), true, ((today - 34)::timestamp AT TIME ZONE tz) + interval '9 hours')
+    RETURNING id INTO a_id;
+  END IF;
+
+  INSERT INTO public.check_ins (user_id, active_challenge_id, task_id, date_key, status, created_at)
+  SELECT uid, a_id, t.id, to_char(today - n, 'YYYY-MM-DD'), 'completed', ((today - n)::timestamp AT TIME ZONE tz) + interval '19 hours'
+  FROM generate_series(1, 34) AS n
+  CROSS JOIN public.challenge_tasks t
+  WHERE t.challenge_id = ndo AND n <> missed
+  ON CONFLICT (active_challenge_id, task_id, date_key) DO NOTHING;
+
+  INSERT INTO public.day_secures (user_id, date_key, created_at)
+  SELECT uid, to_char(today - n, 'YYYY-MM-DD'), ((today - n)::timestamp AT TIME ZONE tz) + interval '19 hours 30 minutes'
+  FROM generate_series(1, 34) AS n
+  WHERE n <> missed
+  ON CONFLICT (user_id, date_key) DO NOTHING;
+
+  -- Earned at streak 7 (day -28), 14 (day -21) and 28 (day -6); 21 fell on a full balance.
+  INSERT INTO public.freeze_grants (user_id, source, streak_at_grant, granted_date_key)
+  VALUES (uid, 'earned', 7, to_char(today - 28, 'YYYY-MM-DD')),
+         (uid, 'earned', 14, to_char(today - 21, 'YYYY-MM-DD')),
+         (uid, 'earned', 28, to_char(today - 6, 'YYYY-MM-DD'))
+  ON CONFLICT (user_id, source, granted_date_key) DO NOTHING;
+
+  INSERT INTO public.freeze_uses (user_id, date_key)
+  VALUES (uid, to_char(today - missed, 'YYYY-MM-DD'))
+  ON CONFLICT (user_id, date_key) DO NOTHING;
+
+  UPDATE public.profiles
+  SET streak_freezes_remaining = 2,
+      last_freeze_used_at = ((today - missed + 1)::timestamp AT TIME ZONE tz) + interval '8 hours',
+      total_days_secured = 33
+  WHERE user_id = uid;
+
+  INSERT INTO public.streaks (user_id, active_streak_count, longest_streak_count, last_completed_date_key)
+  VALUES (uid, 33, 33, to_char(today - 1, 'YYYY-MM-DD'))
+  ON CONFLICT (user_id) DO UPDATE SET active_streak_count = 33, longest_streak_count = GREATEST(public.streaks.longest_streak_count, 33), last_completed_date_key = EXCLUDED.last_completed_date_key;
+
+  -- 25 shared posts for the first task, the shape checkins.ts writes on Done.
+  INSERT INTO public.activity_events (user_id, event_type, challenge_id, share_state, shared_at, metadata, created_at)
+  SELECT uid, 'task_completed', ndo, 'shared', ((today - n)::timestamp AT TIME ZONE tz) + interval '19 hours 1 minute',
+    jsonb_build_object('task_id', t.id, 'task_name', t.title, 'task_type', t.task_type, 'challenge_name', c.title, 'date_key', to_char(today - n, 'YYYY-MM-DD'),
+      'has_photo', false, 'photo_url', null, 'verification_method', 'manual', 'is_hard_mode', false, 'task_mode', 'full', 'audience', 'friends',
+      'heart_rate_verified', false, 'location_verified', false, 'feed_shared', true, 'caption', null),
+    ((today - n)::timestamp AT TIME ZONE tz) + interval '19 hours 1 minute'
+  FROM generate_series(1, 26) AS n
+  JOIN LATERAL (SELECT id, title, task_type FROM public.challenge_tasks WHERE challenge_id = ndo ORDER BY order_index LIMIT 1) t ON true
+  JOIN public.challenges c ON c.id = ndo
+  WHERE n <> missed
+    AND NOT EXISTS (
+      SELECT 1 FROM public.activity_events e
+      WHERE e.user_id = uid AND e.event_type = 'task_completed' AND e.metadata->>'date_key' = to_char(today - n, 'YYYY-MM-DD')
+    );
+
+  -- 7K Steps: joined 30 days ago, 4 days done, then left.
+  SELECT id INTO b_id FROM public.active_challenges WHERE user_id = uid AND challenge_id = steps LIMIT 1;
+  IF b_id IS NULL THEN
+    INSERT INTO public.active_challenges (user_id, challenge_id, status, start_at, end_at, current_day, progress_percent, last_secured_date_key, board_opt_in, leave_effective_at, created_at)
+    VALUES (uid, steps, 'abandoned', ((today - 30)::timestamp AT TIME ZONE tz), ((today - 30 + 7)::timestamp AT TIME ZONE tz), 5, 100, to_char(today - 27, 'YYYY-MM-DD'), true, ((today - 26)::timestamp AT TIME ZONE tz), ((today - 30)::timestamp AT TIME ZONE tz) + interval '9 hours')
+    RETURNING id INTO b_id;
+  END IF;
+
+  INSERT INTO public.check_ins (user_id, active_challenge_id, task_id, date_key, status, created_at)
+  SELECT uid, b_id, t.id, to_char(today - n, 'YYYY-MM-DD'), 'completed', ((today - n)::timestamp AT TIME ZONE tz) + interval '18 hours'
+  FROM generate_series(27, 30) AS n
+  CROSS JOIN public.challenge_tasks t
+  WHERE t.challenge_id = steps
+  ON CONFLICT (active_challenge_id, task_id, date_key) DO NOTHING;
+END $$;
+
+-- Verify: 2 enrollments (active, abandoned), 33 day_secures, 1 freeze use, 25 posts, 2 freezes left.
+SELECT
+  (SELECT string_agg(status, ', ' ORDER BY status) FROM public.active_challenges WHERE user_id = '98f47627-2a2f-464c-90f2-737d14c0084e') AS enrollments,
+  (SELECT count(*) FROM public.day_secures WHERE user_id = '98f47627-2a2f-464c-90f2-737d14c0084e') AS days_secured,
+  (SELECT count(*) FROM public.freeze_uses WHERE user_id = '98f47627-2a2f-464c-90f2-737d14c0084e') AS freezes_used,
+  (SELECT count(*) FROM public.activity_events WHERE user_id = '98f47627-2a2f-464c-90f2-737d14c0084e' AND event_type = 'task_completed') AS posts,
+  (SELECT streak_freezes_remaining FROM public.profiles WHERE user_id = '98f47627-2a2f-464c-90f2-737d14c0084e') AS freezes_left;

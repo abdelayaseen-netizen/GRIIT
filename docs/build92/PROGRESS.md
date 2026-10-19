@@ -15,7 +15,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 09 | First day and account | PASSED | 8d4aaab5 | Items 09.1–09.5; SE gate 5/5 after the chunk 10 deploy (dce02d8) of getStarterPack gate_time_*. Needs Yaseen: Supabase email OTP steps, then flip EMAIL_OTP. Report: docs/reports/build92.md |
 | 10 | Discover, challenge page, Home, feed, words | PASSED | 3cf82f96 (code 756b0dd2) | Items 10.1–10.5; both Maestro gates pass on SE after the deploy (3cf82f9). Needs Yaseen: Run 3 mi SQL (docs/sql/build92.sql, chunk 10.1), hidden on Discover until it runs. Report: docs/reports/build92.md |
 | 11 | Speed: app open and profile | PASSED | 53b47e13 | Release sim medians: cold 3280 → 1459 ms, warm 2927 → 1175 ms (splash on a fixed 1.8 s timer; Home and routing waited on the network). Profile header 12–17 ms. Budget 44–47/min, 0 × 429. 11.3 server thumbnails not done (needs a deploy). Report: docs/reports/build92.md |
-| 12 | Better test agents | NOT STARTED | | |
+| 12 | Better test agents | PASSED (curse-caption fails on both builds: 2 app must-fixes) | agents: f0e13b96 | Harness on feat/agent-testers. Dry run 3/3 with report, $0.32, full run projected $4–16. Must-fix for build 92: a typed caption leaves no way to post (closing the keyboard closes the post sheet); the post-sheet caption is never word-checked or shown. Needs Yaseen: History seed SQL (docs/sql/build92.sql, chunk 12.4); say whether the caption is public. Report: docs/reports/build92.md |
 | 13 | Ship and overnight test | NOT STARTED | | |
 
 ## Item log
@@ -78,3 +78,8 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 11.2 Biggest phases (splash on settle, Home from per-user cache then refresh, returning account routes from device record): done, 53b47e13
 11.3 Profile and feed images (cache keyed on the storage object, tiles decoded at tile size): done; server-sized thumbnails not done (needs backend deploy), 53b47e13
 11.4 Request budget (5 fresh-guest runs: 44–47 in the busiest minute, 0 × 429): done, 53b47e13
+12.1 Stronger personas (Sonnet 5.5 default, Opus 5.5 first-day, ids and $60 cap from agents.config.json): done, f0e13b96
+12.2 Be a person (2 dead taps → do something else + "stuck:", 3 stuck notes stop; screen size fixed for SE and Pro Max): done, f0e13b96
+12.3 Scripted checks (journal, curse words ×5, Strava stub; offline not run, no network conditioner): done, f0e13b96; curse-caption fails on both builds (2 app must-fixes in the report)
+12.4 New groups (History, Social pairs, Day 2; History seed SQL written, NOT RUN): done, f0e13b96
+12.5 Report (screens.csv, end tags, main numbers, cost projection; dry run 3/3, $0.32): done, f0e13b96

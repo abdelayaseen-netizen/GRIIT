@@ -1,0 +1,47 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @7f1302d6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT iPhone 16 - iOS 26.4 - B10E65A0-C453-4E58-97BD-A3696ED848AE
+ > Flow journal-long
+Run guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... WARNED
+  Tap on (Optional) "Not now"... WARNED
+  Run flow when "Toggle performance monitor" is visible...
+  Run flow when "Toggle performance monitor" is visible... SKIPPED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Fitness and gym|Physical toughness.*"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that "Discover" is visible... COMPLETED
+  Wait for animation to end within 4000 ms... COMPLETED
+Run guest-home.yaml... COMPLETED
+Open griit://challenge/b2000001-4000-4000-8000-000000000004... COMPLETED
+Tap on (Optional) "^Open$"... WARNED
+Assert that "Join Journal Today" is visible... COMPLETED
+Tap on "Join Journal Today"... COMPLETED
+Tap on (Optional) "Send it"... WARNED
+Tap on (Optional) "Go back"... COMPLETED
+Tap on (Optional) "^Later$"... WARNED
+Assert that "Write a short journal entry" is visible... COMPLETED
+Tap on (Optional) id: home-task... COMPLETED
+Assert that id: write-body is visible... COMPLETED
+Tap on id: write-body... COMPLETED
+Input text Alpha morning. I woke up early and walked to the river before work, which I have not done in weeks.... COMPLETED
+Input text  The air was cold and the light was low over the water, so I stopped for a while and just watched it move.... COMPLETED
+Input text  Tomorrow I want to do the same walk again and write down one thing I noticed on the way, ending omega.... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that "Alpha morning\..*before work.*just watched it move\..*ending omega\." is visible... COMPLETED
+Take screenshot b92-12-journal-long... COMPLETED
+Tap on "^Done$"... COMPLETED
+Tap on (Optional) "Keep it private"... WARNED
+Tap on (Optional) id: post-choice-post... WARNED
+Assert that "Day secured.*|Day 1 secured.*|Journal Today · finished" is visible... COMPLETED
+Take screenshot b92-12-journal-secured... COMPLETED

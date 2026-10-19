@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GRIIT agent pilot</title>
+<style>
+body{font:16px/1.45 -apple-system,BlinkMacSystemFont,sans-serif;margin:32px auto;max-width:960px;color:#1a1918;background:#f7f5f1}
+h1{font-size:28px;margin-bottom:8px} h2{margin-top:32px;font-size:20px}
+table{border-collapse:collapse;width:100%;background:#fff} td,th{border:1px solid #ddd;padding:6px 8px;text-align:left;vertical-align:top}
+img{width:180px;border-radius:8px;background:#111}
+section{background:#fff;padding:12px 16px;margin:12px 0;border-radius:10px}
+code{font-size:13px}
+</style></head><body>
+<h1>GRIIT agent pilot</h1>
+<p>GRIIT iPhone 16 simulator. Production API. Group social.</p>
+<p>Models from agents.config.json: s-dry-b claude-sonnet-5-5.</p>
+<p>is_test accounts; hidden from real users.</p>
+<h2>Overview</h2>
+<table><tr><th>Agents</th><td>1</td></tr>
+<tr><th>Steps</th><td>19</td></tr>
+<tr><th>Measured API cost</th><td>$0.22</td></tr>
+<tr><th>Database goals passed</th><td>0 / 0</td></tr>
+<tr><th>Crashes</th><td>0</td></tr></table>
+<h2>Funnel</h2>
+<p>Counts are agents who reached the stage. Returned is not measured. Multi-day mode is not built.</p>
+<table><tr><th>Stage</th><th>Agents</th><th>Share</th><th>Drop-off</th></tr><tr><td>opened</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>discover</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>challenge</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>joined</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>task</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>completed</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>photo</td><td>0</td><td>0%</td><td>1 did not reach it</td></tr><tr><td>shared</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr><tr><td>social</td><td>1</td><td>100%</td><td>0 did not reach it</td></tr></table>
+<h2>Per group</h2><table><tr><th>Group</th><th>DB goal pass rate</th><th>Avg steps</th><th>Top problems</th></tr><tr><td>social</td><td>0% (0/0)</td><td>19</td><td>&quot;No shared proofs in this challenge yet.&quot;<br>empty model reply<br>Gave up. home repeated 3 times.</td></tr></table>
+<h2>Where they spend time</h2>
+<table><tr><th>Screen</th><th>Entries</th><th>Steps</th><th>Time</th><th>Backs</th></tr><tr><td>home</td><td>2</td><td>17</td><td>205s</td><td>0</td></tr><tr><td>other</td><td>2</td><td>2</td><td>26s</td><td>0</td></tr></table>
+<h2>Free-roam</h2>
+<p>Not run. This report is goal mode only.</p>
+<h2>Stuck</h2>
+<p>Gave up. home repeated 3 times. (1)</p>
+<h2>Confusion</h2>
+<ul><li><strong>social</strong> · home · Where is Kim&#39;s post? The feed only shows mine.</li><li><strong>social</strong> · home · Kim&#39;s post isn&#39;t in either feed so far.</li><li><strong>social</strong> · home · Kim&#39;s proof isn&#39;t showing in the feed, only my own post.</li><li><strong>social</strong> · home · The page doesn&#39;t seem to scroll and Recent proofs is out of view.</li><li><strong>social</strong> · home · Page won&#39;t scroll to Recent proofs</li><li><strong>social</strong> · home · Page won&#39;t scroll, can&#39;t find Kim&#39;s proof</li><li><strong>social</strong> · home · &quot;No shared proofs in this challenge yet.&quot;</li></ul>
+<h2>Emotion</h2>
+<table><tr><th>Screen</th><th>Frustrated</th></tr><tr><td>other</td><td>0%</td></tr><tr><td>home</td><td>29%</td></tr></table>
+<h2>Top 10 fixes</h2>
+<section><h3>1. &quot;No shared proofs in this challenge yet.&quot;</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/016.png" alt=""></div><ol><li>s-dry-b: tap Go back</li></ol></section><section><h3>2. empty model reply</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/017.png" alt=""></div><ol><li>s-dry-b: none</li></ol></section><section><h3>3. Gave up. home repeated 3 times.</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/019.png" alt=""></div><ol><li>s-dry-b: abort</li><li>s-dry-b: Gave up. home repeated 3 times.</li></ol></section><section><h3>4. home: the same screen came up 3 times</h3><p>1 agents. Screen: social</p><ol><li>s-dry-b: home: the same screen came up 3 times</li><li>s-dry-b: home: the same screen came up 3 times</li><li>s-dry-b: home: the same screen came up 3 times</li><li>s-dry-b: home: the same screen came up 3 times</li></ol></section><section><h3>5. Kim&#39;s post isn&#39;t in either feed so far.</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/008.png" alt=""></div><ol><li>s-dry-b: tap Show feed from everyone</li></ol></section><section><h3>6. Kim&#39;s proof isn&#39;t showing in the feed, only my own post.</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/009.png" alt=""></div><ol><li>s-dry-b: tap Open Gym before work challenge</li></ol></section><section><h3>7. Page won&#39;t scroll to Recent proofs</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/014.png" alt=""></div><ol><li>s-dry-b: tap Recent proofs</li></ol></section><section><h3>8. Page won&#39;t scroll, can&#39;t find Kim&#39;s proof</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/015.png" alt=""></div><ol><li>s-dry-b: tap Got it</li></ol></section><section><h3>9. The page doesn&#39;t seem to scroll and Recent proofs is out of view.</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/013.png" alt=""></div><ol><li>s-dry-b: scroll 50%,80%</li></ol></section><section><h3>10. Where is Kim&#39;s post? The feed only shows mine.</h3><p>1 agents. Screen: home</p><div><img src="s-dry-b/shots/007.png" alt=""></div><ol><li>s-dry-b: tap Show feed from people you follow</li></ol></section>
+<h2>Agents</h2>
+<ul><li><a href="report/agents/s-dry-b.html">s-dry-b</a> Blake · social · 19 steps</li></ul>
+</body></html>

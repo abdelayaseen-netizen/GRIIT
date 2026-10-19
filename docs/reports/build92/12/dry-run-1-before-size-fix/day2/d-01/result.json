@@ -1,0 +1,76 @@
+{
+  "personaId": "d-01",
+  "group": "day2",
+  "chunk": "day2",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 4,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never actually showed me the phrase \"Day secured\" on these screens, so I'm guessing it means finishing your daily task (like the 7,000 steps) so the day counts toward your streak.",
+    "freeze": "A freeze is something you can use, and I have 1 left, to keep your 1-day streak alive when you missed a day, so the streak doesn't reset.",
+    "selfReported": "The app doesn't explain it, but I take it to mean you say you did the task yourself and nothing verifies it, like a step count from a device.",
+    "tomorrow": "6 - I'd likely open it to keep my streak going and use the freeze, but the streak display is confusing (0 days in a row with a best of 1) and the terms aren't explained.",
+    "securedRight": true,
+    "freezeRight": true,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T11:20:00.427Z",
+  "endedAt": "2026-10-19T11:22:48.111Z",
+  "steps": 17,
+  "durationSec": 168,
+  "goals": [
+    {
+      "id": "d-01-g1",
+      "text": "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Gave up. home repeated 3 times.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Element not found: Text matching regex: Check off",
+    "home: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured).",
+    "Screen said Day 3 of 7. Enrollment day is 2/1 (stored current_day 2, secured)."
+  ],
+  "funnel": "completed",
+  "stages": [
+    "opened",
+    "home",
+    "joined",
+    "completed"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "2e54524d-7ad9-4a25-8beb-70345744babd",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 2380,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

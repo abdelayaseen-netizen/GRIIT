@@ -1,0 +1,6 @@
+   × 12.2 tap points on every simulator size > reads the 16 Pro Max (440×956) and the SE (375×667) windows, not the iPhone 16 fallback 3ms
+   × 12.2 tap points on every simulator size > the Profile tab on the Pro Max is tapped on the tab, not clamped to the corner 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  agents/src/build92.test.ts > 12.2 tap points on every simulator size > reads the 16 Pro Max (440×956) and the SE (375×667) windows, not the iPhone 16 fallback
+    128|   it("reads the 16 Pro Max (440×956) and the SE (375×667) windows, not…
+      Tests  2 failed | 13 passed (15)
