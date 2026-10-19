@@ -1,0 +1,25 @@
++ Received
+
+  Array [
+    "Auto-verify runs",
+-   "Extra freezes",
++   "Extra freezes (hold up to 4 instead of 2)",
+    "Stats",
+    "Premium stickers",
+  ]
+
+ ❯ lib/build92-invite.test.ts:180:23
+    178|       enabled: false,
+    179|     });
+    180|     expect(PRO_PERKS).toEqual([
+       |                       ^
+    181|       "Auto-verify runs",
+    182|       "Extra freezes",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  23:23:06
+   Duration  644ms (transform 52ms, setup 0ms, collect 48ms, tests 71ms, environment 0ms, prepare 50ms)
+

@@ -2,6 +2,8 @@
 -- Never run from the app, a script, or CI. Nothing here has been run against prod by Cursor.
 
 -- ---------------------------------------------------------------------------
+-- RUN, Oct 18 (by Yaseen, on production). Step 2 converted 2 tasks to 30-minute timers:
+--   8ae7e1d1-2be2-4ca4-bcb8-7eb4bfe42856, 5cb89dcb-f59b-4181-a2b6-c2c0c499bae1
 -- Chunk 03, item 03.6: live counter / reading tasks whose CHALLENGE title says minutes
 -- but whose task counts pages ("Read" inside "Read 30 min before bed").
 -- Build 90's block covered task titles that say minutes; this one covers the challenge title.

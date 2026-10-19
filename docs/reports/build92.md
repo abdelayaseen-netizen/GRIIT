@@ -959,3 +959,103 @@ P2-20/21 (settings); Part 2 checklist lines 106–118; copy table rows "Invite s
 "Accept". Handoff `src/invite/invite.ts`, `src/challenge/leaderboard.ts`, `src/settings/connections.ts`.
 Decision: short codes live in the existing `invite_tracking` table (`referrer_user_id`, `challenge_id`,
 `invite_code`, `source = 'invite_link'`, `referred_user_id` null until accepted) — no migration, no SQL.
+
+### Chunk 08 · state on resume (Oct 18, 23:15, new chat on Claude Opus)
+`git status` / `git diff` on top of `41a48b05` (the interim code commit, deployed):
+- Modified, not committed:
+  - `app/challenge/[id]/invite.tsx`: the bottom "Share a link" button (raw `inviteToChallenge`) is gone; the
+    `InviteSheet` (P2-14) sits at the top of the picker. Unused `Link`, `Button`, `Divider`, `ICON` removed.
+  - `backend/lib/invite-store.ts`: `loadInviteChallenge` counts live `active_challenges` rows for the landing
+    page's people count (`participants_count` lagged at 0); takes the larger of the two. **Not deployed yet.**
+  - `components/activity/LeaderboardTab.tsx`: `BoardRow` exported so the dev board reuses it.
+  - `components/challenge/ChallengeDetailV3.tsx`: the "{n} of 10" chip shows only for a group room opened
+    through an invite; a public challenge keeps its own count.
+- Untracked: `.maestro/build92-08-invite.yaml` (two-account flow), `app/dev/build92-board.tsx` (5 / 10 member
+  board, same `rankBoard` + `BoardRow`), `docs/reports/build92/08/landing-0jeQjRVg.html`, SE screenshots
+  `docs/reports/build92/08/se/{P2-14-invite-sheet,P2-14-link-copied,P2-18-landing-safari,P2-19-invite-accept,08-b-first-task}.png`.
+- Overwritten-then-restored file: `lib/invite-code.ts`. `git diff 838e8765 HEAD -- lib/invite-code.ts` is one
+  doc-comment line (`griit://i/<uuid>` → "an older scheme link", for the grep gate); the parser is
+  byte-for-byte the chunk 07 version and the working tree matches HEAD. The fetch cache that had overwritten it
+  lives in `lib/invite-code-fetch.ts`. Only intended changes remain.
+- `/api/health` commit `41a48b0` = HEAD; the only backend change since is the `invite-store.ts` edit above, so
+  the backend is redeployed with the final chunk 08 commit.
+
+### 08.1 Short invite codes
+`backend/lib/invite-codes.ts` draws 8 characters from a 62-character alphabet (`crypto.randomInt`, injectable for
+retry on a clash); `backend/lib/invite-store.ts` stores one code per (inviter, challenge) in `invite_tracking`
+(no migration). `invites.create` / `invites.resolve` in `backend/trpc/routes/invites.ts`. Links read
+`{INVITE_BASE_URL}/i/{code}` (`lib/config.ts`, `lib/deep-links.ts` `inviteDeepLink`). Tests:
+`backend/lib/invite-codes.test.ts` "uses a 62-character alphabet and at least 6 characters", "does not repeat across
+many draws and is not a UUID", "maps a stored row back to the challenge and inviter", "self-invite, full room,
+member, ended and open outcomes" (failed before: `08/test-before.txt`, the module did not exist; pass: `08/test-after.txt`).
+
+### 08.2 Landing page (P2-18)
+`GET /i/:code` in `backend/hono.ts` renders the challenge name, days, inviter, people count, the App Store button and
+an "Open it" `griit://invite/{code}` fallback. No associated-domains entitlement exists, so no universal link (listed
+under needs Yaseen). The people count now reads live `active_challenges` rows (`participants_count` lagged at 0).
+Evidence: `08/curl-landing.txt` (200, title "user_5a0f3804 invited you to Show Up 7"; unknown code 404 "This invite
+link doesn't work any more."), `08/se/P2-18-landing-safari.png`.
+
+### 08.3 Invite sheet (P2-14)
+`components/InviteSheet.tsx`: preview (challenge, "Join me. Day 1 is today.", short link), Share primary (system
+sheet), Copy link secondary with the toast "Link copied.". Shown on create success (`LaunchedScreen`), the empty
+board, and the challenge Invite screen (`app/challenge/[id]/invite.tsx`, where it replaces the bottom "Share a link"
+button). The raw link block (`components/InviteLinkRow.tsx`) is deleted. Screens: `08/{se,16promax}/P2-14-*.png`.
+
+### 08.4 Accept screen (P2-19)
+`app/invite/[code].tsx` resolves the code, then the challenge page shows "{name} invited you" with "Accept · Day 1 is
+today" (group room) or "Join · Day 1 is today" (public), and "Not now". No owner approval. The "{n} of 10" chip only
+shows for group rooms. Screens: `08/{se,16promax}/P2-19-invite-accept.png`, `08-b-first-task.png`.
+
+### 08.5 Leaderboard (P2-15 – P2-17)
+`backend/trpc/routes/leaderboard.ts` adds `verifiedThisWeek` (`backend/lib/board-verified.ts`) and `lastSecuredAt`;
+`lib/challenge-board.ts` `rankBoard` ties on verified, then earlier secure. `BoardRow` reads "{s} of 7 · {v}
+verified" and "You". is_test authors are dropped by `dropTestAuthors` (unchanged). Test: `lib/build92-invite.test.ts`
+"ties go to more verified days, then whoever secured earlier", "row line reads secured of 7 and the verified count;
+own row says You". Screens: dev board `griit://dev/build92-board?n=5|10` (same `rankBoard` + `BoardRow`):
+`08/se/P2-16-board-5.png`, `08/16promax/P2-17-board-10.png` (+ `-bottom`).
+
+### 08.6 Settings (P2-20, P2-21)
+`lib/settings-rows.ts` + `app/settings/index.tsx`: Connections card with Strava ("Connected as {name}" + Disconnect,
+or "Verify runs automatically" + Connect, through the existing OAuth in `backend/lib/strava-callback.ts`) only when
+`FLAGS.STRAVA_AUTO_VERIFY` is on and not a guest; Apple Health "Steps and workouts" + "Coming soon", disabled; GRIIT
+Pro card with the 4 perks, each with a Pro tag, gating nothing. On resume the perk copy was fixed to the copy table
+word for word: "Extra freezes" (was "Extra freezes (hold up to 4 instead of 2)") with "Hold up to 4 instead of 2"
+as its only second line; the three invented subtitles are gone. Test: "Apple Health is Coming soon and disabled; Pro
+perks carry the Pro tag" (failed before: `08/perks-before.txt`; pass: `08/perks-after.txt`). Screens:
+`08/16promax/P2-21-settings-strava-off.png` (run with the flag turned on locally for that run only, then reverted;
+saved is_test account), `08/se/P2-21-settings-{connections,pro}.png` (guest, flag off: the shipped state).
+
+### Chunk 08 · gates and evidence
+- [x] vitest codes: `backend/lib/invite-codes.test.ts` 8 tests + `lib/build92-invite.test.ts` 12 tests pass
+      (`08/perks-after.txt`).
+- [x] curl: `/i/iXH0FIGZ` 200 with "Show Up 7" and "invited you"; `/i/zzzzzzzz` 404 friendly page (`08/curl-landing.txt`).
+- [x] Maestro two-account (`.maestro/build92-08-invite.yaml`): A shares → B opens → Join → B on "Get to the gym":
+      SE `08/invite-se-run3.log`, Pro Max `08/invite-promax-run1.log` (exit 0, code iXH0FIGZ).
+- [x] Board with 5 members vs P2-16: `08/se/P2-16-board-5.png` (dev seed, see decisions); 10 vs P2-17 on Pro Max.
+- [x] grep: `08/grep-griit-i.txt`: no `griit://i/` in `app/`, `components/`, or non-test `lib/`; the 3 backend hits
+      are code comments.
+- [x] Backend deployed: `116eae9e` (`08/deploy2.log`, `/api/health` commit `116eae9`, `08/health-after-deploy.txt`).
+      Full vitest 2239 passed / 4 failed = the chunk 07 baseline four (`08/vitest-full.txt`); tsc 5 = baseline (`08/tsc.txt`).
+
+### Chunk 08 · tests moved (behaviour moved, none weakened)
+- `lib/group-invite-link.test.ts` and `lib/share-invite-copy.test.ts` pinned the build 90 `griit://i/<id>` link.
+  08.1 replaces it on purpose; both now pin `{INVITE_BASE_URL}/i/{code}`, no `griit://`, still no `griit.app`, and
+  the invite screen still shares through `inviteToChallenge` (now via `InviteSheet`).
+- `lib/build92-invite.test.ts` perk list: the copy-table words (see 08.6).
+
+### Chunk 08 · decisions made alone
+- Codes are 8 characters (gate asks ≥ 6) and live in `invite_tracking` (no migration).
+- The P2-16/P2-17 boards are a dev route fed through the live `rankBoard` + `BoardRow`; seeding 5 real members needs
+  DB writes or a service key.
+- Public challenges opened by a link say "Join · Day 1 is today"; only group rooms say "Accept".
+- The landing people count is max(live active enrollments, `participants_count`).
+
+### Chunk 08 · not done / needs Yaseen
+- P2-20 (Strava connected) needs a real Strava login; only the not-connected state (P2-21) is shot.
+- Universal links: needs an associated-domains entitlement and an `apple-app-site-association` on the invite domain.
+  Until then the landing page's "Open it" uses `griit://invite/{code}`.
+- The challenge page still reads `participants_count` ("0 people" in `P2-19-invite-accept.png`); the landing page
+  counts live enrollments. Same lag, outside chunk 08's areas.
+- The live landing count includes test guests (81 on Show Up 7); is_test filtering there was not added.
+- The invite screen caption says "0 of 10 in the group" on a public challenge (build 90 picker copy, unchanged).

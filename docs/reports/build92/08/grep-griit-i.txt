@@ -1,0 +1,3 @@
+backend/lib/can-view-challenge.ts:62: * Build 90 08.2: the invite link (griit://i/<id>) is the key to an invite-only challenge.
+backend/trpc/routes/groups.ts:416:      // Build 90 08.2: a griit://i/<id> link is shared for every challenge, not only groups.
+backend/trpc/routes/challenges-join.ts:46:        /** Build 90 08.2: opened through griit://i/<id>; the link is the key to an invite-only challenge. */
