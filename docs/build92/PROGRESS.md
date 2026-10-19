@@ -12,7 +12,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 06 | One source for every number | PASSED | 15983b8c (code de7d012d) | No SQL (server computes user_stats from existing tables). Backend deployed de7d012 (user_stats on getStats/getRecord/meStats, challenges.progress, freeze refill removed). Report: docs/reports/build92.md |
 | 07 | Profile and post viewer | FAILED (07.1 frame gate only) | 838e8765 | Items 07.1–07.6 built and tested; all gates pass except "no frame over 50 ms": PostViewer shows 1 frame of 52–59 ms per 10 s run on the Pro Max simulator (legacy harness max 44 ms). 2 fix attempts spent; needs a device check with real photos. P2-08/P2-13 (second account) not staged. No SQL. |
 | 08 | Invite, leaderboard and settings | PASSED | 354ce8ad (code 116eae9e) | Short codes in invite_tracking (no SQL). Backend deployed 41a48b0 then 116eae9. Needs Yaseen: universal links entitlement; P2-20 (Strava connected) needs a real Strava login. Report: docs/reports/build92.md |
-| 09 | First day and account | PASSED except SE gate (waits on chunk 10 deploy) | 8d4aaab5 | Items 09.1–09.5 built; 9:41 vitest, OTP stub test, screenshots pass. SE 5x gate reruns after chunk 10 deploys getStarterPack gate_time_*. Needs Yaseen: Supabase email OTP steps, then flip EMAIL_OTP. Report: docs/reports/build92.md |
+| 09 | First day and account | PASSED | 8d4aaab5 | Items 09.1–09.5; SE gate 5/5 after the chunk 10 deploy (dce02d8) of getStarterPack gate_time_*. Needs Yaseen: Supabase email OTP steps, then flip EMAIL_OTP. Report: docs/reports/build92.md |
 | 10 | Discover, challenge page, Home, feed, words | NOT STARTED | | |
 | 11 | Speed: app open and profile | NOT STARTED | | |
 | 12 | Better test agents | NOT STARTED | | |
@@ -66,6 +66,6 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 08.6 Settings (Strava Connect / Connected as + Disconnect behind the flag, Apple Health Coming soon, Pro perks with Pro tags, copy-table words): done, 116eae9e
 09.1 Goals (Part 3 seven, 2-column grid on SE, filled + check, 4th pick swaps oldest): done, 8d4aaab5
 09.2 Start here (Join on every card, toast "You’re in. Day 1 is today.", freeze line once): done, 8d4aaab5
-09.3 Closed windows (closed cards last, "Day 1 is tomorrow at {time}" on card / page / join button; server pinned at 9:41): done, 8d4aaab5 (getStarterPack select deploys with chunk 10)
+09.3 Closed windows (closed cards last, "Day 1 is tomorrow at {time}" on card / page / join button; server pinned at 9:41): done, 8d4aaab5 (getStarterPack select deployed dce02d8)
 09.4 Account (Apple, email 6-digit code, oneTimeCode, Not now; behind EMAIL_OTP until dashboard): done, 8d4aaab5
 09.5 Guest save (Not now always; same user id on save): done, 8d4aaab5

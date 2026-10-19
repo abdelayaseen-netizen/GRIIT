@@ -1111,8 +1111,9 @@ Freeze line, After Join, Account, Account errors. Handoff `src/onboarding/{goals
   enrollment); saving later converts the same user id, so the streak carries over.
 
 ### Gates
-- Maestro SE, Welcome → Faith and prayer → Start here → Join → first task → Done → Day secured, 5 of 5:
-  **waiting on the chunk 10 deploy.** Every step up to Done passes on SE (`.maestro/build92-09-first-day.yaml`),
+- Maestro SE, Welcome → Faith and prayer → Start here → Join → first task → Done → Day secured: **5 of 5 pass**
+  after the chunk 10 deploy (health `dce02d8`; `09/maestro-gate-run1..5.txt`, `09/se/P3-06-day-secured.png`).
+  Before that deploy: Every step up to Done passes on SE (`.maestro/build92-09-first-day.yaml`),
   but tonight the first Faith card is Fajr Before Sunrise and the live server rejects the check-in with
   "Window closed." (`09/se/gate-fail-window-closed-before-deploy.png`, `09/maestro-gate-before-deploy.txt`).
   The live `getStarterPack` does not send `gate_time_*`, so the client cannot see the closed window; this is the
