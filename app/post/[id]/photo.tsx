@@ -22,10 +22,11 @@ type LiveFeedResponse = { posts?: LiveFeedPost[]; pages?: { posts?: LiveFeedPost
 export default function PostPhotoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ id: string; uri?: string; name?: string; context?: string }>();
+  const params = useLocalSearchParams<{ id: string; uri?: string; name?: string; context?: string; caption?: string }>();
   const uri = typeof params.uri === "string" ? params.uri : "";
   const name = typeof params.name === "string" ? params.name : "";
   const context = typeof params.context === "string" ? params.context : "";
+  const caption = typeof params.caption === "string" ? params.caption : "";
   const dragging = useRef(false);
   const [release, setRelease] = React.useState(false);
   const id = typeof params.id === "string" ? params.id : "";
@@ -106,6 +107,7 @@ export default function PostPhotoScreen() {
       <View style={[styles.fade, { paddingBottom: insets.bottom + 16 }]}>
         {name ? <Text style={styles.name}>{name}</Text> : null}
         {context ? <Text style={styles.context}>{context}</Text> : null}
+        {caption ? <Text style={styles.caption} testID="post-photo-caption">{caption}</Text> : null}
       </View>
       </View>
     </Screen>
@@ -141,4 +143,5 @@ const styles = StyleSheet.create({
   },
   name: { color: DS_V3.color.textPrimary, fontSize: 17, fontWeight: "600" },
   context: { color: DS_V3.color.textSecondary, fontSize: 15 },
+  caption: { color: DS_V3.color.textPrimary, fontSize: 15, lineHeight: 21, marginTop: 6 },
 });

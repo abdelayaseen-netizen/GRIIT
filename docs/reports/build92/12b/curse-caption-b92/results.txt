@@ -1,0 +1,4 @@
+# build 92 (dev client, server 8ae6ad5) 2026-10-19 18:22:03 device B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+curse-caption PASS
+strava-stub PASS
+offline-post NOT RUN (no network conditioner on this Mac)

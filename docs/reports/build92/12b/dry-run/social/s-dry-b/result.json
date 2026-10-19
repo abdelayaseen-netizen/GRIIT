@@ -1,0 +1,82 @@
+{
+  "personaId": "s-dry-b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never spelled it out, but from the screen it seems a day counts as secured once you finish your task for that day. Right now it says '0 days secured' and 'Nothing done today. 1 task left.'",
+    "freeze": "The app never explained what a freeze is in anything I saw, so I can't say. I'd only be guessing that it saves a streak.",
+    "selfReported": "It seems to mean you just check the task off yourself, with no photo or other proof. 'Do 10 pushups' says Self-reported with a 'Check off' button, while the water challenge asked for a camera proof.",
+    "tomorrow": "6 - It's simple and Kim invited me, so I'd probably check in on the 7-day gym challenge. But some terms are unexplained and I haven't seen much payoff yet.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T22:47:21.488Z",
+  "endedAt": "2026-10-19T22:56:10.492Z",
+  "steps": 60,
+  "durationSec": 529,
+  "goals": [
+    {
+      "id": "s-dry-b-g1",
+      "text": "The invite opened Kim's challenge: accept it and join. Then find Kim's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Kim's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "discover: empty model reply",
+    "home: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 0 of 1. Enrollment day is 1 (stored current_day 1)."
+  ],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5cae7142-4838-485b-bc73-5e085f9a06d8",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 2313,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

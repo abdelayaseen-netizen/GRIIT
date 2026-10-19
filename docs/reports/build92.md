@@ -1474,3 +1474,112 @@ the $60 cap.
 - Cold start in the dry run (9.8 s median) is through Maestro and includes its launch and login overhead; it is not
   comparable to chunk 11's 1.46 s.
 - In dry run 1 the SE simulator showed a 7K Steps day done; I could not tell if the harness or chunk 11 did that.
+
+## Chunk 12b · Build 92 pre-ship fixes
+
+App on `feat/build92`, harness on `feat/agent-testers` (d1c4c700). Evidence in `docs/reports/build92/12b/`.
+Simulators: SE 575796A4 and 16 Pro Max B6CC0160, both on the dev client (HEAD JS from Metro) for the Maestro
+flows; the Pro Max went back to the build 92 Release app (53b47e13) for the agent dry run. Backend deployed
+8ae6ad56; `/api/health` shows `"commit":"8ae6ad5"`. No new SQL.
+
+### 12b.1 Post sheet keyboard (must-fix 1)
+- Root cause (chunk 12 must-fix 1): the caption had no Done key, the sheet did not move with the keyboard, and the
+  dim area's tap was `onClose`, so the tap that should drop the keyboard closed the sheet and saved the proof Only me.
+- Failing tests first (`.maestro/build92-12b-caption-{done-key,keyboard-open,tap-above}.yaml`, shared steps in
+  `build92-12b-caption-sheet.yaml` / `build92-12b-caption-posted.yaml`): type a caption, then Done / Post with the
+  keyboard open / tap above the sheet, then Post, then the caption must be in the Home feed. Before the fix:
+  SE Done-key and keyboard-open FAIL at "Drink Water Today · finished" (`before-se-*.txt`); Pro Max tap-above FAIL,
+  the sheet closed (`before-promax-tap-above.txt`).
+- Change: `components/ds/glass/GlassSheet.tsx` `avoidKeyboard` lifts the sheet by the keyboard height
+  (`lib/sheet-keyboard.ts` `sheetKeyboardLift`, native driver); while the keyboard is open a tap on the dim area or
+  photo, or a swipe down, only drops the keyboard (`sheetOutsideAction`); with it closed they close the sheet as
+  before. The X always closes. A strip in the sheet colour sits under the sheet: iOS 26 reports a keyboard frame
+  taller than the keys, and the gap showed the screen behind. The swipe-close also reads the latest `onClose` (it held
+  the first render's). `PostChoiceSheet.tsx`: `returnKeyType="done"` + `submitBehavior="blurAndSubmit"`.
+- After: all 3 flows PASS on SE and Pro Max (`after-{se,promax}-*.txt`). Screens: `12b/screens/se-sheet-keyboard-up.png`,
+  `promax-sheet-keyboard-up.png` ("Post to friends" above the keyboard), `*-caption-in-feed.png`.
+- Unit: `lib/sheet-keyboard.test.ts` (4).
+
+### 12b.2 Captions are public (must-fix 2, Yaseen's decision)
+- Design: the photo caption travels as its own `caption` field on `checkins.complete`, not `noteText`. The server
+  word-checks it first (`backend/lib/post-caption.ts` `captionBlock`, same `blockedPlainText` as comments and titles)
+  and refuses with "Those words aren't allowed in a caption. Try different ones." before anything is saved; the sheet
+  stays open with the text (the existing `showSheetError` path). It is stored only in
+  `activity_events.metadata.caption` (trimmed, 120 max, the existing `FINISH_COPY.captionMax`; counter from 100).
+- Old notes stay private: feed, hydrate (profile posts, proof detail) now read `metadata.caption` only
+  (`postCaptionFromMetadata`); the old `metadata.note_text` fallback is gone, and `check_ins.note_text` is never read for a
+  post. Nothing writes `metadata.caption` except this path and the build 90 `shareCompletion` share (already
+  moderated). Build 91 still sends `noteText`, which stays private: it keeps working, its captions just do not show.
+  Journal text is unchanged (`noteText`, never on a post).
+- Shown on the feed card (already rendered `post.caption`), the profile posts list / post viewer (already rendered),
+  proof detail (new, under the completion line) and the full-screen photo (new, passed as a route param).
+  The optimistic feed post carries the caption too.
+- Tests: `backend/lib/post-caption.test.ts` (4), `backend/trpc/routes/journal-private.test.ts` updated to the new
+  intended rule (caption field, moderation on caption only, metadata.caption, no `md.note_text`).
+- Device: `.maestro/build92-12b-caption-everywhere.yaml` PASS on SE and Pro Max: feed, full photo, posts list,
+  proof detail (`12b/screens/{se,promax}-caption-{photo,posts-list,detail}.png`).
+  `agents/checks/curse-caption` on build 92: PASS (`12b/curse-caption-b92/results.txt`,
+  `screens/promax-curse-caption.png`: the refusal under the sheet, "this fucking water" still in the box). The red
+  bar in that shot is the dev client's LogBox, not in Release.
+
+### 12b.3 Sticker footer
+`lib/share-image.ts` `STICKER_FOOTER_WORD = "GRIIT"`: "@handle · GRIIT", or "GRIIT" with no handle.
+`lib/stickers-b92.test.ts` pins both and that "griit.app" is gone.
+
+### 12b.4 Invite landing count
+`backend/lib/invite-store.ts` `inviteLandingCount`: live enrollments minus `is_test` profiles (`testAuthorIdSet`), and
+the stored `participants_count` loses its test joins too. `backend/lib/invite-store.test.ts` failed 4/4 on the old
+code (`12b/invite-test-before.txt`), passes now. Deployed with 12b.2 (8ae6ad5).
+
+### 12b.5 Test agents
+- Stuck rule: the build 90 "{screen} repeated 3 times" exit is gone. A repeated screen is a nudge only
+  (`agents/src/stuck.ts` `repeatedScreen`); sessions end on the 60-step cap, the spend or time cap, the agent's own
+  stop after 15, or 3 stuck notes on one screen. `stuck.test.ts` failed 2/6 on the old rule
+  (`12b/stuck-test-before.txt`), passes now.
+- Two simulators: re-checked. With the SE and Pro Max both booted, Maestro MCP `inspect_screen` for the Pro Max
+  (on its home screen) returned the SE's GRIIT screen (375×667), in both orders (`12b/two-sim-check.txt`). So the guard is back:
+  `device.ts` `assertOnlySimulator`, called by `MaestroSession.start()`, refuses with "Another simulator is booted: …".
+  Tests in `harness.test.ts`. Live check: it refused with the SE booted.
+- Dry run (`12b/dry-run/REPORT.md`, 16 Pro Max, build 92 Release 53b47e13, cap $0.95): $0.96, 163 calls.
+
+| Session | Steps (chunk 12) | Steps now | End |
+|---|---|---|---|
+| h-01 Priya (History) | 16, home repeated 3 times | 46 | agent stopped on their own (finished) |
+| s-dry-b Blake (Social) | 19, home repeated 3 times | 60 | 60-step cap; tagged "app bug" for a "Day 0 of 1" text |
+| d-01 Tess (Day 2) | 17 | 46 | the $0.95 spend cap (harness stop) |
+
+  Projection printed by the runner at 51 steps a session: $13.17 for the full run, under the $60 cap.
+
+### 12b.6 Universal links (report only, nothing changed)
+- App: no associated domains. `app.json` `ios` has no `associatedDomains`; `ios/GRIIT/GRIIT.entitlements` has
+  push, Sign in with Apple and time-sensitive only. Invite links are `https://grit-backend-production.up.railway.app/i/{code}`
+  (`EXPO_PUBLIC_DEEP_LINK_BASE_URL` unset), so today they open the web landing page, which hands off to `griit://`.
+- Backend: `GET /.well-known/apple-app-site-association` returns 404; no route serves it.
+- Apple developer dashboard, for Yaseen before chunk 13: Certificates, Identifiers & Profiles → Identifiers →
+  `app.griit.challenge-tracker` (team WZT43QXHZB) → tick **Associated Domains** → Save. Accept the profile
+  regeneration (EAS refreshes it on the next build). That is the only dashboard switch.
+- Then in code (not done, a later chunk): `ios.associatedDomains: ["applinks:<invite host>"]` in `app.json`, and a
+  backend route serving `{"applinks":{"details":[{"appIDs":["WZT43QXHZB.app.griit.challenge-tracker"],"components":[{"/":"/i/*"}]}]}}`
+  as `application/json` with no redirect, deployed before the build. Without both, links keep opening the web page.
+
+### Gates
+- [x] 12b.1 three keyboard flows fail before, pass after on SE and Pro Max.
+- [x] 12b.2 curse-caption PASS on build 92; caption shown in feed, full photo, posts list, proof detail on SE and Pro Max.
+- [x] 12b.3 / 12b.4 unit tests fail-before / pass-after; deployed 8ae6ad5, `/api/health` confirmed.
+- [x] 12b.5 sessions run 46–60 steps; guard restored; dry run $0.96.
+- [x] Full vitest 4 failed (the baseline 4), 2316 passed; tsc 5 (the baseline). Agents vitest 54/54, agents tsc 0.
+
+### Decisions
+- The caption limit stays 120 (the existing limit); the counter shows from 100.
+- Old `metadata.note_text` is not shown even where it exists; only `metadata.caption` is public.
+- A refused caption keeps the uploaded photo in storage unused; the check-in is not written.
+- Build 91 captions (sent as `noteText`) stay private and do not show.
+- The full-screen photo shows the caption too (it is where a feed photo tap lands).
+
+### Not sure
+- The dry run flagged "Screen said Day 0 of 1" in Blake's session while his own Home showed "Drink Water Today · Day 1 of 1"
+  (`12b/dry-run/social/s-dry-b/shots/021.png`). The harness keeps the screen text, not where it came from; the likely
+  source is a 1-day post lower in the Everyone feed. Not traced.
+- In the same session the harness's scroll at 50%,75% did not move Home for several steps (shots 021–025 are the same).
+- Stray output: one `run-checks.sh` call had its arguments in the wrong order and wrote empty check folders into the
+  app root; removed, nothing committed.

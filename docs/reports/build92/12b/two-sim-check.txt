@@ -1,0 +1,9 @@
+round 1 se: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 1 promax: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 2 se: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 2 promax: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 1 promax: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 1 se: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 2 promax: 375x667 lines=GRIIT | Go back | Save your challenge.
+round 2 se: 375x667 lines=GRIIT | Go back | Save your challenge.
+Error: Another simulator is booted: GRIIT SE b92 (575796A4-0937-4BBD-B863-5F926C173844). Shut it down so Maestro drives B6CC0160-9C9F-4D0B-840D-70D790EF7FFD only.

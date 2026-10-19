@@ -1,0 +1,236 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ backend/lib/invite-store.test.ts (4 tests | 4 failed) 4ms
+   × 12b.4 invite landing count leaves out is_test people > two real and three test enrollments show 2 2ms
+     → inviteLandingCount is not a function
+   × 12b.4 invite landing count leaves out is_test people > a stored count above the live rows keeps its real part only 0ms
+     → inviteLandingCount is not a function
+   × 12b.4 invite landing count leaves out is_test people > nobody real joined shows 0 0ms
+     → inviteLandingCount is not a function
+   × 12b.4 invite landing count leaves out is_test people > the landing loader looks up is_test for the enrolled people 1ms
+     → expected '/**\n * Build 92 chunk 08.1: short in…' to match /testAuthorIdSet\(service, enrolledIds…/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  backend/lib/invite-store.test.ts > 12b.4 invite landing count leaves out is_test people > two real and three test enrollments show 2
+TypeError: inviteLandingCount is not a function
+ ❯ backend/lib/invite-store.test.ts:9:12
+      7|   it("two real and three test enrollments show 2", () => {
+      8|     const enrolled = ["r1", "r2", "t1", "t2", "t3"];
+      9|     expect(inviteLandingCount(enrolled, new Set(["t1", "t2", "t3"]), 5…
+       |            ^
+     10|   });
+     11| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  backend/lib/invite-store.test.ts > 12b.4 invite landing count leaves out is_test people > a stored count above the live rows keeps its real part only
+TypeError: inviteLandingCount is not a function
+ ❯ backend/lib/invite-store.test.ts:13:12
+     11| 
+     12|   it("a stored count above the live rows keeps its real part only", ()…
+     13|     expect(inviteLandingCount(["r1", "t1"], new Set(["t1"]), 4)).toBe(…
+       |            ^
+     14|   });
+     15| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  backend/lib/invite-store.test.ts > 12b.4 invite landing count leaves out is_test people > nobody real joined shows 0
+TypeError: inviteLandingCount is not a function
+ ❯ backend/lib/invite-store.test.ts:17:12
+     15| 
+     16|   it("nobody real joined shows 0", () => {
+     17|     expect(inviteLandingCount(["t1"], new Set(["t1"]), 1)).toBe(0);
+       |            ^
+     18|   });
+     19| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  backend/lib/invite-store.test.ts > 12b.4 invite landing count leaves out is_test people > the landing loader looks up is_test for the enrolled people
+AssertionError: expected '/**\n * Build 92 chunk 08.1: short in…' to match /testAuthorIdSet\(service, enrolledIds…/
+
+- Expected: 
+/testAuthorIdSet\(service, enrolledIds\)/
+
++ Received: 
+"/**
+ * Build 92 chunk 08.1: short invite codes stored in `invite_tracking`.
+ * Shared by the `invites` tRPC route and the public `GET /i/:code` page.
+ */
+import type { SupabaseClient } from \"@supabase/supabase-js\";
+import {
+  INVITE_LINK_SOURCE,
+  generateInviteCode,
+  isInviteCode,
+  resolveInviteRow,
+  type ResolvedInvite,
+} from \"./invite-codes\";
+import { logger } from \"./logger\";
+
+type Client = SupabaseClient;
+
+/** One code per (inviter, challenge). Re-uses the row when it exists. */
+export async function getOrCreateInviteCode(
+  service: Client,
+  input: { inviterId: string; challengeId: string },
+): Promise<string> {
+  const { data: existing } = await service
+    .from(\"invite_tracking\")
+    .select(\"invite_code\")
+    .eq(\"referrer_user_id\", input.inviterId)
+    .eq(\"challenge_id\", input.challengeId)
+    .eq(\"source\", INVITE_LINK_SOURCE)
+    .is(\"referred_user_id\", null)
+    .not(\"invite_code\", \"is\", null)
+    .order(\"created_at\", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const code = (existing as { invite_code?: string | null } | null)?.invite_code;
+  if (code && isInviteCode(code)) return code;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const candidate = generateInviteCode();
+    const { data: clash } = await service
+      .from(\"invite_tracking\")
+      .select(\"id\")
+      .eq(\"invite_code\", candidate)
+      .limit(1)
+      .maybeSingle();
+    if (clash) continue;
+    const { error } = await service.from(\"invite_tracking\").insert({
+      referrer_user_id: input.inviterId,
+      challenge_id: input.challengeId,
+      invite_code: candidate,
+      source: INVITE_LINK_SOURCE,
+      joined_challenge: false,
+    });
+    if (!error) return candidate;
+    logger.warn({ attempt, error: error.message }, \"[invites] code insert failed, retrying\");
+  }
+  throw new Error(\"Could not create an invite code.\");
+}
+
+export async function findInviteByCode(service: Client, code: string): Promise<ResolvedInvite | null> {
+  if (!isInviteCode(code)) return null;
+  const { data } = await service
+    .from(\"invite_tracking\")
+    .select(\"challenge_id, referrer_user_id, invite_code, source\")
+    .eq(\"invite_code\", code)
+    .eq(\"source\", INVITE_LINK_SOURCE)
+    .order(\"created_at\", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return resolveInviteRow(data as Parameters<typeof resolveInviteRow>[0]);
+}
+
+export type InviteChallengeSummary = {
+  id: string;
+  title: string;
+  category: string | null;
+  durationDays: number;
+  participantsCount: number;
+  participationType: string | null;
+  runStatus: string | null;
+  creatorId: string | null;
+  firstTask: string | null;
+  proofLine: string | null;
+};
+
+export async function loadInviteChallenge(
+  service: Client,
+  challengeId: string,
+): Promise<InviteChallengeSummary | null> {
+  const { data } = await service
+    .from(\"challenges\")
+    .select(
+      \"id, title, category, duration_days, participants_count, participation_type, run_status, creator_id, challenge_tasks (title, require_photo, order_index, gate_time_start, gate_time_end)\",
+    )
+    .eq(\"id\", challengeId)
+    .maybeSingle();
+  if (!data) return null;
+  // `participants_count` is not kept in step with joins; count the live enrollments instead.
+  const { count: enrolled } = await service
+    .from(\"active_challenges\")
+    .select(\"id\", { count: \"exact\", head: true })
+    .eq(\"challenge_id\", challengeId)
+    .eq(\"status\", \"active\");
+  const row = data as {
+    id: string;
+    title: string;
+    category: string | null;
+    duration_days: number | null;
+    participants_count: number | null;
+    participation_type: string | null;
+    run_status: string | null;
+    creator_id: string | null;
+    challenge_tasks?: Array<{
+      title?: string | null;
+      require_photo?: boolean | null;
+      order_index?: number | null;
+      gate_time_start?: string | null;
+      gate_time_end?: string | null;
+    }> | null;
+  };
+  const tasks = [...(row.challenge_tasks ?? [])].sort(
+    (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
+  );
+  const first = tasks[0] ?? null;
+  const camera = first?.require_photo === true;
+  const window =
+    first?.gate_time_start && first?.gate_time_end
+      ? `, ${clock(first.gate_time_start)} to ${clock(first.gate_time_end)}`
+      : \"\";
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    durationDays: row.duration_days ?? 0,
+    participantsCount: Math.max(enrolled ?? 0, row.participants_count ?? 0),
+    participationType: row.participation_type,
+    runStatus: row.run_status,
+    creatorId: row.creator_id,
+    firstTask: first?.title ?? null,
+    proofLine: first ? (camera ? `Proven with the camera${window}` : \"Self-reported\") : null,
+  };
+}
+
+/** \"06:00:00\" → \"6am\", \"13:30:00\" → \"1:30pm\". */
+export function clock(hhmm: string): string {
+  const [h, m] = hhmm.split(\":\").map((x) => Number(x));
+  if (!Number.isFinite(h)) return hhmm;
+  const suffix = (h ?? 0) >= 12 ? \"pm\" : \"am\";
+  const hour12 = ((h ?? 0) % 12) || 12;
+  const mins = m && m > 0 ? `:${String(m).padStart(2, \"0\")}` : \"\";
+  return `${hour12}${mins}${suffix}`;
+}
+
+export async function inviterDisplayName(service: Client, userId: string): Promise<string> {
+  const { data } = await service
+    .from(\"profiles\")
+    .select(\"display_name, username\")
+    .eq(\"id\", userId)
+    .maybeSingle();
+  const p = data as { display_name?: string | null; username?: string | null } | null;
+  return p?.display_name?.trim() || p?.username?.trim() || \"A friend\";
+}
+"
+
+ ❯ backend/lib/invite-store.test.ts:22:17
+     20|   it("the landing loader looks up is_test for the enrolled people", ()…
+     21|     const src = readFileSync(resolve(__dirname, "./invite-store.ts"), …
+     22|     expect(src).toMatch(/testAuthorIdSet\(service, enrolledIds\)/);
+       |                 ^
+     23|     expect(src).toMatch(/participantsCount: inviteLandingCount\(/);
+     24|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  17:51:01
+   Duration  667ms (transform 44ms, setup 0ms, collect 64ms, tests 4ms, environment 0ms, prepare 65ms)
+

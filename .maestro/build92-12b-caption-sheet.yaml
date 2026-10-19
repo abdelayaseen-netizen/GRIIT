@@ -43,3 +43,4 @@ appId: app.griit.challenge-tracker
 - tapOn:
     id: "post-choice-caption"
 - inputText: ${CAPTION}
+- takeScreenshot: build92-12b-sheet-keyboard-up

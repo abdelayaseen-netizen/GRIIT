@@ -1,0 +1,55 @@
+appId: app.griit.challenge-tracker
+name: build92-12b-caption-everywhere
+---
+# Build 92 12b.2: a caption shows under the post in the feed, the proof detail and the profile
+# posts list (the post viewer). Fresh guest; the caption is public.
+- runFlow:
+    file: build92-12b-caption-sheet.yaml
+    env:
+      CAPTION: "public caption ${MAESTRO_RUN}"
+- tapOn:
+    id: "post-choice-post"
+- runFlow:
+    file: build92-12b-caption-posted.yaml
+    env:
+      CAPTION: "public caption ${MAESTRO_RUN}"
+# Single tap on the photo opens the full photo after 250 ms.
+- tapOn: "public caption ${MAESTRO_RUN}.*"
+- extendedWaitUntil:
+    visible:
+      id: "post-photo-caption"
+    timeout: 15000
+- assertVisible: "public caption ${MAESTRO_RUN}"
+- takeScreenshot: build92-12b-caption-photo
+- waitForAnimationToEnd
+- tapOn: "Close"
+- runFlow:
+    when:
+      visible:
+        id: "post-photo-caption"
+    commands:
+      - waitForAnimationToEnd
+      - tapOn: "Close"
+- tapOn:
+    id: "tab-profile"
+- scrollUntilVisible:
+    element:
+      id: "profile-proof"
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: "profile-proof"
+    index: 0
+- extendedWaitUntil:
+    visible: "public caption ${MAESTRO_RUN}"
+    timeout: 15000
+- takeScreenshot: build92-12b-caption-posts-list
+# In the posts list, Comment opens the proof detail.
+- tapOn: "Comment"
+- scrollUntilVisible:
+    element:
+      id: "post-detail-caption"
+    direction: DOWN
+    timeout: 15000
+- assertVisible: "public caption ${MAESTRO_RUN}"
+- takeScreenshot: build92-12b-caption-detail

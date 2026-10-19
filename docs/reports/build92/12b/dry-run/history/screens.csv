@@ -1,0 +1,9 @@
+persona,group,screen,visits,seconds,steps,wasted_taps,stuck_notes
+"h-01","history","home","5","100.3","12","3","0"
+"h-01","history","Profile","5","95.5","12","0","0"
+"h-01","history","Your record","2","13.2","2","0","0"
+"h-01","history","Your record - Stats","2","100.4","12","0","0"
+"h-01","history","Activity","2","13","2","0","0"
+"h-01","history","Activity Leaderboard","3","27.6","4","0","0"
+"h-01","history","discover","1","3.8","1","1","0"
+"h-01","history","Your record - Challenges","1","5.8","1","0","0"

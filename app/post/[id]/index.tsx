@@ -246,7 +246,7 @@ function PostThreadScreenInner() {
     if (!post || !uri) return;
     router.push({
       pathname: ROUTES.POST_PHOTO(id),
-      params: { uri, name: post.displayName ?? "", context: `${post.challengeName} · Day ${post.currentDay}` },
+      params: { uri, name: post.displayName ?? "", context: `${post.challengeName} · Day ${post.currentDay}`, caption: post.caption ?? "" },
     } as never);
   }, [postQuery.data, router, id]);
 

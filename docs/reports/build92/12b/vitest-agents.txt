@@ -1,0 +1,17 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT-g
+
+ ✓ agents/src/match.test.ts (5 tests) 3ms
+ ✓ agents/src/gate.test.ts (3 tests) 3ms
+ ✓ agents/src/account.test.ts (2 tests) 1ms
+ ✓ agents/src/build92.test.ts (15 tests) 6ms
+ ✓ agents/src/stuck.test.ts (6 tests) 11ms
+ ✓ agents/src/harness.test.ts (18 tests) 15ms
+ ✓ agents/src/build92-report.test.ts (5 tests) 4ms
+
+ Test Files  7 passed (7)
+      Tests  54 passed (54)
+   Start at  17:55:41
+   Duration  395ms (transform 385ms, setup 0ms, collect 691ms, tests 43ms, environment 1ms, prepare 373ms)
+

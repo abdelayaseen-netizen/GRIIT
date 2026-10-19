@@ -23,9 +23,12 @@ appId: app.griit.challenge-tracker
 - extendedWaitUntil:
     visible: "Feed"
     timeout: 20000
+# The photo's label is "{caption}. Open photo".
 - scrollUntilVisible:
     element:
-      text: ${CAPTION}
+      text: "${CAPTION}.*"
     direction: DOWN
     timeout: 30000
+    visibilityPercentage: 50
+    centerElement: true
 - takeScreenshot: build92-12b-caption-in-feed

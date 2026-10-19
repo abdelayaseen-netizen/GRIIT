@@ -1,0 +1,62 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-12b-caption-keyboard-open
+Run build92-12b-caption-sheet.yaml...
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.oracle.truffle.api.dsl.InlineSupport$UnsafeField (file:/Users/yaseenabdela/.maestro/lib/truffle-api-24.2.0.jar)
+WARNING: Please consider reporting this to the maintainers of class com.oracle.truffle.api.dsl.InlineSupport$UnsafeField
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+  Run build92-guest-home-camera.yaml...
+    Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+    Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+    Tap on (Optional) "http://localhost:8081"... COMPLETED
+    Tap on (Optional) "Not now"... WARNED
+    Tap on (Optional) "Continue"... COMPLETED
+    Run flow when "Toggle performance monitor" is visible...
+      Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+    Run flow when "Toggle performance monitor" is visible... COMPLETED
+    Assert that "Start" is visible... COMPLETED
+    Tap on "Start"... COMPLETED
+    Tap on "Fitness and gym"... COMPLETED
+    Tap on "Continue"... COMPLETED
+    Assert that "How it works" is visible... COMPLETED
+    Tap on "Continue"... COMPLETED
+    Assert that "Set this up later" is visible... COMPLETED
+    Tap on "Set this up later"... COMPLETED
+    Assert that "No reminders for now" is visible... COMPLETED
+    Tap on "No reminders for now"... COMPLETED
+    Assert that id: home-starter-card is visible... COMPLETED
+  Run build92-guest-home-camera.yaml... COMPLETED
+  Open griit://challenge/b2000001-4000-4000-8000-000000000001... COMPLETED
+  Assert that "Join Drink Water Today" is visible... COMPLETED
+  Tap on "Join Drink Water Today"... COMPLETED
+  Tap on (Optional) "Send it"... WARNED
+  Tap on (Optional) "Go back"... WARNED
+  Tap on (Optional) "^Later$"... WARNED
+  Assert that "Drink water and post a photo|Take proof photo" is visible... COMPLETED
+  Run flow when "Take proof photo" is not visible...
+  Run flow when "Take proof photo" is not visible... SKIPPED
+  Assert that "Take proof photo" is visible... COMPLETED
+  Tap on "Take proof photo"... COMPLETED
+  Assert that id: review-done is visible... COMPLETED
+  Tap on id: review-done... COMPLETED
+  Assert that "Post your proof" is visible... COMPLETED
+  Tap on id: post-choice-caption... COMPLETED
+  Input text ${CAPTION}... COMPLETED
+  Take screenshot build92-12b-sheet-keyboard-up... COMPLETED
+Run build92-12b-caption-sheet.yaml... COMPLETED
+Take screenshot build92-12b-post-above-keyboard... COMPLETED
+Tap on id: post-choice-post... COMPLETED
+Run build92-12b-caption-posted.yaml...
+  Assert that "Drink Water Today · finished" is visible... COMPLETED
+  Tap on "See the record"... COMPLETED
+  Assert that (Optional) "^Later$|^Not now$" is visible... COMPLETED
+  Tap on (Optional) "^Later$|^Not now$"... COMPLETED
+  Assert that id: tab-home is visible... COMPLETED
+  Tap on id: tab-home... COMPLETED
+  Assert that "Feed" is visible... COMPLETED
+  Scrolling DOWN until "${CAPTION}.*" is visible with speed 40, visibility percentage 50%, timeout 30000 ms, with centering enabled... COMPLETED
+  Take screenshot build92-12b-caption-in-feed... COMPLETED
+Run build92-12b-caption-posted.yaml... COMPLETED

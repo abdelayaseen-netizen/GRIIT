@@ -16,6 +16,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 10 | Discover, challenge page, Home, feed, words | PASSED | 3cf82f96 (code 756b0dd2) | Items 10.1–10.5; both Maestro gates pass on SE after the deploy (3cf82f9). Needs Yaseen: Run 3 mi SQL (docs/sql/build92.sql, chunk 10.1), hidden on Discover until it runs. Report: docs/reports/build92.md |
 | 11 | Speed: app open and profile | PASSED | 53b47e13 | Release sim medians: cold 3280 → 1459 ms, warm 2927 → 1175 ms (splash on a fixed 1.8 s timer; Home and routing waited on the network). Profile header 12–17 ms. Budget 44–47/min, 0 × 429. 11.3 server thumbnails not done (needs a deploy). Report: docs/reports/build92.md |
 | 12 | Better test agents | PASSED (curse-caption fails on both builds: 2 app must-fixes) | 2fb02fe9 (agents f0e13b96) | Harness on feat/agent-testers. Dry run 3/3 with report, $0.32, full run projected $4–16. Must-fix for build 92: a typed caption leaves no way to post (closing the keyboard closes the post sheet); the post-sheet caption is never word-checked or shown. Needs Yaseen: History seed SQL (docs/sql/build92.sql, chunk 12.4); say whether the caption is public. Report: docs/reports/build92.md |
+| 12b | Build 92 pre-ship fixes | PASSED | SHA_PENDING (code 8ae6ad56, agents d1c4c700) | Post sheet keyboard fixed (Done key, sheet rides the keyboard, outside tap drops the keyboard first); captions public, word-checked, shown in feed / photo / posts list / proof detail, old notes stay private; sticker footer "@handle · GRIIT"; invite count without is_test. Backend deployed 8ae6ad5. No SQL. Agents: repeated screen no longer ends a session (46/60/46 steps, $0.96); two-simulator guard restored. Needs Yaseen: tick Associated Domains on the App ID before chunk 13 (report 12b.6). Report: docs/reports/build92.md |
 | 13 | Ship and overnight test | NOT STARTED | | |
 
 ## Item log
@@ -83,3 +84,9 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 12.3 Scripted checks (journal, curse words ×5, Strava stub; offline not run, no network conditioner): done, f0e13b96; curse-caption fails on both builds (2 app must-fixes in the report)
 12.4 New groups (History, Social pairs, Day 2; History seed SQL written, NOT RUN): done, f0e13b96
 12.5 Report (screens.csv, end tags, main numbers, cost projection; dry run 3/3, $0.32): done, f0e13b96
+12b.1 Post sheet keyboard (Done key, sheet lifted above the keyboard, outside tap / swipe drops the keyboard first, X closes): done, 8ae6ad56 + SHA_PENDING; 3 flows fail before, pass after on SE and Pro Max
+12b.2 Public captions (caption field, server word check before any write, metadata.caption only, shown in feed / full photo / posts list / proof detail, no old note shown): done, 8ae6ad56 + SHA_PENDING (backend deployed 8ae6ad5); curse-caption PASS on build 92
+12b.3 Sticker footer "@handle · GRIIT" / "GRIIT": done, 8ae6ad56
+12b.4 Invite landing count without is_test: done, 8ae6ad56 (backend deployed 8ae6ad5)
+12b.5 Agents (repeated screen is a nudge, not an exit; two-simulator guard back; dry run 46/60/46 steps, $0.96): done, d1c4c700
+12b.6 Universal links report (no associated domains, no AASA route; dashboard step for Yaseen): done, report only

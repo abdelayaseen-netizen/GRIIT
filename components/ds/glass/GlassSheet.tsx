@@ -139,6 +139,8 @@ export function GlassSheet({ visible, onClose, label, title, children, testID, c
           ) : null}
           {children}
         </GlassSurface>
+        {/* iOS 26 reports a keyboard frame taller than the keys; the gap shows the sheet, not the screen behind. */}
+        {avoidKeyboard ? <View style={styles.skirt} pointerEvents="none" /> : null}
       </Animated.View>
     </>
   );
@@ -156,6 +158,7 @@ export function GlassSheet({ visible, onClose, label, title, children, testID, c
 const styles = StyleSheet.create({
   dim: { ...StyleSheet.absoluteFillObject, backgroundColor: GLASS_STATE.sheetDim },
   lift: { position: "absolute", left: 0, right: 0, bottom: 0 },
+  skirt: { position: "absolute", left: 0, right: 0, top: "100%", height: 480, backgroundColor: "rgb(22,22,24)" },
   sheet: {
     borderTopLeftRadius: GLASS_RADIUS.sheetTop,
     borderTopRightRadius: GLASS_RADIUS.sheetTop,

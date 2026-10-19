@@ -1,0 +1,10 @@
+{
+  "secured": "The app never spelled it out, but from the screen it seems a day counts as secured once you finish your task for that day. Right now it says '0 days secured' and 'Nothing done today. 1 task left.'",
+  "freeze": "The app never explained what a freeze is in anything I saw, so I can't say. I'd only be guessing that it saves a streak.",
+  "selfReported": "It seems to mean you just check the task off yourself, with no photo or other proof. 'Do 10 pushups' says Self-reported with a 'Check off' button, while the water challenge asked for a camera proof.",
+  "tomorrow": "6 - It's simple and Kim invited me, so I'd probably check in on the 7-day gym challenge. But some terms are unexplained and I haven't seen much payoff yet.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

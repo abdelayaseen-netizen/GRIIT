@@ -1,0 +1,22 @@
+{
+  "today": "2026-10-19",
+  "sessions": 3,
+  "spendUsd": 0.957252,
+  "calls": 163,
+  "projectedUsd": 13.168512710526317,
+  "checks": [
+    {
+      "personaId": "d-01",
+      "lastSecured": "2026-10-19",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": false,
+      "missedDays": 1
+    }
+  ],
+  "notes": [
+    "History account: 12/history. Not seeded: the 30-day seed in docs/sql/build92.sql has not been run, so this account has only the history it built itself.",
+    "Day 2: 14 saved accounts from oct-build90 qualify; 0 secured yesterday (2026-10-19 is today). 1 used. The ones used missed at least one day, so this is a return after a gap, not a true Day 2.",
+    "Social: one B session against a saved build 90 partner (p4-03a, Kim). Invite found."
+  ]
+}

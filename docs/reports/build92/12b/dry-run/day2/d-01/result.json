@@ -1,0 +1,96 @@
+{
+  "personaId": "d-01",
+  "group": "day2",
+  "chunk": "day2",
+  "startedOn": "other",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 1,
+      "taskLabel": "Close",
+      "tappedAt": "2026-10-19T22:56:46.537Z",
+      "toSheetMs": null,
+      "toVisibleMs": 1061,
+      "marker": "day secured",
+      "choice": ""
+    },
+    {
+      "step": 36,
+      "taskLabel": "DRINK WATER DAILY",
+      "tappedAt": "2026-10-19T23:01:37.848Z",
+      "toSheetMs": 1118,
+      "toVisibleMs": 3268,
+      "marker": "1 of 3 done",
+      "choice": "Post to friends"
+    },
+    {
+      "step": 41,
+      "taskLabel": "DRINK WATER DAILY",
+      "tappedAt": "2026-10-19T23:02:17.580Z",
+      "toSheetMs": 1120,
+      "toVisibleMs": 4108,
+      "marker": "2 of 3 done",
+      "choice": "Post to friends"
+    }
+  ],
+  "interview": {
+    "secured": "Going by what I saw, 'Day secured' means I finished and posted proof for that day's task, like the body check-in, so the day counts toward my streak.",
+    "freeze": "The app never explained 'freeze' on any screen I saw, so I'm guessing it's a way to skip a day without losing my streak, but I can't say for sure.",
+    "selfReported": "The app never explained 'Self-reported' to me, so I can only guess it means I just say I did the task and nothing verifies it.",
+    "tomorrow": "6 - The challenge setup was easy and I'm on Day 1 of 7, but the posting screen was stuck on 'Posting' with 0 of 20 words and several terms were never explained.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-19T22:56:10.498Z",
+  "endedAt": "2026-10-19T23:03:15.718Z",
+  "steps": 46,
+  "durationSec": 425,
+  "goals": [
+    {
+      "id": "d-01-g1",
+      "text": "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Stopped because measured API spend hit the $0.95 cap.",
+  "crashes": [],
+  "errors": [
+    "Prepared login did not reach Home. The model will continue from the current screen."
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "task",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "9d3168cb-b3f3-48be-97bd-cdf68b75d6b8",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [
+    "home: stuck: Start did nothing twice, so I'm scrolling the feed to look for another way. The app says yesterday (Oct 17) counted as 1 day secured and the challenge is complete, but my streak shows 0 days with Best 1.",
+    "home: stuck: Start does nothing after two taps. I'll scroll the feed to see if there's anything else about today or yesterday. So far the app says Oct 17 counted as 1 day secured, the challenge is complete, and my streak is 0 with Best 1, so yesterday (Oct 18) was missed."
+  ],
+  "coldStartMs": 2314,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

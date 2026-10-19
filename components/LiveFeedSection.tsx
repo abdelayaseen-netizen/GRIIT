@@ -655,6 +655,7 @@ function LiveFeedSection({
                   uri: item.photoUrl ?? item.proofPhotoUrl ?? "",
                   name: item.displayName ?? "",
                   context: `${item.challengeName} · Day ${item.currentDay}`,
+                  caption: item.caption ?? "",
                 },
               } as never)
             }

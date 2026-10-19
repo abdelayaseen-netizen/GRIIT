@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained \"Day secured\" to me in anything I saw; the home screen only showed '0 days in a row' and 'Day 1 is today', so I'd guess it means you finished that day's task, but that's a guess.",
+  "freeze": "I never saw a freeze explained on the screens I visited, so I can't say what it is; I'd only guess it protects a streak if you miss a day.",
+  "selfReported": "The app didn't explain \"Self-reported\" in anything I saw, so I'd only guess it means you tell the app you did the task yourself without it being checked.",
+  "tomorrow": "6 - The streak tracker and stats are the kind of numbers I like to check, but the terms weren't explained and I have no challenge going yet.",
+  "securedRight": false,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}
