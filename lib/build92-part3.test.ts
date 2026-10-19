@@ -27,6 +27,7 @@ import { WORDS, WORDS_SHEET_TITLE, FREEZE_EARNED, FREEZE_HELD, SELF_REPORTED_FIR
 import { conceptLine, type ConceptKind } from "@/lib/concept-once";
 import { conceptSeenKey, parseConceptSeen } from "@/lib/concept-seen";
 import { FEATURED_BUILTINS } from "@/lib/featured-catalog";
+import { taskProofKind } from "@/lib/discover-preview-tasks";
 
 const src = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -43,6 +44,13 @@ describe("10.1 Discover cards", () => {
     expect(doesLine({ title: "Pray Fajr", task_type: "check_off", gate_time_mode: "by", gate_time_start: "07:00" })).toBe(
       "Pray Fajr · self-reported, by 7:00 am",
     );
+  });
+
+  it("use the same proof rule as the gates (photo_mode wins over legacy flags)", () => {
+    expect(taskProofKind({ task_type: "check_off", config: { require_photo_proof: true } })).toBe("camera");
+    expect(taskProofKind({ task_type: "check_off", require_photo: true, config: { photo_mode: "none" } })).toBe("self");
+    expect(taskProofKind({ task_type: "run", config: { require_strava: true } })).toBe("strava");
+    expect(doesLine({ title: "Drink water and post a photo", proof: "camera" })).toBe("Drink water and post a photo · photo");
   });
 
   it("never say only Camera or Self-reported", () => {

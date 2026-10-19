@@ -10,7 +10,21 @@ export type DiscoverPreviewTask = {
   gate_time_start?: string | null;
   gate_time_end?: string | null;
   config?: { require_strava?: boolean; photo_mode?: string } | null;
+  /** How the task is proven, from the same rule as the gates (photo_mode wins over legacy flags). */
+  proof?: TaskProofKind;
 };
+
+export type TaskProofKind = "strava" | "camera" | "timer" | "counter" | "self";
+
+export function taskProofKind(row: TaskModelRow): TaskProofKind {
+  const cfg = (row.config ?? {}) as Record<string, unknown>;
+  if (cfg.require_strava === true || cfg.verify === "strava") return "strava";
+  if (gatesFor(row).includes("camera")) return "camera";
+  const type = (row.task_type ?? "").trim();
+  if (type === "timer") return "timer";
+  if (type === "counter") return "counter";
+  return "self";
+}
 
 function cardConfig(raw: unknown): DiscoverPreviewTask["config"] {
   if (!raw || typeof raw !== "object") return null;
@@ -49,6 +63,7 @@ export function discoverPreviewTasks(
       gate_time_start: row.gate_time_start ?? null,
       gate_time_end: row.gate_time_end ?? null,
       config: cardConfig(row.config),
+      proof: taskProofKind(row),
     }))
     .filter((row) => row.title.length > 0);
 }

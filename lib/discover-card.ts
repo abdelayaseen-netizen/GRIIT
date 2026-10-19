@@ -14,6 +14,8 @@ export type DoesTask = {
   gate_time_start?: string | null;
   gate_time_end?: string | null;
   config?: Record<string, unknown> | null;
+  /** The server's canonical proof kind (taskProofKind); used when present. */
+  proof?: "strava" | "camera" | "timer" | "counter" | "self" | null;
 };
 
 function meridiemOf(t: string): string {
@@ -40,6 +42,7 @@ export function windowPhrase(t: DoesTask): string {
 type Proof = "strava" | "camera" | "timer" | "counter" | "self";
 
 function proofOf(t: DoesTask): Proof {
+  if (t.proof) return t.proof;
   const cfg = t.config ?? {};
   if (cfg.require_strava === true || cfg.verify === "strava") return "strava";
   if (

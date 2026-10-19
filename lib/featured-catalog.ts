@@ -9,6 +9,7 @@ import { FLAGS } from "@/lib/feature-flags";
 import { buildFeaturedCatalogRows, buildPendingFeaturedRows } from "@/lib/featured-catalog-seed";
 import { gateLabel } from "@/lib/task-ui";
 import { doesLine } from "@/lib/discover-card";
+import { taskProofKind } from "@/lib/discover-preview-tasks";
 
 export type FeaturedProof = "camera" | "optional" | "self";
 
@@ -65,6 +66,7 @@ export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = [
       gate_time_start: row.task.gate_time_start,
       gate_time_end: row.task.gate_time_end,
       config: row.task.config as Record<string, unknown>,
+      proof: taskProofKind(model),
     }),
   };
 });
