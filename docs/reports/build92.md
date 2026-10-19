@@ -1145,3 +1145,111 @@ Freeze line, After Join, Account, Account errors. Handoff `src/onboarding/{goals
 3. Email Templates → **Change Email Address**: send `{{ .Token }}` too (the guest save uses `email_change`).
 4. Email Templates → **Confirm signup**: send `{{ .Token }}` (a brand-new email that signs in, not a guest).
 5. Then set `EMAIL_OTP: true` in `lib/feature-flags.ts` and ship.
+
+## Chunk 10 · Discover, challenge page, Home, feed, words
+
+### State on start
+- Backend deployed first (chunk 10 allows it): `backend/deploy-sha.txt` = `dce02d80`, `/api/health` → `dce02d8`
+  (`10/health-after-deploy.txt`). This shipped chunk 09's `getStarterPack` select; chunk 09's SE gate then passed 5/5.
+
+### Root causes (written before the fix)
+- 10.1 `components/discover/ChallengeCard.tsx:27-33`: the grid caption is `{n} people · {gate}`, but `DiscoverV3.tsx:357-366`
+  never passes `proofType`, so it is only a count; Featured captions use `discoverProofLabel` / `featuredProofLabel`
+  ("Camera", "Self-reported") (`DiscoverV3.tsx:233,255`). `components/ds/Cover.tsx:48-53` is a category gradient.
+  "1 person" / "{n} people" at any size (no "New"). `ChallengeCard` takes `joined` and ignores it; only the DB hero
+  skips the preview when joined (`DiscoverV3.tsx:208`), builtins and grid cards always open a sheet with Join.
+  Featured is the scored DB hero plus the 8 builtins in `lib/featured-catalog-seed.ts`: a gym challenge (Show Up 7), no run.
+- 10.2 `app/challenge/[id].tsx:130-193` renders `ChallengeDetailV3` with Join until `listMyActive` loads, then redirects;
+  a join from there can fail with "You're already in this challenge." (`app/challenge/[id].tsx:421`,
+  `lib/join-challenge-error.ts:30`). The joined page (`ActiveChallengeV3.tsx:187-199`) shows "Day" / big n / "of N" and
+  `recordLine` ("X of Y days secured"); dots come from `getSecuredDateKeys` with `frozen: false` hard-coded
+  (`active/[activeChallengeId].tsx:477-492`), not from `challenges.progress.days` (which has `held`); no dot key.
+  The primary is `{verb} · {task}` and disappears when done. The solo people box says "Private. Only you."
+  (`lib/g2a-challenge.ts:104-110`); there is no per-challenge post audience.
+- 10.3 `components/home/HomeV3.tsx:244-298`: the streak card is secured from `daySecured || allDone` (local check-ins) but
+  `firstDayLine` (`app/(tabs)/index.tsx:1008`, "Day 1 is today. Finish the task to secure it.") reads only
+  `homeSecuredToday(securedDateKeys)`, the server list in the same bootstrap that lags the finish: the build 90 split.
+  Save errors are always "Couldn't save. Tap to try again." (`lib/optimistic-home.ts:6,43`), even for "Window closed.".
+- 10.4 `lib/feed-join.ts:128-197` groups started events per challenge per clock hour and keeps their place, so a feed can
+  open with, or be only, "X started Y" lines. Captions: "Everyone is on until you follow 3 people." only on Everyone;
+  empties: "Your feed is quiet" / "No posts yet. Be the first to check in today." with Discover only.
+- 10.5 `lib/concept-once.ts` one-liners use a device-wide `griit.concept.seen` key (not per user), wording differs from the
+  Words table, and there is no words sheet or "i". The freeze explanation exists in 6 strings (`lib/copy.ts:17`,
+  `first-day.ts`, `onboarding-v2-first-challenge.ts:8`, `challenge-detail-mapping.ts:242`, `create-mode-copy.ts:5`,
+  `freeze-earn.ts:20`).
+
+### Items
+- **10.1 Discover** (`lib/discover-card.ts`, `ChallengeCard.tsx`, `DiscoverV3.tsx`, `components/ds/Cover.tsx`): every card
+  says what you do and how it is proven ("Get to the gym · photo", "Pray Fajr · self-reported, by 7:00 am",
+  "Run 3 mi · Strava"). The proof kind comes from the server (`taskProofKind`, the gates rule, so `photo_mode` wins
+  over legacy flags); `getDiscoverFeatured` and the v43 select now read `require_photo`, `require_location` and
+  `gate_time_*`. Covers are the category motif on ink (hatch, crescent rings, ruled lines, dot grid, square grid at
+  8%), no gradient, no photo. Under 5 people reads "New" (cards and the preview sheet). Joined cards say "Joined" and
+  open the challenge page instead of a sheet with Join. Run 3 mi is a pending built-in: hidden until
+  `challenges.featuredCatalogIds` lists it (SQL below).
+- **10.2 Challenge page** (`app/challenge/[id].tsx`, `ActiveChallengeV3.tsx`, `active/[activeChallengeId].tsx`):
+  Join is hidden until membership is known (`membershipKnown`); an "already in" join opens the joined page, and
+  Discover refreshes `listMyActive` after every join. The joined page shows "Day {n} of {N}" and
+  "{n} days secured" (chunk 06 fields), dots from `challenges.progress.days` (held = freeze, before join = blank), the
+  dot key once per user with "Got it", "Your posts here: {audience} ›" with the sheet (stored per user per
+  enrollment; the task flow uses it as the default audience), and one primary "Start today’s task" /
+  "Today’s task is done" (disabled).
+- **10.3 Home** (`app/(tabs)/index.tsx`, `HomeV3.tsx`, `lib/home-done.ts`): one flag `securedNow = todaySecured ||
+  proofAllDone` drives the first-day line, the start label, the next task, day-2 hero and the first-proof slot, so
+  the server list lagging the finish can no longer show "Finish the task". Secured reads "Today is secured. See you
+  tomorrow." with tasks folded into "{n} done · Show". A failed save carries its real reason ("This task’s window
+  closed at {time}. It opens tomorrow." with no retry; "Couldn't save. No connection. Try again"; the generic retry
+  otherwise).
+- **10.4 Feed** (`lib/feed-fold.ts`, `LiveFeedSection.tsx`, `components/feed/StartedDayRow.tsx`): today's started
+  events fold into one line after the first proof (never at the top, never twice, so never more than one per 5);
+  older started events are dropped; a feed with no proofs is the empty state. The line has no like or comment and
+  opens the list. Captions per tab; empty states offer Discover and Invite.
+- **10.5 Words** (`lib/words.ts`, `lib/concept-once.ts`, `lib/concept-seen.ts`, `components/words/WordsSheet.tsx`):
+  Secured, Freeze, Self-reported and Verified each defined once per user (`griit.concept.seen.v2:{userId}`) at their
+  first moment: secured on Home, the first freeze earned as a card on Day secured, the first self-reported toast,
+  the first camera/Strava proof on Home. After that a small "i" under the date opens "What these words mean".
+  A freeze used reads "A freeze covered yesterday. Your {n}-day streak is safe." The Start here freeze line was
+  already said once (chunk 09).
+
+### Gates
+- Maestro `build92-10-joined.yaml` (SE, after the deploy of 3cf82f9): join Show Up 7 from Discover → relaunch →
+  Discover shows "Joined" → the card opens the joined page with "Start today’s task", "Day 1 of 7", "0 days
+  secured", no Join, no "already in" → Back → reopen, same. Passed (`10/maestro-joined-run7.txt`; runs 1–4 were flow
+  fixes: tab label, camera-off screen, the hero shifting the carousel, tapping before Home loaded).
+- Maestro `build92-10-home-secured.yaml` + `build92-10-home-poll.yaml` (SE): secure the day with 7K Steps, then 10
+  polls 6 s apart over 120 s, each "Finish the task" not visible and "Today is secured. See you tomorrow." visible.
+  Passed twice, before and after the deploy (`10/maestro-home-run2.txt`, `run3.txt`). The in-flow repeat was
+  dropped: Maestro's optional wait only held its timeout once, so 10 polls took 17 s.
+- vitest: `lib/build92-part3.test.ts` 26/26 (fails before: `10/test-before.txt`; after: `10/test-after.txt`),
+  including the 4 feed fixtures and once-per-user words. Full run: 4 failed, the baseline 4 (`10/vitest-full.txt`).
+  tsc: 5 errors, the baseline (`10/tsc.txt`).
+- Screenshots: SE `10/se/` P3-10 (Discover, then Joined), P3-11 preview, P3-13, P3-14 (dot key, posts here,
+  primary), P3-17, P3-22, P3-24; Pro Max `10/promax/` P3-11 (Faith), P3-18, P3-19 (+ the started list).
+  P3-18 and P3-19 use `app/dev/build92-part3.tsx` with fixed data; P3-22 uses `dev/build92-secured?freeze=1`.
+- Backend deployed: 756b0dd (chunk 10 code), then 3cf82f9 (server proof kind); `backend/deploy-sha.txt` written
+  before each, `/api/health` → `"commit":"3cf82f9"` (`10/health-after-redeploy.txt`). Additive only: build 91 ignores
+  the new task fields and does not call `featuredCatalogIds`.
+
+### Tests moved (intended behaviour change)
+- `backend/trpc/routes/challenges-discover.test.ts`: the featured column list adds the task gate columns (10.1).
+- `lib/featured-catalog.test.ts`: 9 built-ins (Run 3 mi added, pending). The applied v44 SQL test is unchanged:
+  Run 3 mi is a separate pending spec, not in the applied file.
+- `lib/build90-links-numbers.test.ts`: the record line now appears once (the record card); the top is `topNumbers`.
+- `lib/build90-speed.test.ts`, `lib/optimistic-home.test.ts`: Home shows the error's message; the generic retry is
+  the fallback, with `retry: true`.
+- `lib/greeting.test.ts`, `lib/save-streak-prompt.test.ts`: the Part 3 secured and self-reported lines.
+- `lib/backend-client-imports.test.ts`: `backend/lib/freeze-grant.ts` added to the pure allowlist (its only import
+  is `lib/freeze-earn`); Day secured reads the 2 / 4 hold caps from it.
+
+### Decisions
+- Run 3 mi ships hidden until its catalog row exists, rather than shown and failing to join.
+- An open today is drawn as the outlined ring (WeekStrip's "missed" + today index); my own first test said "future".
+- The posts-here default is stored on the device per user per enrollment (no server column, so no migration); each
+  post can still change it.
+- The "i" lives under the date on Home (the list header sits under the status bar).
+- The joined page drops the big display number for the exact "Day {n} of {N}" line the spec asks for.
+- The challenge page before joining keeps "{n} people" (its copy row), only Discover says "New".
+
+### Needs Yaseen
+- SQL: `docs/sql/build92.sql` block "Chunk 10, item 10.1" (Run 3 mi challenge + task). Until it runs, Featured has a
+  gym challenge but no run (the gate "Featured includes a run" is met in code, not live).

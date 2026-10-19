@@ -1,0 +1,28 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ❯ lib/build92-part3.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/build92-part3.test.ts [ lib/build92-part3.test.ts ]
+Error: Cannot find module '@/lib/discover-card' imported from '/Users/yaseenabdela/Developer/GRIIT/lib/build92-part3.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ lib/build92-part3.test.ts:4:31
+      3|  * today is done, the feed's started lines and the four words.
+      4|  */
+      5| import { describe, expect, it } from "vitest";
+       |                           ^
+      6| import { readFileSync } from "node:fs";
+      7| import { join } from "node:path";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:10:46
+   Duration  483ms (transform 36ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 42ms)
+

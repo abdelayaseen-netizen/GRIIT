@@ -13,7 +13,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 07 | Profile and post viewer | FAILED (07.1 frame gate only) | 838e8765 | Items 07.1–07.6 built and tested; all gates pass except "no frame over 50 ms": PostViewer shows 1 frame of 52–59 ms per 10 s run on the Pro Max simulator (legacy harness max 44 ms). 2 fix attempts spent; needs a device check with real photos. P2-08/P2-13 (second account) not staged. No SQL. |
 | 08 | Invite, leaderboard and settings | PASSED | 354ce8ad (code 116eae9e) | Short codes in invite_tracking (no SQL). Backend deployed 41a48b0 then 116eae9. Needs Yaseen: universal links entitlement; P2-20 (Strava connected) needs a real Strava login. Report: docs/reports/build92.md |
 | 09 | First day and account | PASSED | 8d4aaab5 | Items 09.1–09.5; SE gate 5/5 after the chunk 10 deploy (dce02d8) of getStarterPack gate_time_*. Needs Yaseen: Supabase email OTP steps, then flip EMAIL_OTP. Report: docs/reports/build92.md |
-| 10 | Discover, challenge page, Home, feed, words | NOT STARTED | | |
+| 10 | Discover, challenge page, Home, feed, words | PASSED | 3cf82f96 (code 756b0dd2) | Items 10.1–10.5; both Maestro gates pass on SE after the deploy (3cf82f9). Needs Yaseen: Run 3 mi SQL (docs/sql/build92.sql, chunk 10.1), hidden on Discover until it runs. Report: docs/reports/build92.md |
 | 11 | Speed: app open and profile | NOT STARTED | | |
 | 12 | Better test agents | NOT STARTED | | |
 | 13 | Ship and overnight test | NOT STARTED | | |
@@ -69,3 +69,8 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 09.3 Closed windows (closed cards last, "Day 1 is tomorrow at {time}" on card / page / join button; server pinned at 9:41): done, 8d4aaab5 (getStarterPack select deployed dce02d8)
 09.4 Account (Apple, email 6-digit code, oneTimeCode, Not now; behind EMAIL_OTP until dashboard): done, 8d4aaab5
 09.5 Guest save (Not now always; same user id on save): done, 8d4aaab5
+10.1 Discover (does-line from the server proof rule, motif covers, New under 5, Joined opens the page; Run 3 mi pending SQL): done, 3cf82f96
+10.2 Challenge page (no Join once in, Day n of N, n days secured, progress dots + key once, Your posts here, one primary): done, 756b0dd2
+10.3 Home (one secured flag, Today is secured + n done · Show, real save reasons, retry only when it can work): done, 756b0dd2
+10.4 Feed (started fold after the first proof, not likeable, captions per tab, Discover + Invite empty): done, 756b0dd2
+10.5 Words (once per user at the first moment, freeze-earned card, words sheet behind the i): done, 756b0dd2

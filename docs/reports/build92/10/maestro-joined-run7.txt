@@ -1,0 +1,56 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-joined
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Fitness and gym"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Tap on "^Discover$"... COMPLETED
+Assert that id: discover-card-e44f0001-4000-4000-8000-000000000001 is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Take screenshot P3-10-discover... COMPLETED
+Tap on id: discover-card-e44f0001-4000-4000-8000-000000000001... COMPLETED
+Assert that "Join Show Up 7" is visible... COMPLETED
+Take screenshot P3-11-preview... COMPLETED
+Tap on "Join Show Up 7"... COMPLETED
+Assert that "Camera access is off|Get to the gym.*|Take photo|Not yet" is visible... COMPLETED
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Today$" is visible... COMPLETED
+Tap on "^Discover$"... COMPLETED
+Assert that id: discover-card-e44f0001-4000-4000-8000-000000000001-joined is visible... COMPLETED
+Assert that "Joined" is visible... COMPLETED
+Take screenshot P3-10-discover-joined... COMPLETED
+Tap on id: discover-card-e44f0001-4000-4000-8000-000000000001... COMPLETED
+Assert that "Start today.s task" is visible... COMPLETED
+Assert that id: active-day-of is visible... COMPLETED
+Assert that id: active-days-secured is visible... COMPLETED
+Assert that "^Join.*" is not visible... COMPLETED
+Assert that ".*already in this challenge.*" is not visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Take screenshot P3-14-joined... COMPLETED
+Tap on "Go back"... COMPLETED
+Assert that id: discover-card-e44f0001-4000-4000-8000-000000000001-joined is visible... COMPLETED
+Tap on id: discover-card-e44f0001-4000-4000-8000-000000000001... COMPLETED
+Assert that "Start today.s task" is visible... COMPLETED
+Assert that "^Join.*" is not visible... COMPLETED
+Assert that ".*already in this challenge.*" is not visible... COMPLETED
+exit=0

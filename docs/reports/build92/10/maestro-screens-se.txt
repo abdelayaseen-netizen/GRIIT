@@ -1,0 +1,45 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-screens-se
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Fitness and gym"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000003... COMPLETED
+Tap on (Optional) "^Open$"... WARNED
+Assert that "^Join.*" is visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Take screenshot P3-13-before-join... COMPLETED
+Open griit://dev/build92-secured?streak=7&freeze=1... COMPLETED
+Tap on (Optional) "^Open$"... WARNED
+Assert that "You earned a freeze." is visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Take screenshot P3-22-freeze-earned... COMPLETED
+Tap on "Got it"... COMPLETED
+Assert that "You earned a freeze." is not visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that id: words-info is visible... COMPLETED
+Tap on id: words-info... COMPLETED
+Assert that "What these words mean" is visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Take screenshot P3-24-words... COMPLETED
+exit=0

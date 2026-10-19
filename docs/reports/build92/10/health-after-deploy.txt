@@ -1,0 +1,1 @@
+{"ok":true,"status":"ok","uptime_ms":96317,"commit":"dce02d8","deps":{"supabase_configured":true,"supabase_missing":[]}}
