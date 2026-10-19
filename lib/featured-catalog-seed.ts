@@ -100,6 +100,23 @@ export const FEATURED_SEED_SPECS: readonly FeaturedSeedSpec[] = [
   },
 ];
 
+/**
+ * Build 92 10.1: Featured always includes a run. Not in the applied v44 file; the row is inserted
+ * by docs/sql/build92.sql (chunk 10.1), and Discover hides it until the server lists it.
+ */
+export const FEATURED_PENDING_SPECS: readonly FeaturedSeedSpec[] = [
+  {
+    id: "e44f0001-4000-4000-8000-000000000009",
+    title: "Run 3 mi",
+    category: "fitness",
+    days: 14,
+    draft: { name: "Run 3 mi", type: "run", photoMode: "none", runDistance: "3", runUnit: "mi" },
+  },
+];
+
+/** Builtins whose catalog row Yaseen has not inserted yet are hidden until the server lists them. */
+export const FEATURED_PENDING_IDS: readonly string[] = FEATURED_PENDING_SPECS.map((spec) => spec.id);
+
 export type FeaturedTaskInsert = ReturnType<typeof buildTaskInsertPayload>;
 
 export type FeaturedCatalogRow = {
@@ -144,6 +161,10 @@ export function buildFeaturedTask(spec: FeaturedSeedSpec): FeaturedTaskInsert {
 
 export function buildFeaturedCatalogRows(): FeaturedCatalogRow[] {
   return FEATURED_SEED_SPECS.map((spec) => ({ spec, task: buildFeaturedTask(spec) }));
+}
+
+export function buildPendingFeaturedRows(): FeaturedCatalogRow[] {
+  return FEATURED_PENDING_SPECS.map((spec) => ({ spec, task: buildFeaturedTask(spec) }));
 }
 
 function sqlStr(value: string): string {

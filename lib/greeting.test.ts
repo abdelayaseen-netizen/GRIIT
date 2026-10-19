@@ -27,8 +27,9 @@ describe("greetingSub", () => {
     );
   });
 
+  // Build 92 10.3: the Part 3 Home line.
   it("says the day is secured", () => {
-    expect(greetingSub({ secured: true, openCount: 0 })).toBe("Day secured. See you tomorrow.");
+    expect(greetingSub({ secured: true, openCount: 0 })).toBe("Today is secured. See you tomorrow.");
   });
 
   it("uses the first-week line before the secured line", () => {
@@ -36,7 +37,7 @@ describe("greetingSub", () => {
       "Day 2 of your first week.",
     );
     expect(greetingSub({ secured: true, openCount: 0, firstWeekDay: 2 })).toBe(
-      "Day secured. See you tomorrow.",
+      "Today is secured. See you tomorrow.",
     );
   });
 });

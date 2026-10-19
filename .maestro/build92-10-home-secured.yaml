@@ -1,0 +1,40 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 10 gate: secure the day, then Home never says "Finish the task" (10 polls, 60 s).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Join 7K Steps"
+    timeout: 20000
+- tapOn: "Join 7K Steps"
+- extendedWaitUntil:
+    visible: "Walk 7,000 steps|^Done$"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible: "^Done$"
+    timeout: 15000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 20000
+- tapOn: "Post to friends"
+- extendedWaitUntil:
+    visible: "Every task today is done.*|Day secured|Day 1 secured.*"
+    timeout: 20000
+- tapOn: "^Done$"
+- tapOn:
+    text: "Not now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Today is secured. See you tomorrow."
+    timeout: 20000
+- takeScreenshot: P3-17-home-secured
+# The 10 polls over 60 s run from the shell (build92-10-home-poll.yaml, 6 s apart): Maestro's
+# optional waits do not hold their timeout after the first one.
+- assertNotVisible: ".*Finish the task.*"

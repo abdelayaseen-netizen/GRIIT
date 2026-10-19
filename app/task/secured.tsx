@@ -31,6 +31,8 @@ import {
 import { afterSecuredNext } from "@/lib/moment-queue";
 import { freezeEarnedNote } from "@/lib/freeze-earn";
 import { useFirstConcept } from "@/lib/concept-seen";
+import { FreezeEarnedSheet } from "@/components/words/WordsSheet";
+import { freezeHoldCap } from "@/backend/lib/freeze-grant";
 
 function TaskSecuredInner() {
   const router = useRouter();
@@ -83,7 +85,9 @@ function TaskSecuredInner() {
   });
   const finishedAt = finishedAtFromSecuredParam(firstString(params.finishedAt));
   // 06.1: the first freeze ever earned says what it does, once.
-  const firstFreeze = useFirstConcept("freeze", result.freezeGranted === true);
+  // Build 92 10.5 (P3-22): per user, as a card with the definition and the count.
+  const firstFreeze = useFirstConcept("freeze", userId, result.freezeGranted === true);
+  const [freezeCardClosed, setFreezeCardClosed] = useState(false);
   const keys = readSecuredDateKeysFromCache(queryClient, userId);
   const fillToday = result.daySecured || todayIsSecuredInCache(queryClient, userId, tz);
   const statsRow = stats as { frozenDateKeys?: string[]; lastStandDateKeys?: string[] } | null;
@@ -221,36 +225,45 @@ function TaskSecuredInner() {
   };
 
   return (
-    <SecuredDayScreen
-      streak={result.streakDays}
-      freezeNote={freezeEarnedNote(result, firstFreeze === true)}
-      tasks={meta.ready ? meta.tasks : []}
-      firstTime={firstTime}
-      loadError={meta.error}
-      onRetryLoad={() => {
-        setMeta((prev) => ({ ...prev, error: false, ready: false }));
-        setRetryTick((n) => n + 1);
-      }}
-      week={week.days}
-      todayIndex={week.todayIndex}
-      fillToday={fillToday}
-      onShare={() =>
-        openStickerCarousel({
-          taskId: "",
-          title: taskName,
-          body: "",
-          photoUri: proofs[0]?.uri ?? proofUri ?? null,
-          cameraSeal: closingPhoto,
-          eventId: shareEventId,
-          challengeName: result.challengeName,
-          taskName,
-          currentDay: result.challengeDay,
-          totalDays: result.challengeLength,
-          streak: result.streakDays,
-        })
-      }
-      onDone={done}
-    />
+    <>
+      <SecuredDayScreen
+        streak={result.streakDays}
+        freezeNote={freezeEarnedNote(result)}
+        tasks={meta.ready ? meta.tasks : []}
+        firstTime={firstTime}
+        loadError={meta.error}
+        onRetryLoad={() => {
+          setMeta((prev) => ({ ...prev, error: false, ready: false }));
+          setRetryTick((n) => n + 1);
+        }}
+        week={week.days}
+        todayIndex={week.todayIndex}
+        fillToday={fillToday}
+        onShare={() =>
+          openStickerCarousel({
+            taskId: "",
+            title: taskName,
+            body: "",
+            photoUri: proofs[0]?.uri ?? proofUri ?? null,
+            cameraSeal: closingPhoto,
+            eventId: shareEventId,
+            challengeName: result.challengeName,
+            taskName,
+            currentDay: result.challengeDay,
+            totalDays: result.challengeLength,
+            streak: result.streakDays,
+          })
+        }
+        onDone={done}
+      />
+      <FreezeEarnedSheet
+        visible={firstFreeze === true && !freezeCardClosed}
+        held={result.freezesHeld ?? 1}
+        cap={freezeHoldCap(false)}
+        proCap={freezeHoldCap(true)}
+        onDismiss={() => setFreezeCardClosed(true)}
+      />
+    </>
   );
 }
 

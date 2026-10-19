@@ -10,7 +10,7 @@ export type OptimisticTaskDone = {
   activeChallengeId: string;
 };
 
-type SaveError = { taskId: string; message: string };
+export type SaveError = { taskId: string; message: string; retry: boolean };
 
 let dones: OptimisticTaskDone[] = [];
 let saveError: SaveError | null = null;
@@ -38,9 +38,13 @@ export function markOptimisticTaskDone(row: OptimisticTaskDone): void {
   emit();
 }
 
-export function rollbackOptimisticTaskDone(taskId: string): void {
+/** `reason` is the real cause (build 92 10.3); without one Home offers the generic retry. */
+export function rollbackOptimisticTaskDone(
+  taskId: string,
+  reason: { message: string; retry: boolean } = { message: OPTIMISTIC_SAVE_ERROR, retry: true },
+): void {
   dones = dones.filter((item) => item.taskId !== taskId);
-  saveError = { taskId, message: OPTIMISTIC_SAVE_ERROR };
+  saveError = { taskId, message: reason.message, retry: reason.retry };
   emit();
 }
 

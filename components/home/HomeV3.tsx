@@ -40,6 +40,7 @@ import {
   type HomeProofSection,
 } from "@/lib/home-proof-card";
 import { FREEZE } from "@/lib/copy";
+import { HOME_DONE } from "@/lib/home-done";
 import { DAY_ONE_SUB, DAY_ONE_WORDS, bestLabel, freezeHoldLine, homeAction, streakNumeralSize, todayNextLine, type HomeNextTask } from "@/lib/home-top";
 import { streakInARow } from "@/lib/task-complete-toast";
 import { homePrestartLine, type QueuedHomeRow } from "@/lib/home-starts-tomorrow";
@@ -157,7 +158,10 @@ export type HomeV3Props = {
   /** "Thursday, Oct 8" under the greeting. */
   dateLine?: string | null;
   /** Set when a finish was shown early and the server rejected it. */
-  saveFailed?: boolean;
+  /** Build 92 10.3: the real reason; `retry` only when trying again can work. */
+  saveError?: { message: string; retry: boolean } | null;
+  /** Build 92 10.5: the one-time definition line and the "i", under the date. */
+  conceptSlot?: React.ReactNode;
   onRetrySave?: () => void;
 };
 
@@ -207,7 +211,8 @@ export function HomeV3({
   bestStreak,
   nextTask = null,
   dateLine = null,
-  saveFailed = false,
+  saveError = null,
+  conceptSlot = null,
   onRetrySave,
 }: HomeV3Props) {
   const insets = useSafeAreaInsets();
@@ -292,7 +297,7 @@ export function HomeV3({
     : dayOne
       ? DAY_ONE_SUB
       : action.kind === "share"
-        ? "Day secured. See you tomorrow."
+        ? HOME_DONE.line
         : action.kind === "task"
           ? todayNextLine(nextTask?.title ?? openRow?.name, openCount, proof?.totalCount ?? openCount)
           : sub;
@@ -383,6 +388,7 @@ export function HomeV3({
         </Text>
       ) : null}
       {dateLine ? <Text testID="home-date" style={styles.dateLine}>{dateLine}</Text> : null}
+      {conceptSlot}
       <View style={styles.topCard}>
         <View style={styles.topRow}>
           <Pressable
@@ -426,15 +432,22 @@ export function HomeV3({
         ) : null}
       </View>
 
-      {saveFailed ? (
-        <Pressable
-          testID="home-save-retry"
-          accessibilityRole="button"
-          onPress={onRetrySave}
-          style={styles.today}
-        >
-          <Text style={styles.caption}>Couldn't save. Tap to try again.</Text>
-        </Pressable>
+      {saveError ? (
+        saveError.retry ? (
+          <Pressable
+            testID="home-save-retry"
+            accessibilityRole="button"
+            accessibilityLabel={saveError.message}
+            onPress={onRetrySave}
+            style={styles.today}
+          >
+            <Text style={styles.caption}>{saveError.message}</Text>
+          </Pressable>
+        ) : (
+          <View testID="home-save-error" style={styles.today}>
+            <Text style={styles.caption}>{saveError.message}</Text>
+          </View>
+        )
       ) : null}
       {proof ? (
         <View style={styles.today}>
@@ -478,7 +491,7 @@ export function HomeV3({
                   section.rows.filter((row) => row.done).map((row) => ({ section, row })),
                 );
                 if (done.length === 0) return null;
-                const label = done.length === 1 ? "1 done" : `${done.length} done`;
+                const label = HOME_DONE.fold(done.length);
                 return (
                   <View>
                     <Pressable
@@ -495,6 +508,7 @@ export function HomeV3({
                         <Text style={styles.task}>{label}</Text>
                         <Text style={styles.caption}>{done.map((item) => item.row.name).join(" · ")}</Text>
                       </View>
+                      {doneOpen ? null : <Text style={styles.caption}>{HOME_DONE.show}</Text>}
                       <View style={styles.chevronHit}>
                         {doneOpen ? (
                           <ChevronUp size={RING} color={DS_V3.color.textSecondary} />

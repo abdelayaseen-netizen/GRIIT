@@ -1,13 +1,15 @@
 /**
- * Build 90 06.1: which one-line definitions this phone has already shown.
- * Same key and shape Home reads (`app/(tabs)/index.tsx`, "griit.concept.seen"),
- * so a definition shown on a task screen is not repeated on Home and vice versa.
+ * Build 90 06.1 / build 92 10.5: which one-line definitions this person has already seen.
+ * Stored per user, so a second account on the same phone still gets each definition once.
+ * Home, the task screens and Day secured all read this, so a definition is never repeated.
  */
 import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ConceptKind } from "@/lib/concept-once";
 
-export const CONCEPT_SEEN_KEY = "griit.concept.seen";
+export function conceptSeenKey(userId: string): string {
+  return `griit.concept.seen.v2:${userId}`;
+}
 
 export function parseConceptSeen(raw: string | null | undefined): Set<ConceptKind> {
   if (!raw) return new Set();
@@ -19,20 +21,22 @@ export function parseConceptSeen(raw: string | null | undefined): Set<ConceptKin
   }
 }
 
-export async function readConceptSeen(): Promise<Set<ConceptKind>> {
+export async function readConceptSeen(userId: string): Promise<Set<ConceptKind>> {
+  if (!userId) return new Set();
   try {
-    return parseConceptSeen(await AsyncStorage.getItem(CONCEPT_SEEN_KEY));
+    return parseConceptSeen(await AsyncStorage.getItem(conceptSeenKey(userId)));
   } catch {
     return new Set();
   }
 }
 
-export async function markConceptSeen(kind: ConceptKind): Promise<void> {
+export async function markConceptSeen(userId: string, kind: ConceptKind): Promise<void> {
+  if (!userId) return;
   try {
-    const seen = await readConceptSeen();
+    const seen = await readConceptSeen(userId);
     if (seen.has(kind)) return;
     seen.add(kind);
-    await AsyncStorage.setItem(CONCEPT_SEEN_KEY, JSON.stringify([...seen]));
+    await AsyncStorage.setItem(conceptSeenKey(userId), JSON.stringify([...seen]));
   } catch {
     /* non-fatal: the line shows again next time */
   }
@@ -40,26 +44,27 @@ export async function markConceptSeen(kind: ConceptKind): Promise<void> {
 
 /**
  * `first` is null until the flag is read, then true the first time this concept is on
- * screen (and it is marked seen as soon as it is), false afterwards.
+ * screen for this user (and it is marked seen as soon as it is), false afterwards.
  */
-export function useFirstConcept(kind: ConceptKind, enabled = true): boolean | null {
+export function useFirstConcept(kind: ConceptKind, userId: string | null | undefined, enabled = true): boolean | null {
   const [first, setFirst] = useState<boolean | null>(null);
   const marked = useRef(false);
+  const uid = userId ?? "";
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !uid) return;
     let alive = true;
-    void readConceptSeen().then((seen) => {
+    void readConceptSeen(uid).then((seen) => {
       if (!alive) return;
       const isFirst = !seen.has(kind);
       setFirst(isFirst);
       if (isFirst && !marked.current) {
         marked.current = true;
-        void markConceptSeen(kind);
+        void markConceptSeen(uid, kind);
       }
     });
     return () => {
       alive = false;
     };
-  }, [kind, enabled]);
+  }, [kind, uid, enabled]);
   return enabled ? first : false;
 }

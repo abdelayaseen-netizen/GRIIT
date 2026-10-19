@@ -1,0 +1,41 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 10 frames on SE: P3-13 (before joining), P3-22 (first freeze earned), P3-24 (words sheet).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000003"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "^Join.*"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-13-before-join
+- openLink: "griit://dev/build92-secured?streak=7&freeze=1"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "You earned a freeze."
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-22-freeze-earned
+- tapOn: "Got it"
+- extendedWaitUntil:
+    notVisible: "You earned a freeze."
+    timeout: 10000
+- tapOn: "^Done$"
+- extendedWaitUntil:
+    visible:
+      id: "words-info"
+    timeout: 20000
+- tapOn:
+    id: "words-info"
+- extendedWaitUntil:
+    visible: "Proven by the camera or Strava."
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-24-words

@@ -27,7 +27,9 @@ import { StarterTodayRow } from "@/components/home/StarterTodayRow";
 import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
 import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
 import { conceptLine, type ConceptKind } from "@/lib/concept-once";
-import { FREEZE } from "@/lib/copy";
+import { markConceptSeen, readConceptSeen } from "@/lib/concept-seen";
+import { FREEZE_HELD } from "@/lib/words";
+import { WordsInfoButton, WordsSheet } from "@/components/words/WordsSheet";
 import { earliestEnrollmentStart, firstNameFromAuth, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
 import { firstWeekStripDays } from "@/lib/week-strip-days";
 import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
@@ -180,6 +182,7 @@ export default function HomeScreen() {
   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
   const [conceptSeen, setConceptSeen] = React.useState<ReadonlySet<ConceptKind>>(new Set());
   const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
+  const [wordsOpen, setWordsOpen] = React.useState(false);
   // null until the flags are read, so a cold start cannot flash the sheet before the
   // stored "Later" is known (06.6).
   const [saveDismissed, setSaveDismissed] = React.useState<{ first: boolean; second: boolean } | null>(null);
@@ -193,15 +196,11 @@ export default function HomeScreen() {
   }, [focus]);
 
   useEffect(() => {
-    void AsyncStorage.getItem("griit.concept.seen").then((raw) => {
-      if (!raw) return;
-      try {
-        const parsed = JSON.parse(raw) as ConceptKind[];
-        if (Array.isArray(parsed)) setConceptSeen(new Set(parsed));
-      } catch {
-        /* ignore a bad flag */
-      }
-    });
+    if (!user?.id) return;
+    void readConceptSeen(user.id).then(setConceptSeen);
+  }, [user?.id]);
+
+  useEffect(() => {
     void Promise.all([
       AsyncStorage.getItem("griit.saveStreak.dismissedFirst"),
       AsyncStorage.getItem("griit.saveStreak.dismissedSecond"),
@@ -215,10 +214,10 @@ export default function HomeScreen() {
       if (prev.has(kind)) return prev;
       const next = new Set(prev);
       next.add(kind);
-      void AsyncStorage.setItem("griit.concept.seen", JSON.stringify([...next]));
+      if (user?.id) void markConceptSeen(user.id, kind);
       return next;
     });
-  }, []);
+  }, [user?.id]);
   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
   const [taskToastUp, setTaskToastUp] = React.useState(false);
   React.useEffect(
@@ -475,6 +474,16 @@ export default function HomeScreen() {
     markConcept("secured");
   }, [todaySecured, conceptSeen, markConcept]);
 
+  // Build 92 10.5: Verified is defined once, the first time a camera or Strava proof is in.
+  const anyVerifiedDone = heroTasks.some((t) => t.done && (t.verifiedBy != null || t.proofType === "photo"));
+  useEffect(() => {
+    if (!anyVerifiedDone || todaySecured) return;
+    const line = conceptLine("verified", conceptSeen);
+    if (!line) return;
+    setConceptBanner(line);
+    markConcept("verified");
+  }, [anyVerifiedDone, todaySecured, conceptSeen, markConcept]);
+
   const morningAfter = useMemo(() => {
     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
     const statsRow = resolvedStats as StatsFromApi | null;
@@ -632,7 +641,7 @@ export default function HomeScreen() {
       onSuccess: (data) => {
       // 06.7: the result shows every time; the definition joins it the first time.
       const line = conceptLine("freeze", conceptSeen);
-      const result = FREEZE.result(data?.restoredStreak ?? 0, data?.remaining ?? 0);
+      const result = FREEZE_HELD(data?.restoredStreak ?? 0);
       setConceptBanner(line ? `${line} ${result}` : result);
       if (line) markConcept("freeze");
       trackUsage("freeze_used");
@@ -830,6 +839,10 @@ export default function HomeScreen() {
       }),
     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey, securedDateKeys, profile],
   );
+  // Build 92 10.3: one secured flag for the card and the Today block. The server's secured list
+  // lags a finish; the rows already know every task is done, so nothing may still say "Finish the task".
+  const proofAllDone = Boolean(proof.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount);
+  const securedNow = todaySecured || proofAllDone;
 
   const startsTomorrow = useMemo(
     () =>
@@ -941,15 +954,24 @@ export default function HomeScreen() {
           showInvite={showInvite}
           ListHeaderComponent={
             <View>
-            {conceptBanner ? (
-              <Text style={s.concept} accessibilityRole="text">{conceptBanner}</Text>
-            ) : null}
             <StarterTodayRow
               challengeTitle={inviteTarget?.name ?? null}
               durationDays={null}
               onChanged={refresh}
             />
             <HomeV3
+              conceptSlot={
+                conceptBanner || conceptSeen.size > 0 ? (
+                  <View style={s.conceptRow}>
+                    {conceptBanner ? (
+                      <Text style={[s.concept, s.conceptSpacer]} accessibilityRole="text">{conceptBanner}</Text>
+                    ) : (
+                      <View style={s.conceptSpacer} />
+                    )}
+                    {conceptSeen.size > 0 ? <WordsInfoButton onPress={() => setWordsOpen(true)} /> : null}
+                  </View>
+                ) : null
+              }
               title={greeting(
                 new Date(),
                 profile?.display_name,
@@ -969,7 +991,7 @@ export default function HomeScreen() {
               todayIndex={homeStrip.todayIndex}
               firstWeekDay={homeStrip.day}
               fillToday={todaySecured}
-              daySecured={todaySecured}
+              daySecured={securedNow}
               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
               onCreateChallenge={() => router.push(ROUTES.CREATE_WIZARD as never)}
               onStartStarter={() => void onStartStarter()}
@@ -1006,12 +1028,12 @@ export default function HomeScreen() {
               highlightTaskId={highlightTaskId}
               loading={bootstrap.isPending && !bootstrap.data}
               firstDayLine={
-                !todaySecured && proof.sections.some((s) => s.day === 1)
+                !securedNow && proof.sections.some((s) => s.day === 1)
                   ? todayFirstDayLine(proof.totalCount)
                   : null
               }
               day2Hero={
-                !todaySecured &&
+                !securedNow &&
                 proof.sections.some((s) => s.day >= 2) &&
                 typeof streak === "number"
                   ? todayDay2Hero(
@@ -1026,14 +1048,14 @@ export default function HomeScreen() {
                   : null
               }
               startLabel={
-                !todaySecured && startTask ? startCtaLabel(startTask.name) : null
+                !securedNow && startTask ? startCtaLabel(startTask.name) : null
               }
               bestStreak={resolvedStats?.longestStreak ?? streak}
               nextTask={
-                !todaySecured && startTask ? { id: startTask.id, title: startTask.name } : null
+                !securedNow && startTask ? { id: startTask.id, title: startTask.name } : null
               }
-              showFirstProofSlot={firstProofEver && !todaySecured}
-              saveFailed={optimisticSaveError() != null}
+              showFirstProofSlot={firstProofEver && !securedNow}
+              saveError={optimisticSaveError()}
               onRetrySave={runOptimisticRetry}
             />
             </View>
@@ -1136,6 +1158,7 @@ export default function HomeScreen() {
             setFreezeError(null);
           }}
         />
+        <WordsSheet visible={wordsOpen && homeFocused} onDismiss={() => setWordsOpen(false)} />
       </Screen>
       </ScreenChrome>
     </ErrorBoundary>
@@ -1150,8 +1173,15 @@ const s = StyleSheet.create({
     gap: DS_V3.space.md,
   },
   guestList: {},
+  conceptRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: DS_V3.space.sm,
+    paddingHorizontal: DS_V3.space.gutter,
+    paddingTop: DS_V3.space.sm,
+  },
+  conceptSpacer: { flex: 1 },
   concept: {
-    marginHorizontal: 20,
     marginBottom: 8,
     fontSize: 15,
     lineHeight: 20,

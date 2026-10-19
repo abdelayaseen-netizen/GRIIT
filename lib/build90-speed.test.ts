@@ -40,7 +40,9 @@ describe("build 90 speed wiring", () => {
     expect(flow).toContain("markOptimisticTaskDone");
     expect(flow).toContain("rollbackOptimisticTaskDone");
     expect(home).toContain("home-save-retry");
-    expect(home).toContain("Couldn't save. Tap to try again.");
+    // Build 92 10.3: Home shows the real reason (homeSaveError); the generic retry is the fallback.
+    expect(home).toContain("{saveError.message}");
+    expect(readFileSync(resolve(root, "lib/optimistic-home.ts"), "utf8")).toContain("Couldn't save. Tap to try again.");
   });
 
   it("waits on Balanced location only when the task is location-gated", () => {

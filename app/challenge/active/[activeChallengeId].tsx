@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StyleSheet, Text } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Screen from "@/components/ds/Screen";
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -58,6 +59,12 @@ import { copyChallengeInvite, inviteToChallenge } from "@/lib/share";
 import { taskDisplayName } from "@/lib/home-proof-card";
 import { useInlineError } from "@/hooks/useInlineError";
 import { InlineError } from "@/components/InlineError";
+import Chip from "@/components/ds/Chip";
+import { POSTS_HERE_SHEET, weekDotsFromProgress } from "@/lib/challenge-state";
+import { POST_AUDIENCES, audienceLabel, type PostAudience } from "@/lib/post-audience";
+import { readPostsHere, writePostsHere } from "@/lib/posts-here";
+
+const dotKeySeenKey = (userId: string) => `griit.dotKey.seen.v1:${userId}`;
 
 type TaskRow = {
   id: string;
@@ -190,6 +197,7 @@ export default function ActiveChallengeDetailScreen() {
         total_days: number;
         days_secured: number;
         elapsed_days: number;
+        days?: { date_key: string; state: string }[];
       }>,
     enabled: !!id && !!user?.id,
     staleTime: 30 * 1000,
@@ -374,6 +382,30 @@ export default function ActiveChallengeDetailScreen() {
 
   const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
   const [shareTodayOpen, setShareTodayOpen] = useState(false);
+  const userId = user?.id ?? "";
+  const [dotKeyOpen, setDotKeyOpen] = useState(false);
+  useEffect(() => {
+    if (!userId) return;
+    void AsyncStorage.getItem(dotKeySeenKey(userId)).then((raw) => setDotKeyOpen(raw !== "1"));
+  }, [userId]);
+  const dismissDotKey = useCallback(() => {
+    setDotKeyOpen(false);
+    if (userId) void AsyncStorage.setItem(dotKeySeenKey(userId), "1");
+  }, [userId]);
+  const [postsHere, setPostsHere] = useState<PostAudience>("friends");
+  const [postsHereDraft, setPostsHereDraft] = useState<PostAudience | null>(null);
+  useEffect(() => {
+    if (!userId || !id) return;
+    void readPostsHere(userId, id).then((saved) => {
+      if (saved) setPostsHere(saved);
+    });
+  }, [userId, id]);
+  const savePostsHere = useCallback(() => {
+    if (!postsHereDraft) return;
+    setPostsHere(postsHereDraft);
+    if (userId && id) void writePostsHere(userId, id, postsHereDraft);
+    setPostsHereDraft(null);
+  }, [postsHereDraft, userId, id]);
   const { error: leaveError, showError: showLeaveError, clearError: clearLeaveError } =
     useInlineError();
 
@@ -474,7 +506,15 @@ export default function ActiveChallengeDetailScreen() {
     challengeTitle: title,
   });
   const lastDateKey = addCalendarDaysToDateKey(startDateKey, Math.max(0, durationDays - 1));
+  // Build 92 10.2: the dots come from the same day records as the two numbers once loaded.
+  const progressDots = Array.isArray(progress.data?.days)
+    ? weekDotsFromProgress(progress.data.days, weekKeys, securedToday)
+    : null;
   const weekDaysOverride = weekKeys.map((key, i) => {
+    if (progressDots) {
+      const dot = progressDots[i]!;
+      return { letter: weekdayLetterForDateKey(key, profileTz), filled: dot === "secured", state: dot };
+    }
     const state = enrollmentWeekDayState({
       dateKey: key,
       startDateKey,
@@ -577,7 +617,29 @@ export default function ActiveChallengeDetailScreen() {
           people={people}
           onInvite={people.showInvite ? handleInvite : undefined}
           onCopyInvite={people.showInvite ? handleCopyInvite : undefined}
+          showDotKey={dotKeyOpen}
+          onDismissDotKey={dismissDotKey}
+          postsHere={postsHere}
+          onPostsHere={() => setPostsHereDraft(postsHere)}
         />
+        <Sheet
+          visible={postsHereDraft != null}
+          onDismiss={() => setPostsHereDraft(null)}
+          heading={POSTS_HERE_SHEET.title(title)}
+          footer={<Button label={POSTS_HERE_SHEET.save} onPress={savePostsHere} />}
+        >
+          <Text style={styles.sheetBody}>{POSTS_HERE_SHEET.body}</Text>
+          <View style={styles.audienceRow}>
+            {POST_AUDIENCES.map((a) => (
+              <Chip
+                key={a}
+                label={audienceLabel(a)}
+                selected={postsHereDraft === a}
+                onPress={() => setPostsHereDraft(a)}
+              />
+            ))}
+          </View>
+        </Sheet>
         <DayStickerSheet
           visible={shareTodayOpen && thisDone}
           onDismiss={() => setShareTodayOpen(false)}
@@ -637,6 +699,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: DS_V3.color.canvas,
   },
+  audienceRow: { flexDirection: "row", flexWrap: "wrap", gap: DS_V3.space.sm, paddingTop: DS_V3.space.md },
   sheetBody: {
     fontSize: DS_V3.type.secondary.fontSize,
     lineHeight: DS_V3.type.secondary.lineHeight,

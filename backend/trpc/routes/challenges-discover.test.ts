@@ -16,7 +16,8 @@ const FEATURED_COLUMNS = [
   "created_at",
   "creator_id",
   "participation_type",
-  "challenge_tasks (id, title, task_type, order_index, config)",
+  // Build 92 10.1: the featured card says how each task is proven and its window.
+  "challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)",
 ] as const;
 
 const RECOMMENDED_COLUMNS = [

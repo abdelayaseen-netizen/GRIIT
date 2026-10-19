@@ -26,7 +26,6 @@ import {
 import type { LucideIcon } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import PushedHeader from "@/components/ds/PushedHeader";
-import DisplayNumber from "@/components/ds/DisplayNumber";
 import WeekStrip from "@/components/ds/WeekStrip";
 import Stamp from "@/components/ds/Stamp";
 import Button from "@/components/ds/Button";
@@ -57,9 +56,16 @@ import {
   INVITE_MEMBERS,
   INVITE_TO,
   NO_SHARED_PROOFS_IN_CHALLENGE,
-  PEOPLE_SOLO,
   recordLine,
 } from "@/lib/v44-detail";
+import {
+  DOT_KEY,
+  DOT_KEY_COPY,
+  joinedPrimary,
+  topNumbers,
+  visibilityRow,
+} from "@/lib/challenge-state";
+import type { PostAudience } from "@/lib/post-audience";
 
 const ICON = DS_V3.space.xs * 6;
 const META_ICON = DS_V3.space.lg;
@@ -123,6 +129,12 @@ export type ActiveChallengeV3Props = {
   onCopyInvite?: () => void;
   onOpenBoard?: () => void;
   onOpenRecord?: () => void;
+  /** Build 92 10.2: the dot key shows on first view; "Got it" hides it for this user. */
+  showDotKey?: boolean;
+  onDismissDotKey?: () => void;
+  /** "Your posts here: {audience} ›" opens the audience sheet. */
+  postsHere?: PostAudience | null;
+  onPostsHere?: () => void;
 };
 
 export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
@@ -131,6 +143,10 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
   const today = enrollmentTodayProgress(p.tasks);
   const line = statusLine(today);
   const footer = footerAction({ securedToday: today.securedToday, tasks: p.tasks });
+  const todayDone = p.securedToday || today.securedToday;
+  const primary = joinedPrimary(todayDone);
+  const primaryTask = footer.kind === "next" && !footer.task.completed_today ? footer.task : null;
+  const numbers = topNumbers({ day: p.currentDay, total: p.durationDays, secured: p.securedCount ?? 0 });
   const weekDays = LETTERS.map((letter, i) => ({
     letter,
     filled: p.weekSecured[i] === true,
@@ -185,17 +201,13 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         ) : null}
 
         <View style={styles.dayBlock}>
-          <Text style={styles.dayLabel}>Day</Text>
           {p.loading ? (
             <View style={styles.daySkel} />
           ) : (
-            <DisplayNumber value={p.currentDay} size="home" />
-          )}
-          <Text style={styles.ofLabel}>of {p.durationDays}</Text>
-          {p.loading ? null : (
-            <Text style={styles.metaLine}>
-              {recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)}
-            </Text>
+            <>
+              <Text testID="active-day-of" style={styles.dayOf}>{numbers.day}</Text>
+              <Text testID="active-days-secured" style={styles.metaLine}>{numbers.secured}</Text>
+            </>
           )}
         </View>
 
@@ -247,6 +259,39 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
               fillToday={p.securedToday}
             />
           )}
+          {p.showDotKey && !p.loading ? (
+            <View testID="dot-key" style={styles.dotKey}>
+              <Text style={styles.taskTitle}>{DOT_KEY_COPY.title}</Text>
+              {DOT_KEY_ROWS.map((row) => (
+                <View key={row.key} style={styles.dotKeyRow}>
+                  <View style={[styles.dotKeySwatch, row.style]}>
+                    {row.key === "freeze" ? <Snowflake size={10} color={DS_V3.color.textSecondary} /> : null}
+                  </View>
+                  <Text style={styles.caption}>{DOT_KEY[row.key]}</Text>
+                </View>
+              ))}
+              <Pressable
+                testID="dot-key-got-it"
+                accessibilityRole="button"
+                accessibilityLabel={DOT_KEY_COPY.done}
+                onPress={p.onDismissDotKey}
+                hitSlop={8}
+              >
+                <Text style={styles.link}>{DOT_KEY_COPY.done}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          {p.postsHere && p.onPostsHere ? (
+            <Pressable
+              testID="posts-here"
+              accessibilityRole="button"
+              accessibilityLabel={visibilityRow(p.postsHere)}
+              onPress={p.onPostsHere}
+              style={styles.postsHere}
+            >
+              <Text style={styles.caption}>{`${visibilityRow(p.postsHere)} ›`}</Text>
+            </Pressable>
+          ) : null}
         </View>
         {p.freezeRow ? (
           <View style={styles.freezeRow}>
@@ -352,7 +397,6 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
               </View>
             ) : (
               <View style={styles.peopleCard}>
-                <Text style={styles.taskTitle}>{PEOPLE_SOLO}</Text>
                 <Button label="Invite" onPress={p.onInvite} />
               </View>
             )}
@@ -385,17 +429,27 @@ export default function ActiveChallengeV3(p: ActiveChallengeV3Props) {
         <View style={styles.footerClear} />
       </ScrollView>
 
-      {p.loading || footer.kind !== "next" ? null : (
+      {p.loading || p.tasks.length === 0 ? null : (
         <View style={[styles.footer, { paddingBottom: DS_V3.space.section + insets.bottom }]}>
           <Button
-            label={`${taskVerb(footer.task.task_type)} · ${footer.task.title}`}
-            onPress={() => p.onTask?.(footer.task)}
+            testID="active-primary"
+            label={primary.label}
+            disabled={primary.disabled || !primaryTask}
+            onPress={primaryTask ? () => p.onTask?.(primaryTask) : undefined}
           />
         </View>
       )}
     </View>
   );
 }
+
+const DOT_KEY_ROWS: { key: keyof typeof DOT_KEY; style: object }[] = [
+  { key: "secured", style: { backgroundColor: DS_V3.color.textPrimary } },
+  { key: "today", style: { borderWidth: 1.5, borderColor: DS_V3.color.textPrimary } },
+  { key: "freeze", style: { borderWidth: 1, borderColor: DS_V3.color.textSecondary } },
+  { key: "missed", style: { borderWidth: 1, borderColor: DS_V3.color.textTertiary, borderStyle: "dashed" } },
+  { key: "before", style: { backgroundColor: DS_V3.color.raised } },
+];
 
 function moreButton(onMore?: () => void) {
   if (!onMore) return null;
@@ -454,20 +508,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
     color: DS_V3.color.textPrimary,
-  },
-  dayLabel: {
-    fontSize: DS_V3.type.secondary.fontSize,
-    lineHeight: DS_V3.type.secondary.lineHeight,
-    fontWeight: DS_V3.type.secondary.fontWeight,
-    color: DS_V3.color.textSecondary,
-    paddingBottom: 11,
-  },
-  ofLabel: {
-    fontSize: DS_V3.type.body.fontSize,
-    lineHeight: DS_V3.type.body.lineHeight,
-    fontWeight: DS_V3.type.body.fontWeight,
-    color: DS_V3.color.textSecondary,
-    paddingBottom: 9,
   },
   daySkel: {
     width: DS_V3.numberSize.home,
@@ -543,6 +583,23 @@ const styles = StyleSheet.create({
     fontWeight: DS_V3.type.secondary.fontWeight,
     color: DS_V3.color.textSecondary,
   },
+  dayOf: {
+    fontSize: DS_V3.type.title.fontSize,
+    lineHeight: DS_V3.type.title.lineHeight,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+    color: DS_V3.color.textPrimary,
+  },
+  dotKey: { gap: DS_V3.space.sm, paddingTop: DS_V3.space.md },
+  dotKeyRow: { flexDirection: "row", alignItems: "center", gap: DS_V3.space.sm },
+  dotKeySwatch: {
+    width: DS_V3.space.lg,
+    height: DS_V3.space.lg,
+    borderRadius: DS_V3.space.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  postsHere: { paddingTop: DS_V3.space.md },
   weekWrap: {
     paddingTop: DS_V3.space.lg + DS_V3.space.sm,
     paddingBottom: DS_V3.space.lg,

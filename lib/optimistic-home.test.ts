@@ -27,7 +27,8 @@ describe("mergeOptimisticCheckins", () => {
     markOptimisticTaskDone({ taskId: "task-2", activeChallengeId: "ac-1" });
     rollbackOptimisticTaskDone("task-2");
     expect(optimisticTaskDones().some((row) => row.taskId === "task-2")).toBe(false);
-    expect(optimisticSaveError()).toEqual({ taskId: "task-2", message: OPTIMISTIC_SAVE_ERROR });
+    // Build 92 10.3: the error says whether a retry can work; with no reason it is the generic retry.
+    expect(optimisticSaveError()).toEqual({ taskId: "task-2", message: OPTIMISTIC_SAVE_ERROR, retry: true });
     expect(OPTIMISTIC_SAVE_ERROR).toBe("Couldn't save. Tap to try again.");
   });
 });

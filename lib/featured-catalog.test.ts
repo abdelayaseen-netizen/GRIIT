@@ -9,8 +9,9 @@ import {
 } from "@/lib/featured-catalog";
 
 describe("v44 featured catalog", () => {
-  it("lists eight built-ins, with Fajr, 7K Steps and 3 Good Things at 7 days", () => {
-    expect(FEATURED_BUILTINS).toHaveLength(8);
+  // Build 92 10.1: the eight v44 built-ins plus Run 3 mi (hidden on Discover until its row exists).
+  it("lists eight built-ins plus Run 3 mi, with Fajr, 7K Steps and 3 Good Things at 7 days", () => {
+    expect(FEATURED_BUILTINS).toHaveLength(9);
     expect(FEATURED_BUILTINS.find((c) => c.title === "Fajr Before Sunrise")?.days).toBe(7);
     expect(FEATURED_BUILTINS.find((c) => c.title === "7K Steps")?.proof).toBe("self");
     expect(FEATURED_BUILTINS.find((c) => c.title === "3 Good Things")?.days).toBe(7);

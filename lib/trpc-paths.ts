@@ -60,6 +60,7 @@ export const TRPC = {
     search: 'challenges.search',
     getDiscoverFeed: 'challenges.getDiscoverFeed',
     getDiscoverFeatured: 'challenges.getDiscoverFeatured',
+    featuredCatalogIds: 'challenges.featuredCatalogIds',
     getDiscoverGrid: 'challenges.getDiscoverGrid',
     getDiscoverHabits: 'challenges.getDiscoverHabits',
     getRecommended: 'challenges.getRecommended',

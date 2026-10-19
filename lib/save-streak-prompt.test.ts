@@ -28,8 +28,9 @@ describe("shouldShowSaveStreak", () => {
 
 describe("concept lines", () => {
   it("shows each line once", () => {
-    expect(conceptLine("secured", new Set())).toBe("Day secured: every task done.");
+    // Build 92 10.5: the lines are the Part 3 Words definitions.
+    expect(conceptLine("secured", new Set())).toBe("Secured: every task today is done, so the day counts toward your streak.");
     expect(conceptLine("secured", new Set(["secured"]))).toBeNull();
-    expect(conceptLine("self", new Set())).toContain("you mark it yourself");
+    expect(conceptLine("self", new Set())).toContain("you marked it done yourself");
   });
 });

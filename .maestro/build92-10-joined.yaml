@@ -1,0 +1,65 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 10 gate: join from Discover, then the challenge page says "Start today's task",
+# Discover says "Joined", and reopening never shows Join or "You're already in this challenge".
+- runFlow: build92-guest-home.yaml
+- tapOn: "^Discover$"
+- extendedWaitUntil:
+    visible:
+      id: "discover-card-e44f0001-4000-4000-8000-000000000001"
+    timeout: 20000
+# Let the server's featured card load first; it shifts the carousel.
+- extendedWaitUntil:
+    visible: "build92-never-shown"
+    timeout: 4000
+    optional: true
+- takeScreenshot: P3-10-discover
+- tapOn:
+    id: "discover-card-e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 10000
+- takeScreenshot: P3-11-preview
+- tapOn: "Join Show Up 7"
+# The join opens the first task; relaunch (session kept) and come back through Discover.
+- extendedWaitUntil:
+    visible: "Camera access is off|Get to the gym.*|Take photo|Not yet"
+    timeout: 20000
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "^Today$"
+    timeout: 30000
+- tapOn: "^Discover$"
+- extendedWaitUntil:
+    visible:
+      id: "discover-card-e44f0001-4000-4000-8000-000000000001-joined"
+    timeout: 20000
+- assertVisible: "Joined"
+- takeScreenshot: P3-10-discover-joined
+- tapOn:
+    id: "discover-card-e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Start today.s task"
+    timeout: 20000
+- assertVisible:
+    id: "active-day-of"
+- assertVisible:
+    id: "active-days-secured"
+- assertNotVisible: "^Join.*"
+- assertNotVisible: ".*already in this challenge.*"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-14-joined
+- tapOn: "Go back"
+- extendedWaitUntil:
+    visible:
+      id: "discover-card-e44f0001-4000-4000-8000-000000000001-joined"
+    timeout: 10000
+- tapOn:
+    id: "discover-card-e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Start today.s task"
+    timeout: 20000
+- assertNotVisible: "^Join.*"
+- assertNotVisible: ".*already in this challenge.*"

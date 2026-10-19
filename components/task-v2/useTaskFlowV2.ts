@@ -32,6 +32,7 @@ import {
   rollbackOptimisticTaskDone,
   setOptimisticRetry,
 } from "@/lib/optimistic-home";
+import { homeSaveError } from "@/lib/home-done";
 import { clearOptimisticFeedPost, optimisticTaskPost, publishOptimisticFeedPost } from "@/lib/optimistic-feed";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { assembleSubmitResult, type SubmitResult, type VerificationKind } from "@/lib/task-completion-result";
@@ -50,6 +51,7 @@ import { enrollmentFinished } from "@/lib/route-after-save";
 import { FINISH_COPY, isOfflineError, remainingAfter, remainingToast, routeAfterFinish } from "@/lib/finish-flow";
 import { createChooserToday } from "@/lib/create-chooser";
 import { audiencePublishes, type PostAudience } from "@/lib/post-audience";
+import { readPostsHere } from "@/lib/posts-here";
 import { needsPostChoice, POST_CHOICE_DEFAULT, POST_CHOICE_PRIVATE } from "@/lib/post-choice";
 import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { shareProgressImage } from "@/lib/share";
@@ -257,6 +259,16 @@ export function useTaskFlowV2() {
   const [audience, setAudience] = useState<PostAudience>("friends");
   const audienceRef = useRef(audience);
   audienceRef.current = audience;
+  // Build 92 10.2: this challenge's "Your posts here" default, unless a choice was already made.
+  useEffect(() => {
+    let live = true;
+    void readPostsHere(userId, activeChallengeId).then((saved) => {
+      if (live && saved && audienceRef.current === "friends") setAudience(saved);
+    });
+    return () => {
+      live = false;
+    };
+  }, [userId, activeChallengeId]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [discardAsk, setDiscardAsk] = useState(false);
@@ -557,10 +569,10 @@ export function useTaskFlowV2() {
     }
   };
 
-  const failLocalSave = () => {
+  const failLocalSave = (message = "") => {
     if (!shownLocalRef.current) return;
     shownLocalRef.current = false;
-    rollbackOptimisticTaskDone(taskId);
+    rollbackOptimisticTaskDone(taskId, homeSaveError(message, closedWindowTime(gateTime)));
     clearOptimisticFeedPost(postingId);
   };
 
@@ -996,8 +1008,8 @@ export function useTaskFlowV2() {
       clearTimeout(slowTimer);
       submitInFlight.current = false;
       setSaving(false);
-      failLocalSave();
       const msg = err instanceof Error ? err.message : "";
+      failLocalSave(msg);
       const code = failureErrorCode(err);
       if (mountedRef.current) {
         setFailNote(msg);

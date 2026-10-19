@@ -186,6 +186,9 @@ export default function ChallengeDetailScreen() {
   });
   const securedDateKeys = bootstrapSecuredKeys ?? securedKeysQuery.data ?? [];
 
+  // Build 92 10.2: Join stays hidden until we know you are not already in (and while redirecting).
+  const membershipKnown = enrollmentsReady && !activeChallengeId;
+
   useEffect(() => {
     if (!activeChallengeId) return;
     if (pathname.includes("/members") || pathname.includes("/invite")) return;
@@ -419,7 +422,16 @@ export default function ChallengeDetailScreen() {
         return;
       }
       if (classified.kind === "already") {
-        showError(classified.message);
+        // Build 92 10.2: already a member; open the challenge instead of saying so.
+        const rows = (await trpcQuery(TRPC.challenges.listMyActive).catch(() => [])) as {
+          id?: string;
+          challenge_id?: string;
+        }[];
+        const mine = Array.isArray(rows) ? rows.find((r) => r.challenge_id === id) : undefined;
+        void queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
+        if (user?.id) void queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(user.id) });
+        if (mine?.id) router.replace(ROUTES.CHALLENGE_ACTIVE(mine.id) as never);
+        else router.replace(ROUTES.TABS_HOME as never);
         return;
       }
       if (classified.kind === "private") {
@@ -581,6 +593,7 @@ export default function ChallengeDetailScreen() {
           endsOn={formatChallengeDate(challenge?.ends_at)}
           startsOn={formatChallengeDate(challenge?.live_date)}
           joining={joining}
+          membershipPending={!!user && !membershipKnown}
           loading={catalogLoading}
           error={catalog.error}
           privateLocked={privateLocked}

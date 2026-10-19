@@ -6,6 +6,7 @@
  * proof_type / category to a Lucide icon and show a difficulty pill plus
  * either a 3-up avatar stack ("3 friends") or a "Be first today" hint.
  */
+import type { DiscoverPreviewTask } from "@/lib/discover-preview-tasks";
 import React, { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
@@ -40,7 +41,7 @@ export type RecommendedChallenge = {
   cover_url?: string | null;
   participantCount: number;
   previewUsers: RecommendedChallengePreviewUser[];
-  tasks?: { title: string; gate: string }[];
+  tasks?: DiscoverPreviewTask[];
 };
 
 export type ChallengeGridCardProps = {

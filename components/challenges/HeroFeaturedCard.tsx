@@ -1,3 +1,5 @@
+import type { DiscoverPreviewTask } from "@/lib/discover-preview-tasks";
+
 export type HeroFeaturedDifficulty = "EASY" | "MED" | "HARD";
 export type HeroFeaturedProofType = "photo" | "text" | "location";
 type HeroFeaturedCategory = "body" | "mind" | "faith" | "focus";
@@ -23,5 +25,5 @@ export interface HeroFeaturedData {
     friend_names: string[];
     others_count: number;
   };
-  tasks?: { title: string; gate: string }[];
+  tasks?: DiscoverPreviewTask[];
 }

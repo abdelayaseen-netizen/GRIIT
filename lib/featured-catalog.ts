@@ -1,13 +1,14 @@
 /**
- * v44 frames 167 + 178 — the eight built-in challenges.
+ * v44 frames 167 + 178 — the eight built-in challenges, plus Run 3 mi (build 92 10.1, pending SQL).
  * Seed lives in docs/drafts/v44-featured-catalog.sql and is not applied.
  * Task fields come from the create-route builder in featured-catalog-seed.
  */
 
 import { gatesFor, gateTimeFor, type TaskModelRow } from "@/backend/lib/task-model";
 import { FLAGS } from "@/lib/feature-flags";
-import { buildFeaturedCatalogRows } from "@/lib/featured-catalog-seed";
+import { buildFeaturedCatalogRows, buildPendingFeaturedRows } from "@/lib/featured-catalog-seed";
 import { gateLabel } from "@/lib/task-ui";
+import { doesLine } from "@/lib/discover-card";
 
 export type FeaturedProof = "camera" | "optional" | "self";
 
@@ -22,6 +23,8 @@ export type FeaturedBuiltin = {
   placeGate: boolean;
   config: Record<string, unknown>;
   taskType: string;
+  /** Build 92 10.1: "Run 3 mi · Strava". */
+  does: string;
 };
 
 function proofFromMode(mode: unknown): FeaturedProof {
@@ -30,7 +33,10 @@ function proofFromMode(mode: unknown): FeaturedProof {
   return "self";
 }
 
-export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = buildFeaturedCatalogRows().map((row) => {
+export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = [
+  ...buildFeaturedCatalogRows(),
+  ...buildPendingFeaturedRows(),
+].map((row) => {
   const model: TaskModelRow = {
     task_type: row.task.task_type,
     require_photo: row.task.require_photo === true,
@@ -51,6 +57,15 @@ export const FEATURED_BUILTINS: readonly FeaturedBuiltin[] = buildFeaturedCatalo
     placeGate: row.task.require_location === true,
     taskType: row.task.task_type,
     config: row.task.config as Record<string, unknown>,
+    does: doesLine({
+      title: row.task.title,
+      task_type: row.task.task_type,
+      require_photo: row.task.require_photo === true,
+      gate_time_mode: row.task.gate_time_mode,
+      gate_time_start: row.task.gate_time_start,
+      gate_time_end: row.task.gate_time_end,
+      config: row.task.config as Record<string, unknown>,
+    }),
   };
 });
 

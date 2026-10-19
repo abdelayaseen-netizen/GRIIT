@@ -47,6 +47,8 @@ import {
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
 import DiscoverSearch from "@/components/discover/DiscoverSearch";
 import { difficultyChip } from "@/lib/discover-preview-tasks";
+import { DISCOVER_JOINED, doesLine } from "@/lib/discover-card";
+import { FEATURED_PENDING_IDS } from "@/lib/featured-catalog-seed";
 
 const COVER_CATEGORY: Record<FeaturedBuiltin["category"], CoverCategory> = {
   fitness: "Fitness",
@@ -79,6 +81,8 @@ export type DiscoverV3Props = {
   circleCount: number;
   featuredJoined?: boolean;
   joinedIds?: ReadonlySet<string>;
+  /** Build 92 10.1: pending built-ins (Run 3 mi) show only once the server has them. */
+  featuredLiveIds?: ReadonlySet<string>;
   error: boolean;
   onRetry: () => void;
   onOpenChallenge: (id: string, slug?: string | null) => void;
@@ -127,6 +131,7 @@ export function DiscoverV3({
   circleCount,
   featuredJoined,
   joinedIds,
+  featuredLiveIds,
   error,
   onRetry,
   onOpenChallenge,
@@ -231,17 +236,25 @@ export function DiscoverV3({
               height={200}
             />
             <Text style={styles.caption} numberOfLines={2}>
-              {discoverProofLabel({ proofType: featured.proof_type, taskTypes: featured.task_types })}
+              {featured.tasks?.[0]?.task_type != null
+                ? doesLine(featured.tasks[0])
+                : discoverProofLabel({ proofType: featured.proof_type, taskTypes: featured.task_types })}
             </Text>
           </Pressable>
         ) : null}
-        {discoverSectionItems(FEATURED_BUILTINS, category).map((item) => (
+        {discoverSectionItems(
+          FEATURED_BUILTINS.filter((b) => !FEATURED_PENDING_IDS.includes(b.id) || featuredLiveIds?.has(b.id)),
+          category,
+        ).map((item) => (
           <Pressable
             key={item.id}
             testID={`discover-card-${item.id}`}
             accessibilityRole="button"
-            accessibilityLabel={item.title}
-            onPress={() => openBuiltin(item)}
+            accessibilityLabel={joinedIds?.has(item.id) ? `${item.title}, ${DISCOVER_JOINED}` : item.title}
+            onPress={() => {
+              if (joinedIds?.has(item.id)) onOpenChallenge(item.id);
+              else openBuiltin(item);
+            }}
             style={styles.builtin}
           >
             <Cover
@@ -252,8 +265,13 @@ export function DiscoverV3({
               height={200}
             />
             <Text style={styles.caption} numberOfLines={2}>
-              {item.rule || featuredProofLabel(item.proof)}
+              {item.does}
             </Text>
+            {joinedIds?.has(item.id) ? (
+              <Text testID={`discover-card-${item.id}-joined`} style={styles.joinedCaption}>
+                {DISCOVER_JOINED}
+              </Text>
+            ) : null}
           </Pressable>
         ))}
       </ScrollView>
@@ -362,7 +380,11 @@ export function DiscoverV3({
                 difficulty={difficultyLabel(item.difficulty)}
                 people={item.participantCount}
                 joined={joinedIds?.has(item.id) === true}
-                onPress={() => openGrid(item)}
+                does={item.tasks?.[0]?.task_type != null ? doesLine(item.tasks[0]) : null}
+                onPress={() => {
+                  if (joinedIds?.has(item.id)) onOpenChallenge(item.id);
+                  else openGrid(item);
+                }}
               />
             </View>
           )}
@@ -402,6 +424,12 @@ export function DiscoverV3({
 }
 
 const styles = StyleSheet.create({
+  joinedCaption: {
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    fontWeight: "600",
+    color: DS_V3.color.textPrimary,
+  },
   root: {
     flex: 1,
     backgroundColor: DS_V3.color.canvas,

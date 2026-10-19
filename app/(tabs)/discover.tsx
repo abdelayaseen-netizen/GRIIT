@@ -5,6 +5,7 @@
  * DiscoverV3 (never mapped into the grid).
  */
 import React, { useCallback, useMemo, useState } from "react";
+import { FEATURED_PENDING_IDS } from "@/lib/featured-catalog-seed";
 import { StyleSheet } from "react-native";
 import Screen from "@/components/ds/Screen";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +16,8 @@ import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { ROUTES, userProfile } from "@/lib/routes";
 import { joinLeftWaitingRoom } from "@/lib/invite-link";
+import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
+import { homeBootstrapQueryKey } from "@/lib/home-bootstrap-key";
 import { openHrefForResult } from "@/lib/discover-search";
 import { DS_V3 } from "@/lib/design-system";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -111,6 +114,15 @@ function DiscoverScreenInner() {
     enabled: signedIn,
   });
 
+  const pendingFeaturedQuery = useQuery({
+    queryKey: ["discover", "featuredCatalogIds", FEATURED_PENDING_IDS.join(",")],
+    queryFn: () =>
+      trpcQuery(TRPC.challenges.featuredCatalogIds, { ids: [...FEATURED_PENDING_IDS] }) as Promise<string[]>,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  });
+  const featuredLiveIds = useMemo(() => new Set(pendingFeaturedQuery.data ?? []), [pendingFeaturedQuery.data]);
+
   const securedQuery = useQuery({
     queryKey: ["profiles", "getSecuredDateKeys", user?.id ?? ""],
     queryFn: () => trpcQuery(TRPC.profiles.getSecuredDateKeys) as Promise<string[]>,
@@ -155,6 +167,23 @@ function DiscoverScreenInner() {
       featuredQuery.data?.id,
     );
   }, [recommendedQuery.data, selectedCategory, featuredQuery.data?.id]);
+
+  // Build 92 10.2: after a join, Discover must know at once (Joined, no second Join).
+  const refreshMembership = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["challenge", "listMyActive"] });
+    if (user?.id) void queryClient.invalidateQueries({ queryKey: homeBootstrapQueryKey(user.id) });
+  }, [queryClient, user?.id]);
+  const onDiscoverJoinError = useCallback(
+    (err: unknown, challengeId: string) => {
+      if (classifyJoinChallengeError(err).kind === "already") {
+        refreshMembership();
+        router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
+        return;
+      }
+      showFollowError(err instanceof Error ? err.message : "Couldn't join.");
+    },
+    [refreshMembership, router, showFollowError],
+  );
 
   const joinedIds = useMemo(() => {
     const rows = myActiveQuery.data ?? [];
@@ -297,6 +326,7 @@ function DiscoverScreenInner() {
           featuredQuery.data?.id ? joinedIds.has(featuredQuery.data.id) : false
         }
         joinedIds={joinedIds}
+        featuredLiveIds={featuredLiveIds}
         error={error}
         onRetry={() => {
           void featuredQuery.refetch();
@@ -309,6 +339,7 @@ function DiscoverScreenInner() {
         onJoinChallenge={(challengeId) => {
           void trpcMutate(TRPC.challenges.join, { challengeId })
             .then(async (result) => {
+              refreshMembership();
               const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
               const startAt = join?.start_at;
               void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
@@ -318,7 +349,7 @@ function DiscoverScreenInner() {
               else if (joinLeftWaitingRoom(join)) router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
               else router.push(ROUTES.TABS_HOME as never);
             })
-            .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
+            .catch((err) => onDiscoverJoinError(err, challengeId));
         }}
         onBuildOwn={handleBuildYourOwn}
         onOpenPerson={handleOpenPerson}
@@ -337,6 +368,7 @@ function DiscoverScreenInner() {
                 } as never);
                 return;
               }
+              refreshMembership();
               const join = result as import("@/lib/open-first-task").JoinWithFirstTask | null;
               const startAt = join?.start_at;
               void (startAt && day1StartCopy(startAt, getDeviceIanaTimeZone()) === JOIN_CAPTION_TOMORROW);
@@ -346,7 +378,7 @@ function DiscoverScreenInner() {
               else if (joinLeftWaitingRoom(join)) router.push(ROUTES.CHALLENGE_ID(item.id) as never);
               else router.push(ROUTES.TABS_HOME as never);
             })
-            .catch((err) => showFollowError(err instanceof Error ? err.message : "Couldn't join."));
+            .catch((err) => onDiscoverJoinError(err, item.id));
         }}
       />
     </Screen>

@@ -15,6 +15,7 @@ import {
   askHonestyLine,
 } from "@/lib/simple-log";
 import { useFirstConcept } from "@/lib/concept-seen";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ICON = DS_V3.space.gutter;
 const ROW_ICONS = [Check, Users, ShieldOff] as const;
@@ -37,7 +38,8 @@ export function AskStep({
   onNotYet,
 }: Props) {
   // 06.1: the first self-reported task explains the word; 06.2: it is said once here.
-  const firstSelf = useFirstConcept("self");
+  const { user } = useAuth();
+  const firstSelf = useFirstConcept("self", user?.id);
   const caption = askFooterCaption(footerCaption);
   return (
     <View style={styles.body}>

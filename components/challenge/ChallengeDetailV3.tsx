@@ -3,7 +3,7 @@
  * Copy from griit_brand/briefs/15/cursor/02_screens.md. DS_V3 tokens, no hex.
  */
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BookOpen,
@@ -88,6 +88,8 @@ export type ChallengeDetailV3Props = {
   endsOn?: string;
   startsOn?: string;
   joining?: boolean;
+  /** Build 92 10.2: membership not known yet (or already in, redirecting); never offer Join. */
+  membershipPending?: boolean;
   loading?: boolean;
   error?: boolean;
   privateLocked?: boolean;
@@ -269,7 +271,11 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
           blocked ? styles.footerBlocked : null,
         ]}
       >
-        {p.finishedLine ? (
+        {p.membershipPending ? (
+          <View testID="challenge-membership-pending" style={styles.joinWide}>
+            <ActivityIndicator color={DS_V3.color.textSecondary} />
+          </View>
+        ) : p.finishedLine ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={p.finishedCtaLabel ?? "Start again"}

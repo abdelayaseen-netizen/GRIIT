@@ -45,7 +45,7 @@ import type { TodayPoster } from "@/lib/today-band";
 import { CommentsSheet } from "@/components/feed/CommentsSheet";
 import { getTodayDateKey } from "@/lib/date-utils";
 import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
-import { groupFeedJoins, isJoinGroup, viewerChallengeDay, type FeedEventGroup, type FeedListItem } from "@/lib/feed-join";
+import { groupFeedJoins, isJoinGroup, viewerChallengeDay, type FeedEventGroup } from "@/lib/feed-join";
 import { ChallengePreviewSheet, type ChallengePreview } from "@/components/discover/ChallengePreviewSheet";
 import EmptyState from "@/components/ds/EmptyState";
 import Avatar from "@/components/ds/Avatar";
@@ -61,11 +61,19 @@ import { tabBarContentPad } from "@/lib/tab-bar-inset";
 import {
   CAUGHT_UP,
   EVERYONE_SCOPE,
-  EVERYONE_UNTIL_THREE,
   FEED_HEADING,
   FOLLOWING_SCOPE,
 } from "@/lib/g2b-home";
-import { inviteToChallenge } from "@/lib/share";
+import { inviteToChallenge, shareInvite } from "@/lib/share";
+import {
+  FEED_CAPTION,
+  FEED_EMPTY,
+  foldStartedLines,
+  isStartedDay,
+  type FoldedFeedRow,
+  type StartedDayGroup,
+} from "@/lib/feed-fold";
+import StartedDayRow, { StartedDaySheet } from "@/components/feed/StartedDayRow";
 
 type LiveFeedResponse = {
   movingCount: number;
@@ -102,36 +110,45 @@ type LiveFeedSectionProps = {
   showInvite?: boolean;
 };
 
-function FriendsEmptyState({
+function FeedEmptyState({
   scope,
   onPressDiscover,
+  onPressInvite,
 }: {
   scope: LiveFeedScope;
   onPressDiscover: () => void;
+  onPressInvite: () => void;
 }) {
   useEffect(() => {
     trackEvent("home_feed_empty_state_viewed", { scope });
   }, [scope]);
 
   return (
-    <View style={styles.emptyFriends}>
+    <View style={styles.emptyFriends} testID="feed-empty">
       <Users size={40} color={DS_V3.color.textSecondary} strokeWidth={1.75} />
-      <Text style={styles.emptyFriendsTitle}>Your feed is quiet</Text>
-      <Text style={styles.emptyFriendsBody}>
-        Follow people in Discover to see their check-ins here, or switch to Everyone to see the
-        whole community.
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Go to Discover"
-        onPress={() => {
-          trackEvent("home_feed_empty_state_cta_tapped", { scope });
-          onPressDiscover();
-        }}
-        style={styles.emptyFriendsCta}
-      >
-        <Text style={styles.emptyFriendsCtaText}>Go to Discover</Text>
-      </Pressable>
+      <Text style={styles.emptyFriendsTitle}>{FEED_EMPTY[scope]}</Text>
+      <Text style={styles.emptyFriendsBody}>{FEED_EMPTY.body}</Text>
+      <View style={styles.emptyActions}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={FEED_EMPTY.discover}
+          onPress={() => {
+            trackEvent("home_feed_empty_state_cta_tapped", { scope });
+            onPressDiscover();
+          }}
+          style={styles.emptyFriendsCta}
+        >
+          <Text style={styles.emptyFriendsCtaText}>{FEED_EMPTY.discover}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={FEED_EMPTY.invite}
+          onPress={onPressInvite}
+          style={styles.emptyFriendsCta}
+        >
+          <Text style={styles.emptyFriendsCtaText}>{FEED_EMPTY.invite}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -167,11 +184,12 @@ function LiveFeedSection({
   const [feedSnack, setFeedSnack] = useState<string | null>(null);
   const [commentEventId, setCommentEventId] = useState<string | null>(null);
   const [startedPreview, setStartedPreview] = useState<ChallengePreview | null>(null);
+  const [startedList, setStartedList] = useState<StartedDayGroup | null>(null);
   const [joiningPreview, setJoiningPreview] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const respectLastAt = useRef<Map<string, number>>(new Map());
   const dotOpacity = useRef(new Animated.Value(1)).current;
-  const listRef = useRef<FlashListRef<FeedListItem> | null>(null);
+  const listRef = useRef<FlashListRef<FoldedFeedRow> | null>(null);
   const [optimisticPost, setOptimisticPost] = useState<LiveFeedPost | null>(null);
   useEffect(() => subscribeOptimisticFeedPost(setOptimisticPost), []);
 
@@ -251,7 +269,11 @@ function LiveFeedSection({
   });
 
   const finalFeed = keepLiveFeedPosts(posts);
-  const listItems = useMemo(() => groupFeedJoins(finalFeed, user?.id), [finalFeed, user?.id]);
+  // Build 92 10.4: proofs lead; today's started events fold into one line after the first proof.
+  const listItems = useMemo(() => {
+    const tz = getDeviceIanaTimeZone();
+    return foldStartedLines(groupFeedJoins(finalFeed, user?.id), { todayKey: getTodayDateKey(tz), timeZone: tz });
+  }, [finalFeed, user?.id]);
   const mineQuery = useQuery({
     queryKey: ["challenges", "listMyActive", user?.id ?? ""],
     queryFn: () =>
@@ -573,10 +595,17 @@ function LiveFeedSection({
   }, [feedQuery.fetchNextPage, feedQuery.hasNextPage, feedQuery.isFetchingNextPage]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedListItem }) => {
+    ({ item }: { item: FoldedFeedRow }) => {
       void previewByPostId;
       void submitComment;
       void openPostMenu;
+      if (isStartedDay(item)) {
+        return (
+          <View style={styles.v3Item}>
+            <StartedDayRow group={item} onPress={() => setStartedList(item)} />
+          </View>
+        );
+      }
       if (isJoinGroup(item)) {
         return (
           <View style={styles.v3Item}>
@@ -663,15 +692,18 @@ function LiveFeedSection({
         </View>
       );
     }
-    if (scope === "everyone") {
-      return (
-        <View style={styles.empty}>
-          <Text style={styles.emptySub}>No posts yet. Be the first to check in today.</Text>
-        </View>
-      );
-    }
-    return <FriendsEmptyState scope={scope} onPressDiscover={goToDiscover} />;
-  }, [feedQuery, scope, goToDiscover]);
+    return (
+      <FeedEmptyState
+        scope={scope}
+        onPressDiscover={goToDiscover}
+        onPressInvite={() => {
+          if (!user?.id) return;
+          if (inviteChallenge) void inviteToChallenge({ name: inviteChallenge.name, id: inviteChallenge.id }, user.id);
+          else void shareInvite();
+        }}
+      />
+    );
+  }, [feedQuery, scope, goToDiscover, inviteChallenge, user?.id]);
 
   const refetchFeed = feedQuery.refetch;
   const refetchPosters = postersQuery.refetch;
@@ -692,7 +724,9 @@ function LiveFeedSection({
   }, [finalFeed.length]);
 
   const scrollToTodayPost = useCallback(() => {
-    const index = listItems.findIndex((item) => !isJoinGroup(item) && item.id === firstTodayEventId);
+    const index = listItems.findIndex(
+      (item) => !isStartedDay(item) && !isJoinGroup(item) && item.id === firstTodayEventId,
+    );
     if (index >= 0) {
       listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
       return;
@@ -751,9 +785,9 @@ function LiveFeedSection({
             </Pressable>
           </View>
         </View>
-          {scope === "everyone" && followingCount < 3 ? (
-            <Text style={styles.untilThree}>{EVERYONE_UNTIL_THREE}</Text>
-          ) : null}
+          <Text testID="feed-scope-caption" style={styles.untilThree}>
+            {scope === "following" ? FEED_CAPTION.following(followingCount) : FEED_CAPTION.everyone}
+          </Text>
         </View>
       )}
 
@@ -968,6 +1002,15 @@ function LiveFeedSection({
         eventId={commentEventId ?? ""}
         onClose={() => setCommentEventId(null)}
       />
+      <StartedDaySheet
+        group={startedList}
+        onClose={() => setStartedList(null)}
+        onOpenChallenge={(entry) => {
+          setStartedList(null);
+          const href = feedChallengeHref(entry.challengeId);
+          if (href) router.push(href as never);
+        }}
+      />
       <ChallengePreviewSheet
         item={startedPreview}
         joining={joiningPreview}
@@ -1109,6 +1152,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
     lineHeight: 18,
   },
+  emptyActions: { flexDirection: "row", gap: DS_V3.space.sm },
   emptyFriendsCta: {
     marginTop: 8,
     paddingVertical: 10,

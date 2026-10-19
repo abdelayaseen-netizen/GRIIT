@@ -225,6 +225,21 @@ export const challengesDiscoverProcedures = {
    * `featuredProof` is always null; the client uses the challenge cover field
    * or generated fallback art. `friendsStarted` is social proof (names only).
    */
+  /** Build 92 10.1: which of the app's builtin catalog ids exist and are published. */
+  featuredCatalogIds: publicProcedure
+    .input(z.object({ ids: z.array(z.string().uuid()).max(20) }))
+    .query(async ({ input, ctx }) => {
+      if (input.ids.length === 0) return [] as string[];
+      const server = getSupabaseServer() ?? ctx.supabase;
+      const { data, error } = await server
+        .from("challenges")
+        .select("id")
+        .in("id", input.ids)
+        .eq("status", "published");
+      requireNoError(error, "featuredCatalogIds");
+      return (data ?? []).map((row: { id: string }) => row.id);
+    }),
+
   getDiscoverFeatured: publicProcedure
     .input(z.object({ category: DiscoverCategoryEnum.optional() }).optional())
     .query(async ({ input, ctx }) => {
@@ -235,7 +250,7 @@ export const challengesDiscoverProcedures = {
         .from("challenges")
         .select(
           // challenges.cover_url does not exist in prod — client uses generated covers.
-          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)"
+          "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)"
         )
         .eq("status", "published")
         .eq("visibility", "PUBLIC")

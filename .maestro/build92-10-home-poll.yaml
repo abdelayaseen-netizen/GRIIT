@@ -1,0 +1,5 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 10: one poll of Home after the day is secured (run 10 times, 6 s apart).
+- assertNotVisible: ".*Finish the task.*"
+- assertVisible: "Today is secured. See you tomorrow."

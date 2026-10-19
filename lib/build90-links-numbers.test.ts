@@ -233,7 +233,10 @@ describe("05.4 numbers agree everywhere", () => {
     const detail = read("components/challenge/ActiveChallengeV3.tsx");
     expect(detail).not.toContain("days done");
     expect(detail).toContain("recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)");
-    expect(detail.split("recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)").length).toBe(3);
+    // Build 92 10.2: the top now reads "Day n of N" and "n days secured" (topNumbers); the record
+    // card keeps the record line.
+    expect(detail.split("recordLine(p.securedCount ?? 0, p.dueCount ?? p.durationDays)").length).toBe(2);
+    expect(detail).toContain("topNumbers({ day: p.currentDay, total: p.durationDays, secured: p.securedCount ?? 0 })");
   });
 
   it("pluralises day counts everywhere they are printed", () => {

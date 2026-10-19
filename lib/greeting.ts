@@ -96,7 +96,7 @@ export function greetingSub(o: {
   if (o.firstWeekDay && o.firstWeekDay <= 7 && !o.secured) {
     return `Day ${o.firstWeekDay} of your first week.`;
   }
-  if (o.secured) return "Day secured. See you tomorrow.";
+  if (o.secured) return "Today is secured. See you tomorrow.";
   if (o.openCount === 1 && o.nextTask) return `${o.nextTask} is all that’s left today.`;
   if (o.openCount <= 0) return o.blocked?.trim() || "Nothing you can finish today.";
   return `Next: ${o.nextTask ?? "a task"}. ${o.openCount} tasks left today.`;

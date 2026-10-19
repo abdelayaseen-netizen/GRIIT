@@ -1,6 +1,25 @@
 import { gatesFor, gateTimeFor, type TaskModelRow } from "./task-model";
 
-export type DiscoverPreviewTask = { title: string; gate: string };
+export type DiscoverPreviewTask = {
+  title: string;
+  gate: string;
+  /** Build 92 10.1: raw fields so the card can say what you do ("Run 3 mi · Strava"). */
+  task_type?: string | null;
+  require_photo?: boolean | null;
+  gate_time_mode?: string | null;
+  gate_time_start?: string | null;
+  gate_time_end?: string | null;
+  config?: { require_strava?: boolean; photo_mode?: string } | null;
+};
+
+function cardConfig(raw: unknown): DiscoverPreviewTask["config"] {
+  if (!raw || typeof raw !== "object") return null;
+  const cfg = raw as Record<string, unknown>;
+  return {
+    require_strava: cfg.require_strava === true ? true : undefined,
+    photo_mode: typeof cfg.photo_mode === "string" ? cfg.photo_mode : undefined,
+  };
+}
 
 function gateText(row: TaskModelRow): string {
   const gates = gatesFor(row);
@@ -17,12 +36,19 @@ function gateText(row: TaskModelRow): string {
 }
 
 export function discoverPreviewTasks(
-  rows: readonly (TaskModelRow & { title?: string | null })[] | null | undefined,
+  rows: readonly (TaskModelRow & { title?: string | null; order_index?: number | null })[] | null | undefined,
 ): DiscoverPreviewTask[] {
-  return (rows ?? [])
+  return [...(rows ?? [])]
+    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
     .map((row) => ({
       title: (row.title ?? "").trim(),
       gate: gateText(row),
+      task_type: row.task_type ?? null,
+      require_photo: row.require_photo ?? null,
+      gate_time_mode: row.gate_time_mode ?? null,
+      gate_time_start: row.gate_time_start ?? null,
+      gate_time_end: row.gate_time_end ?? null,
+      config: cardConfig(row.config),
     }))
     .filter((row) => row.title.length > 0);
 }

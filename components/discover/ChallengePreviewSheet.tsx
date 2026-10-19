@@ -1,6 +1,7 @@
 /**
  * Before joining. v48 frame 533. Does not join until the button is pressed.
  */
+import { peopleLabel } from "@/lib/discover-card";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions } from "react-native";
 import Sheet from "@/components/ds/Sheet";
@@ -51,12 +52,7 @@ export function ChallengePreviewSheet({
   const { width } = useWindowDimensions();
   if (!item) return null;
   const coverW = Math.max(200, Math.round(width - DS_V3.space.gutter * 4));
-  const people =
-    item.people == null
-      ? null
-      : item.people === 1
-        ? "1 person"
-        : `${item.people.toLocaleString("en-US")} people`;
+  const people = item.people == null ? null : peopleLabel(item.people);
   const meta = [formatDays(item.days), item.category, people].filter(Boolean).join(" · ");
   const preview = startedPreviewCopy(enrolled ?? null);
   const joinLabel = preview.open ? preview.label : `Join ${item.title}`;

@@ -2,6 +2,7 @@
  * Build 92 chunk 02 dev route: opens Day secured with sample numbers so Maestro can prove
  * Done, Back and swipe-down all go Home, and for the P1-06 / P1-08 frames.
  * griit://dev/build92-secured?streak=3&camera=0
+ * Build 92 10.5 (P3-22): &freeze=1 adds a freeze earned today (the first-freeze card).
  */
 import React, { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -11,7 +12,7 @@ import { firstString } from "@/lib/task-helpers";
 
 export default function Build92SecuredDev() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ streak?: string; camera?: string }>();
+  const params = useLocalSearchParams<{ streak?: string; camera?: string; freeze?: string }>();
   useEffect(() => {
     const streak = firstString(params.streak) || "3";
     router.replace({
@@ -30,8 +31,11 @@ export default function Build92SecuredDev() {
         closingPhoto: firstString(params.camera) === "1" ? "1" : "0",
         choiceMade: "1",
         originTab: "home",
+        ...(firstString(params.freeze) === "1"
+          ? { freezeGranted: "1", freezesHeld: "1", freezeCap: "2", freezeAtCap: "0" }
+          : {}),
       },
     } as never);
-  }, [params.camera, params.streak, router]);
+  }, [params.camera, params.freeze, params.streak, router]);
   return <Screen edges={[]} />;
 }

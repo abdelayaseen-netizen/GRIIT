@@ -3,7 +3,7 @@ import { CREATE_CATEGORIES } from "../../lib/challenge-category";
 export const DISCOVER_V43_CATEGORY_IDS = CREATE_CATEGORIES.map((c) => c.id);
 
 export const DISCOVER_V43_CHALLENGE_SELECT =
-  "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, config)";
+  "id, title, duration_days, difficulty, category, status, visibility, participants_count, created_at, creator_id, participation_type, challenge_tasks (id, title, task_type, order_index, require_photo, require_location, gate_time_mode, gate_time_start, gate_time_end, config)";
 
 export function matchesDiscoverV43Category(
   stored: string | null | undefined,

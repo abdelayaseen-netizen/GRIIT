@@ -1,0 +1,41 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 10 frames on Pro Max: P3-11 (Discover, Faith, New), P3-19 (feed fold), P3-18 (save error).
+- runFlow: build92-guest-home.yaml
+- tapOn: "^Discover$"
+- extendedWaitUntil:
+    visible: "^Faith$"
+    timeout: 20000
+- tapOn: "^Faith$"
+- extendedWaitUntil:
+    visible: "build92-never-shown"
+    timeout: 4000
+    optional: true
+- takeScreenshot: P3-11-discover-faith
+- openLink: "griit://dev/build92-part3?frame=feed"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "feed-started-day"
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: P3-19-feed-fold
+- tapOn:
+    id: "feed-started-day"
+- extendedWaitUntil:
+    visible:
+      id: "feed-started-list"
+    timeout: 10000
+- takeScreenshot: P3-19-started-list
+- openLink: "griit://dev/build92-part3?frame=error"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "dev-p3-error"
+    timeout: 20000
+- takeScreenshot: P3-18-error
