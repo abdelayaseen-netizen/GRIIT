@@ -30,6 +30,11 @@ export const AUDIENCE_COPY: Record<PostAudience, { label: string; line: string; 
   only_me: { label: "Only me", line: "Only you can see it. It still counts for today.", button: "Save privately" },
 };
 
+/** Build 92 12b.2: the "{count} / {max}" counter shows once a caption is within 20 characters of the limit. */
+export function captionCounterFrom(max: number): number {
+  return Math.max(0, max - 20);
+}
+
 /** The sheet's order: Friends (default), Everyone, Only me. */
 export const POST_SHEET_AUDIENCES: readonly PostAudience[] = ["friends", "everyone", "only_me"];
 

@@ -18,6 +18,7 @@ import {
   FINISH_COPY,
   POST_SHEET_AUDIENCES,
   audienceLine,
+  captionCounterFrom,
   postButton,
   postSheetSubtitle,
 } from "@/lib/finish-flow";
@@ -75,6 +76,7 @@ export function PostChoiceSheet({
       title={FINISH_COPY.postTitle}
       testID="post-choice-sheet"
       closeTestID="post-choice-close"
+      avoidKeyboard
     >
       <Text style={styles.sub} numberOfLines={2}>
         {postSheetSubtitle(taskName, challengeName, currentDay, durationDays)}
@@ -94,6 +96,8 @@ export function PostChoiceSheet({
             placeholderTextColor={DS_V3.color.textSecondary}
             selectionColor={DS_V3.color.textPrimary}
             multiline
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
             maxLength={FINISH_COPY.captionMax}
             accessibilityLabel="Caption"
             editable={!loading}
@@ -101,6 +105,11 @@ export function PostChoiceSheet({
             testID="post-choice-caption"
           />
         </View>
+      ) : null}
+      {photoUri && caption.length >= captionCounterFrom(FINISH_COPY.captionMax) ? (
+        <Text style={styles.count} testID="post-choice-caption-count">
+          {`${caption.length} / ${FINISH_COPY.captionMax}`}
+        </Text>
       ) : null}
       <Text style={styles.label}>{FINISH_COPY.whoSees}</Text>
       <View style={styles.segments} accessibilityRole="radiogroup" accessibilityLabel={FINISH_COPY.whoSees}>
@@ -176,6 +185,14 @@ const styles = StyleSheet.create({
     fontSize: DS_V3.type.body.fontSize,
     lineHeight: DS_V3.type.body.lineHeight,
     textAlignVertical: "top",
+  },
+  count: {
+    alignSelf: "flex-end",
+    fontSize: DS_V3.type.caption.fontSize,
+    lineHeight: DS_V3.type.caption.lineHeight,
+    color: DS_V3.color.textSecondary,
+    marginTop: -DS_V3.space.xs,
+    marginBottom: DS_V3.space.xs,
   },
   label: {
     fontSize: DS_V3.type.secondary.fontSize,

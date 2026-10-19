@@ -1,0 +1,31 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12b.1 (shared): after "Post to friends" on Drink Water Today, the post is in the Home feed
+# with ${CAPTION} under it.
+- extendedWaitUntil:
+    visible: "Drink Water Today · finished"
+    timeout: 60000
+- tapOn: "See the record"
+# A guest's first finished task raises "Save your challenge."; Later or Not now clears it.
+- extendedWaitUntil:
+    visible: "^Later$|^Not now$"
+    timeout: 10000
+    optional: true
+- tapOn:
+    text: "^Later$|^Not now$"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "tab-home"
+    timeout: 15000
+- tapOn:
+    id: "tab-home"
+- extendedWaitUntil:
+    visible: "Feed"
+    timeout: 20000
+- scrollUntilVisible:
+    element:
+      text: ${CAPTION}
+    direction: DOWN
+    timeout: 30000
+- takeScreenshot: build92-12b-caption-in-feed

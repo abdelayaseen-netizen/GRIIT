@@ -28,6 +28,7 @@ import { isChallengeExpired } from "../../lib/challenge-timer";
 import { requiredRemainingCount } from "../../lib/required-remaining";
 import { checkAndUnlockAchievements, getLabelForKey } from "../../lib/achievements";
 import { logger } from "../../lib/logger";
+import { captionBlock, captionToStore } from "../../lib/post-caption";
 import {
   assertHardModeScheduleWindow,
   assertHardModeCameraOnly,
@@ -565,9 +566,13 @@ export const checkinsRouter = createTRPCRouter({
         audience: z.enum(["friends", "everyone", "only_me"]).optional(),
         /** "Done, already did it" — posts as self-reported and does not need a running timer session. */
         self_reported: z.boolean().optional(),
+        /** Build 92 12b.2: the post's public caption. Word-checked before anything is saved; never a note. */
+        caption: z.string().max(500).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const blockedCaption = captionBlock(input.caption);
+      if (blockedCaption) throw new TRPCError({ code: "BAD_REQUEST", message: blockedCaption });
       // 01b.1: every Supabase / storage / secure step is timed; one log line at the end.
       // 01b.2: reads that do not depend on each other run in one round trip (Promise.all).
       const t = createStepTimer();
@@ -1364,6 +1369,7 @@ export const checkinsRouter = createTRPCRouter({
             is_hard_mode: cfg.hard_mode === true,
             task_mode: input.task_mode,
             audience: input.audience ?? null,
+            caption: captionToStore(input.caption),
             heart_rate_verified: false,
             location_verified: locationGatePassed,
             // Build 92 04.1: the result the post shows (facts only; the client writes the words). Additive.

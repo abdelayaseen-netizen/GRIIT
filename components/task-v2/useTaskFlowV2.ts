@@ -845,6 +845,7 @@ export function useTaskFlowV2() {
           currentDay,
           totalDays: durationDays,
           photoUrl: photoUri ?? proofUrl ?? null,
+          caption: typeof body.caption === "string" ? body.caption : null,
         });
         if (posted) publishOptimisticFeedPost(posted);
         if (mountedRef.current) setFinishSave("saved");
@@ -1062,7 +1063,7 @@ export function useTaskFlowV2() {
       {
         proofUrl: url,
         photo_url: url,
-        noteText: caption.trim() || undefined,
+        caption: caption.trim() || undefined,
         audience: audienceRef.current,
         proof_payload_json: capturedAt
           ? { capturedAt, captured_in_app: true }

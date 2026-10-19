@@ -3,12 +3,13 @@
  * Bottom sheet on dense glass (or the solid fallback), 32 pt top corners, black 35% dim
  * behind. Closes on a tap outside or a swipe down. Content is solid; only the sheet is glass.
  */
-import React, { useRef } from "react";
-import { Animated, Modal, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Keyboard, Modal, PanResponder, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { GLASS_RADIUS, GLASS_STATE } from "@/lib/glass";
+import { sheetKeyboardLift, sheetOutsideAction } from "@/lib/sheet-keyboard";
 import { GlassSurface } from "./GlassSurface";
 
 const SWIPE_CLOSE_PT = 48;
@@ -29,11 +30,55 @@ export type GlassSheetProps = {
    * the same frame another iOS Modal closes (two Modals cannot present together).
    */
   inline?: boolean;
+  /**
+   * The sheet holds a text field: it rides up with the keyboard, and while the keyboard is open a tap
+   * outside or a swipe down only drops the keyboard. The close button always closes.
+   */
+  avoidKeyboard?: boolean;
 };
 
-export function GlassSheet({ visible, onClose, label, title, children, testID, closeTestID, inline = false }: GlassSheetProps) {
+export function GlassSheet({ visible, onClose, label, title, children, testID, closeTestID, inline = false, avoidKeyboard = false }: GlassSheetProps) {
   const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, DS_V3.space.md);
   const drag = useRef(new Animated.Value(0)).current;
+  const lift = useRef(new Animated.Value(0)).current;
+  const keyboardOpen = useRef(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!avoidKeyboard || !visible) return;
+    const ios = Platform.OS === "ios";
+    const show = Keyboard.addListener(ios ? "keyboardWillShow" : "keyboardDidShow", (e) => {
+      keyboardOpen.current = true;
+      Animated.timing(lift, {
+        toValue: -sheetKeyboardLift(e.endCoordinates.height, bottomPad, DS_V3.space.sm),
+        duration: e.duration || 250,
+        useNativeDriver: true,
+      }).start();
+    });
+    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", (e) => {
+      keyboardOpen.current = false;
+      Animated.timing(lift, { toValue: 0, duration: e?.duration || 250, useNativeDriver: true }).start();
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+      keyboardOpen.current = false;
+      lift.setValue(0);
+    };
+  }, [avoidKeyboard, visible, bottomPad, lift]);
+
+  const outside = () => {
+    if (sheetOutsideAction(keyboardOpen.current || Keyboard.isVisible(), avoidKeyboard) === "dismiss-keyboard") {
+      Keyboard.dismiss();
+      return true;
+    }
+    return false;
+  };
+  const outsideRef = useRef(outside);
+  outsideRef.current = outside;
+
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_e, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
@@ -41,9 +86,9 @@ export function GlassSheet({ visible, onClose, label, title, children, testID, c
         if (g.dy > 0) drag.setValue(g.dy);
       },
       onPanResponderRelease: (_e, g) => {
-        if (g.dy > SWIPE_CLOSE_PT) {
+        if (g.dy > SWIPE_CLOSE_PT && !outsideRef.current()) {
           drag.setValue(0);
-          onClose();
+          onCloseRef.current();
         } else {
           Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start();
         }
@@ -55,12 +100,14 @@ export function GlassSheet({ visible, onClose, label, title, children, testID, c
     <>
       <Pressable
         style={styles.dim}
-        onPress={onClose}
+        onPress={() => {
+          if (!outside()) onClose();
+        }}
         accessibilityRole="button"
         accessibilityLabel="Close"
       />
       <Animated.View
-        style={[styles.lift, { transform: [{ translateY: drag }] }]}
+        style={[styles.lift, { transform: [{ translateY: Animated.add(drag, lift) }] }]}
         pointerEvents="box-none"
         {...pan.panHandlers}
       >
@@ -68,7 +115,7 @@ export function GlassSheet({ visible, onClose, label, title, children, testID, c
           kind="dense"
           hairline="top"
           testID={testID}
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, DS_V3.space.md) }]}
+          style={[styles.sheet, { paddingBottom: bottomPad }]}
           accessibilityViewIsModal
           accessibilityLabel={label}
         >

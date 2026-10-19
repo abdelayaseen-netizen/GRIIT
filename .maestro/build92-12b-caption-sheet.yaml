@@ -1,0 +1,45 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12b.1 (shared): fresh guest, Drink Water Today (photo, 1 day), take the photo and type
+# ${CAPTION} on "Post your proof". Stops with the keyboard open.
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Drink water and post a photo|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Drink water and post a photo"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible:
+      id: "review-done"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+- extendedWaitUntil:
+    visible: "Post your proof"
+    timeout: 5000
+- tapOn:
+    id: "post-choice-caption"
+- inputText: ${CAPTION}

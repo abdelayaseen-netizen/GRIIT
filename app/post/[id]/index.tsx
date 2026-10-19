@@ -362,6 +362,9 @@ function PostThreadScreenInner() {
               task: displayPost.taskName,
             })}
           </Text>
+          {displayPost.caption ? (
+            <Text style={styles.caption} testID="post-detail-caption">{displayPost.caption}</Text>
+          ) : null}
           {audienceBadge(displayPost.audience) && !(user?.id && displayPost.userId === user.id) ? (
             <Text style={styles.count}>{audienceBadge(displayPost.audience)}</Text>
           ) : null}
@@ -678,6 +681,11 @@ const styles = StyleSheet.create({
     lineHeight: DS_V3.type.caption.lineHeight,
     fontWeight: DS_V3.type.caption.fontWeight,
     color: DS_V3.color.textSecondary,
+  },
+  caption: {
+    fontSize: DS_V3.type.body.fontSize,
+    lineHeight: DS_V3.type.body.lineHeight,
+    color: DS_V3.color.textPrimary,
   },
   completion: {
     fontSize: DS_V3.type.secondary.fontSize,

@@ -11,6 +11,7 @@ import {
   type ResolvedInvite,
 } from "./invite-codes";
 import { logger } from "./logger";
+import { participantCountWithoutTest, testAuthorIdSet } from "./test-authors";
 
 type Client = SupabaseClient;
 
@@ -81,6 +82,13 @@ export type InviteChallengeSummary = {
   proofLine: string | null;
 };
 
+/** Live enrollments without is_test people; the stored count loses its test joins too. */
+export function inviteLandingCount(enrolledIds: readonly string[], testIds: ReadonlySet<string>, stored: number): number {
+  const real = enrolledIds.filter((id) => !testIds.has(id)).length;
+  const testJoined = enrolledIds.length - real;
+  return Math.max(real, participantCountWithoutTest(stored, testJoined));
+}
+
 export async function loadInviteChallenge(
   service: Client,
   challengeId: string,
@@ -94,11 +102,17 @@ export async function loadInviteChallenge(
     .maybeSingle();
   if (!data) return null;
   // `participants_count` is not kept in step with joins; count the live enrollments instead.
-  const { count: enrolled } = await service
+  // 12b.4: is_test profiles never count.
+  const { data: enrolledRows } = await service
     .from("active_challenges")
-    .select("id", { count: "exact", head: true })
+    .select("user_id")
     .eq("challenge_id", challengeId)
-    .eq("status", "active");
+    .eq("status", "active")
+    .limit(5000);
+  const enrolledIds = ((enrolledRows ?? []) as { user_id?: string | null }[])
+    .map((r) => r.user_id)
+    .filter((id): id is string => Boolean(id));
+  const testIds = await testAuthorIdSet(service, enrolledIds);
   const row = data as {
     id: string;
     title: string;
@@ -130,7 +144,7 @@ export async function loadInviteChallenge(
     title: row.title,
     category: row.category,
     durationDays: row.duration_days ?? 0,
-    participantsCount: Math.max(enrolled ?? 0, row.participants_count ?? 0),
+    participantsCount: inviteLandingCount(enrolledIds, testIds, row.participants_count ?? 0),
     participationType: row.participation_type,
     runStatus: row.run_status,
     creatorId: row.creator_id,

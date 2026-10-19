@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { postBadgeFrom, postResultFromMetadata } from "../../lib/post-result";
+import { postCaptionFromMetadata } from "../../lib/post-caption";
 import { SELF_LIKE_MESSAGE, selfLikeRejected } from "../../lib/feed-like";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../create-context";
@@ -437,7 +438,7 @@ export const feedRouter = createTRPCRouter({
       isCompleted: isCompletedChallenge, hasProof: hasProof && !isCompletedChallenge, photoUrl: signed.photoUrl, proofPhotoUrl: signed.proofPhotoUrl, verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       // Build 90 09.3: who verified it ("Verified by Strava" once on the card). Additive.
       verifiedBy: md.verification_method === "strava_activity" ? ("strava" as const) : null,
-      caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
+      caption: postCaptionFromMetadata(md),
       createdAt: ev.created_at,
       respectCount: reactionCount,
       reactedByMe,

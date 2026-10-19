@@ -55,8 +55,8 @@ export const STICKER_FREE = "Free";
 export const STICKER_PRO = "GRIIT Pro";
 export const STICKER_UNLOCK = "Unlock with GRIIT Pro";
 export const STICKER_PLAIN_CARD = "plain card";
-/** Footer word from the copy table ("@{handle} · griit.app"). A word on a picture, not a link. */
-export const STICKER_FOOTER_DOMAIN = "griit.app";
+/** Footer word ("@{handle} · GRIIT", or "GRIIT" with no handle). A word on a picture, not a link. */
+export const STICKER_FOOTER_WORD = "GRIIT";
 export type ProofSource = "camera" | "strava" | "self";
 
 export function isStickerStyle(id: ShareStyleId): id is StickerStyleKey {
@@ -461,7 +461,7 @@ const FLAME = "#DC5401";
 
 function stickerFooter(input: ShareCardInput, color: string): ShareItem {
   const handle = atUser(input.username);
-  return text(handle ? `${handle} · ${STICKER_FOOTER_DOMAIN}` : STICKER_FOOTER_DOMAIN, 30, 38, color, "500");
+  return text(handle ? `${handle} · ${STICKER_FOOTER_WORD}` : STICKER_FOOTER_WORD, 30, 38, color, "500");
 }
 
 function markItem(input: ShareCardInput, color: string): ShareItem {

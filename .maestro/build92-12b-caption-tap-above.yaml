@@ -1,0 +1,21 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12b.1: with the keyboard open, a tap on the photo above the sheet closes the keyboard
+# only; the sheet and the typed caption stay, and the caption posts.
+- runFlow:
+    file: build92-12b-caption-sheet.yaml
+    env:
+      CAPTION: "tapped above ${MAESTRO_RUN}"
+- tapOn:
+    point: "50%,25%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: build92-12b-after-tap-above
+- assertVisible: "Post your proof"
+- assertVisible: "tapped above ${MAESTRO_RUN}"
+- tapOn:
+    id: "post-choice-post"
+- runFlow:
+    file: build92-12b-caption-posted.yaml
+    env:
+      CAPTION: "tapped above ${MAESTRO_RUN}"

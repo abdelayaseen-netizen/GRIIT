@@ -1,0 +1,20 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12b.1: the caption's return key is Done and closes the keyboard; the sheet stays and
+# "Post to friends" posts the caption.
+- runFlow:
+    file: build92-12b-caption-sheet.yaml
+    env:
+      CAPTION: "two litres done ${MAESTRO_RUN}"
+- takeScreenshot: build92-12b-keyboard-open
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: build92-12b-after-done-key
+- assertVisible: "Post your proof"
+- tapOn:
+    id: "post-choice-post"
+- runFlow:
+    file: build92-12b-caption-posted.yaml
+    env:
+      CAPTION: "two litres done ${MAESTRO_RUN}"

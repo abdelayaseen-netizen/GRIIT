@@ -1,8 +1,8 @@
 /**
- * Build 90 07.4: journal text (the Write step and the photo Review caption, both sent
- * as `noteText`) is a private diary. It never goes through moderation and is never
- * returned to another user. These tests pin the three places that would have to
- * change for either to happen.
+ * Build 90 07.4: journal text (the Write step, sent as `noteText`) is a private diary. It never
+ * goes through moderation and is never returned to another user.
+ * Build 92 12b.2: the photo post caption is public. It travels as its own `caption` field, is
+ * word-checked, and lives only in activity_events.metadata.caption. Notes saved before this stay private.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -17,15 +17,18 @@ const record = read("./profiles-record.ts");
 const taskFlow = read("../../../components/task-v2/useTaskFlowV2.ts");
 
 describe("07.4 journal text is private", () => {
-  it("the Write step and the Review caption both travel as noteText", () => {
+  it("the Write step travels as noteText; the photo caption travels as caption", () => {
     expect(taskFlow).toMatch(/noteText:\s*text/);
-    expect(taskFlow).toMatch(/noteText:\s*caption\.trim\(\)/);
+    expect(taskFlow).not.toMatch(/noteText:\s*caption/);
+    expect(taskFlow).toMatch(/caption:\s*caption\.trim\(\)/);
   });
 
-  it("checkins.ts never runs moderation on it", () => {
+  it("checkins.ts never runs moderation on the note, only on the caption", () => {
     expect(checkins).not.toContain("blockedPlainText");
     expect(checkins).not.toContain("moderateContent");
     expect(checkins).not.toContain("content-moderation");
+    expect(checkins).toMatch(/captionBlock\(input\.caption\)/);
+    expect(checkins).not.toMatch(/captionBlock\(input\.noteText\)/);
   });
 
   it("it is written to check_ins.note_text only, and the shared activity_events metadata does not carry it", () => {
@@ -37,7 +40,7 @@ describe("07.4 journal text is private", () => {
     const metadata = checkins.slice(metaStart, metaEnd);
     expect(metadata).not.toContain("note_text");
     expect(metadata).not.toContain("noteText");
-    expect(metadata).not.toContain("caption");
+    expect(metadata).toMatch(/caption: captionToStore\(input\.caption\)/);
   });
 
   it("no feed, hydrate or record query selects check_ins.note_text", () => {
@@ -49,8 +52,11 @@ describe("07.4 journal text is private", () => {
     }
   });
 
-  it("the feed reads a caption from event metadata only, never from check_ins", () => {
-    expect(feed).toMatch(/md\.note_text/);
+  it("the feed reads a caption from metadata.caption only, never a note", () => {
+    expect(feed).not.toMatch(/md\.note_text/);
+    expect(hydrate).not.toMatch(/md\.note_text/);
+    expect(feed).toMatch(/caption: postCaptionFromMetadata\(md\)/);
+    expect(hydrate).toMatch(/caption: postCaptionFromMetadata\(md\)/);
     expect(feed).not.toMatch(/from\("check_ins"\)[\s\S]{0,200}note_text/);
     expect(hydrate).not.toMatch(/from\("check_ins"\)[\s\S]{0,200}note_text/);
   });

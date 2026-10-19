@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { postBadgeFrom, postResultFromMetadata } from "./post-result";
+import { postCaptionFromMetadata } from "./post-caption";
 import type { Context } from "../trpc/create-context";
 import { getTodayDateKey } from "./date-utils";
 import { exclusiveEndDateKey } from "./record-days";
@@ -394,7 +395,7 @@ export async function hydrateActivityEventsToPosts(
       verified: Boolean(md.photo_url) || Boolean(md.proof_photo_url) || md.verification_method === "strava_activity" || md.heart_rate_verified === true,
       // Build 90 09.3: who verified it, so the card can say "Verified by Strava" once. Additive.
       verifiedBy: md.verification_method === "strava_activity" ? ("strava" as const) : null,
-      caption: typeof md.note_text === "string" ? md.note_text : typeof md.caption === "string" ? md.caption : null,
+      caption: postCaptionFromMetadata(md),
       createdAt: ev.created_at,
       respectCount: stat?.count ?? 0,
       reactedByMe: stat?.reactedByMe ?? false,

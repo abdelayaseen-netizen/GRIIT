@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 import {
   SHARE_H,
   SHARE_W,
-  STICKER_FOOTER_DOMAIN,
   STICKER_STYLES,
   buildSharePaint,
   paintStrings,
@@ -160,7 +159,14 @@ describe("05.2 no stock photos", () => {
     expect(paintStrings(paint)).toContain("Day 16");
     expect(paintStrings(paint)).toContain("Read 30 · Day 16 of 30");
     expect(paintStrings(paint)).toContain("Verified");
-    expect(paintStrings(paint)).toContain(`@yaseen · ${STICKER_FOOTER_DOMAIN}`);
+    expect(paintStrings(paint)).toContain("@yaseen · GRIIT");
+    expect(paintStrings(paint).join("\n")).not.toContain("griit.app");
+  });
+
+  it("12b.3 with no handle the footer is just GRIIT", () => {
+    const { paint } = paintJson("photo", "ink", { photoUri: "file://p.jpg", proofSource: "camera", username: "" });
+    expect(paintStrings(paint)).toContain("GRIIT");
+    expect(paintStrings(paint).some((s) => s.startsWith("@") || s.endsWith("· GRIIT"))).toBe(false);
   });
 });
 

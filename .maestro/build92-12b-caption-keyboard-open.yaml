@@ -1,0 +1,14 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12b.1: with the keyboard still open, "Post to friends" sits above it and posts.
+- runFlow:
+    file: build92-12b-caption-sheet.yaml
+    env:
+      CAPTION: "still typing ${MAESTRO_RUN}"
+- takeScreenshot: build92-12b-post-above-keyboard
+- tapOn:
+    id: "post-choice-post"
+- runFlow:
+    file: build92-12b-caption-posted.yaml
+    env:
+      CAPTION: "still typing ${MAESTRO_RUN}"
