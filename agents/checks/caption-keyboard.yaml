@@ -1,0 +1,33 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3 probe: with a caption typed, can a person get the keyboard off "Post to friends"
+# without losing the post? Tries what a person would: Return, a slow swipe down from the grab
+# handle, Maestro's hideKeyboard, then a tap on the photo above the sheet. A screenshot after each.
+# Passes when the sheet is still open after all but the last; the tap above is expected to close it.
+- runFlow:
+    file: photo-sheet.yaml
+    env:
+      CAPTION: "two litres before lunch"
+- takeScreenshot: caption-keyboard-1-typed
+- pressKey: Enter
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: caption-keyboard-2-return
+- swipe:
+    start: "50%, 56%"
+    end: "50%, 95%"
+    duration: 1500
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: caption-keyboard-3-swipe-handle
+- assertVisible: "Post your proof"
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: caption-keyboard-4-hide-keyboard
+- assertVisible: "Post your proof"
+- tapOn:
+    point: "50%, 30%"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: caption-keyboard-5-tap-above

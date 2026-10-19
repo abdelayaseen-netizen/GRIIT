@@ -1,0 +1,26 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: as a fresh guest, join Drink Water Today (photo, 1 day), take the proof photo and
+# post it to friends with ${CAPTION}. Stops on the screen right after Post to friends.
+- runFlow:
+    file: photo-sheet.yaml
+    env:
+      CAPTION: ${CAPTION}
+# A typed caption leaves the keyboard over "Post to friends" (the build 92 sheet is not a ScrollView
+# and Return adds a line). Close it the way a person would, then the sheet must still be open.
+# Build 91's review screen keeps Post above its keyboard, and Maestro cannot hide that keyboard.
+- runFlow:
+    when:
+      true: ${CAPTION != ""}
+    commands:
+      - hideKeyboard:
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - assertVisible:
+          text: "^Post to (friends|everyone)$"
+          label: "The post is still open after closing the keyboard"
+# Build 91 sometimes opens on Everyone; either button posts.
+- tapOn: "^Post to (friends|everyone)$"
+- waitForAnimationToEnd:
+    timeout: 3000

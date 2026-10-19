@@ -29,6 +29,10 @@ export type Persona = {
   chunk?: string;
   /** Build 90 10.4 chunk 5 login: a prepared account, but the app is wiped and opens at Welcome, so the person must log in. */
   startSignedOut?: boolean;
+  /** Build 92 12.1: a model id for this persona only. Otherwise agents.config.json decides by group. */
+  model?: string;
+  /** Build 92 12.4: an account.json from an earlier run. The persona logs in as that user (Day 2, social partner, History). */
+  savedAccount?: string;
 };
 
 export type Decision = {
@@ -64,6 +68,8 @@ export type StepLog = {
   doneToSheetMs?: number;
   /** Build 90 10.3: ms from tapping Done until the task showed as done (N of M done, Day secured). */
   doneToVisibleMs?: number;
+  /** Build 92 12.2: "stuck: why", from the persona or, when it ignored the rule, from the harness. */
+  stuck?: string;
 };
 
 export type DoneTiming = {
@@ -127,4 +133,10 @@ export type AgentResult = {
   userId: string;
   isTest: boolean | null;
   cleanup: string;
+  /** Build 92 12.5: app bug, agent stuck, finished or harness stop. */
+  endTag?: string;
+  stuckNotes?: string[];
+  /** Build 92 12.5: launch until the first screen with text, ms. */
+  coldStartMs?: number | null;
+  model?: string;
 };

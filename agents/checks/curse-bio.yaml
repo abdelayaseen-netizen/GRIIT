@@ -1,0 +1,21 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: a curse word in the bio is refused on Edit profile, with the message naming the field.
+- runFlow: guest-home.yaml
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Edit profile"
+    timeout: 20000
+- tapOn: "Edit profile"
+- extendedWaitUntil:
+    visible: "Bio"
+    timeout: 15000
+- tapOn:
+    text: "Shown to anyone who can see your profile."
+    index: 0
+- inputText: "fuck this"
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a bio\\. Try different ones\\."
+    timeout: 15000
+- takeScreenshot: b92-12-curse-bio

@@ -20,7 +20,8 @@ function boundsArea(bounds: string): number {
 export function screenSize(els: El[]): { w: number; h: number } {
   const roots = els
     .map((el) => boundsBox(el.bounds))
-    .filter((box): box is NonNullable<ReturnType<typeof boundsBox>> => Boolean(box && box.x1 <= 0 && box.y1 <= 0 && box.x2 >= 300 && box.y2 >= 700 && box.y2 <= 950));
+    // SE 375×667 up to Pro Max 440×956; a taller window read as 393×852 sends every tap low and right.
+    .filter((box): box is NonNullable<ReturnType<typeof boundsBox>> => Boolean(box && box.x1 <= 0 && box.y1 <= 0 && box.x2 >= 300 && box.y2 >= 560 && box.y2 <= 1000));
   const window = roots.sort((a, b) => b.y2 - a.y2)[0];
   if (window) return { w: window.x2, h: window.y2 };
   return { w: 393, h: 852 };
@@ -45,10 +46,19 @@ export function usablePoint(value: string): string | null {
 }
 
 /** Match a requested label to the real control. A short name hits the longer accessibility label. */
-export function resolveTarget(target: string, els: El[]): { point: string; label: string; value: string; below: boolean } | null {
+/** Bottom-right, just inside the box: a tap there leaves the caret after the last character of a multiline field. */
+export function endPoint(bounds: string, size: { w: number; h: number }): string | null {
+  const box = boundsBox(bounds);
+  if (!box || size.w <= 0 || size.h <= 0) return null;
+  const x = Math.min(99, Math.max(1, Math.floor(((box.x2 - 8) / size.w) * 100)));
+  const y = Math.min(99, Math.max(1, Math.floor(((box.y2 - 8) / size.h) * 100)));
+  return `${x}%,${y}%`;
+}
+
+export function resolveTarget(target: string, els: El[]): { point: string; end: string | null; label: string; value: string; below: boolean } | null {
   const trimmed = target.trim();
   const direct = usablePoint(trimmed);
-  if (direct) return { point: direct, label: trimmed, value: "", below: false };
+  if (direct) return { point: direct, end: null, label: trimmed, value: "", below: false };
   const needle = trimmed.toLowerCase();
   if (!needle) return null;
   const matches: { el: El; score: number; height: number }[] = [];
@@ -73,7 +83,7 @@ export function resolveTarget(target: string, els: El[]): { point: string; label
   if (!point) return null;
   const box = boundsBox(best.el.bounds);
   const below = box ? (box.y1 + box.y2) / 2 > size.h - 8 : false;
-  return { point, label: (best.el.a11y || best.el.text).replace(/\s+/g, " ").trim(), value: best.el.value, below };
+  return { point, end: endPoint(best.el.bounds, size), label: (best.el.a11y || best.el.text).replace(/\s+/g, " ").trim(), value: best.el.value, below };
 }
 
 export function systemAlert(lines: string[], deny: boolean): string | null {

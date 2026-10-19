@@ -9,13 +9,14 @@ import {
   prepareAgentAccount,
   readContainerSession,
   readOwnRows,
+  savedAccountSession,
   sessionMatchesAgent,
   signInAgent,
   type SessionInfo,
 } from "./account";
 import { askModel } from "./claude";
 import { HAIKU_MODEL, SONNET_MODEL } from "./cost";
-import { appContainer, actionYaml, applyPrivacy, launchYaml, openUrl, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
+import { appContainer, actionYaml, applyPrivacy, bareLaunchYaml, launchYaml, openUrl, resize, setTextSize, shot, wipeAppData, UDID } from "./device";
 import { parseDecision, reviewAction } from "./gate";
 import { needsFreshSignup, specsFor, type GoalSpec } from "./goals";
 import { scoreInterview } from "./interview";
@@ -24,7 +25,7 @@ import { MaestroSession } from "./maestro";
 import { interviewPrompt, MIN_STEPS, systemPrompt, userPrompt } from "./prompt";
 import { samplePng } from "./pixels";
 import { classifyScreen, dayClaims, isHomeScreen, isSpringboard, isWelcomeScreen, parseHierarchy, screenSignature, scrollMarks, visibleLines, type El } from "./screen";
-import { nextStreak, selectedChip } from "./stuck";
+import { countStuck, DEAD_TAPS, endTag, isRepeatOfDeadTarget, nextStreak, selectedChip, stuckNote, stuckPrompt, STUCK_LIMIT, nextTapRepeat, type TapRepeat } from "./stuck";
 import type { AgentResult, DoneTiming, Interview, Mode, Persona, StepLog } from "./types";
 
 export type Spend = { usd: number; input: number; output: number; calls: number };
@@ -154,6 +155,16 @@ export async function runPersona(opts: {
       isTest = true;
       console.log("p36 using the review login");
     }
+  } else if (!fresh && persona.savedAccount) {
+    const saved = await savedAccountSession(persona.savedAccount);
+    if (!saved.ok || !saved.creds) {
+      giveUp = `Could not log in as the saved account (${saved.detail}).`;
+    } else {
+      creds = saved.creds;
+      isTest = true;
+      installedSession = saved.session ?? null;
+      console.log(`${persona.id} logs in as a saved account from an earlier run`);
+    }
   } else if (!fresh && !giveUp) {
     const prepared = await prepareAgentAccount(persona.id, persona.name);
     if (!prepared.ok || !prepared.creds) {
@@ -199,6 +210,7 @@ export async function runPersona(opts: {
   };
 
   let textSizeApplied = "";
+  let coldStartMs: number | null = null;
   const grants: "allow" | "deny" = "allow";
   const accountOnDevice = async () => readContainerSession(await appContainer());
   const installPrepared = async () => {
@@ -208,6 +220,24 @@ export async function runPersona(opts: {
     if (installedSession && !signedOut) await installAppSession(installedSession);
   };
   const openForAgent = async () => {
+    if (coldStartMs == null) {
+      // A bare launch first: the optional dev-menu taps in launchYaml wait out their timeouts on a Release build.
+      const launchAt = Date.now();
+      try {
+        await opts.maestro.run(deviceId(), bareLaunchYaml(grants, true));
+      } catch (err) {
+        if (!/photos/i.test(err instanceof Error ? err.message : String(err))) throw err;
+        await opts.maestro.run(deviceId(), bareLaunchYaml(grants, false));
+      }
+      for (let poll = 0; poll < 40; poll++) {
+        const first = visibleLines(parseHierarchy(await opts.maestro.inspect(deviceId())));
+        if (first.length >= 3 && !isSpringboard(first)) {
+          coldStartMs = Date.now() - launchAt;
+          break;
+        }
+        await sleep(250);
+      }
+    }
     await openApp(opts.maestro, grants);
     await sleep(1200);
     if (!deviceFresh) {
@@ -283,6 +313,10 @@ export async function runPersona(opts: {
   let same = 0;
   let ignoreStuck = false;
   let relaunch = false;
+  let lastTap: { action: string; target: string; sigBefore: string } | null = null;
+  let repeat: TapRepeat | null = null;
+  const stuckCounts = new Map<string, number>();
+  const stuckNotes: string[] = [];
 
   for (let n = 1; n <= limit && !giveUp; n++) {
     if (Date.now() > deadline) {
@@ -368,6 +402,9 @@ export async function runPersona(opts: {
       ignoreStuck = false;
       lastSig = sig;
       lastVisual = visual;
+      repeat = nextTapRepeat(repeat, lastTap, sig);
+      lastTap = null;
+      if (repeat && repeat.count >= DEAD_TAPS) note = [note, stuckPrompt(repeat)].filter(Boolean).join("\n");
       if (same >= 3) {
         deadEnds.push(`${screen}: the same screen came up 3 times`);
         if (steps.length < MIN_STEPS) {
@@ -458,6 +495,12 @@ export async function runPersona(opts: {
     const confusion = decision?.confusion ?? "";
     const emotion = decision?.emotion ?? "frustrated";
 
+    const forced = repeat && repeat.count >= DEAD_TAPS ? repeat : null;
+    if (decision && !error && isRepeatOfDeadTarget(repeat, decision)) {
+      error = `Refused: "${decision.target}" again after ${repeat!.count} taps with no change. Try something different.`;
+      action = "repeat_refused";
+    }
+    const sigBeforeAction = lastSig;
     let doneTapped = false;
     if (decision && !error) {
       const gate = reviewAction({ decision, screenText: lines.join("\n"), allowedNames: opts.allowedNames, group: persona.group });
@@ -510,7 +553,10 @@ export async function runPersona(opts: {
               !/day secured/i.test(priorMarker) &&
               (screen === "task" || hit != null || /\bday \d+ of \d+\b/i.test(lines.join("\n")));
             const tappedAt = Date.now();
-            await opts.maestro.run(deviceId(), actionYaml(decision.action, hit?.label || decision.target, decision.text, hit?.point));
+            const existing = decision.action === "type" ? (hit?.value ?? "") : "";
+            const at = existing && hit?.end ? hit.end : hit?.point;
+            await opts.maestro.run(deviceId(), actionYaml(decision.action, hit?.label || decision.target, decision.text, at, existing));
+            if (decision.action === "tap" || decision.action === "double_tap") lastTap = { action: decision.action, target: decision.target, sigBefore: sigBeforeAction };
             if (doneTapped) {
               // Build 90 10.3: time from tapping Done until the task shows as done.
               const chrome = /^(griit|home|today|discover|profile|feed|me|back|go back|done|skip)$/i;
@@ -564,6 +610,11 @@ export async function runPersona(opts: {
     const screenName = agentScreen && (screen === "other" || screen === "unknown" || agentScreen.toLowerCase() !== screen) ? agentScreen : screen;
     const timing = doneTimings.length > timingsLogged ? doneTimings[doneTimings.length - 1] : undefined;
     timingsLogged = doneTimings.length;
+    const stuck = redact(stuckNote(thought, forced), secrets);
+    if (stuck) {
+      stuckNotes.push(`${screenName}: ${stuck}`);
+      if (countStuck(stuckCounts, screenName, stuck) >= STUCK_LIMIT && !giveUp) giveUp = `Stopped: ${STUCK_LIMIT} stuck notes on ${screenName}.`;
+    }
     const row: StepLog = {
       step: n,
       timestamp: new Date().toISOString(),
@@ -582,10 +633,11 @@ export async function runPersona(opts: {
       shot: path.relative(dir, shotFile),
       doneToSheetMs: doneTapped ? (timing?.toSheetMs ?? pendingDone?.sheetMs ?? undefined) : undefined,
       doneToVisibleMs: timing?.toVisibleMs ?? undefined,
+      stuck: stuck || undefined,
     };
     logStep(row);
     console.log(`${persona.id} ${n}/${limit} ${chunk} ${screenName} ${action} ${row.target} $${opts.spend.usd.toFixed(2)}`);
-    if (decision?.action === "done" && giveUp) break;
+    if (giveUp && (decision?.action === "done" || stuck)) break;
   }
 
   if (!giveUp && steps.length >= hardCap) giveUp = `Hit the ${hardCap}-step cap.`;
@@ -677,7 +729,11 @@ export async function runPersona(opts: {
     userId: session?.userId ?? "",
     isTest,
     cleanup,
+    stuckNotes,
+    coldStartMs,
+    model,
   };
+  result.endTag = endTag(result);
   fs.writeFileSync(path.join(dir, "result.json"), JSON.stringify(result, null, 2));
   return { result, model, compareNote, stopAll };
 }

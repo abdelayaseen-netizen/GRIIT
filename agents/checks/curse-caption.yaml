@@ -1,0 +1,11 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: a curse word in a proof caption is refused, with the message naming the field.
+- runFlow:
+    file: photo-post.yaml
+    env:
+      CAPTION: "this fucking water"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a caption\\. Try different ones\\."
+    timeout: 20000
+- takeScreenshot: b92-12-curse-caption

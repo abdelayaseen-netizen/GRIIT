@@ -1,0 +1,67 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: as a fresh guest, join Drink Water Today (photo, 1 day), take the proof photo and
+# type ${CAPTION}. Stops with the post sheet (build 92) or photo review (build 91) open.
+# Build 92: photo review (review-done), then the post sheet with the caption. Build 91: the caption
+# and "Post to friends" sit on the photo review screen itself.
+- runFlow: guest-home.yaml
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000001"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Join Drink Water Today"
+    timeout: 20000
+- tapOn: "Join Drink Water Today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Drink water and post a photo|Take proof photo"
+    timeout: 20000
+- runFlow:
+    when:
+      notVisible: "Take proof photo"
+    commands:
+      - tapOn:
+          text: "Drink water and post a photo"
+          index: 0
+- extendedWaitUntil:
+    visible: "Take proof photo"
+    timeout: 20000
+- tapOn: "Take proof photo"
+- extendedWaitUntil:
+    visible: "Add a caption.*|Retake"
+    timeout: 20000
+- tapOn:
+    id: "review-done"
+    optional: true
+# Build 92's multiline caption does not expose its placeholder as text; build 91's field has no id.
+- extendedWaitUntil:
+    visible: "^Post to (friends|everyone)$"
+    timeout: 15000
+# An empty CAPTION posts with no caption, so build 92's keyboard never opens.
+- runFlow:
+    when:
+      true: ${CAPTION != ""}
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: "post-choice-caption"
+          commands:
+            - tapOn:
+                id: "post-choice-caption"
+      - runFlow:
+          when:
+            notVisible:
+              id: "post-choice-caption"
+          commands:
+            - tapOn: "Add a caption.*"
+      - inputText: ${CAPTION}

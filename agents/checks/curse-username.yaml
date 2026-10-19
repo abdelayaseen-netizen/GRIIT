@@ -1,0 +1,29 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: a curse word in the username is refused on Edit profile, with the message naming
+# the field, and the username does not change.
+- runFlow: guest-home.yaml
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Edit profile"
+    timeout: 20000
+- tapOn: "Edit profile"
+- extendedWaitUntil:
+    visible: "Username"
+    timeout: 15000
+# The avatar's label is also "user_…", so pick the field under the Username label.
+- tapOn:
+    text: "user_.*"
+    below: "USERNAME|Username"
+- eraseText: 40
+- inputText: "shithead"
+# The availability check runs after typing; Save waits for it.
+- extendedWaitUntil:
+    visible: "Available|Taken"
+    timeout: 8000
+    optional: true
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a username\\. Try different ones\\."
+    timeout: 15000
+- takeScreenshot: b92-12-curse-username

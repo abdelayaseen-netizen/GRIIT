@@ -1,0 +1,16 @@
+{
+  "models": {
+    "default": "claude-sonnet-5-5",
+    "firstDay": "claude-opus-5-5"
+  },
+  "firstDayGroups": ["first-day"],
+  "capUsd": 60,
+  "maxTokens": 2000,
+  "pricesCheckedOn": "2026-10-18, platform.claude.com/docs/en/about-claude/pricing",
+  "prices": {
+    "claude-sonnet-5-5": { "inPerM": 2, "outPerM": 10 },
+    "claude-opus-5-5": { "inPerM": 4, "outPerM": 20 },
+    "claude-haiku-4-5-20251001": { "inPerM": 1, "outPerM": 5 },
+    "claude-sonnet-4-6": { "inPerM": 3, "outPerM": 15 }
+  }
+}

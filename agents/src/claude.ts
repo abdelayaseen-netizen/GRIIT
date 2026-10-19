@@ -1,7 +1,11 @@
 import fs from "fs";
+import { loadConfig } from "./config";
 import { HAIKU_MODEL, dollars } from "./cost";
 import { safeText } from "./env";
 import type { Decision } from "./types";
+
+/** Opus 5.5 always thinks, and thinking counts against max_tokens, so 400 cut replies short. */
+const MAX_TOKENS = loadConfig().maxTokens;
 
 export type AskResult = {
   decision: Decision | null;
@@ -32,7 +36,7 @@ export async function askModel(input: {
       },
       body: JSON.stringify({
         model: input.model,
-        max_tokens: 400,
+        max_tokens: MAX_TOKENS,
         system: input.system,
         messages: [
           {

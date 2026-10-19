@@ -1,0 +1,53 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: a long journal entry, typed in three parts into the multiline field the
+# way a person adds a sentence at a time, keeps every part and secures the day.
+- runFlow: guest-home.yaml
+- openLink: "griit://challenge/b2000001-4000-4000-8000-000000000004"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Join Journal Today"
+    timeout: 20000
+- tapOn: "Join Journal Today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Write a short journal entry"
+    timeout: 20000
+- tapOn:
+    id: "home-task"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "write-body"
+    timeout: 15000
+- tapOn:
+    id: "write-body"
+- inputText: "Alpha morning. I woke up early and walked to the river before work, which I have not done in weeks."
+- inputText: " The air was cold and the light was low over the water, so I stopped for a while and just watched it move."
+- inputText: " Tomorrow I want to do the same walk again and write down one thing I noticed on the way, ending omega."
+- hideKeyboard:
+    optional: true
+- assertVisible: "Alpha morning\\..*before work.*just watched it move\\..*ending omega\\."
+- takeScreenshot: b92-12-journal-long
+- tapOn: "^Done$"
+# Build 91 asks "Keep it private" or post; build 92 opens the post sheet.
+- tapOn:
+    text: "Keep it private"
+    optional: true
+- tapOn:
+    id: "post-choice-post"
+    optional: true
+- extendedWaitUntil:
+    visible: "Day secured.*|Day 1 secured.*|Journal Today · finished"
+    timeout: 30000
+- takeScreenshot: b92-12-journal-secured

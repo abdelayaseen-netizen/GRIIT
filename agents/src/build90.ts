@@ -135,9 +135,9 @@ export const CHUNKS: { slug: string; title: string; personas: Persona[]; pairs?:
   },
 ];
 
-type Run = { result: AgentResult; steps: StepLog[]; persona: Persona };
+export type Run = { result: AgentResult; steps: StepLog[]; persona: Persona };
 
-function readRuns(dir: string, personas: Persona[]): Run[] {
+export function readRuns(dir: string, personas: Persona[]): Run[] {
   const out: Run[] = [];
   for (const persona of personas) {
     const file = path.join(dir, persona.id, "result.json");
@@ -307,7 +307,7 @@ export function summarizeWords(all: Run[]): { md: string; json: Record<string, u
   };
 }
 
-async function inviteLinkOf(runDir: string, personaId: string): Promise<string | null> {
+export async function inviteLinkOf(runDir: string, personaId: string): Promise<string | null> {
   const file = path.join(runDir, personaId, "account.json");
   if (!fs.existsSync(file)) return null;
   const account = JSON.parse(fs.readFileSync(file, "utf8")) as { email: string; password: string };

@@ -105,7 +105,18 @@ export function yamlQuote(value: string): string {
   return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-export function actionYaml(action: string, target: string, text?: string, point?: string): string {
+/**
+ * Build 92 12.3. What a type action should do with what the field already holds. Text that starts with the
+ * current value only appends the rest, so a journal grows sentence by sentence. Anything else replaces the
+ * whole value: a bare eraseText removes only 50 characters, which left the end of a long journal behind.
+ */
+export function typePlan(existing: string, text: string): { erase: number; input: string } {
+  const current = existing ?? "";
+  if (current && text.startsWith(current)) return { erase: 0, input: text.slice(current.length) };
+  return { erase: current.length ? current.length + 10 : 50, input: text };
+}
+
+export function actionYaml(action: string, target: string, text?: string, point?: string, existing = ""): string {
   const safePoint = point ? usablePoint(point) : null;
   const tapAt = safePoint ? `    point: ${yamlQuote(safePoint)}` : `    text: ${yamlQuote(target || " ")}`;
   const lines = [`appId: ${APP_ID}`, "---"];
@@ -113,7 +124,11 @@ export function actionYaml(action: string, target: string, text?: string, point?
     lines.push("- tapOn:", tapAt);
     if (action === "double_tap") lines.push("- tapOn:", tapAt);
   } else if (action === "type") {
-    lines.push("- tapOn:", tapAt, "- eraseText:", "    optional: true", `- inputText: ${yamlQuote(text ?? "")}`, "- hideKeyboard:", "    optional: true");
+    const plan = typePlan(existing, text ?? "");
+    lines.push("- tapOn:", tapAt);
+    if (plan.erase) lines.push("- eraseText:", `    charactersToErase: ${plan.erase}`, "    optional: true");
+    if (plan.input) lines.push(`- inputText: ${yamlQuote(plan.input).replace(/\n/g, "\\n")}`);
+    lines.push("- hideKeyboard:", "    optional: true");
   } else if (action === "scroll") {
     const dir = /down/i.test(target) ? "DOWN" : /left/i.test(target) ? "LEFT" : /right/i.test(target) ? "RIGHT" : "UP";
     lines.push("- swipe:", `    direction: ${dir}`);
@@ -123,6 +138,11 @@ export function actionYaml(action: string, target: string, text?: string, point?
     lines.push("- stopApp");
   }
   return lines.join("\n");
+}
+
+/** Build 92 12.5: only the cold launch, so the time to the first screen has no optional-tap waits in it. */
+export function bareLaunchYaml(grants: "allow" | "deny" = "allow", photos = true): string {
+  return launchYaml(grants, photos).split("\n- tapOn:")[0]!;
 }
 
 export function launchYaml(grants: "allow" | "deny" = "allow", photos = true): string {

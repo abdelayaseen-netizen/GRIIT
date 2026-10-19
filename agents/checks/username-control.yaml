@@ -1,0 +1,28 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3 control for curse-username: can a guest change the username to a clean one at all?
+# If this fails too, the curse check's missing message is a broken save, not the word filter.
+- runFlow: guest-home.yaml
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Edit profile"
+    timeout: 20000
+- tapOn: "Edit profile"
+- extendedWaitUntil:
+    visible: "Username"
+    timeout: 15000
+# The avatar's label is also "user_…", so pick the field under the Username label.
+- tapOn:
+    text: "user_.*"
+    below: "USERNAME|Username"
+- eraseText: 40
+- inputText: "walker${MAESTRO_RUN}"
+- extendedWaitUntil:
+    visible: "Available|Taken"
+    timeout: 8000
+    optional: true
+- tapOn: "Save"
+- extendedWaitUntil:
+    visible: "@walker.*"
+    timeout: 15000
+- takeScreenshot: b92-12-username-control

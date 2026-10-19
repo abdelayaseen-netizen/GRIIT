@@ -1,14 +1,36 @@
+import { loadConfig, priceOf } from "./config";
+
 export const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 export const SONNET_MODEL = "claude-sonnet-4-6";
 
-export const PRICE: Record<string, { inPerM: number; outPerM: number }> = {
-  [HAIKU_MODEL]: { inPerM: 1, outPerM: 5 },
-  [SONNET_MODEL]: { inPerM: 3, outPerM: 15 },
-};
+const config = loadConfig();
+export const PRICE = config.prices;
 
 export function dollars(model: string, inputTokens: number, outputTokens: number): number {
-  const price = PRICE[model] ?? PRICE[SONNET_MODEL]!;
+  const price = priceOf(model, config);
   return (inputTokens / 1_000_000) * price.inPerM + (outputTokens / 1_000_000) * price.outPerM;
+}
+
+/** Projects a full run from what a dry run actually spent per step, per model. */
+export function projectRun(input: {
+  measured: { model: string; usd: number; steps: number }[];
+  planned: { model: string; sessions: number; stepsEach: number }[];
+}): { perStep: Record<string, number>; total: number; lines: string[] } {
+  const perStep: Record<string, number> = {};
+  for (const row of input.measured) {
+    if (row.steps > 0) perStep[row.model] = row.usd / row.steps;
+  }
+  const [refModel, refRate] = Object.entries(perStep)[0] ?? ["", 0];
+  const scaled = (model: string) => (refModel ? refRate * (priceOf(model, config).outPerM / priceOf(refModel, config).outPerM) : 0);
+  let total = 0;
+  const lines: string[] = [];
+  for (const plan of input.planned) {
+    const rate = perStep[plan.model] ?? scaled(plan.model);
+    const cost = rate * plan.sessions * plan.stepsEach;
+    total += cost;
+    lines.push(`${plan.sessions} sessions × ${plan.stepsEach} steps on ${plan.model} at ${money(rate)}/step: ${money(cost)}${perStep[plan.model] == null ? " (rate scaled from the measured model by list price)" : ""}`);
+  }
+  return { perStep, total, lines };
 }
 
 /** Rough pre-run estimate. Image is resized to a 1000px long side. */

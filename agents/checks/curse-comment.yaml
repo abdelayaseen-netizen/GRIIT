@@ -1,0 +1,54 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 12.3: a curse word in a comment is refused, with the message naming the field. The guest
+# posts a clean proof first, then comments on it from the Home feed.
+- runFlow:
+    file: photo-post.yaml
+    env:
+      CAPTION: ""
+- extendedWaitUntil:
+    visible: "Drink Water Today · finished|Day secured.*|Day 1 secured.*"
+    timeout: 60000
+# Build 91 then shows the Proof screen, which has its own comment box; build 92 goes back to Home.
+- repeat:
+    times: 5
+    while:
+      notVisible: "Discover|Add a comment.*"
+    commands:
+      - tapOn:
+          text: "See the record|^Done$"
+          optional: true
+      - tapOn:
+          text: "^Later$|Not now"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      notVisible: "Add a comment.*"
+    commands:
+      - tapOn: "Home"
+      - extendedWaitUntil:
+          visible: "Feed|Comment"
+          timeout: 30000
+      # The 4:5 proof photo fills the screen, so the post's Comment button starts below the fold.
+      - scrollUntilVisible:
+          element:
+            text: "Comment"
+          direction: DOWN
+          timeout: 30000
+          visibilityPercentage: 100
+          centerElement: true
+      - tapOn:
+          text: "Comment"
+          index: 0
+      - extendedWaitUntil:
+          visible: "Add a comment.*"
+          timeout: 15000
+- tapOn: "Add a comment.*"
+- inputText: "sh1t post"
+- tapOn: "Send comment"
+- extendedWaitUntil:
+    visible: "Those words aren't allowed in a comment\\. Try different ones\\."
+    timeout: 15000
+- takeScreenshot: b92-12-curse-comment

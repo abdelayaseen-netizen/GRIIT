@@ -251,6 +251,26 @@ export async function prepareAgentAccount(
   };
 }
 
+/** Build 92 12.4: log in as an account an earlier run saved (Day 2 users, a social partner, the History account). */
+export async function savedAccountSession(file: string): Promise<{
+  ok: boolean;
+  detail: string;
+  creds?: { email: string; password: string; username: string };
+  session?: Record<string, unknown>;
+}> {
+  if (!fs.existsSync(file)) return { ok: false, detail: "account file missing" };
+  const saved = JSON.parse(fs.readFileSync(file, "utf8")) as { email?: string; password?: string; username?: string; anonymous?: boolean };
+  if (!saved.email || !saved.password || saved.anonymous) return { ok: false, detail: "no password login in the account file" };
+  const { data, error } = await agentClient().auth.signInWithPassword({ email: saved.email, password: saved.password });
+  if (error || !data.session) return { ok: false, detail: safeText(error?.message || "no session") };
+  return {
+    ok: true,
+    detail: "signed in",
+    creds: { email: saved.email, password: saved.password, username: saved.username ?? "" },
+    session: data.session as unknown as Record<string, unknown>,
+  };
+}
+
 export type DbSnapshot = {
   enrollments: { id: string; challenge_id: string; status: string; current_day: number | null; last_secured_date_key?: string | null; title: string; duration_days: number | null }[];
   checkins: { id: string; active_challenge_id: string; task_id: string | null; date_key: string | null; status: string | null; proof_url: string | null }[];
