@@ -93,6 +93,12 @@ export async function loadInviteChallenge(
     .eq("id", challengeId)
     .maybeSingle();
   if (!data) return null;
+  // `participants_count` is not kept in step with joins; count the live enrollments instead.
+  const { count: enrolled } = await service
+    .from("active_challenges")
+    .select("id", { count: "exact", head: true })
+    .eq("challenge_id", challengeId)
+    .eq("status", "active");
   const row = data as {
     id: string;
     title: string;
@@ -124,7 +130,7 @@ export async function loadInviteChallenge(
     title: row.title,
     category: row.category,
     durationDays: row.duration_days ?? 0,
-    participantsCount: row.participants_count ?? 0,
+    participantsCount: Math.max(enrolled ?? 0, row.participants_count ?? 0),
     participationType: row.participation_type,
     runStatus: row.run_status,
     creatorId: row.creator_id,

@@ -367,7 +367,7 @@ function useOpenLeaderboardProfile() {
   );
 }
 
-function BoardRow({
+export function BoardRow({
   entry,
   viewerId,
   scope,

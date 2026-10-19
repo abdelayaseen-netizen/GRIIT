@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEEP_LINK_BASE_URL } from "@/lib/config";
+import { DEEP_LINK_BASE_URL, INVITE_BASE_URL } from "@/lib/config";
 import {
   challengeDeepLink,
   inviteDeepLink,
@@ -54,8 +54,9 @@ describe("share/invite copy", () => {
 
   it("uses the app scheme when EXPO_PUBLIC_DEEP_LINK_BASE_URL is unset", () => {
     if (process.env.EXPO_PUBLIC_DEEP_LINK_BASE_URL) return;
-    expect(inviteDeepLink("GRIT42")).toBe("griit://i/GRIT42");
-    expect(inviteDeepLink("GRIT42", "user-1")).toBe("griit://i/GRIT42?ref=user-1");
+    // Build 92 08.1: invite links are always `{INVITE_BASE_URL}/i/{code}` (the backend landing page).
+    expect(inviteDeepLink("GRIT42")).toBe(`${INVITE_BASE_URL}/i/GRIT42`);
+    expect(inviteDeepLink("GRIT42", "user-1")).toBe(`${INVITE_BASE_URL}/i/GRIT42?ref=user-1`);
     expect(challengeDeepLink("ch-1")).toBe("griit://challenge/ch-1");
     expect(profileDeepLink("yaseen")).toBe("griit://profile/yaseen");
   });

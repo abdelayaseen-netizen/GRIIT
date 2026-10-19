@@ -1,0 +1,77 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 08: two accounts, one link.
+# A (guest) joins Show Up 7, opens Invite on the challenge (P2-14), and the short link is read
+# off the sheet. The app state is cleared; B (a fresh guest) opens griit://invite/{code},
+# sees "{A} invited you" with "Join · Day 1 is today" (P2-19), taps it and lands on the first task.
+
+# ---- A: join Show Up 7 ---------------------------------------------------------------------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000001"
+- extendedWaitUntil:
+    visible: "Join Show Up 7"
+    timeout: 20000
+- tapOn: "Join Show Up 7"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+# The join opens the first task (Get to the gym · camera).
+- extendedWaitUntil:
+    visible: "Get to the gym|Take proof photo|Camera access is off"
+    timeout: 20000
+
+# ---- A: Invite on the challenge → the invite sheet with the short link -----------------------
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000001/invite"
+- extendedWaitUntil:
+    visible: "Invite friends"
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "invite-link-text"
+    timeout: 20000
+- assertVisible: "Show Up 7 is ready. Invite people to start with you."
+- assertVisible: "Join me. Day 1 is today."
+- assertVisible: "^Share$"
+- assertVisible: "Copy link"
+- assertNotVisible: "griit://.*"
+- takeScreenshot: P2-14-invite-sheet
+- copyTextFrom:
+    id: "invite-link-text"
+- evalScript: ${output.code = maestro.copiedText.split('/i/')[1].trim()}
+- evalScript: ${console.log('[b92-08] invite code ' + output.code)}
+- tapOn: "Copy link"
+- extendedWaitUntil:
+    visible: "Link copied."
+    timeout: 5000
+- takeScreenshot: P2-14-link-copied
+
+# ---- B: fresh guest opens the link ------------------------------------------------------------
+- runFlow: build92-guest-home-camera.yaml
+- openLink: ${'griit://invite/' + output.code}
+- extendedWaitUntil:
+    visible: ".*invited you"
+    timeout: 30000
+- assertVisible: "Join · Day 1 is today"
+- assertVisible: "Not now"
+- assertNotVisible: "Ask to join"
+- takeScreenshot: P2-19-invite-accept
+- tapOn: "Join · Day 1 is today"
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- tapOn:
+    text: "^Later$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Get to the gym|Take proof photo|Camera access is off"
+    timeout: 30000
+- takeScreenshot: 08-b-first-task

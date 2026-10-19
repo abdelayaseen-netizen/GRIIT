@@ -138,9 +138,12 @@ export default function ChallengeDetailV3(p: ChallengeDetailV3Props) {
   const footerPad = blocked ? 24 : 28;
   const footerTop = blocked ? 14 : DS_V3.space.lg;
   const isSolo = p.participationType === "solo";
-  const peopleChip = invited
-    ? ofTen(p.invite!.memberCount)
-    : isSolo
+  // Build 92 08.4: "{n} of 10" is a group-room number; a public challenge opened through an
+  // invite link keeps its own people count (or none when solo).
+  const peopleChip =
+    invited && p.participationType === "team"
+      ? ofTen(p.invite!.memberCount)
+      : isSolo
       ? null
       : p.participantsCount <= 0
         ? null

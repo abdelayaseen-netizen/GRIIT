@@ -1,0 +1,44 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 08: the board with 5 and 10 people (P2-16, P2-17) and Settings (P2-21).
+# The board uses the dev route (same rankBoard + BoardRow as the live tab).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://dev/build92-board?n=5"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "This week"
+    timeout: 20000
+- assertVisible: "You"
+- takeScreenshot: P2-16-board-5
+- openLink: "griit://dev/build92-board?n=10"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Board · 10 people \\(dev\\)"
+    timeout: 20000
+- takeScreenshot: P2-17-board-10
+- scroll
+- takeScreenshot: P2-17-board-10-bottom
+
+- openLink: "griit://settings"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Apple Health"
+    direction: DOWN
+    centerElement: true
+- assertVisible: "Coming soon"
+- takeScreenshot: P2-21-settings-connections
+- scrollUntilVisible:
+    element: "GRIIT Pro"
+    direction: DOWN
+    centerElement: true
+- scroll
+- takeScreenshot: P2-21-settings-pro

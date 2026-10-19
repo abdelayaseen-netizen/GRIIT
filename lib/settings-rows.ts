@@ -65,17 +65,9 @@ export const PRO_FREE_LINE = "Free stays free: challenges, proofs, streaks, badg
 export const PRO_SEE = "See Pro";
 export const PRO_PERKS_TAG = "Pro";
 /** Additive. Nothing in the free core is gated by these. */
-export const PRO_PERKS = [
-  "Auto-verify runs",
-  "Extra freezes (hold up to 4 instead of 2)",
-  "Stats",
-  "Premium stickers",
-] as const;
-export const PRO_PERK_SUBS: Record<(typeof PRO_PERKS)[number], string> = {
-  "Auto-verify runs": "Strava runs complete run tasks on their own",
-  "Extra freezes (hold up to 4 instead of 2)": "Hold up to 4 instead of 2",
-  Stats: "Your record → Stats",
-  "Premium stickers": "Streak glow, Progress ring",
+export const PRO_PERKS = ["Auto-verify runs", "Extra freezes", "Stats", "Premium stickers"] as const;
+export const PRO_PERK_SUBS: Partial<Record<(typeof PRO_PERKS)[number], string>> = {
+  "Extra freezes": "Hold up to 4 instead of 2",
 };
 export const FREE_CORE = [
   "Challenges",

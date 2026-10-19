@@ -26,6 +26,7 @@ import {
 import {
   APPLE_HEALTH_ROW,
   PRO_PERKS,
+  PRO_PERK_SUBS,
   PRO_PERKS_TAG,
   stravaSettingsRow,
   stravaConnectedSub,
@@ -178,10 +179,12 @@ describe("08.6 settings connections (P2-20, P2-21)", () => {
     });
     expect(PRO_PERKS).toEqual([
       "Auto-verify runs",
-      "Extra freezes (hold up to 4 instead of 2)",
+      "Extra freezes",
       "Stats",
       "Premium stickers",
     ]);
+    // Copy table, word for word: only Extra freezes has a second line.
+    expect(PRO_PERK_SUBS).toEqual({ "Extra freezes": "Hold up to 4 instead of 2" });
     expect(PRO_PERKS_TAG).toBe("Pro");
   });
 

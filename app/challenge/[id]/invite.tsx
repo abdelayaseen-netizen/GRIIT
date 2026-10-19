@@ -3,13 +3,12 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Screen from "@/components/ds/Screen";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "lucide-react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import { trpcMutate, trpcQuery } from "@/lib/trpc";
 import { TRPC } from "@/lib/trpc-paths";
 import { DS_V3 } from "@/lib/design-system";
 import { ROUTES } from "@/lib/routes";
-import { inviteToChallenge } from "@/lib/share";
+import InviteSheet from "@/components/InviteSheet";
 import { captureError } from "@/lib/sentry";
 import {
   GROUP_CAP,
@@ -18,14 +17,11 @@ import {
   pickerRowState,
   type FollowPerson,
 } from "@/lib/group-ui";
-import Button from "@/components/ds/Button";
 import Card from "@/components/ds/Card";
-import Divider from "@/components/ds/Divider";
 import MemberRow from "@/components/ds/MemberRow";
 import PushedHeader from "@/components/ds/PushedHeader";
 import Skeleton from "@/components/ds/Skeleton";
 
-const ICON = DS_V3.space.gutter;
 
 type MembersPayload = {
   members: { userId: string }[];
@@ -112,10 +108,6 @@ export default function ChallengeInviteScreen() {
     [id, full, enrolled, invited, qc],
   );
 
-  const onShareLink = useCallback(() => {
-    if (!id) return;
-    void inviteToChallenge({ name: title, id }, user?.id);
-  }, [id, title, user?.id]);
 
   const loading =
     (followingQuery.isPending && !followingQuery.data) ||
@@ -127,6 +119,12 @@ export default function ChallengeInviteScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <PushedHeader title={`Invite to ${title}`} onBack={goBack} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        {/* Build 92 08.3: the invite sheet (P2-14) is the link; the list below is who to send it to. */}
+        {id ? (
+          <View style={styles.cardWrap}>
+            <InviteSheet challengeId={id} challengeName={title} />
+          </View>
+        ) : null}
         <Text style={styles.caption}>{pickerCaption(memberCount)}</Text>
         {full ? (
           <View style={styles.cardWrap}>
@@ -174,17 +172,6 @@ export default function ChallengeInviteScreen() {
         )}
         <View style={styles.footerClear} />
       </ScrollView>
-      <View style={styles.share}>
-        <Divider />
-        <View style={styles.sharePad}>
-          <Button
-            label="Share a link"
-            variant="secondary"
-            icon={<Link size={ICON} color={DS_V3.color.textPrimary} />}
-            onPress={onShareLink}
-          />
-        </View>
-      </View>
     </Screen>
   );
 }

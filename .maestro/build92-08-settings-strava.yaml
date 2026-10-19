@@ -1,0 +1,56 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 08 (P2-21): Settings with Strava not connected. Needs FLAGS.STRAVA_AUTO_VERIFY on
+# in the running bundle (the row is hidden when it is off and for guests).
+# Run with -e MAESTRO_EMAIL=b92set<unix-time>@example.com (fresh is_test address per run).
+- runFlow: build92-guest-home.yaml
+- openLink: "griit://settings"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "You're using GRIIT as a guest.*"
+    timeout: 20000
+- tapOn: "You're using GRIIT as a guest.*"
+- extendedWaitUntil:
+    visible: "Continue with email"
+    timeout: 15000
+- tapOn: "Continue with email"
+- tapOn:
+    id: "account-email"
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: "account-password"
+- inputText: "Build92-settings-test"
+- tapOn: "^Continue$"
+- extendedWaitUntil:
+    visible: "Send it|Home|Streak|Settings"
+    timeout: 30000
+- tapOn:
+    text: "Send it"
+    optional: true
+- tapOn:
+    text: "Go back"
+    optional: true
+- openLink: "griit://settings"
+- tapOn:
+    text: "^Open$"
+    optional: true
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Apple Health"
+    direction: DOWN
+    centerElement: true
+- assertVisible: "Strava"
+- assertVisible: "Verify runs automatically"
+- assertVisible:
+    id: "settings-strava-action"
+- assertVisible: "Coming soon"
+- takeScreenshot: P2-21-settings-strava-off
+- scrollUntilVisible:
+    element: "Premium stickers"
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: P2-21-settings-pro
